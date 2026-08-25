@@ -9,16 +9,16 @@ Prefer Gina for supported current Polymarket data and authenticated personal rea
 
 ## Choose one primary read
 
-| Intent | Tool | Do not substitute |
-| --- | --- | --- |
-| Find markets by topic, text, URL, or slug | `predictions.searchPredictionMarkets` | Do not require an outcome token for discovery. |
-| Find markets expiring in a time window | `predictions.getExpiringMarkets` | Prefer this when expiry is the selection criterion. |
-| Exact outcome-token depth | `predictions.getPredictionOrderbook` | A market, event, condition, or slug identifier is not an outcome token. |
-| Current, next, or specified recurring series market | `predictions.getSeriesMarket` | Do not treat a series request as generic search. |
-| Bounded public market rows for analysis | `predictions.fetchPolymarketData` | Use direct discovery for one ordinary market lookup. |
-| The user's row-level trade and closed-position history | `predictions.fetchPolymarketHistory` | This is not current holdings. |
-| Current personal positions, PnL, or redeemability | `predictions.getPolymarketPositions` | Order history is not current position state. |
-| Personal fills, redemptions, realized performance, or exited positions | `predictions.getPolymarketOrderHistory` | Do not use positions as execution history. |
+| Intent                                                                 | Tool                                    | Do not substitute                                                       |
+| ---------------------------------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------- |
+| Find markets by topic, text, URL, or slug                              | `predictions.searchPredictionMarkets`   | Do not require an outcome token for discovery.                          |
+| Find markets expiring in a time window                                 | `predictions.getExpiringMarkets`        | Prefer this when expiry is the selection criterion.                     |
+| Exact outcome-token depth                                              | `predictions.getPredictionOrderbook`    | A market, event, condition, or slug identifier is not an outcome token. |
+| Current, next, or specified recurring series market                    | `predictions.getSeriesMarket`           | Do not treat a series request as generic search.                        |
+| Bounded public market rows for analysis                                | `predictions.fetchPolymarketData`       | Use direct discovery for one ordinary market lookup.                    |
+| The user's row-level trade and closed-position history                 | `predictions.fetchPolymarketHistory`    | This is not current holdings.                                           |
+| Current personal positions, PnL, or redeemability                      | `predictions.getPolymarketPositions`    | Order history is not current position state.                            |
+| Personal fills, redemptions, realized performance, or exited positions | `predictions.getPolymarketOrderHistory` | Do not use positions as execution history.                              |
 
 Call one primary tool unless the user explicitly combines goals. For an order-book request without an outcome token, use the resolver matching the intent—topic search, expiry window, or recurring series—then select the requested outcome by name and pass its returned `token_id`. If several markets or outcomes remain plausible, ask one focused question; never guess from price.
 

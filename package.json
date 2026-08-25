@@ -3,27 +3,51 @@
   "version": "0.1.0",
   "private": true,
   "license": "Apache-2.0",
-  "packageManager": "bun@1.4.0",
-  "workspaces": ["packages/*", "plugins/ask-gina"],
+  "workspaces": [
+    "packages/*",
+    "plugins/ask-gina"
+  ],
+  "type": "module",
   "scripts": {
     "fmt:check": "vp fmt --check .",
     "lint": "vp lint --deny-warnings .",
-    "check": "vp check .",
+    "check": "vp run quality",
     "test": "vp run tests",
     "artifacts": "vp run build-artifacts",
     "verify:artifacts": "vp run verify-artifacts",
     "check:public-boundary": "vp run public-boundary",
+    "check:target-conformance": "vp run target-conformance",
     "verify:packages": "bun tools/verify-artifacts.ts --packages",
     "verify:targets": "bun tools/verify-artifacts.ts --targets",
-    "verify:evals": "bun tools/verify-artifacts.ts --evals"
+    "smoke:install": "bun tools/verify-artifacts.ts --packages",
+    "audit": "bun audit",
+    "eval:replay": "bun packages/evals/src/bin/replay.ts",
+    "eval:responses": "bun packages/evals/src/bin/live.ts --runner responses",
+    "eval:codex": "bun packages/evals/src/bin/live.ts --runner codex",
+    "effect-tsgo:patch": "bun scripts/effect-tsgo-patch-if-needed.ts",
+    "prepare": "bun run effect-tsgo:patch",
+    "typecheck": "node_modules/.bin/tsc --noEmit -p tsconfig.json",
+    "effect-tsgo:diagnostics": "node_modules/.bin/effect-tsgo diagnostics --project tsconfig.json --format json"
   },
   "devDependencies": {
+    "@askgina/contracts": "workspace:*",
+    "@effect/language-service": "0.87.2",
     "@effect/platform-bun": "4.0.0-rc.111",
+    "@effect/tsgo": "0.36.5",
     "@effect/vitest": "4.0.0-rc.111",
     "@types/node": "25.6.0",
     "effect": "4.0.0-rc.111",
-    "typescript": "5.9.3",
+    "typescript": "7.0.2",
     "vite-plus": "0.3.0",
     "vitest": "4.1.11"
-  }
+  },
+  "overrides": {
+    "@effect/platform-node-shared": "4.0.0-rc.111",
+    "oxlint": "1.78.0"
+  },
+  "engines": {
+    "bun": "1.4.x",
+    "node": "22.x"
+  },
+  "packageManager": "bun@1.4.0"
 }

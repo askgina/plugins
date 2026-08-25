@@ -9,11 +9,11 @@ Use Gina for supported current or authenticated account data. Keep this skill ac
 
 ## Choose one primary read
 
-| Intent | Tool | Do not substitute |
-| --- | --- | --- |
+| Intent                                                | Tool                          | Do not substitute                                                                                                                  |
+| ----------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | Current cross-chain holdings, balances, or allocation | `gina.getCrosschainPortfolio` | A public token price cannot establish what the user owns. Do not claim an empty result is complete when provider status is absent. |
-| Linked Ethereum and Solana wallets | `gina.getAccountAddresses` | Do not infer an address from portfolio rows. |
-| Scheduled prompts or recent runs | `gina.listScheduledPrompts` | This only inspects schedules; it never creates, edits, pauses, or deletes one. |
+| Linked Ethereum and Solana wallets                    | `gina.getAccountAddresses`    | Do not infer an address from portfolio rows.                                                                                       |
+| Scheduled prompts or recent runs                      | `gina.listScheduledPrompts`   | This only inspects schedules; it never creates, edits, pauses, or deletes one.                                                     |
 
 Call one primary tool unless the user explicitly combines goals. For “how did my schedules run?”, request recent runs. If the request is personal but the user is signed out, activate Gina and allow authentication instead of replacing the answer with generic information.
 

@@ -10,8 +10,9 @@ const client = createClient({ accessToken: process.env.ASK_GINA_ACCESS_TOKEN ?? 
 ```
 
 ```sh
-ask-gina --token "$ASK_GINA_ACCESS_TOKEN" list
-ask-gina --token "$ASK_GINA_ACCESS_TOKEN" call gina.listScheduledPrompts '{}'
+export ASK_GINA_ACCESS_TOKEN=synthetic-fixture
+ask-gina list
+ask-gina call gina.listScheduledPrompts '{}'
 ```
 
 Only the 29 catalog read-tool names are callable. Unknown names are rejected

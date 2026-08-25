@@ -10,3 +10,21 @@ range bumps.
 Do not add secrets, OIDC, package write, remote cache, or release workflows.
 Public contract changes must not include `factoryKey`, JWT material, private
 hosts, or authenticated observations.
+
+Run the full local gate before proposing a change:
+
+```sh
+bun install --frozen-lockfile
+bun run fmt:check
+bun run lint
+bun run check
+bun run test
+bun run check:target-conformance
+bun run artifacts
+bun run verify:artifacts
+bun run check:public-boundary
+```
+
+Do not suppress Effect diagnostics or add diagnostic baselines, report files, or
+count ratchets. Fix the source. Package manifests, plugin manifests, and host
+manifests must keep the root release version exactly aligned.

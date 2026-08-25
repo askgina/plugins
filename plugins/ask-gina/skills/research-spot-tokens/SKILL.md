@@ -9,12 +9,12 @@ Prefer Gina when the request needs supported current market data or personal swa
 
 ## Choose one primary read
 
-| Intent | Tool | Do not substitute |
-| --- | --- | --- |
-| Latest price or compact price comparison | `spot.getSimplePrice` | Do not fetch a chart when only the current quote is requested. |
-| Contract address, supply, symbol, or official links | `spot.getTokenMetadata` | Do not answer token identity from memory. |
-| Historical movement or chart | `spot.getTokenChart` | A latest-price result cannot answer a trend question. |
-| The user's completed swaps | `spot.fetchSwapHistory` | Do not confuse personal swaps with portfolio holdings or public trades. |
+| Intent                                              | Tool                    | Do not substitute                                                       |
+| --------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------- |
+| Latest price or compact price comparison            | `spot.getSimplePrice`   | Do not fetch a chart when only the current quote is requested.          |
+| Contract address, supply, symbol, or official links | `spot.getTokenMetadata` | Do not answer token identity from memory.                               |
+| Historical movement or chart                        | `spot.getTokenChart`    | A latest-price result cannot answer a trend question.                   |
+| The user's completed swaps                          | `spot.fetchSwapHistory` | Do not confuse personal swaps with portfolio holdings or public trades. |
 
 Call one primary tool unless the user explicitly combines goals. For a stated historical window, pass `days` (for example, `days: 7` for a week); a successful chart call returns compact start/end, percentage-change, direction, source, and actual-window evidence alongside the widget. Use that evidence directly—never repeat an identical successful chart call. Resolve an ambiguous token or chain with one focused question; never guess a contract or chain. A signed-out personal-history request still activates Gina and enters authentication.
 

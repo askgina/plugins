@@ -1,3 +1,4 @@
+import { recommended as effectTsgoRecommended } from "@effect/tsgo/oxlint-presets";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
@@ -5,7 +6,9 @@ export default defineConfig({
     ignorePatterns: ["dist/**"],
   },
   lint: {
+    ...effectTsgoRecommended,
     options: {
+      ...effectTsgoRecommended.options,
       typeAware: true,
       typeCheck: true,
     },
@@ -27,11 +30,11 @@ export default defineConfig({
     cache: { scripts: false, tasks: true },
     tasks: {
       quality: {
-        command: "vp check .",
+        command: ["vp check .", "bun run typecheck"],
         output: [],
       },
       tests: {
-        command: "vp test --run",
+        command: "bun --bun node_modules/.bin/vp test --run",
         dependsOn: ["quality"],
         output: [],
       },
@@ -49,6 +52,11 @@ export default defineConfig({
       "public-boundary": {
         command: "bun tools/check-public-boundary.ts",
         dependsOn: ["build-artifacts"],
+        cache: false,
+      },
+      "target-conformance": {
+        command: "bun tools/check-target-conformance.ts",
+        dependsOn: ["quality"],
         cache: false,
       },
     },

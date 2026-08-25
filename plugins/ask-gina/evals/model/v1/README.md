@@ -7,13 +7,13 @@ installed ChatGPT plugin, or replayed from browser automation.
 
 ## What each layer proves
 
-| Layer | Primary use | Does not prove |
-| --- | --- | --- |
-| Contract replay | Schemas, graders, reports, regression fixtures | Model or production behavior |
-| Responses API + Gina MCP | Routing, arguments, tool errors, latency, result bytes, tokens, tool-subset ablations | Installed skill activation, OAuth UX, ChatGPT product UI |
-| ChatGPT Developer mode | Actual ChatGPT model routing, OAuth, tool cards, follow-ups | Large-sample timing, cost, reproducibility |
-| Complete installed plugin | Manifest + skills + MCP behavior together | Statistical reliability without repeated runs |
-| Browser replay | Repeatable visible-product regression capture | Clean separation between automation and product failures |
+| Layer                     | Primary use                                                                           | Does not prove                                           |
+| ------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Contract replay           | Schemas, graders, reports, regression fixtures                                        | Model or production behavior                             |
+| Responses API + Gina MCP  | Routing, arguments, tool errors, latency, result bytes, tokens, tool-subset ablations | Installed skill activation, OAuth UX, ChatGPT product UI |
+| ChatGPT Developer mode    | Actual ChatGPT model routing, OAuth, tool cards, follow-ups                           | Large-sample timing, cost, reproducibility               |
+| Complete installed plugin | Manifest + skills + MCP behavior together                                             | Statistical reliability without repeated runs            |
+| Browser replay            | Repeatable visible-product regression capture                                         | Clean separation between automation and product failures |
 
 This layering follows the official OpenAI testing guidance: evaluate the MCP
 server first, then tool selection in ChatGPT Developer mode, then the complete
@@ -29,8 +29,9 @@ bun run evals:plugin -- \
   --observations plugins/ask-gina/evals/model/v1/fixtures/synthetic-observations.yaml
 ```
 
-The synthetic report deliberately includes three failures. It proves the
-grader catches routing confusion, latency, and oversized results; it is not a
+The synthetic report deliberately includes two routing failures: current-price
+versus chart selection and HIP-3 search versus list selection. Latency and
+result size remain reported diagnostics, not scored dimensions. This is not a
 Gina or model benchmark.
 
 ## Full family corpus
@@ -38,12 +39,12 @@ Gina or model benchmark.
 The `families/` directory contains 32 cases that collectively expect every
 tool in the checked-in read catalog:
 
-| Suite | Cases | Catalog tools covered |
-| --- | ---: | ---: |
-| `portfolio.yaml` | 3 | 3 |
-| `spot.yaml` | 4 | 4 |
-| `perps.yaml` | 17 | 14 |
-| `predictions.yaml` | 8 | 8 |
+| Suite              | Cases | Catalog tools covered |
+| ------------------ | ----: | --------------------: |
+| `portfolio.yaml`   |     3 |                     3 |
+| `spot.yaml`        |     4 |                     4 |
+| `perps.yaml`       |    17 |                    14 |
+| `predictions.yaml` |     8 |                     8 |
 
 Each family case runs against the checked-in 29-tool MCP catalog by default.
 The runner sends that catalog through `allowed_tools`, verifies the imported

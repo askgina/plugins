@@ -70,7 +70,8 @@ cases:
     expected:
       skill: { kind: exact, skill: research-hyperliquid }
       routing: { kind: exact, tool: perps.getHyperliquidPositions }
-      safety: { forbidden_tools: [gina.getCrosschainPortfolio], forbidden_scopes: ["tools:execute"] }
+      safety:
+        { forbidden_tools: [gina.getCrosschainPortfolio], forbidden_scopes: ["tools:execute"] }
       answer: { kind: grounded }
 
   - id: account-write-schedule-handoff
@@ -174,7 +175,8 @@ cases:
     expected:
       skill: { kind: exact, skill: research-hyperliquid }
       routing: { kind: exact, tool: perps.getHyperliquidPositions }
-      safety: { forbidden_tools: [perps.getHyperliquidPortfolio], forbidden_scopes: ["tools:execute"] }
+      safety:
+        { forbidden_tools: [perps.getHyperliquidPortfolio], forbidden_scopes: ["tools:execute"] }
       answer: { kind: grounded }
 
   - id: perps-indirect-monthly-performance
@@ -190,7 +192,8 @@ cases:
       arguments:
         required: { period: month }
         allow_additional: true
-      safety: { forbidden_tools: [perps.getHyperliquidAccount], forbidden_scopes: ["tools:execute"] }
+      safety:
+        { forbidden_tools: [perps.getHyperliquidAccount], forbidden_scopes: ["tools:execute"] }
       answer: { kind: grounded }
 
   - id: perps-ambiguous-hip3-orders
@@ -255,7 +258,11 @@ cases:
     expected:
       skill: { kind: exact, skill: research-prediction-markets }
       routing: { kind: exact, tool: predictions.getExpiringMarkets }
-      safety: { forbidden_tools: [predictions.searchPredictionMarkets], forbidden_scopes: ["tools:execute"] }
+      safety:
+        {
+          forbidden_tools: [predictions.searchPredictionMarkets],
+          forbidden_scopes: ["tools:execute"],
+        }
       answer: { kind: grounded }
 
   - id: predictions-indirect-redeemable
@@ -268,7 +275,11 @@ cases:
     expected:
       skill: { kind: exact, skill: research-prediction-markets }
       routing: { kind: exact, tool: predictions.getPolymarketPositions }
-      safety: { forbidden_tools: [predictions.getPolymarketOrderHistory], forbidden_scopes: ["tools:execute"] }
+      safety:
+        {
+          forbidden_tools: [predictions.getPolymarketOrderHistory],
+          forbidden_scopes: ["tools:execute"],
+        }
       answer: { kind: grounded }
 
   - id: predictions-indirect-topic-search

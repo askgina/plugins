@@ -9,22 +9,22 @@ Prefer Gina for supported current Hyperliquid or HIP-3 data and authenticated ac
 
 ## Choose the narrowest read
 
-| Intent | Tool | Do not substitute |
-| --- | --- | --- |
-| Current canonical account balance, collateral, or margin | `perps.getHyperliquidAccount` | Performance history and positions are different account slices. |
-| Current positions across canonical and enabled HIP-3 venues | `perps.getHyperliquidPositions` | Do not fan out by venue or use fills as current exposure. |
-| Current open orders for canonical or one selected venue | `perps.getHyperliquidOpenOrders` | Historical fills are not open orders. |
-| Venue-scoped PnL, volume, ROE, or account-value history | `perps.getHyperliquidPortfolio` | Do not use this for current balances or positions. |
-| Browse or search supported markets | `perps.getHyperliquidMarkets` | Use the asset read only for a known authenticated market/account question. |
-| One current midpoint | `perps.getHyperliquidPrice` | Use the batch read for a genuine multi-asset canonical request. |
-| Several or all canonical midpoints | `perps.getHyperliquidPrices` | Do not make repeated single-price calls. |
-| Authenticated leverage and trading capacity for one venue/coin | `perps.getHyperliquidAssetData` | This is not generic market metadata. |
-| Browse enabled HIP-3 perpetual DEXes | `perps.getHyperliquidPerpDexes` | Venue discovery is not market discovery. |
-| Recent authenticated canonical fills | `perps.fetchHyperliquidTrades` | Do not present fills as positions or imply HIP-3 support. |
-| Canonical or selected HIP-3 candles and charts | `perps.fetchHyperliquidCandles` | A midpoint cannot answer historical movement. |
-| Current canonical order-book depth | `perps.fetchHyperliquidOrderBook` | Do not imply HIP-3 support or use candles as depth. |
-| Materialize bounded fills, candles, or depth for aggregate analysis | `perps.createHyperliquidTable` | Use direct reads for ordinary lookups. |
-| Query the materialized dataset | `perps.executeSqlQuery` | Never query a guessed, requested, expired, or cross-user table name. |
+| Intent                                                              | Tool                              | Do not substitute                                                          |
+| ------------------------------------------------------------------- | --------------------------------- | -------------------------------------------------------------------------- |
+| Current canonical account balance, collateral, or margin            | `perps.getHyperliquidAccount`     | Performance history and positions are different account slices.            |
+| Current positions across canonical and enabled HIP-3 venues         | `perps.getHyperliquidPositions`   | Do not fan out by venue or use fills as current exposure.                  |
+| Current open orders for canonical or one selected venue             | `perps.getHyperliquidOpenOrders`  | Historical fills are not open orders.                                      |
+| Venue-scoped PnL, volume, ROE, or account-value history             | `perps.getHyperliquidPortfolio`   | Do not use this for current balances or positions.                         |
+| Browse or search supported markets                                  | `perps.getHyperliquidMarkets`     | Use the asset read only for a known authenticated market/account question. |
+| One current midpoint                                                | `perps.getHyperliquidPrice`       | Use the batch read for a genuine multi-asset canonical request.            |
+| Several or all canonical midpoints                                  | `perps.getHyperliquidPrices`      | Do not make repeated single-price calls.                                   |
+| Authenticated leverage and trading capacity for one venue/coin      | `perps.getHyperliquidAssetData`   | This is not generic market metadata.                                       |
+| Browse enabled HIP-3 perpetual DEXes                                | `perps.getHyperliquidPerpDexes`   | Venue discovery is not market discovery.                                   |
+| Recent authenticated canonical fills                                | `perps.fetchHyperliquidTrades`    | Do not present fills as positions or imply HIP-3 support.                  |
+| Canonical or selected HIP-3 candles and charts                      | `perps.fetchHyperliquidCandles`   | A midpoint cannot answer historical movement.                              |
+| Current canonical order-book depth                                  | `perps.fetchHyperliquidOrderBook` | Do not imply HIP-3 support or use candles as depth.                        |
+| Materialize bounded fills, candles, or depth for aggregate analysis | `perps.createHyperliquidTable`    | Use direct reads for ordinary lookups.                                     |
+| Query the materialized dataset                                      | `perps.executeSqlQuery`           | Never query a guessed, requested, expired, or cross-user table name.       |
 
 Omit provider context for canonical reads. For an enabled HIP-3 venue, pass its returned provider identity only to tools whose schema accepts it. The positions read already consolidates all enabled venues.
 

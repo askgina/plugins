@@ -2,22 +2,25 @@
   "name": "@askgina/plugin-core",
   "version": "0.1.0",
   "license": "Apache-2.0",
-  "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "files": [
     "src",
     "plugin.yaml",
     "skills",
-    "evals",
+    "evals/model/v1/activation.yaml",
+    "evals/model/v1/smoke.yaml",
+    "evals/model/v1/families",
+    "evals/model/v1/fixtures",
     "LICENSE",
     "README.md"
   ],
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "dependencies": {
     "@askgina/contracts": "workspace:*",
     "effect": "4.0.0-rc.111",
-    "yaml": "2.8.2",
+    "yaml": "2.8.3",
     "zod": "4.4.3"
   }
 }
