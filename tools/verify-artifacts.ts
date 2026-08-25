@@ -518,7 +518,7 @@ const lockfileVersionOverrides = (file: string, label: string) =>
       }
       const prefix = `${name}@`;
       if (!resolution[0].startsWith(prefix)) {
-        return yield* fail(`${label} package ${name} has an invalid identity`);
+        continue;
       }
       const version = resolution[0].slice(prefix.length);
       if (SEMVER.test(version)) overrides[name] = version;
