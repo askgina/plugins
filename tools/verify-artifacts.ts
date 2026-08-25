@@ -527,12 +527,19 @@ const cleanInstall = (
           : [name, `file:${path.join(dist, "packages", `askgina-${item.slug}-${version}.tgz`)}`];
       }),
     );
-    const overrides = Object.fromEntries(
-      PACKAGES.filter((item) => item.name !== definition.name).map((item) => [
-        item.name,
-        `file:${path.join(dist, "packages", `askgina-${item.slug}-${version}.tgz`)}`,
-      ]),
+    const rootManifest = yield* readJson(path.join(root, "package.json")).pipe(
+      Effect.flatMap((value) => requiredObject(value, "root package metadata")),
     );
+    const rootOverrides = isObject(rootManifest.overrides) ? rootManifest.overrides : {};
+    const overrides = {
+      ...rootOverrides,
+      ...Object.fromEntries(
+        PACKAGES.filter((item) => item.name !== definition.name).map((item) => [
+          item.name,
+          `file:${path.join(dist, "packages", `askgina-${item.slug}-${version}.tgz`)}`,
+        ]),
+      ),
+    };
     yield* fs
       .writeFileString(
         path.join(project, "package.json"),
