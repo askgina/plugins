@@ -1,0 +1,9 @@
+id: unknown-tool
+polarity: negative
+input:
+  prompt: Generate my crypto tax report.
+expected:
+  outcome: mcp_error
+  scope: "tools:read"
+  tool: gina.getTaxReport
+  error_code: -32000

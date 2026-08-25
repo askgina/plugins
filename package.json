@@ -1,0 +1,29 @@
+{
+  "name": "askgina-plugins",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "packageManager": "bun@1.4.0",
+  "workspaces": ["packages/*", "plugins/ask-gina"],
+  "scripts": {
+    "fmt:check": "vp fmt --check .",
+    "lint": "vp lint --deny-warnings .",
+    "check": "vp check .",
+    "test": "vp run tests",
+    "artifacts": "vp run build-artifacts",
+    "verify:artifacts": "vp run verify-artifacts",
+    "check:public-boundary": "vp run public-boundary",
+    "verify:packages": "bun tools/verify-artifacts.ts --packages",
+    "verify:targets": "bun tools/verify-artifacts.ts --targets",
+    "verify:evals": "bun tools/verify-artifacts.ts --evals"
+  },
+  "devDependencies": {
+    "@effect/platform-bun": "4.0.0-rc.111",
+    "@effect/vitest": "4.0.0-rc.111",
+    "@types/node": "25.6.0",
+    "effect": "4.0.0-rc.111",
+    "typescript": "5.9.3",
+    "vite-plus": "0.3.0",
+    "vitest": "4.1.11"
+  }
+}

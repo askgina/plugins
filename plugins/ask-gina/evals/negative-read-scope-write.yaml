@@ -1,0 +1,17 @@
+id: read-scope-write
+polarity: negative
+input:
+  scope: "tools:read"
+  request:
+    jsonrpc: "2.0"
+    id: read-scope-write
+    method: tools/call
+    params:
+      name: bash
+      arguments:
+        command: "echo write attempt"
+expected:
+  outcome: mcp_error
+  scope: "tools:read"
+  tool: bash
+  error_code: -32000

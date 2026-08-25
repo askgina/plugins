@@ -1,0 +1,18 @@
+{
+  "name": "@askgina/cli",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "ask-gina": "./src/bin.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": ["src", "LICENSE", "README.md"],
+  "dependencies": {
+    "@askgina/sdk": "workspace:*",
+    "@effect/platform-bun": "4.0.0-rc.111",
+    "effect": "4.0.0-rc.111"
+  }
+}

@@ -1,0 +1,7 @@
+name: ask-gina
+version: 0.1.0
+description: Read-only Ask Gina MCP skills for account, spot, Hyperliquid, and prediction-market research.
+mcp:
+  url: https://askgina.ai/ai/gina/mcp
+  scopes:
+    - tools:read

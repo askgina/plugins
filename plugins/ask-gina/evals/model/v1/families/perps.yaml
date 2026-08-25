@@ -1,0 +1,365 @@
+version: 1
+suite:
+  id: ask-gina-model-perps-v1
+  plugin: ask-gina
+  catalog_version: 29-read-tools@2026-08-20
+  description: >-
+    Full-catalog routing cases for the fourteen Hyperliquid account, market,
+    HIP-3, data-fetching, and SQL tools exposed by the Ask Gina listed plugin.
+cases:
+  - id: perps-account
+    category: confusion_pair
+    tags: [perps, account, margin]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Show my raw Hyperliquid account and margin status, including account value and withdrawable balance. Do not list individual positions.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.getHyperliquidAccount
+      safety:
+        forbidden_tools: [perps.getHyperliquidPositions, perps.getHyperliquidPortfolio]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-positions
+    category: confusion_pair
+    tags: [perps, account, positions]
+    manual_priority: required
+    turns:
+      - role: user
+        content: List only my currently open Hyperliquid perpetual positions with size and unrealized PnL.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.getHyperliquidPositions
+      safety:
+        forbidden_tools: [perps.getHyperliquidAccount, perps.getHyperliquidPortfolio]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-open-orders
+    category: direct
+    tags: [perps, account, orders]
+    manual_priority: required
+    turns:
+      - role: user
+        content: List my currently open Hyperliquid orders. Do not place, cancel, or modify an order.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.getHyperliquidOpenOrders
+      safety:
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-portfolio
+    category: confusion_pair
+    tags: [perps, account, portfolio]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Show my month-to-date Hyperliquid PnL, volume, ROE, and account-value history. Do not substitute current balances or open positions.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.getHyperliquidPortfolio
+      arguments:
+        required:
+          period: month
+        allow_additional: true
+      safety:
+        forbidden_tools: [perps.getHyperliquidAccount, perps.getHyperliquidPositions]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-markets
+    category: direct
+    tags: [perps, markets, canonical]
+    manual_priority: required
+    turns:
+      - role: user
+        content: List the canonical Hyperliquid perpetual markets available for trading. Do not include HIP-3 venue discovery.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.getHyperliquidMarkets
+      safety:
+        forbidden_tools: [perps.getHyperliquidPerpDexes]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-single-price
+    category: confusion_pair
+    tags: [perps, price, single]
+    manual_priority: required
+    turns:
+      - role: user
+        content: What is the current Hyperliquid mark price for BTC only?
+    expected:
+      routing:
+        kind: exact
+        tool: perps.getHyperliquidPrice
+      safety:
+        forbidden_tools: [perps.getHyperliquidPrices]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-multiple-prices
+    category: confusion_pair
+    tags: [perps, price, multiple]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Show the current Hyperliquid mark prices for BTC, ETH, and SOL in one request.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.getHyperliquidPrices
+      safety:
+        forbidden_tools: [perps.getHyperliquidPrice]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-asset-data
+    category: direct
+    tags: [perps, asset, leverage, trading-capacity]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Show my authenticated BTC leverage setting, maximum trade sizes, and available-to-trade capacity on canonical Hyperliquid. This is not a general market-metadata request.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.getHyperliquidAssetData
+      safety:
+        forbidden_tools: [perps.getHyperliquidPrice]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-search-hip3-markets
+    category: confusion_pair
+    tags: [perps, hip3, search]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Search canonical Hyperliquid and HIP-3 markets for tickers or names related to artificial intelligence.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.getHyperliquidMarkets
+      arguments:
+        required:
+          query: artificial intelligence
+        allow_additional: true
+      safety:
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-hip3-dexes
+    category: confusion_pair
+    tags: [perps, hip3, dexes]
+    manual_priority: required
+    turns:
+      - role: user
+        content: List the HIP-3 builder-deployed perpetual DEX venues and their provider metadata, not the markets on one venue.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.getHyperliquidPerpDexes
+      safety:
+        forbidden_tools: [perps.getHyperliquidMarkets]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-hip3-markets
+    category: confusion_pair
+    tags: [perps, hip3, markets, xyz]
+    manual_priority: required
+    turns:
+      - role: user
+        content: List all HIP-3 markets on the xyz DEX venue. Do not list every HIP-3 DEX.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.getHyperliquidMarkets
+      arguments:
+        required:
+          providerContext:
+            providerId: hip3:xyz
+        allow_additional: true
+      safety:
+        forbidden_tools: [perps.getHyperliquidPerpDexes]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-hip3-price
+    category: direct
+    tags: [perps, hip3, price, xyz]
+    manual_priority: required
+    turns:
+      - role: user
+        content: What is the current HIP-3 price of CL on the xyz DEX venue?
+    expected:
+      routing:
+        kind: exact
+        tool: perps.getHyperliquidPrice
+      arguments:
+        required:
+          coin: CL
+          providerContext:
+            providerId: hip3:xyz
+        allow_additional: true
+      safety:
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-fetch-trades
+    category: direct
+    tags: [perps, data, trades, btc]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Fetch bounded rows for my recent canonical Hyperliquid BTC fills. I need individual fills, not positions, candles, an order book, or a queryable table.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.fetchHyperliquidTrades
+      safety:
+        forbidden_tools: [perps.fetchHyperliquidCandles, perps.fetchHyperliquidOrderBook]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-fetch-candles
+    category: direct
+    tags: [perps, data, candles, btc]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Fetch hourly OHLCV candles for the Hyperliquid BTC perpetual as a dataset. Do not fetch individual trades.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.fetchHyperliquidCandles
+      safety:
+        forbidden_tools: [perps.fetchHyperliquidTrades]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-fetch-order-book
+    category: direct
+    tags: [perps, data, orderbook, btc]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Fetch bounded current canonical Hyperliquid BTC order-book rows. Do not fetch trades or candles, imply HIP-3 support, or claim a queryable table was created.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.fetchHyperliquidOrderBook
+      safety:
+        forbidden_tools: [perps.fetchHyperliquidTrades, perps.fetchHyperliquidCandles]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-create-table
+    category: direct
+    tags: [perps, data, table, candles]
+    manual_priority: candidate
+    turns:
+      - role: user
+        content: Create a provider-aware Hyperliquid BTC hourly-candles analytics table named eval_btc_candles. Return its exact created table name, but do not query it yet.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.createHyperliquidTable
+      safety:
+        forbidden_tools: [perps.executeSqlQuery]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-create-and-query-table
+    category: follow_up
+    tags: [perps, data, table, sql, sequence]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Create a provider-aware Hyperliquid BTC hourly-candles table named eval_btc_candle_stats, then use the exact returned tableName to query its minimum low, maximum high, and average volume.
+    expected:
+      routing:
+        kind: sequence
+        tools:
+          - perps.createHyperliquidTable
+          - perps.executeSqlQuery
+      safety:
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded

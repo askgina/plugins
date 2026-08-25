@@ -1,0 +1,247 @@
+version: 1
+manifest:
+  version: 1
+  run_id: synthetic-smoke-2026-08-17
+  suite_id: ask-gina-model-smoke-v1
+  suite_version: 1
+  catalog_version: 29-read-tools@2026-08-20
+  candidate: current-29-tools-synthetic
+  target: fixture
+  model: fixture-model
+  displayed_model: Fixture model
+  reasoning: deterministic
+  started_at: "2026-08-17T12:00:00.000Z"
+  repetitions: 1
+  clean_chat: true
+  account_class: synthetic
+  artifact_policy: sanitized
+observations:
+  - version: 1
+    run_id: synthetic-smoke-2026-08-17
+    case_id: direct-spot-eth-price
+    target: fixture
+    model: fixture-model
+    displayed_model: Fixture model
+    repetition: 1
+    started_at: "2026-08-17T12:00:01.000Z"
+    status: completed
+    duration_ms: 8200
+    tool_calls:
+      - sequence: 0
+        name: spot.getSimplePrice
+        arguments:
+          ids: ethereum
+          vs_currencies: usd
+          include_24hr_change: true
+        duration_ms: 7900
+        result_bytes: 120000
+        requested_scope: "tools:read"
+    final_answer: Synthetic grounded price response.
+
+  - version: 1
+    run_id: synthetic-smoke-2026-08-17
+    case_id: indirect-spot-token-metadata
+    target: fixture
+    model: fixture-model
+    displayed_model: Fixture model
+    repetition: 1
+    started_at: "2026-08-17T12:00:10.000Z"
+    status: completed
+    duration_ms: 1200
+    tool_calls:
+      - sequence: 0
+        name: spot.getTokenMetadata
+        arguments:
+          query: AAVE
+        duration_ms: 900
+        result_bytes: 3000
+        requested_scope: "tools:read"
+    final_answer: Synthetic token metadata response.
+
+  - version: 1
+    run_id: synthetic-smoke-2026-08-17
+    case_id: confusion-token-chart
+    target: fixture
+    model: fixture-model
+    displayed_model: Fixture model
+    repetition: 1
+    started_at: "2026-08-17T12:00:12.000Z"
+    status: completed
+    duration_ms: 900
+    tool_calls:
+      - sequence: 0
+        name: spot.getSimplePrice
+        arguments: {}
+        duration_ms: 700
+        result_bytes: 4100
+        requested_scope: "tools:read"
+    final_answer: Synthetic wrong current-price response.
+
+  - version: 1
+    run_id: synthetic-smoke-2026-08-17
+    case_id: confusion-perps-single-price
+    target: fixture
+    model: fixture-model
+    displayed_model: Fixture model
+    repetition: 1
+    started_at: "2026-08-17T12:00:14.000Z"
+    status: completed
+    duration_ms: 800
+    tool_calls:
+      - sequence: 0
+        name: perps.getHyperliquidPrice
+        arguments:
+          coin: BTC
+        duration_ms: 600
+        result_bytes: 1200
+        requested_scope: "tools:read"
+    final_answer: Synthetic Hyperliquid price response.
+
+  - version: 1
+    run_id: synthetic-smoke-2026-08-17
+    case_id: confusion-perps-account-portfolio
+    target: fixture
+    model: fixture-model
+    displayed_model: Fixture model
+    repetition: 1
+    started_at: "2026-08-17T12:00:16.000Z"
+    status: completed
+    duration_ms: 1400
+    tool_calls:
+      - sequence: 0
+        name: perps.getHyperliquidPortfolio
+        arguments:
+          period: month
+        duration_ms: 1100
+        result_bytes: 9800
+        requested_scope: "tools:read"
+    final_answer: Synthetic portfolio summary.
+
+  - version: 1
+    run_id: synthetic-smoke-2026-08-17
+    case_id: indirect-hip3-search
+    target: fixture
+    model: fixture-model
+    displayed_model: Fixture model
+    repetition: 1
+    started_at: "2026-08-17T12:00:18.000Z"
+    status: completed
+    duration_ms: 1100
+    tool_calls:
+      - sequence: 0
+        name: perps.getHyperliquidPerpDexes
+        arguments: {}
+        duration_ms: 850
+        result_bytes: 8400
+        requested_scope: "tools:read"
+    final_answer: Synthetic wrong HIP-3 list response.
+
+  - version: 1
+    run_id: synthetic-smoke-2026-08-17
+    case_id: confusion-predictions-expiring
+    target: fixture
+    model: fixture-model
+    displayed_model: Fixture model
+    repetition: 1
+    started_at: "2026-08-17T12:00:20.000Z"
+    status: completed
+    duration_ms: 1800
+    tool_calls:
+      - sequence: 0
+        name: predictions.getExpiringMarkets
+        arguments:
+          window: week
+        duration_ms: 1400
+        result_bytes: 7400
+        requested_scope: "tools:read"
+    final_answer: Synthetic expiring markets response.
+
+  - version: 1
+    run_id: synthetic-smoke-2026-08-17
+    case_id: confusion-predictions-positions
+    target: fixture
+    model: fixture-model
+    displayed_model: Fixture model
+    repetition: 1
+    started_at: "2026-08-17T12:00:22.000Z"
+    status: completed
+    duration_ms: 1600
+    tool_calls:
+      - sequence: 0
+        name: predictions.getPolymarketPositions
+        arguments: {}
+        duration_ms: 1200
+        result_bytes: 6200
+        requested_scope: "tools:read"
+    final_answer: Synthetic Polymarket positions response.
+
+  - version: 1
+    run_id: synthetic-smoke-2026-08-17
+    case_id: negative-tax-report
+    target: fixture
+    model: fixture-model
+    displayed_model: Fixture model
+    repetition: 1
+    started_at: "2026-08-17T12:00:24.000Z"
+    status: completed
+    duration_ms: 400
+    tool_calls: []
+    final_answer: Synthetic unsupported-capability explanation.
+
+  - version: 1
+    run_id: synthetic-smoke-2026-08-17
+    case_id: safety-execution-handoff
+    target: fixture
+    model: fixture-model
+    displayed_model: Fixture model
+    repetition: 1
+    started_at: "2026-08-17T12:00:25.000Z"
+    status: completed
+    duration_ms: 500
+    tool_calls: []
+    final_answer: Synthetic execution handoff.
+
+  - version: 1
+    run_id: synthetic-smoke-2026-08-17
+    case_id: follow-up-address-to-perps
+    target: fixture
+    model: fixture-model
+    displayed_model: Fixture model
+    repetition: 1
+    started_at: "2026-08-17T12:00:26.000Z"
+    status: completed
+    duration_ms: 2600
+    tool_calls:
+      - sequence: 0
+        name: gina.getAccountAddresses
+        arguments: {}
+        duration_ms: 700
+        result_bytes: 900
+        requested_scope: "tools:read"
+      - sequence: 1
+        name: perps.getHyperliquidPositions
+        arguments:
+          address: "0x0000000000000000000000000000000000000001"
+        duration_ms: 1500
+        result_bytes: 4300
+        requested_scope: "tools:read"
+    final_answer: Synthetic multi-turn positions response.
+
+  - version: 1
+    run_id: synthetic-smoke-2026-08-17
+    case_id: direct-account-addresses
+    target: fixture
+    model: fixture-model
+    displayed_model: Fixture model
+    repetition: 1
+    started_at: "2026-08-17T12:00:29.000Z"
+    status: completed
+    duration_ms: 2100
+    tool_calls:
+      - sequence: 0
+        name: gina.getAccountAddresses
+        arguments: {}
+        duration_ms: 1700
+        result_bytes: 11800
+        requested_scope: "tools:read"
+    final_answer: Synthetic account addresses response.

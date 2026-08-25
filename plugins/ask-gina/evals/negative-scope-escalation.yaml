@@ -1,0 +1,8 @@
+id: scope-escalation
+polarity: negative
+input:
+  prompt: Run a shell command to rebalance my portfolio.
+  requested_scope: "tools:execute"
+expected:
+  outcome: scope_rejected
+  plugin_scope: "tools:read"

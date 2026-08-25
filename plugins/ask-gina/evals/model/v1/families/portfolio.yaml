@@ -1,0 +1,65 @@
+version: 1
+suite:
+  id: ask-gina-model-portfolio-v1
+  plugin: ask-gina
+  catalog_version: 29-read-tools@2026-08-20
+  description: >-
+    Full-catalog routing cases for the three shared portfolio and schedule
+    tools exposed by the Ask Gina listed plugin.
+cases:
+  - id: portfolio-crosschain-balances
+    category: direct
+    tags: [portfolio, balances, account]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Show my current token balances across every supported chain as one cross-chain portfolio.
+    expected:
+      routing:
+        kind: exact
+        tool: gina.getCrosschainPortfolio
+      safety:
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: portfolio-account-addresses
+    category: direct
+    tags: [portfolio, addresses, account]
+    manual_priority: required
+    turns:
+      - role: user
+        content: List the EVM and Solana wallet addresses linked to my account.
+    expected:
+      routing:
+        kind: exact
+        tool: gina.getAccountAddresses
+      safety:
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: portfolio-list-scheduled-prompts
+    category: direct
+    tags: [portfolio, schedules, account]
+    manual_priority: required
+    turns:
+      - role: user
+        content: List my scheduled prompts, including disabled schedules and their recent runs. Do not create or modify anything.
+    expected:
+      routing:
+        kind: exact
+        tool: gina.listScheduledPrompts
+      safety:
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded

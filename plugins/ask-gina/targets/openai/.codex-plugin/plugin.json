@@ -1,0 +1,35 @@
+{
+  "name": "ask-gina",
+  "version": "0.1.0",
+  "description": "Read-only Ask Gina skills for account and market research.",
+  "author": {
+    "name": "Ask Gina",
+    "url": "https://askgina.ai"
+  },
+  "homepage": "https://askgina.ai",
+  "repository": "https://github.com/askgina/plugins",
+  "license": "Apache-2.0",
+  "keywords": ["crypto", "portfolio", "market-data", "hyperliquid", "polymarket"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Ask Gina",
+    "shortDescription": "Accounts, markets, and charts",
+    "longDescription": "Ask Gina provides read-only research across your linked account, spot tokens, Hyperliquid and HIP-3 perpetuals, and Polymarket prediction markets. Use it to inspect wallets, schedules, token prices and charts, positions, orders, performance, markets, and history. Ask Gina cannot place trades, transfer assets, change leverage, redeem positions, or create automations inside ChatGPT or Codex. When you ask to take action, it can provide a link to continue securely on Ask Gina.",
+    "developerName": "Ask Gina",
+    "category": "Finance",
+    "capabilities": ["Interactive", "Read"],
+    "websiteURL": "https://askgina.ai",
+    "privacyPolicyURL": "https://askgina.ai/privacy-policy",
+    "termsOfServiceURL": "https://askgina.ai/terms-and-conditions",
+    "defaultPrompt": [
+      "Show my linked wallets and cross-chain portfolio.",
+      "Chart ETH's price over the past week.",
+      "Which prediction markets are resolving soon?"
+    ],
+    "brandColor": "#B50D00",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/icon.svg",
+    "screenshots": []
+  }
+}
