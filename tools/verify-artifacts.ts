@@ -47,7 +47,7 @@ const PACKAGES = [
     slug: "evals",
     name: "@askgina/evals",
     directory: "packages/evals",
-    internal: ["@askgina/contracts", "@askgina/plugin-core"],
+    internal: ["@askgina/contracts", "@askgina/plugin-core", "@askgina/sdk"],
   },
 ];
 const TARGET_MANIFESTS: Readonly<Record<string, string>> = {
