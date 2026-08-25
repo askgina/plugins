@@ -282,7 +282,10 @@ const validateMcp = (target: TargetName, manifest: unknown): boolean => {
   ) {
     return false;
   }
-  return nested(server, "type") === (target === "openai" ? "http" : "streamable-http");
+  return (
+    nested(server, "type") ===
+    (target === "openai" || target === "claude" ? "http" : "streamable-http")
+  );
 };
 
 const defaultPackageRootFor = (paths: Path.Path): string =>

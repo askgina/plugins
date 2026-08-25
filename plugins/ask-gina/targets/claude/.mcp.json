@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "gina": {
-      "type": "streamable-http",
+      "type": "http",
       "url": "https://askgina.ai/ai/gina/mcp"
     }
   }
