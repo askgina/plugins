@@ -112,6 +112,17 @@ describe("pack artifact source snapshot", () => {
           const path = yield* Path.Path;
           const fixture = yield* repositoryFixture;
           const relative = "plugins/ask-gina/ignored-wrapper";
+          yield* fs.makeDirectory(
+            path.join(fixture.root, "packages/contracts/node_modules/synthetic-dependency"),
+            { recursive: true },
+          );
+          yield* fs.writeFileString(
+            path.join(
+              fixture.root,
+              "packages/contracts/node_modules/synthetic-dependency/index.js",
+            ),
+            "export {};\n",
+          );
           const executable = path.join(fixture.root, relative);
           yield* fs.writeFileString(executable, `#!/bin/sh\ntouch '${fixture.impact}'\n`);
           yield* fs.chmod(executable, 0o755);

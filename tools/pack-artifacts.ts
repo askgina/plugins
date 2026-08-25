@@ -397,7 +397,9 @@ const assertLiveSourceBoundary = (root: string, snapshot: string) =>
           .readDirectory(live)
           .pipe(Effect.mapError((cause) => fail(`cannot list ${relative}`, cause)));
         yield* Effect.forEach(names.sort(), (name) =>
-          visit(path.join(live, name), path.join(committed, name), `${relative}/${name}`),
+          name === "node_modules"
+            ? Effect.void
+            : visit(path.join(live, name), path.join(committed, name), `${relative}/${name}`),
         );
       });
     yield* Effect.forEach(PACKAGES, (definition) =>
