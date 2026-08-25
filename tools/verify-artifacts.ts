@@ -16,7 +16,11 @@ import {
   Stream,
 } from "effect";
 
-import { runHermeticEvalReplay, sanitizeEvalAggregate } from "../packages/evals/src/index.js";
+import {
+  runHermeticEvalReplay,
+  sanitizeEvalAggregate,
+  sanitizeEvalReplay,
+} from "../packages/evals/src/index.js";
 import { copyCheckedRegularFile, extractCheckedTarGz } from "./archive-security.js";
 import { checkGeneratedTargetConformance } from "./check-target-conformance.js";
 import { buildArtifacts } from "./pack-artifacts.js";
@@ -925,39 +929,9 @@ const verifyEvals = (
     if (stableJson(sanitizedAggregate) !== stableJson(aggregate)) {
       return yield* fail("eval aggregate is not canonical");
     }
-    const overall = result.report.overall;
-    const regenerated = yield* sanitizeEvalAggregate(
-      {
-        schemaVersion: "v1",
-        suiteId: result.suiteId,
-        suiteVersion: result.suiteVersion,
-        fixtureVersion: result.fixtureVersion,
-        catalogSha: result.catalogSha,
-        overall: { passed: overall.passed, total: overall.passed + overall.failed },
-        dimensions: {
-          routing: {
-            passed: result.report.routing.passed,
-            failed: result.report.routing.failed,
-          },
-          arguments: {
-            passed: result.report.arguments.passed,
-            failed: result.report.arguments.failed,
-          },
-          safety: {
-            passed: result.report.safety.passed,
-            failed: result.report.safety.failed,
-          },
-          completion: {
-            passed: result.report.completion.passed,
-            failed: result.report.completion.failed,
-          },
-        },
-        latencyMs: result.report.latency_ms,
-        totalResultBytes: result.report.total_result_bytes,
-        artifactPolicy: "sanitized",
-      },
-      expected,
-    ).pipe(Effect.mapError((cause) => fail("hermetic eval sanitization failed", cause)));
+    const regenerated = yield* sanitizeEvalReplay(result).pipe(
+      Effect.mapError((cause) => fail("hermetic eval sanitization failed", cause)),
+    );
     if (stableJson(regenerated) !== stableJson(aggregate)) {
       return yield* fail("evals receipt does not match hermetic replay");
     }

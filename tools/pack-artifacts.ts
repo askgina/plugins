@@ -5,7 +5,7 @@ import * as BunServices from "@effect/platform-bun/BunServices";
 import { ChildProcess } from "effect/unstable/process";
 import { Crypto, Data, Effect, FileSystem, Layer, Path, Schema, Stream } from "effect";
 
-import { runHermeticEvalReplay, sanitizeEvalAggregate } from "../packages/evals/src/index.js";
+import { runHermeticEvalReplay, sanitizeEvalReplay } from "../packages/evals/src/index.js";
 import { copyCheckedRegularFile } from "./archive-security.js";
 import { checkGeneratedTargetConformance } from "./check-target-conformance.js";
 
@@ -456,54 +456,9 @@ const buildEvalReceipt = (root: string, version: string, sourceCommit: string) =
         "plugins/ask-gina/evals/model/v1/fixtures/synthetic-observations.yaml",
       ),
     }).pipe(Effect.mapError((cause) => fail("hermetic eval replay failed", cause)));
-    const overall = result.report.overall;
-    const aggregate = yield* sanitizeEvalAggregate(
-      {
-        schemaVersion: "v1",
-        suiteId: result.suiteId,
-        suiteVersion: result.suiteVersion,
-        fixtureVersion: result.fixtureVersion,
-        catalogSha: result.catalogSha,
-        overall: { passed: overall.passed, total: overall.passed + overall.failed },
-        dimensions: {
-          routing: {
-            passed: result.report.routing.passed,
-            failed: result.report.routing.failed,
-          },
-          arguments: {
-            passed: result.report.arguments.passed,
-            failed: result.report.arguments.failed,
-          },
-          safety: {
-            passed: result.report.safety.passed,
-            failed: result.report.safety.failed,
-          },
-          completion: {
-            passed: result.report.completion.passed,
-            failed: result.report.completion.failed,
-          },
-        },
-        skillActivation: {
-          passed: result.report.skill_activation.passed,
-          failed: result.report.skill_activation.failed,
-        },
-        latencyMs: result.report.latency_ms,
-        totalResultBytes: result.report.total_result_bytes,
-        tokenUsage: {
-          observations: result.report.token_usage.observations,
-          inputTokens: result.report.token_usage.input_tokens,
-          outputTokens: result.report.token_usage.output_tokens,
-          totalTokens: result.report.token_usage.total_tokens,
-        },
-        artifactPolicy: "sanitized",
-      },
-      {
-        suiteId: result.suiteId,
-        suiteVersion: result.suiteVersion,
-        fixtureVersion: result.fixtureVersion,
-        catalogSha: result.catalogSha,
-      },
-    ).pipe(Effect.mapError((cause) => fail("hermetic eval sanitization failed", cause)));
+    const aggregate = yield* sanitizeEvalReplay(result).pipe(
+      Effect.mapError((cause) => fail("hermetic eval sanitization failed", cause)),
+    );
     if (RAW_EVAL_FIELDS.test(stableJson(aggregate))) {
       return yield* fail("eval sanitizer emitted a forbidden aggregate");
     }
