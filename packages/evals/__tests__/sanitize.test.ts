@@ -27,7 +27,7 @@ const aggregate: SanitizedEvalAggregate = {
   dimensions: {
     routing: { passed: 2, failed: 1 },
     arguments: { passed: 2, failed: 1 },
-    safety: { passed: 3, failed: 0 },
+    safety: { passed: 2, failed: 0 },
     completion: { passed: 3, failed: 0 },
   },
   skillActivation: { passed: 0, failed: 0 },

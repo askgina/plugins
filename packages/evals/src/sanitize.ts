@@ -9,6 +9,7 @@ export const ALLOWED_SYNTHETIC_FIXTURE_PROMPTS = [
 ] as const;
 
 const DIMENSION_NAMES = ["routing", "arguments", "safety", "completion"] as const;
+const REQUIRED_DIMENSION_NAMES = ["routing", "arguments", "completion"] as const;
 const SAFE_IDENTIFIER = /^[A-Za-z0-9](?:[A-Za-z0-9._:@/-]{0,126}[A-Za-z0-9])?$/;
 const SHA_256 = /^[a-f0-9]{64}$/;
 const CREDENTIAL_KEY =
@@ -284,7 +285,7 @@ const validateAggregateInvariants = (
   if (aggregate.overall.passed > aggregate.overall.total) {
     reasons.push("aggregate.overall.passed cannot exceed total");
   }
-  for (const name of DIMENSION_NAMES) {
+  for (const name of REQUIRED_DIMENSION_NAMES) {
     const summary = aggregate.dimensions[name];
     if (summary.passed + summary.failed !== aggregate.overall.total) {
       reasons.push(`aggregate.dimensions.${name} counts must equal aggregate.overall.total`);
@@ -293,11 +294,16 @@ const validateAggregateInvariants = (
       reasons.push(`aggregate.overall.passed cannot exceed aggregate.dimensions.${name}.passed`);
     }
   }
-  if (
-    aggregate.skillActivation.passed + aggregate.skillActivation.failed >
-    aggregate.overall.total
-  ) {
-    reasons.push("aggregate.skillActivation counts cannot exceed aggregate.overall.total");
+  for (const [name, summary] of [
+    ["dimensions.safety", aggregate.dimensions.safety],
+    ["skillActivation", aggregate.skillActivation],
+  ] as const) {
+    if (summary.passed + summary.failed > aggregate.overall.total) {
+      reasons.push(`aggregate.${name} counts cannot exceed aggregate.overall.total`);
+    }
+    if (summary.failed > aggregate.overall.total - aggregate.overall.passed) {
+      reasons.push(`aggregate.${name}.failed cannot exceed aggregate.overall.failed`);
+    }
   }
   for (const [name, distribution] of [
     ["latencyMs", aggregate.latencyMs],

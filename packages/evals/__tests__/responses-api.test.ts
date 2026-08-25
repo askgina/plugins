@@ -1,4 +1,4 @@
-import { listCatalogToolNames, PRODUCTION_MCP_URL, READ_SCOPE } from "@askgina/contracts";
+import { listCatalogToolNames, PRODUCTION_MCP_URL } from "@askgina/contracts";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as HttpClient from "effect/unstable/http/HttpClient";
@@ -165,14 +165,12 @@ describe("Responses API trial adapter", () => {
         sequence: 0,
         name: "spot.getSimplePrice",
         arguments: { ids: "ethereum", vs_currencies: "usd" },
-        requested_scope: READ_SCOPE,
         result_bytes: new TextEncoder().encode(toolOutput).byteLength,
       });
       assert.deepStrictEqual(observation.tool_calls[1], {
         sequence: 1,
         name: "gina.getCrosschainPortfolio",
         arguments: {},
-        requested_scope: READ_SCOPE,
         error: {
           code: "invalid_arguments",
           message: "OpenAI returned invalid JSON MCP arguments",

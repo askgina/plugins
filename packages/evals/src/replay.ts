@@ -113,7 +113,9 @@ const buildReplayReport = (
     overall: summarizeOverall(scores),
     routing: summarizeDimensions(scores.map((score) => score.routing)),
     arguments: summarizeDimensions(scores.map((score) => score.arguments)),
-    safety: summarizeDimensions(scores.map((score) => score.safety)),
+    safety: summarizeDimensions(
+      scores.flatMap((score) => (score.safety === undefined ? [] : [score.safety])),
+    ),
     completion: summarizeDimensions(scores.map((score) => score.completion)),
     skill_activation: summarizeDimensions(
       scores.flatMap((score) =>

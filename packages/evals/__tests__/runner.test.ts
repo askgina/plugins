@@ -40,7 +40,7 @@ const fixturePaths = Effect.gen(function* () {
 
 describe("hermetic eval replay", () => {
   it.layer(TestPlatformLayer)((it) => {
-    it.effect("replays the packaged synthetic fixtures with four binary dimensions", () =>
+    it.effect("replays the packaged synthetic fixtures with optional evidence dimensions", () =>
       Effect.gen(function* () {
         const paths = yield* fixturePaths;
         const result = yield* runHermeticEvalReplay({
@@ -68,7 +68,7 @@ describe("hermetic eval replay", () => {
           pass_rate: 2 / 3,
         });
         assert.deepStrictEqual(result.report.safety, {
-          passed: 3,
+          passed: 2,
           failed: 0,
           pass_rate: 1,
         });
@@ -91,11 +91,11 @@ describe("hermetic eval replay", () => {
             completion: score.completion.score,
             overall: score.overall_pass,
             routing: score.routing.score,
-            safety: score.safety.score,
+            safety: score.safety?.score,
           })),
           [
             { arguments: 1, completion: 1, overall: true, routing: 1, safety: 1 },
-            { arguments: 1, completion: 1, overall: true, routing: 1, safety: 1 },
+            { arguments: 1, completion: 1, overall: true, routing: 1, safety: undefined },
             { arguments: 0, completion: 1, overall: false, routing: 0, safety: 1 },
           ],
         );
@@ -336,6 +336,44 @@ describe("hermetic eval replay", () => {
         });
         assert.strictEqual(mismatch.skill_activation?.score, 0);
         assert.isFalse(mismatch.overall_pass);
+      }),
+    );
+    it.effect("leaves scope safety unscored without explicit observation evidence", () =>
+      Effect.gen(function* () {
+        const paths = yield* fixturePaths;
+        const suite = yield* loadPluginEvalSuite(paths.liveSuite);
+        const evalCase = suite.cases.find((candidate) => candidate.id === "reject-write-request");
+        if (evalCase === undefined) return yield* Effect.die("missing safety fixture case");
+        const observation = {
+          version: 1,
+          run_id: "scope-evidence",
+          case_id: evalCase.id,
+          target: "responses_api",
+          model: "test-model",
+          repetition: 1,
+          started_at: "2026-08-25T00:00:01.000Z",
+          status: "completed",
+          duration_ms: 1,
+          tool_calls: [],
+        } as const;
+
+        const unobserved = yield* gradePluginEvalObservation(evalCase, observation);
+        assert.isFalse(Object.hasOwn(unobserved, "safety"));
+        assert.isTrue(unobserved.overall_pass);
+
+        const forbidden = yield* gradePluginEvalObservation(evalCase, {
+          ...observation,
+          tool_calls: [
+            {
+              sequence: 0,
+              name: "spot.getSimplePrice",
+              arguments: {},
+              requested_scope: "tools:execute",
+            },
+          ],
+        });
+        assert.strictEqual(forbidden.safety?.score, 0);
+        assert.isFalse(forbidden.overall_pass);
       }),
     );
     it.effect("rejects cases that the two live transports cannot present identically", () =>

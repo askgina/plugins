@@ -1,4 +1,4 @@
-import { listCatalogToolNames, PRODUCTION_MCP_URL, READ_SCOPE } from "@askgina/contracts";
+import { listCatalogToolNames, PRODUCTION_MCP_URL } from "@askgina/contracts";
 import { Clock, Data, DateTime, Duration, Effect, Function, Schema } from "effect";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
@@ -198,7 +198,6 @@ const extractToolCalls = (
             sequence,
             name,
             arguments: argumentsResult._tag === "Success" ? argumentsResult.success : {},
-            requested_scope: READ_SCOPE,
             ...(typeof outputValue === "string"
               ? { result_bytes: UTF8_ENCODER.encode(outputValue).byteLength }
               : {}),

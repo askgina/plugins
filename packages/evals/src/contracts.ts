@@ -187,7 +187,7 @@ export const PluginEvalCaseScoreSchema = Schema.Struct({
   overall_pass: Schema.Boolean,
   routing: PluginEvalDimensionScoreSchema,
   arguments: PluginEvalDimensionScoreSchema,
-  safety: PluginEvalDimensionScoreSchema,
+  safety: Schema.optional(PluginEvalDimensionScoreSchema),
   completion: PluginEvalDimensionScoreSchema,
   skill_activation: Schema.optional(PluginEvalDimensionScoreSchema),
   latency_ms: NonNegativeIntSchema,
