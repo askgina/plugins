@@ -117,6 +117,18 @@ const requiredString = (value: unknown, label: string) =>
   typeof value === "string" && value.length > 0
     ? Effect.succeed(value)
     : Effect.fail(fail(`${label} must be a non-empty string`));
+const requiredStringRecord = (value: unknown, label: string) =>
+  Effect.gen(function* () {
+    const object = yield* requiredObject(value, label);
+    const result: Record<string, string> = {};
+    for (const [key, entry] of Object.entries(object)) {
+      if (typeof entry !== "string" || entry.length === 0) {
+        return yield* fail(`${label}.${key} must be a non-empty string`);
+      }
+      result[key] = entry;
+    }
+    return result;
+  });
 const verifySourceDirty = (value: unknown, expected: boolean, label: string) =>
   typeof value === "boolean" && value === expected
     ? Effect.void
@@ -492,6 +504,27 @@ const proveExternalGraph = (rootLockFile: string, isolatedLockFile: string, labe
       }
     }
   });
+const lockfileVersionOverrides = (file: string, label: string) =>
+  Effect.gen(function* () {
+    const lock = yield* readJsonc(file).pipe(
+      Effect.flatMap((value) => requiredObject(value, label)),
+    );
+    const packages = yield* requiredObject(lock.packages, `${label} packages`);
+    const overrides: Record<string, string> = {};
+    for (const [name, resolution] of Object.entries(packages)) {
+      if (name.startsWith("@askgina/")) continue;
+      if (!Array.isArray(resolution) || typeof resolution[0] !== "string") {
+        return yield* fail(`${label} package ${name} has an invalid resolution`);
+      }
+      const prefix = `${name}@`;
+      if (!resolution[0].startsWith(prefix)) {
+        return yield* fail(`${label} package ${name} has an invalid identity`);
+      }
+      const version = resolution[0].slice(prefix.length);
+      if (SEMVER.test(version)) overrides[name] = version;
+    }
+    return overrides;
+  });
 
 const cleanInstall = (
   definition: PackageDefinition,
@@ -530,8 +563,16 @@ const cleanInstall = (
     const rootManifest = yield* readJson(path.join(root, "package.json")).pipe(
       Effect.flatMap((value) => requiredObject(value, "root package metadata")),
     );
-    const rootOverrides = isObject(rootManifest.overrides) ? rootManifest.overrides : {};
+    const rootOverrides = yield* requiredStringRecord(
+      rootManifest.overrides ?? {},
+      "root package overrides",
+    );
+    const rootLockOverrides = yield* lockfileVersionOverrides(
+      path.join(root, "bun.lock"),
+      "root bun.lock",
+    );
     const overrides = {
+      ...rootLockOverrides,
       ...rootOverrides,
       ...Object.fromEntries(
         PACKAGES.filter((item) => item.name !== definition.name).map((item) => [
