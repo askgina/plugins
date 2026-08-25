@@ -207,8 +207,8 @@ const gradeSkillActivation = (
   observation: PluginEvalObservation,
 ): PluginEvalDimensionScore | undefined => {
   const expectation = evalCase.expected.skill;
-  if (expectation === undefined) return undefined;
-  const activated = observation.activated_skills ?? [];
+  if (expectation === undefined || observation.activated_skills === undefined) return undefined;
+  const activated = observation.activated_skills;
   const passed =
     expectation.kind === "none"
       ? activated.length === 0
@@ -247,6 +247,7 @@ export const gradePluginEvalObservation = Function.dual<
     const completion = gradeCompletion(observation);
     const skillActivation = gradeSkillActivation(evalCase, observation);
     const dimensions = [routing, argumentsScore, safety, completion];
+    if (skillActivation !== undefined) dimensions.push(skillActivation);
 
     return {
       case_id: evalCase.id,

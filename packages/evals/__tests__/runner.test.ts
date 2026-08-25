@@ -301,6 +301,43 @@ describe("hermetic eval replay", () => {
         assert.deepStrictEqual(report.aggregate.dimensions.routing, { passed: 3, failed: 0 });
       }),
     );
+    it.effect("scores skill activation only when observation evidence is present", () =>
+      Effect.gen(function* () {
+        const paths = yield* fixturePaths;
+        const suite = yield* loadPluginEvalSuite(paths.liveSuite);
+        const evalCase = suite.cases[0];
+        if (evalCase === undefined) return yield* Effect.die("missing fixture case");
+        const observation = {
+          version: 1,
+          run_id: "skill-evidence",
+          case_id: evalCase.id,
+          target: "responses_api",
+          model: "test-model",
+          repetition: 1,
+          started_at: "2026-08-25T00:00:01.000Z",
+          status: "completed",
+          duration_ms: 1,
+          tool_calls: [
+            {
+              sequence: 0,
+              name: "gina.listScheduledPrompts",
+              arguments: {},
+            },
+          ],
+        } as const;
+
+        const unobserved = yield* gradePluginEvalObservation(evalCase, observation);
+        assert.isFalse(Object.hasOwn(unobserved, "skill_activation"));
+        assert.isTrue(unobserved.overall_pass);
+
+        const mismatch = yield* gradePluginEvalObservation(evalCase, {
+          ...observation,
+          activated_skills: ["research-spot-tokens"],
+        });
+        assert.strictEqual(mismatch.skill_activation?.score, 0);
+        assert.isFalse(mismatch.overall_pass);
+      }),
+    );
     it.effect("rejects cases that the two live transports cannot present identically", () =>
       Effect.gen(function* () {
         const paths = yield* fixturePaths;

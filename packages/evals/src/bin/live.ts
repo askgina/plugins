@@ -405,7 +405,7 @@ const setupCodexRuntime = (
       !isJsonObject(mcpServers) ||
       !isJsonObject(ginaServer) ||
       Object.keys(mcpServers).length !== 1 ||
-      ginaServer.type !== "streamable-http" ||
+      ginaServer.type !== "http" ||
       ginaServer.url !== PRODUCTION_MCP_URL
     ) {
       return yield* new LiveEvalCliError({ reason: "codex-preflight-failed" });
