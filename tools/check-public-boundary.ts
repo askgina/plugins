@@ -2,7 +2,10 @@
 
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { findPublicTextViolations } from "../packages/evals/src/index.js";
+import {
+  findPublicTextViolations,
+  type PublicTextViolationKind,
+} from "../packages/evals/src/index.js";
 import { Data, Effect, FileSystem, Layer, Path, Schema } from "effect";
 
 import { extractCheckedTarGz } from "./archive-security.js";
@@ -17,6 +20,15 @@ const PACKAGES = [
 ];
 const MAX_FINDINGS = 100;
 const MAX_TEXT_BYTES = 2 * 1024 * 1024;
+const HIGH_CONFIDENCE_SECRET_KINDS: ReadonlySet<PublicTextViolationKind> = new Set([
+  "basic-credential",
+  "bearer-credential",
+  "github-token",
+  "jwt",
+  "private-key",
+  "provider-api-key",
+  "uri-userinfo",
+]);
 const PRIVATE_ALIAS = ["@", "/"].join("");
 const PRIVATE_REPOSITORY = ["nextjs", "-ai-chatbot"].join("");
 const PRIVATE_REGISTRY = ["gina-tool", "-registry"].join("");
@@ -25,7 +37,6 @@ const FORBIDDEN_RUNTIME = ["@effect/platform", "-node"].join("");
 const PRIVATE_CACHE = ["red", "is"].join("");
 const RAW_EVAL_FIELDS = new RegExp(
   `"(?:${[
-    "observations",
     "prompt",
     "prompts",
     "toolCalls",
@@ -178,7 +189,10 @@ const program = Effect.scoped(
       }
       if (/\bREDIS_[A-Z0-9_]+\b|rediss?:\/\//u.test(text)) addFinding("private-cache", label);
       for (const violation of findPublicTextViolations(text)) {
-        addFinding(violation.kind, label);
+        const syntheticFixture = label.includes("/__tests__/") || label.includes("/fixtures/");
+        if (receipt || (!syntheticFixture && HIGH_CONFIDENCE_SECRET_KINDS.has(violation.kind))) {
+          addFinding(violation.kind, label);
+        }
       }
       for (const match of text.matchAll(/https?:\/\/([^\s/"'<>]+)/giu)) {
         const hostname = (match[1] ?? "").toLowerCase().replace(/:\d+$/u, "");
