@@ -36,7 +36,7 @@ const SEMVER =
   /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u;
 const MAX_GIT_PORCELAIN_BYTES = 64 * 1024;
 const RAW_EVAL_FIELDS =
-  /"(?:observations|prompts?|toolCalls?|tool_calls|payloads?|models?|accounts?|addresses?|final_answer|report)"\s*:/iu;
+  /"(?:prompts?|toolCalls?|tool_calls|payloads?|models?|accounts?|addresses?|final_answer|report)"\s*:/iu;
 
 type PackageDefinition = (typeof PACKAGES)[number];
 
