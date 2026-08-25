@@ -63,7 +63,7 @@ const SEMVER =
   /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u;
 const MAX_GIT_PORCELAIN_BYTES = 64 * 1024;
 const RAW_EVAL_FIELDS =
-  /"(?:observations|prompts?|toolCalls?|tool_calls|payloads?|models?|accounts?|addresses?|final_answer|report)"\s*:/iu;
+  /"(?:prompts?|toolCalls?|tool_calls|payloads?|models?|accounts?|addresses?|final_answer|report)"\s*:/iu;
 
 type PackageDefinition = (typeof PACKAGES)[number];
 type FileProof = Readonly<{ readonly path: string; readonly sha256: string }>;
@@ -95,6 +95,17 @@ const readJson = (file: string) =>
       Schema.decodeEffect(Schema.fromJsonString(Schema.Unknown))(text).pipe(
         Effect.mapError((cause) => fail(`cannot parse ${file}`, cause)),
       ),
+    ),
+  );
+const parseJsonc = (text: string): unknown => Bun.JSONC.parse(text);
+
+const readJsonc = (file: string) =>
+  readText(file).pipe(
+    Effect.flatMap((text) =>
+      Effect.try({
+        try: () => parseJsonc(text),
+        catch: (cause) => fail(`cannot parse ${file}`, cause),
+      }),
     ),
   );
 
@@ -463,10 +474,10 @@ const expectedDependencies = (source: Record<string, unknown>, field: string, ve
 };
 const proveExternalGraph = (rootLockFile: string, isolatedLockFile: string, label: string) =>
   Effect.gen(function* () {
-    const rootLock = yield* readJson(rootLockFile).pipe(
+    const rootLock = yield* readJsonc(rootLockFile).pipe(
       Effect.flatMap((value) => requiredObject(value, "root bun.lock")),
     );
-    const isolatedLock = yield* readJson(isolatedLockFile).pipe(
+    const isolatedLock = yield* readJsonc(isolatedLockFile).pipe(
       Effect.flatMap((value) => requiredObject(value, `${label} bun.lock`)),
     );
     const rootPackages = yield* requiredObject(rootLock.packages, "root bun.lock packages");

@@ -48,7 +48,7 @@ export class ArchiveSecurityError extends Data.TaggedError("ArchiveSecurityError
 const fail = (message: string, cause?: unknown): ArchiveSecurityError =>
   new ArchiveSecurityError(cause === undefined ? { message } : { message, cause });
 
-const ascii = (bytes: Uint8Array): string => new TextDecoder("ascii").decode(bytes);
+const ascii = (bytes: Uint8Array): string => new TextDecoder().decode(bytes);
 
 const fieldBytes = (header: Uint8Array, offset: number, length: number): Uint8Array => {
   const field = header.subarray(offset, offset + length);

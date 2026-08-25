@@ -9,7 +9,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "types": ["node"],
+    "types": ["bun"],
     "plugins": [
       {
         "name": "@effect/language-service",
