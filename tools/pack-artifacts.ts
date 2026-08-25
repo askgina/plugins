@@ -483,8 +483,18 @@ const buildEvalReceipt = (root: string, version: string, sourceCommit: string) =
             failed: result.report.completion.failed,
           },
         },
+        skillActivation: {
+          passed: result.report.skill_activation.passed,
+          failed: result.report.skill_activation.failed,
+        },
         latencyMs: result.report.latency_ms,
         totalResultBytes: result.report.total_result_bytes,
+        tokenUsage: {
+          observations: result.report.token_usage.observations,
+          inputTokens: result.report.token_usage.input_tokens,
+          outputTokens: result.report.token_usage.output_tokens,
+          totalTokens: result.report.token_usage.total_tokens,
+        },
         artifactPolicy: "sanitized",
       },
       {
