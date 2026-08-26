@@ -703,9 +703,11 @@ const buildSnapshotPackages = (root: string, snapshot: string) =>
     yield* fs
       .symlink(node, path.join(buildBin, "node"))
       .pipe(Effect.mapError((cause) => fail("cannot link snapshot Node launcher", cause)));
-    yield* runCommand(node, ["node_modules/.bin/vp", "pack"], snapshot, {
-      PATH: `${buildBin}:/usr/bin:/bin`,
-    });
+    yield* Effect.forEach(PACKAGES, (definition) =>
+      runCommand(node, ["node_modules/.bin/vp", "pack", "--filter", definition.slug], snapshot, {
+        PATH: `${buildBin}:/usr/bin:/bin`,
+      }),
+    );
   });
 
 const assertLiveSourceBoundary = (root: string, snapshot: string) =>
