@@ -630,6 +630,12 @@ const buildSnapshotPackages = (root: string, snapshot: string) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
+    const node = Bun.which("node");
+    if (node === null) return yield* fail("Node 24 is unavailable for the source commit build");
+    const nodeVersion = (yield* commandOutput(node, ["--version"], root)).trim();
+    if (!/^v24\./u.test(nodeVersion)) {
+      return yield* fail(`source commit build requires Node 24, received ${nodeVersion}`);
+    }
     const linkNodeModules = (relative: string, required: boolean) =>
       Effect.gen(function* () {
         const installed = path.join(root, relative, "node_modules");
@@ -695,10 +701,9 @@ const buildSnapshotPackages = (root: string, snapshot: string) =>
       .makeDirectory(buildBin)
       .pipe(Effect.mapError((cause) => fail("cannot create snapshot build launcher", cause)));
     yield* fs
-      .symlink(process.execPath, path.join(buildBin, "node"))
+      .symlink(node, path.join(buildBin, "node"))
       .pipe(Effect.mapError((cause) => fail("cannot link snapshot Node launcher", cause)));
-    yield* runCommand(process.execPath, ["node_modules/.bin/vp", "pack"], snapshot, {
-      BUN_BE_BUN: "1",
+    yield* runCommand(node, ["node_modules/.bin/vp", "pack"], snapshot, {
       PATH: `${buildBin}:/usr/bin:/bin`,
     });
   });
