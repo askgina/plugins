@@ -20,7 +20,7 @@ class ReplayCliWriteError extends Data.TaggedError("ReplayCliWriteError")<{}> {}
 const JsonReport = Schema.fromJsonString(Schema.Unknown, { space: 2 });
 
 const usage =
-  "Usage: bun run evals:plugin -- --suite <suite.yaml> --observations <observations.yaml> [--output <new-report.json>]";
+  "Usage: bun run eval:replay -- --suite <suite.yaml> --observations <observations.yaml> [--output <new-report.json>]";
 
 const parseOptions = (
   argv: readonly string[],

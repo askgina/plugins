@@ -649,6 +649,19 @@ const cleanInstall = (
         project,
         env,
       ).pipe(Effect.mapError((cause) => fail("@askgina/evals omitted live adapters", cause)));
+      const evalPackageRoot = path.join(project, "node_modules", "@askgina", "evals");
+      yield* runCommand(
+        "bun",
+        [
+          path.join(evalPackageRoot, "src/bin/replay.ts"),
+          "--suite",
+          path.join(evalPackageRoot, "src/fixtures/model-smoke.yaml"),
+          "--observations",
+          path.join(evalPackageRoot, "src/fixtures/synthetic-observations.yaml"),
+        ],
+        project,
+        env,
+      ).pipe(Effect.mapError((cause) => fail("@askgina/evals replay entrypoint failed", cause)));
     }
     if (definition.name === "@askgina/cli") {
       const bin = path.join(project, "node_modules/.bin/ask-gina");
