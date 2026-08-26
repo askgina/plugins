@@ -457,6 +457,52 @@ const exactDirectory = (directory: string, expected: readonly string[], label: s
     }
   });
 
+export const verifyOpenAiArchivePayload = (directory: string) =>
+  Effect.gen(function* () {
+    const path = yield* Path.Path;
+    yield* exactDirectory(
+      directory,
+      [".codex-plugin", ".mcp.json", "assets", "skills"],
+      "OpenAI archive root",
+    );
+    yield* exactDirectory(
+      path.join(directory, ".codex-plugin"),
+      ["plugin.json"],
+      "OpenAI manifest directory",
+    );
+    yield* exactDirectory(path.join(directory, "assets"), ["icon.svg"], "OpenAI assets directory");
+    yield* exactDirectory(path.join(directory, "skills"), SKILLS, "OpenAI skills directory");
+    yield* Effect.forEach(SKILLS, (skill) =>
+      Effect.all(
+        [
+          exactDirectory(
+            path.join(directory, "skills", skill),
+            ["SKILL.md", "agents"],
+            `OpenAI ${skill} skill directory`,
+          ),
+          exactDirectory(
+            path.join(directory, "skills", skill, "agents"),
+            ["openai.yaml"],
+            `OpenAI ${skill} agents directory`,
+          ),
+        ],
+        { concurrency: "unbounded" },
+      ),
+    );
+    const expected = [
+      ".codex-plugin/plugin.json",
+      ".mcp.json",
+      "assets/icon.svg",
+      ...SKILLS.flatMap((skill) => [
+        `skills/${skill}/SKILL.md`,
+        `skills/${skill}/agents/openai.yaml`,
+      ]),
+    ].sort();
+    const actual = [...(yield* filesBelow(directory))].sort();
+    if (stableJson(actual) !== stableJson(expected)) {
+      return yield* fail("OpenAI archive payload is not the exact lean host payload");
+    }
+  });
 const compareBytes = (actual: string, expected: string, label: string) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
@@ -820,6 +866,9 @@ const verifyPackages = (
     );
     const entries = yield* requiredArray(receipt.packages, "packages receipt packages");
     yield* verifySourceDirty(receipt.sourceDirty, sourceDirty, "packages receipt sourceDirty");
+    if (receipt.schemaVersion !== "v1" || receipt.releaseVersion !== version) {
+      return yield* fail("packages receipt release version is stale");
+    }
     if (entries.length !== PACKAGES.length)
       return yield* fail("packages receipt has the wrong package count");
     yield* Effect.forEach(PACKAGES, (definition) =>
@@ -944,6 +993,9 @@ const verifyTargets = (
     );
     const targets = yield* requiredArray(receipt.targets, "targets receipt targets");
     yield* verifySourceDirty(receipt.sourceDirty, sourceDirty, "targets receipt sourceDirty");
+    if (receipt.schemaVersion !== "v1" || receipt.releaseVersion !== version) {
+      return yield* fail("targets receipt release version is stale");
+    }
     if (targets.length !== HOSTS.length)
       return yield* fail("targets receipt has the wrong host count");
     yield* Effect.forEach(HOSTS, (host) =>
@@ -978,6 +1030,7 @@ const verifyTargets = (
         }
         const stage = path.join(temporary, `target-${host}`);
         yield* extract(archive, stage);
+        if (host === "openai") yield* verifyOpenAiArchivePayload(stage);
         yield* verifyProofs(
           yield* parseProofs(entry.files, `${host} receipt files`),
           yield* fileProofs(stage),

@@ -48,7 +48,7 @@ const GIT_STATUS_LIMIT_BYTES = 65_536;
 const CODEX_PREFLIGHT_LIMIT_BYTES = 1_048_576;
 const CODEX_MARKETPLACE_NAME = "ask-gina-plugins";
 const CODEX_PLUGIN_ID = `ask-gina@${CODEX_MARKETPLACE_NAME}`;
-const CODEX_MCP_SERVER_NAME = "gina";
+const CODEX_MCP_SERVER_NAME = "ask-gina";
 const JsonObjectString = Schema.fromJsonString(Schema.JsonObject);
 const UnknownJsonString = Schema.fromJsonString(Schema.Unknown);
 const PrettyUnknownJsonString = Schema.fromJsonString(Schema.Unknown, { space: 2 });
@@ -390,25 +390,23 @@ const setupCodexRuntime = (
       );
     if (
       pluginManifest?.name !== "ask-gina" ||
-      pluginManifest.skills !== "./skills" ||
-      pluginManifest.mcpServers !== "./targets/claude/.mcp.json"
+      pluginManifest.skills !== "./skills/" ||
+      pluginManifest.mcpServers !== "./.mcp.json"
     ) {
       return yield* new LiveEvalCliError({ reason: "codex-preflight-failed" });
     }
-    const mcpConfig = yield* fs
-      .readFileString(path.join(installedRoot, "targets", "claude", ".mcp.json"))
-      .pipe(
-        Effect.map(parseJsonObject),
-        Effect.mapError(() => new LiveEvalCliError({ reason: "codex-preflight-failed" })),
-      );
+    const mcpConfig = yield* fs.readFileString(path.join(installedRoot, ".mcp.json")).pipe(
+      Effect.map(parseJsonObject),
+      Effect.mapError(() => new LiveEvalCliError({ reason: "codex-preflight-failed" })),
+    );
     const mcpServers = mcpConfig?.mcpServers;
-    const ginaServer = isJsonObject(mcpServers) ? mcpServers[CODEX_MCP_SERVER_NAME] : undefined;
+    const askGinaServer = isJsonObject(mcpServers) ? mcpServers[CODEX_MCP_SERVER_NAME] : undefined;
     if (
       !isJsonObject(mcpServers) ||
-      !isJsonObject(ginaServer) ||
+      !isJsonObject(askGinaServer) ||
       Object.keys(mcpServers).length !== 1 ||
-      ginaServer.type !== "http" ||
-      ginaServer.url !== PRODUCTION_MCP_URL
+      askGinaServer.type !== "http" ||
+      askGinaServer.url !== PRODUCTION_MCP_URL
     ) {
       return yield* new LiveEvalCliError({ reason: "codex-preflight-failed" });
     }

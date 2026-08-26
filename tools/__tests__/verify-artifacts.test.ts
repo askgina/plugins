@@ -1,17 +1,95 @@
+import { fileURLToPath } from "node:url";
+
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { assert, describe, it } from "@effect/vitest";
 import { ChildProcess } from "effect/unstable/process";
-import { Config, Effect, FileSystem, Path } from "effect";
+import { Config, Effect, FileSystem, Path, Schema } from "effect";
 
 import { findEmbeddedSourceMapBoundaryRules, inspectSourceMapText } from "../check-public-boundary";
+import { checkRepositoryConformance, type RepositorySummary } from "../check-target-conformance";
 import {
+  ArtifactVerificationError,
   runNodeEsmSmoke,
   snapshotArtifactInputs,
   verifyNoInstalledLibrarySources,
   verifyNode24Consumer,
+  verifyOpenAiArchivePayload,
 } from "../verify-artifacts";
 
-describe("artifact verification snapshots", () => {
+const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
+const SKILLS = [
+  "research-hyperliquid",
+  "research-prediction-markets",
+  "research-spot-tokens",
+  "review-gina-account",
+] as const;
+const UnknownJsonString = Schema.fromJsonString(Schema.Unknown);
+const decodeUnknownJson = Schema.decodeUnknownSync(UnknownJsonString);
+const encodeUnknownJson = Schema.encodeUnknownSync(UnknownJsonString);
+
+const repositoryFixture = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "repository-conformance-test-" });
+  yield* Effect.all(
+    [
+      fs.copy(path.join(repositoryRoot, ".agents"), path.join(root, ".agents")),
+      fs.copy(path.join(repositoryRoot, ".claude-plugin"), path.join(root, ".claude-plugin")),
+      fs.copy(
+        path.join(repositoryRoot, "plugins", "ask-gina"),
+        path.join(root, "plugins", "ask-gina"),
+      ),
+    ],
+    { concurrency: "unbounded" },
+  );
+  return { root, packageRoot: path.join(root, "plugins", "ask-gina") };
+});
+
+const readMarketplace = (root: string) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    return decodeUnknownJson(
+      yield* fs.readFileString(path.join(root, ".agents", "plugins", "marketplace.json")),
+    ) as Record<string, unknown>;
+  });
+
+const writeMarketplace = (root: string, marketplace: Record<string, unknown>) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    yield* fs.writeFileString(
+      path.join(root, ".agents", "plugins", "marketplace.json"),
+      `${encodeUnknownJson(marketplace)}\n`,
+    );
+  });
+
+const failedCheck = (report: RepositorySummary, id: string): boolean =>
+  report.checks.some((check) => check.id === id && !check.passed);
+
+const makeLeanOpenAiPayload = (root: string) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const files = [
+      ".codex-plugin/plugin.json",
+      ".mcp.json",
+      "assets/icon.svg",
+      ...SKILLS.flatMap((skill) => [
+        `skills/${skill}/SKILL.md`,
+        `skills/${skill}/agents/openai.yaml`,
+      ]),
+    ];
+    yield* Effect.forEach(files, (file) =>
+      Effect.gen(function* () {
+        const destination = path.join(root, file);
+        yield* fs.makeDirectory(path.dirname(destination), { recursive: true });
+        yield* fs.writeFileString(destination, `${file}\n`);
+      }),
+    );
+  });
+
+describe("artifact and source conformance verification", () => {
   it.layer(BunServices.layer)((it) => {
     it.effect("executes only snapshotted bytes after canonical comparison", () =>
       Effect.scoped(
@@ -170,5 +248,158 @@ describe("artifact verification snapshots", () => {
         )?.unsafeSourcePath,
       );
     });
+    it.effect("accepts the exact repository marketplace and clean root plugin layout", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fixture = yield* repositoryFixture;
+          const report = yield* checkRepositoryConformance({
+            repositoryRoot: fixture.root,
+            packageRoot: fixture.packageRoot,
+          });
+          assert.isTrue(report.passed);
+        }),
+      ),
+    );
+
+    it.effect("rejects malformed marketplace policy, category, source, escape, and version", () =>
+      Effect.gen(function* () {
+        const cases: readonly Readonly<{
+          readonly expectedCheck: string;
+          readonly mutate: (marketplace: Record<string, unknown>) => void;
+        }>[] = [
+          {
+            expectedCheck: "marketplace.schema",
+            mutate: (marketplace) => {
+              const plugin = (marketplace.plugins as Record<string, unknown>[])[0];
+              if (plugin !== undefined) {
+                plugin.policy = { installation: "ENABLED", authentication: "ON_INSTALL" };
+              }
+            },
+          },
+          {
+            expectedCheck: "marketplace.schema",
+            mutate: (marketplace) => {
+              const plugin = (marketplace.plugins as Record<string, unknown>[])[0];
+              if (plugin !== undefined) plugin.category = "Other";
+            },
+          },
+          {
+            expectedCheck: "marketplace.schema",
+            mutate: (marketplace) => {
+              const plugin = (marketplace.plugins as Record<string, unknown>[])[0];
+              if (plugin !== undefined) plugin.source = "./plugins/ask-gina";
+            },
+          },
+          {
+            expectedCheck: "marketplace.source_containment",
+            mutate: (marketplace) => {
+              const plugin = (marketplace.plugins as Record<string, unknown>[])[0];
+              if (plugin !== undefined) {
+                plugin.source = { source: "local", path: "../outside" };
+              }
+            },
+          },
+          {
+            expectedCheck: "marketplace.no_version",
+            mutate: (marketplace) => {
+              marketplace.version = "0.1.0";
+            },
+          },
+        ];
+
+        yield* Effect.forEach(cases, ({ expectedCheck, mutate }) =>
+          Effect.scoped(
+            Effect.gen(function* () {
+              const fixture = yield* repositoryFixture;
+              const marketplace = yield* readMarketplace(fixture.root);
+              mutate(marketplace);
+              yield* writeMarketplace(fixture.root, marketplace);
+              const report = yield* checkRepositoryConformance({
+                repositoryRoot: fixture.root,
+                packageRoot: fixture.packageRoot,
+              });
+              assert.isTrue(failedCheck(report, expectedCheck));
+            }),
+          ),
+        );
+      }),
+    );
+
+    it.effect("rejects missing root files, version drift, and a legacy OpenAI overlay", () =>
+      Effect.forEach(["missing-mcp", "version-drift", "legacy-overlay"] as const, (mutation) =>
+        Effect.scoped(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const fixture = yield* repositoryFixture;
+            if (mutation === "missing-mcp") {
+              yield* fs.remove(path.join(fixture.packageRoot, ".mcp.json"));
+            } else if (mutation === "version-drift") {
+              const manifestPath = path.join(fixture.packageRoot, ".codex-plugin", "plugin.json");
+              const manifest = decodeUnknownJson(yield* fs.readFileString(manifestPath)) as Record<
+                string,
+                unknown
+              >;
+              manifest.version = "99.0.0";
+              yield* fs.writeFileString(manifestPath, `${encodeUnknownJson(manifest)}\n`);
+            } else {
+              yield* fs.makeDirectory(path.join(fixture.packageRoot, "targets", "openai"), {
+                recursive: true,
+              });
+            }
+            const report = yield* checkRepositoryConformance({
+              repositoryRoot: fixture.root,
+              packageRoot: fixture.packageRoot,
+            });
+            const expected =
+              mutation === "missing-mcp"
+                ? "repository.root_openai.mcp_exists"
+                : mutation === "version-drift"
+                  ? "repository.root_openai.manifest_contract"
+                  : "repository.legacy_openai.absent";
+            assert.isTrue(failedCheck(report, expected));
+          }),
+        ),
+      ),
+    );
+
+    it.effect("rejects symbolic links in the loadable plugin source", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fixture = yield* repositoryFixture;
+          const external = path.join(fixture.root, "external-icon.svg");
+          const icon = path.join(fixture.packageRoot, "assets", "icon.svg");
+          yield* fs.writeFileString(external, "<svg />\n");
+          yield* fs.remove(icon);
+          yield* fs.symlink(external, icon);
+          const report = yield* checkRepositoryConformance({
+            repositoryRoot: fixture.root,
+            packageRoot: fixture.packageRoot,
+          });
+          assert.isTrue(failedCheck(report, "repository.source.no_symlinks"));
+        }),
+      ),
+    );
+
+    it.effect("requires the exact lean OpenAI archive payload", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const stage = yield* fs.makeTempDirectoryScoped({ prefix: "openai-payload-test-" });
+          yield* makeLeanOpenAiPayload(stage);
+          yield* verifyOpenAiArchivePayload(stage);
+
+          const foreign = path.join(stage, "targets", "claude", ".mcp.json");
+          yield* fs.makeDirectory(path.dirname(foreign), { recursive: true });
+          yield* fs.writeFileString(foreign, "{}\n");
+          const error = yield* verifyOpenAiArchivePayload(stage).pipe(Effect.flip);
+          assert.instanceOf(error, ArtifactVerificationError);
+          assert.include(error.message, "OpenAI archive root");
+        }),
+      ),
+    );
   });
 });

@@ -17,7 +17,8 @@
     }
   },
   "scripts": {
-    "build": "vp -C ../.. pack --filter evals"
+    "build": "vp -C ../.. pack --filter evals",
+    "check:marketplace:codex": "bun run build && bun dist/bin/check-codex-marketplace.js"
   },
   "dependencies": {
     "@askgina/contracts": "workspace:*",

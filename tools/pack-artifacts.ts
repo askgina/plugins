@@ -9,7 +9,8 @@ import { runHermeticEvalReplay, sanitizeEvalReplay } from "../packages/evals/src
 import { copyCheckedRegularFile } from "./archive-security";
 import { checkGeneratedTargetConformance } from "./check-target-conformance";
 
-const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini"] as const;
+export const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini"] as const;
+export type Host = (typeof HOSTS)[number];
 const SKILLS = [
   "research-hyperliquid",
   "research-prediction-markets",
@@ -69,12 +70,17 @@ const PACKAGES = [
     directory: "packages/evals",
     packageFiles: ["dist", "LICENSE", "README.md"],
     compiledFiles: [
+      /^bin\/check-codex-marketplace\.d\.ts$/u,
+      /^bin\/check-codex-marketplace\.js$/u,
+      /^bin\/check-codex-marketplace\.js\.map$/u,
       /^bin\/live\.d\.ts$/u,
       /^bin\/live\.js$/u,
       /^bin\/live\.js\.map$/u,
       /^bin\/replay\.d\.ts$/u,
       /^bin\/replay\.js$/u,
       /^bin\/replay\.js\.map$/u,
+      /^codex-cli-[A-Za-z0-9_-]+\.js$/u,
+      /^codex-cli-[A-Za-z0-9_-]+\.js\.map$/u,
       /^index\.d\.ts$/u,
       /^index\.js$/u,
       /^report-[A-Za-z0-9_-]+\.js$/u,
@@ -86,7 +92,7 @@ const PACKAGES = [
     ],
   },
 ];
-const TARGET_MANIFESTS: Readonly<Record<string, string>> = {
+const TARGET_MANIFESTS: Readonly<Record<Host, string>> = {
   openai: ".codex-plugin/plugin.json",
   cursor: ".cursor-plugin/plugin.json",
   claude: ".claude-plugin/plugin.json",
@@ -764,7 +770,21 @@ const assertLiveSourceBoundary = (root: string, snapshot: string) =>
       ),
     );
   });
+type PluginTargetEffect = Effect.Effect<void, ArtifactPackError, FileSystem.FileSystem | Path.Path>;
 
+export const validateTargetVersion: {
+  (host: Host, version: string): (pluginRoot: string) => PluginTargetEffect;
+  (pluginRoot: string, host: Host, version: string): PluginTargetEffect;
+} = Function.dual(3, (pluginRoot: string, host: Host, version: string): PluginTargetEffect =>
+  Effect.gen(function* () {
+    const path = yield* Path.Path;
+    const manifestRoot = host === "openai" ? pluginRoot : path.join(pluginRoot, "targets", host);
+    const value = yield* readJson(path.join(manifestRoot, TARGET_MANIFESTS[host]));
+    if (!isObject(value) || value.version !== version) {
+      return yield* fail(`${host} target version is inconsistent`);
+    }
+  }),
+);
 const validateVersions = (root: string) =>
   Effect.gen(function* () {
     const path = yield* Path.Path;
@@ -787,16 +807,8 @@ const validateVersions = (root: string) =>
     if (pluginManifest.match(/^version:\s*([^\s]+)$/mu)?.[1] !== version) {
       return yield* fail("plugin.yaml version is inconsistent");
     }
-    yield* Effect.forEach(HOSTS, (host) =>
-      Effect.gen(function* () {
-        const manifest = TARGET_MANIFESTS[host];
-        if (manifest === undefined) return yield* fail(`unknown target ${host}`);
-        const value = yield* readJson(path.join(root, "plugins/ask-gina/targets", host, manifest));
-        if (!isObject(value) || value.version !== version) {
-          return yield* fail(`${host} target version is inconsistent`);
-        }
-      }),
-    );
+    const pluginRoot = path.join(root, "plugins/ask-gina");
+    yield* Effect.forEach(HOSTS, (host) => validateTargetVersion(pluginRoot, host, version));
     return version;
   });
 
@@ -819,6 +831,57 @@ const buildEvalReceipt = (root: string, version: string, sourceCommit: string) =
     return { releaseVersion: version, sourceCommit, aggregate };
   });
 
+export const stagePluginTarget: {
+  (plugin: string, stage: string): (host: Host) => PluginTargetEffect;
+  (host: Host, plugin: string, stage: string): PluginTargetEffect;
+} = Function.dual(3, (host: Host, plugin: string, stage: string): PluginTargetEffect =>
+  Effect.gen(function* () {
+    const path = yield* Path.Path;
+    const fs = yield* FileSystem.FileSystem;
+
+    if (host === "openai") {
+      yield* fs
+        .makeDirectory(stage, { recursive: true })
+        .pipe(Effect.mapError((cause) => fail("cannot create openai target stage", cause)));
+      yield* Effect.forEach([".codex-plugin", "assets"] as const, (entry) =>
+        Effect.gen(function* () {
+          const source = path.join(plugin, entry);
+          yield* filesBelow(source);
+          yield* fs
+            .copy(source, path.join(stage, entry), { overwrite: true })
+            .pipe(Effect.mapError((cause) => fail(`cannot stage openai ${entry}`, cause)));
+        }),
+      );
+      yield* copyCheckedRegularFile(
+        path.join(plugin, ".mcp.json"),
+        path.join(stage, ".mcp.json"),
+      ).pipe(Effect.mapError((cause) => fail("cannot stage openai .mcp.json", cause)));
+    } else {
+      const sourceOverlay = path.join(plugin, "targets", host);
+      yield* filesBelow(sourceOverlay);
+      yield* fs
+        .copy(sourceOverlay, stage, { overwrite: true })
+        .pipe(Effect.mapError((cause) => fail(`cannot stage ${host} target`, cause)));
+    }
+
+    yield* fs
+      .makeDirectory(path.join(stage, "skills"), { recursive: true })
+      .pipe(Effect.mapError((cause) => fail(`cannot create ${host} skills`, cause)));
+    yield* Effect.forEach(SKILLS, (skill) =>
+      Effect.gen(function* () {
+        const destination = path.join(stage, "skills", skill);
+        yield* fs
+          .copy(path.join(plugin, "skills", skill), destination, { overwrite: true })
+          .pipe(Effect.mapError((cause) => fail(`cannot stage ${host}:${skill}`, cause)));
+        if (host !== "openai") {
+          yield* fs
+            .remove(path.join(destination, "agents"), { recursive: true, force: true })
+            .pipe(Effect.mapError((cause) => fail(`cannot remove ${host} overlay`, cause)));
+        }
+      }),
+    );
+  }),
+);
 export interface BuildArtifactsOptions {
   readonly root: string;
   readonly dist: string;
@@ -899,26 +962,7 @@ export const buildArtifacts = ({ root, dist }: BuildArtifactsOptions) =>
       const targetReceipts = yield* Effect.forEach(HOSTS, (host) =>
         Effect.gen(function* () {
           const stage = path.join(temporary, `target-${host}`);
-          yield* filesBelow(path.join(plugin, "targets", host));
-          yield* fs
-            .copy(path.join(plugin, "targets", host), stage, { overwrite: true })
-            .pipe(Effect.mapError((cause) => fail(`cannot stage ${host} target`, cause)));
-          yield* fs
-            .makeDirectory(path.join(stage, "skills"), { recursive: true })
-            .pipe(Effect.mapError((cause) => fail(`cannot create ${host} skills`, cause)));
-          yield* Effect.forEach(SKILLS, (skill) =>
-            Effect.gen(function* () {
-              const destination = path.join(stage, "skills", skill);
-              yield* fs
-                .copy(path.join(plugin, "skills", skill), destination, { overwrite: true })
-                .pipe(Effect.mapError((cause) => fail(`cannot stage ${host}:${skill}`, cause)));
-              if (host !== "openai") {
-                yield* fs
-                  .remove(path.join(destination, "agents"), { recursive: true, force: true })
-                  .pipe(Effect.mapError((cause) => fail(`cannot remove ${host} overlay`, cause)));
-              }
-            }),
-          );
+          yield* stagePluginTarget(host, plugin, stage);
           const skills = (yield* fs
             .readDirectory(path.join(stage, "skills"))
             .pipe(Effect.mapError((cause) => fail(`cannot list ${host} skills`, cause)))).sort();

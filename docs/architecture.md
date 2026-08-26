@@ -15,11 +15,22 @@ CommonJS, browser, edge, or subpath entrypoints. They support Node >=24 and Bun
 
 > =1.4. The compiled CLI and eval executables run on Bun 1.4.x only.
 
-## Skills
+## Marketplace and skills
 
-`plugins/ask-gina/skills/` is the only authoring source. Pack-time generation
-builds temporary host trees and the skills candidate. Generated
-`targets/<host>/skills/` copies are not source.
+`.agents/plugins/marketplace.json` is the repository marketplace descriptor. It
+points directly at `plugins/ask-gina/`, so a clean checkout exposes the OpenAI
+source without a generation step. The directly loadable OpenAI files live at the
+plugin root: `.codex-plugin/plugin.json`, `.mcp.json`, `assets/icon.svg`, and `skills/`.
+
+`plugins/ask-gina/skills/` is the only authored skill tree. OpenAI-specific skill
+metadata remains beside each canonical `SKILL.md` under `agents/openai.yaml`.
+`plugins/ask-gina/targets/` contains only the Cursor, Claude, Copilot, and Gemini
+overlays; there is no `targets/openai/` source tree.
+
+Sync and pack operations build temporary host targets from these sources. The
+OpenAI target selects only the root OpenAI files and canonical skills. Every
+other host combines its `targets/<host>/` overlay with the same canonical
+skills. Generated host trees are output, never authoring source.
 
 ## Runtime
 
@@ -43,10 +54,13 @@ enabled compiler and Effect diagnostic; there is no baseline or count ratchet.
 source maps; every map embeds committed TypeScript through relative paths. The
 repository's custom packer stages those validated outputs with metadata and assets
 as five npm-style package archives, five host archives, one skills candidate, and
-four bounded receipts under ignored `dist/`. Verification clean-installs package
-tarballs in temporary projects, checks their closures, runs their actual runtime
-entrypoints, reruns target conformance, and regenerates the four-dimension
-hermetic eval aggregate from synthetic files. Generated `dist/` content is evidence, never authoring source.
+four bounded receipts under ignored `dist/`. Host archives remain lean: each
+contains only the selected host surface and skills, never repository workspace
+files or foreign-host overlays. Verification clean-installs package tarballs in
+temporary projects, checks their closures, runs their actual runtime entrypoints,
+reruns target conformance, and regenerates the four-dimension hermetic eval
+aggregate from synthetic files. Generated `dist/` content is evidence, never
+authoring source.
 
 ## CI
 

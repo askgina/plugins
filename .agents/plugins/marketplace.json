@@ -1,0 +1,20 @@
+{
+  "name": "ask-gina-plugins",
+  "interface": {
+    "displayName": "Ask Gina Plugins"
+  },
+  "plugins": [
+    {
+      "name": "ask-gina",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ask-gina"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Finance"
+    }
+  ]
+}
