@@ -175,10 +175,22 @@ const isExplicitSyntheticCredential = (value: string): boolean => {
   }
   const unquoted = withoutLeadingQuote.slice(0, end);
   const withoutScheme = unquoted.replace(/^(?:Bearer|Basic)\s+/iu, "");
-  const assignment = withoutScheme.includes("=")
-    ? (withoutScheme.split("=").at(-1) ?? "")
-    : withoutScheme;
-  return isExplicitSyntheticFixtureValue(assignment);
+  return isExplicitSyntheticFixtureValue(withoutScheme);
+};
+
+const isExplicitSyntheticHeaderCredential = (match: RegExpExecArray, value: string): boolean => {
+  const header = match[0].toLowerCase();
+  if (
+    header.startsWith("cookie") ||
+    header.startsWith("set-cookie") ||
+    header.startsWith("set_cookie")
+  ) {
+    const assignmentIndex = value.indexOf("=");
+    if (assignmentIndex !== -1) {
+      return isExplicitSyntheticCredential(value.slice(assignmentIndex + 1));
+    }
+  }
+  return isExplicitSyntheticCredential(value);
 };
 
 const isCanonicalBasicCredential = (value: string): boolean => {
@@ -228,14 +240,14 @@ export const findPublicTextViolations = (text: string): readonly PublicTextViola
     "header-credential",
     text,
     HEADER_CREDENTIAL,
-    (match) => !isExplicitSyntheticCredential(match[1] ?? ""),
+    (match) => !isExplicitSyntheticHeaderCredential(match, match[1] ?? ""),
   );
   addPatternViolations(
     violations,
     "secret-assignment",
     text,
     SECRET_ASSIGNMENT,
-    (match) => !isExplicitSyntheticCredential(match[1] ?? match[2] ?? match[3] ?? ""),
+    (match) => !isExplicitSyntheticHeaderCredential(match, match[1] ?? match[2] ?? match[3] ?? ""),
   );
   addPatternViolations(violations, "host-absolute-path", text, FILE_ABSOLUTE_URI);
   addPatternViolations(violations, "uri-userinfo", text, URI_USERINFO);

@@ -177,6 +177,21 @@ describe("public eval text detection", () => {
       "secret-assignment",
     ]);
   });
+  it("rejects a production credential with a synthetic-looking suffix", () => {
+    const kinds = findPublicTextViolations("Authorization: opaque-production-secret=fixture").map(
+      ({ kind }) => kind,
+    );
+
+    assert.includeMembers(kinds, ["header-credential"]);
+  });
+
+  it("rejects a cookie whose assigned value is not entirely synthetic", () => {
+    const kinds = findPublicTextViolations("Cookie: session=opaque-production-secret=fixture").map(
+      ({ kind }) => kind,
+    );
+
+    assert.includeMembers(kinds, ["header-credential"]);
+  });
 
   it("allows negative prose and explicitly synthetic fixture values", () => {
     const text = [
@@ -186,6 +201,7 @@ describe("public eval text detection", () => {
       "Bearer test-token",
       "Authorization: Bearer synthetic-fixture",
       "Cookie: session=example-fixture",
+      "cookie=example-fixture",
       "A 1/2 ratio and/or choice is ordinary prose.",
       "OPENAI_API_KEY=synthetic-fixture",
       "See https://example.test/docs.",
@@ -194,15 +210,13 @@ describe("public eval text detection", () => {
     assert.deepStrictEqual(findPublicTextViolations(text), []);
     assert.deepStrictEqual(findPublicTextViolations("Look up the synthetic label amber."), []);
   });
-  it.effect("handles long trailing delimiters and Base64 input", () =>
-    Effect.sync(() => {
-      const syntheticHeader = `Authorization: Bearer synthetic-fixture${";".repeat(100_000)}`;
-      const longBasic = `Basic ${btoa("x".repeat(74_999))}`;
+  it("handles long trailing delimiters and Base64 input", () => {
+    const syntheticHeader = `Authorization: Bearer synthetic-fixture${";".repeat(100_000)}`;
+    const longBasic = `Basic ${btoa("x".repeat(74_999))}`;
 
-      assert.deepStrictEqual(findPublicTextViolations(syntheticHeader), []);
-      assert.deepStrictEqual(findPublicTextViolations(longBasic), []);
-    }),
-  );
+    assert.deepStrictEqual(findPublicTextViolations(syntheticHeader), []);
+    assert.deepStrictEqual(findPublicTextViolations(longBasic), []);
+  });
 });
 
 describe("eval aggregate sanitization", () => {
