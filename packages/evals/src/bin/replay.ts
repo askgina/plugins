@@ -4,8 +4,8 @@ import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Console, Data, Effect, FileSystem, Layer, Path, Schema } from "effect";
 
-import { makeSanitizedEvalRunReport } from "../report.js";
-import { runHermeticEvalReplay } from "../runner.js";
+import { makeSanitizedEvalRunReport } from "../report";
+import { runHermeticEvalReplay } from "../runner";
 
 interface ReplayCliOptions {
   readonly suitePath: string;

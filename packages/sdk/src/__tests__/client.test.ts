@@ -5,9 +5,9 @@ import { assert, describe, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import { beforeEach, vi } from "vitest";
 
-import { createClient, listCatalogToolNames } from "../client.js";
-import { AskGinaAuthError, AskGinaToolError } from "../errors.js";
-import type { AskGinaTransport } from "../transport.js";
+import { createClient, listCatalogToolNames } from "../client";
+import { AskGinaAuthError, AskGinaToolError } from "../errors";
+import type { AskGinaTransport } from "../transport";
 const mcpMocks = vi.hoisted(() => ({
   callTool: vi.fn<() => Promise<unknown>>(),
   clientConstructor: vi.fn<() => void>(),

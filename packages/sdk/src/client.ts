@@ -6,10 +6,10 @@ import {
 } from "@askgina/contracts";
 import { Effect } from "effect";
 
-import type { AskGinaError } from "./errors.js";
-import { AskGinaAuthError, AskGinaToolError } from "./errors.js";
-import type { AskGinaListedTool, AskGinaTransport } from "./transport.js";
-import { createProductionTransport } from "./transport.js";
+import type { AskGinaError } from "./errors";
+import { AskGinaAuthError, AskGinaToolError } from "./errors";
+import type { AskGinaListedTool, AskGinaTransport } from "./transport";
+import { createProductionTransport } from "./transport";
 
 export type AskGinaClientOptions = {
   readonly accessToken: string;

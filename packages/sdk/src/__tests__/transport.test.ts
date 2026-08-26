@@ -5,8 +5,8 @@ import { assert, describe, it } from "@effect/vitest";
 import { Effect, Fiber, Result } from "effect";
 import { beforeEach, vi } from "vitest";
 
-import { AskGinaToolError, AskGinaTransportError } from "../errors.js";
-import { createProductionTransport, rejectIfMcpToolError } from "../transport.js";
+import { AskGinaToolError, AskGinaTransportError } from "../errors";
+import { createProductionTransport, rejectIfMcpToolError } from "../transport";
 
 type RequestOptions = {
   readonly signal?: AbortSignal;

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "license": "Apache-2.0",
   "files": [
-    "src",
+    "dist",
     "plugin.yaml",
     "skills",
     "evals/model/v1/activation.yaml",
@@ -14,8 +14,16 @@
     "README.md"
   ],
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "vp -C ../.. pack --filter plugin-core"
   },
   "dependencies": {
     "@askgina/contracts": "workspace:*",

@@ -1,14 +1,10 @@
-export { createClient, listCatalogToolNames } from "./client.js";
-export type { AskGinaClient, AskGinaClientOptions } from "./client.js";
+export { createClient, listCatalogToolNames } from "./client";
+export type { AskGinaClient, AskGinaClientOptions } from "./client";
 export {
   AskGinaAuthError,
   AskGinaJsonArgsError,
   AskGinaToolError,
   AskGinaTransportError,
-} from "./errors.js";
-export type { AskGinaError } from "./errors.js";
-export {
-  rejectIfMcpToolError,
-  type AskGinaListedTool,
-  type AskGinaTransport,
-} from "./transport.js";
+} from "./errors";
+export type { AskGinaError } from "./errors";
+export { rejectIfMcpToolError, type AskGinaListedTool, type AskGinaTransport } from "./transport";

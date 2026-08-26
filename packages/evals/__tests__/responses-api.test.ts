@@ -6,7 +6,7 @@ import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
-import type { PluginEvalCase } from "../src/contracts.js";
+import type { PluginEvalCase } from "../src/contracts";
 import {
   PluginEvalResponsesDecodeError,
   PluginEvalResponsesHttpError,
@@ -15,7 +15,7 @@ import {
   RESPONSES_API_MAX_BODY_BYTES,
   type ResponsesApiTrialOptions,
   runResponsesApiPluginEvalTrial,
-} from "../src/responses-api.js";
+} from "../src/responses-api";
 
 const evalCase: PluginEvalCase = {
   id: "direct-price",

@@ -1,6 +1,6 @@
 import { Data, Effect, Function, Schema } from "effect";
 
-import { isUnknownRecord } from "./type-guards.js";
+import { isUnknownRecord } from "./type-guards";
 
 export const ALLOWED_SYNTHETIC_FIXTURE_PROMPTS = [
   "Look up the synthetic label amber.",

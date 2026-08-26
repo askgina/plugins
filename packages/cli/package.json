@@ -3,21 +3,31 @@
   "version": "0.1.0",
   "license": "Apache-2.0",
   "bin": {
-    "ask-gina": "./bin.ts"
+    "ask-gina": "./dist/bin.js"
   },
   "files": [
-    "bin.ts",
-    "src",
+    "dist",
     "LICENSE",
     "README.md"
   ],
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "vp -C ../.. pack --filter cli"
   },
   "dependencies": {
     "@askgina/sdk": "workspace:*",
     "@effect/platform-bun": "4.0.0-rc.111",
     "effect": "4.0.0-rc.111"
+  },
+  "engines": {
+    "bun": "1.4.x"
   }
 }

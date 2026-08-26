@@ -32,17 +32,17 @@ import {
   openAttestedCodexExecutable,
   runCodexCliPluginEvalTrial,
   type AttestedCodexExecutable,
-} from "../codex-cli.js";
-import { collectBoundedUtf8Output } from "../bounded-output.js";
-import { loadPluginEvalSuite } from "../load-suite.js";
+} from "../codex-cli";
+import { collectBoundedUtf8Output } from "../bounded-output";
+import { loadPluginEvalSuite } from "../load-suite";
 import {
   MAXIMUM_LIVE_REPETITIONS,
   MINIMUM_LIVE_REPETITIONS,
   preflightLiveEvalSuite,
   runLiveEvalSuite,
-} from "../live.js";
-import { runResponsesApiPluginEvalTrial } from "../responses-api.js";
-import type { SanitizedEvalRunReport } from "../report.js";
+} from "../live";
+import { runResponsesApiPluginEvalTrial } from "../responses-api";
+import type { SanitizedEvalRunReport } from "../report";
 
 const GIT_STATUS_LIMIT_BYTES = 65_536;
 const CODEX_PREFLIGHT_LIMIT_BYTES = 1_048_576;

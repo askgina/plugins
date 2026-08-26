@@ -10,8 +10,8 @@ import type {
   PluginEvalReplayReport,
   PluginEvalTokenUsageSummary,
   PluginEvalSuite,
-} from "./contracts.js";
-import { gradePluginEvalObservation, type PluginEvalObservationMismatchError } from "./grading.js";
+} from "./contracts";
+import { gradePluginEvalObservation, type PluginEvalObservationMismatchError } from "./grading";
 
 export class PluginEvalReplayContractError extends Data.TaggedError(
   "PluginEvalReplayContractError",

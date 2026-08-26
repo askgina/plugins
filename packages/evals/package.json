@@ -3,13 +3,21 @@
   "version": "0.1.0",
   "license": "Apache-2.0",
   "files": [
-    "src",
+    "dist",
     "LICENSE",
     "README.md"
   ],
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "vp -C ../.. pack --filter evals"
   },
   "dependencies": {
     "@askgina/contracts": "workspace:*",
@@ -18,5 +26,8 @@
     "@effect/platform-bun": "4.0.0-rc.111",
     "effect": "4.0.0-rc.111",
     "yaml": "2.8.3"
+  },
+  "engines": {
+    "bun": "1.4.x"
   }
 }

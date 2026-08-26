@@ -4,6 +4,12 @@ One schema and rubric drive hermetic replay, OpenAI Responses API trials, and
 Codex CLI trials. Live runners use the same suite cases, model, reasoning mode,
 case selection, repetition count, and sanitized aggregate shape.
 
+`@askgina/evals` is a Bun 1.4.x-only compiled `dist` package. The root
+`eval:replay`, `eval:responses`, and `eval:codex` commands build the package graph, then execute `packages/evals/dist/bin/*.js`; suite and observation YAML remain repository inputs.
+Artifact verification clean-installs the built tarball and exercises its compiled
+import and replay entrypoint. The package supports only its root ESM import; Node.js,
+CommonJS, browser and edge runtimes, and subpath imports are unsupported.
+
 ## Hermetic replay
 
 ```sh

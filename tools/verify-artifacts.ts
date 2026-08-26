@@ -20,10 +20,10 @@ import {
   runHermeticEvalReplay,
   sanitizeEvalAggregate,
   sanitizeEvalReplay,
-} from "../packages/evals/src/index.js";
-import { copyCheckedRegularFile, extractCheckedTarGz } from "./archive-security.js";
-import { checkGeneratedTargetConformance } from "./check-target-conformance.js";
-import { buildArtifacts } from "./pack-artifacts.js";
+} from "../packages/evals/src/index";
+import { copyCheckedRegularFile, extractCheckedTarGz } from "./archive-security";
+import { checkGeneratedTargetConformance } from "./check-target-conformance";
+import { buildArtifacts } from "./pack-artifacts";
 
 const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini"] as const;
 const SKILLS = [
@@ -63,11 +63,77 @@ const TARGET_MANIFESTS: Readonly<Record<string, string>> = {
 };
 const SHA_256 = /^[a-f0-9]{64}$/u;
 const GIT_COMMIT = /^[a-f0-9]{40}$/u;
+const NODE_24_VERSION = /^v24\.\d+\.\d+$/u;
 const SEMVER =
   /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u;
 const MAX_GIT_PORCELAIN_BYTES = 64 * 1024;
 const RAW_EVAL_FIELDS =
   /"(?:prompts?|toolCalls?|tool_calls|payloads?|models?|accounts?|addresses?|final_answer|report)"\s*:/iu;
+const NODE_24_SMOKE = String.raw`
+import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { Effect, Schema } from "effect";
+import {
+  GINA_READ_TOOL_CATALOG,
+  GinaReadToolCatalogSchema,
+  PRODUCTION_MCP_URL,
+} from "@askgina/contracts";
+import { createClient, listCatalogToolNames } from "@askgina/sdk";
+
+const packageRoot = (name) => dirname(dirname(fileURLToPath(import.meta.resolve(name))));
+for (const name of ["@askgina/contracts", "@askgina/sdk"]) {
+  const root = packageRoot(name);
+  assert.equal(existsSync(join(root, "src")), false, name + " installed raw source");
+  const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+  assert.deepEqual(Object.keys(manifest.exports["."]).sort(), ["import", "types"]);
+  assert.equal(manifest.type, "module");
+  assert.equal(manifest.engines.node, ">=24");
+}
+
+const catalog = await Effect.runPromise(
+  Schema.decodeUnknownEffect(GinaReadToolCatalogSchema)(GINA_READ_TOOL_CATALOG),
+);
+assert.equal(catalog.length, 29);
+const listed = GINA_READ_TOOL_CATALOG.map(({ name }) => ({ name }));
+const client = createClient({
+  accessToken: "offline-token",
+  transport: {
+    listTools: () => Effect.succeed(listed),
+    callTool: () => Effect.succeed({}),
+  },
+});
+assert.equal(client.url, PRODUCTION_MCP_URL);
+assert.deepEqual(
+  (await Effect.runPromise(client.listTools())).map(({ name }) => name),
+  listCatalogToolNames(),
+);
+
+let contacted = false;
+const unauthenticated = createClient({
+  accessToken: "   ",
+  transport: {
+    listTools: () => Effect.sync(() => { contacted = true; return []; }),
+    callTool: () => Effect.sync(() => { contacted = true; return {}; }),
+  },
+});
+const authenticationError = await Effect.runPromise(
+  unauthenticated.listTools().pipe(
+    Effect.match({ onFailure: (error) => error, onSuccess: () => undefined }),
+  ),
+);
+assert.equal(authenticationError?._tag, "AskGinaAuthError");
+assert.equal(contacted, false);
+
+let stack = "";
+try {
+  createClient({ accessToken: "offline-token", url: "https://example.invalid" });
+} catch (error) {
+  stack = String(error?.stack ?? error);
+}
+assert.match(stack, /node_modules\/@askgina\/sdk\/src\/client\.ts:\d+:\d+/u);
+`;
 
 type PackageDefinition = (typeof PACKAGES)[number];
 type FileProof = Readonly<{ readonly path: string; readonly sha256: string }>;
@@ -257,6 +323,57 @@ const runCommand = (
       if (exitCode !== 0) return yield* fail(`${command} exited with ${exitCode}`);
     }),
   );
+export const runNodeEsmSmoke = (
+  options: Readonly<{
+    readonly node: string;
+    readonly cwd: string;
+    readonly source: string;
+    readonly env?: Record<string, string | undefined>;
+  }>,
+) =>
+  runCommand(
+    options.node,
+    ["--enable-source-maps", "--input-type=module", "--eval", options.source],
+    options.cwd,
+    options.env,
+  ).pipe(Effect.mapError((cause) => fail("Node ESM smoke failed", cause)));
+
+export const verifyNoInstalledLibrarySources = (project: string) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    for (const name of ["contracts", "sdk"]) {
+      if (yield* fs.exists(path.join(project, "node_modules", "@askgina", name, "src"))) {
+        return yield* fail(`@askgina/${name} installed raw source`);
+      }
+    }
+  });
+
+export const verifyNode24Consumer = (
+  options: Readonly<{
+    readonly node: string;
+    readonly project: string;
+    readonly env?: Record<string, string | undefined>;
+  }>,
+) =>
+  Effect.gen(function* () {
+    const version = (yield* commandOutput(
+      options.node,
+      ["--version"],
+      options.project,
+      options.env,
+    )).trim();
+    if (!NODE_24_VERSION.test(version)) {
+      return yield* fail(`Node 24 is required for package verification; found ${version}`);
+    }
+    yield* verifyNoInstalledLibrarySources(options.project);
+    yield* runNodeEsmSmoke({
+      node: options.node,
+      cwd: options.project,
+      source: NODE_24_SMOKE,
+      env: options.env,
+    });
+  });
 
 const filesBelow = (directory: string) =>
   Effect.gen(function* () {
@@ -472,7 +589,7 @@ const verifyContract = (
     const proofs = yield* parseProofs(receipt.files, "contract receipt files");
     yield* verifyProofs(
       proofs,
-      [{ path: "packages/contracts/src/index.ts", sha256: yield* hash(source) }],
+      yield* fileProofs(path.join(root, "packages/contracts/dist"), "packages/contracts/dist"),
       "contract receipt",
     );
     return receipt;
@@ -650,14 +767,18 @@ const cleanInstall = (
         env,
       ).pipe(Effect.mapError((cause) => fail("@askgina/evals omitted live adapters", cause)));
       const evalPackageRoot = path.join(project, "node_modules", "@askgina", "evals");
+      if (yield* fs.exists(path.join(evalPackageRoot, "src"))) {
+        return yield* fail("@askgina/evals installed raw source");
+      }
+      const evalSourceRoot = path.join(root, "packages/evals/src");
       yield* runCommand(
         "bun",
         [
-          path.join(evalPackageRoot, "src/bin/replay.ts"),
+          path.join(evalPackageRoot, "dist/bin/replay.js"),
           "--suite",
-          path.join(evalPackageRoot, "src/fixtures/model-smoke.yaml"),
+          path.join(evalSourceRoot, "fixtures/model-smoke.yaml"),
           "--observations",
-          path.join(evalPackageRoot, "src/fixtures/synthetic-observations.yaml"),
+          path.join(evalSourceRoot, "fixtures/synthetic-observations.yaml"),
         ],
         project,
         env,
@@ -773,6 +894,17 @@ const verifyPackages = (
           .pipe(Effect.mapError((cause) => fail(`cannot access ${archive}`, cause)));
       }),
     );
+    const nodeProject = path.join(temporary, "install-sdk");
+    yield* verifyNode24Consumer({
+      node: "node",
+      project: nodeProject,
+      env: {
+        PATH: yield* Config.string("PATH").pipe(Config.withDefault("/usr/bin:/bin")),
+        HOME: path.join(nodeProject, ".home"),
+        LC_ALL: "C",
+        TZ: "UTC",
+      },
+    });
   });
 
 const verifyTargets = (

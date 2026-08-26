@@ -14,8 +14,8 @@ import {
   replayPluginEvalObservationSet,
   runLiveEvalSuite,
   runHermeticEvalReplay,
-} from "../src/index.js";
-import { makeSanitizedEvalRunReport } from "../src/report.js";
+} from "../src/index";
+import { makeSanitizedEvalRunReport } from "../src/report";
 
 const collectPublicStrings = (value: unknown): readonly string[] => {
   if (typeof value === "string") return [value];

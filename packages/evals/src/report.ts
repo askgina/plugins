@@ -1,12 +1,12 @@
 import { Data, Effect, Schema } from "effect";
 
-import type { PluginEvalReplayReport, PluginEvalRunManifest } from "./contracts.js";
+import type { PluginEvalReplayReport, PluginEvalRunManifest } from "./contracts";
 import {
   findPublicTextViolations,
   HermeticEvalSanitizationError,
   sanitizeEvalAggregate,
   SanitizedEvalAggregateSchema,
-} from "./sanitize.js";
+} from "./sanitize";
 
 const SafeRunLabelSchema = Schema.NonEmptyString.check(
   Schema.isMaxLength(128),

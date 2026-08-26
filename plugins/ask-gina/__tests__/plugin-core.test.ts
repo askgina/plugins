@@ -6,9 +6,12 @@ import { assert, describe, it } from "@effect/vitest";
 import { ASK_GINA_SKILL_DEFINITIONS, PRODUCTION_MCP_URL, READ_SCOPE } from "@askgina/contracts";
 import { Effect, FileSystem, Path, PlatformError, Schema } from "effect";
 
-import { loadCanonicalSkillDocuments, loadPluginManifest } from "../src/index.js";
-import { createGeneratedPluginTargets, TARGET_NAMES } from "../../../tools/sync-plugin-skills.js";
-import { runTargetConformanceChecks } from "../../../tools/check-target-conformance.js";
+import { loadCanonicalSkillDocuments, loadPluginManifest } from "../src/index";
+import { createGeneratedPluginTargets, TARGET_NAMES } from "../../../tools/sync-plugin-skills";
+import {
+  checkGeneratedTargetConformance,
+  runTargetConformanceChecks,
+} from "../../../tools/check-target-conformance";
 
 const pluginRoot = fileURLToPath(new URL("../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
@@ -188,6 +191,32 @@ describe("Ask Gina portable plugin core", () => {
         assert.strictEqual(report.totalFailed, 0);
         assert.strictEqual(Object.keys(report.targets).length, TARGET_NAMES.length);
       }),
+    );
+    it.effect("rejects loss of canonical OpenAI support and skill metadata", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const paths = yield* Path.Path;
+          const generated = yield* makeGeneratedTargets(pluginRoot);
+          const openai = generated.targets.openai;
+          const manifestPath = paths.join(openai, ".codex-plugin", "plugin.json");
+          const manifest = yield* fs.readFileString(manifestPath);
+          yield* fs.writeFileString(
+            manifestPath,
+            manifest.replace("https://askgina.ai/support", "https://invalid.example/support"),
+          );
+          yield* fs.remove(
+            paths.join(openai, "skills", "research-hyperliquid", "agents", "openai.yaml"),
+          );
+
+          const report = yield* checkGeneratedTargetConformance("openai", openai, {
+            packageRoot: pluginRoot,
+          });
+          const failed = report.checks.filter((check) => !check.passed).map((check) => check.id);
+          assert.include(failed, "openai.manifest.contract");
+          assert.include(failed, "openai.skill.research-hyperliquid.openai_metadata");
+        }),
+      ),
     );
   });
 });

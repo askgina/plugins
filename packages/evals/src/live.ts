@@ -1,20 +1,20 @@
 import { catalogSha, isGinaReadToolName, listCatalogToolNames } from "@askgina/contracts";
 import { Data, DateTime, Effect, Function } from "effect";
 
-import type { PluginEvalCase, PluginEvalObservation, PluginEvalSuite } from "./contracts.js";
-import type { PluginEvalObservationMismatchError } from "./grading.js";
+import type { PluginEvalCase, PluginEvalObservation, PluginEvalSuite } from "./contracts";
+import type { PluginEvalObservationMismatchError } from "./grading";
 import {
   decodePluginEvalObservationSet,
   type PluginEvalObservationSetValidationError,
-} from "./load-observations.js";
-import { replayPluginEvalObservationSet, type PluginEvalReplayContractError } from "./replay.js";
+} from "./load-observations";
+import { replayPluginEvalObservationSet, type PluginEvalReplayContractError } from "./replay";
 import {
   assertSanitizedRunMetadata,
   makeSanitizedEvalRunReport,
   type SanitizedEvalRunReport,
   type SanitizedEvalRunReportError,
-} from "./report.js";
-import type { HermeticEvalSanitizationError } from "./sanitize.js";
+} from "./report";
+import type { HermeticEvalSanitizationError } from "./sanitize";
 export const MINIMUM_LIVE_REPETITIONS = 3;
 export const MAXIMUM_LIVE_REPETITIONS = 5;
 export const MAXIMUM_LIVE_CASES = 64;

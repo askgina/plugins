@@ -3,11 +3,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { gzipSync } from "node:zlib";
 import { Effect, FileSystem, Path } from "effect";
 
-import {
-  ArchiveSecurityError,
-  copyCheckedRegularFile,
-  preflightTarGz,
-} from "../archive-security.js";
+import { ArchiveSecurityError, copyCheckedRegularFile, preflightTarGz } from "../archive-security";
 
 const BLOCK_BYTES = 512;
 const encoder = new TextEncoder();
@@ -145,14 +141,16 @@ describe("archive security", () => {
       }),
     );
 
-    it.effect("rejects a declared file size above the configured resource bound", () =>
+    it.effect("keeps compiled JavaScript, declarations, and maps inside file-size bounds", () =>
       Effect.gen(function* () {
-        const error = yield* rejectFixture(tarGz({ path: "large", body: "12345" }), {
-          maxFileBytes: 4,
-          maxExpandedBytes: 4,
-        });
-        assert.instanceOf(error, ArchiveSecurityError);
-        assert.include(error.message, "file-size");
+        for (const path of ["dist/index.js", "dist/index.d.ts", "dist/index.js.map"]) {
+          const error = yield* rejectFixture(tarGz({ path, body: "12345" }), {
+            maxFileBytes: 4,
+            maxExpandedBytes: 4,
+          });
+          assert.instanceOf(error, ArchiveSecurityError);
+          assert.include(error.message, "file-size");
+        }
       }),
     );
   });

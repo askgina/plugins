@@ -3,8 +3,8 @@ import { Clock, Data, DateTime, Duration, Effect, Function, Schema } from "effec
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 
-import type { PluginEvalCase, PluginEvalObservation, PluginEvalToolCall } from "./contracts.js";
-import { collectBoundedUtf8Output } from "./bounded-output.js";
+import type { PluginEvalCase, PluginEvalObservation, PluginEvalToolCall } from "./contracts";
+import { collectBoundedUtf8Output } from "./bounded-output";
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const DEFAULT_TIMEOUT_MS = 120_000;

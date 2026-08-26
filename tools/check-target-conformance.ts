@@ -31,7 +31,7 @@ import {
   createGeneratedPluginTarget,
   type PluginSkillSyncError,
   type TargetName,
-} from "./sync-plugin-skills.js";
+} from "./sync-plugin-skills";
 
 export { TARGET_NAMES, type TargetName };
 

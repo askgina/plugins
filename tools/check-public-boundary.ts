@@ -5,10 +5,10 @@ import * as BunServices from "@effect/platform-bun/BunServices";
 import {
   findPublicTextViolations,
   type PublicTextViolationKind,
-} from "../packages/evals/src/index.js";
+} from "../packages/evals/src/index";
 import { Data, Effect, FileSystem, Layer, Path, Schema } from "effect";
 
-import { extractCheckedTarGz } from "./archive-security.js";
+import { extractCheckedTarGz } from "./archive-security";
 
 const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini"];
 const PACKAGES = [
@@ -76,6 +76,97 @@ const fail = (message: string, cause?: unknown) =>
   new PublicBoundaryError(cause === undefined ? { message } : { message, cause });
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+const ABSOLUTE_OR_URI_SOURCE = /^(?:\/|[A-Za-z]:[\\/]|\\\\|[A-Za-z][A-Za-z\d+.-]*:)/u;
+
+export const inspectSourceMapText = (
+  text: string,
+):
+  | Readonly<{
+      readonly sources: readonly string[];
+      readonly sourcesContent: readonly string[];
+      readonly unsafeSourcePath: boolean;
+    }>
+  | undefined => {
+  let value: unknown;
+  try {
+    value = JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+  if (
+    !isObject(value) ||
+    value.version !== 3 ||
+    !Array.isArray(value.sources) ||
+    !Array.isArray(value.sourcesContent) ||
+    value.sources.length !== value.sourcesContent.length ||
+    !value.sources.every((source) => typeof source === "string") ||
+    !value.sourcesContent.every((source) => typeof source === "string")
+  ) {
+    return undefined;
+  }
+  return {
+    sources: value.sources,
+    sourcesContent: value.sourcesContent,
+    unsafeSourcePath: value.sources.some((source) => ABSOLUTE_OR_URI_SOURCE.test(source)),
+  };
+};
+const findPublicBoundaryTextRules = (
+  text: string,
+  label: string,
+  receipt: boolean,
+): readonly string[] => {
+  const rules: string[] = [];
+  const add = (rule: string): void => {
+    rules.push(rule);
+  };
+  const codeOrData = /\.(?:[cm]?[jt]sx?|json|ya?ml|toml|lock)$/iu.test(label);
+  if (text.includes(PRIVATE_REPOSITORY)) add("private-repository-name");
+  if (codeOrData && text.includes(PRIVATE_REGISTRY)) add("private-registry");
+  if (codeOrData && text.includes(PRIVATE_REGISTRY_FIELD)) add("private-registry-field");
+  for (const match of text.matchAll(
+    /(?:from\s+|import\s*(?:\(\s*)?|require\s*\()\s*["']([^"']+)["']/gu,
+  )) {
+    const specifier = match[1] ?? "";
+    if (specifier.startsWith(PRIVATE_ALIAS)) add("private-import");
+    if (specifier === FORBIDDEN_RUNTIME || specifier.startsWith(`${FORBIDDEN_RUNTIME}/`))
+      add("forbidden-runtime");
+    if (specifier.toLowerCase().includes(PRIVATE_CACHE)) add("private-cache");
+  }
+  if (/(?:package\.json|bun\.lock)(?::|$)/u.test(label)) {
+    for (const match of text.matchAll(/["']([^"']+)["']\s*:/gu)) {
+      const dependency = (match[1] ?? "").toLowerCase();
+      if (dependency === FORBIDDEN_RUNTIME || dependency.startsWith(`${FORBIDDEN_RUNTIME}/`))
+        add("forbidden-runtime");
+      if (dependency.includes(PRIVATE_CACHE)) add("private-cache");
+    }
+  }
+  if (/\bREDIS_[A-Z0-9_]+\b|rediss?:\/\//u.test(text)) add("private-cache");
+  for (const violation of reportablePublicTextViolations(text, receipt)) add(violation.kind);
+  for (const match of text.matchAll(/https?:\/\/([^\s/"'<>]+)/giu)) {
+    const hostname = (match[1] ?? "").toLowerCase().replace(/:\d+$/u, "");
+    if (
+      hostname === "localhost" ||
+      hostname.endsWith(".local") ||
+      hostname.endsWith(".internal") ||
+      hostname.endsWith(".private") ||
+      /^(?:127\.|0\.0\.0\.0$|10\.|192\.168\.|172\.(?:1[6-9]|2\d|3[01])\.)/u.test(hostname)
+    )
+      add("private-host");
+  }
+  if (receipt && RAW_EVAL_FIELDS.test(text)) add("raw-eval-field");
+  return rules;
+};
+export const findEmbeddedSourceMapBoundaryRules = (text: string): readonly string[] => {
+  const sourceMap = inspectSourceMapText(text);
+  if (sourceMap === undefined) return ["invalid-source-map"];
+  const rules = sourceMap.unsafeSourcePath ? ["absolute-source-map-path"] : [];
+  for (const [index, source] of sourceMap.sourcesContent.entries()) {
+    rules.push(
+      ...findPublicBoundaryTextRules(source, sourceMap.sources[index] ?? String(index), false),
+    );
+  }
+  return rules;
+};
 
 const readText = (file: string) =>
   Effect.gen(function* () {
@@ -173,44 +264,9 @@ const program = Effect.scoped(
         findings.push({ rule, path: file.split(path.sep).join("/") });
     };
     const scanText = (text: string, label: string, receipt: boolean): void => {
-      const codeOrData = /\.(?:[cm]?[jt]sx?|json|ya?ml|toml|lock)$/iu.test(label);
-      if (text.includes(PRIVATE_REPOSITORY)) addFinding("private-repository-name", label);
-      if (codeOrData && text.includes(PRIVATE_REGISTRY)) addFinding("private-registry", label);
-      if (codeOrData && text.includes(PRIVATE_REGISTRY_FIELD))
-        addFinding("private-registry-field", label);
-      for (const match of text.matchAll(
-        /(?:from\s+|import\s*(?:\(\s*)?|require\s*\()\s*["']([^"']+)["']/gu,
-      )) {
-        const specifier = match[1] ?? "";
-        if (specifier.startsWith(PRIVATE_ALIAS)) addFinding("private-import", label);
-        if (specifier === FORBIDDEN_RUNTIME || specifier.startsWith(`${FORBIDDEN_RUNTIME}/`))
-          addFinding("forbidden-runtime", label);
-        if (specifier.toLowerCase().includes(PRIVATE_CACHE)) addFinding("private-cache", label);
+      for (const rule of findPublicBoundaryTextRules(text, label, receipt)) {
+        addFinding(rule, label);
       }
-      if (/(?:package\.json|bun\.lock)(?::|$)/u.test(label)) {
-        for (const match of text.matchAll(/["']([^"']+)["']\s*:/gu)) {
-          const dependency = (match[1] ?? "").toLowerCase();
-          if (dependency === FORBIDDEN_RUNTIME || dependency.startsWith(`${FORBIDDEN_RUNTIME}/`))
-            addFinding("forbidden-runtime", label);
-          if (dependency.includes(PRIVATE_CACHE)) addFinding("private-cache", label);
-        }
-      }
-      if (/\bREDIS_[A-Z0-9_]+\b|rediss?:\/\//u.test(text)) addFinding("private-cache", label);
-      for (const violation of reportablePublicTextViolations(text, receipt)) {
-        addFinding(violation.kind, label);
-      }
-      for (const match of text.matchAll(/https?:\/\/([^\s/"'<>]+)/giu)) {
-        const hostname = (match[1] ?? "").toLowerCase().replace(/:\d+$/u, "");
-        if (
-          hostname === "localhost" ||
-          hostname.endsWith(".local") ||
-          hostname.endsWith(".internal") ||
-          hostname.endsWith(".private") ||
-          /^(?:127\.|0\.0\.0\.0$|10\.|192\.168\.|172\.(?:1[6-9]|2\d|3[01])\.)/u.test(hostname)
-        )
-          addFinding("private-host", label);
-      }
-      if (receipt && RAW_EVAL_FIELDS.test(text)) addFinding("raw-eval-field", label);
     };
     const scanFile = (absolute: string, label: string, receipt: boolean) =>
       Effect.gen(function* () {
@@ -226,7 +282,20 @@ const program = Effect.scoped(
           .readFile(absolute)
           .pipe(Effect.mapError((cause) => fail(`cannot read ${absolute}`, cause)));
         if (bytes.includes(0)) addFinding("unscannable-binary-file", label);
-        else scanText(new TextDecoder().decode(bytes), label, receipt);
+        else {
+          const text = new TextDecoder().decode(bytes);
+          scanText(text, label, receipt);
+          if (label.endsWith(".map")) {
+            const sourceMap = inspectSourceMapText(text);
+            if (sourceMap === undefined) addFinding("invalid-source-map", label);
+            else {
+              if (sourceMap.unsafeSourcePath) addFinding("absolute-source-map-path", label);
+              for (const [index, source] of sourceMap.sourcesContent.entries()) {
+                scanText(source, `${label}#${sourceMap.sources[index] ?? index}`, false);
+              }
+            }
+          }
+        }
       });
     const comparePackageDeclarations = (stage: string, definition: PackageDefinition) =>
       Effect.gen(function* () {
@@ -336,6 +405,11 @@ const program = Effect.scoped(
           (item) => relative === `packages/askgina-${item.slug}-${version}.tgz`,
         );
         if (definition !== undefined) {
+          for (const file of tree.files) {
+            if (/\.(?:[cm]?ts|tsx)$/u.test(file) && !/\.d\.(?:[cm]?ts|tsx)$/u.test(file)) {
+              addFinding("raw-package-source", `dist/${relative}:${file}`);
+            }
+          }
           yield* comparePackageDeclarations(stage, definition).pipe(
             Effect.catchIf(
               () => true,

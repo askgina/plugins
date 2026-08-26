@@ -4,28 +4,28 @@ export {
   PluginEvalObservationSetParseError,
   PluginEvalObservationSetReadError,
   PluginEvalObservationSetValidationError,
-} from "./load-observations.js";
+} from "./load-observations";
 export {
   decodePluginEvalSuite,
   loadPluginEvalSuite,
   PluginEvalSuiteParseError,
   PluginEvalSuiteReadError,
   PluginEvalSuiteValidationError,
-} from "./load-suite.js";
-export { gradePluginEvalObservation, PluginEvalObservationMismatchError } from "./grading.js";
-export { replayPluginEvalObservationSet, PluginEvalReplayContractError } from "./replay.js";
+} from "./load-suite";
+export { gradePluginEvalObservation, PluginEvalObservationMismatchError } from "./grading";
+export { replayPluginEvalObservationSet, PluginEvalReplayContractError } from "./replay";
 export {
   runHermeticEvalReplay,
   type HermeticEvalReplayError,
   type HermeticEvalReplayOptions,
   type HermeticEvalReplayResult,
-} from "./runner.js";
+} from "./runner";
 export {
   LiveEvalSelectionError,
   runLiveEvalSuite,
   type LiveEvalOptions,
   type LiveEvalTrialInput,
-} from "./live.js";
+} from "./live";
 export {
   PluginEvalResponsesDecodeError,
   PluginEvalResponsesHttpError,
@@ -34,7 +34,7 @@ export {
   runResponsesApiPluginEvalTrial,
   type PluginEvalResponsesError,
   type ResponsesApiTrialOptions,
-} from "./responses-api.js";
+} from "./responses-api";
 export {
   attestCodexExecutable,
   PluginEvalCodexCliExecutableError,
@@ -49,7 +49,7 @@ export {
   type CodexCliTrialOptions,
   type CodexCliTrialRunner,
   type PluginEvalCodexCliError,
-} from "./codex-cli.js";
+} from "./codex-cli";
 export {
   makeSanitizedEvalRunReport,
   sanitizeEvalReplay,
@@ -57,7 +57,7 @@ export {
   SanitizedEvalRunReportSchema,
   type EvalReplayProvenance,
   type SanitizedEvalRunReport,
-} from "./report.js";
+} from "./report";
 export {
   ALLOWED_SYNTHETIC_FIXTURE_PROMPTS,
   findPublicTextViolations,
@@ -73,7 +73,7 @@ export {
   type SanitizedEvalDimensionName,
   type SanitizedEvalDimensionSummary,
   type SanitizedEvalDistribution,
-} from "./sanitize.js";
+} from "./sanitize";
 export {
   PluginEvalCaseSchema,
   PluginEvalCaseScoreSchema,
@@ -96,4 +96,4 @@ export {
   type PluginEvalReplayReport,
   type PluginEvalSuite,
   type PluginEvalToolCall,
-} from "./contracts.js";
+} from "./contracts";
