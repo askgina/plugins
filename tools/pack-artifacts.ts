@@ -101,8 +101,6 @@ const MAX_GIT_PORCELAIN_BYTES = 64 * 1024;
 const RAW_EVAL_FIELDS =
   /"(?:prompts?|toolCalls?|tool_calls|payloads?|models?|accounts?|addresses?|final_answer|report)"\s*:/iu;
 
-type PackageDefinition = (typeof PACKAGES)[number];
-
 export class ArtifactPackError extends Data.TaggedError("ArtifactPackError")<{
   readonly message: string;
   readonly cause?: unknown;
@@ -410,6 +408,7 @@ const verifyCompiledPackageOutputImpl = (
 ): VerifyCompiledPackageOutputEffect =>
   Effect.gen(function* () {
     const definition = yield* packageDefinition(packageName);
+    const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const livePackageRoot = path.join(liveRoot, definition.directory);
     const sourcePackageRoot = path.join(sourceRoot, definition.directory);
@@ -423,6 +422,33 @@ const verifyCompiledPackageOutputImpl = (
     }
     const dist = path.join(livePackageRoot, "dist");
     const files = yield* filesBelow(dist);
+    const committedDist = path.join(sourcePackageRoot, "dist");
+    const committedFiles = yield* filesBelow(committedDist);
+    if (files.join("\n") !== committedFiles.join("\n")) {
+      return yield* fail(`${definition.name} compiled output differs from source commit build`);
+    }
+    yield* Effect.forEach(files, (file) =>
+      Effect.gen(function* () {
+        const liveBytes = yield* fs
+          .readFile(path.join(dist, file))
+          .pipe(Effect.mapError((cause) => fail(`cannot read ${definition.name}:${file}`, cause)));
+        const committedBytes = yield* fs
+          .readFile(path.join(committedDist, file))
+          .pipe(
+            Effect.mapError((cause) =>
+              fail(`cannot read source commit build ${definition.name}:${file}`, cause),
+            ),
+          );
+        if (
+          liveBytes.length !== committedBytes.length ||
+          liveBytes.some((byte, index) => byte !== committedBytes[index])
+        ) {
+          return yield* fail(
+            `${definition.name} compiled output differs from source commit build: ${file}`,
+          );
+        }
+      }),
+    );
     for (const pattern of definition.compiledFiles) {
       if (files.filter((file) => pattern.test(file)).length !== 1) {
         return yield* fail(
@@ -478,18 +504,18 @@ const rewriteWorkspaceRanges = (value: unknown, version: string): void => {
   }
 };
 
-const copyPackage = (
+export const stagePackage = (
   liveRoot: string,
   sourceRoot: string,
-  definition: PackageDefinition,
+  packageName: string,
   stage: string,
   version: string,
 ) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
+    const definition = yield* packageDefinition(packageName);
     const sourcePackageRoot = path.join(sourceRoot, definition.directory);
-    const livePackageRoot = path.join(liveRoot, definition.directory);
     const verified = yield* verifyCompiledPackageOutput(liveRoot, sourceRoot, definition.name);
     const metadata = yield* readJson(path.join(sourcePackageRoot, "package.json"));
     if (!isObject(metadata))
@@ -513,7 +539,7 @@ const copyPackage = (
       .pipe(Effect.mapError((cause) => fail(`cannot stage ${definition.name} metadata`, cause)));
     yield* Effect.forEach(allowlist, (entry) =>
       Effect.gen(function* () {
-        const source = path.join(entry === "dist" ? livePackageRoot : sourcePackageRoot, entry);
+        const source = path.join(sourcePackageRoot, entry);
         const symbolicLink = yield* fs
           .readLink(source)
           .pipe(Effect.match({ onFailure: () => false, onSuccess: () => true }));
@@ -578,6 +604,73 @@ const snapshotAtCommit = (root: string, sourceCommit: string) =>
     );
     yield* runCommand("tar", ["--extract", "--file", archiveFile, "--directory", snapshot], root);
     return snapshot;
+  });
+
+const buildSnapshotPackages = (root: string, snapshot: string) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const linkNodeModules = (relative: string, required: boolean) =>
+      Effect.gen(function* () {
+        const installed = path.join(root, relative, "node_modules");
+        if (!(yield* fs.exists(installed))) {
+          if (required) return yield* fail("installed dependencies are unavailable");
+          return;
+        }
+        const linked = path.join(snapshot, relative, "node_modules");
+        yield* fs
+          .makeDirectory(linked, { recursive: true })
+          .pipe(Effect.mapError((cause) => fail(`cannot create ${relative}/node_modules`, cause)));
+        const names = yield* fs
+          .readDirectory(installed)
+          .pipe(Effect.mapError((cause) => fail(`cannot list ${relative}/node_modules`, cause)));
+        yield* Effect.forEach(names.sort(), (name) =>
+          Effect.gen(function* () {
+            if (name === ".vite" || name === ".vite-temp") return;
+            if (name !== "@askgina") {
+              yield* fs
+                .symlink(path.join(installed, name), path.join(linked, name))
+                .pipe(
+                  Effect.mapError((cause) =>
+                    fail(`cannot link build dependency ${relative}/node_modules/${name}`, cause),
+                  ),
+                );
+              return;
+            }
+            const installedScope = path.join(installed, name);
+            const linkedScope = path.join(linked, name);
+            yield* fs
+              .makeDirectory(linkedScope, { recursive: true })
+              .pipe(Effect.mapError((cause) => fail("cannot link workspace dependencies", cause)));
+            const workspaceNames = yield* fs
+              .readDirectory(installedScope)
+              .pipe(Effect.mapError((cause) => fail("cannot list workspace dependencies", cause)));
+            yield* Effect.forEach(workspaceNames.sort(), (workspaceName) =>
+              Effect.gen(function* () {
+                const definition = PACKAGES.find(
+                  (candidate) => candidate.name === `@askgina/${workspaceName}`,
+                );
+                if (definition === undefined) {
+                  return yield* fail(`unknown workspace dependency: @askgina/${workspaceName}`);
+                }
+                yield* fs
+                  .symlink(
+                    path.join(snapshot, definition.directory),
+                    path.join(linkedScope, workspaceName),
+                  )
+                  .pipe(
+                    Effect.mapError((cause) =>
+                      fail(`cannot link workspace dependency ${definition.name}`, cause),
+                    ),
+                  );
+              }),
+            );
+          }),
+        );
+      });
+    yield* linkNodeModules("", true);
+    yield* Effect.forEach(PACKAGES, (definition) => linkNodeModules(definition.directory, false));
+    yield* runCommand(process.execPath, ["node_modules/.bin/vp", "pack"], snapshot);
   });
 
 const assertLiveSourceBoundary = (root: string, snapshot: string) =>
@@ -716,6 +809,7 @@ export const buildArtifacts = ({ root, dist }: BuildArtifactsOptions) =>
         MAX_GIT_PORCELAIN_BYTES,
       );
       if (sourceDirty) return yield* fail("artifact source tree must be clean");
+      yield* buildSnapshotPackages(root, source);
       const contractSource = yield* readText(path.join(source, "packages/contracts/src/index.ts"));
       const catalogSha = contractSource.match(/export const catalogSha = "([a-f0-9]{64})"/u)?.[1];
       const contractVersion = contractSource.match(
@@ -741,7 +835,7 @@ export const buildArtifacts = ({ root, dist }: BuildArtifactsOptions) =>
       const packageReceipts = yield* Effect.forEach(PACKAGES, (definition) =>
         Effect.gen(function* () {
           const stage = path.join(temporary, `package-${definition.slug}`);
-          const files = yield* copyPackage(root, source, definition, stage, version);
+          const files = yield* stagePackage(root, source, definition.name, stage, version);
           const filename = `askgina-${definition.slug}-${version}.tgz`;
           const output = path.join(dist, "packages", filename);
           yield* archive(root, stage, output, ["package"]);
@@ -755,7 +849,7 @@ export const buildArtifacts = ({ root, dist }: BuildArtifactsOptions) =>
         }),
       );
       const contractFiles = yield* fileProofs(
-        path.join(root, "packages/contracts/dist"),
+        path.join(source, "packages/contracts/dist"),
         "packages/contracts/dist",
       );
 

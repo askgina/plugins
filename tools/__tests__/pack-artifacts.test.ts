@@ -3,7 +3,12 @@ import { assert, describe, it } from "@effect/vitest";
 import { ChildProcess } from "effect/unstable/process";
 import { Data, Effect, FileSystem, Path, Schema } from "effect";
 
-import { ArtifactPackError, buildArtifacts, verifyCompiledPackageOutput } from "../pack-artifacts";
+import {
+  ArtifactPackError,
+  buildArtifacts,
+  stagePackage,
+  verifyCompiledPackageOutput,
+} from "../pack-artifacts";
 class TestCommandError extends Data.TaggedError("TestCommandError")<{
   readonly command: string;
   readonly exitCode: number;
@@ -85,8 +90,10 @@ const compiledContractFixture = Effect.gen(function* () {
   yield* fs.makeDirectory(dist, { recursive: true });
   yield* fs.writeFileString(
     path.join(packageRoot, "package.json"),
-    json({ files: ["dist", "LICENSE", "README.md"] }),
+    json({ name: "@askgina/contracts", version: "0.1.0", files: ["dist", "LICENSE", "README.md"] }),
   );
+  yield* fs.writeFileString(path.join(packageRoot, "LICENSE"), "fixture license\n");
+  yield* fs.writeFileString(path.join(packageRoot, "README.md"), "fixture readme\n");
   yield* fs.writeFileString(path.join(packageRoot, "src/index.ts"), source);
   yield* fs.writeFileString(
     path.join(dist, "index.js"),
@@ -123,6 +130,7 @@ describe("pack artifact source snapshot", () => {
     it.effect("accepts compiled output with matching embedded TypeScript", () =>
       Effect.scoped(
         Effect.gen(function* () {
+          const path = yield* Path.Path;
           const fixture = yield* compiledContractFixture;
           const result = yield* verifyCompiledPackageOutput(
             fixture.root,
@@ -130,6 +138,45 @@ describe("pack artifact source snapshot", () => {
             "@askgina/contracts",
           );
           assert.deepStrictEqual(result.files, ["index.d.ts", "index.js", "index.js.map"]);
+          const staged = yield* stagePackage(
+            fixture.root,
+            fixture.root,
+            "@askgina/contracts",
+            path.join(fixture.root, "stage"),
+            "0.1.0",
+          );
+          assert.isTrue(staged.some((proof) => proof.path === "package/dist/index.js"));
+        }),
+      ),
+    );
+
+    it.effect("rejects modified ignored executable bytes before staging", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fixture = yield* compiledContractFixture;
+          const committedRoot = yield* fs.makeTempDirectoryScoped({
+            prefix: "committed-contract-test-",
+          });
+          const committedPackageRoot = path.join(committedRoot, "packages/contracts");
+          yield* fs.makeDirectory(path.dirname(committedPackageRoot), { recursive: true });
+          yield* fs.copy(fixture.packageRoot, committedPackageRoot, { overwrite: true });
+          yield* fs.writeFileString(
+            path.join(fixture.dist, "index.js"),
+            "globalThis.compromised = true;\n//# sourceMappingURL=index.js.map\n",
+          );
+          const stage = path.join(fixture.root, "stage");
+          const error = yield* stagePackage(
+            fixture.root,
+            committedRoot,
+            "@askgina/contracts",
+            stage,
+            "0.1.0",
+          ).pipe(Effect.flip);
+          assert.instanceOf(error, ArtifactPackError);
+          assert.include(error.message, "compiled output differs from source commit build");
+          assert.isFalse(yield* fs.exists(stage));
         }),
       ),
     );
