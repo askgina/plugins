@@ -27,6 +27,30 @@ export {
   type LiveEvalTrialInput,
 } from "./live.js";
 export {
+  PluginEvalResponsesDecodeError,
+  PluginEvalResponsesHttpError,
+  PluginEvalResponsesRequestError,
+  PluginEvalResponsesTimeoutError,
+  runResponsesApiPluginEvalTrial,
+  type PluginEvalResponsesError,
+  type ResponsesApiTrialOptions,
+} from "./responses-api.js";
+export {
+  attestCodexExecutable,
+  PluginEvalCodexCliExecutableError,
+  PluginEvalCodexCliProcessError,
+  PluginEvalCodexCliSpawnError,
+  PluginEvalCodexCliTimeoutError,
+  runCodexCliPluginEvalTrial,
+  type AttestCodexExecutableOptions,
+  type AttestedCodexExecutable,
+  type CodexCliCommand,
+  type CodexCliProcessResult,
+  type CodexCliTrialOptions,
+  type CodexCliTrialRunner,
+  type PluginEvalCodexCliError,
+} from "./codex-cli.js";
+export {
   makeSanitizedEvalRunReport,
   sanitizeEvalReplay,
   SanitizedEvalRunReportError,

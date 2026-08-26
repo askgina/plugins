@@ -639,6 +639,17 @@ const cleanInstall = (
     yield* runCommand("bun", ["-e", `await import("${definition.name}")`], project, env).pipe(
       Effect.mapError((cause) => fail(`${definition.name} failed a clean import`, cause)),
     );
+    if (definition.name === "@askgina/evals") {
+      yield* runCommand(
+        "bun",
+        [
+          "-e",
+          'import * as api from "@askgina/evals"; if (typeof api.runResponsesApiPluginEvalTrial !== "function" || typeof api.runCodexCliPluginEvalTrial !== "function") throw new Error("missing live eval adapters")',
+        ],
+        project,
+        env,
+      ).pipe(Effect.mapError((cause) => fail("@askgina/evals omitted live adapters", cause)));
+    }
     if (definition.name === "@askgina/cli") {
       const bin = path.join(project, "node_modules/.bin/ask-gina");
       yield* runCommand("bun", [bin, "--help"], project, env).pipe(

@@ -3,7 +3,7 @@ import { Data, Effect, Schema } from "effect";
 import type { PluginEvalReplayReport, PluginEvalRunManifest } from "./contracts.js";
 import {
   findPublicTextViolations,
-  type HermeticEvalSanitizationError,
+  HermeticEvalSanitizationError,
   sanitizeEvalAggregate,
   SanitizedEvalAggregateSchema,
 } from "./sanitize.js";
@@ -51,6 +51,11 @@ export const sanitizeEvalReplay = (
   source: EvalReplayProvenance,
 ): Effect.Effect<typeof SanitizedEvalAggregateSchema.Type, HermeticEvalSanitizationError> => {
   const report = source.report;
+  if (report.observed !== report.expected_observations || report.coverage_rate !== 1) {
+    return Effect.fail(
+      new HermeticEvalSanitizationError({ reasons: ["eval replay coverage must be complete"] }),
+    );
+  }
   return sanitizeEvalAggregate(
     {
       schemaVersion: "v1",

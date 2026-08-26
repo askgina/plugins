@@ -502,6 +502,31 @@ describe("hermetic eval replay", () => {
         }
       }),
     );
+    it.effect("rejects sanitized reports with incomplete replay coverage", () =>
+      Effect.gen(function* () {
+        const paths = yield* fixturePaths;
+        const replay = yield* runHermeticEvalReplay({
+          suitePath: paths.suite,
+          observationsPath: paths.observations,
+        });
+        const expectedObservations = replay.report.expected_observations + 1;
+        const result = yield* Effect.result(
+          makeSanitizedEvalRunReport({
+            ...replay,
+            report: {
+              ...replay.report,
+              expected_observations: expectedObservations,
+              coverage_rate: replay.report.observed / expectedObservations,
+            },
+          }),
+        );
+
+        assert.strictEqual(result._tag, "Failure");
+        if (result._tag === "Failure") {
+          assert.include(result.failure.reasons, "eval replay coverage must be complete");
+        }
+      }),
+    );
 
     it.effect("rejects schema and observation invariant drift before replay", () =>
       Effect.gen(function* () {
