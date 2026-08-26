@@ -134,7 +134,6 @@ const isNativeExecutableHeader = (bytes: readonly number[]): boolean =>
 
 const executableDescriptorPath = (descriptor: number): string | undefined => {
   if (process.platform === "linux") return `/proc/self/fd/${descriptor}`;
-  if (process.platform === "darwin") return `/dev/fd/${descriptor}`;
   return undefined;
 };
 
@@ -148,12 +147,20 @@ const fileDescriptor = (file: FileSystem.File): number | undefined => {
 const inspectOpenExecutable = (
   handle: FileSystem.File,
   expectedSha256: string,
+  options: {
+    readonly copyTo?: FileSystem.File;
+    readonly forbiddenWriteBits: number;
+  },
 ): Effect.Effect<Omit<AttestedCodexExecutable, "path">, PluginEvalCodexCliExecutableError> =>
   Effect.gen(function* () {
     const before = yield* handle.stat.pipe(
       Effect.mapError(() => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" })),
     );
-    if (before.type !== "File" || (before.mode & 0o111) === 0) {
+    if (
+      before.type !== "File" ||
+      (before.mode & 0o111) === 0 ||
+      (before.mode & options.forbiddenWriteBits) !== 0
+    ) {
       return yield* new PluginEvalCodexCliExecutableError({ reason: "invalid-file" });
     }
     yield* handle
@@ -172,10 +179,24 @@ const inspectOpenExecutable = (
       if (Option.isNone(maybeChunk)) break;
       const chunk = maybeChunk.value;
       hash.update(chunk);
+      if (options.copyTo !== undefined) {
+        yield* options.copyTo
+          .writeAll(chunk)
+          .pipe(
+            Effect.mapError(
+              () => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" }),
+            ),
+          );
+      }
       for (let index = 0; index < chunk.length && header.length < 4; index += 1) {
         const value = chunk[index];
         if (value !== undefined) header.push(value);
       }
+    }
+    if (options.copyTo !== undefined) {
+      yield* options.copyTo.sync.pipe(
+        Effect.mapError(() => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" })),
+      );
     }
     const after = yield* handle.stat.pipe(
       Effect.mapError(() => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" })),
@@ -236,12 +257,59 @@ export const openAttestedCodexExecutable = ({
     if (forbiddenRoots.some((root) => isWithin(path, path.resolve(root), canonical))) {
       return yield* new PluginEvalCodexCliExecutableError({ reason: "forbidden-path" });
     }
-    const handle = yield* fs
-      .open(canonical, { flag: "r" })
+    const descriptorRoot = executableDescriptorPath(0);
+    if (descriptorRoot === undefined) {
+      return yield* new PluginEvalCodexCliExecutableError({ reason: "descriptor-unavailable" });
+    }
+    const snapshotDirectory = yield* fs
+      .makeTempDirectoryScoped({
+        prefix: "ask-gina-codex-executable-",
+      })
       .pipe(
         Effect.mapError(() => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" })),
       );
-    const descriptor = fileDescriptor(handle);
+    yield* fs
+      .chmod(snapshotDirectory, 0o700)
+      .pipe(
+        Effect.mapError(() => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" })),
+      );
+    const snapshotPath = path.join(snapshotDirectory, "codex");
+    const inspected = yield* Effect.scoped(
+      Effect.gen(function* () {
+        const source = yield* fs
+          .open(canonical, { flag: "r" })
+          .pipe(
+            Effect.mapError(
+              () => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" }),
+            ),
+          );
+        const snapshotWriter = yield* fs
+          .open(snapshotPath, { flag: "wx", mode: 0o500 })
+          .pipe(
+            Effect.mapError(
+              () => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" }),
+            ),
+          );
+        const sourceInspection = yield* inspectOpenExecutable(source, expectedSha256, {
+          copyTo: snapshotWriter,
+          forbiddenWriteBits: 0o022,
+        });
+        yield* fs
+          .chmod(snapshotPath, 0o500)
+          .pipe(
+            Effect.mapError(
+              () => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" }),
+            ),
+          );
+        return sourceInspection;
+      }),
+    );
+    const snapshot = yield* fs
+      .open(snapshotPath, { flag: "r" })
+      .pipe(
+        Effect.mapError(() => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" })),
+      );
+    const descriptor = fileDescriptor(snapshot);
     if (descriptor === undefined) {
       return yield* new PluginEvalCodexCliExecutableError({ reason: "descriptor-unavailable" });
     }
@@ -249,7 +317,12 @@ export const openAttestedCodexExecutable = ({
     if (command === undefined) {
       return yield* new PluginEvalCodexCliExecutableError({ reason: "descriptor-unavailable" });
     }
-    const inspected = yield* inspectOpenExecutable(handle, expectedSha256);
+    yield* inspectOpenExecutable(snapshot, expectedSha256, { forbiddenWriteBits: 0o222 });
+    yield* fs
+      .remove(snapshotPath)
+      .pipe(
+        Effect.mapError(() => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" })),
+      );
     return {
       command,
       executable: { path: canonical, ...inspected },

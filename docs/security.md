@@ -25,10 +25,12 @@ Live eval credentials are read from environment-backed Effect `Config` values,
 never command-line arguments. The Responses runner sends the provider key only
 to the Responses API and the Gina bearer only in the remote MCP authorization
 transport field. The Codex runner accepts only an absolute native executable whose
-bytes match a pinned SHA-256 digest. It hashes an already-open handle and launches
-that same descriptor, so replacing the configured path cannot redirect the
-credential-bearing child. Descriptor-backed launch is supported on Linux and
-macOS; other platforms fail closed. The runner installs and validates the plugin
+bytes match a pinned SHA-256 digest and whose group/other write bits are clear. It
+copies those verified bytes into a private, non-writable snapshot and launches an
+open descriptor after unlinking the snapshot path, so replacing or overwriting the
+configured file cannot redirect the credential-bearing child. Descriptor-backed
+launch is supported on Linux; other platforms fail closed. The runner
+installs and validates the plugin
 in a fresh temporary `CODEX_HOME`, writes the Gina MCP credential only to that
 temporary credential store, and never forwards the Gina bearer in the child
 environment. Before the model request,

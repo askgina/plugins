@@ -304,28 +304,22 @@ describe("Codex CLI trial adapter", () => {
       }),
     );
 
-    it.effect("executes the opened executable after its path is replaced", () =>
+    it.effect("executes an immutable snapshot after the source is overwritten", () =>
       Effect.gen(function* () {
-        if (process.platform !== "linux" && process.platform !== "darwin") return;
+        if (process.platform !== "linux") return;
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "codex-descriptor-test-" });
         const executablePath = `${root}/codex`;
-        const substitutePath = `${root}/substitute`;
         const trustedBytes = yield* fs.readFile("/bin/echo");
-        const substituteBytes = yield* fs.readFile(
-          process.platform === "darwin" ? "/usr/bin/false" : "/bin/false",
-        );
-        yield* Effect.all([
-          fs.writeFile(executablePath, trustedBytes),
-          fs.writeFile(substitutePath, substituteBytes),
-        ]);
-        yield* Effect.all([fs.chmod(executablePath, 0o755), fs.chmod(substitutePath, 0o755)]);
+        const substituteBytes = yield* fs.readFile("/bin/false");
+        yield* fs.writeFile(executablePath, trustedBytes);
+        yield* fs.chmod(executablePath, 0o755);
         const opened = yield* openAttestedCodexExecutable({
           executablePath,
           expectedSha256: createHash("sha256").update(trustedBytes).digest("hex"),
         });
 
-        yield* fs.rename(substitutePath, executablePath);
+        yield* fs.writeFile(executablePath, substituteBytes);
         const child = yield* ChildProcess.make(opened.command, ["descriptor-ok"], {
           stdin: "ignore",
           stdout: "pipe",
@@ -338,6 +332,30 @@ describe("Codex CLI trial adapter", () => {
 
         assert.strictEqual(exitCode, 0);
         assert.strictEqual(stdout.text, "descriptor-ok\n");
+      }),
+    );
+
+    it.effect("rejects an executable writable by another user", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "codex-mode-test-" });
+        const executablePath = `${root}/codex`;
+        const bytes = yield* fs.readFile("/bin/echo");
+        yield* fs.writeFile(executablePath, bytes);
+        yield* fs.chmod(executablePath, 0o775);
+
+        const result = yield* Effect.result(
+          openAttestedCodexExecutable({
+            executablePath,
+            expectedSha256: createHash("sha256").update(bytes).digest("hex"),
+          }),
+        );
+
+        assert.strictEqual(result._tag, "Failure");
+        if (result._tag === "Failure") {
+          assert.instanceOf(result.failure, PluginEvalCodexCliExecutableError);
+          assert.strictEqual(result.failure.reason, "invalid-file");
+        }
       }),
     );
 
