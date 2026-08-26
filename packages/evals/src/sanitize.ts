@@ -180,11 +180,7 @@ const isExplicitSyntheticCredential = (value: string): boolean => {
 
 const isExplicitSyntheticHeaderCredential = (match: RegExpExecArray, value: string): boolean => {
   const header = match[0].toLowerCase();
-  if (
-    header.startsWith("cookie") ||
-    header.startsWith("set-cookie") ||
-    header.startsWith("set_cookie")
-  ) {
+  if (/^(?:set[-_])?cookie\s*:/.test(header)) {
     const assignmentIndex = value.indexOf("=");
     if (assignmentIndex !== -1) {
       return isExplicitSyntheticCredential(value.slice(assignmentIndex + 1));

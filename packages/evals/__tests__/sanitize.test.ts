@@ -193,6 +193,14 @@ describe("public eval text detection", () => {
     assert.includeMembers(kinds, ["header-credential"]);
   });
 
+  it("rejects a cookie assignment whose entire RHS is not synthetic", () => {
+    const kinds = findPublicTextViolations("cookie=opaque-production-secret=fixture").map(
+      ({ kind }) => kind,
+    );
+
+    assert.includeMembers(kinds, ["header-credential", "secret-assignment"]);
+  });
+
   it("allows negative prose and explicitly synthetic fixture values", () => {
     const text = [
       "tokenCount=3",
