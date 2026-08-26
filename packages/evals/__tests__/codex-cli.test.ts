@@ -113,6 +113,13 @@ describe("Codex CLI JSONL evidence", () => {
             type: "item.completed",
             item: {
               type: "command_execution",
+              command: `cat "${ASK_GINA_SKILL_PATH}"`,
+            },
+          },
+          {
+            type: "item.completed",
+            item: {
+              type: "command_execution",
               command: `cat ${HOST_SKILL_PATH}`,
             },
           },
@@ -124,6 +131,18 @@ describe("Codex CLI JSONL evidence", () => {
               tool: "spot.getSimplePrice",
               arguments: { ids: "ethereum", vs_currencies: "usd" },
               result: { ethereum: { usd: 1 } },
+              error: null,
+              status: "completed",
+            },
+          },
+          {
+            type: "item.completed",
+            item: {
+              type: "mcp_tool_call",
+              server: "ask-gina",
+              tool: "gina.getAccountAddresses",
+              arguments: {},
+              result: {},
               status: "completed",
             },
           },
@@ -151,13 +170,15 @@ describe("Codex CLI JSONL evidence", () => {
       );
 
       assert.deepStrictEqual(parsed.activated_skills, ["research-spot-tokens"]);
-      assert.strictEqual(parsed.tool_calls.length, 1);
+      assert.strictEqual(parsed.tool_calls.length, 2);
       assert.strictEqual(parsed.unsupported_actions, 2);
       assert.strictEqual(parsed.tool_calls[0]?.name, "spot.getSimplePrice");
+      assert.isUndefined(parsed.tool_calls[0]?.error);
       assert.deepStrictEqual(parsed.tool_calls[0]?.arguments, {
         ids: "ethereum",
         vs_currencies: "usd",
       });
+      assert.strictEqual(parsed.tool_calls[1]?.name, "gina.getAccountAddresses");
       assert.strictEqual(parsed.final_answer, "ETH is $1.");
       assert.deepStrictEqual(parsed.token_usage, {
         input_tokens: 10,

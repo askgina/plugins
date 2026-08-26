@@ -50,13 +50,17 @@ const ASK_GINA_SKILL_NAMES: Readonly<Record<(typeof ASK_GINA_PLUGIN_SKILL_NAMES)
 const ASK_GINA_SKILL_PATH_RE =
   /(?:^|[/\\])ask-gina(?:@[^/\\]+)?(?:[/\\].*)?[/\\]skills[/\\](review-gina-account|research-spot-tokens|research-hyperliquid|research-prediction-markets)[/\\]SKILL\.md\b/u;
 const ASK_GINA_MCP_SERVER = "gina";
+const ASK_GINA_MCP_SERVER_NAMES: Readonly<Record<string, true>> = {
+  gina: true,
+  "ask-gina": true,
+};
 const CODEX_NON_ACTION_ITEM_TYPES: Readonly<Record<string, true>> = {
   agent_message: true,
   reasoning: true,
   todo_list: true,
 };
 const SAFE_SKILL_READ_COMMAND_RE =
-  /^(?:cat(?:\s+--)?|sed\s+-n\s+['"]?\d+(?:,\d+)?p['"]?)\s+['"]?([^\s;&|><$`]+)['"]?$/u;
+  /^(?:cat(?:\s+--)?|sed\s+-n\s+(?:'\d+(?:,\d+)?p'|"\d+(?:,\d+)?p"|\d+(?:,\d+)?p))\s+(?:"([^"\s;&|><$`]+)"|'([^'\s;&|><$`]+)'|([^\s;&|><$`'"]+))$/u;
 const UTF8_ENCODER = new TextEncoder();
 export class PluginEvalCodexCliSpawnError extends Data.TaggedError("PluginEvalCodexCliSpawnError")<{
   readonly caseId: string;
@@ -434,7 +438,8 @@ const skillFromReadItem = (
   if (item.type !== "command_execution") return undefined;
   const command = asString(item.command)?.trim();
   if (command === undefined) return undefined;
-  const candidate = SAFE_SKILL_READ_COMMAND_RE.exec(command)?.[1];
+  const match = SAFE_SKILL_READ_COMMAND_RE.exec(command);
+  const candidate = match?.[1] ?? match?.[2] ?? match?.[3];
   return candidate === undefined ? undefined : skillFromPluginPath(candidate, pluginSkillRoot);
 };
 
@@ -470,9 +475,11 @@ const toolNameFromItem = (item: Readonly<Record<string, unknown>>): string | und
 const isMcpToolItem = (item: Readonly<Record<string, unknown>>): boolean => {
   const type = asString(item.type);
   const name = toolNameFromItem(item);
+  const server = asString(item.server);
   return (
     type === "mcp_tool_call" &&
-    item.server === ASK_GINA_MCP_SERVER &&
+    server !== undefined &&
+    Object.hasOwn(ASK_GINA_MCP_SERVER_NAMES, server) &&
     name !== undefined &&
     isGinaReadToolName(name)
   );
@@ -488,7 +495,7 @@ const toolCallFromItem = (
   const result = item.result ?? item.output ?? item.aggregated_output ?? item.response;
   const serialized =
     typeof result === "string" ? result : result === undefined ? undefined : JSON.stringify(result);
-  const failed = item.error !== undefined || item.status === "failed";
+  const failed = (item.error !== undefined && item.error !== null) || item.status === "failed";
   const decodedArguments = decodeToolArguments(item.arguments ?? item.args);
 
   return {
