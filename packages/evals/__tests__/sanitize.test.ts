@@ -6,7 +6,7 @@ import {
   sanitizeEvalAggregate,
   type SanitizedEvalAggregate,
   type SanitizedEvalAggregateProvenance,
-} from "../src/index.js";
+} from "../src/index";
 
 const collectPublicStrings = (value: unknown): readonly string[] => {
   if (typeof value === "string") return [value];

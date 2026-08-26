@@ -2,7 +2,7 @@ import type { AskGinaError, AskGinaTransport } from "@askgina/sdk";
 import { Console, Effect } from "effect";
 import { CliError, Command } from "effect/unstable/cli";
 
-import { makeAskGinaCommand } from "./command.js";
+import { makeAskGinaCommand } from "./command";
 
 export type AskGinaCliOptions = {
   readonly argv: ReadonlyArray<string>;

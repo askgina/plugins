@@ -1,13 +1,16 @@
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { assert, describe, it } from "@effect/vitest";
 import { ChildProcess } from "effect/unstable/process";
-import { Data, Effect, FileSystem, Path } from "effect";
+import { Data, Effect, FileSystem, Path, Schema } from "effect";
 
-import { ArtifactPackError, buildArtifacts } from "../pack-artifacts.js";
+import { ArtifactPackError, buildArtifacts, verifyCompiledPackageOutput } from "../pack-artifacts";
 class TestCommandError extends Data.TaggedError("TestCommandError")<{
   readonly command: string;
   readonly exitCode: number;
 }> {}
+
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+const json = (value: unknown): string => `${encodeJson(value)}\n`;
 
 const SOURCE_DIRECTORIES = [
   "packages/contracts",
@@ -71,6 +74,39 @@ const repositoryFixture = Effect.gen(function* () {
   );
   return { root, dist, impact };
 });
+const compiledContractFixture = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "compiled-contract-test-" });
+  const packageRoot = path.join(root, "packages/contracts");
+  const dist = path.join(packageRoot, "dist");
+  const source = "export const value = 1;\n";
+  yield* fs.makeDirectory(path.join(packageRoot, "src"), { recursive: true });
+  yield* fs.makeDirectory(dist, { recursive: true });
+  yield* fs.writeFileString(
+    path.join(packageRoot, "package.json"),
+    json({ files: ["dist", "LICENSE", "README.md"] }),
+  );
+  yield* fs.writeFileString(path.join(packageRoot, "src/index.ts"), source);
+  yield* fs.writeFileString(
+    path.join(dist, "index.js"),
+    "const value = 1;\n//# sourceMappingURL=index.js.map\n",
+  );
+  yield* fs.writeFileString(path.join(dist, "index.d.ts"), "declare const value = 1;\n");
+  const writeMap = (value: unknown) =>
+    fs.writeFileString(path.join(dist, "index.js.map"), json(value));
+  yield* writeMap({
+    version: 3,
+    sources: ["../src/index.ts"],
+    sourcesContent: [source],
+    names: [],
+    mappings: "",
+  });
+  return { root, packageRoot, dist, source, writeMap };
+});
+
+const rejectCompiledContract = (root: string) =>
+  verifyCompiledPackageOutput(root, root, "@askgina/contracts").pipe(Effect.flip);
 
 const assertRejectedBeforeImpact = (root: string, dist: string, impact: string) =>
   Effect.gen(function* () {
@@ -84,6 +120,91 @@ const assertRejectedBeforeImpact = (root: string, dist: string, impact: string) 
 
 describe("pack artifact source snapshot", () => {
   it.layer(BunServices.layer)((it) => {
+    it.effect("accepts compiled output with matching embedded TypeScript", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fixture = yield* compiledContractFixture;
+          const result = yield* verifyCompiledPackageOutput(
+            fixture.root,
+            fixture.root,
+            "@askgina/contracts",
+          );
+          assert.deepStrictEqual(result.files, ["index.d.ts", "index.js", "index.js.map"]);
+        }),
+      ),
+    );
+
+    it.effect("rejects missing and stale embedded source content", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fixture = yield* compiledContractFixture;
+          yield* fixture.writeMap({ version: 3, sources: ["../src/index.ts"] });
+          const missing = yield* rejectCompiledContract(fixture.root);
+          assert.include(missing.message, "sourcesContent must match sources");
+
+          yield* fixture.writeMap({
+            version: 3,
+            sources: ["../src/index.ts"],
+            sourcesContent: ["export const value = 2;\n"],
+          });
+          const stale = yield* rejectCompiledContract(fixture.root);
+          assert.include(stale.message, "content is stale");
+        }),
+      ),
+    );
+
+    it.effect("rejects absolute host paths in source maps", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fixture = yield* compiledContractFixture;
+          yield* fixture.writeMap({
+            version: 3,
+            sources: ["/home/private/checkout/src/index.ts"],
+            sourcesContent: [fixture.source],
+          });
+          const error = yield* rejectCompiledContract(fixture.root);
+          assert.include(error.message, "unsafe source path");
+        }),
+      ),
+    );
+
+    it.effect("rejects raw-source allowlists and unexpected compiled files", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fixture = yield* compiledContractFixture;
+          yield* fs.writeFileString(
+            path.join(fixture.packageRoot, "package.json"),
+            json({ files: ["dist", "src", "LICENSE", "README.md"] }),
+          );
+          const rawSource = yield* rejectCompiledContract(fixture.root);
+          assert.include(rawSource.message, "package files are inconsistent");
+
+          yield* fs.writeFileString(
+            path.join(fixture.packageRoot, "package.json"),
+            json({ files: ["dist", "LICENSE", "README.md"] }),
+          );
+          yield* fs.writeFileString(path.join(fixture.dist, "unexpected.js"), "export {};\n");
+          const unexpected = yield* rejectCompiledContract(fixture.root);
+          assert.include(unexpected.message, "unexpected compiled output");
+        }),
+      ),
+    );
+
+    it.effect("rejects missing compiled files", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fixture = yield* compiledContractFixture;
+          yield* fs.remove(path.join(fixture.dist, "index.js"));
+          const error = yield* rejectCompiledContract(fixture.root);
+          assert.include(error.message, "compiled output is missing or ambiguous");
+        }),
+      ),
+    );
+
     it.effect("rejects a package wrapper symlink before archive output", () =>
       Effect.scoped(
         Effect.gen(function* () {

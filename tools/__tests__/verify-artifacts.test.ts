@@ -3,7 +3,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { ChildProcess } from "effect/unstable/process";
 import { Effect, FileSystem, Path } from "effect";
 
-import { snapshotArtifactInputs } from "../verify-artifacts.js";
+import { snapshotArtifactInputs } from "../verify-artifacts";
 
 describe("artifact verification snapshots", () => {
   it.layer(BunServices.layer)((it) => {

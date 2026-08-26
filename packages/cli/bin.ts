@@ -4,7 +4,7 @@ import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Effect, Layer } from "effect";
 
-import { recoverAskGinaCliFailures, runAskGinaCliFromStdio } from "./src/run.js";
+import { recoverAskGinaCliFailures, runAskGinaCliFromStdio } from "./src/run";
 
 const program: Effect.Effect<number, never, BunServices.BunServices> = recoverAskGinaCliFailures(
   runAskGinaCliFromStdio(),

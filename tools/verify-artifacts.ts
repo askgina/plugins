@@ -20,10 +20,10 @@ import {
   runHermeticEvalReplay,
   sanitizeEvalAggregate,
   sanitizeEvalReplay,
-} from "../packages/evals/src/index.js";
-import { copyCheckedRegularFile, extractCheckedTarGz } from "./archive-security.js";
-import { checkGeneratedTargetConformance } from "./check-target-conformance.js";
-import { buildArtifacts } from "./pack-artifacts.js";
+} from "../packages/evals/src/index";
+import { copyCheckedRegularFile, extractCheckedTarGz } from "./archive-security";
+import { checkGeneratedTargetConformance } from "./check-target-conformance";
+import { buildArtifacts } from "./pack-artifacts";
 
 const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini"] as const;
 const SKILLS = [

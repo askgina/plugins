@@ -3,8 +3,8 @@ import { Client as McpClient } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { Effect, Function } from "effect";
 
-import type { AskGinaError } from "./errors.js";
-import { AskGinaToolError, AskGinaTransportError } from "./errors.js";
+import type { AskGinaError } from "./errors";
+import { AskGinaToolError, AskGinaTransportError } from "./errors";
 
 export type AskGinaListedTool = {
   readonly name: string;

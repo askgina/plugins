@@ -5,10 +5,10 @@ import * as BunServices from "@effect/platform-bun/BunServices";
 import {
   findPublicTextViolations,
   type PublicTextViolationKind,
-} from "../packages/evals/src/index.js";
+} from "../packages/evals/src/index";
 import { Data, Effect, FileSystem, Layer, Path, Schema } from "effect";
 
-import { extractCheckedTarGz } from "./archive-security.js";
+import { extractCheckedTarGz } from "./archive-security";
 
 const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini"];
 const PACKAGES = [

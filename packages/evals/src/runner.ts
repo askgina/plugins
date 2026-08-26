@@ -1,21 +1,21 @@
 import { catalogSha } from "@askgina/contracts";
 import { Effect, FileSystem, Path } from "effect";
 
-import type { PluginEvalReplayReport, PluginEvalRunManifest } from "./contracts.js";
+import type { PluginEvalReplayReport, PluginEvalRunManifest } from "./contracts";
 import {
   loadPluginEvalObservationSet,
   type PluginEvalObservationSetParseError,
   type PluginEvalObservationSetReadError,
   type PluginEvalObservationSetValidationError,
-} from "./load-observations.js";
+} from "./load-observations";
 import {
   loadPluginEvalSuite,
   type PluginEvalSuiteParseError,
   type PluginEvalSuiteReadError,
   type PluginEvalSuiteValidationError,
-} from "./load-suite.js";
-import type { PluginEvalObservationMismatchError } from "./grading.js";
-import { replayPluginEvalObservationSet, type PluginEvalReplayContractError } from "./replay.js";
+} from "./load-suite";
+import type { PluginEvalObservationMismatchError } from "./grading";
+import { replayPluginEvalObservationSet, type PluginEvalReplayContractError } from "./replay";
 
 export interface HermeticEvalReplayOptions {
   readonly suitePath: string;

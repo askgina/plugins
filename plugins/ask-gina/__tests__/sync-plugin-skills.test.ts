@@ -6,7 +6,7 @@ import {
   createGeneratedPluginTargets,
   SKILL_NAMES,
   TARGET_NAMES,
-} from "../../../tools/sync-plugin-skills.js";
+} from "../../../tools/sync-plugin-skills";
 
 const makeGeneratedTargets = Effect.acquireRelease(
   createGeneratedPluginTargets(),

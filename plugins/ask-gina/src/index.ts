@@ -7,4 +7,4 @@ export {
   type AskGinaPluginManifest,
   type AskGinaPluginSource,
   type CanonicalSkillDocument,
-} from "./loaders.js";
+} from "./loaders";

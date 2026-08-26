@@ -6,6 +6,11 @@ import { ChildProcess } from "effect/unstable/process";
 import { Crypto, Data, Effect, FileSystem, Layer, Path, Schema, Stream } from "effect";
 
 const CONTRACT_SOURCE = "packages/contracts/src/index.ts";
+const CONTRACT_OUTPUTS = [
+  "packages/contracts/dist/index.d.ts",
+  "packages/contracts/dist/index.js",
+  "packages/contracts/dist/index.js.map",
+] as const;
 const RECEIPT_PATH = "dist/receipts/contract.json";
 const SHA_256 = /^[a-f0-9]{64}$/u;
 const GIT_COMMIT = /^[a-f0-9]{40}$/u;
@@ -98,17 +103,45 @@ export const buildContractReceipt = (root: string) =>
     if (catalogSha === undefined || !SHA_256.test(catalogSha)) {
       return yield* fail("contracts catalogSha must be a SHA-256 digest");
     }
-    const sourceHash = toHex(
-      yield* crypto
-        .digest("SHA-256", new TextEncoder().encode(source))
-        .pipe(Effect.mapError((cause) => fail("cannot hash public contract source", cause))),
+    const outputDirectory = path.join(root, "packages/contracts/dist");
+    const outputNames = (yield* fs
+      .readDirectory(outputDirectory)
+      .pipe(
+        Effect.mapError((cause) => fail("cannot list compiled contract output", cause)),
+      )).sort();
+    if (outputNames.join("\n") !== CONTRACT_OUTPUTS.map((file) => path.basename(file)).join("\n")) {
+      return yield* fail("compiled contract output is missing or unexpected");
+    }
+    const files = yield* Effect.forEach(CONTRACT_OUTPUTS, (file) =>
+      Effect.gen(function* () {
+        const absolute = path.join(root, file);
+        const symbolicLink = yield* fs
+          .readLink(absolute)
+          .pipe(Effect.match({ onFailure: () => false, onSuccess: () => true }));
+        if (symbolicLink)
+          return yield* fail(`compiled contract output is a symbolic link: ${file}`);
+        const info = yield* fs
+          .stat(absolute)
+          .pipe(Effect.mapError((cause) => fail(`cannot inspect ${file}`, cause)));
+        if (info.type !== "File")
+          return yield* fail(`compiled contract output is not a file: ${file}`);
+        const bytes = yield* fs
+          .readFile(absolute)
+          .pipe(Effect.mapError((cause) => fail(`cannot read ${file}`, cause)));
+        const sha256 = toHex(
+          yield* crypto
+            .digest("SHA-256", bytes)
+            .pipe(Effect.mapError((cause) => fail(`cannot hash ${file}`, cause))),
+        );
+        return { path: file, sha256 };
+      }),
     );
     return {
       schemaVersion: "v1",
       releaseVersion,
       sourceCommit: yield* sourceCommit(root),
       catalogSha,
-      files: [{ path: CONTRACT_SOURCE, sha256: sourceHash }],
+      files: files,
     } satisfies ContractReceipt;
   });
 

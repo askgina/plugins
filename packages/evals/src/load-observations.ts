@@ -1,7 +1,7 @@
 import { Data, Effect, FileSystem, Function, Path, Schema } from "effect";
 import { parse as parseYaml } from "yaml";
 
-import { type PluginEvalObservationSet, PluginEvalObservationSetSchema } from "./contracts.js";
+import { type PluginEvalObservationSet, PluginEvalObservationSetSchema } from "./contracts";
 
 export class PluginEvalObservationSetReadError extends Data.TaggedError(
   "PluginEvalObservationSetReadError",

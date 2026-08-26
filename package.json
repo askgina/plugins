@@ -10,23 +10,25 @@
   "type": "module",
   "scripts": {
     "fmt:check": "vp fmt --check .",
-    "lint": "vp lint --deny-warnings .",
+    "lint": "bun run build && vp lint --deny-warnings .",
     "check": "vp run quality",
+    "build": "vp run build-packages",
     "test": "vp run tests",
     "artifacts": "vp run build-artifacts",
     "verify:artifacts": "vp run verify-artifacts",
     "check:public-boundary": "vp run public-boundary",
     "check:target-conformance": "vp run target-conformance",
+    "check:typescript-imports": "bun tools/check-typescript-imports.ts",
     "verify:packages": "bun tools/verify-artifacts.ts --packages",
     "verify:targets": "bun tools/verify-artifacts.ts --targets",
     "smoke:install": "bun tools/verify-artifacts.ts --packages",
     "audit": "bun audit",
-    "eval:replay": "bun packages/evals/src/bin/replay.ts",
-    "eval:responses": "bun packages/evals/src/bin/live.ts --runner responses",
-    "eval:codex": "bun packages/evals/src/bin/live.ts --runner codex",
+    "eval:replay": "bun packages/evals/dist/bin/replay.js",
+    "eval:responses": "bun packages/evals/dist/bin/live.js --runner responses",
+    "eval:codex": "bun packages/evals/dist/bin/live.js --runner codex",
     "effect-tsgo:patch": "bun scripts/effect-tsgo-patch-if-needed.ts",
     "prepare": "bun run effect-tsgo:patch",
-    "typecheck": "node_modules/.bin/tsc --noEmit -p tsconfig.json",
+    "typecheck": "bun run build && node_modules/.bin/tsc --noEmit -p tsconfig.json",
     "effect-tsgo:diagnostics": "node_modules/.bin/effect-tsgo diagnostics --project tsconfig.json --format json"
   },
   "devDependencies": {
@@ -47,8 +49,7 @@
     "oxlint": "1.78.0"
   },
   "engines": {
-    "bun": "1.4.x",
-    "node": "22.x"
+    "bun": "1.4.x"
   },
   "packageManager": "bun@1.4.0"
 }

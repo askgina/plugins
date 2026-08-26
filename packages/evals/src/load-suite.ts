@@ -1,7 +1,7 @@
 import { Data, Effect, FileSystem, Function, Path, Schema } from "effect";
 import { parse as parseYaml } from "yaml";
 
-import { type PluginEvalCase, type PluginEvalSuite, PluginEvalSuiteSchema } from "./contracts.js";
+import { type PluginEvalCase, type PluginEvalSuite, PluginEvalSuiteSchema } from "./contracts";
 
 export class PluginEvalSuiteReadError extends Data.TaggedError("PluginEvalSuiteReadError")<{
   readonly path: string;

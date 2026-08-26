@@ -3,11 +3,11 @@
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { ChildProcess } from "effect/unstable/process";
-import { Crypto, Data, Effect, FileSystem, Layer, Path, Schema, Stream } from "effect";
+import { Crypto, Data, Effect, FileSystem, Function, Layer, Path, Schema, Stream } from "effect";
 
-import { runHermeticEvalReplay, sanitizeEvalReplay } from "../packages/evals/src/index.js";
-import { copyCheckedRegularFile } from "./archive-security.js";
-import { checkGeneratedTargetConformance } from "./check-target-conformance.js";
+import { runHermeticEvalReplay, sanitizeEvalReplay } from "../packages/evals/src/index";
+import { copyCheckedRegularFile } from "./archive-security";
+import { checkGeneratedTargetConformance } from "./check-target-conformance";
 
 const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini"] as const;
 const SKILLS = [
@@ -17,11 +17,74 @@ const SKILLS = [
   "review-gina-account",
 ];
 const PACKAGES = [
-  { slug: "contracts", name: "@askgina/contracts", directory: "packages/contracts" },
-  { slug: "sdk", name: "@askgina/sdk", directory: "packages/sdk" },
-  { slug: "cli", name: "@askgina/cli", directory: "packages/cli" },
-  { slug: "plugin-core", name: "@askgina/plugin-core", directory: "plugins/ask-gina" },
-  { slug: "evals", name: "@askgina/evals", directory: "packages/evals" },
+  {
+    slug: "contracts",
+    name: "@askgina/contracts",
+    directory: "packages/contracts",
+    packageFiles: ["dist", "LICENSE", "README.md"],
+    compiledFiles: [/^index\.d\.ts$/u, /^index\.js$/u, /^index\.js\.map$/u],
+  },
+  {
+    slug: "sdk",
+    name: "@askgina/sdk",
+    directory: "packages/sdk",
+    packageFiles: ["dist", "LICENSE", "README.md"],
+    compiledFiles: [/^index\.d\.ts$/u, /^index\.js$/u, /^index\.js\.map$/u],
+  },
+  {
+    slug: "cli",
+    name: "@askgina/cli",
+    directory: "packages/cli",
+    packageFiles: ["dist", "LICENSE", "README.md"],
+    compiledFiles: [
+      /^bin\.d\.ts$/u,
+      /^bin\.js$/u,
+      /^bin\.js\.map$/u,
+      /^index\.d\.ts$/u,
+      /^index\.js$/u,
+      /^run-[A-Za-z0-9_-]+\.js$/u,
+      /^run-[A-Za-z0-9_-]+\.js\.map$/u,
+    ],
+  },
+  {
+    slug: "plugin-core",
+    name: "@askgina/plugin-core",
+    directory: "plugins/ask-gina",
+    packageFiles: [
+      "dist",
+      "plugin.yaml",
+      "skills",
+      "evals/model/v1/activation.yaml",
+      "evals/model/v1/smoke.yaml",
+      "evals/model/v1/families",
+      "evals/model/v1/fixtures",
+      "LICENSE",
+      "README.md",
+    ],
+    compiledFiles: [/^index\.d\.ts$/u, /^index\.js$/u, /^index\.js\.map$/u],
+  },
+  {
+    slug: "evals",
+    name: "@askgina/evals",
+    directory: "packages/evals",
+    packageFiles: ["dist", "LICENSE", "README.md"],
+    compiledFiles: [
+      /^bin\/live\.d\.ts$/u,
+      /^bin\/live\.js$/u,
+      /^bin\/live\.js\.map$/u,
+      /^bin\/replay\.d\.ts$/u,
+      /^bin\/replay\.js$/u,
+      /^bin\/replay\.js\.map$/u,
+      /^index\.d\.ts$/u,
+      /^index\.js$/u,
+      /^report-[A-Za-z0-9_-]+\.js$/u,
+      /^report-[A-Za-z0-9_-]+\.js\.map$/u,
+      /^responses-api-[A-Za-z0-9_-]+\.js$/u,
+      /^responses-api-[A-Za-z0-9_-]+\.js\.map$/u,
+      /^runner-[A-Za-z0-9_-]+\.js$/u,
+      /^runner-[A-Za-z0-9_-]+\.js\.map$/u,
+    ],
+  },
 ];
 const TARGET_MANIFESTS: Readonly<Record<string, string>> = {
   openai: ".codex-plugin/plugin.json",
@@ -251,6 +314,142 @@ const fileProofs = (directory: string, prefix = "") =>
       ),
     );
   });
+const packageDefinition = (name: string) => {
+  const definition = PACKAGES.find((candidate) => candidate.name === name);
+  return definition === undefined
+    ? Effect.fail(fail(`unknown package definition: ${name}`))
+    : Effect.succeed(definition);
+};
+
+const verifyEmbeddedSourceMap = (
+  livePackageRoot: string,
+  sourcePackageRoot: string,
+  mapFile: string,
+) =>
+  Effect.gen(function* () {
+    const path = yield* Path.Path;
+    const value = yield* readJson(mapFile);
+    if (!isObject(value) || value.version !== 3) {
+      return yield* fail("compiled source map must be a version 3 object");
+    }
+    if (value.sourceRoot !== undefined && value.sourceRoot !== "") {
+      return yield* fail("compiled source map must not declare sourceRoot");
+    }
+    const companion = mapFile.slice(0, -".map".length);
+    const companionName = path.basename(companion);
+    if (value.file !== undefined && value.file !== companionName) {
+      return yield* fail("compiled source map file does not match its companion");
+    }
+    const compiled = yield* readText(companion);
+    if (!compiled.trimEnd().endsWith(`//# sourceMappingURL=${path.basename(mapFile)}`)) {
+      return yield* fail("compiled file does not reference its source map");
+    }
+    if (!Array.isArray(value.sources) || value.sources.length === 0) {
+      return yield* fail("compiled source map must contain sources");
+    }
+    if (
+      !Array.isArray(value.sourcesContent) ||
+      value.sourcesContent.length !== value.sources.length
+    ) {
+      return yield* fail("compiled source map sourcesContent must match sources");
+    }
+    for (const [index, sourceValue] of value.sources.entries()) {
+      const content = value.sourcesContent[index];
+      if (typeof sourceValue !== "string" || sourceValue.length === 0) {
+        return yield* fail("compiled source map contains an invalid source path");
+      }
+      if (typeof content !== "string" || content.length === 0) {
+        return yield* fail("compiled source map contains empty sourcesContent");
+      }
+      if (
+        sourceValue.includes("\\") ||
+        sourceValue.startsWith("/") ||
+        /^[A-Za-z]:/u.test(sourceValue) ||
+        /^[A-Za-z][A-Za-z0-9+.-]*:/u.test(sourceValue) ||
+        Array.from(sourceValue).some((character) => {
+          const code = character.charCodeAt(0);
+          return code <= 0x1f || code === 0x7f;
+        }) ||
+        sourceValue.split("/").some((segment) => segment.length === 0 || segment === ".")
+      ) {
+        return yield* fail(`compiled source map contains an unsafe source path: ${sourceValue}`);
+      }
+      const liveSource = path.resolve(path.dirname(mapFile), sourceValue);
+      const packageRelative = path.relative(livePackageRoot, liveSource);
+      if (
+        packageRelative === ".." ||
+        packageRelative.startsWith("../") ||
+        packageRelative.startsWith("..\\") ||
+        path.isAbsolute(packageRelative) ||
+        !packageRelative.endsWith(".ts")
+      ) {
+        return yield* fail(`compiled source map escapes its package: ${sourceValue}`);
+      }
+      const expected = yield* readText(path.join(sourcePackageRoot, packageRelative));
+      if (content !== expected) {
+        return yield* fail(`compiled source map content is stale: ${sourceValue}`);
+      }
+    }
+  });
+
+export interface VerifiedCompiledPackageOutput {
+  readonly allowlist: readonly string[];
+  readonly files: readonly string[];
+}
+
+export type VerifyCompiledPackageOutputEffect = Effect.Effect<
+  VerifiedCompiledPackageOutput,
+  ArtifactPackError,
+  FileSystem.FileSystem | Path.Path
+>;
+
+const verifyCompiledPackageOutputImpl = (
+  liveRoot: string,
+  sourceRoot: string,
+  packageName: string,
+): VerifyCompiledPackageOutputEffect =>
+  Effect.gen(function* () {
+    const definition = yield* packageDefinition(packageName);
+    const path = yield* Path.Path;
+    const livePackageRoot = path.join(liveRoot, definition.directory);
+    const sourcePackageRoot = path.join(sourceRoot, definition.directory);
+    const metadata = yield* readJson(path.join(sourcePackageRoot, "package.json"));
+    if (!isObject(metadata)) {
+      return yield* fail(`${definition.name} package.json must be an object`);
+    }
+    const allowlist = yield* normalizedPackageFiles(metadata.files, `${definition.name} files`);
+    if (stableJson(allowlist) !== stableJson(definition.packageFiles)) {
+      return yield* fail(`${definition.name} package files are inconsistent`);
+    }
+    const dist = path.join(livePackageRoot, "dist");
+    const files = yield* filesBelow(dist);
+    for (const pattern of definition.compiledFiles) {
+      if (files.filter((file) => pattern.test(file)).length !== 1) {
+        return yield* fail(
+          `${definition.name} compiled output is missing or ambiguous: ${pattern}`,
+        );
+      }
+    }
+    for (const file of files) {
+      if (definition.compiledFiles.filter((pattern) => pattern.test(file)).length !== 1) {
+        return yield* fail(`${definition.name} has unexpected compiled output: ${file}`);
+      }
+    }
+    const maps = files.filter((file) => file.endsWith(".map"));
+    if (maps.length === 0) return yield* fail(`${definition.name} has no compiled source maps`);
+    yield* Effect.forEach(maps, (file) =>
+      verifyEmbeddedSourceMap(livePackageRoot, sourcePackageRoot, path.join(dist, file)),
+    );
+    return { allowlist, files };
+  });
+
+export const verifyCompiledPackageOutput: {
+  (
+    sourceRoot: string,
+    packageName: string,
+  ): (liveRoot: string) => VerifyCompiledPackageOutputEffect;
+  (liveRoot: string, sourceRoot: string, packageName: string): VerifyCompiledPackageOutputEffect;
+} = Function.dual(3, verifyCompiledPackageOutputImpl);
 
 const rewriteWorkspaceRanges = (value: unknown, version: string): void => {
   if (!isObject(value)) return;
@@ -263,12 +462,20 @@ const rewriteWorkspaceRanges = (value: unknown, version: string): void => {
   }
 };
 
-const copyPackage = (root: string, definition: PackageDefinition, stage: string, version: string) =>
+const copyPackage = (
+  liveRoot: string,
+  sourceRoot: string,
+  definition: PackageDefinition,
+  stage: string,
+  version: string,
+) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const sourceRoot = path.join(root, definition.directory);
-    const metadata = yield* readJson(path.join(sourceRoot, "package.json"));
+    const sourcePackageRoot = path.join(sourceRoot, definition.directory);
+    const livePackageRoot = path.join(liveRoot, definition.directory);
+    const verified = yield* verifyCompiledPackageOutput(liveRoot, sourceRoot, definition.name);
+    const metadata = yield* readJson(path.join(sourcePackageRoot, "package.json"));
     if (!isObject(metadata))
       return yield* fail(`${definition.name} package.json must be an object`);
     const name = yield* requiredString(metadata.name, `${definition.name} package name`);
@@ -279,7 +486,7 @@ const copyPackage = (root: string, definition: PackageDefinition, stage: string,
     if (name !== definition.name || declaredVersion !== version) {
       return yield* fail(`${definition.name} package identity is inconsistent`);
     }
-    const allowlist = yield* normalizedPackageFiles(metadata.files, `${definition.name} files`);
+    const allowlist = verified.allowlist;
     rewriteWorkspaceRanges(metadata, version);
     const packageRoot = path.join(stage, "package");
     yield* fs
@@ -290,7 +497,7 @@ const copyPackage = (root: string, definition: PackageDefinition, stage: string,
       .pipe(Effect.mapError((cause) => fail(`cannot stage ${definition.name} metadata`, cause)));
     yield* Effect.forEach(allowlist, (entry) =>
       Effect.gen(function* () {
-        const source = path.join(sourceRoot, entry);
+        const source = path.join(entry === "dist" ? livePackageRoot : sourcePackageRoot, entry);
         const symbolicLink = yield* fs
           .readLink(source)
           .pipe(Effect.match({ onFailure: () => false, onSuccess: () => true }));
@@ -397,7 +604,8 @@ const assertLiveSourceBoundary = (root: string, snapshot: string) =>
           .readDirectory(live)
           .pipe(Effect.mapError((cause) => fail(`cannot list ${relative}`, cause)));
         yield* Effect.forEach(names.sort(), (name) =>
-          name === "node_modules"
+          name === "node_modules" ||
+          (name === "dist" && PACKAGES.some((definition) => definition.directory === relative))
             ? Effect.void
             : visit(path.join(live, name), path.join(committed, name), `${relative}/${name}`),
         );
@@ -517,7 +725,7 @@ export const buildArtifacts = ({ root, dist }: BuildArtifactsOptions) =>
       const packageReceipts = yield* Effect.forEach(PACKAGES, (definition) =>
         Effect.gen(function* () {
           const stage = path.join(temporary, `package-${definition.slug}`);
-          const files = yield* copyPackage(source, definition, stage, version);
+          const files = yield* copyPackage(root, source, definition, stage, version);
           const filename = `askgina-${definition.slug}-${version}.tgz`;
           const output = path.join(dist, "packages", filename);
           yield* archive(root, stage, output, ["package"]);
@@ -529,6 +737,10 @@ export const buildArtifacts = ({ root, dist }: BuildArtifactsOptions) =>
             files,
           };
         }),
+      );
+      const contractFiles = yield* fileProofs(
+        path.join(root, "packages/contracts/dist"),
+        "packages/contracts/dist",
       );
 
       const sourceSkills = (yield* Effect.forEach(SKILLS, (skill) =>
@@ -640,9 +852,7 @@ export const buildArtifacts = ({ root, dist }: BuildArtifactsOptions) =>
             sourceCommit,
             sourceDirty,
             catalogSha,
-            files: [
-              { path: "packages/contracts/src/index.ts", sha256: yield* hash(contractSource) },
-            ],
+            files: contractFiles,
           },
         ],
         [

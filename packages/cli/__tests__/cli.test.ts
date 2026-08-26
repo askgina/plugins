@@ -10,7 +10,7 @@ import {
 } from "@askgina/sdk";
 import { ConfigProvider, Effect } from "effect";
 
-import { AskGinaCliExitCode, recoverAskGinaCliFailures, runAskGinaCli } from "../src/run.js";
+import { AskGinaCliExitCode, recoverAskGinaCliFailures, runAskGinaCli } from "../src/run";
 
 const mockTransport: AskGinaTransport = {
   listTools: () => Effect.succeed(listCatalogToolNames().map((name) => ({ name }))),

@@ -6,7 +6,7 @@ import type {
   PluginEvalDimensionScore,
   PluginEvalObservation,
   PluginEvalToolCall,
-} from "./contracts.js";
+} from "./contracts";
 
 export class PluginEvalObservationMismatchError extends Data.TaggedError(
   "PluginEvalObservationMismatchError",

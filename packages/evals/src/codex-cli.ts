@@ -22,8 +22,8 @@ import type {
   PluginEvalObservation,
   PluginEvalTokenUsage,
   PluginEvalToolCall,
-} from "./contracts.js";
-import { collectBoundedUtf8Output } from "./bounded-output.js";
+} from "./contracts";
+import { collectBoundedUtf8Output } from "./bounded-output";
 
 const DEFAULT_TIMEOUT_MS = 120_000;
 const DEFAULT_MODEL = "codex-cli";

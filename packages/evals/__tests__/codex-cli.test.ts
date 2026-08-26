@@ -21,9 +21,9 @@ import {
   PluginEvalCodexCliSpawnError,
   PluginEvalCodexCliTimeoutError,
   runCodexCliPluginEvalTrial,
-} from "../src/codex-cli.js";
-import { collectBoundedUtf8Output } from "../src/bounded-output.js";
-import type { PluginEvalCase } from "../src/contracts.js";
+} from "../src/codex-cli";
+import { collectBoundedUtf8Output } from "../src/bounded-output";
+import type { PluginEvalCase } from "../src/contracts";
 
 const ASK_GINA_SKILL_PATH =
   "/home/eval/.codex/plugins/cache/personal/ask-gina/0.1.0/skills/research-spot-tokens/SKILL.md";

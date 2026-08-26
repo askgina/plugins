@@ -1,7 +1,51 @@
 import { recommended as effectTsgoRecommended } from "@effect/tsgo/oxlint-presets";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite-plus";
+const packDefaults = {
+  deps: { neverBundle: true },
+  dts: true,
+  fixedExtension: false,
+  format: "esm",
+  sourcemap: true,
+} as const;
 
 export default defineConfig({
+  pack: [
+    {
+      ...packDefaults,
+      cwd: fileURLToPath(new URL("packages/contracts/", import.meta.url)),
+      entry: ["src/index.ts"],
+      name: "contracts",
+    },
+    {
+      ...packDefaults,
+      cwd: fileURLToPath(new URL("packages/sdk/", import.meta.url)),
+      entry: ["src/index.ts"],
+      name: "sdk",
+    },
+    {
+      ...packDefaults,
+      cwd: fileURLToPath(new URL("packages/cli/", import.meta.url)),
+      entry: { bin: "bin.ts", index: "src/index.ts" },
+      name: "cli",
+    },
+    {
+      ...packDefaults,
+      cwd: fileURLToPath(new URL("packages/evals/", import.meta.url)),
+      entry: {
+        "bin/live": "src/bin/live.ts",
+        "bin/replay": "src/bin/replay.ts",
+        index: "src/index.ts",
+      },
+      name: "evals",
+    },
+    {
+      ...packDefaults,
+      cwd: fileURLToPath(new URL("plugins/ask-gina/", import.meta.url)),
+      entry: ["src/index.ts"],
+      name: "plugin-core",
+    },
+  ],
   fmt: {
     ignorePatterns: ["dist/**"],
   },
@@ -30,8 +74,21 @@ export default defineConfig({
     cache: { scripts: false, tasks: true },
     tasks: {
       quality: {
-        command: ["vp check .", "bun run typecheck"],
+        command: [
+          "vp check .",
+          "node_modules/.bin/tsc --noEmit -p tsconfig.json",
+          "bun run check:typescript-imports",
+        ],
+        dependsOn: ["build-packages"],
         output: [],
+      },
+      "build-packages": {
+        command: "vp run --filter '@askgina/*' --fail-if-no-match build",
+        input: [{ auto: true }, "!packages/*/dist/**", "!plugins/*/dist/**"],
+        output: [
+          { pattern: "packages/*/dist/**", base: "workspace" },
+          { pattern: "plugins/*/dist/**", base: "workspace" },
+        ],
       },
       tests: {
         command: "bun --bun node_modules/.bin/vp test --run",

@@ -4,4 +4,4 @@ export {
   runAskGinaCli,
   type AskGinaCliOptions,
   type AskGinaParseFailure,
-} from "./run.js";
+} from "./run";
