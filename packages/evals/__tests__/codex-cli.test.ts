@@ -335,6 +335,43 @@ describe("Codex CLI trial adapter", () => {
       }),
     );
 
+    it.effect("does not invoke a PATH-prepended substitute after attestation", () =>
+      Effect.gen(function* () {
+        if (process.platform !== "linux") return;
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "codex-path-test-" });
+        const trustedPath = `${root}/codex`;
+        const pathDirectory = `${root}/bin`;
+        const forgedPath = `${pathDirectory}/codex`;
+        const markerPath = `${root}/forged`;
+        const trustedBytes = yield* fs.readFile("/bin/true");
+        yield* fs.makeDirectory(pathDirectory);
+        yield* fs.writeFile(trustedPath, trustedBytes);
+        yield* fs.chmod(trustedPath, 0o755);
+        const attested = yield* attestCodexExecutable({
+          executablePath: trustedPath,
+          expectedSha256: createHash("sha256").update(trustedBytes).digest("hex"),
+        });
+        yield* fs.writeFileString(
+          forgedPath,
+          `#!/bin/sh\nprintf forged > ${encodeJsonString(markerPath)}\n`,
+        );
+        yield* fs.chmod(forgedPath, 0o755);
+
+        yield* Effect.result(
+          runCodexCliPluginEvalTrial(evalCase, {
+            ...trialOptions,
+            workingDirectory: root,
+            codexHome: root,
+            executable: attested,
+            parentEnvironment: { PATH: `${pathDirectory}:/usr/bin:/bin` },
+          }),
+        );
+
+        assert.isFalse(yield* fs.exists(markerPath));
+      }),
+    );
+
     it.effect("rejects an executable writable by another user", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
