@@ -472,7 +472,7 @@ const verifyContract = (
     const proofs = yield* parseProofs(receipt.files, "contract receipt files");
     yield* verifyProofs(
       proofs,
-      [{ path: "packages/contracts/src/index.ts", sha256: yield* hash(source) }],
+      yield* fileProofs(path.join(root, "packages/contracts/dist"), "packages/contracts/dist"),
       "contract receipt",
     );
     return receipt;
@@ -650,14 +650,18 @@ const cleanInstall = (
         env,
       ).pipe(Effect.mapError((cause) => fail("@askgina/evals omitted live adapters", cause)));
       const evalPackageRoot = path.join(project, "node_modules", "@askgina", "evals");
+      if (yield* fs.exists(path.join(evalPackageRoot, "src"))) {
+        return yield* fail("@askgina/evals installed raw source");
+      }
+      const evalSourceRoot = path.join(root, "packages/evals/src");
       yield* runCommand(
         "bun",
         [
-          path.join(evalPackageRoot, "src/bin/replay.ts"),
+          path.join(evalPackageRoot, "dist/bin/replay.js"),
           "--suite",
-          path.join(evalPackageRoot, "src/fixtures/model-smoke.yaml"),
+          path.join(evalSourceRoot, "fixtures/model-smoke.yaml"),
           "--observations",
-          path.join(evalPackageRoot, "src/fixtures/synthetic-observations.yaml"),
+          path.join(evalSourceRoot, "fixtures/synthetic-observations.yaml"),
         ],
         project,
         env,
