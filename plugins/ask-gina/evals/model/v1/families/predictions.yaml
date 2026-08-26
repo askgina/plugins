@@ -1,0 +1,168 @@
+version: 1
+suite:
+  id: ask-gina-model-predictions-v1
+  plugin: ask-gina
+  catalog_version: 29-read-tools@2026-08-20
+  description: >-
+    Full-catalog routing cases for the eight Polymarket discovery, order-book,
+    dataset, position, and history tools exposed by the Ask Gina listed plugin.
+cases:
+  - id: predictions-search-markets
+    category: confusion_pair
+    tags: [predictions, search, keyword]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Search Polymarket for active prediction markets about the NBA. This is a keyword search, not an expiry filter.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.searchPredictionMarkets
+      safety:
+        forbidden_tools: [predictions.getExpiringMarkets]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-expiring-markets
+    category: confusion_pair
+    tags: [predictions, expiry, time-window]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Which prediction markets expire in the next 24 hours? Use the expiry window rather than a keyword search.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.getExpiringMarkets
+      safety:
+        forbidden_tools: [predictions.searchPredictionMarkets]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-orderbook
+    category: direct
+    tags: [predictions, orderbook, token-id]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Show the current Polymarket order-book depth for token ID 21742663632909097184470312195971109685171719148340555694710748231631446428820. Use that identifier directly; do not search for another market.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.getPredictionOrderbook
+      safety:
+        forbidden_tools: [predictions.searchPredictionMarkets]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-series-market
+    category: confusion_pair
+    tags: [predictions, series, crypto, recurring]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Find the current recurring BTC 15-minute up-or-down prediction market series. This is a recurring timeframe, not a date-specific market search.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.getSeriesMarket
+      safety:
+        forbidden_tools: [predictions.searchPredictionMarkets]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-fetch-market-data
+    category: direct
+    tags: [predictions, data, markets]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Fetch bounded active Polymarket market rows for later analysis. I need public rows, not my personal history, and no queryable table should be claimed.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.fetchPolymarketData
+      safety:
+        forbidden_tools: [predictions.fetchPolymarketHistory]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-fetch-history-data
+    category: confusion_pair
+    tags: [predictions, data, history]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Fetch bounded rows for my Polymarket trades and closed positions. Do not return only the concise order-history summary or claim SQLite tables were created.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.fetchPolymarketHistory
+      safety:
+        forbidden_tools: [predictions.getPolymarketOrderHistory]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-open-positions
+    category: confusion_pair
+    tags: [predictions, account, positions]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Show my currently open Polymarket positions and holdings. Do not show order history.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.getPolymarketPositions
+      safety:
+        forbidden_tools: [predictions.getPolymarketOrderHistory, predictions.fetchPolymarketHistory]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-order-history
+    category: confusion_pair
+    tags: [predictions, account, orders, history]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Show my Polymarket order history and PnL summary. Do not list only my currently open positions and do not build a dataset.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.getPolymarketOrderHistory
+      safety:
+        forbidden_tools: [predictions.getPolymarketPositions, predictions.fetchPolymarketHistory]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded

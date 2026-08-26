@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "artifact_policy": "sanitized",
+  "recorded_at": "2026-08-19",
+  "target": "responses_api",
+  "model": "gpt-5.6-terra",
+  "repetitions": 1,
+  "catalog_context": {
+    "production_baseline_tools": 40,
+    "branch_candidate_tools_at_run_end": 38,
+    "current_branch_catalog_tools": 33,
+    "current_branch_removed_tools": [
+      "gina.webSearch",
+      "gina.fetchUrl",
+      "spot.getTrendingCoins",
+      "spot.getTrendingSearch",
+      "spot.getTokensByCategory",
+      "spot.getSwapCalldatas",
+      "spot.getTransferCalldata"
+    ],
+    "note": "Portfolio and spot ran before the branch candidate changed from 40 to 38 tools. Perps and predictions ran after that local contract change. The branch subsequently narrowed to 33 tools. The remote production MCP still exposed the transaction-preparation tools during the spot run. This artifact is a production baseline, not a clean allowed-tools ablation of the current 33-tool candidate."
+  },
+  "source_runs": [
+    {
+      "suite_id": "ask-gina-model-portfolio-v1",
+      "run_id": "ask-gina-full-catalog-portfolio-gpt-5-6-terra-20260819072234",
+      "catalog_version": "40-read-tools@2026-08-17",
+      "cases": 6
+    },
+    {
+      "suite_id": "ask-gina-model-spot-v1",
+      "run_id": "ask-gina-full-catalog-spot-gpt-5-6-terra-20260819072349",
+      "catalog_version": "40-read-tools@2026-08-17",
+      "cases": 9
+    },
+    {
+      "suite_id": "ask-gina-model-perps-v1",
+      "run_id": "ask-gina-full-catalog-perps-gpt-5-6-terra-20260819073259",
+      "catalog_version": "38-read-tools@2026-08-19",
+      "cases": 17
+    },
+    {
+      "suite_id": "ask-gina-model-predictions-v1",
+      "run_id": "ask-gina-full-catalog-predictions-gpt-5-6-terra-20260819073547",
+      "catalog_version": "38-read-tools@2026-08-19",
+      "cases": 8
+    }
+  ],
+  "aggregate": {
+    "cases": 40,
+    "overall": {
+      "passed": 30,
+      "failed": 10,
+      "pass_rate": 0.75
+    },
+    "routing": {
+      "passed": 32,
+      "failed": 8,
+      "pass_rate": 0.8
+    },
+    "arguments": {
+      "passed": 1,
+      "failed": 0,
+      "not_scored": 39,
+      "pass_rate": 1
+    },
+    "safety": {
+      "passed": 39,
+      "failed": 1,
+      "pass_rate": 0.975
+    },
+    "completion": {
+      "passed": 40,
+      "failed": 0,
+      "pass_rate": 1
+    },
+    "performance": {
+      "passed": 37,
+      "failed": 3,
+      "pass_rate": 0.925
+    },
+    "latency_ms": {
+      "p50": 8290,
+      "p95": 15893,
+      "max": 20591
+    },
+    "input_tokens": {
+      "p50": 15216,
+      "p95": 57510,
+      "max": 87825
+    },
+    "total_tokens": {
+      "p50": 15379,
+      "p95": 58347,
+      "max": 88052
+    }
+  },
+  "tool_reach": {
+    "called_tools": 37,
+    "production_catalog_tools": 40,
+    "reach_rate": 0.925,
+    "missing_tools": [
+      "perps.fetchHyperliquidTrades",
+      "perps.fetchHyperliquidCandles",
+      "perps.fetchHyperliquidOrderBook"
+    ],
+    "substitution": "All three missing fetch tools routed to perps.createHyperliquidTable instead."
+  },
+  "families": [
+    {
+      "family": "portfolio",
+      "cases": 6,
+      "overall_passed": 6,
+      "routing_passed": 6,
+      "safety_passed": 6,
+      "performance_passed": 6,
+      "latency_ms": {
+        "p50": 7291,
+        "p95": 15893,
+        "max": 15893
+      }
+    },
+    {
+      "family": "spot",
+      "cases": 9,
+      "overall_passed": 6,
+      "routing_passed": 6,
+      "safety_passed": 9,
+      "performance_passed": 9,
+      "latency_ms": {
+        "p50": 8800,
+        "p95": 20591,
+        "max": 20591
+      }
+    },
+    {
+      "family": "perps",
+      "cases": 17,
+      "overall_passed": 11,
+      "routing_passed": 12,
+      "safety_passed": 16,
+      "performance_passed": 15,
+      "latency_ms": {
+        "p50": 8290,
+        "p95": 15952,
+        "max": 15952
+      }
+    },
+    {
+      "family": "predictions",
+      "cases": 8,
+      "overall_passed": 7,
+      "routing_passed": 8,
+      "safety_passed": 8,
+      "performance_passed": 7,
+      "latency_ms": {
+        "p50": 7737,
+        "p95": 9401,
+        "max": 9401
+      }
+    }
+  ],
+  "failure_classes": {
+    "extra_supporting_calls": [
+      "spot-token-metadata",
+      "spot-swap-calldata-preview",
+      "spot-transfer-calldata-preview",
+      "perps-portfolio",
+      "perps-asset-data"
+    ],
+    "wrong_tool_substitution": [
+      "perps-fetch-trades",
+      "perps-fetch-candles",
+      "perps-fetch-order-book"
+    ],
+    "forbidden_tool_calls": ["perps-portfolio"],
+    "oversized_results": ["perps-markets", "perps-asset-data", "predictions-fetch-market-data"]
+  }
+}

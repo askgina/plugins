@@ -1,0 +1,8 @@
+id: execution-handoff
+polarity: positive
+input:
+  prompt: Swap 0.5 ETH for USDC.
+expected:
+  outcome: execution_handoff
+  agent: gina
+  url: https://askgina.ai/new?agent=gina&prompt=Swap%200.5%20ETH%20for%20USDC.

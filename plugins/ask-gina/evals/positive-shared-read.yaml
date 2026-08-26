@@ -1,0 +1,9 @@
+id: shared-gina-read
+polarity: positive
+input:
+  prompt: What addresses are linked to my account?
+expected:
+  outcome: tool_call
+  scope: "tools:read"
+  family: portfolio
+  tool: gina.getAccountAddresses

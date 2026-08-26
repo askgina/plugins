@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "gina": {
+      "type": "streamable-http",
+      "url": "https://askgina.ai/ai/gina/mcp"
+    }
+  }
+}

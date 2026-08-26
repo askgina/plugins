@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "v1",
+  "suiteId": "synthetic-model-smoke-v1",
+  "suiteVersion": 1,
+  "fixtureVersion": 1,
+  "catalogSha": "06a3c7ca4f56617e7aebdcc840b96f4fcfbffeafb7d5b359d1d4c90eb4aeefda",
+  "overall": {
+    "passed": 2,
+    "total": 3
+  },
+  "dimensions": {
+    "routing": { "passed": 2, "failed": 1 },
+    "arguments": { "passed": 2, "failed": 1 },
+    "safety": { "passed": 3, "failed": 0 },
+    "completion": { "passed": 3, "failed": 0 }
+  },
+  "skillActivation": { "passed": 0, "failed": 0 },
+  "latencyMs": { "p50": 1, "p95": 1, "max": 1 },
+  "totalResultBytes": { "p50": 0, "p95": 0, "max": 0 },
+  "tokenUsage": { "observations": 0, "inputTokens": 0, "outputTokens": 0, "totalTokens": 0 },
+  "artifactPolicy": "sanitized"
+}

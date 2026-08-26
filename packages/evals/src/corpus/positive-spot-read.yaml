@@ -1,0 +1,9 @@
+id: spot-read
+polarity: positive
+input:
+  prompt: Show the current price of ETH in USD.
+expected:
+  outcome: tool_call
+  scope: "tools:read"
+  family: spot
+  tool: spot.getSimplePrice

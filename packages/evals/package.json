@@ -1,0 +1,22 @@
+{
+  "name": "@askgina/evals",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "files": [
+    "src",
+    "LICENSE",
+    "README.md"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@askgina/contracts": "workspace:*",
+    "@askgina/plugin-core": "workspace:*",
+    "@askgina/sdk": "workspace:*",
+    "@effect/platform-bun": "4.0.0-rc.111",
+    "effect": "4.0.0-rc.111",
+    "yaml": "2.8.3"
+  }
+}

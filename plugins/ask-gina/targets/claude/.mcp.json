@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "gina": {
+      "type": "http",
+      "url": "https://askgina.ai/ai/gina/mcp"
+    }
+  }
+}

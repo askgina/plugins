@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "ask-gina",
+  "version": "0.1.0",
+  "description": "Read-only Ask Gina skills for account and market research.",
+  "author": {
+    "name": "Ask Gina"
+  }
+}

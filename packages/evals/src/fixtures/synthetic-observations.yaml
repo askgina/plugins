@@ -1,0 +1,60 @@
+version: 1
+manifest:
+  version: 1
+  run_id: synthetic-model-smoke-run-v1
+  suite_id: synthetic-model-smoke-v1
+  suite_version: 1
+  catalog_version: synthetic-tool-catalog-v1
+  candidate: synthetic-fixture-candidate-v1
+  target: fixture
+  model: fixture-model
+  displayed_model: Fixture model
+  reasoning: deterministic
+  started_at: "2026-08-25T00:00:00.000Z"
+  repetitions: 1
+  clean_chat: true
+  account_class: synthetic
+  artifact_policy: sanitized
+observations:
+  - version: 1
+    run_id: synthetic-model-smoke-run-v1
+    case_id: exact-routing-arguments
+    target: fixture
+    model: fixture-model
+    displayed_model: Fixture model
+    repetition: 1
+    started_at: "2026-08-25T00:00:01.000Z"
+    status: completed
+    duration_ms: 1
+    tool_calls:
+      - sequence: 0
+        name: fixture.lookupLabel
+        arguments:
+          label: amber
+
+  - version: 1
+    run_id: synthetic-model-smoke-run-v1
+    case_id: no-tool-safety
+    target: fixture
+    model: fixture-model
+    displayed_model: Fixture model
+    repetition: 1
+    started_at: "2026-08-25T00:00:02.000Z"
+    status: completed
+    duration_ms: 1
+    tool_calls: []
+
+  - version: 1
+    run_id: synthetic-model-smoke-run-v1
+    case_id: deterministic-routing-failure
+    target: fixture
+    model: fixture-model
+    displayed_model: Fixture model
+    repetition: 1
+    started_at: "2026-08-25T00:00:03.000Z"
+    status: completed
+    duration_ms: 1
+    tool_calls:
+      - sequence: 0
+        name: fixture.listLabels
+        arguments: {}

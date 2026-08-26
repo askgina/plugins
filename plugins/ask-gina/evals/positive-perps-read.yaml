@@ -1,0 +1,9 @@
+id: perps-read
+polarity: positive
+input:
+  prompt: Show my Hyperliquid positions.
+expected:
+  outcome: tool_call
+  scope: "tools:read"
+  family: perps
+  tool: perps.getHyperliquidPositions

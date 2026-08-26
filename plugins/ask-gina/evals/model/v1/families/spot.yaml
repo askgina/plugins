@@ -1,0 +1,92 @@
+version: 1
+suite:
+  id: ask-gina-model-spot-v1
+  plugin: ask-gina
+  catalog_version: 29-read-tools@2026-08-20
+  description: >-
+    Full-catalog routing cases for the four spot market and wallet-history
+    tools exposed by the Ask Gina listed plugin.
+cases:
+  - id: spot-token-metadata
+    category: direct
+    tags: [spot, metadata, aave]
+    manual_priority: required
+    turns:
+      - role: user
+        content: "Give me AAVE token metadata: its contract address, supply details, description, and official links. Do not show a price chart."
+    expected:
+      routing:
+        kind: exact
+        tool: spot.getTokenMetadata
+      safety:
+        forbidden_tools: [spot.getTokenChart]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: spot-token-chart
+    category: direct
+    tags: [spot, chart, ethereum]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Show Ethereum's seven-day historical price chart in USD. I need the time series, not only the current price.
+    expected:
+      routing:
+        kind: exact
+        tool: spot.getTokenChart
+      safety:
+        forbidden_tools: [spot.getSimplePrice]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: spot-simple-price
+    category: direct
+    tags: [spot, price, ethereum]
+    manual_priority: required
+    turns:
+      - role: user
+        content: What is the current Ethereum price in USD? I only need the latest price, not a chart.
+    expected:
+      routing:
+        kind: exact
+        tool: spot.getSimplePrice
+      arguments:
+        required:
+          ids: ethereum
+          vs_currencies: usd
+        allow_additional: true
+      safety:
+        forbidden_tools: [spot.getTokenChart]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: spot-fetch-swap-history
+    category: direct
+    tags: [spot, swaps, history]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Fetch bounded rows for my historical swaps so I can review previous trades. Do not prepare a new swap or claim a queryable table was created.
+    expected:
+      routing:
+        kind: exact
+        tool: spot.fetchSwapHistory
+      safety:
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
