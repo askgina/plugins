@@ -26,6 +26,7 @@
     "eval:replay": "bun run build && bun packages/evals/dist/bin/replay.js",
     "eval:responses": "bun run build && bun packages/evals/dist/bin/live.js --runner responses",
     "eval:codex": "bun run build && bun packages/evals/dist/bin/live.js --runner codex",
+    "check:marketplace:codex": "bun run build && bun packages/evals/dist/bin/check-codex-marketplace.js",
     "effect-tsgo:patch": "bun scripts/effect-tsgo-patch-if-needed.ts",
     "prepare": "bun run effect-tsgo:patch",
     "typecheck": "bun run build && node_modules/.bin/tsc --noEmit -p tsconfig.json",

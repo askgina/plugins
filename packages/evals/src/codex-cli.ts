@@ -49,11 +49,7 @@ const ASK_GINA_SKILL_NAMES: Readonly<Record<(typeof ASK_GINA_PLUGIN_SKILL_NAMES)
 };
 const ASK_GINA_SKILL_PATH_RE =
   /(?:^|[/\\])ask-gina(?:@[^/\\]+)?(?:[/\\].*)?[/\\]skills[/\\](review-gina-account|research-spot-tokens|research-hyperliquid|research-prediction-markets)[/\\]SKILL\.md\b/u;
-const ASK_GINA_MCP_SERVER = "gina";
-const ASK_GINA_MCP_SERVER_NAMES: Readonly<Record<string, true>> = {
-  gina: true,
-  "ask-gina": true,
-};
+const ASK_GINA_MCP_SERVER = "ask-gina";
 const CODEX_NON_ACTION_ITEM_TYPES: Readonly<Record<string, true>> = {
   agent_message: true,
   reasoning: true,
@@ -623,8 +619,7 @@ const isMcpToolItem = (item: Readonly<Record<string, unknown>>): boolean => {
   const server = asString(item.server);
   return (
     type === "mcp_tool_call" &&
-    server !== undefined &&
-    Object.hasOwn(ASK_GINA_MCP_SERVER_NAMES, server) &&
+    server === ASK_GINA_MCP_SERVER &&
     name !== undefined &&
     isGinaReadToolName(name)
   );

@@ -16,7 +16,7 @@ import {
 const pluginRoot = fileURLToPath(new URL("../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 
-const MarketplaceJson = Schema.fromJsonString(
+const ClaudeMarketplaceJson = Schema.fromJsonString(
   Schema.Struct({
     name: Schema.String,
     owner: Schema.Struct({ name: Schema.String, url: Schema.String }),
@@ -35,6 +35,20 @@ const MarketplaceJson = Schema.fromJsonString(
   }),
 );
 
+const OpenAiMarketplaceJson = Schema.fromJsonString(
+  Schema.Struct({
+    name: Schema.String,
+    interface: Schema.Struct({ displayName: Schema.String }),
+    plugins: Schema.Array(
+      Schema.Struct({
+        name: Schema.String,
+        source: Schema.Struct({ source: Schema.String, path: Schema.String }),
+        policy: Schema.Struct({ installation: Schema.String, authentication: Schema.String }),
+        category: Schema.String,
+      }),
+    ),
+  }),
+);
 const collectSkillDocuments = (
   directory: string,
 ): Effect.Effect<
@@ -101,11 +115,41 @@ describe("Ask Gina portable plugin core", () => {
       }),
     );
 
+    it.effect("publishes OpenAI marketplace metadata for the loadable root plugin", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const paths = yield* Path.Path;
+        const marketplace = yield* Schema.decodeEffect(OpenAiMarketplaceJson)(
+          yield* fs.readFileString(
+            paths.join(repositoryRoot, ".agents", "plugins", "marketplace.json"),
+          ),
+        );
+
+        assert.strictEqual(marketplace.name, "ask-gina-plugins");
+        assert.deepStrictEqual(marketplace.interface, { displayName: "Ask Gina Plugins" });
+        assert.strictEqual(marketplace.plugins.length, 1);
+        const plugin = marketplace.plugins[0];
+        assert.isDefined(plugin);
+        assert.deepStrictEqual(plugin, {
+          name: "ask-gina",
+          source: { source: "local", path: "./plugins/ask-gina" },
+          policy: { installation: "AVAILABLE", authentication: "ON_INSTALL" },
+          category: "Finance",
+        });
+        const sourceRoot = paths.resolve(repositoryRoot, plugin?.source.path ?? "");
+        assert.strictEqual(sourceRoot, paths.resolve(pluginRoot));
+        assert.isTrue(yield* fs.exists(paths.join(sourceRoot, ".codex-plugin", "plugin.json")));
+        assert.isTrue(yield* fs.exists(paths.join(sourceRoot, ".mcp.json")));
+        assert.isTrue(yield* fs.exists(paths.join(sourceRoot, "assets", "icon.svg")));
+        assert.isTrue(yield* fs.exists(paths.join(sourceRoot, "skills")));
+      }),
+    );
+
     it.effect("publishes Claude marketplace metadata for the canonical plugin directory", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const paths = yield* Path.Path;
-        const marketplace = yield* Schema.decodeEffect(MarketplaceJson)(
+        const marketplace = yield* Schema.decodeEffect(ClaudeMarketplaceJson)(
           yield* fs.readFileString(
             paths.join(repositoryRoot, ".claude-plugin", "marketplace.json"),
           ),

@@ -7,6 +7,8 @@ import {
   ArtifactPackError,
   buildArtifacts,
   stagePackage,
+  stagePluginTarget,
+  validateTargetVersion,
   verifyCompiledPackageOutput,
 } from "../pack-artifacts";
 class TestCommandError extends Data.TaggedError("TestCommandError")<{
@@ -15,6 +17,65 @@ class TestCommandError extends Data.TaggedError("TestCommandError")<{
 }> {}
 
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+const SKILL_NAMES = [
+  "research-hyperliquid",
+  "research-prediction-markets",
+  "research-spot-tokens",
+  "review-gina-account",
+] as const;
+const TARGET_MANIFESTS = {
+  cursor: [".cursor-plugin", "plugin.json"],
+  claude: [".claude-plugin", "plugin.json"],
+  copilot: ["plugin.json"],
+  gemini: ["gemini-extension.json"],
+} as const;
+
+const makePluginFixture = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const temporary = yield* fs.makeTempDirectoryScoped({
+    prefix: "pack-plugin-test-",
+  });
+  const plugin = path.join(temporary, "ask-gina");
+  const stage = path.join(temporary, "stage");
+  const version = "1.2.3";
+
+  yield* fs.makeDirectory(path.join(plugin, ".codex-plugin"), { recursive: true });
+  yield* fs.writeFileString(
+    path.join(plugin, ".codex-plugin", "plugin.json"),
+    `${encodeJson({ version, marker: "root-openai" })}\n`,
+  );
+  yield* fs.writeFileString(path.join(plugin, ".mcp.json"), '{"mcpServers":{}}\n');
+  yield* fs.makeDirectory(path.join(plugin, "assets"), { recursive: true });
+  yield* fs.writeFileString(path.join(plugin, "assets", "icon.svg"), "<svg/>\n");
+  for (const skill of SKILL_NAMES) {
+    const skillRoot = path.join(plugin, "skills", skill);
+    yield* fs.makeDirectory(path.join(skillRoot, "agents"), { recursive: true });
+    yield* fs.writeFileString(path.join(skillRoot, "SKILL.md"), `# ${skill}\n`);
+    yield* fs.writeFileString(path.join(skillRoot, "agents", "openai.yaml"), `name: ${skill}\n`);
+  }
+
+  for (const [host, manifest] of Object.entries(TARGET_MANIFESTS)) {
+    const overlay = path.join(plugin, "targets", host);
+    const manifestPath = path.join(overlay, ...manifest);
+    yield* fs.makeDirectory(path.dirname(manifestPath), { recursive: true });
+    yield* fs.writeFileString(
+      manifestPath,
+      `${encodeJson({ version, marker: `${host}-overlay` })}\n`,
+    );
+    yield* fs.writeFileString(path.join(overlay, `${host}.txt`), `${host}\n`);
+  }
+
+  for (const relative of ["package.json", "plugin.yaml", "README.md", "LICENSE"] as const) {
+    yield* fs.writeFileString(path.join(plugin, relative), `${relative}\n`);
+  }
+  for (const directory of ["src", "evals"] as const) {
+    yield* fs.makeDirectory(path.join(plugin, directory), { recursive: true });
+    yield* fs.writeFileString(path.join(plugin, directory, "foreign.txt"), `${directory}\n`);
+  }
+
+  return { plugin, stage, version };
+});
 const json = (value: unknown): string => `${encodeJson(value)}\n`;
 
 const SOURCE_DIRECTORIES = [
@@ -319,6 +380,116 @@ describe("pack artifact source snapshot", () => {
           );
           assert.include(error.message, "absent from source commit");
           assert.include(error.message, relative);
+        }),
+      ),
+    );
+  });
+});
+
+describe("plugin target packing", () => {
+  it.layer(BunServices.layer)((it) => {
+    it.effect("validates OpenAI at the root and other hosts in their target overlays", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fixture = yield* makePluginFixture;
+          const legacyManifest = path.join(
+            fixture.plugin,
+            "targets",
+            "openai",
+            ".codex-plugin",
+            "plugin.json",
+          );
+          yield* fs.makeDirectory(path.dirname(legacyManifest), { recursive: true });
+          yield* fs.writeFileString(legacyManifest, `${encodeJson({ version: "9.9.9" })}\n`);
+
+          yield* validateTargetVersion(fixture.plugin, "openai", fixture.version);
+          yield* fs.writeFileString(
+            path.join(fixture.plugin, ".codex-plugin", "plugin.json"),
+            `${encodeJson({ version: "8.8.8" })}\n`,
+          );
+          yield* validateTargetVersion(fixture.plugin, "cursor", fixture.version);
+
+          yield* fs.remove(path.join(fixture.plugin, ".codex-plugin", "plugin.json"));
+          const error = yield* validateTargetVersion(fixture.plugin, "openai", "9.9.9").pipe(
+            Effect.flip,
+          );
+          assert.instanceOf(error, ArtifactPackError);
+          assert.include(error.message, path.join(".codex-plugin", "plugin.json"));
+        }),
+      ),
+    );
+
+    it.effect("stages a lean OpenAI target from root source surfaces", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fixture = yield* makePluginFixture;
+
+          yield* stagePluginTarget("openai", fixture.plugin, fixture.stage);
+
+          assert.deepStrictEqual((yield* fs.readDirectory(fixture.stage)).sort(), [
+            ".codex-plugin",
+            ".mcp.json",
+            "assets",
+            "skills",
+          ]);
+          for (const relative of [
+            [".codex-plugin", "plugin.json"],
+            [".mcp.json"],
+            ["assets", "icon.svg"],
+          ] as const) {
+            assert.strictEqual(
+              yield* fs.readFileString(path.join(fixture.stage, ...relative)),
+              yield* fs.readFileString(path.join(fixture.plugin, ...relative)),
+            );
+          }
+          for (const excluded of [
+            "package.json",
+            "plugin.yaml",
+            "README.md",
+            "LICENSE",
+            "src",
+            "evals",
+            "targets",
+          ]) {
+            assert.isFalse(yield* fs.exists(path.join(fixture.stage, excluded)));
+          }
+          for (const skill of SKILL_NAMES) {
+            assert.isTrue(
+              yield* fs.exists(path.join(fixture.stage, "skills", skill, "agents", "openai.yaml")),
+            );
+          }
+        }),
+      ),
+    );
+
+    it.effect("retains non-OpenAI overlay staging without OpenAI skill metadata", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fixture = yield* makePluginFixture;
+
+          yield* stagePluginTarget("cursor", fixture.plugin, fixture.stage);
+
+          assert.deepStrictEqual((yield* fs.readDirectory(fixture.stage)).sort(), [
+            ".cursor-plugin",
+            "cursor.txt",
+            "skills",
+          ]);
+          for (const relative of [[".cursor-plugin", "plugin.json"], ["cursor.txt"]] as const) {
+            assert.strictEqual(
+              yield* fs.readFileString(path.join(fixture.stage, ...relative)),
+              yield* fs.readFileString(path.join(fixture.plugin, "targets", "cursor", ...relative)),
+            );
+          }
+          for (const skill of SKILL_NAMES) {
+            assert.isTrue(yield* fs.exists(path.join(fixture.stage, "skills", skill, "SKILL.md")));
+            assert.isFalse(yield* fs.exists(path.join(fixture.stage, "skills", skill, "agents")));
+          }
         }),
       ),
     );

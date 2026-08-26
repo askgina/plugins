@@ -10,6 +10,7 @@ export type TargetName = (typeof TARGET_NAMES)[number];
 export const SKILL_NAMES = ASK_GINA_SKILL_DEFINITIONS.map((skill) => skill.name);
 
 const OPENAI_METADATA_PATH = ["agents", "openai.yaml"] as const;
+const OPENAI_SOURCE_ENTRIES = [".codex-plugin", ".mcp.json", "assets"] as const;
 const here = fileURLToPath(new URL(".", import.meta.url));
 
 type SyncEnvironment = FileSystem.FileSystem | Path.Path;
@@ -151,6 +152,80 @@ const assertSourceIsPortable = (
     yield* assertDirectoryNames(canonicalSkills, SKILL_NAMES);
     yield* assertNoSymbolicLinks(canonicalSkills);
 
+    const legacyOpenAiOverlay = paths.join(packageRoot, "targets", "openai");
+    const legacyOpenAiOverlayExists = yield* withFileSystemError(
+      legacyOpenAiOverlay,
+      "cannot be inspected",
+      fs.exists(legacyOpenAiOverlay),
+    );
+    if (legacyOpenAiOverlayExists) {
+      return yield* pluginSkillSyncError(
+        legacyOpenAiOverlay,
+        "legacy OpenAI target overlay must not exist",
+      );
+    }
+
+    const openAiFiles = [
+      paths.join(packageRoot, ".codex-plugin", "plugin.json"),
+      paths.join(packageRoot, ".mcp.json"),
+      paths.join(packageRoot, "assets", "icon.svg"),
+    ] as const;
+    yield* Effect.forEach(openAiFiles, (candidate) =>
+      Effect.gen(function* () {
+        const symbolicLink = yield* fs
+          .readLink(candidate)
+          .pipe(Effect.match({ onFailure: () => false, onSuccess: () => true }));
+        if (symbolicLink) {
+          return yield* pluginSkillSyncError(
+            candidate,
+            "plugin source must not contain symbolic links",
+          );
+        }
+        const info = yield* withFileSystemError(
+          candidate,
+          "cannot be inspected",
+          fs.stat(candidate),
+        );
+        if (info.type !== "File") {
+          return yield* pluginSkillSyncError(
+            candidate,
+            "required OpenAI source file is not a file",
+          );
+        }
+        if (candidate.endsWith(".json")) {
+          const source = yield* withFileSystemError(
+            candidate,
+            "cannot be read",
+            fs.readFileString(candidate),
+          );
+          yield* parseJson(candidate, source);
+        }
+      }),
+    );
+    yield* assertNoSymbolicLinks(paths.join(packageRoot, ".codex-plugin"));
+    yield* assertNoSymbolicLinks(paths.join(packageRoot, "assets"));
+    yield* Effect.forEach(
+      TARGET_NAMES.filter((target) => target !== "openai"),
+      (target) =>
+        Effect.gen(function* () {
+          const overlay = paths.join(packageRoot, "targets", target);
+          const exists = yield* withFileSystemError(
+            overlay,
+            "cannot be inspected",
+            fs.exists(overlay),
+          );
+          if (!exists) {
+            return yield* pluginSkillSyncError(overlay, "missing target overlay");
+          }
+          const info = yield* withFileSystemError(overlay, "cannot be inspected", fs.stat(overlay));
+          if (info.type !== "Directory") {
+            return yield* pluginSkillSyncError(overlay, "target overlay is not a directory");
+          }
+          yield* assertNoSymbolicLinks(overlay);
+        }),
+      { concurrency: "unbounded" },
+    );
+
     yield* Effect.forEach(
       TARGET_NAMES,
       (target) => {
@@ -227,6 +302,23 @@ const copyTargetOverlay = (
     );
   });
 
+const copyOpenAiSourceSurfaces = (
+  packageRoot: string,
+  destination: string,
+): Effect.Effect<void, PluginSkillSyncError, SyncEnvironment> =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const paths = yield* Path.Path;
+    yield* Effect.forEach(OPENAI_SOURCE_ENTRIES, (entry) => {
+      const source = paths.join(packageRoot, entry);
+      return withFileSystemError(
+        source,
+        "cannot be copied",
+        fs.copy(source, paths.join(destination, entry), { overwrite: false }),
+      );
+    });
+  });
+
 const copyCanonicalSkills = (
   packageRoot: string,
   target: TargetName,
@@ -281,22 +373,17 @@ const materializeTarget = (
     const packageRoot = packageRootFor(paths, options.packageRoot);
     yield* assertSourceIsPortable(packageRoot);
 
-    const sourceOverlay = paths.join(packageRoot, "targets", target);
-    const overlayExists = yield* withFileSystemError(
-      sourceOverlay,
-      "cannot be inspected",
-      fs.exists(sourceOverlay),
-    );
-    if (!overlayExists) {
-      return yield* pluginSkillSyncError(sourceOverlay, "missing target overlay");
-    }
-
     yield* withFileSystemError(
       destination,
       "cannot be created",
       fs.makeDirectory(destination, { recursive: true }),
     );
-    yield* copyTargetOverlay(sourceOverlay, destination);
+
+    if (target === "openai") {
+      yield* copyOpenAiSourceSurfaces(packageRoot, destination);
+    } else {
+      yield* copyTargetOverlay(paths.join(packageRoot, "targets", target), destination);
+    }
     yield* copyCanonicalSkills(packageRoot, target, destination);
   });
 

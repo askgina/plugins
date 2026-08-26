@@ -41,7 +41,7 @@ type ConformanceEnvironment = FileSystem.FileSystem | Path.Path;
 
 export interface TargetConformanceCheck {
   readonly id: string;
-  readonly target: TargetName;
+  readonly target: TargetName | "repository";
   readonly title: string;
   readonly passed: boolean;
   readonly detail?: string;
@@ -53,8 +53,14 @@ export interface TargetSummary {
   readonly checks: readonly TargetConformanceCheck[];
 }
 
+export interface RepositorySummary {
+  readonly target: "repository";
+  readonly passed: boolean;
+  readonly checks: readonly TargetConformanceCheck[];
+}
 export interface TargetConformanceReport {
   readonly targets: Partial<Record<TargetName, TargetSummary>>;
+  readonly repository?: RepositorySummary;
   readonly totalChecks: number;
   readonly totalPassed: number;
   readonly totalFailed: number;
@@ -63,6 +69,8 @@ export interface TargetConformanceReport {
 
 export interface TargetConformanceOptions {
   readonly packageRoot?: string;
+  readonly repositoryRoot?: string;
+  readonly checkRepository?: boolean;
 }
 
 export class TargetConformanceError extends Data.TaggedError("TargetConformanceError")<{
@@ -129,6 +137,39 @@ const hasExactKeys = (value: unknown, expected: readonly string[]): boolean => {
   return sameSortedStrings(actual, wanted);
 };
 
+const isWithin = (paths: Path.Path, parent: string, child: string): boolean => {
+  const relative = paths.relative(parent, child);
+  return !relative.startsWith(`..${paths.sep}`) && relative !== ".." && !paths.isAbsolute(relative);
+};
+
+const findSymbolicLinks = (
+  fs: FileSystem.FileSystem,
+  paths: Path.Path,
+  directory: string,
+): Effect.Effect<readonly string[], PlatformError.PlatformError> =>
+  Effect.gen(function* () {
+    const exists = yield* fs.exists(directory);
+    if (!exists) return [];
+    const entries = yield* fs.readDirectory(directory);
+    const nested = yield* Effect.forEach(
+      entries,
+      (entry) =>
+        Effect.gen(function* () {
+          const entryPath = paths.join(directory, entry);
+          const isLink = yield* fs
+            .readLink(entryPath)
+            .pipe(Effect.match({ onFailure: () => false, onSuccess: () => true }));
+          if (isLink) return [entryPath];
+          const info = yield* fs.stat(entryPath);
+          if (info.type === "Directory" && entry !== "node_modules" && entry !== ".git") {
+            return yield* findSymbolicLinks(fs, paths, entryPath);
+          }
+          return [];
+        }),
+      { concurrency: "unbounded" },
+    );
+    return nested.flat();
+  });
 const advertisedToolIdentifiers = (markdown: string): readonly string[] =>
   Array.from(
     markdown.matchAll(/`((?:gina|spot|perps|predictions)\.[A-Za-z][A-Za-z0-9]*)`/g),
@@ -320,7 +361,7 @@ const validateMcp = (target: TargetName, manifest: unknown): boolean => {
 
 const defaultPackageRootFor = (paths: Path.Path): string =>
   paths.resolve(here, "..", "plugins", "ask-gina");
-
+const defaultRepositoryRootFor = (paths: Path.Path): string => paths.resolve(here, "..");
 type GeneratedTargetConformanceEffect = Effect.Effect<
   TargetSummary,
   TargetConformanceError,
@@ -615,6 +656,338 @@ export const checkTargetConformance: {
     ),
 );
 
+export const checkRepositoryConformance = (
+  options: TargetConformanceOptions = {},
+): Effect.Effect<RepositorySummary, TargetConformanceError, ConformanceEnvironment> =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const paths = yield* Path.Path;
+    const packageRoot = paths.resolve(options.packageRoot ?? defaultPackageRootFor(paths));
+    const repositoryRoot = paths.resolve(
+      options.repositoryRoot ??
+        (options.packageRoot === undefined
+          ? defaultRepositoryRootFor(paths)
+          : paths.join(packageRoot, "..", "..")),
+    );
+    const canonicalRepositoryRoot = yield* withFileSystemError(
+      repositoryRoot,
+      "cannot be resolved",
+      fs.realPath(repositoryRoot),
+    );
+    const checks: TargetConformanceCheck[] = [];
+    const addCheck = (id: string, title: string, passed: boolean, detail?: string): void => {
+      checks.push({ id, target: "repository", title, passed, detail });
+    };
+
+    const marketplacePath = paths.join(repositoryRoot, ".agents", "plugins", "marketplace.json");
+    const marketplaceExists = yield* withFileSystemError(
+      marketplacePath,
+      "cannot be inspected",
+      fs.exists(marketplacePath),
+    );
+    addCheck("marketplace.exists", ".agents/plugins/marketplace.json exists", marketplaceExists);
+    if (marketplaceExists) {
+      const marketplace = yield* readJson(fs, marketplacePath);
+      const plugins = nested(marketplace, "plugins");
+      const plugin = Array.isArray(plugins) && plugins.length === 1 ? plugins[0] : undefined;
+      const source = nested(plugin, "source");
+      const policy = nested(plugin, "policy");
+      const marketplaceContract =
+        hasExactKeys(marketplace, ["name", "interface", "plugins"]) &&
+        nested(marketplace, "name") === "ask-gina-plugins" &&
+        hasExactKeys(nested(marketplace, "interface"), ["displayName"]) &&
+        nested(marketplace, "interface", "displayName") === "Ask Gina Plugins" &&
+        Array.isArray(plugins) &&
+        plugins.length === 1 &&
+        hasExactKeys(plugin, ["name", "source", "policy", "category"]) &&
+        nested(plugin, "name") === "ask-gina" &&
+        hasExactKeys(source, ["source", "path"]) &&
+        nested(source, "source") === "local" &&
+        nested(source, "path") === "./plugins/ask-gina" &&
+        hasExactKeys(policy, ["installation", "authentication"]) &&
+        nested(policy, "installation") === "AVAILABLE" &&
+        nested(policy, "authentication") === "ON_INSTALL" &&
+        nested(plugin, "category") === "Finance";
+      addCheck(
+        "marketplace.schema",
+        "Repository marketplace has exact schema and values",
+        marketplaceContract,
+        marketplaceContract
+          ? undefined
+          : "marketplace name, interface, plugin, policy, category, or source is malformed",
+      );
+      const descriptorVersioned =
+        nested(marketplace, "version") !== undefined || nested(plugin, "version") !== undefined;
+      addCheck(
+        "marketplace.no_version",
+        "Repository marketplace descriptor is unversioned",
+        !descriptorVersioned,
+        descriptorVersioned ? "marketplace descriptor must not declare version" : undefined,
+      );
+
+      const sourceValue = nested(source, "path");
+      let sourceContained = false;
+      let sourceDetail: string | undefined;
+      if (typeof sourceValue !== "string") {
+        sourceDetail = "plugin source path must be a string";
+      } else {
+        const segments = sourceValue.split(/[\\/]/u);
+        const normalized = paths.normalize(sourceValue);
+        const resolvedSource = paths.resolve(repositoryRoot, sourceValue);
+        const normalizedExpected = paths.normalize("plugins/ask-gina");
+        if (
+          paths.isAbsolute(sourceValue) ||
+          segments.some((segment) => segment === "..") ||
+          normalized !== normalizedExpected ||
+          !isWithin(paths, repositoryRoot, resolvedSource)
+        ) {
+          sourceDetail = `plugin source path escapes or is not canonical: ${sourceValue}`;
+        } else {
+          const exists = yield* withFileSystemError(
+            resolvedSource,
+            "cannot be inspected",
+            fs.exists(resolvedSource),
+          );
+          if (!exists) {
+            sourceDetail = `declared plugin source is missing: ${sourceValue}`;
+          } else {
+            const sourceIsLink = yield* fs
+              .readLink(resolvedSource)
+              .pipe(Effect.match({ onFailure: () => false, onSuccess: () => true }));
+            if (sourceIsLink) {
+              sourceDetail = `declared plugin source is a symbolic link: ${sourceValue}`;
+            } else {
+              const realSource = yield* withFileSystemError(
+                resolvedSource,
+                "cannot be resolved",
+                fs.realPath(resolvedSource),
+              );
+              sourceContained = isWithin(paths, canonicalRepositoryRoot, realSource);
+              if (!sourceContained) sourceDetail = `declared plugin source escapes: ${sourceValue}`;
+            }
+          }
+        }
+      }
+      addCheck(
+        "marketplace.source_containment",
+        "Repository marketplace source exists inside the repository without symlink indirection",
+        sourceContained,
+        sourceDetail,
+      );
+    }
+
+    const openAiManifestPath = paths.join(packageRoot, ".codex-plugin", "plugin.json");
+    const openAiMcpPath = paths.join(packageRoot, ".mcp.json");
+    const openAiIconPath = paths.join(packageRoot, "assets", "icon.svg");
+    const canonicalSkillsRoot = paths.join(packageRoot, "skills");
+    const requiredOpenAiPaths = [
+      [
+        openAiManifestPath,
+        "repository.root_openai.manifest_exists",
+        "Root OpenAI manifest exists as a regular file",
+        "File",
+      ],
+      [
+        openAiMcpPath,
+        "repository.root_openai.mcp_exists",
+        "Root OpenAI MCP configuration exists as a regular file",
+        "File",
+      ],
+      [
+        openAiIconPath,
+        "repository.root_openai.icon_exists",
+        "Root OpenAI icon exists as a regular file",
+        "File",
+      ],
+      [
+        canonicalSkillsRoot,
+        "repository.root_openai.skills_exists",
+        "Root canonical skills directory exists",
+        "Directory",
+      ],
+    ] as const;
+    for (const [candidate, id, title, expectedType] of requiredOpenAiPaths) {
+      const exists = yield* withFileSystemError(
+        candidate,
+        "cannot be inspected",
+        fs.exists(candidate),
+      );
+      const actualType = exists
+        ? (yield* withFileSystemError(candidate, "cannot be inspected", fs.stat(candidate))).type
+        : undefined;
+      addCheck(
+        id,
+        title,
+        exists && actualType === expectedType,
+        exists && actualType !== expectedType
+          ? `expected ${expectedType}, found ${actualType ?? "unknown"}`
+          : undefined,
+      );
+    }
+
+    if (
+      yield* withFileSystemError(
+        openAiManifestPath,
+        "cannot be inspected",
+        fs.exists(openAiManifestPath),
+      )
+    ) {
+      const manifest = yield* readJson(fs, openAiManifestPath);
+      addCheck(
+        "repository.root_openai.manifest_contract",
+        "Root OpenAI manifest has exact contract and release version",
+        validateManifest("openai", manifest),
+      );
+    }
+    if (
+      yield* withFileSystemError(openAiMcpPath, "cannot be inspected", fs.exists(openAiMcpPath))
+    ) {
+      const mcp = yield* readJson(fs, openAiMcpPath);
+      addCheck(
+        "repository.root_openai.mcp_contract",
+        "Root OpenAI MCP configuration binds the production endpoint",
+        validateMcp("openai", mcp),
+      );
+    }
+
+    const expectedSkillNames = ASK_GINA_SKILL_DEFINITIONS.map((skill) => skill.name).sort();
+    const skillsExist = yield* withFileSystemError(
+      canonicalSkillsRoot,
+      "cannot be inspected",
+      fs.exists(canonicalSkillsRoot),
+    );
+    let actualSkillNames: readonly string[] = [];
+    let skillFilesComplete = false;
+    if (skillsExist) {
+      actualSkillNames = (yield* withFileSystemError(
+        canonicalSkillsRoot,
+        "cannot be read",
+        fs.readDirectory(canonicalSkillsRoot),
+      )).sort();
+      const declaredFiles = yield* Effect.forEach(
+        expectedSkillNames,
+        (skill) =>
+          Effect.all(
+            [
+              withFileSystemError(
+                paths.join(canonicalSkillsRoot, skill, "SKILL.md"),
+                "cannot be inspected",
+                fs.exists(paths.join(canonicalSkillsRoot, skill, "SKILL.md")),
+              ),
+              withFileSystemError(
+                paths.join(canonicalSkillsRoot, skill, "agents", "openai.yaml"),
+                "cannot be inspected",
+                fs.exists(paths.join(canonicalSkillsRoot, skill, "agents", "openai.yaml")),
+              ),
+            ],
+            { concurrency: "unbounded" },
+          ),
+        { concurrency: "unbounded" },
+      );
+      skillFilesComplete = declaredFiles.every(([skill, metadata]) => skill && metadata);
+    }
+    addCheck(
+      "repository.root_openai.skills_contract",
+      "Root OpenAI source contains exact canonical skills and declared files",
+      sameSortedStrings(actualSkillNames, expectedSkillNames) && skillFilesComplete,
+    );
+
+    const legacyOpenAiOverlay = paths.join(packageRoot, "targets", "openai");
+    const legacyOpenAiExists = yield* withFileSystemError(
+      legacyOpenAiOverlay,
+      "cannot be inspected",
+      fs.exists(legacyOpenAiOverlay),
+    );
+    addCheck(
+      "repository.legacy_openai.absent",
+      "Legacy targets/openai overlay is absent",
+      !legacyOpenAiExists,
+      legacyOpenAiExists ? "legacy OpenAI overlay must be removed" : undefined,
+    );
+
+    const symlinks = yield* findSymbolicLinks(fs, paths, packageRoot).pipe(
+      Effect.mapError((cause) =>
+        targetConformanceError(packageRoot, "cannot inspect plugin source links", cause),
+      ),
+    );
+    addCheck(
+      "repository.source.no_symlinks",
+      "Plugin source contains no symbolic links",
+      symlinks.length === 0,
+      symlinks.length === 0 ? undefined : `symbolic links: ${symlinks.join(", ")}`,
+    );
+
+    const claudeMarketplacePath = paths.join(repositoryRoot, ".claude-plugin", "marketplace.json");
+    const claudeMarketplaceExists = yield* withFileSystemError(
+      claudeMarketplacePath,
+      "cannot be inspected",
+      fs.exists(claudeMarketplacePath),
+    );
+    addCheck(
+      "repository.claude.marketplace_exists",
+      "Independent Claude marketplace descriptor exists",
+      claudeMarketplaceExists,
+    );
+    if (claudeMarketplaceExists) {
+      const claudeMarketplace = yield* readJson(fs, claudeMarketplacePath);
+      const claudePlugins = nested(claudeMarketplace, "plugins");
+      const claudePlugin =
+        Array.isArray(claudePlugins) && claudePlugins.length === 1 ? claudePlugins[0] : undefined;
+      const claudeContract =
+        nested(claudeMarketplace, "name") === "ask-gina-plugins" &&
+        nested(claudePlugin, "name") === "ask-gina" &&
+        nested(claudePlugin, "source") === "./plugins/ask-gina" &&
+        nested(claudePlugin, "skills") === "./skills" &&
+        nested(claudePlugin, "mcpServers") === "./targets/claude/.mcp.json";
+      addCheck(
+        "repository.claude.marketplace_contract",
+        "Claude marketplace independently references the Claude MCP overlay",
+        claudeContract,
+      );
+    }
+
+    const claudeManifestPath = paths.join(
+      packageRoot,
+      "targets",
+      "claude",
+      ".claude-plugin",
+      "plugin.json",
+    );
+    const claudeMcpPath = paths.join(packageRoot, "targets", "claude", ".mcp.json");
+    const [claudeManifestExists, claudeMcpExists] = yield* Effect.all(
+      [
+        withFileSystemError(
+          claudeManifestPath,
+          "cannot be inspected",
+          fs.exists(claudeManifestPath),
+        ),
+        withFileSystemError(claudeMcpPath, "cannot be inspected", fs.exists(claudeMcpPath)),
+      ],
+      { concurrency: "unbounded" },
+    );
+    addCheck(
+      "repository.claude.overlay_exists",
+      "Claude overlay manifest and MCP configuration exist",
+      claudeManifestExists && claudeMcpExists,
+    );
+    if (claudeManifestExists && claudeMcpExists) {
+      const [claudeManifest, claudeMcp] = yield* Effect.all(
+        [readJson(fs, claudeManifestPath), readJson(fs, claudeMcpPath)],
+        { concurrency: "unbounded" },
+      );
+      addCheck(
+        "repository.claude.overlay_contract",
+        "Claude overlay has the release version and production MCP contract",
+        validateManifest("claude", claudeManifest) && validateMcp("claude", claudeMcp),
+      );
+    }
+
+    return {
+      target: "repository",
+      passed: checks.every((check) => check.passed),
+      checks,
+    };
+  });
 export const runTargetConformanceChecks = (
   options: TargetConformanceOptions & { readonly target?: TargetName } = {},
 ): Effect.Effect<
@@ -631,11 +1004,17 @@ export const runTargetConformanceChecks = (
     );
     const targets: Partial<Record<TargetName, TargetSummary>> = {};
     for (const summary of summaries) targets[summary.target] = summary;
-    const checks = summaries.flatMap((summary) => summary.checks);
+    const shouldCheckRepository = options.checkRepository ?? options.target === undefined;
+    const repository = shouldCheckRepository
+      ? yield* checkRepositoryConformance(options)
+      : undefined;
+    const allSummaries = repository === undefined ? summaries : [...summaries, repository];
+    const checks = allSummaries.flatMap((summary) => summary.checks);
     const totalPassed = checks.filter((check) => check.passed).length;
     const totalFailed = checks.length - totalPassed;
     return {
       targets,
+      ...(repository === undefined ? {} : { repository }),
       totalChecks: checks.length,
       totalPassed,
       totalFailed,
@@ -681,6 +1060,14 @@ const printHumanReport = (report: TargetConformanceReport): void => {
     process.stdout.write(`\n${target.toUpperCase()}: ${summary.passed ? "PASS" : "FAIL"}\n`);
     for (const check of summary.checks) {
       process.stdout.write(`  ${check.passed ? "PASS" : "FAIL"} ${check.title}\n`);
+    }
+  }
+  if (report.repository !== undefined) {
+    process.stdout.write(`\nREPOSITORY: ${report.repository.passed ? "PASS" : "FAIL"}\n`);
+    for (const check of report.repository.checks) {
+      process.stdout.write(
+        `  ${check.passed ? "PASS" : "FAIL"} ${check.title}${check.detail === undefined ? "" : ` (${check.detail})`}\n`,
+      );
     }
   }
   process.stdout.write(

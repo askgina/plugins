@@ -40,6 +40,30 @@ jobs:
       - run: bun run verify:artifacts
       - run: bun run smoke:install
       - run: bun run check:public-boundary
+      - name: Install pinned Codex marketplace CLI
+        if: github.event_name == 'push'
+        env:
+          BUN_INSTALL_CACHE_DIR: ${{ runner.temp }}/codex-cli-cache
+          CODEX_CLI_ROOT: ${{ runner.temp }}/codex-cli
+        run: |
+          mkdir -p "$CODEX_CLI_ROOT"
+          printf '{"private":true}\n' > "$CODEX_CLI_ROOT/package.json"
+          bun add --cwd "$CODEX_CLI_ROOT" --exact @openai/codex@0.149.0-alpha.4.3
+      - name: Smoke Codex marketplace at published revision
+        if: github.event_name == 'push'
+        env:
+          CODEX_MARKETPLACE_EXECUTABLE: ${{ runner.temp }}/codex-cli/node_modules/.bin/codex
+          CODEX_MARKETPLACE_REPOSITORY_TOKEN: ${{ github.token }}
+          CODEX_MARKETPLACE_REF: ${{ github.sha }}
+          CODEX_MARKETPLACE_REPOSITORY: ${{ github.repository }}
+        run: >-
+          bun run check:marketplace:codex --
+          --executable "$CODEX_MARKETPLACE_EXECUTABLE"
+          --repository "$CODEX_MARKETPLACE_REPOSITORY"
+          --ref "$CODEX_MARKETPLACE_REF"
+      - name: Remove temporary Codex CLI state
+        if: always() && github.event_name == 'push'
+        run: rm -rf "$RUNNER_TEMP/codex-cli" "$RUNNER_TEMP/codex-cli-cache"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: receipts

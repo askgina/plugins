@@ -89,7 +89,7 @@ const jsonl = (...events: readonly Record<string, unknown>[]): string =>
   `${events.map((event) => Schema.encodeUnknownSync(JsonLine)(event)).join("\n")}\n`;
 
 describe("Codex CLI JSONL evidence", () => {
-  it.effect("records only Ask Gina skill-path reads and completed Gina tool calls", () =>
+  it.effect("records only Ask Gina skill-path reads and completed Ask Gina tool calls", () =>
     Effect.sync(() => {
       assert.strictEqual(
         extractAskGinaActivatedSkills(ASK_GINA_SKILL_PATH),
@@ -174,15 +174,11 @@ describe("Codex CLI JSONL evidence", () => {
       );
 
       assert.deepStrictEqual(parsed.activated_skills, ["research-spot-tokens"]);
-      assert.strictEqual(parsed.tool_calls.length, 2);
-      assert.strictEqual(parsed.unsupported_actions, 2);
-      assert.strictEqual(parsed.tool_calls[0]?.name, "spot.getSimplePrice");
+      assert.strictEqual(parsed.tool_calls.length, 1);
+      assert.strictEqual(parsed.unsupported_actions, 3);
+      assert.strictEqual(parsed.tool_calls[0]?.name, "gina.getAccountAddresses");
       assert.isUndefined(parsed.tool_calls[0]?.error);
-      assert.deepStrictEqual(parsed.tool_calls[0]?.arguments, {
-        ids: "ethereum",
-        vs_currencies: "usd",
-      });
-      assert.strictEqual(parsed.tool_calls[1]?.name, "gina.getAccountAddresses");
+      assert.deepStrictEqual(parsed.tool_calls[0]?.arguments, {});
       assert.strictEqual(parsed.final_answer, "ETH is $1.");
       assert.deepStrictEqual(parsed.token_usage, {
         input_tokens: 10,
@@ -474,7 +470,7 @@ describe("Codex CLI trial adapter", () => {
         assert.include(profile, '[mcp_servers."gina"]\nenabled = false');
         assert.include(
           profile,
-          `[plugins.${encodeJsonString(trialOptions.pluginId)}.mcp_servers.gina]`,
+          `[plugins.${encodeJsonString(trialOptions.pluginId)}.mcp_servers.ask-gina]`,
         );
         assert.include(
           profile,
