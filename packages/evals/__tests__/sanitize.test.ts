@@ -128,8 +128,8 @@ describe("public eval text detection", () => {
     const text = [
       "SESSION_COOKIE=opaque-session-value",
       "AWS_ACCESS_KEY_ID=opaque-access-key-id",
-      "AKIA1234567890ABCDEF",
-      "ASIA1234567890ABCDEF",
+      ["AKIA", "1234567890ABCDEF"].join(""),
+      ["ASIA", "1234567890ABCDEF"].join(""),
       "file:///srv/private/config.json",
     ].join("\n");
 
@@ -160,7 +160,11 @@ describe("public eval text detection", () => {
 
   it("detects auth headers, namespaced secrets, API keys, and JWTs", () => {
     const text = [
-      ["Bea", "rer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.signature0123456789"].join(""),
+      [
+        "Bea",
+        "rer ",
+        ["eyJhbGciOiJIUzI1NiJ9", "eyJzdWIiOiIxMjM0NTY3ODkwIn0", "signature0123456789"].join("."),
+      ].join(""),
       ["Bas", "ic dXNlcjpwYXNz"].join(""),
       ["Coo", "kie: session=abcdef0123456789"].join(""),
       ["AWS_SECRET", "_ACCESS_KEY=abcdef0123456789"].join(""),
@@ -266,7 +270,7 @@ describe("eval aggregate sanitization", () => {
       for (const [value, kind] of [
         ["SESSION_COOKIE=opaque-session-value", "secret-assignment"],
         ["AWS_ACCESS_KEY_ID=opaque-access-key-id", "secret-assignment"],
-        ["ASIA1234567890ABCDEF", "provider-api-key"],
+        [["ASIA", "1234567890ABCDEF"].join(""), "provider-api-key"],
         ["file:///srv/private/config.json", "host-absolute-path"],
       ] as const) {
         const reasons = yield* failureReasons(

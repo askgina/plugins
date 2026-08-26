@@ -29,6 +29,14 @@ const HIGH_CONFIDENCE_SECRET_KINDS: ReadonlySet<PublicTextViolationKind> = new S
   "provider-api-key",
   "uri-userinfo",
 ]);
+
+const reportablePublicTextViolations = (
+  text: string,
+  receipt: boolean,
+): ReturnType<typeof findPublicTextViolations> =>
+  findPublicTextViolations(text).filter(
+    (violation) => receipt || HIGH_CONFIDENCE_SECRET_KINDS.has(violation.kind),
+  );
 const PRIVATE_ALIAS = ["@", "/"].join("");
 const PRIVATE_REPOSITORY = ["nextjs", "-ai-chatbot"].join("");
 const PRIVATE_REGISTRY = ["gina-tool", "-registry"].join("");
@@ -188,11 +196,8 @@ const program = Effect.scoped(
         }
       }
       if (/\bREDIS_[A-Z0-9_]+\b|rediss?:\/\//u.test(text)) addFinding("private-cache", label);
-      for (const violation of findPublicTextViolations(text)) {
-        const syntheticFixture = label.includes("/__tests__/") || label.includes("/fixtures/");
-        if (receipt || (!syntheticFixture && HIGH_CONFIDENCE_SECRET_KINDS.has(violation.kind))) {
-          addFinding(violation.kind, label);
-        }
+      for (const violation of reportablePublicTextViolations(text, receipt)) {
+        addFinding(violation.kind, label);
       }
       for (const match of text.matchAll(/https?:\/\/([^\s/"'<>]+)/giu)) {
         const hostname = (match[1] ?? "").toLowerCase().replace(/:\d+$/u, "");
@@ -371,4 +376,6 @@ const main = Layer.build(BunServices.layer).pipe(
   Effect.scoped,
 );
 
-BunRuntime.runMain(main);
+if (import.meta.main) {
+  BunRuntime.runMain(main);
+}
