@@ -435,6 +435,22 @@ const verifyCompiledPackageOutputImpl = (
         return yield* fail(`${definition.name} has unexpected compiled output: ${file}`);
       }
     }
+    yield* Effect.forEach(
+      files.filter((file) => file.endsWith(".d.ts")),
+      (file) =>
+        Effect.gen(function* () {
+          const declaration = yield* readText(path.join(dist, file));
+          const referencedMap = declaration.match(/\/\/# sourceMappingURL=([^\r\n]+)\s*$/u)?.[1];
+          if (
+            referencedMap !== undefined &&
+            (referencedMap !== `${path.basename(file)}.map` || !files.includes(`${file}.map`))
+          ) {
+            return yield* fail(
+              `${definition.name} compiled declaration references a missing source map: ${file}`,
+            );
+          }
+        }),
+    );
     const maps = files.filter((file) => file.endsWith(".map"));
     if (maps.length === 0) return yield* fail(`${definition.name} has no compiled source maps`);
     yield* Effect.forEach(maps, (file) =>

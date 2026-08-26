@@ -205,6 +205,22 @@ describe("pack artifact source snapshot", () => {
       ),
     );
 
+    it.effect("rejects a declaration reference to an omitted map", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fixture = yield* compiledContractFixture;
+          yield* fs.writeFileString(
+            path.join(fixture.dist, "index.d.ts"),
+            "declare const value = 1;\n//# sourceMappingURL=index.d.ts.map\n",
+          );
+          const error = yield* rejectCompiledContract(fixture.root);
+          assert.include(error.message, "compiled declaration references a missing source map");
+        }),
+      ),
+    );
+
     it.effect("rejects a package wrapper symlink before archive output", () =>
       Effect.scoped(
         Effect.gen(function* () {

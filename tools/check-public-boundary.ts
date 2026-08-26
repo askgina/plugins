@@ -285,7 +285,7 @@ const program = Effect.scoped(
         else {
           const text = new TextDecoder().decode(bytes);
           scanText(text, label, receipt);
-          if (label.endsWith(".js.map")) {
+          if (label.endsWith(".map")) {
             const sourceMap = inspectSourceMapText(text);
             if (sourceMap === undefined) addFinding("invalid-source-map", label);
             else {

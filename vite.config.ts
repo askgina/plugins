@@ -1,13 +1,30 @@
 import { recommended as effectTsgoRecommended } from "@effect/tsgo/oxlint-presets";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite-plus";
+import type { PackUserConfig } from "vite-plus/pack";
+
 const packDefaults = {
   deps: { neverBundle: true },
   dts: true,
   fixedExtension: false,
   format: "esm",
+  plugins: [
+    {
+      name: "strip-unemitted-declaration-map-references",
+      generateBundle(_options, bundle) {
+        for (const output of Object.values(bundle)) {
+          if (output.type === "chunk" && output.fileName.endsWith(".d.ts")) {
+            output.code = output.code.replace(
+              /\n?\/\/# sourceMappingURL=[^\r\n]+\.d\.ts\.map\s*$/u,
+              "\n",
+            );
+          }
+        }
+      },
+    },
+  ],
   sourcemap: true,
-} as const;
+} satisfies PackUserConfig;
 
 export default defineConfig({
   pack: [
