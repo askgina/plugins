@@ -504,7 +504,7 @@ const rewriteWorkspaceRanges = (value: unknown, version: string): void => {
   }
 };
 
-export const stagePackage = (
+const stagePackageImpl = (
   liveRoot: string,
   sourceRoot: string,
   packageName: string,
@@ -566,6 +566,21 @@ export const stagePackage = (
     );
     return yield* fileProofs(packageRoot, "package");
   });
+export const stagePackage: {
+  (
+    sourceRoot: string,
+    packageName: string,
+    stage: string,
+    version: string,
+  ): (liveRoot: string) => ReturnType<typeof stagePackageImpl>;
+  (
+    liveRoot: string,
+    sourceRoot: string,
+    packageName: string,
+    stage: string,
+    version: string,
+  ): ReturnType<typeof stagePackageImpl>;
+} = Function.dual(5, stagePackageImpl);
 
 const archive = (root: string, stage: string, output: string, entries: readonly string[]) =>
   runCommand(
