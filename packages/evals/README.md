@@ -21,8 +21,10 @@ runners. The default live benchmark suite is `ask-gina-routing-smoke.yaml`. Both
 runners require `ASK_GINA_ACCESS_TOKEN` and `OPENAI_API_KEY` in the process
 environment. Codex trials additionally require an absolute executable path in
 `CODEX_EVAL_EXECUTABLE` and its lowercase SHA-256 digest in
-`CODEX_EVAL_EXECUTABLE_SHA256`. The runner attests that executable, installs and
-validates the repository plugin under a fresh temporary `CODEX_HOME`, seeds only
+`CODEX_EVAL_EXECUTABLE_SHA256`. On Linux and macOS, the runner hashes an open
+handle and launches that same descriptor; unsupported platforms fail closed. It
+then installs and validates the repository plugin under a fresh temporary
+`CODEX_HOME`, seeds only
 the temporary Gina MCP credential, verifies the exact MCP endpoint and OAuth
 status and production catalog, then runs with an enforced permission profile.
 The profile denies reads from `CODEX_HOME`, read-allows only the minimal runtime,

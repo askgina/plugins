@@ -29,6 +29,7 @@ import {
 import {
   CODEX_CLI_ALLOWED_ENVIRONMENT_NAMES,
   attestCodexExecutable,
+  openAttestedCodexExecutable,
   runCodexCliPluginEvalTrial,
   type AttestedCodexExecutable,
 } from "../codex-cli.js";
@@ -291,14 +292,15 @@ const runAttestedCodexCommand = (
 > =>
   Effect.scoped(
     Effect.gen(function* () {
-      const actual = yield* attestCodexExecutable({
+      const opened = yield* openAttestedCodexExecutable({
         executablePath: executable.path,
         expectedSha256: executable.sha256,
       }).pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "codex-preflight-failed" })));
+      const actual = opened.executable;
       if (!sameExecutable(executable, actual)) {
         return yield* new LiveEvalCliError({ reason: "codex-preflight-failed" });
       }
-      const child = yield* ChildProcess.make(actual.path, args, {
+      const child = yield* ChildProcess.make(opened.command, args, {
         cwd,
         env: { ...environment },
         extendEnv: false,

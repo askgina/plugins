@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-
 import {
   Clock,
   Data,
@@ -11,6 +10,7 @@ import {
   Option,
   Path,
   Redacted,
+  Scope,
   Stream,
 } from "effect";
 import { ChildProcess } from "effect/unstable/process";
@@ -81,7 +81,12 @@ export class PluginEvalCodexCliTimeoutError extends Data.TaggedError(
 export class PluginEvalCodexCliExecutableError extends Data.TaggedError(
   "PluginEvalCodexCliExecutableError",
 )<{
-  readonly reason: "invalid-path" | "forbidden-path" | "invalid-file" | "digest-mismatch";
+  readonly reason:
+    | "invalid-path"
+    | "forbidden-path"
+    | "invalid-file"
+    | "digest-mismatch"
+    | "descriptor-unavailable";
 }> {}
 export class PluginEvalCodexCliProcessError extends Data.TaggedError(
   "PluginEvalCodexCliProcessError",
@@ -105,11 +110,17 @@ export interface AttestedCodexExecutable {
   readonly size: bigint;
 }
 
+export interface OpenAttestedCodexExecutable {
+  readonly command: string;
+  readonly executable: AttestedCodexExecutable;
+}
+
 export interface AttestCodexExecutableOptions {
   readonly executablePath: string;
   readonly expectedSha256: string;
   readonly forbiddenRoots?: readonly string[];
 }
+
 const isWithin = (path: Path.Path, parent: string, child: string): boolean => {
   const relative = path.relative(parent, child);
   return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
@@ -121,14 +132,95 @@ const isNativeExecutableHeader = (bytes: readonly number[]): boolean =>
   (bytes[0] === 0xcf && bytes[1] === 0xfa && bytes[2] === 0xed && bytes[3] === 0xfe) ||
   (bytes[0] === 0xfe && bytes[1] === 0xed && bytes[2] === 0xfa && bytes[3] === 0xcf);
 
-export const attestCodexExecutable = ({
+const executableDescriptorPath = (descriptor: number): string | undefined => {
+  if (process.platform === "linux") return `/proc/self/fd/${descriptor}`;
+  if (process.platform === "darwin") return `/dev/fd/${descriptor}`;
+  return undefined;
+};
+
+const fileDescriptor = (file: FileSystem.File): number | undefined => {
+  const descriptor = Reflect.get(file, "fd");
+  return typeof descriptor === "number" && Number.isSafeInteger(descriptor) && descriptor >= 0
+    ? descriptor
+    : undefined;
+};
+
+const inspectOpenExecutable = (
+  handle: FileSystem.File,
+  expectedSha256: string,
+): Effect.Effect<Omit<AttestedCodexExecutable, "path">, PluginEvalCodexCliExecutableError> =>
+  Effect.gen(function* () {
+    const before = yield* handle.stat.pipe(
+      Effect.mapError(() => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" })),
+    );
+    if (before.type !== "File" || (before.mode & 0o111) === 0) {
+      return yield* new PluginEvalCodexCliExecutableError({ reason: "invalid-file" });
+    }
+    yield* handle
+      .seek(0n, "start")
+      .pipe(
+        Effect.mapError(() => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" })),
+      );
+    const hash = createHash("sha256");
+    const header: number[] = [];
+    while (true) {
+      const maybeChunk = yield* handle
+        .readAlloc(64 * 1024)
+        .pipe(
+          Effect.mapError(() => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" })),
+        );
+      if (Option.isNone(maybeChunk)) break;
+      const chunk = maybeChunk.value;
+      hash.update(chunk);
+      for (let index = 0; index < chunk.length && header.length < 4; index += 1) {
+        const value = chunk[index];
+        if (value !== undefined) header.push(value);
+      }
+    }
+    const after = yield* handle.stat.pipe(
+      Effect.mapError(() => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" })),
+    );
+    const beforeIno = Option.getOrUndefined(before.ino);
+    const afterIno = Option.getOrUndefined(after.ino);
+    const beforeMtime = Option.getOrUndefined(before.mtime)?.getTime();
+    const afterMtime = Option.getOrUndefined(after.mtime)?.getTime();
+    const sha256 = hash.digest("hex");
+    if (
+      !isNativeExecutableHeader(header) ||
+      sha256 !== expectedSha256 ||
+      after.type !== "File" ||
+      before.dev !== after.dev ||
+      beforeIno !== afterIno ||
+      before.mode !== after.mode ||
+      before.size !== after.size ||
+      beforeMtime !== afterMtime
+    ) {
+      return yield* new PluginEvalCodexCliExecutableError({ reason: "digest-mismatch" });
+    }
+    if (
+      !Number.isSafeInteger(after.dev) ||
+      !Number.isSafeInteger(after.mode) ||
+      (afterIno !== undefined && !Number.isSafeInteger(afterIno))
+    ) {
+      return yield* new PluginEvalCodexCliExecutableError({ reason: "invalid-file" });
+    }
+    return {
+      sha256,
+      dev: after.dev,
+      ...(afterIno === undefined ? {} : { ino: afterIno }),
+      mode: after.mode,
+      size: after.size,
+    };
+  });
+
+export const openAttestedCodexExecutable = ({
   executablePath,
   expectedSha256,
   forbiddenRoots = [],
 }: AttestCodexExecutableOptions): Effect.Effect<
-  AttestedCodexExecutable,
+  OpenAttestedCodexExecutable,
   PluginEvalCodexCliExecutableError,
-  FileSystem.FileSystem | Path.Path
+  FileSystem.FileSystem | Path.Path | Scope.Scope
 > =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
@@ -144,56 +236,36 @@ export const attestCodexExecutable = ({
     if (forbiddenRoots.some((root) => isWithin(path, path.resolve(root), canonical))) {
       return yield* new PluginEvalCodexCliExecutableError({ reason: "forbidden-path" });
     }
-    const before = yield* fs
-      .stat(canonical)
+    const handle = yield* fs
+      .open(canonical, { flag: "r" })
       .pipe(
         Effect.mapError(() => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" })),
       );
-    if (before.type !== "File" || (before.mode & 0o111) === 0) {
-      return yield* new PluginEvalCodexCliExecutableError({ reason: "invalid-file" });
+    const descriptor = fileDescriptor(handle);
+    if (descriptor === undefined) {
+      return yield* new PluginEvalCodexCliExecutableError({ reason: "descriptor-unavailable" });
     }
-    const hash = createHash("sha256");
-    const header: number[] = [];
-    yield* fs.stream(canonical).pipe(
-      Stream.runForEach((chunk) =>
-        Effect.sync(() => {
-          hash.update(chunk);
-          for (let index = 0; index < chunk.length && header.length < 4; index += 1) {
-            const value = chunk[index];
-            if (value !== undefined) header.push(value);
-          }
-        }),
-      ),
-      Effect.mapError(() => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" })),
-    );
-    const after = yield* fs
-      .stat(canonical)
-      .pipe(
-        Effect.mapError(() => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" })),
-      );
-    const beforeIno = Option.getOrUndefined(before.ino);
-    const afterIno = Option.getOrUndefined(after.ino);
-    const sha256 = hash.digest("hex");
-    if (
-      !isNativeExecutableHeader(header) ||
-      sha256 !== expectedSha256 ||
-      after.type !== "File" ||
-      before.dev !== after.dev ||
-      beforeIno !== afterIno ||
-      before.mode !== after.mode ||
-      before.size !== after.size
-    ) {
-      return yield* new PluginEvalCodexCliExecutableError({ reason: "digest-mismatch" });
+    const command = executableDescriptorPath(descriptor);
+    if (command === undefined) {
+      return yield* new PluginEvalCodexCliExecutableError({ reason: "descriptor-unavailable" });
     }
+    const inspected = yield* inspectOpenExecutable(handle, expectedSha256);
     return {
-      path: canonical,
-      sha256,
-      dev: after.dev,
-      ...(afterIno === undefined ? {} : { ino: afterIno }),
-      mode: after.mode,
-      size: after.size,
+      command,
+      executable: { path: canonical, ...inspected },
     };
   });
+
+export const attestCodexExecutable = (
+  options: AttestCodexExecutableOptions,
+): Effect.Effect<
+  AttestedCodexExecutable,
+  PluginEvalCodexCliExecutableError,
+  FileSystem.FileSystem | Path.Path
+> =>
+  Effect.scoped(
+    openAttestedCodexExecutable(options).pipe(Effect.map(({ executable }) => executable)),
+  );
 
 export interface CodexExecParsedStream {
   readonly activated_skills: readonly string[];
@@ -666,10 +738,11 @@ export const effectCodexCliTrialRunner: CodexCliTrialRunner = {
   run: (command) =>
     Effect.scoped(
       Effect.gen(function* () {
-        const actual = yield* attestCodexExecutable({
+        const opened = yield* openAttestedCodexExecutable({
           executablePath: command.executable.path,
           expectedSha256: command.executable.sha256,
         });
+        const actual = opened.executable;
         if (
           command.command !== actual.path ||
           command.executable.dev !== actual.dev ||
@@ -679,7 +752,7 @@ export const effectCodexCliTrialRunner: CodexCliTrialRunner = {
         ) {
           return yield* new PluginEvalCodexCliExecutableError({ reason: "digest-mismatch" });
         }
-        const process = yield* ChildProcess.make(command.command, command.args, {
+        const process = yield* ChildProcess.make(opened.command, command.args, {
           cwd: command.workingDirectory,
           env: { ...command.environment },
           extendEnv: false,

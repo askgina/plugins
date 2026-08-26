@@ -1,7 +1,10 @@
+import { createHash } from "node:crypto";
+
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { listCatalogToolNames } from "@askgina/contracts";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, FileSystem, Redacted, Schema, Stream } from "effect";
+import { ChildProcess } from "effect/unstable/process";
 import { TestClock } from "effect/testing";
 
 import {
@@ -11,6 +14,7 @@ import {
   type CodexCliCommand,
   type CodexCliTrialRunner,
   extractAskGinaActivatedSkills,
+  openAttestedCodexExecutable,
   parseCodexExecJsonl,
   PluginEvalCodexCliExecutableError,
   PluginEvalCodexCliProcessError,
@@ -297,6 +301,43 @@ describe("Codex CLI trial adapter", () => {
           assert.instanceOf(replacedBeforeSpawn.failure, PluginEvalCodexCliExecutableError);
           assert.strictEqual(replacedBeforeSpawn.failure.reason, "digest-mismatch");
         }
+      }),
+    );
+
+    it.effect("executes the opened executable after its path is replaced", () =>
+      Effect.gen(function* () {
+        if (process.platform !== "linux" && process.platform !== "darwin") return;
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "codex-descriptor-test-" });
+        const executablePath = `${root}/codex`;
+        const substitutePath = `${root}/substitute`;
+        const trustedBytes = yield* fs.readFile("/bin/echo");
+        const substituteBytes = yield* fs.readFile(
+          process.platform === "darwin" ? "/usr/bin/false" : "/bin/false",
+        );
+        yield* Effect.all([
+          fs.writeFile(executablePath, trustedBytes),
+          fs.writeFile(substitutePath, substituteBytes),
+        ]);
+        yield* Effect.all([fs.chmod(executablePath, 0o755), fs.chmod(substitutePath, 0o755)]);
+        const opened = yield* openAttestedCodexExecutable({
+          executablePath,
+          expectedSha256: createHash("sha256").update(trustedBytes).digest("hex"),
+        });
+
+        yield* fs.rename(substitutePath, executablePath);
+        const child = yield* ChildProcess.make(opened.command, ["descriptor-ok"], {
+          stdin: "ignore",
+          stdout: "pipe",
+          stderr: "ignore",
+        });
+        const [stdout, exitCode] = yield* Effect.all([
+          collectBoundedUtf8Output(child.stdout, 1024),
+          child.exitCode,
+        ]);
+
+        assert.strictEqual(exitCode, 0);
+        assert.strictEqual(stdout.text, "descriptor-ok\n");
       }),
     );
 
