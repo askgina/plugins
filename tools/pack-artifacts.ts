@@ -690,8 +690,16 @@ const buildSnapshotPackages = (root: string, snapshot: string) =>
       });
     yield* linkNodeModules("", true);
     yield* Effect.forEach(PACKAGES, (definition) => linkNodeModules(definition.directory, false));
+    const buildBin = path.join(snapshot, ".build-bin");
+    yield* fs
+      .makeDirectory(buildBin)
+      .pipe(Effect.mapError((cause) => fail("cannot create snapshot build launcher", cause)));
+    yield* fs
+      .symlink(process.execPath, path.join(buildBin, "node"))
+      .pipe(Effect.mapError((cause) => fail("cannot link snapshot Node launcher", cause)));
     yield* runCommand(process.execPath, ["node_modules/.bin/vp", "pack"], snapshot, {
       BUN_BE_BUN: "1",
+      PATH: `${buildBin}:/usr/bin:/bin`,
     });
   });
 
