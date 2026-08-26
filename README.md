@@ -3,16 +3,22 @@
 Private-first Apache-2.0 workspace for the Ask Gina programmatic client, Bun CLI,
 listed-plugin portable core, host adapters, and hermetic evals.
 
-This repository is not public and does not publish packages. Pull-request CI is credential-free and build-only. Production Gina MCP remains at `https://askgina.ai/ai/gina/mcp`.
-Callers supply a bearer token. The client exposes only the 29 catalog read tools.
+This repository is not public and does not publish packages. Pull-request CI runs
+workflow gates, but `main` has no protected required checks. Production Gina MCP
+remains at `https://askgina.ai/ai/gina/mcp`. Callers supply a bearer token. The
+client exposes only the 29 catalog read tools.
 
-## Packages
+## Packages and runtimes
 
-- `@askgina/contracts` — public catalog, protocol literals, and receipt schemas
-- `@askgina/sdk` — TypeScript client
-- `@askgina/cli` — Bun `ask-gina` binary
-- `@askgina/plugin-core` — portable plugin source and loaders
-- `@askgina/evals` — shared hermetic/live eval contracts, adapters, replay, grading, and sanitization
+- `@askgina/contracts` — public catalog, protocol literals, and receipt schemas;
+  root-only ESM for Node >=24 and Bun >=1.4
+- `@askgina/sdk` — TypeScript client; root-only ESM for Node >=24 and Bun >=1.4
+- `@askgina/cli` — compiled Bun `ask-gina` binary; Bun 1.4.x only
+- `@askgina/plugin-core` — host-specific plugin core and loaders
+- `@askgina/evals` — compiled hermetic/live eval tools, shared contracts,
+  adapters, replay, grading, and sanitization; Bun 1.4.x only
+
+The contracts and SDK packages have no CommonJS, browser, edge, or subpath entrypoints.
 
 ## Commands
 
@@ -30,7 +36,9 @@ bun run check:public-boundary
 bun run smoke:install
 ```
 
-`bun run artifacts` emits five package tarballs, five complete host archives,
-one four-skill candidate archive, and contract, package, target, and eval receipts
-under ignored `dist/`. Nothing in this repository publishes, releases, deploys,
+`bun run artifacts` builds the five package outputs with `vp pack`; the
+custom packer then creates five package tarballs, five complete host archives, one
+four-skill candidate archive, and contract, package, target, and eval receipts
+under ignored `dist/`. `bun run verify:artifacts` performs clean
+tarball installs and runtime checks. Nothing here publishes, releases, deploys,
 submits, or calls production during pull-request CI.

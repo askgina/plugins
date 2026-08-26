@@ -21,6 +21,12 @@ Forbidden in source, packages, archives, and receipts:
 archives. It fails on private imports or hosts, credential-like values, unsafe or
 unexpected archive content, private runtime dependencies, and raw eval fields.
 The check has no credentialed mode and no release override.
+`vp pack` writes ignored compiled package output. Custom artifact
+verification clean-installs the tarballs and runs their compiled entrypoints.
+Contracts and SDK expose only root ESM imports for Node >=24 and Bun >=1.4.
+CLI and eval executables require Bun 1.4.x. No package supports CommonJS,
+browser, edge, or subpath entrypoints. CI runs these checks, but `main` has no
+protected required checks. Nothing here grants publication authority.
 Live eval credentials are read from environment-backed Effect `Config` values,
 never command-line arguments. The Responses runner sends the provider key only
 to the Responses API and the Gina bearer only in the remote MCP authorization
