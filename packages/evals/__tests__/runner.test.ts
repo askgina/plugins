@@ -460,6 +460,39 @@ describe("hermetic eval replay", () => {
       }),
     );
 
+    it.effect("rejects unsafe run metadata before invoking a transport", () =>
+      Effect.gen(function* () {
+        const paths = yield* fixturePaths;
+        const suite = yield* loadPluginEvalSuite(paths.liveSuite);
+        let invoked = false;
+        const result = yield* Effect.result(
+          runLiveEvalSuite(
+            {
+              suite,
+              runId: "unsafe-candidate",
+              candidate: "feature/foo",
+              target: "responses_api",
+              model: "test-model",
+              displayedModel: "test-model",
+              reasoning: "test",
+              repetitions: 3,
+              accountClass: "synthetic",
+            },
+            () => {
+              invoked = true;
+              return Effect.die("trial should not run");
+            },
+          ),
+        );
+
+        assert.isFalse(invoked);
+        assert.strictEqual(result._tag, "Failure");
+        if (result._tag === "Failure") {
+          assert.strictEqual(result.failure._tag, "SanitizedEvalRunReportError");
+        }
+      }),
+    );
+
     it.effect("emits only bounded aggregate evidence with safe run metadata", () =>
       Effect.gen(function* () {
         const paths = yield* fixturePaths;

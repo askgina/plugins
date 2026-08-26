@@ -47,6 +47,55 @@ export class SanitizedEvalRunReportError extends Data.TaggedError("SanitizedEval
   readonly reasons: readonly string[];
 }> {}
 
+const SanitizedRunMetadataSchema = Schema.Struct({
+  runId: SafeRunLabelSchema,
+  candidate: SafeRunLabelSchema,
+  target: SafeRunLabelSchema,
+  model: SafeRunLabelSchema,
+  reasoning: SafeRunLabelSchema,
+  accountClass: SafeRunLabelSchema,
+  startedAt: UtcTimestampSchema,
+});
+
+export const assertSanitizedRunMetadata = (labels: {
+  readonly runId: string;
+  readonly candidate: string;
+  readonly target: string;
+  readonly model: string;
+  readonly reasoning: string;
+  readonly accountClass: string;
+  readonly startedAt: string;
+}): Effect.Effect<void, SanitizedEvalRunReportError> =>
+  Effect.gen(function* () {
+    const reasons = [
+      labels.runId,
+      labels.candidate,
+      labels.target,
+      labels.model,
+      labels.reasoning,
+      labels.accountClass,
+      labels.startedAt,
+    ].flatMap((value) =>
+      findPublicTextViolations(value).map(
+        ({ kind, index }) => `run label contains ${kind} at offset ${index}`,
+      ),
+    );
+    if (reasons.length > 0) {
+      return yield* new SanitizedEvalRunReportError({ reasons });
+    }
+    yield* Schema.decodeEffect(SanitizedRunMetadataSchema, {
+      errors: "all",
+      onExcessProperty: "error",
+    })(labels).pipe(
+      Effect.mapError(
+        () =>
+          new SanitizedEvalRunReportError({
+            reasons: ["run metadata does not match the sanitized report schema"],
+          }),
+      ),
+    );
+  });
+
 export const sanitizeEvalReplay = (
   source: EvalReplayProvenance,
 ): Effect.Effect<typeof SanitizedEvalAggregateSchema.Type, HermeticEvalSanitizationError> => {
@@ -103,20 +152,15 @@ export const makeSanitizedEvalRunReport = (
   HermeticEvalSanitizationError | SanitizedEvalRunReportError
 > =>
   Effect.gen(function* () {
-    const reasons = [
-      source.manifest.run_id,
-      source.manifest.candidate,
-      source.manifest.target,
-      source.manifest.model,
-      source.manifest.reasoning ?? "",
-      source.manifest.account_class,
-      source.manifest.started_at,
-    ].flatMap((value) =>
-      findPublicTextViolations(value).map(
-        ({ kind, index }) => `run label contains ${kind} at offset ${index}`,
-      ),
-    );
-    if (reasons.length > 0) return yield* new SanitizedEvalRunReportError({ reasons });
+    yield* assertSanitizedRunMetadata({
+      runId: source.manifest.run_id,
+      candidate: source.manifest.candidate,
+      target: source.manifest.target,
+      model: source.manifest.model,
+      reasoning: source.manifest.reasoning ?? "",
+      accountClass: source.manifest.account_class,
+      startedAt: source.manifest.started_at,
+    });
     const aggregate = yield* sanitizeEvalReplay(source);
     return yield* Schema.decodeUnknownEffect(SanitizedEvalRunReportSchema, {
       errors: "all",

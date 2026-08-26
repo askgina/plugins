@@ -9,6 +9,7 @@ import {
 } from "./load-observations.js";
 import { replayPluginEvalObservationSet, type PluginEvalReplayContractError } from "./replay.js";
 import {
+  assertSanitizedRunMetadata,
   makeSanitizedEvalRunReport,
   type SanitizedEvalRunReport,
   type SanitizedEvalRunReportError,
@@ -146,6 +147,15 @@ export const runLiveEvalSuite = Function.dual<
         return yield* new LiveEvalSelectionError({ reason: "unsupported-turns" });
       }
       const startedAt = DateTime.formatIso(yield* DateTime.now);
+      yield* assertSanitizedRunMetadata({
+        runId: options.runId,
+        candidate: options.candidate,
+        target: options.target,
+        model: options.model,
+        reasoning: options.reasoning,
+        accountClass: options.accountClass,
+        startedAt,
+      });
       const observations: PluginEvalObservation[] = [];
 
       for (let repetition = 1; repetition <= options.repetitions; repetition += 1) {
