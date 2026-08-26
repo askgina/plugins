@@ -90,6 +90,9 @@ export interface MarketplaceCommandRunner {
 }
 export interface CodexMarketplaceSmokeRunOptions extends CodexMarketplaceSmokeOptions {
   readonly runner?: MarketplaceCommandRunner;
+  readonly removeRepositoryCredentialFile?: (
+    file: string,
+  ) => Effect.Effect<void, CodexMarketplaceSmokeError, never>;
   readonly parentEnvironment?: Readonly<Record<string, string | undefined>>;
 }
 
@@ -681,8 +684,10 @@ esac
           ? Effect.void
           : Effect.gen(function* () {
               const credentialFiles = [repositoryTokenFile, gitAskpassFile] as const;
+              const removeCredentialFile =
+                options.removeRepositoryCredentialFile ?? ((file: string) => fs.remove(file));
               for (const file of credentialFiles) {
-                if (yield* fs.exists(file)) yield* fs.remove(file);
+                if (yield* fs.exists(file)) yield* removeCredentialFile(file);
               }
               for (const file of credentialFiles) {
                 if (yield* fs.exists(file)) {
@@ -702,6 +707,7 @@ esac
                     detail: "cannot remove isolated repository credentials",
                   }),
               ),
+              Effect.asVoid,
             );
       const runCommand = (
         stage: MarketplaceCommandInput["stage"],
@@ -720,7 +726,7 @@ esac
           environment: commandEnvironment,
           timeoutMs: options.timeoutMs,
         });
-      const cleanup = Effect.gen(function* () {
+      const cleanupCommands = Effect.gen(function* () {
         yield* runCommand("plugin-remove", ["plugin", "remove", PLUGIN_ID, "--json"]).pipe(
           Effect.ignore,
         );
@@ -732,6 +738,10 @@ esac
           "--json",
         ]).pipe(Effect.ignore);
       });
+      const cleanup = removeRepositoryCredentials.pipe(
+        Effect.flatMap(() => cleanupCommands),
+        Effect.ignore,
+      );
 
       return yield* Effect.gen(function* () {
         const marketplaceAttempt = yield* Effect.result(

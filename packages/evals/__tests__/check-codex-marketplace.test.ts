@@ -392,6 +392,52 @@ describe("Codex marketplace smoke lifecycle", () => {
         assert.isFalse(yield* fs.exists(path.dirname(codexHome)));
       }),
     );
+    it.effect("does not run Codex cleanup when repository credential removal fails", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const commands: MarketplaceCommandInput[] = [];
+        let removalAttempts = 0;
+        const result = yield* Effect.result(
+          runCodexMarketplaceSmoke({
+            ...OPTIONS,
+            runner: makeFakeRunner(commands),
+            parentEnvironment: {
+              PATH: "/usr/bin:/bin",
+              CODEX_MARKETPLACE_REPOSITORY_TOKEN: "repository-secret",
+            },
+            removeRepositoryCredentialFile: () => {
+              removalAttempts += 1;
+              return Effect.fail(
+                new CodexMarketplaceSmokeError({
+                  stage: "environment",
+                  reason: "io-failed",
+                  detail: "synthetic credential removal failure",
+                }),
+              );
+            },
+          }),
+        );
+
+        assert.strictEqual(result._tag, "Failure");
+        if (result._tag === "Failure") {
+          assert.strictEqual(result.failure.stage, "environment");
+          assert.strictEqual(result.failure.reason, "io-failed");
+          assert.strictEqual(
+            result.failure.detail,
+            "cannot remove isolated repository credentials",
+          );
+        }
+        assert.strictEqual(removalAttempts, 2);
+        assert.deepStrictEqual(
+          commands.map((command) => command.stage),
+          ["marketplace-add"],
+        );
+        const codexHome = commands[0]?.environment.CODEX_HOME;
+        if (codexHome === undefined) return yield* Effect.die("fake runner did not capture home");
+        assert.isFalse(yield* fs.exists(path.dirname(codexHome)));
+      }),
+    );
 
     it.effect("rejects the legacy gina MCP alias during deterministic inspection", () =>
       Effect.gen(function* () {
