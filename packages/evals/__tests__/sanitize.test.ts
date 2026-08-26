@@ -194,6 +194,15 @@ describe("public eval text detection", () => {
     assert.deepStrictEqual(findPublicTextViolations(text), []);
     assert.deepStrictEqual(findPublicTextViolations("Look up the synthetic label amber."), []);
   });
+  it.effect("handles long trailing delimiters and Base64 input", () =>
+    Effect.sync(() => {
+      const syntheticHeader = `Authorization: Bearer synthetic-fixture${";".repeat(100_000)}`;
+      const longBasic = `Basic ${btoa("x".repeat(74_999))}`;
+
+      assert.deepStrictEqual(findPublicTextViolations(syntheticHeader), []);
+      assert.deepStrictEqual(findPublicTextViolations(longBasic), []);
+    }),
+  );
 });
 
 describe("eval aggregate sanitization", () => {

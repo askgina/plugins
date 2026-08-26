@@ -156,7 +156,24 @@ const isExplicitSyntheticFixtureValue = (value: string): boolean =>
   /^(?:synthetic|fixture|example|fake|test|redacted)(?:[-_][a-z0-9]+)*$/i.test(value);
 
 const isExplicitSyntheticCredential = (value: string): boolean => {
-  const unquoted = value.trim().replace(/^["']|["'},;]+$/gu, "");
+  const trimmed = value.trim();
+  const withoutLeadingQuote =
+    trimmed.startsWith('"') || trimmed.startsWith("'") ? trimmed.slice(1) : trimmed;
+  let end = withoutLeadingQuote.length;
+  while (end > 0) {
+    const character = withoutLeadingQuote[end - 1];
+    if (
+      character !== '"' &&
+      character !== "'" &&
+      character !== "}" &&
+      character !== "," &&
+      character !== ";"
+    ) {
+      break;
+    }
+    end -= 1;
+  }
+  const unquoted = withoutLeadingQuote.slice(0, end);
   const withoutScheme = unquoted.replace(/^(?:Bearer|Basic)\s+/iu, "");
   const assignment = withoutScheme.includes("=")
     ? (withoutScheme.split("=").at(-1) ?? "")
@@ -167,8 +184,13 @@ const isExplicitSyntheticCredential = (value: string): boolean => {
 const isCanonicalBasicCredential = (value: string): boolean => {
   try {
     const decoded = atob(value);
-    const canonical = value.replace(/=+$/u, "");
-    return btoa(decoded).replace(/=+$/u, "") === canonical && decoded.includes(":");
+    const paddingIndex = value.indexOf("=");
+    const canonical = paddingIndex === -1 ? value : value.slice(0, paddingIndex);
+    const encoded = btoa(decoded);
+    const encodedPaddingIndex = encoded.indexOf("=");
+    const canonicalEncoded =
+      encodedPaddingIndex === -1 ? encoded : encoded.slice(0, encodedPaddingIndex);
+    return canonicalEncoded === canonical && decoded.includes(":");
   } catch {
     return false;
   }
