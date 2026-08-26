@@ -25,7 +25,7 @@
     "@askgina/sdk": "workspace:*",
     "@effect/platform-bun": "4.0.0-rc.111",
     "effect": "4.0.0-rc.111",
-    "yaml": "2.8.3"
+    "yaml": "2.9.0"
   },
   "engines": {
     "bun": "1.4.x"
