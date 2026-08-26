@@ -252,12 +252,17 @@ const commandHasBoundedOutput = (
     }),
   );
 
-const runCommand = (command: string, args: readonly string[], cwd: string) =>
+const runCommand = (
+  command: string,
+  args: readonly string[],
+  cwd: string,
+  environment: Readonly<Record<string, string>> = {},
+) =>
   Effect.scoped(
     Effect.gen(function* () {
       const child = yield* ChildProcess.make(command, args, {
         cwd,
-        env: childEnvironment(),
+        env: { ...childEnvironment(), ...environment },
         extendEnv: false,
         stdin: "ignore",
         stdout: "ignore",
@@ -685,7 +690,9 @@ const buildSnapshotPackages = (root: string, snapshot: string) =>
       });
     yield* linkNodeModules("", true);
     yield* Effect.forEach(PACKAGES, (definition) => linkNodeModules(definition.directory, false));
-    yield* runCommand(process.execPath, ["node_modules/.bin/vp", "pack"], snapshot);
+    yield* runCommand(process.execPath, ["node_modules/.bin/vp", "pack"], snapshot, {
+      BUN_BE_BUN: "1",
+    });
   });
 
 const assertLiveSourceBoundary = (root: string, snapshot: string) =>
