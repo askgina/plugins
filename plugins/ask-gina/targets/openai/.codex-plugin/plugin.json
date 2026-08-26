@@ -21,6 +21,7 @@
     "capabilities": ["Interactive", "Read"],
     "websiteURL": "https://askgina.ai",
     "privacyPolicyURL": "https://askgina.ai/privacy-policy",
+    "supportURL": "https://askgina.ai/support",
     "termsOfServiceURL": "https://askgina.ai/terms-and-conditions",
     "defaultPrompt": [
       "Show my linked wallets and cross-chain portfolio.",

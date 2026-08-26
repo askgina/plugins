@@ -1,3 +1,6 @@
+interface:
+  display_name: "Research Spot Tokens"
+  short_description: "Research live token prices, historical charts, and swap history."
 dependencies:
   tools:
     - type: "mcp"

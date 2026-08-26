@@ -141,6 +141,35 @@ const handoffUrls = (markdown: string): readonly URL[] =>
     ([value]) => new URL(value),
   );
 
+const productionSupportUrl = "https://askgina.ai/support";
+
+const openAiSkillInterfaces = {
+  "review-gina-account": {
+    display_name: "Review Gina Account",
+    short_description: "Review Ask Gina portfolio balances, linked wallets, and automations.",
+  },
+  "research-spot-tokens": {
+    display_name: "Research Spot Tokens",
+    short_description: "Research live token prices, historical charts, and swap history.",
+  },
+  "research-prediction-markets": {
+    display_name: "Research Prediction Markets",
+    short_description: "Research live Polymarket events, outcome books, and market positions.",
+  },
+  "research-hyperliquid": {
+    display_name: "Research Hyperliquid",
+    short_description: "Research live Hyperliquid markets, account activity, and positions.",
+  },
+} as const satisfies Readonly<
+  Record<
+    (typeof ASK_GINA_SKILL_DEFINITIONS)[number]["name"],
+    Readonly<{
+      display_name: string;
+      short_description: string;
+    }>
+  >
+>;
+
 const targetManifestPath: Readonly<Record<TargetName, string>> = {
   openai: ".codex-plugin/plugin.json",
   cursor: ".cursor-plugin/plugin.json",
@@ -226,7 +255,8 @@ const validateManifest = (target: TargetName, manifest: unknown): boolean => {
       nested(manifest, "skills") === "./skills/" &&
       nested(manifest, "mcpServers") === "./.mcp.json" &&
       nested(manifest, "interface", "composerIcon") === "./assets/icon.svg" &&
-      nested(manifest, "interface", "logo") === "./assets/icon.svg"
+      nested(manifest, "interface", "logo") === "./assets/icon.svg" &&
+      nested(manifest, "interface", "supportURL") === productionSupportUrl
     );
   }
 
@@ -536,9 +566,13 @@ export const checkGeneratedTargetConformance: {
                   fs.readFileString(canonicalMetadataPath),
                 )
               : "";
+            const expectedInterface = openAiSkillInterfaces[skill.name];
             const metadataMatches =
               metadataExists &&
               metadata === canonicalMetadata &&
+              metadata.startsWith(
+                `interface:\n  display_name: "${expectedInterface.display_name}"\n  short_description: "${expectedInterface.short_description}"\ndependencies:\n`,
+              ) &&
               metadata.includes('type: "mcp"') &&
               metadata.includes('value: "ask-gina"') &&
               metadata.includes('transport: "streamable_http"') &&
