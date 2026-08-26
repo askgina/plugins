@@ -33,7 +33,7 @@ export const SanitizedEvalRunReportSchema = Schema.Struct({
   candidate: SafeRunLabelSchema,
   target: SafeRunLabelSchema,
   model: SafeRunLabelSchema,
-  reasoning: SafeRunLabelSchema,
+  reasoning: Schema.optional(SafeRunLabelSchema),
   repetitions: PositiveIntSchema,
   startedAt: UtcTimestampSchema,
   cleanChat: Schema.Literal(true),
@@ -52,7 +52,7 @@ const SanitizedRunMetadataSchema = Schema.Struct({
   candidate: SafeRunLabelSchema,
   target: SafeRunLabelSchema,
   model: SafeRunLabelSchema,
-  reasoning: SafeRunLabelSchema,
+  reasoning: Schema.optional(SafeRunLabelSchema),
   accountClass: SafeRunLabelSchema,
   startedAt: UtcTimestampSchema,
 });
@@ -62,7 +62,7 @@ export const assertSanitizedRunMetadata = (labels: {
   readonly candidate: string;
   readonly target: string;
   readonly model: string;
-  readonly reasoning: string;
+  readonly reasoning?: string;
   readonly accountClass: string;
   readonly startedAt: string;
 }): Effect.Effect<void, SanitizedEvalRunReportError> =>
@@ -72,7 +72,7 @@ export const assertSanitizedRunMetadata = (labels: {
       labels.candidate,
       labels.target,
       labels.model,
-      labels.reasoning,
+      ...(labels.reasoning === undefined ? [] : [labels.reasoning]),
       labels.accountClass,
       labels.startedAt,
     ].flatMap((value) =>
@@ -157,9 +157,9 @@ export const makeSanitizedEvalRunReport = (
       candidate: source.manifest.candidate,
       target: source.manifest.target,
       model: source.manifest.model,
-      reasoning: source.manifest.reasoning ?? "",
       accountClass: source.manifest.account_class,
       startedAt: source.manifest.started_at,
+      ...(source.manifest.reasoning === undefined ? {} : { reasoning: source.manifest.reasoning }),
     });
     const aggregate = yield* sanitizeEvalReplay(source);
     return yield* Schema.decodeUnknownEffect(SanitizedEvalRunReportSchema, {
@@ -169,7 +169,6 @@ export const makeSanitizedEvalRunReport = (
       schemaVersion: "v1",
       candidate: source.manifest.candidate,
       model: source.manifest.model,
-      reasoning: source.manifest.reasoning,
       repetitions: source.manifest.repetitions,
       runId: source.manifest.run_id,
       target: source.manifest.target,
@@ -177,6 +176,7 @@ export const makeSanitizedEvalRunReport = (
       cleanChat: source.manifest.clean_chat,
       accountClass: source.manifest.account_class,
       aggregate,
+      ...(source.manifest.reasoning === undefined ? {} : { reasoning: source.manifest.reasoning }),
     }).pipe(
       Effect.mapError(
         () =>

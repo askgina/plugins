@@ -535,6 +535,23 @@ describe("hermetic eval replay", () => {
         }
       }),
     );
+
+    it.effect("accepts a sanitized report when reasoning is omitted from the manifest", () =>
+      Effect.gen(function* () {
+        const paths = yield* fixturePaths;
+        const replay = yield* runHermeticEvalReplay({
+          suitePath: paths.suite,
+          observationsPath: paths.observations,
+        });
+        const { reasoning: _reasoning, ...manifest } = replay.manifest;
+        const report = yield* makeSanitizedEvalRunReport({
+          ...replay,
+          manifest,
+        });
+
+        assert.isFalse(Object.hasOwn(report, "reasoning"));
+      }),
+    );
     it.effect("rejects sanitized reports with incomplete replay coverage", () =>
       Effect.gen(function* () {
         const paths = yield* fixturePaths;
