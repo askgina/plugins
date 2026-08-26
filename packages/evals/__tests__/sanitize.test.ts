@@ -211,6 +211,7 @@ describe("public eval text detection", () => {
       "secret_sauce=recipe",
       "Basic documentation is public.",
       "Bearer test-token",
+      "uses only the canonical production URL with non-following bearer requests",
       "Authorization: Bearer synthetic-fixture",
       "Cookie: session=example-fixture",
       "cookie=example-fixture",

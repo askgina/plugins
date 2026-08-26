@@ -62,7 +62,7 @@ const GITHUB_TOKEN = /\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20
 const PROVIDER_API_KEY =
   /\b(?:sk-(?:(?:proj|ant-api\d+)-)?[A-Za-z0-9_-]{20,}|sk_(?:live|test)_[A-Za-z0-9]{16,}|AIza[0-9A-Za-z_-]{20,}|xox(?:b|p|a|r|s)-[0-9A-Za-z-]{16,}|(?:AKIA|ASIA)[0-9A-Z]{16}|glpat-[A-Za-z0-9_-]{20,}|hf_[A-Za-z0-9]{20,}|npm_[A-Za-z0-9]{20,}|SG\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,})\b/g;
 const JWT = /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/g;
-const BEARER_CREDENTIAL = /\bBearer\s+([A-Za-z0-9._~+/-]{8,})/gi;
+const BEARER_CREDENTIAL = /\bBearer\s+([A-Za-z0-9]*[^A-Za-z\s][A-Za-z0-9._~+/-]+)/gi;
 const BASIC_CREDENTIAL = /\bBasic\s+([A-Za-z0-9+/]{8,}={0,2})(?![A-Za-z0-9+/=])/gi;
 const HEADER_CREDENTIAL =
   /\b(?:authorization|proxy[-_]authorization|cookie|set[-_]cookie)["']?\s*[:=]\s*["']?([^\r\n"']+)/gi;

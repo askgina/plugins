@@ -31,7 +31,7 @@ const evalCase: PluginEvalCase = {
 const allowedTools = listCatalogToolNames();
 
 const options = {
-  apiKey: "openai-secret",
+  apiKey: "synthetic-fixture",
   mcpAuthorization: "gina-read-secret",
   model: "chat-latest",
   reasoning: "medium",
@@ -129,7 +129,7 @@ describe("Responses API trial adapter", () => {
       if (request === undefined) return yield* Effect.die("missing request");
       assert.strictEqual(request.method, "POST");
       assert.strictEqual(request.url, "https://api.openai.com/v1/responses");
-      assert.strictEqual(request.headers.authorization, "Bearer openai-secret");
+      assert.strictEqual(request.headers.authorization, "Bearer synthetic-fixture");
       assert.strictEqual(request.headers.accept, "application/json");
       assert.strictEqual(allowedTools.length, 29);
 

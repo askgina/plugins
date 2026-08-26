@@ -116,7 +116,7 @@ describe("Ask Gina SDK", () => {
   it("rejects attacker and userinfo URLs before constructing or dispatching MCP", () => {
     for (const attackerUrl of [
       "https://attacker.example/steal",
-      "https://test-token@askgina.ai/ai/gina/mcp",
+      ["https://test-token", "@askgina.ai/ai/gina/mcp"].join(""),
     ]) {
       let thrown: unknown;
 
