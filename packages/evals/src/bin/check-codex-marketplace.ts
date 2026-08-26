@@ -13,6 +13,7 @@ import { CODEX_CLI_ALLOWED_ENVIRONMENT_NAMES } from "../codex-cli";
 const DEFAULT_REPOSITORY = "askgina/plugins";
 const DEFAULT_EXECUTABLE = "codex";
 const DEFAULT_TIMEOUT_MS = 120_000;
+const REPOSITORY_TOKEN_ENVIRONMENT_NAME = "CODEX_MARKETPLACE_REPOSITORY_TOKEN";
 const MAXIMUM_OUTPUT_BYTES = 1_048_576;
 const MARKETPLACE_NAME = "ask-gina-plugins";
 const PLUGIN_NAME = "ask-gina";
@@ -215,6 +216,13 @@ export const buildCodexMarketplaceEnvironment: {
     };
   },
 );
+const withGitAskpass = (
+  environment: Readonly<Record<string, string>>,
+  askpassFile: string,
+): Record<string, string> => ({
+  ...environment,
+  GIT_ASKPASS: askpassFile,
+});
 
 export const parseMarketplaceAddOutput = (
   output: string,
@@ -578,6 +586,17 @@ export const runCodexMarketplaceSmoke = (
         runtimeDirectory: path.join(root, "xdg", "runtime"),
         workingDirectory: path.join(root, "work"),
       };
+      const repositoryToken = parentEnvironment[REPOSITORY_TOKEN_ENVIRONMENT_NAME];
+      if (
+        repositoryToken !== undefined &&
+        (repositoryToken.length === 0 || /[\r\n]/u.test(repositoryToken))
+      ) {
+        return yield* fail(
+          "environment",
+          "invalid-arguments",
+          `${REPOSITORY_TOKEN_ENVIRONMENT_NAME} must be non-empty and single-line when provided`,
+        );
+      }
       yield* Effect.forEach(
         [
           isolation.home,
@@ -617,9 +636,77 @@ export const runCodexMarketplaceSmoke = (
           ),
         );
       const environment = buildCodexMarketplaceEnvironment(isolation, parentEnvironment);
+      const repositoryTokenFile = path.join(isolation.home, ".repository-token");
+      const gitAskpassFile = path.join(isolation.home, "git-askpass");
+      if (repositoryToken !== undefined) {
+        yield* fs
+          .writeFileString(repositoryTokenFile, repositoryToken, { flag: "wx", mode: 0o600 })
+          .pipe(
+            Effect.mapError(
+              () =>
+                new CodexMarketplaceSmokeError({
+                  stage: "environment",
+                  reason: "io-failed",
+                  detail: "cannot initialize isolated repository token",
+                }),
+            ),
+          );
+        yield* fs
+          .writeFileString(
+            gitAskpassFile,
+            `#!/bin/sh
+case "$1" in
+  *sername*) printf '%s\\n' 'x-access-token' ;;
+  *assword*) cat "$HOME/.repository-token" ;;
+  *) exit 1 ;;
+esac
+`,
+            { flag: "wx", mode: 0o700 },
+          )
+          .pipe(
+            Effect.mapError(
+              () =>
+                new CodexMarketplaceSmokeError({
+                  stage: "environment",
+                  reason: "io-failed",
+                  detail: "cannot initialize isolated Git askpass helper",
+                }),
+            ),
+          );
+      }
+      const marketplaceAddEnvironment =
+        repositoryToken === undefined ? environment : withGitAskpass(environment, gitAskpassFile);
+      const removeRepositoryCredentials =
+        repositoryToken === undefined
+          ? Effect.void
+          : Effect.gen(function* () {
+              const credentialFiles = [repositoryTokenFile, gitAskpassFile] as const;
+              for (const file of credentialFiles) {
+                if (yield* fs.exists(file)) yield* fs.remove(file);
+              }
+              for (const file of credentialFiles) {
+                if (yield* fs.exists(file)) {
+                  return yield* fail(
+                    "environment",
+                    "io-failed",
+                    "isolated repository credentials remain after marketplace clone",
+                  );
+                }
+              }
+            }).pipe(
+              Effect.mapError(
+                () =>
+                  new CodexMarketplaceSmokeError({
+                    stage: "environment",
+                    reason: "io-failed",
+                    detail: "cannot remove isolated repository credentials",
+                  }),
+              ),
+            );
       const runCommand = (
         stage: MarketplaceCommandInput["stage"],
         args: readonly string[],
+        commandEnvironment: Readonly<Record<string, string>> = environment,
       ): Effect.Effect<
         MarketplaceCommandResult,
         CodexMarketplaceSmokeError,
@@ -630,7 +717,7 @@ export const runCodexMarketplaceSmoke = (
           executable: options.executable,
           args,
           cwd: isolation.workingDirectory,
-          environment,
+          environment: commandEnvironment,
           timeoutMs: options.timeoutMs,
         });
       const cleanup = Effect.gen(function* () {
@@ -647,15 +734,16 @@ export const runCodexMarketplaceSmoke = (
       });
 
       return yield* Effect.gen(function* () {
-        const marketplaceResult = yield* runCommand("marketplace-add", [
-          "plugin",
-          "marketplace",
-          "add",
-          options.repository,
-          "--ref",
-          options.ref,
-          "--json",
-        ]);
+        const marketplaceAttempt = yield* Effect.result(
+          runCommand(
+            "marketplace-add",
+            ["plugin", "marketplace", "add", options.repository, "--ref", options.ref, "--json"],
+            marketplaceAddEnvironment,
+          ),
+        );
+        yield* removeRepositoryCredentials;
+        if (marketplaceAttempt._tag === "Failure") return yield* marketplaceAttempt.failure;
+        const marketplaceResult = marketplaceAttempt.success;
         const marketplace = yield* parseMarketplaceAddOutput(marketplaceResult.stdout);
         const marketplaceRoot = yield* fs.realPath(marketplace.installedRoot).pipe(
           Effect.mapError(

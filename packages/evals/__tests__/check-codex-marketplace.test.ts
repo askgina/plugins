@@ -112,6 +112,20 @@ const makeFakeRunner = (
           detail: "fake runner did not receive CODEX_HOME",
         });
       }
+      const isolatedHome = input.environment.HOME;
+      const repositoryTokenExists =
+        isolatedHome !== undefined &&
+        (yield* fs.exists(path.join(isolatedHome, ".repository-token")).pipe(Effect.orDie));
+      const gitAskpassExists =
+        isolatedHome !== undefined &&
+        (yield* fs.exists(path.join(isolatedHome, "git-askpass")).pipe(Effect.orDie));
+      if (input.stage !== "marketplace-add" && (repositoryTokenExists || gitAskpassExists)) {
+        return yield* new CodexMarketplaceSmokeError({
+          stage: input.stage,
+          reason: "command-failed",
+          detail: "repository credential remained after marketplace clone",
+        });
+      }
       if (input.stage === failStage) {
         return yield* new CodexMarketplaceSmokeError({
           stage: input.stage,
@@ -265,6 +279,7 @@ describe("Codex marketplace environment isolation", () => {
         OPENAI_API_KEY: "provider-secret",
         ASK_GINA_ACCESS_TOKEN: "gina-secret",
         GITHUB_TOKEN: "github-secret",
+        CODEX_MARKETPLACE_REPOSITORY_TOKEN: "repository-secret",
         SSH_AUTH_SOCK: "/tmp/agent.sock",
         HTTPS_PROXY: "http://proxy-secret",
       });
@@ -282,6 +297,7 @@ describe("Codex marketplace environment isolation", () => {
       assert.notProperty(environment, "OPENAI_API_KEY");
       assert.notProperty(environment, "ASK_GINA_ACCESS_TOKEN");
       assert.notProperty(environment, "GITHUB_TOKEN");
+      assert.notProperty(environment, "CODEX_MARKETPLACE_REPOSITORY_TOKEN");
       assert.notProperty(environment, "SSH_AUTH_SOCK");
       assert.notProperty(environment, "HTTPS_PROXY");
     }),
@@ -301,6 +317,7 @@ describe("Codex marketplace smoke lifecycle", () => {
           parentEnvironment: {
             PATH: "/usr/bin:/bin",
             OPENAI_API_KEY: "must-not-leak",
+            CODEX_MARKETPLACE_REPOSITORY_TOKEN: "repository-secret",
           },
         });
 
@@ -335,6 +352,10 @@ describe("Codex marketplace smoke lifecycle", () => {
           ),
         );
         assert.notProperty(commands[0]?.environment ?? {}, "OPENAI_API_KEY");
+        assert.notProperty(commands[0]?.environment ?? {}, "CODEX_MARKETPLACE_REPOSITORY_TOKEN");
+        assert.match(commands[0]?.environment.GIT_ASKPASS ?? "", /git-askpass$/u);
+        assert.notInclude(commands[0]?.environment.GIT_ASKPASS ?? "", "repository-secret");
+        assert.isFalse(commands.slice(1).some((command) => "GIT_ASKPASS" in command.environment));
         const codexHome = commands[0]?.environment.CODEX_HOME;
         if (codexHome === undefined) return yield* Effect.die("fake runner did not capture home");
         assert.isFalse(yield* fs.exists(path.dirname(codexHome)));

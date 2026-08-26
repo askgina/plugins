@@ -21,6 +21,12 @@ CommonJS, browser, edge, or subpath entrypoints. They support Node >=24 and Bun
 points directly at `plugins/ask-gina/`, so a clean checkout exposes the OpenAI
 source without a generation step. The directly loadable OpenAI files live at the
 plugin root: `.codex-plugin/plugin.json`, `.mcp.json`, `assets/icon.svg`, and `skills/`.
+The repository is private. Automated remote marketplace proof runs only on a trusted
+same-repository push and uses an ephemeral, read-only GitHub token only while Codex
+clones the marketplace. Pull-request jobs never receive this token. The smoke harness
+deletes its isolated token and token-free askpass helper before plugin installation,
+and neither plugin installation nor runtime receives the repository token. Marketplace consumers need
+GitHub read access independently of Ask Gina MCP authentication.
 
 `plugins/ask-gina/skills/` is the only authored skill tree. OpenAI-specific skill
 metadata remains beside each canonical `SKILL.md` under `agents/openai.yaml`.
@@ -67,7 +73,9 @@ authoring source.
 Fork-safe GitHub Actions run formatting, lint, compiler, test, audit, target
 conformance, artifact clean-install/runtime, and public-boundary gates on pull
 requests. These workflows use `pull_request` with `contents: read`, but `main`
-has no protected required checks, so they do not gate merge. A separate manual
-Responses live-smoke workflow may read two protected secrets and uploads only the
+has no protected required checks, so they do not gate merge. The authenticated Codex
+remote smoke runs separately on same-repository pushes at the immutable pushed SHA;
+it never runs in a pull-request job. A separate manual Responses live-smoke workflow
+may read two protected secrets and uploads only the
 sanitized aggregate. There is no release job, OIDC, package writer, remote cache,
 or publication authority.

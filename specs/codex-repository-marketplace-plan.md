@@ -2,7 +2,7 @@
 
 ## Goal
 
-A clean checkout of `askgina/plugins` must install Ask Gina through the Codex and ChatGPT repository marketplace without running Bun, Vite+, or artifact generation. The repository keeps one authored skill tree and continues to produce lean host archives.
+A clean checkout by a GitHub principal with read access to the private `askgina/plugins` repository must install Ask Gina through the Codex and ChatGPT repository marketplace without running Bun, Vite+, or artifact generation. The repository keeps one authored skill tree and continues to produce lean host archives.
 
 The implementation may be merged to `main` and verified through an isolated repository-marketplace install. This plan does not authorize OpenAI universal-directory submission, npm publication, MCP deployment, or installation for end users.
 
@@ -13,6 +13,7 @@ The implementation may be merged to `main` and verified through an isolated repo
 - [#20](https://github.com/askgina/plugins/issues/20) locks the source and target-generation migration.
 - [#24](https://github.com/askgina/plugins/issues/24) locks conformance and install verification.
 - [#23](https://github.com/askgina/plugins/issues/23) orders the work and defines rollback.
+- On 2026-08-26, the delivery owner kept the repository private and authorized least-privilege GitHub authentication for remote marketplace clones. This supersedes the credential-free clause in #24 while preserving isolated plugin and MCP authentication boundaries.
 
 ## Resulting source tree
 
@@ -40,8 +41,8 @@ The marketplace descriptor has no version field. Version equality applies to ver
 6. Update `tools/verify-artifacts.ts` and existing archive tests so the OpenAI archive remains lean and foreign-host-free.
 7. Migrate Codex evaluator consumers from MCP server name `gina` to `ask-gina`. Move installed-plugin preflight from the Claude MCP path to root `.mcp.json`. Update the matching evaluator tests.
 8. Update plugin-core, sync, conformance, pack, verifier, and evaluator tests at their existing boundaries. Update `docs/architecture.md` to distinguish root OpenAI source, non-OpenAI overlays, generated targets, and ignored artifacts.
-9. Add an isolated Codex marketplace smoke command. It must use a temporary `HOME`, config, and cache, exercise the remote owner/repository plus `--ref` syntax proved by #21, inspect the installed files, remove the plugin and marketplace on every exit, and require no credentials.
-10. Add the smoke to CI. Treat `ON_INSTALL` as listing metadata in this automated check. It does not prove OAuth or a live MCP connection.
+9. Add an isolated Codex marketplace smoke command. It must use a temporary `HOME`, config, and cache, exercise the remote owner/repository plus `--ref` syntax proved by #21, inspect the installed files, and remove the plugin and marketplace on every exit. For the private repository, accept one dedicated read-only repository token through `CODEX_MARKETPLACE_REPOSITORY_TOKEN`, write it only to a mode-0600 temporary token file, expose a token-free temporary `GIT_ASKPASS` helper only to `marketplace add`, delete both files before plugin installation, and never pass the token itself to Codex's environment or arguments.
+10. Add the smoke to CI only on a trusted same-repository `push`, never in a pull-request job that executes PR-controlled code. Pull requests keep all credential-free static and artifact gates. Treat `ON_INSTALL` as listing metadata in this automated check; it does not prove OAuth or a live MCP connection.
 
 ## Verification
 
@@ -54,14 +55,15 @@ bun run check:target-conformance
 bun run artifacts
 bun run verify:artifacts
 bun run check:public-boundary
+# Provide CODEX_MARKETPLACE_REPOSITORY_TOKEN through the process environment.
 bun run check:marketplace:codex -- --ref <published-pr-sha>
 ```
 
-Run an external review after these commands pass. Fix every accepted finding and rerun the affected proof. Merge only a published PR revision with green required checks.
+Run the authenticated remote smoke from the same immutable PR-head SHA's trusted `push` workflow, not its pull-request workflow. Run an external review after these commands pass. Fix every accepted finding and rerun the affected proof. Merge only a published PR revision with green required checks.
 
 Before the initial merge, manually verify the supported ChatGPT host flow described in #24. Record the tested commit, client and platform, install or connection evidence, and one successful skill and tool response. Codex CLI installation alone does not prove host authentication.
 
-After merge, repeat the isolated remote Codex sequence against the immutable `main` commit SHA. Remove all temporary plugin, marketplace, home, config, cache, build, and worktree state.
+After merge, repeat the isolated authenticated remote Codex sequence against the immutable `main` commit SHA. The `main` push workflow is acceptable proof when it reports that exact SHA. Remove all temporary repository credentials, plugin, marketplace, home, config, cache, build, and worktree state.
 
 ## Rollback
 
