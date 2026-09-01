@@ -35,7 +35,7 @@
   "devDependencies": {
     "@askgina/contracts": "workspace:*",
     "@effect/language-service": "0.87.2",
-    "@effect/platform-bun": "4.0.0-rc.111",
+    "@effect/platform-bun": "4.0.0-rc.112",
     "@effect/tsgo": "0.36.5",
     "@effect/vitest": "4.0.0-rc.111",
     "@types/bun": "1.4.0",
