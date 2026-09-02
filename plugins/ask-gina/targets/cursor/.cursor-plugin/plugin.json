@@ -1,8 +1,20 @@
 {
   "name": "ask-gina",
   "version": "0.1.0",
-  "description": "Read-only Ask Gina skills for account and market research.",
+  "description": "Read-only Ask Gina research for linked wallets, spot tokens, Hyperliquid, and Polymarket. Cannot place trades, transfer assets, or create automations.",
   "author": {
     "name": "Ask Gina"
-  }
+  },
+  "homepage": "https://askgina.ai",
+  "repository": "https://github.com/askgina/plugins",
+  "license": "Apache-2.0",
+  "keywords": [
+    "crypto",
+    "portfolio",
+    "market-data",
+    "hyperliquid",
+    "polymarket",
+    "mcp"
+  ],
+  "logo": "assets/icon.svg"
 }
