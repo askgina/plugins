@@ -5,7 +5,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import { beforeEach, vi } from "vitest";
 
-import { createClient, listCatalogToolNames } from "../client";
+import { createClient, listCatalogToolNames, listConnectedToolNames } from "../client";
 import { AskGinaAuthError, AskGinaToolError } from "../errors";
 import type { AskGinaTransport } from "../transport";
 const mcpMocks = vi.hoisted(() => ({
@@ -76,6 +76,20 @@ describe("Ask Gina SDK", () => {
       const tools = yield* client.listTools();
       assert.deepStrictEqual(tools, observedTools);
       assert.isTrue(listCatalogToolNames().includes("spot.getSimplePrice"));
+    }),
+  );
+
+  it.effect("accepts the connected MCP tool catalog projection with dynamic widget renderer", () =>
+    Effect.gen(function* () {
+      const observedTools = [...listConnectedToolNames()].reverse().map((name) => ({ name }));
+      mcpMocks.listTools.mockResolvedValue({
+        tools: observedTools,
+      });
+      const client = createClient({ accessToken: "test-token" });
+
+      const tools = yield* client.listTools();
+      assert.deepStrictEqual(tools, observedTools);
+      assert.isTrue(listConnectedToolNames().includes("gina.renderReadOnlyDashboard"));
 
       const [url, options] = mcpMocks.transportConstructor.mock.calls[0] ?? [];
       assert.strictEqual(url?.href, new URL(PRODUCTION_MCP_URL).href);
@@ -111,6 +125,23 @@ describe("Ask Gina SDK", () => {
 
       assert.instanceOf(error, AskGinaToolError);
     }),
+  );
+
+  it.effect(
+    "rejects a 30-tool catalog containing the dynamic widget renderer while missing a required read tool",
+    () =>
+      Effect.gen(function* () {
+        mcpMocks.listTools.mockResolvedValue({
+          tools: ["gina.renderReadOnlyDashboard", ...listCatalogToolNames().slice(1)].map(
+            (name) => ({ name }),
+          ),
+        });
+        const error = yield* createClient({ accessToken: "test-token" })
+          .listTools()
+          .pipe(Effect.flip);
+
+        assert.instanceOf(error, AskGinaToolError);
+      }),
   );
 
   it("rejects attacker and userinfo URLs before constructing or dispatching MCP", () => {

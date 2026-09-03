@@ -1,4 +1,4 @@
-export { createClient, listCatalogToolNames } from "./client";
+export { createClient, listCatalogToolNames, listConnectedToolNames } from "./client";
 export type { AskGinaClient, AskGinaClientOptions } from "./client";
 export {
   AskGinaAuthError,

@@ -4,8 +4,10 @@ import { Effect, Schema } from "effect";
 import {
   ASK_GINA_SKILL_DEFINITIONS,
   EXECUTE_SCOPE,
-  GINA_PREDICTION_RENDER_TOOL_NAMES,
+  GINA_CONNECTED_TOOL_NAMES,
+  GINA_DYNAMIC_WIDGET_TOOL,
   GINA_READ_TOOL_CATALOG,
+  GINA_RENDER_TOOL_NAMES,
   GinaReadToolCatalogJsonSchema,
   PRODUCTION_MCP_URL,
   READ_SCOPE,
@@ -14,10 +16,13 @@ import {
   catalogSha,
   getGinaReadToolAnnotations,
   getGinaReadToolFamily,
+  isGinaConnectedToolName,
+  isGinaDynamicWidgetTool,
   isGinaMcpAppBoundReadTool,
-  isGinaPredictionRenderToolName,
   isGinaReadToolName,
+  isGinaRenderToolName,
   listCatalogToolNames,
+  listConnectedToolNames,
 } from "@askgina/contracts";
 
 const EXPECTED_TOOL_NAMES = [
@@ -69,14 +74,14 @@ const EXPECTED_MCP_APP_BOUND_TOOLS: readonly string[] = [
 
 const EXPECTED_PREDICTION_SKILL_TOOLS = [
   "predictions.searchPredictionMarkets",
+  "predictions.getExpiringMarkets",
   "predictions.getPredictionOrderbook",
+  "predictions.getSeriesMarket",
+  "predictions.getPredictionMarketDetails",
   "predictions.fetchPolymarketData",
   "predictions.fetchPolymarketHistory",
   "predictions.getPolymarketPositions",
   "predictions.getPolymarketOrderHistory",
-  "predictions.renderPredictionPodium",
-  "predictions.renderPredictionBinaryMarket",
-  "predictions.renderPredictionCollection",
 ] as const;
 
 const familyFromName = (name: (typeof EXPECTED_TOOL_NAMES)[number]) =>
@@ -100,7 +105,7 @@ describe("@askgina/contracts", () => {
       );
       assert.isTrue(EXPECTED_TOOL_NAMES.every((name) => isGinaReadToolName(name)));
       assert.isFalse(isGinaReadToolName("perps.placeOrder"));
-      assert.isFalse(isGinaReadToolName("predictions.renderPredictionPodium"));
+      assert.isFalse(isGinaReadToolName(GINA_DYNAMIC_WIDGET_TOOL));
       assert.isFalse(isGinaReadToolName(undefined));
     }),
   );
@@ -132,18 +137,25 @@ describe("@askgina/contracts", () => {
     }),
   );
 
-  it.effect("publishes prediction renderer names and the public prediction skill tools", () =>
+  it.effect("publishes dynamic widget renderer names and connected tool projections", () =>
     Effect.sync(() => {
-      assert.deepStrictEqual(GINA_PREDICTION_RENDER_TOOL_NAMES, [
-        "predictions.renderPredictionPodium",
-        "predictions.renderPredictionBinaryMarket",
-        "predictions.renderPredictionCollection",
-      ]);
+      assert.strictEqual(GINA_DYNAMIC_WIDGET_TOOL, "gina.renderReadOnlyDashboard");
+      assert.isTrue(isGinaDynamicWidgetTool(GINA_DYNAMIC_WIDGET_TOOL));
+      assert.isFalse(isGinaDynamicWidgetTool("gina.getCrosschainPortfolio"));
+      assert.isFalse(isGinaDynamicWidgetTool(undefined));
+
+      assert.deepStrictEqual(GINA_RENDER_TOOL_NAMES, ["gina.renderReadOnlyDashboard"]);
+      assert.isTrue(GINA_RENDER_TOOL_NAMES.every((name: string) => isGinaRenderToolName(name)));
+      assert.isFalse(isGinaRenderToolName("predictions.searchPredictionMarkets"));
+      assert.isFalse(isGinaRenderToolName(undefined));
+
+      assert.strictEqual(GINA_CONNECTED_TOOL_NAMES.length, 31);
+      assert.deepStrictEqual(listConnectedToolNames(), GINA_CONNECTED_TOOL_NAMES);
       assert.isTrue(
-        GINA_PREDICTION_RENDER_TOOL_NAMES.every((name) => isGinaPredictionRenderToolName(name)),
+        GINA_CONNECTED_TOOL_NAMES.every((name: string) => isGinaConnectedToolName(name)),
       );
-      assert.isFalse(isGinaPredictionRenderToolName("predictions.searchPredictionMarkets"));
-      assert.isFalse(isGinaPredictionRenderToolName(undefined));
+      assert.isFalse(isGinaConnectedToolName("perps.placeOrder"));
+      assert.isFalse(isGinaConnectedToolName(undefined));
     }),
   );
 
@@ -160,22 +172,23 @@ describe("@askgina/contracts", () => {
       );
 
       for (const skill of ASK_GINA_SKILL_DEFINITIONS) {
-        if (skill.name === "research-prediction-markets") {
-          assert.deepStrictEqual(skill.tools, EXPECTED_PREDICTION_SKILL_TOOLS);
-          continue;
-        }
-
         const family =
           skill.name === "review-gina-account"
             ? "portfolio"
             : skill.name === "research-spot-tokens"
               ? "spot"
-              : "perps";
+              : skill.name === "research-hyperliquid"
+                ? "perps"
+                : "predictions";
         assert.deepStrictEqual(
           skill.tools,
           GINA_READ_TOOL_CATALOG.filter((tool) => tool.family === family).map((tool) => tool.name),
         );
       }
+      const predictionSkill = ASK_GINA_SKILL_DEFINITIONS.find(
+        (skill) => skill.name === "research-prediction-markets",
+      );
+      assert.deepStrictEqual(predictionSkill?.tools, EXPECTED_PREDICTION_SKILL_TOOLS);
     }),
   );
 
