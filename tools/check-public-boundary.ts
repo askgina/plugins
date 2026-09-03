@@ -281,8 +281,20 @@ const program = Effect.scoped(
         const bytes = yield* fs
           .readFile(absolute)
           .pipe(Effect.mapError((cause) => fail(`cannot read ${absolute}`, cause)));
-        if (bytes.includes(0)) addFinding("unscannable-binary-file", label);
-        else {
+        const isPngAsset =
+          label.endsWith(".png") &&
+          bytes.length >= 8 &&
+          bytes[0] === 0x89 &&
+          bytes[1] === 0x50 &&
+          bytes[2] === 0x4e &&
+          bytes[3] === 0x47 &&
+          bytes[4] === 0x0d &&
+          bytes[5] === 0x0a &&
+          bytes[6] === 0x1a &&
+          bytes[7] === 0x0a;
+        if (bytes.includes(0)) {
+          if (!isPngAsset) addFinding("unscannable-binary-file", label);
+        } else {
           const text = new TextDecoder().decode(bytes);
           scanText(text, label, receipt);
           if (label.endsWith(".map")) {

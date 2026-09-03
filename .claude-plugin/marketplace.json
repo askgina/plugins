@@ -4,7 +4,7 @@
     "name": "Ask Gina",
     "url": "https://askgina.ai"
   },
-  "description": "Research assistant for crypto, prediction, perpetual markets.",
+  "description": "Research assistant for crypto, prediction, and perpetual markets.",
   "version": "1.0.0",
   "plugins": [
     {
@@ -29,10 +29,11 @@
         "market-data",
         "hyperliquid",
         "polymarket",
-        "research",
         "prediction",
         "perpetuals",
-        "strategise"
+        "research",
+        "strategise",
+        "mcp"
       ]
     }
   ]

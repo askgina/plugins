@@ -1,7 +1,7 @@
 {
   "name": "ask-gina",
   "version": "1.0.0",
-  "description": "Research assistant for crypto, prediction and perptual markets",
+  "description": "Research assistant for crypto, prediction, and perpetual markets.",
   "author": {
     "name": "Ask Gina",
     "url": "https://askgina.ai"
@@ -15,9 +15,11 @@
     "market-data",
     "hyperliquid",
     "polymarket",
+    "prediction",
     "perpetuals",
-    "reserch",
-    "strategise"
+    "research",
+    "strategise",
+    "mcp"
   ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
@@ -41,11 +43,11 @@
     "composerIcon": "./assets/icon.svg",
     "logo": "./assets/icon.svg",
     "screenshots": [
-      "./gold-up-or-down-daily.png",
-      "./hyperliquid-chart.png",
-      "./nba-champion-podium.png",
-      "./perpetual-positions.png",
-      "./premier-league-prediction-markets.png"
+      "./assets/gold-up-or-down-daily.png",
+      "./assets/hyperliquid-chart.png",
+      "./assets/nba-champion-podium.png",
+      "./assets/perpetual-positions.png",
+      "./assets/premier-league-prediction-markets.png"
     ]
   }
 }

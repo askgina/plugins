@@ -15,10 +15,11 @@
     "market-data",
     "hyperliquid",
     "polymarket",
-    "mcp",
+    "prediction",
+    "perpetuals",
     "research",
     "strategise",
-    "strategy"
+    "mcp"
   ],
   "logo": "assets/icon.svg"
 }
