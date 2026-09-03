@@ -866,7 +866,7 @@ export const stagePluginTarget: {
       yield* fs
         .makeDirectory(stage, { recursive: true })
         .pipe(Effect.mapError((cause) => fail("cannot create cursor target stage", cause)));
-      yield* Effect.forEach([".cursor-plugin", "assets"] as const, (entry) =>
+      yield* Effect.forEach([".cursor-plugin", "assets", "rules", "commands"] as const, (entry) =>
         Effect.gen(function* () {
           const source = path.join(plugin, entry);
           yield* filesBelow(source);

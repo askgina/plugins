@@ -36,7 +36,7 @@ describe("sync-plugin-skills", () => {
           );
           assert.deepStrictEqual(
             (yield* fs.readDirectory(generatedTargets.targets.cursor)).sort(),
-            [".cursor-plugin", "README.md", "assets", "mcp.json", "skills"],
+            [".cursor-plugin", "README.md", "assets", "commands", "mcp.json", "rules", "skills"],
           );
 
           for (const relative of [
@@ -55,6 +55,11 @@ describe("sync-plugin-skills", () => {
             ["mcp.json"],
             ["assets", "icon.svg"],
             ["README.md"],
+            ["rules", "gina-read-only.mdc"],
+            ["commands", "review-gina-account.md"],
+            ["commands", "research-spot-tokens.md"],
+            ["commands", "research-hyperliquid.md"],
+            ["commands", "research-prediction-markets.md"],
           ] as const) {
             assert.strictEqual(
               yield* fs.readFileString(paths.join(generatedTargets.targets.cursor, ...relative)),

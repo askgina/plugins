@@ -11,7 +11,14 @@ export const SKILL_NAMES = ASK_GINA_SKILL_DEFINITIONS.map((skill) => skill.name)
 
 const OPENAI_METADATA_PATH = ["agents", "openai.yaml"] as const;
 const OPENAI_SOURCE_ENTRIES = [".codex-plugin", ".mcp.json", "assets"] as const;
-const CURSOR_SOURCE_ENTRIES = [".cursor-plugin", "mcp.json", "assets", "README.md"] as const;
+const CURSOR_SOURCE_ENTRIES = [
+  ".cursor-plugin",
+  "mcp.json",
+  "assets",
+  "README.md",
+  "rules",
+  "commands",
+] as const;
 const here = fileURLToPath(new URL(".", import.meta.url));
 
 type SyncEnvironment = FileSystem.FileSystem | Path.Path;
@@ -223,6 +230,11 @@ const assertSourceIsPortable = (
       paths.join(packageRoot, ".cursor-plugin", "plugin.json"),
       paths.join(packageRoot, "mcp.json"),
       paths.join(packageRoot, "README.md"),
+      paths.join(packageRoot, "rules", "gina-read-only.mdc"),
+      paths.join(packageRoot, "commands", "review-gina-account.md"),
+      paths.join(packageRoot, "commands", "research-spot-tokens.md"),
+      paths.join(packageRoot, "commands", "research-hyperliquid.md"),
+      paths.join(packageRoot, "commands", "research-prediction-markets.md"),
     ] as const;
     yield* Effect.forEach(cursorFiles, (candidate) =>
       Effect.gen(function* () {
@@ -257,6 +269,8 @@ const assertSourceIsPortable = (
       }),
     );
     yield* assertNoSymbolicLinks(paths.join(packageRoot, ".cursor-plugin"));
+    yield* assertNoSymbolicLinks(paths.join(packageRoot, "rules"));
+    yield* assertNoSymbolicLinks(paths.join(packageRoot, "commands"));
     yield* Effect.forEach(
       TARGET_NAMES.filter((target) => target !== "openai" && target !== "cursor"),
       (target) =>

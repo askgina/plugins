@@ -53,6 +53,15 @@ const makePluginFixture = Effect.gen(function* () {
   yield* fs.writeFileString(path.join(plugin, "mcp.json"), '{"mcpServers":{}}\n');
   yield* fs.makeDirectory(path.join(plugin, "assets"), { recursive: true });
   yield* fs.writeFileString(path.join(plugin, "assets", "icon.svg"), "<svg/>\n");
+  yield* fs.makeDirectory(path.join(plugin, "rules"), { recursive: true });
+  yield* fs.writeFileString(
+    path.join(plugin, "rules", "gina-read-only.mdc"),
+    "alwaysApply: true\n",
+  );
+  yield* fs.makeDirectory(path.join(plugin, "commands"), { recursive: true });
+  for (const skill of SKILL_NAMES) {
+    yield* fs.writeFileString(path.join(plugin, "commands", `${skill}.md`), `# ${skill}\n`);
+  }
   for (const skill of SKILL_NAMES) {
     const skillRoot = path.join(plugin, "skills", skill);
     yield* fs.makeDirectory(path.join(skillRoot, "agents"), { recursive: true });
@@ -502,7 +511,9 @@ describe("plugin target packing", () => {
             ".cursor-plugin",
             "README.md",
             "assets",
+            "commands",
             "mcp.json",
+            "rules",
             "skills",
           ]);
           for (const relative of [
@@ -510,6 +521,8 @@ describe("plugin target packing", () => {
             ["mcp.json"],
             ["assets", "icon.svg"],
             ["README.md"],
+            ["rules", "gina-read-only.mdc"],
+            ["commands", "review-gina-account.md"],
           ] as const) {
             assert.strictEqual(
               yield* fs.readFileString(path.join(fixture.stage, ...relative)),

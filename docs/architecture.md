@@ -24,8 +24,8 @@ template-native Cursor marketplace descriptor and points at the same plugin
 root. The directly loadable OpenAI files live at the plugin root:
 `.codex-plugin/plugin.json`, `.mcp.json`, `assets/icon.svg`, and `skills/`.
 The directly loadable Cursor files live beside them:
-`.cursor-plugin/plugin.json`, `mcp.json`, `assets/icon.svg`, `README.md`, and
-`skills/`.
+`.cursor-plugin/plugin.json`, `mcp.json`, `assets/icon.svg`, `README.md`,
+`rules/`, `commands/`, and `skills/`.
 The repository is private. Automated remote marketplace proof runs only on a trusted
 same-repository push and uses an ephemeral, read-only GitHub token only while Codex
 clones the marketplace. Pull-request jobs never receive this token. The smoke harness
@@ -42,7 +42,8 @@ Sync and pack operations build temporary host targets from these sources. The
 OpenAI and Cursor targets select only their root files and canonical skills.
 Every remaining host combines its `targets/<host>/` overlay with the same
 canonical skills. Generated host trees are output, never authoring source.
-The Cursor generated host also includes `README.md` for the listing checklist.
+The Cursor generated host also includes `README.md`, `rules/`, and `commands/`.
+Those extras are Cursor-only. Grok Bot still loads skills and MCP.
 
 ## Runtime
 

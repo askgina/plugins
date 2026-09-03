@@ -226,6 +226,8 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
     "plugin.json",
     "mcp.json",
     "gemini-extension.json",
+    "rules",
+    "commands",
   ],
   cursor: [
     ".app.json",
@@ -242,6 +244,8 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
     "plugin.json",
     "mcp.json",
     "gemini-extension.json",
+    "rules",
+    "commands",
   ],
   copilot: [
     ".app.json",
@@ -250,6 +254,8 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
     ".codex-plugin",
     ".mcp.json",
     "gemini-extension.json",
+    "rules",
+    "commands",
   ],
   gemini: [
     ".app.json",
@@ -259,6 +265,8 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
     "plugin.json",
     "mcp.json",
     ".mcp.json",
+    "rules",
+    "commands",
   ],
 };
 
@@ -477,6 +485,45 @@ export const checkGeneratedTargetConformance: {
           "cursor.readme.exists",
           "Cursor listing README exists",
           yield* withFileSystemError(readmePath, "cannot be inspected", fs.exists(readmePath)),
+        );
+        const rulePath = paths.join(generatedTargetRoot, "rules", "gina-read-only.mdc");
+        addCheck(
+          "cursor.rules.read_only_exists",
+          "Cursor read-only rule exists",
+          yield* withFileSystemError(rulePath, "cannot be inspected", fs.exists(rulePath)),
+        );
+        if (yield* withFileSystemError(rulePath, "cannot be inspected", fs.exists(rulePath))) {
+          const rule = yield* withFileSystemError(
+            rulePath,
+            "cannot be read",
+            fs.readFileString(rulePath),
+          );
+          addCheck(
+            "cursor.rules.read_only_always_apply",
+            "Cursor read-only rule is always applied",
+            /^alwaysApply:\s*true\s*$/m.test(rule),
+          );
+        }
+        const expectedCommands = ASK_GINA_SKILL_DEFINITIONS.map(
+          (skill) => `${skill.name}.md`,
+        ).sort();
+        const commandsRoot = paths.join(generatedTargetRoot, "commands");
+        const commandsExist = yield* withFileSystemError(
+          commandsRoot,
+          "cannot be inspected",
+          fs.exists(commandsRoot),
+        );
+        const actualCommands = commandsExist
+          ? (yield* withFileSystemError(
+              commandsRoot,
+              "cannot be read",
+              fs.readDirectory(commandsRoot),
+            )).sort()
+          : [];
+        addCheck(
+          "cursor.commands.directory_set",
+          "Cursor commands match the four canonical skills",
+          sameSortedStrings(actualCommands, expectedCommands),
         );
       }
 
@@ -1024,6 +1071,18 @@ export const checkRepositoryConformance = (
         "repository.root_cursor.readme_exists",
         "Root Cursor listing README exists as a regular file",
         "File",
+      ],
+      [
+        paths.join(packageRoot, "rules", "gina-read-only.mdc"),
+        "repository.root_cursor.rule_exists",
+        "Root Cursor read-only rule exists as a regular file",
+        "File",
+      ],
+      [
+        paths.join(packageRoot, "commands"),
+        "repository.root_cursor.commands_exists",
+        "Root Cursor commands directory exists",
+        "Directory",
       ],
     ] as const;
     for (const [candidate, id, title, expectedType] of requiredCursorPaths) {
