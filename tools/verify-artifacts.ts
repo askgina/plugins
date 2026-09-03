@@ -22,7 +22,10 @@ import {
   sanitizeEvalReplay,
 } from "../packages/evals/src/index";
 import { copyCheckedRegularFile, extractCheckedTarGz } from "./archive-security";
-import { checkGeneratedTargetConformance } from "./check-target-conformance";
+import {
+  CURSOR_LISTING_VERSION,
+  checkGeneratedTargetConformance,
+} from "./check-target-conformance";
 import { buildArtifacts } from "./pack-artifacts";
 
 const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini"] as const;
@@ -1041,7 +1044,10 @@ const verifyTargets = (
         const manifest = yield* readJson(path.join(stage, manifestPath)).pipe(
           Effect.flatMap((value) => requiredObject(value, `${host} manifest`)),
         );
-        if (manifest.version !== version) return yield* fail(`${host} manifest version is wrong`);
+        const manifestVersion = host === "cursor" ? CURSOR_LISTING_VERSION : version;
+        if (manifest.version !== manifestVersion) {
+          return yield* fail(`${host} manifest version is wrong`);
+        }
         yield* exactDirectory(path.join(stage, "skills"), SKILLS, `${host} skills`);
         const overlays = (yield* filesBelow(stage)).filter((file) =>
           file.endsWith("/agents/openai.yaml"),
