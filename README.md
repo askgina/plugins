@@ -3,7 +3,7 @@
 Apache-2.0 workspace for the Ask Gina programmatic client, Bun CLI,
 listed-plugin portable core, host adapters, and hermetic evals.
 
-Production Gina MCP remains at `https://askgina.ai/ai/gina/mcp`. 
+Production Gina MCP remains at `https://askgina.ai/ai/gina/mcp`.
 Callers supply a bearer token or oauth authenticate.
 
 ## Packages and runtimes

@@ -271,9 +271,16 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
 };
 
 export const CURSOR_LISTING_VERSION = "1.0.0";
+export const OPENAI_LISTING_VERSION = "1.0.0";
+export const CODEX_LISTING_VERSION = OPENAI_LISTING_VERSION;
 
 const validateManifest = (target: TargetName, manifest: unknown): boolean => {
-  const expectedVersion = target === "cursor" ? CURSOR_LISTING_VERSION : RELEASE_VERSION;
+  const expectedVersion =
+    target === "cursor"
+      ? CURSOR_LISTING_VERSION
+      : target === "openai"
+        ? OPENAI_LISTING_VERSION
+        : RELEASE_VERSION;
   if (nested(manifest, "name") !== "ask-gina" || nested(manifest, "version") !== expectedVersion) {
     return false;
   }

@@ -9,7 +9,16 @@
   "homepage": "https://askgina.ai",
   "repository": "https://github.com/askgina/plugins",
   "license": "Apache-2.0",
-  "keywords": ["crypto", "portfolio", "market-data", "hyperliquid", "polymarket", "perpetuals", "reserch", "strategise"],
+  "keywords": [
+    "crypto",
+    "portfolio",
+    "market-data",
+    "hyperliquid",
+    "polymarket",
+    "perpetuals",
+    "reserch",
+    "strategise"
+  ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {

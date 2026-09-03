@@ -9,6 +9,7 @@ import { runHermeticEvalReplay, sanitizeEvalReplay } from "../packages/evals/src
 import { copyCheckedRegularFile } from "./archive-security";
 import {
   CURSOR_LISTING_VERSION,
+  OPENAI_LISTING_VERSION,
   checkGeneratedTargetConformance,
 } from "./check-target-conformance";
 
@@ -760,6 +761,7 @@ const assertLiveSourceBoundary = (root: string, snapshot: string) =>
           .pipe(Effect.mapError((cause) => fail(`cannot list ${relative}`, cause)));
         yield* Effect.forEach(names.sort(), (name) =>
           name === "node_modules" ||
+          name === ".DS_Store" ||
           (name === "dist" && PACKAGES.some((definition) => definition.directory === relative))
             ? Effect.void
             : visit(path.join(live, name), path.join(committed, name), `${relative}/${name}`),
@@ -813,7 +815,15 @@ const validateVersions = (root: string) =>
     }
     const pluginRoot = path.join(root, "plugins/ask-gina");
     yield* Effect.forEach(HOSTS, (host) =>
-      validateTargetVersion(pluginRoot, host, host === "cursor" ? CURSOR_LISTING_VERSION : version),
+      validateTargetVersion(
+        pluginRoot,
+        host,
+        host === "cursor"
+          ? CURSOR_LISTING_VERSION
+          : host === "openai"
+            ? OPENAI_LISTING_VERSION
+            : version,
+      ),
     );
     return version;
   });

@@ -9,6 +9,7 @@ import { findEmbeddedSourceMapBoundaryRules, inspectSourceMapText } from "../che
 import { checkRepositoryConformance, type RepositorySummary } from "../check-target-conformance";
 import {
   ArtifactVerificationError,
+  OPENAI_ASSETS,
   runNodeEsmSmoke,
   snapshotArtifactInputs,
   verifyNoInstalledLibrarySources,
@@ -75,7 +76,7 @@ const makeLeanOpenAiPayload = (root: string) =>
     const files = [
       ".codex-plugin/plugin.json",
       ".mcp.json",
-      "assets/icon.svg",
+      ...OPENAI_ASSETS.map((asset) => `assets/${asset}`),
       ...SKILLS.flatMap((skill) => [
         `skills/${skill}/SKILL.md`,
         `skills/${skill}/agents/openai.yaml`,

@@ -24,6 +24,7 @@ import {
 import { copyCheckedRegularFile, extractCheckedTarGz } from "./archive-security";
 import {
   CURSOR_LISTING_VERSION,
+  OPENAI_LISTING_VERSION,
   checkGeneratedTargetConformance,
 } from "./check-target-conformance";
 import { buildArtifacts } from "./pack-artifacts";
@@ -35,6 +36,14 @@ const SKILLS = [
   "research-spot-tokens",
   "review-gina-account",
 ];
+export const OPENAI_ASSETS = [
+  "gold-up-or-down-daily.png",
+  "hyperliquid-chart.png",
+  "icon.svg",
+  "nba-champion-podium.png",
+  "perpetual-positions.png",
+  "premier-league-prediction-markets.png",
+] as const;
 const PACKAGES = [
   { slug: "contracts", name: "@askgina/contracts", directory: "packages/contracts", internal: [] },
   {
@@ -473,7 +482,7 @@ export const verifyOpenAiArchivePayload = (directory: string) =>
       ["plugin.json"],
       "OpenAI manifest directory",
     );
-    yield* exactDirectory(path.join(directory, "assets"), ["icon.svg"], "OpenAI assets directory");
+    yield* exactDirectory(path.join(directory, "assets"), OPENAI_ASSETS, "OpenAI assets directory");
     yield* exactDirectory(path.join(directory, "skills"), SKILLS, "OpenAI skills directory");
     yield* Effect.forEach(SKILLS, (skill) =>
       Effect.all(
@@ -495,7 +504,7 @@ export const verifyOpenAiArchivePayload = (directory: string) =>
     const expected = [
       ".codex-plugin/plugin.json",
       ".mcp.json",
-      "assets/icon.svg",
+      ...OPENAI_ASSETS.map((asset) => `assets/${asset}`),
       ...SKILLS.flatMap((skill) => [
         `skills/${skill}/SKILL.md`,
         `skills/${skill}/agents/openai.yaml`,
@@ -1044,7 +1053,12 @@ const verifyTargets = (
         const manifest = yield* readJson(path.join(stage, manifestPath)).pipe(
           Effect.flatMap((value) => requiredObject(value, `${host} manifest`)),
         );
-        const manifestVersion = host === "cursor" ? CURSOR_LISTING_VERSION : version;
+        const manifestVersion =
+          host === "cursor"
+            ? CURSOR_LISTING_VERSION
+            : host === "openai"
+              ? OPENAI_LISTING_VERSION
+              : version;
         if (manifest.version !== manifestVersion) {
           return yield* fail(`${host} manifest version is wrong`);
         }
