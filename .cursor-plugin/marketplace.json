@@ -4,7 +4,7 @@
     "name": "Ask Gina"
   },
   "metadata": {
-    "description": "Official Ask Gina plugins for Cursor and Grok Bot.",
+    "description": "Ask Gina is a research assistant for crypto, prediction markets, perpetuals, and equities. Use it to fetch real-time prices and historical data for tokens, Hyperliquid markets, and Polymarket prediction markets, and to analyze your Gina wallet, positions, and accounts.",
     "version": "1.0.0"
   },
   "plugins": [
