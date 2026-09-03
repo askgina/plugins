@@ -9,6 +9,7 @@ import {
 import { Data, Effect, FileSystem, Layer, Path, Schema } from "effect";
 
 import { extractCheckedTarGz } from "./archive-security";
+import { OPENAI_ASSETS } from "./verify-artifacts";
 
 const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini"];
 const PACKAGES = [
@@ -281,8 +282,10 @@ const program = Effect.scoped(
         const bytes = yield* fs
           .readFile(absolute)
           .pipe(Effect.mapError((cause) => fail(`cannot read ${absolute}`, cause)));
-        const isPngAsset =
-          label.endsWith(".png") &&
+        const filename = path.basename(label);
+        const isDeclaredPngAsset =
+          OPENAI_ASSETS.includes(filename as (typeof OPENAI_ASSETS)[number]) &&
+          (label.startsWith("plugins/ask-gina/assets/") || label.includes(":assets/")) &&
           bytes.length >= 8 &&
           bytes[0] === 0x89 &&
           bytes[1] === 0x50 &&
@@ -293,7 +296,7 @@ const program = Effect.scoped(
           bytes[6] === 0x1a &&
           bytes[7] === 0x0a;
         if (bytes.includes(0)) {
-          if (!isPngAsset) addFinding("unscannable-binary-file", label);
+          if (!isDeclaredPngAsset) addFinding("unscannable-binary-file", label);
         } else {
           const text = new TextDecoder().decode(bytes);
           scanText(text, label, receipt);
