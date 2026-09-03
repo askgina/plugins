@@ -292,6 +292,25 @@ const validateManifest = (target: TargetName, manifest: unknown): boolean => {
     );
   }
 
+  if (target === "cursor") {
+    return (
+      hasExactKeys(manifest, [
+        "name",
+        "version",
+        "description",
+        "author",
+        "homepage",
+        "repository",
+        "license",
+        "keywords",
+        "logo",
+      ]) &&
+      hasExactKeys(nested(manifest, "author"), ["name"]) &&
+      nested(manifest, "repository") === "https://github.com/askgina/plugins" &&
+      nested(manifest, "logo") === "assets/icon.svg"
+    );
+  }
+
   if (target === "copilot") {
     return (
       hasExactKeys(manifest, ["$schema", "name", "version", "description", "author"]) &&
