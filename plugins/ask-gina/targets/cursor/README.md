@@ -14,10 +14,7 @@ Scope: `tools:read` only. This plugin does not include transaction execution or 
 2. Open the Gina connector and choose **Connect**. Complete Ask Gina OAuth in the browser.
 3. Confirm the connector shows the read tools (30 catalog tools). Skills below should appear as well.
 
-OAuth callbacks the Gina authorization server must allow:
-
-- `https://www.cursor.com/agents/mcp/oauth/callback` (Cursor / Grok Bot web)
-- `http://localhost:8787/callback` (desktop)
+The Gina authorization server allows the Cursor and Grok Bot web callback, `https://www.cursor.com/agents/mcp/oauth/callback`, and the Cursor desktop loopback callback.
 
 ## What it can do
 
@@ -56,4 +53,4 @@ Do not add a bearer header or `"type": "streamable-http"`.
 
 Canonical overlay: `plugins/ask-gina/targets/cursor/` in [askgina/plugins](https://github.com/askgina/plugins).
 
-Skills come from `plugins/ask-gina/skills/`. Operating product remains `t-y-b-b/nextjs-ai-chatbot`.
+Skills come from `plugins/ask-gina/skills/`.
