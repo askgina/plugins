@@ -95,7 +95,7 @@ for (const name of ["@askgina/contracts", "@askgina/sdk"]) {
 const catalog = await Effect.runPromise(
   Schema.decodeUnknownEffect(GinaReadToolCatalogSchema)(GINA_READ_TOOL_CATALOG),
 );
-assert.equal(catalog.length, 29);
+assert.equal(catalog.length, 30);
 const listed = GINA_READ_TOOL_CATALOG.map(({ name }) => ({ name }));
 const client = createClient({
   accessToken: "offline-token",

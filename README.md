@@ -6,7 +6,7 @@ listed-plugin portable core, host adapters, and hermetic evals.
 This repository is not public and does not publish packages. Pull-request CI runs
 workflow gates, but `main` has no protected required checks. Production Gina MCP
 remains at `https://askgina.ai/ai/gina/mcp`. Callers supply a bearer token. The
-client exposes only the 29 catalog read tools.
+client exposes only the 30 catalog read tools.
 
 ## Packages and runtimes
 

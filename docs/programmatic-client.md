@@ -34,5 +34,5 @@ ask-gina list
 ask-gina call gina.listScheduledPrompts '{}'
 ```
 
-Only the 29 catalog read-tool names are callable. Unknown names are rejected
+Only the 30 catalog read-tool names are callable. Unknown names are rejected
 before transport. There is no login, DCR, or write/execute catalog.

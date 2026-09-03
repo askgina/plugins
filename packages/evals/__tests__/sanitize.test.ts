@@ -22,7 +22,7 @@ const aggregate: SanitizedEvalAggregate = {
   suiteId: "synthetic-model-smoke-v1",
   suiteVersion: 1,
   fixtureVersion: 1,
-  catalogSha: "06a3c7ca4f56617e7aebdcc840b96f4fcfbffeafb7d5b359d1d4c90eb4aeefda",
+  catalogSha: "92fb5788ef462b85710f03c4fa6b8b67b8beaf3e20a478e6128daf839fb1bbee",
   overall: { passed: 2, total: 3 },
   dimensions: {
     routing: { passed: 2, failed: 1 },

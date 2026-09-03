@@ -6,4 +6,4 @@ expected:
   outcome: tool_call
   scope: "tools:read"
   family: predictions
-  tool: predictions.getExpiringMarkets
+  tool: predictions.searchPredictionMarkets
