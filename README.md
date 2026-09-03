@@ -1,12 +1,10 @@
 # askgina/plugins
 
-Private-first Apache-2.0 workspace for the Ask Gina programmatic client, Bun CLI,
+Apache-2.0 workspace for the Ask Gina programmatic client, Bun CLI,
 listed-plugin portable core, host adapters, and hermetic evals.
 
-This repository is not public and does not publish packages. Pull-request CI runs
-workflow gates, but `main` has no protected required checks. Production Gina MCP
-remains at `https://askgina.ai/ai/gina/mcp`. Callers supply a bearer token. The
-client exposes only the 30 catalog read tools.
+Production Gina MCP remains at `https://askgina.ai/ai/gina/mcp`. 
+Callers supply a bearer token or oauth authenticate.
 
 ## Packages and runtimes
 
