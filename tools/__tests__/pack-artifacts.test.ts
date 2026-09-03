@@ -23,8 +23,7 @@ const SKILL_NAMES = [
   "research-spot-tokens",
   "review-gina-account",
 ] as const;
-const TARGET_MANIFESTS = {
-  cursor: [".cursor-plugin", "plugin.json"],
+const OVERLAY_MANIFESTS = {
   claude: [".claude-plugin", "plugin.json"],
   copilot: ["plugin.json"],
   gemini: ["gemini-extension.json"],
@@ -46,8 +45,23 @@ const makePluginFixture = Effect.gen(function* () {
     `${encodeJson({ version, marker: "root-openai" })}\n`,
   );
   yield* fs.writeFileString(path.join(plugin, ".mcp.json"), '{"mcpServers":{}}\n');
+  yield* fs.makeDirectory(path.join(plugin, ".cursor-plugin"), { recursive: true });
+  yield* fs.writeFileString(
+    path.join(plugin, ".cursor-plugin", "plugin.json"),
+    `${encodeJson({ version, marker: "root-cursor" })}\n`,
+  );
+  yield* fs.writeFileString(path.join(plugin, "mcp.json"), '{"mcpServers":{}}\n');
   yield* fs.makeDirectory(path.join(plugin, "assets"), { recursive: true });
   yield* fs.writeFileString(path.join(plugin, "assets", "icon.svg"), "<svg/>\n");
+  yield* fs.makeDirectory(path.join(plugin, "rules"), { recursive: true });
+  yield* fs.writeFileString(
+    path.join(plugin, "rules", "gina-read-only.mdc"),
+    "alwaysApply: true\n",
+  );
+  yield* fs.makeDirectory(path.join(plugin, "commands"), { recursive: true });
+  for (const skill of SKILL_NAMES) {
+    yield* fs.writeFileString(path.join(plugin, "commands", `${skill}.md`), `# ${skill}\n`);
+  }
   for (const skill of SKILL_NAMES) {
     const skillRoot = path.join(plugin, "skills", skill);
     yield* fs.makeDirectory(path.join(skillRoot, "agents"), { recursive: true });
@@ -55,7 +69,7 @@ const makePluginFixture = Effect.gen(function* () {
     yield* fs.writeFileString(path.join(skillRoot, "agents", "openai.yaml"), `name: ${skill}\n`);
   }
 
-  for (const [host, manifest] of Object.entries(TARGET_MANIFESTS)) {
+  for (const [host, manifest] of Object.entries(OVERLAY_MANIFESTS)) {
     const overlay = path.join(plugin, "targets", host);
     const manifestPath = path.join(overlay, ...manifest);
     yield* fs.makeDirectory(path.dirname(manifestPath), { recursive: true });
@@ -388,28 +402,39 @@ describe("pack artifact source snapshot", () => {
 
 describe("plugin target packing", () => {
   it.layer(BunServices.layer)((it) => {
-    it.effect("validates OpenAI at the root and other hosts in their target overlays", () =>
+    it.effect("validates OpenAI and Cursor at the root and other hosts in overlays", () =>
       Effect.scoped(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           const fixture = yield* makePluginFixture;
-          const legacyManifest = path.join(
+          const legacyOpenAiManifest = path.join(
             fixture.plugin,
             "targets",
             "openai",
             ".codex-plugin",
             "plugin.json",
           );
-          yield* fs.makeDirectory(path.dirname(legacyManifest), { recursive: true });
-          yield* fs.writeFileString(legacyManifest, `${encodeJson({ version: "9.9.9" })}\n`);
+          const legacyCursorManifest = path.join(
+            fixture.plugin,
+            "targets",
+            "cursor",
+            ".cursor-plugin",
+            "plugin.json",
+          );
+          yield* fs.makeDirectory(path.dirname(legacyOpenAiManifest), { recursive: true });
+          yield* fs.writeFileString(legacyOpenAiManifest, `${encodeJson({ version: "9.9.9" })}\n`);
+          yield* fs.makeDirectory(path.dirname(legacyCursorManifest), { recursive: true });
+          yield* fs.writeFileString(legacyCursorManifest, `${encodeJson({ version: "9.9.9" })}\n`);
 
           yield* validateTargetVersion(fixture.plugin, "openai", fixture.version);
+          yield* validateTargetVersion(fixture.plugin, "cursor", fixture.version);
           yield* fs.writeFileString(
             path.join(fixture.plugin, ".codex-plugin", "plugin.json"),
             `${encodeJson({ version: "8.8.8" })}\n`,
           );
           yield* validateTargetVersion(fixture.plugin, "cursor", fixture.version);
+          yield* validateTargetVersion(fixture.plugin, "claude", fixture.version);
 
           yield* fs.remove(path.join(fixture.plugin, ".codex-plugin", "plugin.json"));
           const error = yield* validateTargetVersion(fixture.plugin, "openai", "9.9.9").pipe(
@@ -417,6 +442,13 @@ describe("plugin target packing", () => {
           );
           assert.instanceOf(error, ArtifactPackError);
           assert.include(error.message, path.join(".codex-plugin", "plugin.json"));
+
+          yield* fs.remove(path.join(fixture.plugin, ".cursor-plugin", "plugin.json"));
+          const cursorError = yield* validateTargetVersion(fixture.plugin, "cursor", "9.9.9").pipe(
+            Effect.flip,
+          );
+          assert.instanceOf(cursorError, ArtifactPackError);
+          assert.include(cursorError.message, path.join(".cursor-plugin", "plugin.json"));
         }),
       ),
     );
@@ -466,7 +498,7 @@ describe("plugin target packing", () => {
       ),
     );
 
-    it.effect("retains non-OpenAI overlay staging without OpenAI skill metadata", () =>
+    it.effect("stages a lean Cursor target from root source surfaces", () =>
       Effect.scoped(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -477,13 +509,62 @@ describe("plugin target packing", () => {
 
           assert.deepStrictEqual((yield* fs.readDirectory(fixture.stage)).sort(), [
             ".cursor-plugin",
-            "cursor.txt",
+            "README.md",
+            "assets",
+            "commands",
+            "mcp.json",
+            "rules",
             "skills",
           ]);
-          for (const relative of [[".cursor-plugin", "plugin.json"], ["cursor.txt"]] as const) {
+          for (const relative of [
+            [".cursor-plugin", "plugin.json"],
+            ["mcp.json"],
+            ["assets", "icon.svg"],
+            ["README.md"],
+            ["rules", "gina-read-only.mdc"],
+            ["commands", "review-gina-account.md"],
+          ] as const) {
             assert.strictEqual(
               yield* fs.readFileString(path.join(fixture.stage, ...relative)),
-              yield* fs.readFileString(path.join(fixture.plugin, "targets", "cursor", ...relative)),
+              yield* fs.readFileString(path.join(fixture.plugin, ...relative)),
+            );
+          }
+          for (const excluded of [
+            "package.json",
+            "plugin.yaml",
+            "LICENSE",
+            "src",
+            "evals",
+            "targets",
+          ]) {
+            assert.isFalse(yield* fs.exists(path.join(fixture.stage, excluded)));
+          }
+          for (const skill of SKILL_NAMES) {
+            assert.isTrue(yield* fs.exists(path.join(fixture.stage, "skills", skill, "SKILL.md")));
+            assert.isFalse(yield* fs.exists(path.join(fixture.stage, "skills", skill, "agents")));
+          }
+        }),
+      ),
+    );
+
+    it.effect("retains remaining overlay staging without OpenAI skill metadata", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fixture = yield* makePluginFixture;
+
+          yield* stagePluginTarget("claude", fixture.plugin, fixture.stage);
+
+          assert.deepStrictEqual((yield* fs.readDirectory(fixture.stage)).sort(), [
+            ".claude-plugin",
+            "claude.txt",
+            "skills",
+          ]);
+          for (const relative of [[".claude-plugin", "plugin.json"], ["claude.txt"]] as const) {
+            assert.strictEqual(
+              yield* fs.readFileString(path.join(fixture.stage, ...relative)),
+              yield* fs.readFileString(path.join(fixture.plugin, "targets", "claude", ...relative)),
             );
           }
           for (const skill of SKILL_NAMES) {

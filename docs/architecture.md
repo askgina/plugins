@@ -17,10 +17,15 @@ CommonJS, browser, edge, or subpath entrypoints. They support Node >=24 and Bun
 
 ## Marketplace and skills
 
-`.agents/plugins/marketplace.json` is the repository marketplace descriptor. It
+`.agents/plugins/marketplace.json` is the Codex marketplace descriptor. It
 points directly at `plugins/ask-gina/`, so a clean checkout exposes the OpenAI
-source without a generation step. The directly loadable OpenAI files live at the
-plugin root: `.codex-plugin/plugin.json`, `.mcp.json`, `assets/icon.svg`, and `skills/`.
+source without a generation step. `.cursor-plugin/marketplace.json` is the
+template-native Cursor marketplace descriptor and points at the same plugin
+root. The directly loadable OpenAI files live at the plugin root:
+`.codex-plugin/plugin.json`, `.mcp.json`, `assets/icon.svg`, and `skills/`.
+The directly loadable Cursor files live beside them:
+`.cursor-plugin/plugin.json`, `mcp.json`, `assets/icon.svg`, `README.md`,
+`rules/`, `commands/`, and `skills/`.
 The repository is private. Automated remote marketplace proof runs only on a trusted
 same-repository push and uses an ephemeral, read-only GitHub token only while Codex
 clones the marketplace. Pull-request jobs never receive this token. The smoke harness
@@ -30,13 +35,15 @@ GitHub read access independently of Ask Gina MCP authentication.
 
 `plugins/ask-gina/skills/` is the only authored skill tree. OpenAI-specific skill
 metadata remains beside each canonical `SKILL.md` under `agents/openai.yaml`.
-`plugins/ask-gina/targets/` contains only the Cursor, Claude, Copilot, and Gemini
-overlays; there is no `targets/openai/` source tree.
+`plugins/ask-gina/targets/` contains only the Claude, Copilot, and Gemini
+overlays; there is no `targets/openai/` or `targets/cursor/` source tree.
 
 Sync and pack operations build temporary host targets from these sources. The
-OpenAI target selects only the root OpenAI files and canonical skills. Every
-other host combines its `targets/<host>/` overlay with the same canonical
-skills. Generated host trees are output, never authoring source.
+OpenAI and Cursor targets select only their root files and canonical skills.
+Every remaining host combines its `targets/<host>/` overlay with the same
+canonical skills. Generated host trees are output, never authoring source.
+The Cursor generated host also includes `README.md`, `rules/`, and `commands/`.
+Those extras are Cursor-only. Grok Bot still loads skills and MCP.
 
 ## Runtime
 

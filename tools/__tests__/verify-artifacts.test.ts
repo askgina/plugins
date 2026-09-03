@@ -35,6 +35,7 @@ const repositoryFixture = Effect.gen(function* () {
     [
       fs.copy(path.join(repositoryRoot, ".agents"), path.join(root, ".agents")),
       fs.copy(path.join(repositoryRoot, ".claude-plugin"), path.join(root, ".claude-plugin")),
+      fs.copy(path.join(repositoryRoot, ".cursor-plugin"), path.join(root, ".cursor-plugin")),
       fs.copy(
         path.join(repositoryRoot, "plugins", "ask-gina"),
         path.join(root, "plugins", "ask-gina"),
@@ -323,6 +324,45 @@ describe("artifact and source conformance verification", () => {
           ),
         );
       }),
+    );
+
+    it.effect(
+      "rejects missing Cursor marketplace, missing mcp.json, and a legacy Cursor overlay",
+      () =>
+        Effect.forEach(
+          ["missing-marketplace", "missing-mcp", "legacy-overlay"] as const,
+          (mutation) =>
+            Effect.scoped(
+              Effect.gen(function* () {
+                const fs = yield* FileSystem.FileSystem;
+                const path = yield* Path.Path;
+                const fixture = yield* repositoryFixture;
+                if (mutation === "missing-marketplace") {
+                  yield* fs.remove(path.join(fixture.root, ".cursor-plugin"), {
+                    recursive: true,
+                    force: true,
+                  });
+                } else if (mutation === "missing-mcp") {
+                  yield* fs.remove(path.join(fixture.packageRoot, "mcp.json"));
+                } else {
+                  yield* fs.makeDirectory(path.join(fixture.packageRoot, "targets", "cursor"), {
+                    recursive: true,
+                  });
+                }
+                const report = yield* checkRepositoryConformance({
+                  repositoryRoot: fixture.root,
+                  packageRoot: fixture.packageRoot,
+                });
+                const expected =
+                  mutation === "missing-marketplace"
+                    ? "repository.cursor.marketplace_exists"
+                    : mutation === "missing-mcp"
+                      ? "repository.root_cursor.mcp_exists"
+                      : "repository.legacy_cursor.absent";
+                assert.isTrue(failedCheck(report, expected));
+              }),
+            ),
+        ),
     );
 
     it.effect("rejects missing root files, version drift, and a legacy OpenAI overlay", () =>

@@ -11,6 +11,14 @@ export const SKILL_NAMES = ASK_GINA_SKILL_DEFINITIONS.map((skill) => skill.name)
 
 const OPENAI_METADATA_PATH = ["agents", "openai.yaml"] as const;
 const OPENAI_SOURCE_ENTRIES = [".codex-plugin", ".mcp.json", "assets"] as const;
+const CURSOR_SOURCE_ENTRIES = [
+  ".cursor-plugin",
+  "mcp.json",
+  "assets",
+  "README.md",
+  "rules",
+  "commands",
+] as const;
 const here = fileURLToPath(new URL(".", import.meta.url));
 
 type SyncEnvironment = FileSystem.FileSystem | Path.Path;
@@ -165,6 +173,19 @@ const assertSourceIsPortable = (
       );
     }
 
+    const legacyCursorOverlay = paths.join(packageRoot, "targets", "cursor");
+    const legacyCursorOverlayExists = yield* withFileSystemError(
+      legacyCursorOverlay,
+      "cannot be inspected",
+      fs.exists(legacyCursorOverlay),
+    );
+    if (legacyCursorOverlayExists) {
+      return yield* pluginSkillSyncError(
+        legacyCursorOverlay,
+        "legacy Cursor target overlay must not exist",
+      );
+    }
+
     const openAiFiles = [
       paths.join(packageRoot, ".codex-plugin", "plugin.json"),
       paths.join(packageRoot, ".mcp.json"),
@@ -204,8 +225,54 @@ const assertSourceIsPortable = (
     );
     yield* assertNoSymbolicLinks(paths.join(packageRoot, ".codex-plugin"));
     yield* assertNoSymbolicLinks(paths.join(packageRoot, "assets"));
+
+    const cursorFiles = [
+      paths.join(packageRoot, ".cursor-plugin", "plugin.json"),
+      paths.join(packageRoot, "mcp.json"),
+      paths.join(packageRoot, "README.md"),
+      paths.join(packageRoot, "rules", "gina-read-only.mdc"),
+      paths.join(packageRoot, "commands", "review-gina-account.md"),
+      paths.join(packageRoot, "commands", "research-spot-tokens.md"),
+      paths.join(packageRoot, "commands", "research-hyperliquid.md"),
+      paths.join(packageRoot, "commands", "research-prediction-markets.md"),
+    ] as const;
+    yield* Effect.forEach(cursorFiles, (candidate) =>
+      Effect.gen(function* () {
+        const symbolicLink = yield* fs
+          .readLink(candidate)
+          .pipe(Effect.match({ onFailure: () => false, onSuccess: () => true }));
+        if (symbolicLink) {
+          return yield* pluginSkillSyncError(
+            candidate,
+            "plugin source must not contain symbolic links",
+          );
+        }
+        const info = yield* withFileSystemError(
+          candidate,
+          "cannot be inspected",
+          fs.stat(candidate),
+        );
+        if (info.type !== "File") {
+          return yield* pluginSkillSyncError(
+            candidate,
+            "required Cursor source file is not a file",
+          );
+        }
+        if (candidate.endsWith(".json")) {
+          const source = yield* withFileSystemError(
+            candidate,
+            "cannot be read",
+            fs.readFileString(candidate),
+          );
+          yield* parseJson(candidate, source);
+        }
+      }),
+    );
+    yield* assertNoSymbolicLinks(paths.join(packageRoot, ".cursor-plugin"));
+    yield* assertNoSymbolicLinks(paths.join(packageRoot, "rules"));
+    yield* assertNoSymbolicLinks(paths.join(packageRoot, "commands"));
     yield* Effect.forEach(
-      TARGET_NAMES.filter((target) => target !== "openai"),
+      TARGET_NAMES.filter((target) => target !== "openai" && target !== "cursor"),
       (target) =>
         Effect.gen(function* () {
           const overlay = paths.join(packageRoot, "targets", target);
@@ -319,6 +386,23 @@ const copyOpenAiSourceSurfaces = (
     });
   });
 
+const copyCursorSourceSurfaces = (
+  packageRoot: string,
+  destination: string,
+): Effect.Effect<void, PluginSkillSyncError, SyncEnvironment> =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const paths = yield* Path.Path;
+    yield* Effect.forEach(CURSOR_SOURCE_ENTRIES, (entry) => {
+      const source = paths.join(packageRoot, entry);
+      return withFileSystemError(
+        source,
+        "cannot be copied",
+        fs.copy(source, paths.join(destination, entry), { overwrite: false }),
+      );
+    });
+  });
+
 const copyCanonicalSkills = (
   packageRoot: string,
   target: TargetName,
@@ -381,6 +465,8 @@ const materializeTarget = (
 
     if (target === "openai") {
       yield* copyOpenAiSourceSurfaces(packageRoot, destination);
+    } else if (target === "cursor") {
+      yield* copyCursorSourceSurfaces(packageRoot, destination);
     } else {
       yield* copyTargetOverlay(paths.join(packageRoot, "targets", target), destination);
     }

@@ -226,6 +226,8 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
     "plugin.json",
     "mcp.json",
     "gemini-extension.json",
+    "rules",
+    "commands",
   ],
   cursor: [
     ".app.json",
@@ -242,6 +244,8 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
     "plugin.json",
     "mcp.json",
     "gemini-extension.json",
+    "rules",
+    "commands",
   ],
   copilot: [
     ".app.json",
@@ -250,6 +254,8 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
     ".codex-plugin",
     ".mcp.json",
     "gemini-extension.json",
+    "rules",
+    "commands",
   ],
   gemini: [
     ".app.json",
@@ -259,11 +265,16 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
     "plugin.json",
     "mcp.json",
     ".mcp.json",
+    "rules",
+    "commands",
   ],
 };
 
+export const CURSOR_LISTING_VERSION = "1.0.0";
+
 const validateManifest = (target: TargetName, manifest: unknown): boolean => {
-  if (nested(manifest, "name") !== "ask-gina" || nested(manifest, "version") !== RELEASE_VERSION) {
+  const expectedVersion = target === "cursor" ? CURSOR_LISTING_VERSION : RELEASE_VERSION;
+  if (nested(manifest, "name") !== "ask-gina" || nested(manifest, "version") !== expectedVersion) {
     return false;
   }
 
@@ -296,6 +307,7 @@ const validateManifest = (target: TargetName, manifest: unknown): boolean => {
     return (
       hasExactKeys(manifest, [
         "name",
+        "displayName",
         "version",
         "description",
         "author",
@@ -306,7 +318,10 @@ const validateManifest = (target: TargetName, manifest: unknown): boolean => {
         "logo",
       ]) &&
       hasExactKeys(nested(manifest, "author"), ["name"]) &&
+      nested(manifest, "displayName") === "Ask Gina" &&
+      nested(manifest, "homepage") === "https://askgina.ai" &&
       nested(manifest, "repository") === "https://github.com/askgina/plugins" &&
+      nested(manifest, "license") === "Apache-2.0" &&
       nested(manifest, "logo") === "assets/icon.svg"
     );
   }
@@ -455,6 +470,60 @@ export const checkGeneratedTargetConformance: {
           "openai.assets.icon_exists",
           "OpenAI icon asset exists",
           yield* withFileSystemError(iconPath, "cannot be inspected", fs.exists(iconPath)),
+        );
+      }
+
+      if (target === "cursor") {
+        const iconPath = paths.join(generatedTargetRoot, "assets", "icon.svg");
+        const readmePath = paths.join(generatedTargetRoot, "README.md");
+        addCheck(
+          "cursor.assets.icon_exists",
+          "Cursor icon asset exists",
+          yield* withFileSystemError(iconPath, "cannot be inspected", fs.exists(iconPath)),
+        );
+        addCheck(
+          "cursor.readme.exists",
+          "Cursor listing README exists",
+          yield* withFileSystemError(readmePath, "cannot be inspected", fs.exists(readmePath)),
+        );
+        const rulePath = paths.join(generatedTargetRoot, "rules", "gina-read-only.mdc");
+        addCheck(
+          "cursor.rules.read_only_exists",
+          "Cursor read-only rule exists",
+          yield* withFileSystemError(rulePath, "cannot be inspected", fs.exists(rulePath)),
+        );
+        if (yield* withFileSystemError(rulePath, "cannot be inspected", fs.exists(rulePath))) {
+          const rule = yield* withFileSystemError(
+            rulePath,
+            "cannot be read",
+            fs.readFileString(rulePath),
+          );
+          addCheck(
+            "cursor.rules.read_only_always_apply",
+            "Cursor read-only rule is always applied",
+            /^alwaysApply:\s*true\s*$/m.test(rule),
+          );
+        }
+        const expectedCommands = ASK_GINA_SKILL_DEFINITIONS.map(
+          (skill) => `${skill.name}.md`,
+        ).sort();
+        const commandsRoot = paths.join(generatedTargetRoot, "commands");
+        const commandsExist = yield* withFileSystemError(
+          commandsRoot,
+          "cannot be inspected",
+          fs.exists(commandsRoot),
+        );
+        const actualCommands = commandsExist
+          ? (yield* withFileSystemError(
+              commandsRoot,
+              "cannot be read",
+              fs.readDirectory(commandsRoot),
+            )).sort()
+          : [];
+        addCheck(
+          "cursor.commands.directory_set",
+          "Cursor commands match the four canonical skills",
+          sameSortedStrings(actualCommands, expectedCommands),
         );
       }
 
@@ -934,6 +1003,130 @@ export const checkRepositoryConformance = (
       !legacyOpenAiExists,
       legacyOpenAiExists ? "legacy OpenAI overlay must be removed" : undefined,
     );
+
+    const legacyCursorOverlay = paths.join(packageRoot, "targets", "cursor");
+    const legacyCursorExists = yield* withFileSystemError(
+      legacyCursorOverlay,
+      "cannot be inspected",
+      fs.exists(legacyCursorOverlay),
+    );
+    addCheck(
+      "repository.legacy_cursor.absent",
+      "Legacy targets/cursor overlay is absent",
+      !legacyCursorExists,
+      legacyCursorExists ? "legacy Cursor overlay must be removed" : undefined,
+    );
+
+    const cursorMarketplacePath = paths.join(repositoryRoot, ".cursor-plugin", "marketplace.json");
+    const cursorMarketplaceExists = yield* withFileSystemError(
+      cursorMarketplacePath,
+      "cannot be inspected",
+      fs.exists(cursorMarketplacePath),
+    );
+    addCheck(
+      "repository.cursor.marketplace_exists",
+      "Cursor marketplace descriptor exists",
+      cursorMarketplaceExists,
+    );
+    if (cursorMarketplaceExists) {
+      const cursorMarketplace = yield* readJson(fs, cursorMarketplacePath);
+      const cursorPlugins = nested(cursorMarketplace, "plugins");
+      const cursorPlugin =
+        Array.isArray(cursorPlugins) && cursorPlugins.length === 1 ? cursorPlugins[0] : undefined;
+      const cursorMarketplaceContract =
+        hasExactKeys(cursorMarketplace, ["name", "owner", "metadata", "plugins"]) &&
+        nested(cursorMarketplace, "name") === "ask-gina-plugins" &&
+        hasExactKeys(nested(cursorMarketplace, "owner"), ["name"]) &&
+        nested(cursorMarketplace, "owner", "name") === "Ask Gina" &&
+        hasExactKeys(nested(cursorMarketplace, "metadata"), ["description", "version"]) &&
+        nested(cursorMarketplace, "metadata", "version") === CURSOR_LISTING_VERSION &&
+        hasExactKeys(cursorPlugin, ["name", "source", "description"]) &&
+        nested(cursorPlugin, "name") === "ask-gina" &&
+        nested(cursorPlugin, "source") === "./plugins/ask-gina";
+      addCheck(
+        "repository.cursor.marketplace_contract",
+        "Cursor marketplace points at the plugin root without overlay overrides",
+        cursorMarketplaceContract,
+      );
+    }
+
+    const cursorManifestPath = paths.join(packageRoot, ".cursor-plugin", "plugin.json");
+    const cursorMcpPath = paths.join(packageRoot, "mcp.json");
+    const cursorReadmePath = paths.join(packageRoot, "README.md");
+    const requiredCursorPaths = [
+      [
+        cursorManifestPath,
+        "repository.root_cursor.manifest_exists",
+        "Root Cursor manifest exists as a regular file",
+        "File",
+      ],
+      [
+        cursorMcpPath,
+        "repository.root_cursor.mcp_exists",
+        "Root Cursor MCP configuration exists as a regular file",
+        "File",
+      ],
+      [
+        cursorReadmePath,
+        "repository.root_cursor.readme_exists",
+        "Root Cursor listing README exists as a regular file",
+        "File",
+      ],
+      [
+        paths.join(packageRoot, "rules", "gina-read-only.mdc"),
+        "repository.root_cursor.rule_exists",
+        "Root Cursor read-only rule exists as a regular file",
+        "File",
+      ],
+      [
+        paths.join(packageRoot, "commands"),
+        "repository.root_cursor.commands_exists",
+        "Root Cursor commands directory exists",
+        "Directory",
+      ],
+    ] as const;
+    for (const [candidate, id, title, expectedType] of requiredCursorPaths) {
+      const exists = yield* withFileSystemError(
+        candidate,
+        "cannot be inspected",
+        fs.exists(candidate),
+      );
+      const actualType = exists
+        ? (yield* withFileSystemError(candidate, "cannot be inspected", fs.stat(candidate))).type
+        : undefined;
+      addCheck(
+        id,
+        title,
+        exists && actualType === expectedType,
+        exists && actualType !== expectedType
+          ? `expected ${expectedType}, found ${actualType ?? "unknown"}`
+          : undefined,
+      );
+    }
+    if (
+      yield* withFileSystemError(
+        cursorManifestPath,
+        "cannot be inspected",
+        fs.exists(cursorManifestPath),
+      )
+    ) {
+      const manifest = yield* readJson(fs, cursorManifestPath);
+      addCheck(
+        "repository.root_cursor.manifest_contract",
+        "Root Cursor manifest has exact contract and release version",
+        validateManifest("cursor", manifest),
+      );
+    }
+    if (
+      yield* withFileSystemError(cursorMcpPath, "cannot be inspected", fs.exists(cursorMcpPath))
+    ) {
+      const mcp = yield* readJson(fs, cursorMcpPath);
+      addCheck(
+        "repository.root_cursor.mcp_contract",
+        "Root Cursor MCP configuration binds the production endpoint",
+        validateMcp("cursor", mcp),
+      );
+    }
 
     const symlinks = yield* findSymbolicLinks(fs, paths, packageRoot).pipe(
       Effect.mapError((cause) =>

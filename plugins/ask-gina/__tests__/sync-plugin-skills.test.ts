@@ -16,7 +16,7 @@ const makeGeneratedTargets = Effect.acquireRelease(
 
 describe("sync-plugin-skills", () => {
   it.layer(BunServices.layer)((it) => {
-    it.effect("loads OpenAI from the plugin root and retains non-OpenAI overlays", () =>
+    it.effect("loads OpenAI and Cursor from the plugin root and retains remaining overlays", () =>
       Effect.scoped(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -29,9 +29,14 @@ describe("sync-plugin-skills", () => {
           assert.isTrue(yield* fs.exists(paths.join(packageRoot, ".mcp.json")));
           assert.isTrue(yield* fs.exists(paths.join(packageRoot, "assets", "icon.svg")));
           assert.isFalse(yield* fs.exists(paths.join(packageRoot, "targets", "openai")));
+          assert.isFalse(yield* fs.exists(paths.join(packageRoot, "targets", "cursor")));
           assert.deepStrictEqual(
             (yield* fs.readDirectory(generatedTargets.targets.openai)).sort(),
             [".codex-plugin", ".mcp.json", "assets", "skills"],
+          );
+          assert.deepStrictEqual(
+            (yield* fs.readDirectory(generatedTargets.targets.cursor)).sort(),
+            [".cursor-plugin", "README.md", "assets", "commands", "mcp.json", "rules", "skills"],
           );
 
           for (const relative of [
@@ -45,7 +50,26 @@ describe("sync-plugin-skills", () => {
             );
           }
 
-          for (const hostName of TARGET_NAMES.filter((hostName) => hostName !== "openai")) {
+          for (const relative of [
+            [".cursor-plugin", "plugin.json"],
+            ["mcp.json"],
+            ["assets", "icon.svg"],
+            ["README.md"],
+            ["rules", "gina-read-only.mdc"],
+            ["commands", "review-gina-account.md"],
+            ["commands", "research-spot-tokens.md"],
+            ["commands", "research-hyperliquid.md"],
+            ["commands", "research-prediction-markets.md"],
+          ] as const) {
+            assert.strictEqual(
+              yield* fs.readFileString(paths.join(generatedTargets.targets.cursor, ...relative)),
+              yield* fs.readFileString(paths.join(packageRoot, ...relative)),
+            );
+          }
+
+          for (const hostName of TARGET_NAMES.filter(
+            (hostName) => hostName !== "openai" && hostName !== "cursor",
+          )) {
             assert.deepStrictEqual(
               (yield* fs.readDirectory(generatedTargets.targets[hostName]))
                 .filter((entry) => entry !== "skills")
@@ -125,6 +149,26 @@ describe("sync-plugin-skills", () => {
           const error = yield* Effect.flip(createGeneratedPluginTarget("openai", { packageRoot }));
           assert.strictEqual(error.path, legacyOverlay);
           assert.include(error.reason, "legacy OpenAI target overlay");
+        }),
+      ),
+    );
+
+    it.effect("rejects a legacy Cursor target overlay", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const paths = yield* Path.Path;
+          const temporary = yield* fs.makeTempDirectoryScoped({
+            prefix: "sync-plugin-skills-test-",
+          });
+          const packageRoot = paths.join(temporary, "ask-gina");
+          yield* fs.copy(paths.resolve("plugins/ask-gina"), packageRoot, { overwrite: true });
+          const legacyOverlay = paths.join(packageRoot, "targets", "cursor");
+          yield* fs.makeDirectory(legacyOverlay, { recursive: true });
+
+          const error = yield* Effect.flip(createGeneratedPluginTarget("cursor", { packageRoot }));
+          assert.strictEqual(error.path, legacyOverlay);
+          assert.include(error.reason, "legacy Cursor target overlay");
         }),
       ),
     );
