@@ -1,9 +1,12 @@
 # Ask Gina for Cursor and Grok Bot
 
-Read-only market and account research through Gina MCP. Install this plugin, connect Ask Gina, then ask about wallets, spot tokens, Hyperliquid, or Polymarket.
+Ask Gina is a research assistant for crypto, prediction markets, perpetuals, and equities. 
+Use it to fetch real-time prices and historical data for tokens, Hyperliquid markets, and Polymarket prediction markets, and to analyze your Gina wallet, positions, and accounts. 
+
+Gina cannot place trades or transfer assets inside Cursor or Grok Bot.
 
 Production MCP: `https://askgina.ai/ai/gina/mcp`  
-Scope: `tools:read` only. This plugin does not include Spot execute.
+Scope: `tools:read` only. This plugin does not include transaction execution or transfers.
 
 ## Install
 
@@ -29,7 +32,7 @@ Try: “Show my linked wallets.” / “Chart ETH over the past week.” / “Wh
 
 ## What it cannot do
 
-Gina will not place trades, transfer assets, change leverage, redeem positions, or create/edit schedules from this plugin. For those, it should hand you a link to continue on [Ask Gina](https://askgina.ai).
+Gina will not place trades, transfer assets, change leverage, redeem positions, or create/edit schedules from this plugin.
 
 Privacy: https://askgina.ai/privacy-policy  
 Terms: https://askgina.ai/terms-and-conditions  
@@ -46,8 +49,11 @@ README.md
 LICENSE
 ```
 
-`mcp.json` is URL-only so Cursor and Grok Bot run Streamable HTTP plus MCP OAuth. Do not add a bearer header or `"type": "streamable-http"`.
+`mcp.json` is URL-only so Cursor and Grok Bot run Streamable HTTP plus MCP OAuth. 
+Do not add a bearer header or `"type": "streamable-http"`.
 
 ## Source
 
-Canonical overlay: `plugins/ask-gina/targets/cursor/` in [askgina/plugins](https://github.com/askgina/plugins). Skills come from `plugins/ask-gina/skills/`. Operating product remains `t-y-b-b/nextjs-ai-chatbot`.
+Canonical overlay: `plugins/ask-gina/targets/cursor/` in [askgina/plugins](https://github.com/askgina/plugins). 
+
+Skills come from `plugins/ask-gina/skills/`. Operating product remains `t-y-b-b/nextjs-ai-chatbot`.
