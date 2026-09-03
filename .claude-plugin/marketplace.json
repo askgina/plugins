@@ -4,8 +4,8 @@
     "name": "Ask Gina",
     "url": "https://askgina.ai"
   },
-  "description": "Official Ask Gina plugins for account and market research.",
-  "version": "0.1.0",
+  "description": "Research assistant for crypto, prediction, perpetual markets.",
+  "version": "1.0.0",
   "plugins": [
     {
       "name": "ask-gina",
@@ -14,8 +14,8 @@
       "skills": "./skills",
       "mcpServers": "./targets/claude/.mcp.json",
       "displayName": "Ask Gina",
-      "description": "Read-only Ask Gina skills for account and market research.",
-      "version": "0.1.0",
+      "description": "Ask Gina is a research assistant for crypto, prediction markets, perpetuals, and equities. Use it to fetch real-time prices and historical data for tokens, Hyperliquid markets, and Polymarket prediction markets, and to analyze your Gina wallet, positions, and accounts. Gina cannot place trades or transfer assets inside Claude.",
+      "version": "1.0.0",
       "author": {
         "name": "Ask Gina",
         "url": "https://askgina.ai"
@@ -23,7 +23,7 @@
       "homepage": "https://askgina.ai",
       "repository": "https://github.com/askgina/plugins",
       "license": "Apache-2.0",
-      "keywords": ["crypto", "portfolio", "market-data", "hyperliquid", "polymarket"]
+      "keywords": ["crypto", "portfolio", "market-data", "hyperliquid", "polymarket", "research", "prediction", "perpetuals", "strategise"],
     }
   ]
 }

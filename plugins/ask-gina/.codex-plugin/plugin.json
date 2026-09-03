@@ -1,7 +1,7 @@
 {
   "name": "ask-gina",
   "version": "1.0.0",
-  "description": "Read-only Ask Gina skills for account and market research.",
+  "description": "Research assistant for crypto, prediction and perptual markets",
   "author": {
     "name": "Ask Gina",
     "url": "https://askgina.ai"
@@ -9,7 +9,7 @@
   "homepage": "https://askgina.ai",
   "repository": "https://github.com/askgina/plugins",
   "license": "Apache-2.0",
-  "keywords": ["crypto", "portfolio", "market-data", "hyperliquid", "polymarket"],
+  "keywords": ["crypto", "portfolio", "market-data", "hyperliquid", "polymarket", "perpetuals", "reserch", "strategise"],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {
@@ -31,6 +31,12 @@
     "brandColor": "#B50D00",
     "composerIcon": "./assets/icon.svg",
     "logo": "./assets/icon.svg",
-    "screenshots": []
+    "screenshots": [
+      "./gold-up-or-down-daily.png",
+      "./hyperliquid-chart.png",
+      "./nba-champion-podium.png",
+      "./perpetual-positions.png",
+      "./premier-league-prediction-markets.png"
+    ]
   }
 }
