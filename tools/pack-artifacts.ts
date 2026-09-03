@@ -778,7 +778,8 @@ export const validateTargetVersion: {
 } = Function.dual(3, (pluginRoot: string, host: Host, version: string): PluginTargetEffect =>
   Effect.gen(function* () {
     const path = yield* Path.Path;
-    const manifestRoot = host === "openai" ? pluginRoot : path.join(pluginRoot, "targets", host);
+    const manifestRoot =
+      host === "openai" || host === "cursor" ? pluginRoot : path.join(pluginRoot, "targets", host);
     const value = yield* readJson(path.join(manifestRoot, TARGET_MANIFESTS[host]));
     if (!isObject(value) || value.version !== version) {
       return yield* fail(`${host} target version is inconsistent`);
@@ -856,6 +857,27 @@ export const stagePluginTarget: {
         path.join(plugin, ".mcp.json"),
         path.join(stage, ".mcp.json"),
       ).pipe(Effect.mapError((cause) => fail("cannot stage openai .mcp.json", cause)));
+    } else if (host === "cursor") {
+      yield* fs
+        .makeDirectory(stage, { recursive: true })
+        .pipe(Effect.mapError((cause) => fail("cannot create cursor target stage", cause)));
+      yield* Effect.forEach([".cursor-plugin", "assets"] as const, (entry) =>
+        Effect.gen(function* () {
+          const source = path.join(plugin, entry);
+          yield* filesBelow(source);
+          yield* fs
+            .copy(source, path.join(stage, entry), { overwrite: true })
+            .pipe(Effect.mapError((cause) => fail(`cannot stage cursor ${entry}`, cause)));
+        }),
+      );
+      yield* copyCheckedRegularFile(
+        path.join(plugin, "mcp.json"),
+        path.join(stage, "mcp.json"),
+      ).pipe(Effect.mapError((cause) => fail("cannot stage cursor mcp.json", cause)));
+      yield* copyCheckedRegularFile(
+        path.join(plugin, "README.md"),
+        path.join(stage, "README.md"),
+      ).pipe(Effect.mapError((cause) => fail("cannot stage cursor README.md", cause)));
     } else {
       const sourceOverlay = path.join(plugin, "targets", host);
       yield* filesBelow(sourceOverlay);

@@ -1,0 +1,17 @@
+{
+  "name": "ask-gina-plugins",
+  "owner": {
+    "name": "Ask Gina"
+  },
+  "metadata": {
+    "description": "Official Ask Gina plugins for Cursor and Grok Bot.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "ask-gina",
+      "source": "./plugins/ask-gina",
+      "description": "Read-only Ask Gina research for wallets, spot tokens, Hyperliquid, and Polymarket. Cannot place trades or transfer assets."
+    }
+  ]
+}
