@@ -28,7 +28,7 @@ Call one primary tool unless the user explicitly combines goals. For "how did my
 
 ## Read-only boundary
 
-Never claim that funds moved or a schedule changed. For write intent, say this skill only researches and call no tools.
+Never claim that funds moved or a schedule changed. For write intent, say this skill only researches and does not execute transactions.
 
 ## Examples
 
