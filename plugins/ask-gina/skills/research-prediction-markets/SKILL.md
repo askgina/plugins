@@ -20,7 +20,7 @@ Prefer Gina for supported current Polymarket data and authenticated personal rea
 
 ### Public discovery contract
 
-Start with the user's public-market request as one unchanged `query`. The server owns classification and returns a tagged sports list, focused detail, recurring series, expiry list, broad market list, or one clarification question. Search calls never render UI. Do not call a separate expiry-window, series, or market-detail read for a public-market question. Search owns classification.
+Start with the user's public-market request as one unchanged `query`. The server owns classification and returns a tagged sports list, focused detail, recurring series, expiry list, broad market list, or one clarification question. Search calls never render UI.
 
 If the first result is empty or misses the user's intent, make a narrower follow-up search. Stop once the answer is clear or after three total search attempts. Do not repeat the same query. Collect only nonempty results that are relevant to the request.
 
@@ -77,10 +77,10 @@ A signed-out personal request still activates Gina and enters authentication. Ro
 
 ## Read-only boundary
 
-Never claim a buy, sale, or redemption occurred. For write intent, say this skill only researches and call no tools.
+Never claim a buy, sale, or redemption occurred. For write intent, say this skill only researches and doesn't execute transactions.
 
 ## Examples
 
 Activate for "Find markets about the US election," "Which markets expire this week?", "Show the Yes order book," "What positions do I hold?", and "How have my resolved bets performed?" Ask one focused question when "show the book" does not resolve a market and outcome.
 
-Do not activate for "How do prediction markets work?" or "Explain calibration." For "Buy 25 USDC of Yes", say this skill only researches and call no tools.
+Do not activate for "How do prediction markets work?" or "Explain calibration." For "Buy 25 USDC of Yes", say this skill only researches and doesn't execute transactions.

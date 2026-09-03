@@ -30,6 +30,30 @@ Omit provider context for canonical reads. For an enabled HIP-3 venue, pass its 
 
 For aggregate analysis, first materialize the required dataset. Then pass the exact `tableName` from the successful create result both as the query tool's table name and as the bounded SQL relation; never reuse, sanitize, or reconstruct the requested name. Ask one focused question when a coin or venue remains ambiguous.
 
+## What HIP-3 exposes
+
+HIP-3 is Hyperliquid's builder-deployed perpetual DEX layer. Canonical Hyperliquid lists crypto perps; HIP-3 venues list additional perpetuals that a builder chooses, which today means equities, indices, FX, and commodities alongside some crypto. One venue is enabled: TradeXYZ, provider `hip3:xyz`, USDC collateral. Its markets use the plain ticker as the coin with the venue passed as provider context, for example coin `TSLA` with `{ "providerId": "hip3:xyz" }`.
+
+| Asset class    | Representative xyz tickers                                                                                            |
+| -------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Equities       | TSLA, NVDA, AAPL, MSFT, META, GOOGL, AMZN, AMD, HOOD, PLTR, COIN, MSTR, CRCL, NFLX, TSM, BABA, GME, SOFTBANK, HYUNDAI |
+| Commodities    | GOLD, SILVER, CL (WTI crude), BRENTOIL, NATGAS, COPPER, PLATINUM, PALLADIUM, URANIUM, ALUMINIUM, CORN, WHEAT          |
+| Indices and FX | SP500, XYZ100, VIX, VOL, DXY, EUR, JPY, JP225, KR200, XLE, EWY, EWJ                                                   |
+
+The listing changes; confirm a ticker with the markets read scoped to `hip3:xyz` before quoting it. The perp-DEX read returns venue metadata only; when the user asks which asset classes a venue lists, answer from the provider-scoped markets read. Present a HIP-3 mark or midpoint as the venue's perpetual-derivative price: it is not ownership of the stock or commodity, not a spot price, and not a traditional exchange quote, and it carries no dividends, voting rights, or physical delivery. The batch price read, fills read, and order-book read are canonical only; for several HIP-3 prices make one single-price call per ticker, and for HIP-3 fills materialize a venue-scoped table.
+
+Example queries and the read they map to:
+
+- "What is TSLA trading at on Hyperliquid?" → single-price read with coin `TSLA` and `hip3:xyz`.
+- "Chart gold perps for the last week" → candles read with coin `GOLD`, `hip3:xyz`, a 1h interval, and a 7-day window.
+- "Which stock perps can I trade on Hyperliquid?" → markets read scoped to `hip3:xyz`, grouped by asset class in the answer.
+- "How has the S&P 500 perp moved today?" → candles read with coin `SP500` and `hip3:xyz`; never a midpoint alone.
+- "Compare WTI and Brent midpoints" → two single-price reads for `CL` and `BRENTOIL` on `hip3:xyz`.
+- "Do I have any equity positions on xyz?" → positions read once; filter the consolidated result to the xyz venue.
+- "What was my PnL on xyz this month?" → portfolio read with `hip3:xyz` and the month window.
+- "Show my NVDA fills on xyz" → materialize a fills table with `hip3:xyz`, then query the returned `tableName`.
+- "Show the NVDA order book" → say the depth read covers canonical markets only, then offer the xyz price or candles.
+
 ## Respond and recover
 
 - Lead with the result. Identify the account, venue, market, asset, and time window when returned.
@@ -40,10 +64,10 @@ For aggregate analysis, first materialize the required dataset. Then pass the ex
 
 ## Read-only boundary
 
-Never claim a trade, cancellation, transfer, or leverage change occurred. For write intent, say this skill only researches and call no tools.
+Never claim a trade, cancellation, transfer, or leverage change occurred. For write intent, say this skill only researches and does not execute transactions.
 
 ## Examples
 
 Activate for "Show my Hyperliquid positions," "Which HIP-3 venues are available?", "How did my account perform this month?", "Chart BTC perps for 24 hours," and "What is the ETH book?" Ask one focused question for "Show my orders" when the intended HIP-3 venue is unresolved.
 
-Do not activate for "How does perpetual funding work?" or "Compare derivatives regulations." For "Open a 1 ETH long", say this skill only researches and call no tools.
+Do not activate for "How does perpetual funding work?" or "Compare derivatives regulations." For "Open a 1 ETH long", say this skill only researches and does not execute transactions.

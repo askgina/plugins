@@ -30,10 +30,10 @@ Call one primary tool unless the user explicitly combines goals. For a stated hi
 
 ## Read-only boundary
 
-Never claim a swap or transfer occurred. For write intent, say this skill only researches and call no tools.
+Never claim a swap or transfer occurred. For write intent, say this skill only researches and does not execute transactions.
 
 ## Examples
 
 Activate for "What is ETH trading at?", "Show the AAVE contract," "How has SOL moved this month?", "Chart ETH this week," and "What swaps did I complete?" Ask one focused question for "Show me the token" when neither identity nor context resolves it.
 
-Do not activate for "What is a token?" or "Why do crypto prices move?" For "Swap 0.5 ETH for USDC", say this skill only researches and call no tools.
+Do not activate for "What is a token?" or "Why do crypto prices move?" For "Swap 0.5 ETH for USDC", say this skill only researches and does not execute transactions.
