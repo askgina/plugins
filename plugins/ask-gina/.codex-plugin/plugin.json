@@ -1,6 +1,6 @@
 {
   "name": "ask-gina",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Read-only Ask Gina skills for account and market research.",
   "author": {
     "name": "Ask Gina",
@@ -15,7 +15,7 @@
   "interface": {
     "displayName": "Ask Gina",
     "shortDescription": "Accounts, markets, and charts",
-    "longDescription": "Ask Gina provides read-only research across your linked account, spot tokens, Hyperliquid and HIP-3 perpetuals, and Polymarket prediction markets. Use it to inspect wallets, schedules, token prices and charts, positions, orders, performance, markets, and history. Ask Gina cannot place trades, transfer assets, change leverage, redeem positions, or create automations inside ChatGPT or Codex. When you ask to take action, it can provide a link to continue securely on Ask Gina.",
+    "longDescription": "Ask Gina provides read-only research across your linked account, spot tokens, Hyperliquid and HIP-3 perpetuals, and Polymarket prediction markets. Use it to inspect wallets, schedules, token prices and charts, positions, orders, performance, markets, and history. Ask Gina cannot place trades, transfer assets, change leverage, redeem positions, or create automations inside ChatGPT or Codex.",
     "developerName": "Ask Gina",
     "category": "Finance",
     "capabilities": ["Interactive", "Read"],
