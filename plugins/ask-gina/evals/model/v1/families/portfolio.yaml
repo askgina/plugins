@@ -2,7 +2,7 @@ version: 1
 suite:
   id: ask-gina-model-portfolio-v1
   plugin: ask-gina
-  catalog_version: 29-read-tools@2026-08-20
+  catalog_version: 30-read-tools@2026-09-01
   description: >-
     Full-catalog routing cases for the three shared portfolio and schedule
     tools exposed by the Ask Gina listed plugin.

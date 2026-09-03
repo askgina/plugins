@@ -2,24 +2,155 @@ version: 1
 suite:
   id: ask-gina-model-predictions-v1
   plugin: ask-gina
-  catalog_version: 29-read-tools@2026-08-20
+  catalog_version: 30-read-tools@2026-09-01
   description: >-
-    Full-catalog routing cases for the eight Polymarket discovery, order-book,
-    dataset, position, and history tools exposed by the Ask Gina listed plugin.
+    Routing cases for public Polymarket discovery, order-book, dataset, position,
+    and history reads. Search owns topic, URL/slug, sports play windows, expiry
+    windows, and recurring series. Renderers are optional post-discovery tools.
 cases:
-  - id: predictions-search-markets
+  - id: predictions-focused-fact-search-only
     category: confusion_pair
-    tags: [predictions, search, keyword]
+    tags: [predictions, focused, search-only]
     manual_priority: required
     turns:
       - role: user
-        content: Search Polymarket for active prediction markets about the NBA. This is a keyword search, not an expiry filter.
+        content: What are the current odds in the 2027 NBA champion market?
     expected:
       routing:
         kind: exact
         tool: predictions.searchPredictionMarkets
+      arguments:
+        tool: predictions.searchPredictionMarkets
+        required:
+          query: What are the current odds in the 2027 NBA champion market?
+        allow_additional: true
       safety:
-        forbidden_tools: [predictions.getExpiringMarkets]
+        forbidden_tools: [predictions.getPredictionMarketDetails]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-broad-nba-search-only
+    category: confusion_pair
+    tags: [predictions, nba, search-only]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Search Polymarket for active NBA prediction markets.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.searchPredictionMarkets
+      arguments:
+        tool: predictions.searchPredictionMarkets
+        required:
+          query: Search Polymarket for active NBA prediction markets.
+        allow_additional: true
+      safety:
+        forbidden_tools: [predictions.getPredictionMarketDetails]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-broad-football-search-only
+    category: indirect
+    tags: [predictions, football, search-only]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Find active football prediction markets.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.searchPredictionMarkets
+      arguments:
+        tool: predictions.searchPredictionMarkets
+        required:
+          query: Find active football prediction markets.
+        allow_additional: true
+      safety:
+        forbidden_tools: [predictions.getPredictionMarketDetails]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-non-exact-no-render
+    category: boundary
+    tags: [predictions, ambiguous, search-only]
+    manual_priority: required
+    turns:
+      - role: user
+        content: What markets are there about the next US election?
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.searchPredictionMarkets
+      arguments:
+        tool: predictions.searchPredictionMarkets
+        required:
+          query: What markets are there about the next US election?
+        allow_additional: true
+      safety:
+        forbidden_tools: [predictions.getPredictionMarketDetails]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-sparse-history-no-render
+    category: boundary
+    tags: [predictions, sparse-history, search-only]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Find the thinly traded market about a lunar landing before 2030 and summarize what data is available.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.searchPredictionMarkets
+      arguments:
+        tool: predictions.searchPredictionMarkets
+        required:
+          query: Find the thinly traded market about a lunar landing before 2030 and summarize what data is available.
+        allow_additional: true
+      safety:
+        forbidden_tools: [predictions.getPredictionMarketDetails]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-multi-series-no-render
+    category: confusion_pair
+    tags: [predictions, recurring, multi-series, search-only]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Find current recurring BTC up-or-down prediction markets across the available timeframes.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.searchPredictionMarkets
+      arguments:
+        tool: predictions.searchPredictionMarkets
+        required:
+          query: Find current recurring BTC up-or-down prediction markets across the available timeframes.
+        allow_additional: true
+      safety:
+        forbidden_tools: [predictions.getPredictionMarketDetails]
         forbidden_scopes: ["tools:execute"]
       performance:
         max_latency_ms: 30000
@@ -37,9 +168,39 @@ cases:
     expected:
       routing:
         kind: exact
-        tool: predictions.getExpiringMarkets
+        tool: predictions.searchPredictionMarkets
+      arguments:
+        tool: predictions.searchPredictionMarkets
+        required:
+          query: Which prediction markets expire in the next 24 hours? Use the expiry window rather than a keyword search.
+        allow_additional: true
       safety:
-        forbidden_tools: [predictions.searchPredictionMarkets]
+        forbidden_tools: [predictions.getPredictionMarketDetails]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-series-market
+    category: confusion_pair
+    tags: [predictions, series, crypto, recurring]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Find the current recurring BTC 15-minute up-or-down prediction market series. This is a recurring timeframe, not a date-specific market search.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.searchPredictionMarkets
+      arguments:
+        tool: predictions.searchPredictionMarkets
+        required:
+          query: Find the current recurring BTC 15-minute up-or-down prediction market series. This is a recurring timeframe, not a date-specific market search.
+        allow_additional: true
+      safety:
+        forbidden_tools: [predictions.getPredictionMarketDetails]
         forbidden_scopes: ["tools:execute"]
       performance:
         max_latency_ms: 30000
@@ -58,26 +219,6 @@ cases:
       routing:
         kind: exact
         tool: predictions.getPredictionOrderbook
-      safety:
-        forbidden_tools: [predictions.searchPredictionMarkets]
-        forbidden_scopes: ["tools:execute"]
-      performance:
-        max_latency_ms: 30000
-        max_total_result_bytes: 100000
-      answer:
-        kind: grounded
-
-  - id: predictions-series-market
-    category: confusion_pair
-    tags: [predictions, series, crypto, recurring]
-    manual_priority: required
-    turns:
-      - role: user
-        content: Find the current recurring BTC 15-minute up-or-down prediction market series. This is a recurring timeframe, not a date-specific market search.
-    expected:
-      routing:
-        kind: exact
-        tool: predictions.getSeriesMarket
       safety:
         forbidden_tools: [predictions.searchPredictionMarkets]
         forbidden_scopes: ["tools:execute"]

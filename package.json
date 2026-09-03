@@ -47,7 +47,8 @@
   },
   "overrides": {
     "@effect/platform-node-shared": "4.0.0-rc.111",
-    "oxlint": "1.78.0"
+    "oxlint": "1.78.0",
+    "qs": "6.16.0"
   },
   "engines": {
     "bun": "1.4.x"

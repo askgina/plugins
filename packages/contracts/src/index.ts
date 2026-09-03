@@ -1,16 +1,12 @@
-import { Function, Schema } from "effect";
+import { Schema } from "effect";
 
 export const PRODUCTION_MCP_URL = "https://askgina.ai/ai/gina/mcp";
-export const EXECUTION_HANDOFF_ORIGIN = "https://askgina.ai";
-export const EXECUTION_HANDOFF_PATHNAME = "/new";
 
 export const READ_SCOPE = "tools:read";
 export const EXECUTE_SCOPE = "tools:execute";
 
 export const GINA_MCP_APP_FAMILY_VALUES = ["spot", "perps", "predictions", "portfolio"] as const;
 export type GinaMcpAppFamily = (typeof GINA_MCP_APP_FAMILY_VALUES)[number];
-
-export type ExecutionHandoffAgent = "gina" | "perps" | "predictions";
 
 export type GinaReadToolAnnotations = Readonly<{
   readOnlyHint: true;
@@ -227,6 +223,14 @@ export const GINA_READ_TOOL_CATALOG = [
     mcpAppBound: false,
   },
   {
+    name: "predictions.getPredictionMarketDetails",
+    family: "predictions",
+    readOnlyHint: true,
+    destructiveHint: false,
+    openWorldHint: true,
+    mcpAppBound: false,
+  },
+  {
     name: "predictions.fetchPolymarketData",
     family: "predictions",
     readOnlyHint: true,
@@ -262,6 +266,23 @@ export const GINA_READ_TOOL_CATALOG = [
 
 export type GinaReadToolName = (typeof GINA_READ_TOOL_CATALOG)[number]["name"];
 
+export const GINA_PREDICTION_RENDER_TOOL_NAMES = [
+  "predictions.renderPredictionPodium",
+  "predictions.renderPredictionBinaryMarket",
+  "predictions.renderPredictionCollection",
+] as const;
+
+export type GinaPredictionRenderToolName = (typeof GINA_PREDICTION_RENDER_TOOL_NAMES)[number];
+
+export const isGinaPredictionRenderToolName = (
+  name: unknown,
+): name is GinaPredictionRenderToolName =>
+  name === "predictions.renderPredictionPodium" ||
+  name === "predictions.renderPredictionBinaryMarket" ||
+  name === "predictions.renderPredictionCollection";
+
+export type AskGinaSkillToolName = GinaReadToolName | GinaPredictionRenderToolName;
+
 export const GINA_CLOSED_WORLD_READ_TOOL_NAMES = [
   "gina.getAccountAddresses",
   "gina.listScheduledPrompts",
@@ -290,7 +311,7 @@ export const GinaReadToolCatalogEntrySchema = Schema.Struct({
 });
 
 export const GinaReadToolCatalogSchema = Schema.Array(GinaReadToolCatalogEntrySchema).check(
-  Schema.isLengthBetween(29, 29),
+  Schema.isLengthBetween(30, 30),
 );
 
 export const GinaReadToolCatalogJsonSchema = Schema.fromJsonString(GinaReadToolCatalogSchema);
@@ -316,15 +337,6 @@ export const isGinaMcpAppBoundReadTool = (name: GinaReadToolName): boolean =>
     name as (typeof GINA_MCP_APP_BOUND_READ_TOOL_NAMES)[number],
   );
 
-export const buildExecutionHandoffUrl = Function.dual<
-  (prompt: string) => (agent: ExecutionHandoffAgent) => string,
-  (agent: ExecutionHandoffAgent, prompt: string) => string
->(
-  2,
-  (agent, prompt) =>
-    `${EXECUTION_HANDOFF_ORIGIN}${EXECUTION_HANDOFF_PATHNAME}?agent=${agent}&prompt=${encodeURIComponent(prompt)}`,
-);
-
 const sharedReadTools = GINA_READ_TOOL_CATALOG.filter((tool) => tool.family === "portfolio").map(
   (tool) => tool.name,
 );
@@ -342,38 +354,40 @@ export type SkillName = (typeof SKILL_NAMES)[number];
 
 export type AskGinaSkillDefinition = Readonly<{
   name: SkillName;
-  handoffAgent: ExecutionHandoffAgent;
-  handoffExamplePrompt: string;
-  tools: readonly GinaReadToolName[];
+  tools: readonly AskGinaSkillToolName[];
 }>;
+
+const PREDICTION_SKILL_TOOLS = [
+  "predictions.searchPredictionMarkets",
+  "predictions.getPredictionOrderbook",
+  "predictions.fetchPolymarketData",
+  "predictions.fetchPolymarketHistory",
+  "predictions.getPolymarketPositions",
+  "predictions.getPolymarketOrderHistory",
+  "predictions.renderPredictionPodium",
+  "predictions.renderPredictionBinaryMarket",
+  "predictions.renderPredictionCollection",
+] as const satisfies readonly AskGinaSkillToolName[];
 
 export const ASK_GINA_SKILL_DEFINITIONS = [
   {
     name: "review-gina-account",
-    handoffAgent: "gina",
-    handoffExamplePrompt: "Create a daily 9 AM portfolio summary.",
     tools: sharedReadTools,
   },
   {
     name: "research-spot-tokens",
-    handoffAgent: "gina",
-    handoffExamplePrompt: "Swap 0.5 ETH for USDC.",
     tools: familyTools("spot"),
   },
   {
     name: "research-hyperliquid",
-    handoffAgent: "perps",
-    handoffExamplePrompt: "Place a 1 ETH long with a 2500 USDC stop.",
     tools: familyTools("perps"),
   },
   {
     name: "research-prediction-markets",
-    handoffAgent: "predictions",
-    handoffExamplePrompt: "Buy 25 USDC of Yes on market 123.",
-    tools: familyTools("predictions"),
+    tools: PREDICTION_SKILL_TOOLS,
   },
 ] as const satisfies readonly AskGinaSkillDefinition[];
 
 export const SOURCE_COMMIT = "908af9015f1e87cf1ba4893226d149905e74df4a";
 export const RELEASE_VERSION = "0.1.0";
-export const catalogSha = "06a3c7ca4f56617e7aebdcc840b96f4fcfbffeafb7d5b359d1d4c90eb4aeefda";
+export const catalogSha = "92fb5788ef462b85710f03c4fa6b8b67b8beaf3e20a478e6128daf839fb1bbee";

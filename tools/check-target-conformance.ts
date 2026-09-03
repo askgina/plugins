@@ -6,13 +6,10 @@ import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import {
   ASK_GINA_SKILL_DEFINITIONS,
-  EXECUTION_HANDOFF_ORIGIN,
-  EXECUTION_HANDOFF_PATHNAME,
   PRODUCTION_MCP_URL,
   RELEASE_VERSION,
-  buildExecutionHandoffUrl,
+  isGinaPredictionRenderToolName,
   isGinaReadToolName,
-  listCatalogToolNames,
 } from "@askgina/contracts";
 import {
   Data,
@@ -175,12 +172,6 @@ const advertisedToolIdentifiers = (markdown: string): readonly string[] =>
     markdown.matchAll(/`((?:gina|spot|perps|predictions)\.[A-Za-z][A-Za-z0-9]*)`/g),
     ([, identifier]) => identifier,
   ).sort();
-
-const handoffUrls = (markdown: string): readonly URL[] =>
-  Array.from(
-    markdown.matchAll(/https:\/\/askgina\.ai\/new\?[^\s)\]}>'"`]+/g),
-    ([value]) => new URL(value),
-  );
 
 const productionSupportUrl = "https://askgina.ai/support";
 
@@ -493,15 +484,17 @@ export const checkGeneratedTargetConformance: {
         sameSortedStrings(actualSkillNames, expectedSkillNames),
       );
 
-      const catalogNames = listCatalogToolNames();
       addCheck(
         `${target}.skills.contract_catalog`,
-        `${target} skill definitions use only public catalog tools`,
+        `${target} skill definitions use only public catalog or renderer tools`,
         ASK_GINA_SKILL_DEFINITIONS.every((skill) =>
-          skill.tools.every((tool) => catalogNames.includes(tool) && isGinaReadToolName(tool)),
+          skill.tools.every(
+            (tool) => isGinaReadToolName(tool) || isGinaPredictionRenderToolName(tool),
+          ),
         ),
       );
 
+      let skillsHandoffFree = true;
       for (const skill of ASK_GINA_SKILL_DEFINITIONS) {
         const generatedSkillRoot = paths.join(generatedSkillsRoot, skill.name);
         const generatedSkillPath = paths.join(generatedSkillRoot, "SKILL.md");
@@ -558,26 +551,12 @@ export const checkGeneratedTargetConformance: {
           const expectedTools = [...skill.tools].sort();
           addCheck(
             `${target}.skill.${skill.name}.tool_advertisements`,
-            `${target}: ${skill.name} advertises exactly its owned read tools`,
+            `${target}: ${skill.name} advertises exactly its owned tools`,
             sameSortedStrings(actualTools, expectedTools),
           );
-
-          const canonicalHandoff = buildExecutionHandoffUrl(
-            skill.handoffAgent,
-            skill.handoffExamplePrompt,
-          );
-          const urls = handoffUrls(content);
-          addCheck(
-            `${target}.skill.${skill.name}.execution_handoff`,
-            `${target}: ${skill.name} has the canonical execution handoff`,
-            content.includes(canonicalHandoff) &&
-              urls.length > 0 &&
-              urls.every(
-                (url) =>
-                  url.origin === EXECUTION_HANDOFF_ORIGIN &&
-                  url.pathname === EXECUTION_HANDOFF_PATHNAME,
-              ),
-          );
+          if (content.includes("https://askgina.ai/new")) {
+            skillsHandoffFree = false;
+          }
 
           const metadataPath = paths.join(generatedSkillRoot, "agents", "openai.yaml");
           const metadataExists = yield* withFileSystemError(
@@ -632,6 +611,12 @@ export const checkGeneratedTargetConformance: {
           }
         }
       }
+
+      addCheck(
+        `${target}.skills.execution_handoff_free`,
+        `${target} skills omit execution handoff URLs`,
+        skillsHandoffFree,
+      );
 
       return { target, passed: checks.every((check) => check.passed), checks };
     }),
@@ -890,6 +875,32 @@ export const checkRepositoryConformance = (
       "repository.root_openai.skills_contract",
       "Root OpenAI source contains exact canonical skills and declared files",
       sameSortedStrings(actualSkillNames, expectedSkillNames) && skillFilesComplete,
+    );
+
+    let repositoryHandoffFree = true;
+    if (skillsExist) {
+      for (const skill of expectedSkillNames) {
+        const skillPath = paths.join(canonicalSkillsRoot, skill, "SKILL.md");
+        const skillMarkdownExists = yield* withFileSystemError(
+          skillPath,
+          "cannot be inspected",
+          fs.exists(skillPath),
+        );
+        if (!skillMarkdownExists) continue;
+        const content = yield* withFileSystemError(
+          skillPath,
+          "cannot be read",
+          fs.readFileString(skillPath),
+        );
+        if (content.includes("https://askgina.ai/new")) {
+          repositoryHandoffFree = false;
+        }
+      }
+    }
+    addCheck(
+      "repository.skills.execution_handoff_free",
+      "Canonical skills omit execution handoff URLs",
+      repositoryHandoffFree,
     );
 
     const legacyOpenAiOverlay = paths.join(packageRoot, "targets", "openai");

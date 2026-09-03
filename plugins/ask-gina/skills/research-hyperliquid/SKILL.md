@@ -1,6 +1,6 @@
 ---
 name: research-hyperliquid
-description: Research live Hyperliquid and HIP-3 markets, prices, charts, account state, positions, orders, fills, performance, and bounded analytics with Ask Gina. Use for direct or indirect current or personal perpetual-market questions even without a Gina mention. For trade, cancel, transfer, or leverage-change requests, provide the secure Ask Gina handoff without calling read tools. Do not use for general perpetuals education or unrelated venues.
+description: Research live Hyperliquid and HIP-3 markets, prices, charts, account state, positions, orders, fills, performance, and bounded analytics with Ask Gina. Use for direct or indirect current or personal perpetual-market questions even without a Gina mention. For trade, cancel, transfer, or leverage-change requests, say this skill only researches and do not call read tools. Do not use for general perpetuals education or unrelated venues.
 ---
 
 # Research Hyperliquid
@@ -40,10 +40,10 @@ For aggregate analysis, first materialize the required dataset. Then pass the ex
 
 ## Read-only boundary
 
-Never claim a trade, cancellation, transfer, or leverage change occurred. For write intent, explain the boundary and offer a secure Ask Gina handoff. Set `prompt` to the user's complete current write request using standard query encoding. Opening the link does not submit anything; the user must review and confirm. Example: `https://askgina.ai/new?agent=perps&prompt=Place%20a%201%20ETH%20long%20with%20a%202500%20USDC%20stop.`.
+Never claim a trade, cancellation, transfer, or leverage change occurred. For write intent, say this skill only researches and call no tools.
 
 ## Examples
 
-Activate for “Show my Hyperliquid positions,” “Which HIP-3 venues are available?”, “How did my account perform this month?”, “Chart BTC perps for 24 hours,” and “What is the ETH book?” Ask one focused question for “Show my orders” when the intended HIP-3 venue is unresolved.
+Activate for "Show my Hyperliquid positions," "Which HIP-3 venues are available?", "How did my account perform this month?", "Chart BTC perps for 24 hours," and "What is the ETH book?" Ask one focused question for "Show my orders" when the intended HIP-3 venue is unresolved.
 
-Do not activate for “How does perpetual funding work?” or “Compare derivatives regulations.” A request such as “Open a 1 ETH long” is a write handoff, not a completed order.
+Do not activate for "How does perpetual funding work?" or "Compare derivatives regulations." For "Open a 1 ETH long", say this skill only researches and call no tools.

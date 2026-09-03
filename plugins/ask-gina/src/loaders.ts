@@ -4,7 +4,6 @@ import {
   ASK_GINA_SKILL_DEFINITIONS,
   PRODUCTION_MCP_URL,
   READ_SCOPE,
-  buildExecutionHandoffUrl,
   type AskGinaSkillDefinition,
   type SkillName,
 } from "@askgina/contracts";
@@ -209,26 +208,12 @@ const validateSkillDocument = (
       for (const toolName of definition.tools) {
         if (!document.content.includes(`\`${toolName}\``)) {
           return Effect.fail(
-            pluginSourceLoadError(
-              document.path,
-              `does not document required read tool ${toolName}`,
-            ),
+            pluginSourceLoadError(document.path, `does not document required tool ${toolName}`),
           );
         }
       }
 
-      const handoffUrl = buildExecutionHandoffUrl(
-        definition.handoffAgent,
-        definition.handoffExamplePrompt,
-      );
-      return document.content.includes(handoffUrl)
-        ? Effect.succeed({ definition, path: document.path, content: document.content })
-        : Effect.fail(
-            pluginSourceLoadError(
-              document.path,
-              "does not document the canonical execution handoff",
-            ),
-          );
+      return Effect.succeed({ definition, path: document.path, content: document.content });
     }),
   );
 
