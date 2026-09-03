@@ -266,22 +266,19 @@ export const GINA_READ_TOOL_CATALOG = [
 
 export type GinaReadToolName = (typeof GINA_READ_TOOL_CATALOG)[number]["name"];
 
-export const GINA_PREDICTION_RENDER_TOOL_NAMES = [
-  "predictions.renderPredictionPodium",
-  "predictions.renderPredictionBinaryMarket",
-  "predictions.renderPredictionCollection",
-] as const;
+export const GINA_DYNAMIC_WIDGET_TOOL = "gina.renderReadOnlyDashboard" as const;
+export type GinaDynamicWidgetTool = typeof GINA_DYNAMIC_WIDGET_TOOL;
 
-export type GinaPredictionRenderToolName = (typeof GINA_PREDICTION_RENDER_TOOL_NAMES)[number];
+export const isGinaDynamicWidgetTool = (name: unknown): name is GinaDynamicWidgetTool =>
+  name === GINA_DYNAMIC_WIDGET_TOOL;
 
-export const isGinaPredictionRenderToolName = (
-  name: unknown,
-): name is GinaPredictionRenderToolName =>
-  name === "predictions.renderPredictionPodium" ||
-  name === "predictions.renderPredictionBinaryMarket" ||
-  name === "predictions.renderPredictionCollection";
+export const GINA_RENDER_TOOL_NAMES = [GINA_DYNAMIC_WIDGET_TOOL] as const;
+export type GinaRenderToolName = (typeof GINA_RENDER_TOOL_NAMES)[number];
 
-export type AskGinaSkillToolName = GinaReadToolName | GinaPredictionRenderToolName;
+export const isGinaRenderToolName = (name: unknown): name is GinaRenderToolName =>
+  name === GINA_DYNAMIC_WIDGET_TOOL;
+
+export type AskGinaSkillToolName = GinaReadToolName | GinaRenderToolName;
 
 export const GINA_CLOSED_WORLD_READ_TOOL_NAMES = [
   "gina.getAccountAddresses",
@@ -321,6 +318,16 @@ export const listCatalogToolNames = (): readonly GinaReadToolName[] => catalogTo
 export const isGinaReadToolName = (name: unknown): name is GinaReadToolName =>
   typeof name === "string" && catalogToolNames.includes(name as GinaReadToolName);
 
+export const GINA_CONNECTED_TOOL_NAMES = [...catalogToolNames, GINA_DYNAMIC_WIDGET_TOOL] as const;
+
+export type GinaConnectedToolName = (typeof GINA_CONNECTED_TOOL_NAMES)[number];
+
+export const isGinaConnectedToolName = (name: unknown): name is GinaConnectedToolName =>
+  isGinaReadToolName(name) || isGinaDynamicWidgetTool(name);
+
+export const listConnectedToolNames = (): readonly GinaConnectedToolName[] =>
+  GINA_CONNECTED_TOOL_NAMES;
+
 export const getGinaReadToolFamily = (name: GinaReadToolName): GinaMcpAppFamily =>
   name.startsWith("gina.") ? "portfolio" : (name.split(".", 1)[0] as GinaMcpAppFamily);
 
@@ -357,18 +364,6 @@ export type AskGinaSkillDefinition = Readonly<{
   tools: readonly AskGinaSkillToolName[];
 }>;
 
-const PREDICTION_SKILL_TOOLS = [
-  "predictions.searchPredictionMarkets",
-  "predictions.getPredictionOrderbook",
-  "predictions.fetchPolymarketData",
-  "predictions.fetchPolymarketHistory",
-  "predictions.getPolymarketPositions",
-  "predictions.getPolymarketOrderHistory",
-  "predictions.renderPredictionPodium",
-  "predictions.renderPredictionBinaryMarket",
-  "predictions.renderPredictionCollection",
-] as const satisfies readonly AskGinaSkillToolName[];
-
 export const ASK_GINA_SKILL_DEFINITIONS = [
   {
     name: "review-gina-account",
@@ -384,7 +379,7 @@ export const ASK_GINA_SKILL_DEFINITIONS = [
   },
   {
     name: "research-prediction-markets",
-    tools: PREDICTION_SKILL_TOOLS,
+    tools: familyTools("predictions"),
   },
 ] as const satisfies readonly AskGinaSkillDefinition[];
 

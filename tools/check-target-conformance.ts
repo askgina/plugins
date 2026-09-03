@@ -8,8 +8,8 @@ import {
   ASK_GINA_SKILL_DEFINITIONS,
   PRODUCTION_MCP_URL,
   RELEASE_VERSION,
-  isGinaPredictionRenderToolName,
   isGinaReadToolName,
+  isGinaRenderToolName,
 } from "@askgina/contracts";
 import {
   Data,
@@ -583,9 +583,7 @@ export const checkGeneratedTargetConformance: {
         `${target}.skills.contract_catalog`,
         `${target} skill definitions use only public catalog or renderer tools`,
         ASK_GINA_SKILL_DEFINITIONS.every((skill) =>
-          skill.tools.every(
-            (tool) => isGinaReadToolName(tool) || isGinaPredictionRenderToolName(tool),
-          ),
+          skill.tools.every((tool) => isGinaReadToolName(tool) || isGinaRenderToolName(tool)),
         ),
       );
 

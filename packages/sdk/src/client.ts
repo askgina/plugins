@@ -1,7 +1,9 @@
 import {
+  GINA_CONNECTED_TOOL_NAMES,
   GINA_READ_TOOL_CATALOG,
-  isGinaReadToolName,
+  isGinaConnectedToolName,
   PRODUCTION_MCP_URL,
+  type GinaConnectedToolName,
   type GinaReadToolName,
 } from "@askgina/contracts";
 import { Effect } from "effect";
@@ -51,29 +53,36 @@ export const createClient = (options: AskGinaClientOptions): AskGinaClient => {
         yield* requireAccessToken(options.accessToken);
         const tools = yield* transport.listTools();
         const observedNames = new Set<string>();
-        if (tools.length !== GINA_READ_TOOL_CATALOG.length) {
-          return yield* new AskGinaToolError({
-            message:
-              "Production Ask Gina tool catalog does not match the canonical read-tool catalog",
-          });
-        }
         for (const tool of tools) {
-          if (!isGinaReadToolName(tool.name) || observedNames.has(tool.name)) {
+          if (observedNames.has(tool.name)) {
             return yield* new AskGinaToolError({
-              message:
-                "Production Ask Gina tool catalog does not match the canonical read-tool catalog",
+              message: "Production Ask Gina tool catalog does not match the canonical tool catalog",
             });
           }
           observedNames.add(tool.name);
+        }
+
+        const matchesConnected =
+          observedNames.size === GINA_CONNECTED_TOOL_NAMES.length &&
+          GINA_CONNECTED_TOOL_NAMES.every((name: string) => observedNames.has(name));
+
+        const matchesReadCatalog =
+          observedNames.size === GINA_READ_TOOL_CATALOG.length &&
+          GINA_READ_TOOL_CATALOG.every((tool: { name: string }) => observedNames.has(tool.name));
+
+        if (!matchesConnected && !matchesReadCatalog) {
+          return yield* new AskGinaToolError({
+            message: "Production Ask Gina tool catalog does not match the canonical tool catalog",
+          });
         }
         return tools;
       }),
     callTool: (name, args = {}) =>
       Effect.gen(function* () {
         yield* requireAccessToken(options.accessToken);
-        if (!isGinaReadToolName(name)) {
+        if (!isGinaConnectedToolName(name)) {
           return yield* new AskGinaToolError({
-            message: `Unknown Ask Gina read tool: ${name}`,
+            message: `Unknown Ask Gina tool: ${name}`,
             tool: name,
           });
         }
@@ -84,3 +93,6 @@ export const createClient = (options: AskGinaClientOptions): AskGinaClient => {
 
 export const listCatalogToolNames = (): readonly GinaReadToolName[] =>
   GINA_READ_TOOL_CATALOG.map((tool) => tool.name);
+
+export const listConnectedToolNames = (): readonly GinaConnectedToolName[] =>
+  GINA_CONNECTED_TOOL_NAMES;
