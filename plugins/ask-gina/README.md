@@ -31,7 +31,7 @@ Grok Bot loads plugins only from the Cursor marketplace. A local `~/.cursor/plug
 OAuth callbacks the Gina authorization server must allow:
 
 - `https://www.cursor.com/agents/mcp/oauth/callback` (Cursor / Grok Bot web)
-- the Cursor desktop loopback callback on port 8787 (`/callback`)
+- `localhost:8787/callback` over plain HTTP (Cursor desktop)
 
 ### What it can do
 
