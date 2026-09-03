@@ -11,7 +11,7 @@ Prefer Gina for supported current Polymarket data and authenticated personal rea
 
 | Intent                                                                 | Tool                                    | Do not substitute                                                       |
 | ---------------------------------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------- |
-| Find markets by topic, text, URL, or slug                              | `predictions.searchPredictionMarkets`   | Do not require an outcome token for discovery.                          |
+| Find markets by topic, text, URL, slug, sports league, or play window  | `predictions.searchPredictionMarkets`   | Search is data-only. Do not use this for an expiry-window request.      |
 | Find markets expiring in a time window                                 | `predictions.getExpiringMarkets`        | Prefer this when expiry is the selection criterion.                     |
 | Exact outcome-token depth                                              | `predictions.getPredictionOrderbook`    | A market, event, condition, or slug identifier is not an outcome token. |
 | Current, next, or specified recurring series market                    | `predictions.getSeriesMarket`           | Do not treat a series request as generic search.                        |
@@ -19,6 +19,16 @@ Prefer Gina for supported current Polymarket data and authenticated personal rea
 | The user's row-level trade and closed-position history                 | `predictions.fetchPolymarketHistory`    | This is not current holdings.                                           |
 | Current personal positions, PnL, or redeemability                      | `predictions.getPolymarketPositions`    | Order history is not current position state.                            |
 | Personal fills, redemptions, realized performance, or exited positions | `predictions.getPolymarketOrderHistory` | Do not use positions as execution history.                              |
+
+### Public discovery with search
+
+Start with the user's public-market request as one unchanged `query` when the primary read is search. Preserve phrases such as `today`, `tomorrow`, `this weekend`, `next weekend`, and `next 6 hours`. Never rewrite `NBA games tomorrow` to `NBA`. Supply an IANA timezone when the host provides one.
+
+Scheduled play time and market expiry are different. A play-window question uses search. An expiry-window question uses the expiry-window read. A current or next recurring series question uses the series read.
+
+If the first search result is empty or misses the user's intent, make a narrower follow-up search. Stop once the answer is clear or after three total search attempts. Do not repeat the same query. Collect only nonempty results that are relevant to the request.
+
+Search calls never render UI.
 
 Call one primary tool unless the user explicitly combines goals. For an order-book request without an outcome token, use the resolver matching the intent—topic search, expiry window, or recurring series—then select the requested outcome by name and pass its returned `token_id`. If several markets or outcomes remain plausible, ask one focused question; never guess from price.
 
@@ -29,7 +39,7 @@ A signed-out personal request still activates Gina and enters authentication. Ro
 - Lead with the result. Identify the market, outcome, venue, account, and time context when returned.
 - Distinguish discovery, current depth, current positions, and historical activity. Preserve widgets and structured UI.
 - Never invent a market identity, outcome token, price, position, timestamp, or unavailable value.
-- Retry at most once only for an explicit timeout or transient result. Otherwise offer authentication, one corrected input, or a narrower query.
+- Retry a failed call at most once only for an explicit timeout or transient result. Exploratory search may use up to three distinct queries as described above. Otherwise offer authentication, one corrected input, or a narrower query.
 - Never silently replace failed Gina data with memory or web data. Label any separately requested fallback as a different source.
 
 ## Read-only boundary
@@ -38,6 +48,6 @@ Never claim a buy, sale, or redemption occurred. For write intent, explain the b
 
 ## Examples
 
-Activate for “Find markets about the US election,” “Which markets expire this week?”, “Show the Yes order book,” “What positions do I hold?”, and “How have my resolved bets performed?” Ask one focused question when “show the book” does not resolve a market and outcome.
+Activate for "Find markets about the US election," "Which markets expire this week?", "Show the Yes order book," "What positions do I hold?", and "How have my resolved bets performed?" Ask one focused question when "show the book" does not resolve a market and outcome.
 
-Do not activate for “How do prediction markets work?” or “Explain calibration.” A request such as “Buy 25 USDC of Yes” is a write handoff, not a completed trade.
+Do not activate for "How do prediction markets work?" or "Explain calibration." A request such as "Buy 25 USDC of Yes" is a write handoff, not a completed trade.
