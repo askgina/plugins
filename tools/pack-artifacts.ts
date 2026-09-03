@@ -7,7 +7,10 @@ import { Crypto, Data, Effect, FileSystem, Function, Layer, Path, Schema, Stream
 
 import { runHermeticEvalReplay, sanitizeEvalReplay } from "../packages/evals/src/index";
 import { copyCheckedRegularFile } from "./archive-security";
-import { checkGeneratedTargetConformance } from "./check-target-conformance";
+import {
+  CURSOR_LISTING_VERSION,
+  checkGeneratedTargetConformance,
+} from "./check-target-conformance";
 
 export const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini"] as const;
 export type Host = (typeof HOSTS)[number];
@@ -809,7 +812,9 @@ const validateVersions = (root: string) =>
       return yield* fail("plugin.yaml version is inconsistent");
     }
     const pluginRoot = path.join(root, "plugins/ask-gina");
-    yield* Effect.forEach(HOSTS, (host) => validateTargetVersion(pluginRoot, host, version));
+    yield* Effect.forEach(HOSTS, (host) =>
+      validateTargetVersion(pluginRoot, host, host === "cursor" ? CURSOR_LISTING_VERSION : version),
+    );
     return version;
   });
 

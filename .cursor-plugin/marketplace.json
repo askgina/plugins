@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Official Ask Gina plugins for Cursor and Grok Bot.",
-    "version": "0.1.0"
+    "version": "1.0.0"
   },
   "plugins": [
     {

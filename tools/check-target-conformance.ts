@@ -262,8 +262,11 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
   ],
 };
 
+export const CURSOR_LISTING_VERSION = "1.0.0";
+
 const validateManifest = (target: TargetName, manifest: unknown): boolean => {
-  if (nested(manifest, "name") !== "ask-gina" || nested(manifest, "version") !== RELEASE_VERSION) {
+  const expectedVersion = target === "cursor" ? CURSOR_LISTING_VERSION : RELEASE_VERSION;
+  if (nested(manifest, "name") !== "ask-gina" || nested(manifest, "version") !== expectedVersion) {
     return false;
   }
 
@@ -989,7 +992,7 @@ export const checkRepositoryConformance = (
         hasExactKeys(nested(cursorMarketplace, "owner"), ["name"]) &&
         nested(cursorMarketplace, "owner", "name") === "Ask Gina" &&
         hasExactKeys(nested(cursorMarketplace, "metadata"), ["description", "version"]) &&
-        nested(cursorMarketplace, "metadata", "version") === RELEASE_VERSION &&
+        nested(cursorMarketplace, "metadata", "version") === CURSOR_LISTING_VERSION &&
         hasExactKeys(cursorPlugin, ["name", "source", "description"]) &&
         nested(cursorPlugin, "name") === "ask-gina" &&
         nested(cursorPlugin, "source") === "./plugins/ask-gina";
