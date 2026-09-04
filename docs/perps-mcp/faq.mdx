@@ -1,0 +1,47 @@
+---
+title: "FAQ"
+description: "Frequently asked questions about Gina Perps MCP"
+---
+
+<AccordionGroup>
+  <Accordion title="What is Perps MCP?">
+    Perps MCP is an MCP server by Gina for Hyperliquid perpetual futures. It lets MCP clients use a sandboxed `bash` tool to inspect market data, manage positions, place orders, work with HIP-3 DEXes, and analyze fetched data.
+  </Accordion>
+
+  <Accordion title="Which MCP clients are supported?">
+    Any client that supports MCP over streamable HTTP:
+    - **Claude Code** via `claude mcp add`
+    - **Codex** via `bunx add-mcp` or `.codex/config.toml`
+    - **Cursor** via Settings -> MCP or `.cursor/mcp.json`
+    - **Windsurf** via Settings -> MCP
+    - **OpenCode** via `opencode mcp add`
+    - Any client supporting generic JSON MCP config
+  </Accordion>
+
+<Accordion title="Do I need a perps MCP feature flag?">
+  No. Perps MCP is default enabled for authenticated Gina users. You still need to sign in through
+  MCP OAuth or provide a token bound to the Perps MCP resource.
+</Accordion>
+
+<Accordion title="Why does a browser window open?">
+  That's the OAuth sign-in flow. Sign in to Gina and approve access for your MCP client, then return
+  to your client and retry `tools/list`.
+</Accordion>
+
+<Accordion title="What can I do with it?">
+  - Fetch Hyperliquid prices, markets, candles, trades, and order books - View account state,
+  positions, open orders, and portfolio details - Place, modify, and cancel perps orders - Adjust
+  leverage and isolated margin - Discover HIP-3 DEXes and work with provider-scoped markets - Move
+  funds into or out of supported Hyperliquid/HIP-3 flows
+</Accordion>
+
+<Accordion title="Is it safe?">
+  The MCP tool runs inside a sandboxed workspace, but perps trading is financially risky. Start with
+  read-only commands, check schemas before execution, and review order size, side, leverage, asset,
+  and provider context before trading.
+</Accordion>
+
+  <Accordion title="Where do I report issues?">
+    Start with [Troubleshooting](/perps-mcp/troubleshooting). If you're still stuck, reach out on [Twitter/X](https://x.com/askginadotai).
+  </Accordion>
+</AccordionGroup>

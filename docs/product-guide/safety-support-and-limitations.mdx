@@ -1,0 +1,101 @@
+---
+title: "Safety, Support & Limitations"
+description: "Read before a first send or when you need help."
+owner: "Ask Gina web team"
+lastReviewed: "2026-08-24"
+kind: "policy"
+includeInDocsAgent: false
+relatedSlugs:
+  - overview
+  - wallet-and-account
+  - transactions-and-portfolio
+  - market-research
+  - recipes-and-webhooks
+  - memory
+  - networks-fees-and-pricing
+  - leaderboard
+---
+
+# Safety, Support & Limitations
+
+You control the wallet and choose what it does. Ask Gina can help you review a transaction, but it cannot undo a finalized transfer or make a stale quote current.
+
+## Purpose
+
+Use this page before your first send or when you need help with a transaction, recipe, quote, or suspicious credential request.
+
+## Suitable Use Cases
+
+Review a send or swap. Check whether a transaction settled. Diagnose a failed recipe or questionable market result. Prepare a useful support request.
+
+## Prerequisites and Authentication
+
+Public docs and the logged-out Docs Agent answer general product questions. Sign in for balances, recipes, files, or a live transaction proposal.
+
+### Before your first send
+
+1. Ask Gina to build a review without broadcasting. Use "prepare," "quote," "draft," "do not execute," or "ready for review."
+2. Check the asset, amount, network, recipient, token contract, route, expected output, and network fee.
+3. Give a clear send or swap instruction only when you want same-turn execution.
+4. After execution, verify the transaction hash on a block explorer.
+
+## Safety Boundaries
+
+### Credentials and self-custody
+
+You hold custody of Gina Wallets. You choose recipients, approve token allowances, select networks, and manage exported keys. Support will never ask for a private key, seed phrase, password, access token, two-factor code, or one-time code. Never put a credential in chat, email, a ticket, a recipe, or Memory.
+
+Onchain transfers are irreversible. Nobody can recall funds sent to the wrong address or network.
+
+### Transaction review
+
+A clear send or swap instruction authorizes same-turn execution once Gina builds the transaction payload. To review details without broadcasting, include instructions like "prepare," "quote," "draft," "do not execute," or "ready for review." Quotes and routes expire. A chat confirmation is not proof of settlement. Check the transaction hash on a block explorer.
+
+### Research and market data
+
+Market feeds can be late, incomplete, or wrong. Citations identify the source Gina used. They do not guarantee that it is current or correct. Ask Gina does not give financial, legal, tax, or investment advice or promise profit.
+
+### Automations
+
+A scheduled recipe can run late or fail if a provider is down, the account changes, credits run out, or the input is invalid. Run the prompt once before scheduling it. Do not rely on an unattended recipe for urgent work.
+
+### Third-party services
+
+Authentication, market data, wallets, networks, search, and settlement rely on external providers. Their terms, rate limits, and availability apply. These docs do not override provider terms or blockchain rules.
+
+## Inputs for Support
+
+Send support the account or public wallet address, affected feature, network, approximate time, public transaction hash, and exact error text. You may attach a redacted screenshot. Never send credentials.
+
+## Expected Support Results
+
+Support can investigate product behavior, account access, documented capabilities, and available records. Support cannot reverse a finalized transfer, promise recovery, or take custody of a key.
+
+## Tested Examples
+
+### Suspicious credential request
+
+> A message says support needs my private key to fix a transaction. Should I send it?
+
+Expected result: No. Stop and use the official support page. Ask Gina Support does not need your private key or seed phrase.
+
+### Wrong-address transaction
+
+> Can Ask Gina reverse a finalized transfer sent to the wrong address?
+
+Expected result: No. A finalized blockchain transfer is generally irreversible. Ask Gina does not promise recovery.
+
+### Data quality concern
+
+> A market result in chat differs from the project's official page.
+
+Expected result: Compare the citation with the project's primary materials and identifiers. Do not act until you understand the difference.
+
+## Support and policy links
+
+- [Ask Gina Support](https://askgina.ai/support)
+- [Privacy Policy](https://askgina.ai/privacy-policy)
+- [Terms and Conditions](https://askgina.ai/terms-and-conditions)
+- [Predictions MCP](https://docs.askgina.ai/predictions-mcp) for MCP, SDK, authentication, and integration references
+
+Related product guidance: [Wallet & Account Management](/product-guide/wallet-and-account), [Transactions & Portfolio](/product-guide/transactions-and-portfolio), and [Recipes & Webhooks](/product-guide/recipes-and-webhooks). Return to the [Product Guide](/product-guide).

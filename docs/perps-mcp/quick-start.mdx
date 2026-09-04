@@ -1,0 +1,113 @@
+---
+title: "Quick Start"
+description: "Connect to Gina's Perps MCP and run your first Hyperliquid lookup"
+---
+
+Get connected and run your first perps market query.
+
+## 1. Add the Server
+
+Pick your client and run the install command:
+
+<Tabs>
+  <Tab title="Claude Code">
+    Run in your **terminal** (not inside Claude Code):
+
+    ```bash
+    claude mcp add perps \
+      --transport http \
+      https://askgina.ai/ai/perps/mcp
+    ```
+
+    Then restart Claude Code. Run `/mcp` inside Claude Code to check the server status and trigger sign-in.
+
+  </Tab>
+  <Tab title="Codex">
+    ```bash
+    bunx add-mcp "https://askgina.ai/ai/perps/mcp" \
+      --agent codex \
+      --name perps \
+      --transport http \
+      -y
+    ```
+  </Tab>
+  <Tab title="Cursor">
+    Open Cursor Settings -> MCP -> **Add new MCP server**, then paste:
+
+    - **Name:** `perps`
+    - **Type:** `http`
+    - **URL:** `https://askgina.ai/ai/perps/mcp`
+
+    Or add it to your `.cursor/mcp.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "perps": {
+          "type": "http",
+          "url": "https://askgina.ai/ai/perps/mcp"
+        }
+      }
+    }
+    ```
+
+  </Tab>
+  <Tab title="Windsurf">
+    Open Windsurf Settings -> MCP -> **Add Server**, then set:
+
+    - **Name:** `perps`
+    - **URL:** `https://askgina.ai/ai/perps/mcp`
+
+  </Tab>
+</Tabs>
+
+## 2. Connect & Sign In
+
+<Steps>
+  <Step title="Restart your client">
+    After adding the server, restart your MCP client or reload the window.
+  </Step>
+  <Step title="Sign in">
+    Your client will trigger the OAuth flow. Sign in to Gina and approve access.
+  </Step>
+  <Step title="Verify">
+    Once authenticated, `bash` will appear alongside your client's built-in tools. Try asking your
+    AI assistant: *"What tools do you have from the perps server?"*
+  </Step>
+</Steps>
+
+## 3. Run First Checks
+
+Call `bash` with:
+
+```json
+{ "command": "echo ok" }
+```
+
+You should see `ok` in the output.
+
+Then inspect the sandbox and host tools:
+
+```json
+{ "command": "capabilities --json" }
+```
+
+```json
+{ "command": "host-tools --brief" }
+```
+
+## 4. Get a Perps Price
+
+Run a live Hyperliquid price lookup:
+
+```json
+{ "command": "host-tools getHyperliquidPrice '{\"asset\":\"BTC\"}'" }
+```
+
+You should see JSON output with current BTC perpetual futures price data.
+
+## Next Steps
+
+- [What You Can Do](/perps-mcp/features) - full features with example prompts
+- [Client Setup](/perps-mcp/client-setup) - detailed config for every client
+- [Troubleshooting](/perps-mcp/troubleshooting) - smoke test and common fixes

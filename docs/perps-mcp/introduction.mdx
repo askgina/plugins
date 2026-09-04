@@ -1,0 +1,44 @@
+---
+title: "Introduction"
+description: "What Perps MCP is and when to use it"
+---
+
+Perps MCP is Gina's dedicated MCP server for Hyperliquid perpetual futures. It exposes a sandboxed `bash` tool that can discover and call allowlisted perps host tools for market data, account state, trading, HIP-3 DEX workflows, funding, and SQL analysis.
+
+## How It Works
+
+Your MCP client connects to:
+
+```
+https://askgina.ai/ai/perps/mcp
+```
+
+After OAuth sign-in, the client receives one MCP tool: `bash`. Inside that sandbox, use commands such as `capabilities`, `host-tools`, `sql`, and `ts-exec` to inspect the tool surface and run perps workflows.
+
+<CardGroup cols={3}>
+  <Card title="Discover" icon="search">
+    Search canonical Hyperliquid and HIP-3 markets, inspect prices, funding, open interest, and
+    order books.
+  </Card>
+  <Card title="Trade" icon="chart-candlestick">
+    Place, modify, and cancel orders; set stops; adjust leverage and isolated margin.
+  </Card>
+  <Card title="Analyze" icon="database">
+    Fetch trades, candles, and order books into the sandbox, then query them with SQL.
+  </Card>
+</CardGroup>
+
+## Default Access
+
+Perps MCP is default enabled for authenticated Gina users. Runtime access is controlled by MCP authentication, not by a perps-specific feature flag.
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/perps-mcp/quick-start">
+    Connect and run a first verification flow.
+  </Card>
+  <Card title="What You Can Do" icon="sparkles" href="/perps-mcp/features">
+    See the full feature reference with example prompts and direct commands.
+  </Card>
+</CardGroup>

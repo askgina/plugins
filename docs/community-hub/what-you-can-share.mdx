@@ -1,0 +1,62 @@
+---
+title: "What You Can Share"
+description: "Accepted submission types and submission scope"
+---
+
+We currently accept community entries that demonstrate real user-facing outcomes built with these submission types:
+
+## Accepted submission types (v0)
+
+- `strategy`
+- `recipe`
+- `workflow`
+- `skill`
+- `filesystem`
+
+## Quick type decision table
+
+| If your submission is mainly...      | Pick         |
+| ------------------------------------ | ------------ |
+| decision logic and state transitions | `strategy`   |
+| runnable automation artifact         | `recipe`     |
+| multi-step orchestration flow        | `workflow`   |
+| reusable agent capability pattern    | `skill`      |
+| file structure/templates/assets      | `filesystem` |
+
+Canonical type definitions for reviewers live in:
+
+- `specs/awesome-gina-org-structure/07-capability-schema.md#canonical-submission-type-definitions-source-of-truth`
+
+## What a strategy means here
+
+- A strategy is the main shareable outcome concept (for example, PnL strategies).
+- A strategy can reference implementation primitives (for example recipe definitions) when that improves clarity.
+- For strategy entries, include strategy state transitions when behavior changes over time.
+
+## Good submissions look like
+
+- A clear problem statement and outcome.
+- Reproducible setup steps.
+- Explicit capability contract (trigger, inputs, outputs, side effects).
+- Honest safety and permission notes.
+
+## Minimum required details
+
+- Name and one-line summary
+- Submission type and category
+- Trigger conditions (when applicable)
+- Inputs and outputs (when applicable)
+- Side effects and failure modes
+- Repo/homepage link and license
+- Auth model and required permissions
+
+## Out of scope
+
+- Placeholder ideas without implementation detail
+- Content with missing ownership/licensing context
+- Entries that hide financial/security side effects
+- Secrets or private credentials in examples
+
+## Next
+
+- [Capability Template](/community-hub/capability-template)

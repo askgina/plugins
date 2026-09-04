@@ -1,0 +1,134 @@
+---
+title: "Troubleshooting"
+description: "Verify your connection and fix common issues with Gina Predictions MCP"
+---
+
+## Smoke Test
+
+A quick checklist to verify everything is working.
+
+### Prerequisites
+
+<Check>Your MCP client is installed and running</Check>
+<Check>You've added `https://askgina.ai/ai/predictions/mcp` as a server</Check>
+<Check>You can open a browser for OAuth sign-in</Check>
+
+### Run These Commands
+
+<Steps>
+  <Step title="Echo test">
+    ```json
+    { "command": "echo ok" }
+    ```
+    <Check>Expected: `ok`</Check>
+  </Step>
+  <Step title="List available commands">
+    ```json
+    { "command": "commands --help host-tools" }
+    ```
+    <Check>Expected: help text describing host-tools usage</Check>
+  </Step>
+  <Step title="Find a host tool">
+    ```json
+    { "command": "host-tools --name searchPredictionMarkets --limit 5 --full" }
+    ```
+    <Check>Expected: JSON output including `searchPredictionMarkets` tool details</Check>
+  </Step>
+  <Step title="Search prediction markets">
+    ```json
+    { "command": "host-tools searchPredictionMarkets '{\"query\":\"NBA\"}'" }
+    ```
+    <Check>Expected: JSON output with live market data</Check>
+  </Step>
+</Steps>
+
+All checks pass? You're fully connected!
+
+---
+
+## Common Issues
+
+### 1. Check the Server URL
+
+Make sure your MCP client is using this exact URL:
+
+```
+https://askgina.ai/ai/predictions/mcp
+```
+
+<Warning>
+  If the URL is different (even slightly), remove the server and add it again with the correct URL.
+</Warning>
+
+### 2. Sign-In Not Working
+
+<Steps>
+  <Step title="Trigger auth">
+    Your client should trigger OAuth automatically. If not: - **Claude Code:** run `/mcp` and pick
+    `predictions` - **Codex:** run `codex mcp login predictions` - **Cursor:** go to Settings → MCP
+    and check status
+  </Step>
+  <Step title="Complete sign-in">Sign in to Gina in the browser window that opens.</Step>
+  <Step title="Approve access">Click "Approve" when prompted.</Step>
+  <Step title="Retry">
+    Return to your MCP client — `bash` should now appear as an available tool.
+  </Step>
+</Steps>
+
+### 3. No Browser Window Opens
+
+Some MCP clients show a sign-in link or "Authorize" button instead of opening a browser automatically.
+
+- Look in your client UI for an auth link and follow it
+- Try these client-specific commands:
+
+<Tabs>
+  <Tab title="Claude Code">Start `claude`, then run `/mcp` and pick `predictions`.</Tab>
+  <Tab title="Codex">```bash codex mcp login predictions ```</Tab>
+  <Tab title="Cursor">
+    Restart Cursor, then open any chat and ask to use the predictions tool. The OAuth flow should
+    trigger.
+  </Tab>
+  <Tab title="OpenCode">```bash opencode mcp auth predictions ```</Tab>
+</Tabs>
+
+### 4. Signed In But No Tools
+
+If you signed in but no `bash` tool appears:
+
+<Steps>
+  <Step title="Remove the server">Remove `predictions` from your MCP client.</Step>
+  <Step title="Re-add it">
+    Add the server again with URL `https://askgina.ai/ai/predictions/mcp`.
+  </Step>
+  <Step title="Re-authenticate">Restart your client and complete the sign-in flow again.</Step>
+</Steps>
+
+### 5. Commands Fail
+
+First, verify the basics work:
+
+```json
+{ "command": "echo ok" }
+```
+
+If that succeeds, check what's available:
+
+```json
+{ "command": "commands --help host-tools" }
+```
+
+<Tip>
+  If a specific command fails, check that your input JSON is valid. A common issue is missing or
+  mismatched quotes in the JSON argument.
+</Tip>
+
+### 6. Connection Timeout
+
+- Check your internet connection
+- Try a different network (VPN or corporate firewalls can block MCP connections)
+- Ensure the server URL uses `https://` (not `http://`)
+
+## Still Stuck?
+
+Check the [FAQ](/predictions-mcp/faq) or reach out on [Twitter/X](https://x.com/askginadotai).

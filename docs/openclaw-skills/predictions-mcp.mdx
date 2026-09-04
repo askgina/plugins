@@ -1,0 +1,123 @@
+---
+title: "askgina-polymarket"
+description: "Copy-paste setup for Polymarket via Gina in OpenClaw"
+---
+
+Search, analyze, and trade on prediction markets (Polymarket) from OpenClaw.
+
+**Skill ID:** `askgina-polymarket`
+
+## Dead-Easy Setup
+
+<Steps>
+  <Step title="Install the skill">
+    ```bash
+    clawhub install askgina-polymarket
+    ```
+  </Step>
+  <Step title="Generate a token in Gina">
+    Open `https://askgina.ai/agent-setup`, click **Generate Token**, and copy it.
+  </Step>
+  <Step title="Paste this into your OpenClaw MCP config">
+    ```json
+    {
+      "mcpServers": {
+        "gina-predictions": {
+          "url": "https://askgina.ai/ai/predictions/mcp",
+          "headers": {
+            "Authorization": "Bearer synthetic-fixture"
+          }
+        }
+      }
+    }
+    ```
+    Replace `synthetic-fixture` with the token you copied from Gina.
+  </Step>
+  <Step title="Restart OpenClaw and run a smoke test">
+    Ask your agent:
+    - `what tools do you have from gina-predictions?`
+    - `search NBA markets on Polymarket`
+  </Step>
+</Steps>
+
+<Note>
+  - Use `https://askgina.ai/ai/predictions/mcp` (not `/ai/gina/mcp`) - If testing alpha, replace
+  `askgina.ai` with `alpha.askgina.ai` - If your client supports transport mode, use `http-only`
+</Note>
+
+## Install (Manual Alternative)
+
+Install via [ClawHub](https://clawhub.ai):
+
+```bash
+clawhub install askgina-polymarket
+```
+
+Or manually place the skill in your workspace:
+
+```bash
+mkdir -p ./skills/askgina-polymarket
+```
+
+Then create `./skills/askgina-polymarket/SKILL.md`:
+
+```markdown
+---
+name: askgina-polymarket
+description: Scan, filter, trade and automate Polymarket strategies with your own agent.
+metadata: { "openclaw": { "requires": { "env": [] } } }
+---
+
+# Polymarket via Gina
+
+Connects to Gina's Predictions MCP server for Polymarket prediction market access.
+
+## Server URL
+
+https://askgina.ai/ai/predictions/mcp
+
+## Auth
+
+Bearer token from `https://askgina.ai/agent-setup`.
+```
+
+OpenClaw will pick up the skill on the next session. See the [OpenClaw skills docs](https://docs.openclaw.ai/tools/skills) for more on skill loading, precedence, and configuration.
+
+## What You Can Do
+
+| Feature               | Example Prompts                                                                 |
+| --------------------- | ------------------------------------------------------------------------------- |
+| **Getting started**   | `"What can you do Gina"` `"Give me some use cases I can try with the Gina MCP"` |
+| **Search markets**    | `"NBA markets tomorrow"` `"Trump election odds"`                                |
+| **Trending**          | `"what's trending on Polymarket?"` `"what are people betting on?"`              |
+| **Crypto price bets** | `"BTC 15 minute up or down"` `"ETH hourly prediction"`                          |
+| **Stocks & indices**  | `"AAPL daily up or down"` `"S&P 500 daily"`                                     |
+| **Expiring markets**  | `"markets ending in 2 hours"` `"NBA games ending tonight"`                      |
+| **Place trades**      | `"bet $5 on eagles to win"` `"buy 100 YES shares"`                              |
+| **Limit orders**      | `"buy Yes at 0.40 or better"` `"avoid slippage"`                                |
+| **View positions**    | `"show my Polymarket positions"` `"what's my P&L?"`                             |
+| **Performance**       | `"what's my win rate?"` `"show my trade history"`                               |
+| **Manage orders**     | `"show my open orders"` `"cancel all pending orders"`                           |
+| **Redeem winnings**   | `"redeem my winnings"` `"what can I redeem?"`                                   |
+| **Data analysis**     | `"fetch crypto markets into SQL"` `"run a query"`                               |
+| **Automations**       | `"daily market briefing at 9am"` `"alert me on swings"`                         |
+
+<Card
+  title="Full features guide with all example prompts →"
+  icon="sparkles"
+  href="/predictions-mcp/features"
+>
+  See the complete breakdown with copy-paste prompts for every capability.
+</Card>
+
+## Safety
+
+<Note>
+  - Trading uses real money (USDC on Polygon) — always review before confirming - Start with
+  read-only commands (search, trending) before trading - Large trades require explicit confirmation
+  - Treat third-party skills as untrusted code — review before enabling
+</Note>
+
+## Also Available as MCP
+
+If you're not using OpenClaw, you can connect directly via MCP from Claude Code, Codex, Cursor, or any MCP client. See the [Predictions MCP Quick Start](/predictions-mcp/quick-start).

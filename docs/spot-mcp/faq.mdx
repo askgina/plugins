@@ -1,0 +1,41 @@
+---
+title: "FAQ"
+description: "Frequently asked questions about Spot MCP"
+---
+
+<AccordionGroup>
+  <Accordion title="Is Spot MCP the same as Gina MCP?">
+    No. Gina MCP at `/ai/gina/mcp` is cross-market and read-only. Spot MCP at `/ai/spot/mcp` is
+    venue-scoped write access with 23 native tools and a sandboxed `bash` fallback.
+  </Accordion>
+  <Accordion title="What can Spot MCP write?">
+    It can prepare swaps and transfers, execute approved supertransactions, and manage scheduled
+    prompts. Its full host-tool boundary is listed on the [Features and
+    Allowlist](/spot-mcp/features) page.
+  </Accordion>
+  <Accordion title="Can Spot MCP trade Predictions or Perps?">
+    No. Connect the Predictions or Perps MCP separately for those markets.
+  </Accordion>
+  <Accordion title="Why does Spot include both native tools and bash?">
+    Native tools are the fast path for ordinary reads and transactions. `bash` remains available for
+    scripts, files, SQL, short waits, and composed workflows. Its host-tool allowlist matches the 23
+    native tools.
+  </Accordion>
+  <Accordion title="Do I have to type confirm execute?">
+    No. A complete imperative transaction request authorizes preparation and execution. If
+    preparation reveals a material new term, the agent asks one normal question. A normal answer
+    such as `yes` or `retry` is enough. Your MCP client or wallet may still show its own approval
+    UI.
+  </Accordion>
+  <Accordion title="What does Spot report after a swap?">
+    The agent checks the submitted hash against swap history and portfolio state for up to 20
+    seconds. A landed receipt reports the exact recorded amount spent and received. If settlement is
+    still indexing, Spot reports the transaction as submitted/pending and labels quote amounts as
+    estimates.
+  </Accordion>
+  <Accordion title="Is Spot MCP enabled for every account?">
+    Not automatically. Access is controlled by one global database-backed `mcp_spot_enabled` rollout
+    flag. A true row enables authenticated accounts; a false, missing, or unavailable row denies
+    them all.
+  </Accordion>
+</AccordionGroup>

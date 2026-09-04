@@ -1,0 +1,63 @@
+---
+title: "OpenClaw Skills"
+description: "Gina skills for OpenClaw with dead-simple setup"
+---
+
+Gina publishes skills on [ClawHub](https://clawhub.ai) for [OpenClaw](https://docs.openclaw.ai/tools/skills). Install them in one command and start using them immediately.
+
+## Available Skills
+
+<CardGroup cols={2}>
+  <Card title="Gina Read (Coming Soon)" icon="shield" href="/openclaw-skills/gina-mcp">
+    Safe-mode research and account reads across Spot, Predictions, and Perps.
+  </Card>
+  <Card title="Spot MCP" icon="coins" href="/openclaw-skills/spot-mcp">
+    Token research, swaps, transfers, transaction execution, and scheduling.
+  </Card>
+  <Card title="askgina-polymarket" icon="chart-line" href="/openclaw-skills/predictions-mcp">
+    Search and trade on prediction markets (Polymarket). Sports, politics, crypto, and more.
+  </Card>
+  <Card title="askgina-perps" icon="chart-candlestick" href="/openclaw-skills/perps-mcp">
+    Perpetual futures trading on Hyperliquid. Price feeds, positions, and execution.
+  </Card>
+</CardGroup>
+
+## How It Works
+
+<Steps>
+  <Step title="Install">
+    Install a skill via ClawHub:
+
+    ```bash
+    clawhub install askgina-polymarket
+    ```
+
+    Or manually place a `SKILL.md` in `./skills/askgina-polymarket/`. See the [OpenClaw skills docs](https://docs.openclaw.ai/tools/skills) for loading and precedence.
+
+  </Step>
+  <Step title="Authenticate">
+    Generate a token at `https://askgina.ai/agent-setup`, then add it as a Bearer header in your OpenClaw MCP config.
+  </Step>
+  <Step title="Use">
+    Just prompt your agent in natural language:
+
+    ```
+    "what's trending on Polymarket?"
+    "bet $5 on eagles to win tonight"
+    "show my positions"
+    ```
+
+  </Step>
+</Steps>
+
+## Safety
+
+<Warning>
+  - Treat third-party skills as untrusted code — review `SKILL.md` before enabling - Financial
+  actions (trading) require explicit confirmation for large orders - Start with read-only prompts
+  (search, trending) before trading
+</Warning>
+
+## Not Using OpenClaw?
+
+You can also connect directly from any MCP client. Start with [Choose Your MCP Access](/mcp-access), then use the setup guide for Spot, Predictions, or Perps.

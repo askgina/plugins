@@ -1,0 +1,103 @@
+---
+title: "Troubleshooting"
+description: "Verify your connection and fix common issues with Gina Perps MCP"
+---
+
+## Smoke Test
+
+### Prerequisites
+
+<Check>Your MCP client is installed and running</Check>
+<Check>You've added `https://askgina.ai/ai/perps/mcp` as a server</Check>
+<Check>You can open a browser for OAuth sign-in</Check>
+
+### Run These Commands
+
+<Steps>
+  <Step title="Echo test">
+    ```json
+    { "command": "echo ok" }
+    ```
+    <Check>Expected: `ok`</Check>
+  </Step>
+  <Step title="List available commands">
+    ```json
+    { "command": "commands --help host-tools" }
+    ```
+    <Check>Expected: help text describing host-tools usage</Check>
+  </Step>
+  <Step title="Find a host tool">
+    ```json
+    { "command": "host-tools --name getHyperliquidPrice --limit 5 --full" }
+    ```
+    <Check>Expected: JSON output including `getHyperliquidPrice` tool details</Check>
+  </Step>
+  <Step title="Fetch a price">
+    ```json
+    { "command": "host-tools getHyperliquidPrice '{\"asset\":\"BTC\"}'" }
+    ```
+    <Check>Expected: JSON output with live BTC perps price data</Check>
+  </Step>
+</Steps>
+
+## Common Issues
+
+### 1. Check the Server URL
+
+Make sure your MCP client is using this exact URL:
+
+```
+https://askgina.ai/ai/perps/mcp
+```
+
+### 2. Sign-In Not Working
+
+<Steps>
+  <Step title="Trigger auth">
+    Your client should trigger OAuth automatically. If not:
+    - **Claude Code:** run `/mcp` and pick `perps`
+    - **Codex:** run `codex mcp login perps`
+    - **Cursor:** go to Settings -> MCP and check status
+  </Step>
+  <Step title="Complete sign-in">
+    Sign in to Gina in the browser window that opens.
+  </Step>
+  <Step title="Retry tools/list">
+    Return to your MCP client. `bash` should appear as an available tool.
+  </Step>
+</Steps>
+
+### 3. Signed In But No Tools
+
+If you signed in but no `bash` tool appears, remove the `perps` server from your client, re-add it with the URL above, restart the client, and authenticate again.
+
+### 4. Host Tool Input Fails
+
+Check the schema before retrying:
+
+```json
+{ "command": "host-tools schema getHyperliquidPrice" }
+```
+
+<Tip>
+  Most failures are malformed JSON, an asset symbol mismatch, or missing HIP-3 `providerContext` for
+  provider-scoped tools.
+</Tip>
+
+### 5. Trading or Funding Is Not What You Intended
+
+Stop and inspect state before continuing:
+
+```json
+{ "command": "host-tools getHyperliquidPositions" }
+```
+
+```json
+{ "command": "host-tools getHyperliquidOpenOrders" }
+```
+
+Perps MCP is default enabled for authenticated users, but financial actions still use the underlying tool confirmations and risk checks.
+
+## Still Stuck?
+
+Check the [FAQ](/perps-mcp/faq) or reach out on [Twitter/X](https://x.com/askginadotai).

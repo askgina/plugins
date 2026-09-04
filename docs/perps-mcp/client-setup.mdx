@@ -1,0 +1,167 @@
+---
+title: "Client Setup"
+description: "Configure any MCP client to connect to Gina's Perps MCP"
+---
+
+Detailed setup instructions for supported MCP clients.
+
+## Server URL
+
+All clients use the same URL:
+
+```
+https://askgina.ai/ai/perps/mcp
+```
+
+Perps MCP is default enabled for authenticated Gina users. No separate perps MCP feature flag is required.
+
+## Setup by Client
+
+<Tabs>
+  <Tab title="Claude Code">
+    ### Quick Install
+
+    Run in your **terminal**:
+
+    ```bash
+    claude mcp add perps \
+      --transport http \
+      https://askgina.ai/ai/perps/mcp
+    ```
+
+    Then restart Claude Code. Inside Claude Code, run `/mcp` to see server status and trigger OAuth sign-in.
+
+    ### Manual Config
+
+    Add to `~/.claude/settings.json` or your project's `.claude/settings.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "perps": {
+          "transport": "http",
+          "url": "https://askgina.ai/ai/perps/mcp"
+        }
+      }
+    }
+    ```
+
+  </Tab>
+  <Tab title="Codex">
+    ### Quick Install
+
+    ```bash
+    bunx add-mcp "https://askgina.ai/ai/perps/mcp" \
+      --agent codex \
+      --name perps \
+      --transport http \
+      -y
+    ```
+
+    ### Manual Config
+
+    Add to `.codex/config.toml`:
+
+    ```toml
+    [mcp_servers.perps]
+    type = "http"
+    url = "https://askgina.ai/ai/perps/mcp"
+    ```
+
+  </Tab>
+  <Tab title="Cursor">
+    ### Option A: Settings UI
+
+    1. Open **Cursor Settings**
+    2. Navigate to **MCP**
+    3. Click **Add new MCP server**
+    4. Enter:
+       - **Name:** `perps`
+       - **Type:** `http`
+       - **URL:** `https://askgina.ai/ai/perps/mcp`
+    5. Save and reload Cursor.
+
+    ### Option B: Config File
+
+    Add to `.cursor/mcp.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "perps": {
+          "type": "http",
+          "url": "https://askgina.ai/ai/perps/mcp"
+        }
+      }
+    }
+    ```
+
+  </Tab>
+  <Tab title="Windsurf">
+    1. Open **Windsurf Settings**
+    2. Navigate to **MCP**
+    3. Click **Add Server**
+    4. Enter:
+       - **Name:** `perps`
+       - **URL:** `https://askgina.ai/ai/perps/mcp`
+    5. Save and restart.
+  </Tab>
+  <Tab title="OpenCode">
+    ```bash
+    opencode mcp add perps \
+      --transport http \
+      https://askgina.ai/ai/perps/mcp
+    ```
+  </Tab>
+  <Tab title="Generic JSON">
+    For any MCP client that supports JSON config:
+
+    ```json
+    {
+      "mcpServers": {
+        "perps": {
+          "transport": "http",
+          "url": "https://askgina.ai/ai/perps/mcp"
+        }
+      }
+    }
+    ```
+
+  </Tab>
+</Tabs>
+
+## Sign In
+
+<Steps>
+  <Step title="Restart your client">
+    Restart your MCP client so it picks up the new server configuration.
+  </Step>
+  <Step title="Trigger auth">
+    Your client will usually trigger OAuth automatically. If it does not:
+    - **Cursor:** Go to Settings -> MCP and check server status
+    - **Claude Code:** Run `/mcp` inside Claude Code and select `perps`
+    - **Codex:** Run `codex mcp login perps`
+  </Step>
+  <Step title="Browser sign-in">
+    Sign in to Gina in the browser window that opens and approve access.
+  </Step>
+  <Step title="Verify">
+    Back in your client, `bash` should now appear as an available tool.
+  </Step>
+</Steps>
+
+## Verify It Works
+
+After signing in, run:
+
+```json
+{ "command": "echo ok" }
+```
+
+Then try a market data call:
+
+```json
+{ "command": "host-tools getHyperliquidPrice '{\"asset\":\"BTC\"}'" }
+```
+
+<Check>If you see JSON price data, you're connected.</Check>

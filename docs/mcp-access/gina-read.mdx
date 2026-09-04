@@ -1,0 +1,28 @@
+---
+title: "Gina Read"
+description: "Safe-mode research across Spot, Predictions, and Perps"
+---
+
+Gina Read is the read-only MCP connection for cross-market research and account visibility.
+
+## Server URL
+
+```
+https://askgina.ai/ai/gina/mcp
+```
+
+It requests `tools:read` and lists named tools for Spot prices and charts, Hyperliquid state, prediction markets, cross-chain holdings, linked addresses, and scheduled-prompt visibility.
+
+<Check>No `bash` tool</Check>
+<Check>No swap, transfer, trade, funding, or scheduling mutations</Check>
+<Check>One connection for reads across all three markets</Check>
+
+## When You Need to Write
+
+Add only the venue-specific server you need:
+
+- [Spot MCP](/spot-mcp) for swaps, transfers, transaction execution, and Spot scheduling
+- [Predictions MCP](/predictions-mcp) for Polymarket execution
+- [Perps MCP](/perps-mcp) for Hyperliquid and HIP-3 execution
+
+Existing execute-scoped Gina credentials cannot be used on Gina Read. Reconnect through OAuth to receive a read-scoped token.

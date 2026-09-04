@@ -1,0 +1,42 @@
+---
+title: "Publish Flow"
+description: "How submissions become Community Hub entries"
+---
+
+Publishing currently uses a manual PR flow so quality gates stay simple and explicit.
+
+Reviewer source of truth:
+
+- `specs/awesome-gina-org-structure/07-capability-schema.md#canonical-submission-type-definitions-source-of-truth`
+
+## Current v0 flow
+
+<Steps>
+  <Step title="Create submission">
+    Choose one submission type (`strategy`, `recipe`, `workflow`, `skill`, `filesystem`) and fill
+    the template with setup and evidence links. For strategy/recipe entries, include triggers plus
+    strategy state transitions when relevant.
+  </Step>
+  <Step title="Open PR">Open a PR to `askgina/awesome-gina` with your entry.</Step>
+  <Step title="Run checks">
+    Maintainers and CI validate required fields, links, and safety details.
+  </Step>
+  <Step title="Review and decision">
+    Maintainers request changes, approve, or reject with clear reasons.
+  </Step>
+</Steps>
+
+## Review labels you will see
+
+- `unverified` (default for merged entries)
+- `needs-info`
+- `security-review`
+- `verified` (after maintainer validation)
+- `stale`
+
+## Tips for fast approval
+
+- Be specific about side effects.
+- Include realistic prompts/examples.
+- Keep setup concise and reproducible.
+- Add clear permission scope.

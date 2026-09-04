@@ -1,0 +1,47 @@
+---
+title: "Recipes & Webhooks"
+description: "Test a prompt, then run it yourself, on a schedule, or from a webhook."
+owner: "Ask Gina web team"
+lastReviewed: "2026-08-24"
+kind: "guide"
+includeInDocsAgent: true
+relatedSlugs:
+  - overview
+  - market-research
+  - memory
+  - safety-support-and-limitations
+---
+
+# Recipes & Webhooks
+
+## Purpose
+
+Automate a prompt that works in chat. First, run it once and check the answer. Then save it as a recipe.
+
+## Suitable Use Cases
+
+Recurring research, alerts, summaries, or Memory writes.
+
+## Prerequisites and Authentication
+
+Sign in and check credits and permissions. For prediction-market automation in coding clients, see [Predictions MCP](https://docs.askgina.ai/predictions-mcp).
+
+## Inputs and Expected Results
+
+1. Run the prompt in chat.
+2. Add a schedule or connect a supported webhook. Set a time for a schedule. A webhook needs a supported event, valid signature, and payload.
+3. Check the recorded result after each run.
+
+## Tested Example
+
+> Each weekday, summarize this project's official announcements with links.
+
+Expected: the tested prompt runs each weekday and records a result.
+
+## Limitations and Safety
+
+A source, timeout, usage limit, or bad webhook signature can fail a run. Accepted means queued, not finished. Runs can be late.
+
+Never put secrets in prompts or payloads. Do not rely on a recipe when a missed run could cause harm.
+
+Related: [Research](/product-guide/market-research), [Memory](/product-guide/memory), [Safety](/product-guide/safety-support-and-limitations), [Product Guide](/product-guide).

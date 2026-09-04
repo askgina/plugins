@@ -1,0 +1,98 @@
+---
+title: "Capability Template"
+description: "Schema and page template for community submissions"
+---
+
+Use this structure for every Community Hub submission.
+
+Canonical type definitions (source of truth for review semantics):
+
+- `specs/awesome-gina-org-structure/07-capability-schema.md#canonical-submission-type-definitions-source-of-truth`
+
+Fully worked examples:
+
+- `specs/awesome-gina-org-structure/17-worked-submission-examples.md`
+
+## Required metadata fields
+
+```yaml
+id: strategy-limit-order-alert
+name: Limit Order Alert Strategy
+type: strategy
+summary: Send Telegram alerts when target prices hit.
+category: strategies/alerts
+repo: https://github.com/owner/repo
+homepage: https://example.com
+license: MIT
+status: active
+verification:
+  tier: unverified
+  lastVerifiedAt: null
+tags: [alerts, automation]
+```
+
+Allowed values for `type`: `strategy`, `recipe`, `workflow`, `skill`, `filesystem`.
+
+At least one of `repo` or `homepage` is required.
+
+## Capability contract requirements
+
+For `strategy`, `recipe`, and `workflow` submissions:
+
+- `trigger`
+- `inputs`
+- `outputs`
+- `sideEffects`
+- `failureModes`
+- strategy state transitions (when behavior changes by state)
+- `authModel`
+- `permissions`
+
+For `skill` and `filesystem` submissions:
+
+- interface summary (commands/tools/files exposed)
+- setup requirements
+- side effects and permission scope
+
+## Suggested submission body
+
+```md
+# <Name>
+
+One-line value proposition.
+
+## What it does
+
+- ...
+
+## Capability contract
+
+- Trigger: ...
+- Inputs: ...
+- Outputs: ...
+- Side effects: ...
+- Failure modes: ...
+- Strategy state transitions (if applicable): ...
+
+## Setup
+
+1. ...
+2. ...
+
+## Security and permissions
+
+- Auth model: ...
+- Required permissions: ...
+- Required secrets (names only): ...
+
+## Evidence
+
+- Demo link: ...
+- Example run: ...
+```
+
+## Validation tips
+
+- Keep summaries under 140 chars.
+- Use explicit permission names, not generic text.
+- Include at least one reproducible example.

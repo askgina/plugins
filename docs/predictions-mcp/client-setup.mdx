@@ -1,0 +1,189 @@
+---
+title: "Client Setup"
+description: "Configure any MCP client to connect to Gina's Predictions MCP"
+---
+
+Detailed setup instructions for every supported MCP client.
+
+## Server URL
+
+All clients use the same URL:
+
+```
+https://askgina.ai/ai/predictions/mcp
+```
+
+## Setup by Client
+
+<Tabs>
+  <Tab title="Claude Code">
+    ### Quick Install
+
+    Run in your **terminal** (not inside Claude Code):
+
+    ```bash
+    claude mcp add predictions \
+      --transport http \
+      https://askgina.ai/ai/predictions/mcp
+    ```
+
+    Then **restart Claude Code**. Inside Claude Code, run `/mcp` to see the server status and trigger the OAuth sign-in flow.
+
+    ### Manual Config
+
+    Add to `~/.claude/settings.json` (or your project's `.claude/settings.json`):
+
+    ```json
+    {
+      "mcpServers": {
+        "predictions": {
+          "transport": "http",
+          "url": "https://askgina.ai/ai/predictions/mcp"
+        }
+      }
+    }
+    ```
+
+    Then restart Claude Code.
+
+  </Tab>
+  <Tab title="Codex">
+    ### Quick Install
+
+    ```bash
+    bunx add-mcp "https://askgina.ai/ai/predictions/mcp" \
+      --agent codex \
+      --name predictions \
+      --transport http \
+      -y
+    ```
+
+    ### Manual Config
+
+    Add to `.codex/config.toml`:
+
+    ```toml
+    [mcp_servers.predictions]
+    type = "http"
+    url = "https://askgina.ai/ai/predictions/mcp"
+    ```
+
+  </Tab>
+  <Tab title="Cursor">
+    ### Option A: Settings UI
+
+    1. Open **Cursor Settings** (⌘ + ,)
+    2. Navigate to **MCP**
+    3. Click **Add new MCP server**
+    4. Enter:
+       - **Name:** `predictions`
+       - **Type:** `http`
+       - **URL:** `https://askgina.ai/ai/predictions/mcp`
+    5. Click **Save**
+
+    ### Option B: Config File
+
+    Add to `.cursor/mcp.json` in your project (or `~/.cursor/mcp.json` globally):
+
+    ```json
+    {
+      "mcpServers": {
+        "predictions": {
+          "type": "http",
+          "url": "https://askgina.ai/ai/predictions/mcp"
+        }
+      }
+    }
+    ```
+
+    Then restart Cursor or reload the window.
+
+  </Tab>
+  <Tab title="Windsurf">
+    1. Open **Windsurf Settings**
+    2. Navigate to **MCP**
+    3. Click **Add Server**
+    4. Enter:
+       - **Name:** `predictions`
+       - **URL:** `https://askgina.ai/ai/predictions/mcp`
+    5. Save and restart
+  </Tab>
+  <Tab title="OpenCode">
+    ### Quick Install
+
+    ```bash
+    opencode mcp add predictions \
+      --transport http \
+      https://askgina.ai/ai/predictions/mcp
+    ```
+
+  </Tab>
+  <Tab title="Generic JSON">
+    For any MCP client that supports JSON config:
+
+    ```json
+    {
+      "mcpServers": {
+        "predictions": {
+          "transport": "http",
+          "url": "https://askgina.ai/ai/predictions/mcp"
+        }
+      }
+    }
+    ```
+
+  </Tab>
+</Tabs>
+
+## Sign In (OAuth)
+
+After adding the server, you need to authenticate:
+
+<Steps>
+  <Step title="Restart your client">
+    Restart your MCP client so it picks up the new server configuration.
+  </Step>
+  <Step title="Trigger auth">
+    Your client will automatically trigger the OAuth flow when it tries to connect. If it doesn't: -
+    **Cursor:** Go to Settings → MCP and check the server status - **Claude Code:** Run `/mcp`
+    inside Claude Code and select the `predictions` server - **Codex:** Run `codex mcp login
+    predictions`
+  </Step>
+  <Step title="Browser sign-in">A browser window opens. Sign in to Gina and approve access.</Step>
+  <Step title="Verify">
+    Back in your client, `bash` should now appear as an available tool. Try asking your AI: *"What
+    MCP tools do you have?"*
+  </Step>
+</Steps>
+
+### Manual Sign-In
+
+If sign-in doesn't trigger automatically:
+
+<Tabs>
+  <Tab title="Claude Code">
+    Inside Claude Code, run `/mcp`, select `predictions`, and complete sign-in in your browser.
+  </Tab>
+  <Tab title="Codex">```bash codex mcp login predictions ```</Tab>
+  <Tab title="OpenCode">```bash opencode mcp auth predictions ```</Tab>
+</Tabs>
+
+## Verify It Works
+
+After signing in, run:
+
+```json
+{ "command": "echo ok" }
+```
+
+You should see `ok`. Then try a market search:
+
+```json
+{ "command": "host-tools searchPredictionMarkets '{\"query\":\"NBA\"}'" }
+```
+
+<Check>If you see JSON market data, you're all set!</Check>
+
+## Connection Issues?
+
+See [Troubleshooting](/predictions-mcp/troubleshooting) for common fixes.

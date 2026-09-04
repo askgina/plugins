@@ -1,0 +1,99 @@
+---
+title: "Perps MCP"
+description: "Connect to Gina's Perps MCP server and work with Hyperliquid perpetual futures from any MCP client"
+---
+
+Gina's Perps MCP server lets you analyze markets, inspect account state, manage positions, and trade Hyperliquid perpetual futures from your AI coding assistant or MCP client.
+For Ask Gina's broader user-facing capabilities, including wallets, market research, Recipes, Memory, networks, fees, and safety boundaries, see the [Product Guide](/product-guide).
+
+## What You Can Do
+
+Use natural language in your client, or call the sandbox `bash` tool directly.
+
+<CardGroup cols={3}>
+  <Card title="Market Data" icon="chart-line">
+    *"BTC perps price"* *"show Hyperliquid markets"* *"search HIP-3 markets for CL"*
+  </Card>
+  <Card title="Positions" icon="chart-pie">
+    *"show my perps positions"* *"what open orders do I have?"* *"summarize my margin status"*
+  </Card>
+  <Card title="Trade" icon="arrow-right-arrow-left">
+    *"place a BTC limit order"* *"set a stop loss"* *"cancel my open ETH order"*
+  </Card>
+  <Card title="HIP-3 DEXes" icon="building-2">
+    *"list HIP-3 DEXes"* *"show XYZ markets"* *"price CL on xyz"*
+  </Card>
+  <Card title="Funding" icon="wallet">
+    *"deposit to Hyperliquid"* *"fund the xyz HIP-3 DEX"* *"return HIP-3 funds"*
+  </Card>
+  <Card title="Analysis" icon="database">
+    *"fetch BTC candles"* *"load order book depth into SQL"* *"query large trades"*
+  </Card>
+</CardGroup>
+
+<Card title="See all features with example prompts ->" icon="sparkles" href="/perps-mcp/features">
+  Full breakdown of market data, account state, trading, HIP-3, funding, and SQL workflows.
+</Card>
+
+## Server URL
+
+```
+https://askgina.ai/ai/perps/mcp
+```
+
+Perps MCP is available by default to authenticated Gina users. There is no separate perps MCP feature flag to enable.
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/perps-mcp/quick-start">
+    Connect and run your first price lookup
+  </Card>
+  <Card title="Client Setup" icon="gear" href="/perps-mcp/client-setup">
+    Config for Claude Code, Codex, Cursor, and more
+  </Card>
+</CardGroup>
+
+## Quick Success Check
+
+<Steps>
+  <Step title="Add the server">
+    Add `https://askgina.ai/ai/perps/mcp` to your MCP client and restart it.
+  </Step>
+  <Step title="Sign in">
+    Your client triggers OAuth. Sign in to Gina in the browser and approve access.
+  </Step>
+  <Step title="Verify">
+    Ask your AI assistant to use the `bash` tool:
+
+    ```json
+    { "command": "echo ok" }
+    ```
+
+    You should see `ok` in the output.
+
+  </Step>
+</Steps>
+
+## Safety
+
+<Warning>
+  Perpetual futures use leverage and can liquidate quickly. Start with read-only commands such as
+  prices, positions, and schemas before placing orders or moving funds.
+</Warning>
+
+## Advanced: MCP Resources
+
+If your client supports MCP prompts and resources, you'll also see:
+
+| Type     | URI                               |
+| -------- | --------------------------------- |
+| Prompt   | `perps_guide`                     |
+| Resource | `mcp://perps/guide`               |
+| Resource | `mcp://perps/connect`             |
+| Resource | `mcp://perps/quickstart`          |
+| Resource | `mcp://perps/policy`              |
+| Resource | `mcp://perps/filesystem`          |
+| Resource | `mcp://perps/commands/index`      |
+| Resource | `mcp://perps/host-tools/index`    |
+| Resource | `mcp://perps/prompts/perps_guide` |

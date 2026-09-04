@@ -1,0 +1,66 @@
+---
+title: "Features and Allowlist"
+description: "The complete host-tool boundary for Spot MCP"
+---
+
+Spot MCP exposes the following 23 tools directly. The same allowlist is available inside the `bash` sandbox. `bash` remains a separate twenty-fourth tool for scripts, files, SQL, short waits, and composed workflows.
+
+## Market Reads
+
+| Host tool             | Purpose                     |
+| --------------------- | --------------------------- |
+| `getTrendingCoins`    | Trending token list         |
+| `getTrendingSearch`   | Trending search data        |
+| `getTokenMetadata`    | Token identity and metadata |
+| `getTokenChart`       | Historical token chart data |
+| `getSimplePrice`      | Current token prices        |
+| `getTokensByCategory` | Category-based discovery    |
+| `fetchSwapHistory`    | Completed swap history      |
+
+## LONG / Robinhood reads
+
+| Host tool            | Purpose                                                             |
+| -------------------- | ------------------------------------------------------------------- |
+| `getLongMarkets`     | List LONG launchpad markets on chain 4663                           |
+| `getLongMarket`      | One market by tokenAddress or poolAddress (exactly one)             |
+| `getLongLaunches`    | Recent LONG launchpad observations (delayed, not live)              |
+| `getPoolState`       | Pinned-block Uniswap V2/V3 compatible pool state on Robinhood Chain |
+| `getRecentPoolSwaps` | Recent swaps for a pool address                                     |
+
+## Account Support
+
+| Host tool                | Purpose                               |
+| ------------------------ | ------------------------------------- |
+| `getCrosschainPortfolio` | Cross-chain holdings context          |
+| `getAccountAddresses`    | Linked account addresses              |
+| `nameResolver`           | Resolve supported names and addresses |
+
+## Writes
+
+| Host tool                 | Purpose                                |
+| ------------------------- | -------------------------------------- |
+| `getSwapCalldatas`        | Prepare swap transaction data          |
+| `getTransferCalldata`     | Prepare transfer transaction data      |
+| `executeSupertransaction` | Execute an approved transaction bundle |
+
+For an imperative transaction request, the agent prepares and executes without
+requiring a phrase such as `confirm execute`. If preparation reveals a material
+new term, it asks one normal question. After submission, it checks the returned
+transaction hash against swap history and portfolio state for up to 20 seconds.
+A landed receipt reports recorded amounts spent and received. A transaction that
+has not appeared yet is reported as submitted/pending, with quote values clearly
+labeled as estimates.
+
+## Scheduling
+
+| Host tool                    | Purpose                             |
+| ---------------------------- | ----------------------------------- |
+| `createScheduledPrompt`      | Create a schedule                   |
+| `listScheduledPrompts`       | List schedules                      |
+| `toggleScheduledPrompt`      | Pause or resume a schedule          |
+| `deleteScheduledPrompt`      | Delete a schedule                   |
+| `updateScheduledAgentConfig` | Update schedule agent configuration |
+
+Spot schedules continue to run through Gina's fixed internal agent. `updateScheduledPromptCondition` is not part of Spot MCP.
+
+`webSearch` and `fetchUrl` are not part of Spot MCP. Use the MCP client's native web tools for outside context. Predictions and Perps host tools, `renderReadOnlyDashboard`, and every unlisted tool are denied.
