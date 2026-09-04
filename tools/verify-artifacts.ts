@@ -29,7 +29,7 @@ import {
 } from "./check-target-conformance";
 import { buildArtifacts } from "./pack-artifacts";
 
-const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini"] as const;
+const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini", "devin"] as const;
 const SKILLS = [
   "research-hyperliquid",
   "research-prediction-markets",
@@ -72,6 +72,7 @@ const TARGET_MANIFESTS: Readonly<Record<string, string>> = {
   claude: ".claude-plugin/plugin.json",
   copilot: "plugin.json",
   gemini: "gemini-extension.json",
+  devin: ".devin-plugin/plugin.json",
 };
 const SHA_256 = /^[a-f0-9]{64}$/u;
 const GIT_COMMIT = /^[a-f0-9]{40}$/u;

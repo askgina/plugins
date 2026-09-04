@@ -45,6 +45,11 @@ const makePluginFixture = Effect.gen(function* () {
     `${encodeJson({ version, marker: "root-openai" })}\n`,
   );
   yield* fs.writeFileString(path.join(plugin, ".mcp.json"), '{"mcpServers":{}}\n');
+  yield* fs.makeDirectory(path.join(plugin, ".devin-plugin"), { recursive: true });
+  yield* fs.writeFileString(
+    path.join(plugin, ".devin-plugin", "plugin.json"),
+    `${encodeJson({ version, marker: "root-devin" })}\n`,
+  );
   yield* fs.makeDirectory(path.join(plugin, ".cursor-plugin"), { recursive: true });
   yield* fs.writeFileString(
     path.join(plugin, ".cursor-plugin", "plugin.json"),
@@ -402,7 +407,7 @@ describe("pack artifact source snapshot", () => {
 
 describe("plugin target packing", () => {
   it.layer(BunServices.layer)((it) => {
-    it.effect("validates OpenAI and Cursor at the root and other hosts in overlays", () =>
+    it.effect("validates root-sourced and overlay-sourced target versions", () =>
       Effect.scoped(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -429,6 +434,7 @@ describe("plugin target packing", () => {
 
           yield* validateTargetVersion(fixture.plugin, "openai", fixture.version);
           yield* validateTargetVersion(fixture.plugin, "cursor", fixture.version);
+          yield* validateTargetVersion(fixture.plugin, "devin", fixture.version);
           yield* fs.writeFileString(
             path.join(fixture.plugin, ".codex-plugin", "plugin.json"),
             `${encodeJson({ version: "8.8.8" })}\n`,
@@ -449,6 +455,13 @@ describe("plugin target packing", () => {
           );
           assert.instanceOf(cursorError, ArtifactPackError);
           assert.include(cursorError.message, path.join(".cursor-plugin", "plugin.json"));
+
+          yield* fs.remove(path.join(fixture.plugin, ".devin-plugin", "plugin.json"));
+          const devinError = yield* validateTargetVersion(fixture.plugin, "devin", "9.9.9").pipe(
+            Effect.flip,
+          );
+          assert.instanceOf(devinError, ArtifactPackError);
+          assert.include(devinError.message, path.join(".devin-plugin", "plugin.json"));
         }),
       ),
     );
@@ -538,6 +551,34 @@ describe("plugin target packing", () => {
             "targets",
           ]) {
             assert.isFalse(yield* fs.exists(path.join(fixture.stage, excluded)));
+          }
+          for (const skill of SKILL_NAMES) {
+            assert.isTrue(yield* fs.exists(path.join(fixture.stage, "skills", skill, "SKILL.md")));
+            assert.isFalse(yield* fs.exists(path.join(fixture.stage, "skills", skill, "agents")));
+          }
+        }),
+      ),
+    );
+
+    it.effect("stages a lean Devin target from root source files", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fixture = yield* makePluginFixture;
+
+          yield* stagePluginTarget("devin", fixture.plugin, fixture.stage);
+
+          assert.deepStrictEqual((yield* fs.readDirectory(fixture.stage)).sort(), [
+            ".devin-plugin",
+            ".mcp.json",
+            "skills",
+          ]);
+          for (const relative of [[".devin-plugin", "plugin.json"], [".mcp.json"]] as const) {
+            assert.strictEqual(
+              yield* fs.readFileString(path.join(fixture.stage, ...relative)),
+              yield* fs.readFileString(path.join(fixture.plugin, ...relative)),
+            );
           }
           for (const skill of SKILL_NAMES) {
             assert.isTrue(yield* fs.exists(path.join(fixture.stage, "skills", skill, "SKILL.md")));

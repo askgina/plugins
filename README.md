@@ -35,7 +35,7 @@ bun run smoke:install
 ```
 
 `bun run artifacts` builds the five package outputs with `vp pack`; the
-custom packer then creates five package tarballs, five complete host archives, one
+custom packer then creates five package tarballs, six complete host archives, one
 four-skill candidate archive, and contract, package, target, and eval receipts
 under ignored `dist/`. `bun run verify:artifacts` performs clean
 tarball installs and runtime checks. Nothing here publishes, releases, deploys,

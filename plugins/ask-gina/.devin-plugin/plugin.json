@@ -1,0 +1,24 @@
+{
+  "name": "ask-gina",
+  "version": "0.1.0",
+  "description": "Ask Gina is a research assistant for crypto, prediction markets, perpetuals, and equities. Use it to fetch real-time prices and historical data for tokens, Hyperliquid markets, and Polymarket prediction markets, and to analyze your Gina wallet, positions, and accounts. Gina cannot place trades or transfer assets inside Devin.",
+  "author": {
+    "name": "Ask Gina"
+  },
+  "homepage": "https://askgina.ai",
+  "repository": "https://github.com/askgina/plugins",
+  "license": "Apache-2.0",
+  "keywords": [
+    "crypto",
+    "portfolio",
+    "market-data",
+    "hyperliquid",
+    "polymarket",
+    "prediction",
+    "perpetuals",
+    "research",
+    "mcp"
+  ],
+  "skills": "skills",
+  "mcpServers": ".mcp.json"
+}

@@ -49,6 +49,14 @@ const OpenAiMarketplaceJson = Schema.fromJsonString(
     ),
   }),
 );
+const DevinPluginJson = Schema.fromJsonString(
+  Schema.Struct({
+    name: Schema.String,
+    version: Schema.String,
+    skills: Schema.String,
+    mcpServers: Schema.String,
+  }),
+);
 const collectSkillDocuments = (
   directory: string,
 ): Effect.Effect<
@@ -180,6 +188,25 @@ describe("Ask Gina portable plugin core", () => {
         assert.isDefined(plugin);
         assert.isTrue(yield* fs.exists(paths.resolve(pluginRoot, plugin?.skills ?? "")));
         assert.isTrue(yield* fs.exists(paths.resolve(pluginRoot, plugin?.mcpServers ?? "")));
+      }),
+    );
+
+    it.effect("publishes a directly loadable Devin plugin", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const paths = yield* Path.Path;
+        const plugin = yield* Schema.decodeEffect(DevinPluginJson)(
+          yield* fs.readFileString(paths.join(pluginRoot, ".devin-plugin", "plugin.json")),
+        );
+
+        assert.deepStrictEqual(plugin, {
+          name: "ask-gina",
+          version: "0.1.0",
+          skills: "skills",
+          mcpServers: ".mcp.json",
+        });
+        assert.isTrue(yield* fs.exists(paths.join(pluginRoot, "skills")));
+        assert.isTrue(yield* fs.exists(paths.join(pluginRoot, ".mcp.json")));
       }),
     );
 

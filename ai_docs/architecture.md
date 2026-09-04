@@ -21,25 +21,33 @@ CommonJS, browser, edge, or subpath entrypoints. They support Node >=24 and Bun
 points directly at `plugins/ask-gina/`, so a clean checkout exposes the OpenAI
 source without a generation step. `.cursor-plugin/marketplace.json` is the
 template-native Cursor marketplace descriptor and points at the same plugin
-root. The directly loadable OpenAI files live at the plugin root:
-`.codex-plugin/plugin.json`, `.mcp.json`, `assets/icon.svg`, and `skills/`.
+root. Devin has no separate marketplace descriptor in this repository. Remote
+consumers install `plugins/ask-gina/` directly with a `git-subdir` source. The
+repository root is not a Devin plugin, so its contributor-facing `AGENTS.md`
+never becomes an installed session rule. A future Devin marketplace must use a
+dedicated repository whose root content is safe to install. The directly
+loadable OpenAI files live at the plugin
+root: `.codex-plugin/plugin.json`, `.mcp.json`, `assets/icon.svg`, and `skills/`.
 The directly loadable Cursor files live beside them:
 `.cursor-plugin/plugin.json`, `mcp.json`, `assets/icon.svg`, `README.md`,
-`rules/`, `commands/`, and `skills/`.
-The repository is private. Automated remote marketplace proof runs only on a trusted
-same-repository push and uses an ephemeral, read-only GitHub token only while Codex
-clones the marketplace. Pull-request jobs never receive this token. The smoke harness
+`rules/`, `commands/`, and `skills/`. Devin loads
+`.devin-plugin/plugin.json`, `.mcp.json`, and the same canonical `skills/` from
+the plugin root.
+The repository is public. Automated remote marketplace proof still runs only on a
+trusted same-repository push and uses an ephemeral, read-only GitHub token only while
+Codex clones the marketplace. Pull-request jobs never receive this token. The smoke harness
 deletes its isolated token and token-free askpass helper before plugin installation,
-and neither plugin installation nor runtime receives the repository token. Marketplace consumers need
-GitHub read access independently of Ask Gina MCP authentication.
+and neither plugin installation nor runtime receives the repository token. Public marketplace
+consumers need no repository token; Ask Gina MCP authentication remains separate.
 
 `plugins/ask-gina/skills/` is the only authored skill tree. OpenAI-specific skill
 metadata remains beside each canonical `SKILL.md` under `agents/openai.yaml`.
 `plugins/ask-gina/targets/` contains only the Claude, Copilot, and Gemini
-overlays; there is no `targets/openai/` or `targets/cursor/` source tree.
+overlays; there is no `targets/openai/`, `targets/cursor/`, or `targets/devin/`
+source tree.
 
 Sync and pack operations build temporary host targets from these sources. The
-OpenAI and Cursor targets select only their root files and canonical skills.
+OpenAI, Cursor, and Devin targets select only their root files and canonical skills.
 Every remaining host combines its `targets/<host>/` overlay with the same
 canonical skills. Generated host trees are output, never authoring source.
 The Cursor generated host also includes `README.md`, `rules/`, and `commands/`.
@@ -66,7 +74,7 @@ enabled compiler and Effect diagnostic; there is no baseline or count ratchet.
 `vp pack` writes each package's ignored compiled JavaScript, declarations, and
 source maps; every map embeds committed TypeScript through relative paths. The
 repository's custom packer stages those validated outputs with metadata and assets
-as five npm-style package archives, five host archives, one skills candidate, and
+as five npm-style package archives, six host archives, one skills candidate, and
 four bounded receipts under ignored `dist/`. Host archives remain lean: each
 contains only the selected host surface and skills, never repository workspace
 files or foreign-host overlays. Verification clean-installs package tarballs in

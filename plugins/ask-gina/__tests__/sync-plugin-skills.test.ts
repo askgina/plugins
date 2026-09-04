@@ -16,7 +16,7 @@ const makeGeneratedTargets = Effect.acquireRelease(
 
 describe("sync-plugin-skills", () => {
   it.layer(BunServices.layer)((it) => {
-    it.effect("loads OpenAI and Cursor from the plugin root and retains remaining overlays", () =>
+    it.effect("loads OpenAI, Cursor, and Devin from the plugin root", () =>
       Effect.scoped(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -26,10 +26,12 @@ describe("sync-plugin-skills", () => {
           const canonicalSkillsRoot = paths.join(packageRoot, "skills");
 
           assert.isTrue(yield* fs.exists(paths.join(packageRoot, ".codex-plugin", "plugin.json")));
+          assert.isTrue(yield* fs.exists(paths.join(packageRoot, ".devin-plugin", "plugin.json")));
           assert.isTrue(yield* fs.exists(paths.join(packageRoot, ".mcp.json")));
           assert.isTrue(yield* fs.exists(paths.join(packageRoot, "assets", "icon.svg")));
           assert.isFalse(yield* fs.exists(paths.join(packageRoot, "targets", "openai")));
           assert.isFalse(yield* fs.exists(paths.join(packageRoot, "targets", "cursor")));
+          assert.isFalse(yield* fs.exists(paths.join(packageRoot, "targets", "devin")));
           assert.deepStrictEqual(
             (yield* fs.readDirectory(generatedTargets.targets.openai)).sort(),
             [".codex-plugin", ".mcp.json", "assets", "skills"],
@@ -38,6 +40,11 @@ describe("sync-plugin-skills", () => {
             (yield* fs.readDirectory(generatedTargets.targets.cursor)).sort(),
             [".cursor-plugin", "README.md", "assets", "commands", "mcp.json", "rules", "skills"],
           );
+          assert.deepStrictEqual((yield* fs.readDirectory(generatedTargets.targets.devin)).sort(), [
+            ".devin-plugin",
+            ".mcp.json",
+            "skills",
+          ]);
 
           for (const relative of [
             [".codex-plugin", "plugin.json"],
@@ -67,8 +74,15 @@ describe("sync-plugin-skills", () => {
             );
           }
 
+          for (const relative of [[".devin-plugin", "plugin.json"], [".mcp.json"]] as const) {
+            assert.strictEqual(
+              yield* fs.readFileString(paths.join(generatedTargets.targets.devin, ...relative)),
+              yield* fs.readFileString(paths.join(packageRoot, ...relative)),
+            );
+          }
+
           for (const hostName of TARGET_NAMES.filter(
-            (hostName) => hostName !== "openai" && hostName !== "cursor",
+            (hostName) => hostName !== "openai" && hostName !== "cursor" && hostName !== "devin",
           )) {
             assert.deepStrictEqual(
               (yield* fs.readDirectory(generatedTargets.targets[hostName]))
@@ -169,6 +183,26 @@ describe("sync-plugin-skills", () => {
           const error = yield* Effect.flip(createGeneratedPluginTarget("cursor", { packageRoot }));
           assert.strictEqual(error.path, legacyOverlay);
           assert.include(error.reason, "legacy Cursor target overlay");
+        }),
+      ),
+    );
+
+    it.effect("rejects a legacy Devin target overlay", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const paths = yield* Path.Path;
+          const temporary = yield* fs.makeTempDirectoryScoped({
+            prefix: "sync-plugin-skills-test-",
+          });
+          const packageRoot = paths.join(temporary, "ask-gina");
+          yield* fs.copy(paths.resolve("plugins/ask-gina"), packageRoot, { overwrite: true });
+          const legacyOverlay = paths.join(packageRoot, "targets", "devin");
+          yield* fs.makeDirectory(legacyOverlay, { recursive: true });
+
+          const error = yield* Effect.flip(createGeneratedPluginTarget("devin", { packageRoot }));
+          assert.strictEqual(error.path, legacyOverlay);
+          assert.include(error.reason, "legacy Devin target overlay");
         }),
       ),
     );

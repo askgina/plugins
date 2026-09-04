@@ -11,7 +11,7 @@ import { Data, Effect, FileSystem, Layer, Path, Schema } from "effect";
 import { extractCheckedTarGz } from "./archive-security";
 import { OPENAI_ASSETS } from "./verify-artifacts";
 
-const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini"];
+const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini", "devin"];
 const PACKAGES = [
   { slug: "contracts", name: "@askgina/contracts", directory: "packages/contracts" },
   { slug: "sdk", name: "@askgina/sdk", directory: "packages/sdk" },

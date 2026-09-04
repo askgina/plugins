@@ -366,6 +366,58 @@ describe("artifact and source conformance verification", () => {
         ),
     );
 
+    it.effect("rejects an unsafe root Devin plugin and malformed direct plugin source", () =>
+      Effect.forEach(
+        [
+          "root-manifest",
+          "missing-plugin-manifest",
+          "plugin-version-drift",
+          "legacy-overlay",
+        ] as const,
+        (mutation) =>
+          Effect.scoped(
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const fixture = yield* repositoryFixture;
+              if (mutation === "root-manifest") {
+                const rootManifest = path.join(fixture.root, ".devin-plugin", "plugin.json");
+                yield* fs.makeDirectory(path.dirname(rootManifest), { recursive: true });
+                yield* fs.writeFileString(rootManifest, "{}\n");
+              } else if (mutation === "legacy-overlay") {
+                yield* fs.makeDirectory(path.join(fixture.packageRoot, "targets", "devin"), {
+                  recursive: true,
+                });
+              } else {
+                const manifestPath = path.join(fixture.packageRoot, ".devin-plugin", "plugin.json");
+                if (mutation === "missing-plugin-manifest") {
+                  yield* fs.remove(manifestPath);
+                } else {
+                  const manifest = decodeUnknownJson(
+                    yield* fs.readFileString(manifestPath),
+                  ) as Record<string, unknown>;
+                  manifest.version = "99.0.0";
+                  yield* fs.writeFileString(manifestPath, `${encodeUnknownJson(manifest)}\n`);
+                }
+              }
+              const report = yield* checkRepositoryConformance({
+                repositoryRoot: fixture.root,
+                packageRoot: fixture.packageRoot,
+              });
+              const expected =
+                mutation === "root-manifest"
+                  ? "repository.devin.root_manifest_absent"
+                  : mutation === "missing-plugin-manifest"
+                    ? "repository.devin.plugin_manifest_exists"
+                    : mutation === "plugin-version-drift"
+                      ? "repository.devin.plugin_manifest_contract"
+                      : "repository.legacy_devin.absent";
+              assert.isTrue(failedCheck(report, expected));
+            }),
+          ),
+      ),
+    );
+
     it.effect("rejects missing root files, version drift, and a legacy OpenAI overlay", () =>
       Effect.forEach(["missing-mcp", "version-drift", "legacy-overlay"] as const, (mutation) =>
         Effect.scoped(

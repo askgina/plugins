@@ -13,7 +13,7 @@ import {
   checkGeneratedTargetConformance,
 } from "./check-target-conformance";
 
-export const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini"] as const;
+export const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini", "devin"] as const;
 export type Host = (typeof HOSTS)[number];
 const SKILLS = [
   "research-hyperliquid",
@@ -102,6 +102,7 @@ const TARGET_MANIFESTS: Readonly<Record<Host, string>> = {
   claude: ".claude-plugin/plugin.json",
   copilot: "plugin.json",
   gemini: "gemini-extension.json",
+  devin: ".devin-plugin/plugin.json",
 };
 const SHA_256 = /^[a-f0-9]{64}$/u;
 const GIT_COMMIT = /^[a-f0-9]{40}$/u;
@@ -784,7 +785,9 @@ export const validateTargetVersion: {
   Effect.gen(function* () {
     const path = yield* Path.Path;
     const manifestRoot =
-      host === "openai" || host === "cursor" ? pluginRoot : path.join(pluginRoot, "targets", host);
+      host === "openai" || host === "cursor" || host === "devin"
+        ? pluginRoot
+        : path.join(pluginRoot, "targets", host);
     const value = yield* readJson(path.join(manifestRoot, TARGET_MANIFESTS[host]));
     if (!isObject(value) || value.version !== version) {
       return yield* fail(`${host} target version is inconsistent`);
@@ -893,6 +896,19 @@ export const stagePluginTarget: {
         path.join(plugin, "README.md"),
         path.join(stage, "README.md"),
       ).pipe(Effect.mapError((cause) => fail("cannot stage cursor README.md", cause)));
+    } else if (host === "devin") {
+      yield* fs
+        .makeDirectory(stage, { recursive: true })
+        .pipe(Effect.mapError((cause) => fail("cannot create devin target stage", cause)));
+      const source = path.join(plugin, ".devin-plugin");
+      yield* filesBelow(source);
+      yield* fs
+        .copy(source, path.join(stage, ".devin-plugin"), { overwrite: true })
+        .pipe(Effect.mapError((cause) => fail("cannot stage devin manifest", cause)));
+      yield* copyCheckedRegularFile(
+        path.join(plugin, ".mcp.json"),
+        path.join(stage, ".mcp.json"),
+      ).pipe(Effect.mapError((cause) => fail("cannot stage devin .mcp.json", cause)));
     } else {
       const sourceOverlay = path.join(plugin, "targets", host);
       yield* filesBelow(sourceOverlay);
