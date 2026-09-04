@@ -1,0 +1,45 @@
+---
+title: "Ask Gina Product Guide"
+description: "Start here to learn what Gina does and when to sign in."
+owner: "Ask Gina web team"
+lastReviewed: "2026-08-24"
+kind: "guide"
+includeInDocsAgent: true
+relatedSlugs:
+  - wallet-and-account
+  - transactions-and-portfolio
+  - market-research
+  - recipes-and-webhooks
+  - memory
+  - networks-fees-and-pricing
+  - safety-support-and-limitations
+  - leaderboard
+---
+
+# Ask Gina Product Guide
+
+Gina is a chat assistant for market research, wallet activity, transactions, and recipes. Public docs need no account. Sign in to use balances, files, recipes, or transactions. A chat response does not prove onchain settlement.
+
+## First hour
+
+1. **Sign in.** Ask "What is my Base USDC receive address?" **Outcome:** Gina returns your EVM address. Match it to the wallet screen.
+2. **Check a market.** Ask "Show ETH price over the last seven days." **Outcome:** Gina returns sourced spot price data.
+3. **Prepare a transfer.** Ask "Prepare to send 5 USDC to 0x... on Base." **Outcome:** Gina returns a proposal and does not submit it.
+4. **Review the proposal.** Check the address, network, amount, and fee. **Outcome:** you know what to verify before a real send.
+
+Never paste a private key or recovery phrase into chat.
+
+## What you can do
+
+- [Wallet](/product-guide/wallet-and-account): EVM and Solana addresses, balances, and key export.
+- [Transactions](/product-guide/transactions-and-portfolio): holdings and when sends or swaps execute.
+- [Research](/product-guide/market-research): token prices, charts, and sourced research. Spot prices differ from Polymarket 15-minute markets.
+- [Recipes](/product-guide/recipes-and-webhooks): prompts run manually, on a schedule, or from a webhook.
+- [Memory](/product-guide/memory): private files for chat and recipes, separate from the MCP sandbox `/workspace`.
+- [Networks and fees](/product-guide/networks-fees-and-pricing): supported networks, fees, sponsorship, and credits.
+- [Safety and support](/product-guide/safety-support-and-limitations): limits and help.
+- [Leaderboard](/product-guide/leaderboard): season ranks, not payouts.
+
+## Predictions, perps, and MCP
+
+A signed-in account can also trade Polymarket and Hyperliquid perps in chat. Prompt catalogs live in [Predictions MCP](https://docs.askgina.ai/predictions-mcp) and Perps MCP. Claude, Codex, and Cursor use MCP to call these tools. MCP is not a separate product.

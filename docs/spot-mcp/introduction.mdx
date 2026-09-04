@@ -1,0 +1,32 @@
+---
+title: "Introduction"
+description: "What Spot MCP is and when to use it"
+---
+
+Spot MCP is Gina's dedicated write-capable server for token workflows. It exposes 23 native tools for Spot reads, LONG and Robinhood reads, account support, swaps, transfers, transaction execution, and scheduling. It also retains a sandboxed `bash` tool for scripts, files, SQL, short waits, and composed workflows.
+
+## How It Works
+
+Your client connects to:
+
+```
+https://askgina.ai/ai/spot/mcp
+```
+
+After OAuth sign-in and approval, call the native tools directly for ordinary work. Use `capabilities`, `host-tools`, and `ts-exec` inside the sandbox when a workflow needs composition.
+
+<CardGroup cols={3}>
+  <Card title="Research" icon="search">
+    Inspect tokens, prices, charts, trends, portfolio context, and completed swaps.
+  </Card>
+  <Card title="Execute" icon="arrow-right-arrow-left">
+    Prepare swaps or transfers and execute an approved supertransaction.
+  </Card>
+  <Card title="Automate" icon="clock">
+    Create, inspect, update, pause, or delete scheduled prompts.
+  </Card>
+</CardGroup>
+
+## Access
+
+Spot MCP is controlled by the global `mcp_spot_enabled` rollout flag. Authentication and `tools:execute` are still required when the flag is enabled.

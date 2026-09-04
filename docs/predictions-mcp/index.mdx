@@ -1,0 +1,101 @@
+---
+title: "Predictions MCP"
+description: "Connect to Gina's Predictions MCP server and trade on prediction markets from any MCP client"
+---
+
+Gina's Predictions MCP server lets you search, analyze, and trade on prediction markets directly from your AI coding assistant or MCP client.
+For Ask Gina's broader user-facing capabilities, including wallets, market research, Recipes, Memory, networks, fees, and safety boundaries, see the [Product Guide](/product-guide).
+
+## What You Can Do
+
+Just type natural language prompts — no special syntax needed.
+
+<CardGroup cols={3}>
+  <Card title="Search Markets" icon="magnifying-glass">
+    *"NBA markets tomorrow"* *"Trump election odds"* *"what's trending?"*
+  </Card>
+  <Card title="Crypto Prices" icon="bitcoin-sign">
+    *"BTC 15 min up or down"* *"ETH hourly prediction"* *"AAPL daily market"*
+  </Card>
+  <Card title="Place Trades" icon="arrow-right-arrow-left">
+    *"bet $5 on eagles to win"* *"buy 100 YES shares"* *"limit order at 0.40"*
+  </Card>
+  <Card title="Track Positions" icon="chart-pie">
+    *"show my positions"* *"what's my P&L?"* *"what's my win rate?"*
+  </Card>
+  <Card title="Expiring Markets" icon="clock">
+    *"markets ending in 2 hours"* *"NBA games ending tonight"*
+  </Card>
+  <Card title="Automations" icon="robot">
+    *"daily market briefing at 9am"* *"alert me on odds swings"*
+  </Card>
+</CardGroup>
+
+<Card
+  title="See all features with example prompts →"
+  icon="sparkles"
+  href="/predictions-mcp/features"
+>
+  Full breakdown of everything you can do: search, trade, analyze, automate — with copy-paste
+  prompts for each.
+</Card>
+
+## Server URL
+
+```
+https://askgina.ai/ai/predictions/mcp
+```
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/predictions-mcp/quick-start">
+    Connect in under 2 minutes
+  </Card>
+  <Card title="Client Setup" icon="gear" href="/predictions-mcp/client-setup">
+    Config for Claude Code, Codex, Cursor, and more
+  </Card>
+</CardGroup>
+
+## Quick Success Check
+
+<Steps>
+  <Step title="Add the server">
+    Add `https://askgina.ai/ai/predictions/mcp` to your MCP client and restart it.
+  </Step>
+  <Step title="Sign in">
+    Your client triggers OAuth — sign in to Gina in the browser and approve access.
+  </Step>
+  <Step title="Verify">
+    Ask your AI assistant to use the `bash` tool:
+
+    ```json
+    { "command": "echo ok" }
+    ```
+
+    You should see `ok` in the output.
+
+  </Step>
+</Steps>
+
+## Safety
+
+<Note>
+  `bash` runs inside a sandboxed workspace. Start with read-only commands (search, list) before
+  executing trades. Large trade orders require explicit confirmation.
+</Note>
+
+## Advanced: MCP Resources
+
+If your client supports MCP prompts and resources, you'll also see:
+
+| Type     | URI                                  |
+| -------- | ------------------------------------ |
+| Prompt   | `predictions_guide`                  |
+| Resource | `mcp://predictions/guide`            |
+| Resource | `mcp://predictions/connect`          |
+| Resource | `mcp://predictions/quickstart`       |
+| Resource | `mcp://predictions/policy`           |
+| Resource | `mcp://predictions/filesystem`       |
+| Resource | `mcp://predictions/commands/index`   |
+| Resource | `mcp://predictions/host-tools/index` |

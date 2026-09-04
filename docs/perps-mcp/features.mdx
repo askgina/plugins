@@ -1,0 +1,56 @@
+---
+title: "Features Table"
+description: "Complete reference of Perps MCP capabilities with example prompts and commands"
+---
+
+Complete reference of Perps MCP capabilities. You can prompt naturally, or ask your client to call `bash` with the direct command shown.
+
+<Info>
+Start with `host-tools --brief` and `host-tools schema <toolName>` before using an unfamiliar trading or funding tool.
+</Info>
+
+| Feature               | What It Does                                                | Example Prompts                                             | Direct Command                                                                                                    |
+| --------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Account State**     | View account, margin, positions, open orders, and portfolio | `"show my perps positions"` `"what open orders do I have?"` | `host-tools getHyperliquidPositions`                                                                              |
+| **Markets**           | List canonical Hyperliquid markets and asset metadata       | `"show Hyperliquid markets"` `"what is BTC funding?"`       | `host-tools getHyperliquidMarkets`                                                                                |
+| **Prices**            | Fetch one or many live perps prices                         | `"BTC perps price"` `"price BTC ETH SOL"`                   | `host-tools getHyperliquidPrice '{\"asset\":\"BTC\"}'`                                                            |
+| **HIP-3 Discovery**   | Search HIP-3 markets and list builder-deployed DEXes        | `"search HIP-3 markets for CL"` `"list HIP-3 DEXes"`        | `host-tools perps.hip3.search query=CL`                                                                           |
+| **HIP-3 Prices**      | Read venue-scoped HIP-3 prices                              | `"price CL on xyz"`                                         | `host-tools perps.hip3.price '{\"dex\":\"xyz\",\"coin\":\"CL\"}'`                                                 |
+| **Orders**            | Place market or limit orders                                | `"place a BTC limit order"` `"open a small ETH short"`      | `host-tools placeHyperliquidOrder '{\"asset\":\"BTC\",\"isBuy\":true,\"size\":0.01,\"orderType\":\"market\"}'`    |
+| **Stops**             | Place stop-loss or take-profit style trigger orders         | `"set a BTC stop loss"`                                     | `host-tools placeHyperliquidStopOrder '{\"asset\":\"BTC\",\"triggerPrice\":95000,\"size\":0.01,\"isBuy\":false}'` |
+| **Order Management**  | Cancel or modify open orders                                | `"cancel my open ETH order"` `"modify that limit order"`    | `host-tools cancelHyperliquidOrder '<json>'`                                                                      |
+| **Leverage & Margin** | Adjust leverage and isolated margin                         | `"set BTC leverage to 5x"` `"add isolated margin"`          | `host-tools adjustHyperliquidLeverage '{\"asset\":\"BTC\",\"leverage\":5}'`                                       |
+| **Funding**           | Deposit or withdraw Hyperliquid USDC                        | `"deposit to Hyperliquid"` `"withdraw from Hyperliquid"`    | `host-tools depositToHyperliquid '<json>'`                                                                        |
+| **HIP-3 Funds**       | Move collateral into or out of a selected HIP-3 DEX         | `"fund xyz HIP-3 with 100 USDC"`                            | `host-tools perps.hip3.fund '{\"providerContext\":{\"providerId\":\"hip3:xyz\"},\"amount\":\"100\"}'`             |
+| **Data Fetching**     | Fetch trades, candles, and order books into sandbox tables  | `"fetch BTC candles into SQL"`                              | `host-tools fetchHyperliquidCandles '{\"coin\":\"BTC\",\"interval\":\"1h\"}'`                                     |
+| **SQL Analysis**      | Query fetched perps data with DuckDB/SQLite-style workflows | `"query large BTC trades"`                                  | `sql query "SELECT * FROM <table> LIMIT 10"`                                                                      |
+
+## Discovery Flow
+
+Use this sequence when you are unsure which tool to call:
+
+```json
+{ "command": "capabilities --json" }
+```
+
+```json
+{ "command": "host-tools --brief" }
+```
+
+```json
+{ "command": "host-tools schema getHyperliquidPrice" }
+```
+
+## HIP-3 Provider Context
+
+For HIP-3 tools, prefer provider context over legacy venue-only inputs:
+
+```json
+{
+  "providerContext": {
+    "providerId": "hip3:xyz"
+  }
+}
+```
+
+This keeps pricing, orders, margin, funding, and SQL analysis scoped to the selected HIP-3 provider.

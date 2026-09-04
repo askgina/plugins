@@ -1,0 +1,584 @@
+name: Docs checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "docs/**"
+      - ".github/workflows/docs.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: docs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "24.7.0"
+
+      - name: Enforce public docs content policy
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          const collectPagesFromEntries = (entries) => {
+            const pages = [];
+            for (const entry of entries ?? []) {
+              if (typeof entry === 'string' && entry.length > 0) {
+                pages.push(entry);
+                continue;
+              }
+
+              if (entry && typeof entry === 'object' && Array.isArray(entry.pages)) {
+                pages.push(...collectPagesFromEntries(entry.pages));
+              }
+            }
+            return pages;
+          };
+
+          const collectPublicPages = (mintDoc) => {
+            const navPages = (mintDoc.navigation ?? []).flatMap((group) =>
+              Array.isArray(group?.pages) ? collectPagesFromEntries(group.pages) : []
+            );
+
+            const tabPages = (mintDoc.tabs ?? [])
+              .map((tab) => tab?.url)
+              .filter((url) => typeof url === 'string' && url.length > 0);
+
+            return [...new Set([...navPages, ...tabPages])];
+          };
+
+          const findDeniedPages = (pages, denylist) =>
+            pages.filter((page) => denylist.some((pattern) => pattern.test(page)));
+
+          const denylist = [/target-registry/i, /kill-switch/i, /moderation-runbook/i];
+
+          const assertFixture = (condition, message) => {
+            if (!condition) {
+              throw new Error(`docs-content-policy fixture failed: ${message}`);
+            }
+          };
+
+          const runFixtureSmokeTests = () => {
+            const fixtureMint = {
+              navigation: [
+                {
+                  group: 'Public',
+                  pages: [
+                    'intro',
+                    'guides/safe-page',
+                    'internal/kill-switch',
+                    { group: 'Nested', pages: ['nested/safe-page', 'internal/target-registry'] }
+                  ]
+                }
+              ],
+              tabs: [{ url: 'internal/moderation-runbook' }, { url: 'https://example.com/docs' }, {}]
+            };
+
+            const fixturePages = collectPublicPages(fixtureMint);
+            const offenders = findDeniedPages(fixturePages, denylist);
+
+            assertFixture(fixturePages.includes('guides/safe-page'), 'non-denylisted page should be preserved');
+            assertFixture(offenders.includes('internal/kill-switch'), 'kill-switch slug should be denied');
+            assertFixture(
+              offenders.includes('internal/moderation-runbook'),
+              'moderation-runbook slug should be denied'
+            );
+            assertFixture(
+              offenders.includes('internal/target-registry'),
+              'nested denylisted slug should be denied'
+            );
+          };
+
+          runFixtureSmokeTests();
+
+          const mint = JSON.parse(fs.readFileSync('docs/mint.json', 'utf8'));
+          const publicPages = collectPublicPages(mint);
+          const offenders = findDeniedPages(publicPages, denylist);
+
+          if (offenders.length > 0) {
+            console.error('Public docs navigation includes internal-only page slugs:');
+            for (const page of offenders) console.error(`- ${page}`);
+            process.exit(1);
+          }
+
+          const robots = fs.readFileSync('docs/robots.txt', 'utf8');
+          const requiredRobotsRules = [
+            'User-agent: *\nContent-Signal: ai-train=no, search=yes, ai-input=yes\nAllow: /',
+            'User-agent: GPTBot\nDisallow: /',
+            'User-agent: ClaudeBot\nDisallow: /',
+            'User-agent: DeepSeekBot\nDisallow: /',
+            'User-agent: Google-Extended\nDisallow: /',
+            'User-agent: Applebot-Extended\nDisallow: /',
+            'Sitemap: https://docs.askgina.ai/sitemap.xml'
+          ];
+          const missingRobotsRules = requiredRobotsRules.filter((rule) => !robots.includes(rule));
+          if (missingRobotsRules.length > 0) {
+            console.error('docs/robots.txt is missing approved crawler policy:');
+            for (const rule of missingRobotsRules) console.error(`- ${JSON.stringify(rule)}`);
+            process.exit(1);
+          }
+
+          const predictionsIndex = fs.readFileSync('docs/predictions-mcp/index.mdx', 'utf8');
+          if (!predictionsIndex.includes('[Product Guide](/product-guide)')) {
+            console.error('docs/predictions-mcp/index.mdx must link back to the Product Guide.');
+            process.exit(1);
+          }
+
+          console.log(`Validated ${publicPages.length} nav/tab pages against public content policy.`);
+          NODE
+
+      - name: Validate docs links
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const { execSync } = require('node:child_process');
+
+          const fileList = execSync("git ls-files 'docs/**/*.md' 'docs/**/*.mdx'", { encoding: 'utf8' })
+            .split('\n')
+            .map((file) => file.trim())
+            .filter(Boolean);
+
+          if (fileList.length === 0) {
+            console.log('No docs markdown files found; skipping.');
+            process.exit(0);
+          }
+
+          const markdownLinkRegex = /!?\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
+          const keyHosts = new Set(['askgina.ai', 'www.askgina.ai', 'docs.askgina.ai', 'github.com']);
+          const localMissing = [];
+          const externalUrls = new Set();
+
+          const stripDecoration = (href) => href.split('#')[0].split('?')[0].trim();
+
+          const existsFile = (targetPath) => {
+            try {
+              return fs.statSync(targetPath).isFile();
+            } catch {
+              return false;
+            }
+          };
+
+          const existsDirectory = (targetPath) => {
+            try {
+              return fs.statSync(targetPath).isDirectory();
+            } catch {
+              return false;
+            }
+          };
+
+          const existsDocRoute = (targetPath) => {
+            // Explicit file links (docs assets) must resolve to files.
+            if (existsFile(targetPath)) return true;
+
+            const candidates = [`${targetPath}.mdx`, `${targetPath}.md`];
+            if (candidates.some((candidate) => existsFile(candidate))) return true;
+
+            if (!existsDirectory(targetPath)) return false;
+
+            return ['index.mdx', 'index.md']
+              .map((indexFile) => path.join(targetPath, indexFile))
+              .some((candidate) => existsFile(candidate));
+          };
+
+          const assertFixture = (condition, message) => {
+            if (!condition) {
+              throw new Error(`docs-link-check fixture failed: ${message}`);
+            }
+          };
+
+          const runFixtureSmokeTests = () => {
+            const fixtureRoot = path.join('.tmp', 'docs-link-check-fixture');
+            fs.rmSync(fixtureRoot, { recursive: true, force: true });
+            fs.mkdirSync(path.join(fixtureRoot, 'docs', 'dir-only'), { recursive: true });
+
+            fs.writeFileSync(path.join(fixtureRoot, 'docs', 'page.mdx'), '# fixture');
+            fs.writeFileSync(path.join(fixtureRoot, 'docs', 'asset.png'), 'asset');
+            fs.mkdirSync(path.join(fixtureRoot, 'docs', 'guide'), { recursive: true });
+            fs.writeFileSync(path.join(fixtureRoot, 'docs', 'guide', 'index.md'), '# fixture index');
+
+            assertFixture(
+              existsDocRoute(path.join(fixtureRoot, 'docs', 'page')),
+              'extensionless markdown route should resolve via page.mdx'
+            );
+            assertFixture(
+              existsDocRoute(path.join(fixtureRoot, 'docs', 'asset.png')),
+              'explicit asset path should resolve only when a file exists'
+            );
+            assertFixture(
+              existsDocRoute(path.join(fixtureRoot, 'docs', 'guide')),
+              'directory route should require index.md or index.mdx'
+            );
+            assertFixture(
+              !existsDocRoute(path.join(fixtureRoot, 'docs', 'dir-only')),
+              'bare directory must not be treated as a valid docs route'
+            );
+
+            fs.rmSync(fixtureRoot, { recursive: true, force: true });
+          };
+
+          runFixtureSmokeTests();
+
+          const isExternal = (href) => /^https?:\/\//i.test(href);
+          const isSkippable = (href) =>
+            href.startsWith('#') ||
+            href.startsWith('mailto:') ||
+            href.startsWith('tel:') ||
+            href.startsWith('data:');
+
+          for (const file of fileList) {
+            const text = fs.readFileSync(file, 'utf8');
+            for (const match of text.matchAll(markdownLinkRegex)) {
+              const rawHref = match[1] ?? '';
+              const href = stripDecoration(rawHref);
+              if (!href || isSkippable(href)) continue;
+
+              if (isExternal(href)) {
+                try {
+                  const host = new URL(href).hostname.toLowerCase();
+                  if (keyHosts.has(host)) externalUrls.add(href);
+                } catch {
+                  localMissing.push({ file, href, reason: 'invalid URL syntax' });
+                }
+                continue;
+              }
+
+              if (href.startsWith('/')) {
+                const target = path.join('docs', href.replace(/^\/+/, ''));
+                if (!existsDocRoute(target)) {
+                  localMissing.push({ file, href, reason: 'missing absolute docs route' });
+                }
+                continue;
+              }
+
+              const fromDir = path.dirname(file);
+              const target = path.resolve(fromDir, href);
+              if (!existsDocRoute(target)) {
+                localMissing.push({ file, href, reason: 'missing relative docs route' });
+              }
+            }
+          }
+
+          const fetchWithTimeout = async (url, options) => {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 10000);
+            try {
+              return await fetch(url, { ...options, redirect: 'follow', signal: controller.signal });
+            } finally {
+              clearTimeout(timeout);
+            }
+          };
+
+          const checkExternal = async (url) => {
+            try {
+              let response = await fetchWithTimeout(url, { method: 'HEAD' });
+              if (response.status === 405 || response.status === 501) {
+                response = await fetchWithTimeout(url, { method: 'GET' });
+              }
+              return response.ok;
+            } catch {
+              return false;
+            }
+          };
+
+          const main = async () => {
+            const badExternal = [];
+            for (const url of externalUrls) {
+              const ok = await checkExternal(url);
+              if (!ok) badExternal.push(url);
+            }
+
+            if (localMissing.length > 0) {
+              console.error('Broken local docs links:');
+              for (const item of localMissing) {
+                console.error(`- ${item.file}: ${item.href} (${item.reason})`);
+              }
+            }
+
+            if (badExternal.length > 0) {
+              console.error('Unreachable key external links:');
+              for (const url of badExternal) console.error(`- ${url}`);
+            }
+
+            if (localMissing.length > 0 || badExternal.length > 0) {
+              process.exit(1);
+            }
+
+            console.log(`Validated ${fileList.length} docs files.`);
+            console.log(`Checked ${externalUrls.size} key external links.`);
+          };
+
+          main().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Validate docs navigation integrity
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+
+          const mintPath = 'docs/mint.json';
+          if (!fs.existsSync(mintPath)) {
+            console.error(`Missing ${mintPath}`);
+            process.exit(1);
+          }
+
+          const mint = JSON.parse(fs.readFileSync(mintPath, 'utf8'));
+
+          const collectPagesFromEntries = (entries) => {
+            const pages = [];
+            for (const entry of entries ?? []) {
+              if (typeof entry === 'string' && entry.length > 0) {
+                pages.push(entry);
+                continue;
+              }
+
+              if (entry && typeof entry === 'object' && Array.isArray(entry.pages)) {
+                pages.push(...collectPagesFromEntries(entry.pages));
+              }
+            }
+            return pages;
+          };
+
+          const collectPagesFromMint = (mintDoc) => {
+            const pages = [];
+
+            for (const group of mintDoc.navigation ?? []) {
+              if (!Array.isArray(group?.pages)) continue;
+              pages.push(...collectPagesFromEntries(group.pages));
+            }
+
+            for (const tab of mintDoc.tabs ?? []) {
+              if (typeof tab?.url === 'string' && tab.url.length > 0) {
+                pages.push(tab.url);
+              }
+            }
+
+            return pages;
+          };
+
+          const findDuplicates = (items) => {
+            const duplicates = [];
+            const seen = new Set();
+
+            for (const item of items) {
+              if (seen.has(item)) duplicates.push(item);
+              seen.add(item);
+            }
+
+            return duplicates;
+          };
+
+          const resolvePage = (page) => {
+            const base = path.join('docs', page);
+            const candidates = [
+              `${base}.mdx`,
+              `${base}.md`,
+              path.join(base, 'index.mdx'),
+              path.join(base, 'index.md')
+            ];
+            return candidates.find((candidate) => fs.existsSync(candidate));
+          };
+
+          const assertFixture = (condition, message) => {
+            if (!condition) {
+              throw new Error(`docs-nav-integrity fixture failed: ${message}`);
+            }
+          };
+
+          const runFixtureSmokeTests = () => {
+            const fixturePages = collectPagesFromMint({
+              navigation: [
+                {
+                  group: 'Docs',
+                  pages: [
+                    'guide/start',
+                    'guide/start',
+                    'missing/page',
+                    { group: 'Nested', pages: ['guide/nested-entry'] }
+                  ]
+                },
+                { group: 'Invalid' }
+              ],
+              tabs: [{ url: 'https://example.com/docs' }, { url: 'guide/start' }, { url: 'guides/advanced' }, {}]
+            }).filter((page) => !/^https?:\/\//i.test(page));
+
+            const duplicates = findDuplicates(fixturePages);
+            const missing = fixturePages.filter((page) => page === 'missing/page');
+
+            assertFixture(duplicates.includes('guide/start'), 'duplicate route entries should be detected');
+            assertFixture(missing.length === 1, 'missing route entries should remain detectable');
+            assertFixture(
+              fixturePages.includes('guides/advanced'),
+              'valid tab urls should be included in route integrity checks'
+            );
+            assertFixture(
+              fixturePages.includes('guide/nested-entry'),
+              'nested group page entries should be included in route integrity checks'
+            );
+          };
+
+          runFixtureSmokeTests();
+
+          const routePages = collectPagesFromMint(mint).filter((page) => !/^https?:\/\//i.test(page));
+          const duplicates = findDuplicates(routePages);
+          const missing = routePages.filter((page) => !resolvePage(page));
+
+          if (missing.length > 0) {
+            console.error('Missing pages referenced by docs/mint.json navigation:');
+            for (const page of missing) console.error(`- ${page}`);
+          }
+
+          if (duplicates.length > 0) {
+            console.error('Duplicate page ids in docs/mint.json navigation:');
+            for (const page of duplicates) console.error(`- ${page}`);
+          }
+
+          if (missing.length > 0 || duplicates.length > 0) {
+            process.exit(1);
+          }
+
+          console.log(`Validated ${routePages.length} navigation/tab entries in docs/mint.json`);
+          NODE
+
+  preview-comment:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+
+      - name: Post docs preview summary
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('node:fs');
+
+            if (!context.payload.pull_request) {
+              core.info('No pull request context; skipping.');
+              return;
+            }
+
+            const marker = '<!-- docs-preview-comment -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner,
+              repo,
+              pull_number: issue_number,
+              per_page: 100
+            });
+
+            const changedPaths = files.map((file) => file.filename);
+            const changedDocsPages = [...new Set(
+              changedPaths
+                .filter((file) => /^docs\/.*\.(md|mdx)$/.test(file))
+                .map((file) => file.replace(/^docs\//, '').replace(/\.(md|mdx)$/, ''))
+            )];
+
+            const collectPagesFromEntries = (entries) => {
+              const pages = [];
+              for (const entry of entries ?? []) {
+                if (typeof entry === 'string' && entry.length > 0) {
+                  pages.push(entry);
+                  continue;
+                }
+
+                if (entry && typeof entry === 'object' && Array.isArray(entry.pages)) {
+                  pages.push(...collectPagesFromEntries(entry.pages));
+                }
+              }
+              return pages;
+            };
+
+            let navGroups = [];
+            if (fs.existsSync('docs/mint.json')) {
+              const mint = JSON.parse(fs.readFileSync('docs/mint.json', 'utf8'));
+              navGroups = (mint.navigation ?? [])
+                .filter((group) =>
+                  collectPagesFromEntries(group.pages).some((page) =>
+                    changedDocsPages.includes(page)
+                  )
+                )
+                .map((group) => group.group);
+            }
+
+            const mintChanged = changedPaths.includes('docs/mint.json');
+            const bodyLines = [
+              marker,
+              '### Docs Preview',
+              '',
+              `Changed docs pages: **${changedDocsPages.length}**`,
+            ];
+
+            if (changedDocsPages.length > 0) {
+              bodyLines.push('', ...changedDocsPages.map((page) => `- \`${page}\``));
+            }
+
+            bodyLines.push('', `Navigation updated: **${mintChanged ? 'yes' : 'no'}**`);
+
+            if (navGroups.length > 0) {
+              bodyLines.push('', 'Impacted nav groups:', '', ...navGroups.map((group) => `- ${group}`));
+            }
+
+            const body = bodyLines.join('\n');
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100
+            });
+            const existing = comments.find((comment) => comment.body?.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body
+              });
+            }

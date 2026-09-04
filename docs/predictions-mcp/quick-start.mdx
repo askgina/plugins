@@ -1,0 +1,124 @@
+---
+title: "Quick Start"
+description: "Connect to Gina's Predictions MCP in under 2 minutes"
+---
+
+Get connected and run your first prediction market query in under 2 minutes.
+
+## 1. Add the Server
+
+Pick your client and run the install command:
+
+<Tabs>
+  <Tab title="Claude Code">
+    Run in your **terminal** (not inside Claude Code):
+
+    ```bash
+    claude mcp add predictions \
+      --transport http \
+      https://askgina.ai/ai/predictions/mcp
+    ```
+
+    Then restart Claude Code. Run `/mcp` inside Claude Code to check the server status and trigger sign-in.
+
+  </Tab>
+  <Tab title="Codex">
+    ```bash
+    bunx add-mcp "https://askgina.ai/ai/predictions/mcp" \
+      --agent codex \
+      --name predictions \
+      --transport http \
+      -y
+    ```
+  </Tab>
+  <Tab title="Cursor">
+    Open Cursor Settings → MCP → **Add new MCP server**, then paste:
+
+    - **Name:** `predictions`
+    - **Type:** `http`
+    - **URL:** `https://askgina.ai/ai/predictions/mcp`
+
+    Or add it to your `.cursor/mcp.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "predictions": {
+          "type": "http",
+          "url": "https://askgina.ai/ai/predictions/mcp"
+        }
+      }
+    }
+    ```
+
+  </Tab>
+  <Tab title="Windsurf">
+    Open Windsurf Settings → MCP → **Add Server**, then set:
+
+    - **Name:** `predictions`
+    - **URL:** `https://askgina.ai/ai/predictions/mcp`
+
+  </Tab>
+</Tabs>
+
+## 2. Connect & Sign In
+
+<Steps>
+  <Step title="Restart your client">
+    After adding the server, restart your MCP client (or reload the window in Cursor).
+  </Step>
+  <Step title="Sign in">
+    Your client will trigger the OAuth flow — a browser window opens. Sign in to Gina and approve access.
+
+    <Tip>
+    In **Claude Code**, run `/mcp` to see server status and trigger auth. In **Cursor**, go to Settings → MCP to check the connection.
+    </Tip>
+
+  </Step>
+  <Step title="Verify">
+    Once authenticated, `bash` will appear alongside your client's built-in tools. Try asking your AI assistant: *"What tools do you have from the predictions server?"*
+  </Step>
+</Steps>
+
+## 3. Run Your First Command
+
+Call `bash` with:
+
+```json
+{ "command": "echo ok" }
+```
+
+You should see `ok` in the output. You're connected! 🎉
+
+## 4. Search a Market
+
+Now try a real prediction market search:
+
+```json
+{ "command": "host-tools searchPredictionMarkets '{\"query\":\"NBA\"}'" }
+```
+
+You should see JSON output with live market data.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="No browser window opens">
+    Some clients show a sign-in link instead of opening a browser automatically. Look in your client UI for an auth link, or see [Client Setup](/predictions-mcp/client-setup) for manual sign-in commands.
+  </Accordion>
+  <Accordion title="Signed in but no tools appear">
+    Remove the server from your client, re-add it, and run `tools/list` again.
+  </Accordion>
+  <Accordion title="Command fails">
+    Start with a simple command (`echo ok`) first. If that works, try:
+    ```json
+    { "command": "commands --help host-tools" }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+- [What You Can Do](/predictions-mcp/features) — full features with example prompts
+- [Client Setup](/predictions-mcp/client-setup) — detailed config for every client
+- [Troubleshooting](/predictions-mcp/troubleshooting) — smoke test and common fixes

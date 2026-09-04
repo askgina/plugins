@@ -1,0 +1,43 @@
+---
+title: "Wallet & Account"
+description: "Find EVM or Solana addresses, check custody, and export keys safely."
+owner: "Ask Gina web team"
+lastReviewed: "2026-08-24"
+kind: "guide"
+includeInDocsAgent: true
+relatedSlugs:
+  - overview
+  - transactions-and-portfolio
+  - networks-fees-and-pricing
+  - safety-support-and-limitations
+---
+
+# Wallet & Account
+
+## Purpose
+
+Gina creates a self-custodial EVM wallet and a separate Solana wallet when you sign in. You own both wallets. Gina does not. Use the EVM address on supported EVM networks. Use the Solana address only on Solana.
+
+## Suitable Use Cases
+
+Find a receive address, check a balance, or export a key.
+
+## Prerequisites and Authentication
+
+Sign in for wallet data or key export. The public Docs Agent cannot open your account.
+
+## Inputs and Expected Results
+
+Name the asset and network. Gina returns the matching address or balance it can retrieve. For key export, open the wallet settings menu and choose Export Privy Wallet. The provider screen handles the export. The key never appears in chat.
+
+## Tested Example
+
+> Give me the address to receive USDC on Base.
+
+Expected: the Base EVM address and a reminder to deposit on the same network.
+
+## Limitations and Safety
+
+Confirm the address and network before depositing. A deposit to the wrong address or network may be unrecoverable. An exported key controls the wallet. Never paste a private key, recovery phrase, or code into chat.
+
+Related: [Transactions](/product-guide/transactions-and-portfolio), [Safety](/product-guide/safety-support-and-limitations), [Product Guide](/product-guide).

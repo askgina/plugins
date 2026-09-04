@@ -1,0 +1,158 @@
+---
+title: "Perps MCP Skill"
+description: "OpenClaw skill for perpetual futures trading on Hyperliquid"
+---
+
+# Perps MCP Skill
+
+Trade perpetual futures on Hyperliquid with real-time price feeds, position management, and order execution.
+
+## Server URL
+
+```
+https://askgina.ai/ai/perps/mcp
+```
+
+## What You Get
+
+- **MCP tool:** `bash` (commands in a persisted `/workspace`)
+- **Built-in commands:** `commands`, `host-tools`, `sql`, `kv`, `ts-exec`, `workflow`, `skill`, `hook`, `event`, `apply_patch`, and more
+- **Prompt:** `perps_guide` (if your client supports MCP prompts)
+
+## Host Tools
+
+Key host tools available in this skill:
+
+| Tool                  | Description                          |
+| --------------------- | ------------------------------------ |
+| `getHyperliquidPrice` | Get current perpetual futures prices |
+
+Discover all available tools:
+
+```json
+{ "command": "host-tools --brief" }
+```
+
+## MCP Resources
+
+| URI                               | Description                              |
+| --------------------------------- | ---------------------------------------- |
+| `mcp://perps/guide`               | Onboarding guide                         |
+| `mcp://perps/connect`             | Connection URL and sign-in triggers      |
+| `mcp://perps/quickstart`          | First-run verification sequence          |
+| `mcp://perps/auth`                | Auth expectations and token requirements |
+| `mcp://perps/policy`              | Safety boundaries                        |
+| `mcp://perps/filesystem`          | Workspace layout (`/workspace`)          |
+| `mcp://perps/commands/index`      | Built-in command catalogue               |
+| `mcp://perps/host-tools/index`    | Allowlisted host tools                   |
+| `mcp://perps/prompts/perps_guide` | Prompt version of the guide              |
+
+## Quick Install
+
+<Tabs>
+  <Tab title="Claude Code">
+    Run in your **terminal** (not inside Claude Code):
+
+    ```bash
+    claude mcp add perps \
+      --transport http \
+      https://askgina.ai/ai/perps/mcp
+    ```
+
+    Then restart Claude Code and run `/mcp` to trigger sign-in.
+
+  </Tab>
+  <Tab title="Codex">
+    ```bash
+    bunx add-mcp "https://askgina.ai/ai/perps/mcp" \
+      --agent codex \
+      --name perps \
+      --transport http \
+      -y
+    ```
+
+    Or add to `.codex/config.toml`:
+
+    ```toml
+    [mcp_servers.perps]
+    type = "http"
+    url = "https://askgina.ai/ai/perps/mcp"
+    ```
+
+  </Tab>
+  <Tab title="Cursor">
+    Add to `.cursor/mcp.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "perps": {
+          "type": "http",
+          "url": "https://askgina.ai/ai/perps/mcp"
+        }
+      }
+    }
+    ```
+
+  </Tab>
+  <Tab title="Windsurf">
+    Open Windsurf Settings → MCP → **Add Server**, then set:
+
+    - **Name:** `perps`
+    - **URL:** `https://askgina.ai/ai/perps/mcp`
+
+  </Tab>
+</Tabs>
+
+## 5-Minute Smoke Test
+
+<Steps>
+  <Step title="Connect and list tools">
+    Run `tools/list`. Sign in when prompted. Confirm `bash` appears.
+  </Step>
+  <Step title="Echo test">
+    ```json
+    { "command": "echo ok" }
+    ```
+    Expected: `ok`
+  </Step>
+  <Step title="Discover host tools">
+    ```json
+    { "command": "commands --help host-tools" }
+    ```
+    Expected: help text
+  </Step>
+  <Step title="Find a tool">
+    ```json
+    { "command": "host-tools --name getHyperliquidPrice --limit 5 --full" }
+    ```
+    Expected: JSON with tool details
+  </Step>
+  <Step title="Get BTC perps price">
+    ```json
+    { "command": "host-tools getHyperliquidPrice '{\"asset\":\"BTC\"}'" }
+    ```
+    Expected: JSON with current BTC perpetual futures price
+  </Step>
+</Steps>
+
+## Usage Patterns
+
+- Prefer `host-tools <toolName> [input]` for direct execution inside the sandbox
+- Perps MCP is default enabled for authenticated Gina users; no separate perps MCP feature flag is required
+- Keep discovery bounded: use `--limit` and `--name` to avoid context bloat
+- Use `callTool(...)` only inside `ts-exec` scripts
+- Treat `/workspace/tools/host/*` as generated stubs for advanced `ts-exec` usage, not the default discovery path
+- `/workspace` persists between calls, but each `bash` invocation starts a fresh shell session
+- The host tool surface is intentionally allowlisted
+
+## Safety Notes
+
+<Warning>
+Perpetual futures trading carries significant risk.
+
+- The sandbox can write files into your persisted `/workspace`
+- Host tools may execute trades and other financial actions
+- Start with price lookups and read-only operations before executing trades
+- Large position sizes require explicit confirmation
+  </Warning>

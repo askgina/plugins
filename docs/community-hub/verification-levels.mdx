@@ -1,0 +1,31 @@
+---
+title: "Verification Levels"
+description: "How trust is signaled in Community Hub"
+---
+
+Community Hub uses verification tiers so users can quickly assess confidence.
+
+## Levels
+
+### `unverified`
+
+- Entry is published and useful, but not fully maintainer-validated.
+- Good for discovery and experimentation.
+
+### `verified`
+
+- Entry has passed maintainer validation.
+- Includes a recent verification date.
+- Better default for production-like usage.
+
+## Promotion criteria
+
+- Submission has complete capability contract.
+- Setup path is reproducible.
+- Safety/permission model is explicit.
+- Maintainer validation is documented.
+
+## Downgrade behavior
+
+- Stale or broken entries may be downgraded from `verified` to `unverified`.
+- Entries are typically downgraded before archival/removal.

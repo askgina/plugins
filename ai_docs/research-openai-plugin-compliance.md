@@ -2,7 +2,7 @@
 
 Research date: 2026-08-26. Scope: MCP-backed plugins submitted to the universal public Plugins Directory. This note does not assess this repository's plugin implementation.
 
-The repository has no prior research-note directory or research findings files. Its established documentation location is `docs/`, so this note follows that convention.
+Internal engineering notes live in `ai_docs/`; the public Mintlify source is isolated under `docs/`.
 
 ## Source set and precedence
 

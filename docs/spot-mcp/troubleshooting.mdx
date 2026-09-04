@@ -1,0 +1,33 @@
+---
+title: "Troubleshooting"
+description: "Verify and fix a Spot MCP connection"
+---
+
+## Smoke Test
+
+1. Confirm the URL is exactly `https://askgina.ai/ai/spot/mcp`.
+2. Complete OAuth and approve write access.
+3. Run `tools/list`; `bash` and 23 native Spot tools should appear.
+4. Call `getSimplePrice` directly.
+5. Call `{ "command": "echo ok" }` to verify `bash`.
+6. Call `{ "command": "host-tools --name getSimplePrice --limit 5 --full" }` to verify the matching sandbox allowlist.
+
+## Common Issues
+
+### Access is denied after sign-in
+
+Spot MCP is rollout-controlled by one global database flag. A true `mcp_spot_enabled` row enables every authenticated account; a false or missing row denies every account. Admin status and non-production environments do not bypass it. Ask an operator to enable the global row rather than changing an individual account.
+
+### An old Gina token fails
+
+This is expected. `/ai/gina/mcp` is read-only and old execute grants are not migrated. Remove the old connection, add the Spot URL, and complete OAuth again.
+
+### A host tool is missing
+
+Check [Features and Allowlist](/spot-mcp/features). Predictions, Perps, dashboard rendering, and condition-specific scheduling tools are intentionally excluded.
+
+`webSearch` and `fetchUrl` are also excluded. Use your MCP client's native web tools.
+
+### A write input fails
+
+Read the native tool's published input schema, or run `host-tools schema <toolName>` inside `bash`. Re-check the asset, chain, amount, destination, and transaction details before retrying.

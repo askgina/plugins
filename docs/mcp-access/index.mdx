@@ -1,0 +1,45 @@
+---
+title: "Choose Your MCP Access"
+description: "One read-only connection or three venue-specific write connections"
+---
+
+Gina separates research from execution so each MCP connection has a clear authority boundary.
+
+## Safe Mode: Gina Read
+
+Connect `https://askgina.ai/ai/gina/mcp` for read-only access across Spot, Predictions, and Perps. Gina Read exposes named research and account tools; it does not expose `bash` or write tools.
+
+<Card title="Gina Read" icon="shield" href="/mcp-access/gina-read">
+  Cross-market research and account visibility with `tools:read`. A packaged plugin for ChatGPT,
+  Codex, Claude, and other hosts is coming soon.
+</Card>
+
+## Write Access: Degen Mode
+
+Choose the market you want an agent to operate. Each connection uses `tools:execute`, exposes one sandboxed `bash` tool, and has its own host-tool allowlist.
+
+<CardGroup cols={3}>
+  <Card title="Spot" icon="coins" href="/spot-mcp">
+    Token research, swaps, transfers, transaction execution, and scheduling.
+  </Card>
+  <Card title="Predictions" icon="chart-line" href="/predictions-mcp">
+    Polymarket discovery, portfolio workflows, and trading.
+  </Card>
+  <Card title="Perps" icon="chart-candlestick" href="/perps-mcp">
+    Hyperliquid and HIP-3 market, account, trading, and funding workflows.
+  </Card>
+</CardGroup>
+
+<Warning>
+  Write access can move funds or place trades. Connect only the venue you need, inspect tool
+  schemas, and review amounts, assets, destinations, and market sides before execution.
+</Warning>
+
+## Connection Matrix
+
+| Mode         | Server                | OAuth scope     | MCP tools                | Markets                    |
+| ------------ | --------------------- | --------------- | ------------------------ | -------------------------- |
+| Safe mode    | `/ai/gina/mcp`        | `tools:read`    | Named read tools         | Spot + Predictions + Perps |
+| Write access | `/ai/spot/mcp`        | `tools:execute` | 23 native tools + `bash` | Spot                       |
+| Write access | `/ai/predictions/mcp` | `tools:execute` | `bash`                   | Predictions                |
+| Write access | `/ai/perps/mcp`       | `tools:execute` | `bash`                   | Perps                      |

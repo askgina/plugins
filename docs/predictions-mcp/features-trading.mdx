@@ -1,0 +1,54 @@
+---
+title: "Trading"
+description: "Place trades, limit orders, and understand prediction market outcomes"
+---
+
+## Placing Trades
+
+Execute real trades on Polymarket. Buy or sell outcome shares.
+
+<Warning>
+  Trading uses real money (USDC on Polygon). Always review trade details before confirming.
+</Warning>
+
+### By Dollar Amount
+
+```
+"bet $5 on eagles to win tonight"
+"put $20 on cowboys to win this weekend"
+"bet $10 on trump winning the election"
+"buy $50 of Yes on the Bitcoin market"
+```
+
+### By Shares
+
+```
+"buy 100 shares of YES in the bitcoin market"
+"buy 50 NO shares for the fed rate decision"
+"sell 25 shares of my Lakers position"
+```
+
+### Limit Orders
+
+```
+"buy Yes at 0.40 or better on the Trump market"
+"place a limit order for No at 0.25"
+"buy Yes shares but avoid slippage"
+```
+
+---
+
+## Understanding Outcomes
+
+- **Yes price of $0.70** = 70% implied probability of happening
+- **No price** is always (1 − Yes price)
+- Winning shares pay out **$1.00 each**
+- Your profit = $1.00 − purchase price per share
+
+### Example
+
+If you buy 100 Yes shares at $0.40 each:
+
+- **Cost:** $40
+- **If Yes wins:** you get $100 → **$60 profit**
+- **If No wins:** shares worth $0 → **$40 loss**

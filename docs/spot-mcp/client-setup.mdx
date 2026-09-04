@@ -1,0 +1,52 @@
+---
+title: "Client Setup"
+description: "Configure an MCP client for Spot write access"
+---
+
+## Server URL
+
+```
+https://askgina.ai/ai/spot/mcp
+```
+
+<Tabs>
+  <Tab title="Claude Code">
+    ```bash
+    claude mcp add spot --transport http https://askgina.ai/ai/spot/mcp
+    ```
+
+    Restart Claude Code and run `/mcp` to sign in.
+
+  </Tab>
+  <Tab title="Codex">
+    ```bash
+    bunx add-mcp "https://askgina.ai/ai/spot/mcp" --agent codex --name spot --transport http -y
+    ```
+
+    Or add:
+
+    ```toml
+    [mcp_servers.spot]
+    type = "http"
+    url = "https://askgina.ai/ai/spot/mcp"
+    ```
+
+  </Tab>
+  <Tab title="Cursor">
+    ```json
+    {
+      "mcpServers": {
+        "spot": {
+          "type": "http",
+          "url": "https://askgina.ai/ai/spot/mcp"
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Windsurf">
+    Add an HTTP MCP server named `spot` with URL `https://askgina.ai/ai/spot/mcp`, then restart.
+  </Tab>
+</Tabs>
+
+The OAuth grant is bound to Spot and carries `tools:execute`. Gina Read tokens and legacy Gina execute tokens do not substitute for a Spot token.

@@ -1,0 +1,59 @@
+---
+title: "Quick Start"
+description: "Connect to Spot MCP and verify the sandbox"
+---
+
+## 1. Add the Server
+
+<Tabs>
+  <Tab title="Claude Code">
+    ```bash
+    claude mcp add spot --transport http https://askgina.ai/ai/spot/mcp
+    ```
+  </Tab>
+  <Tab title="Codex">
+    ```bash
+    bunx add-mcp "https://askgina.ai/ai/spot/mcp" --agent codex --name spot --transport http -y
+    ```
+  </Tab>
+  <Tab title="Generic JSON">
+    ```json
+    {
+      "mcpServers": {
+        "spot": {
+          "transport": "http",
+          "url": "https://askgina.ai/ai/spot/mcp"
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## 2. Sign In and Approve
+
+Restart the client, complete Gina OAuth in the browser, and approve Spot write access. `tools/list` should return `bash` plus 23 native Spot tools.
+
+## 3. Verify
+
+Call `getSimplePrice` directly with:
+
+```json
+{ "ids": "ethereum", "vs_currencies": "usd" }
+```
+
+To verify `bash` too:
+
+```json
+{ "command": "echo ok" }
+```
+
+```json
+{ "command": "host-tools --brief" }
+```
+
+Native MCP clients publish each tool's input schema. Inside `bash`, inspect a write schema with:
+
+```json
+{ "command": "host-tools schema getSwapCalldatas" }
+```

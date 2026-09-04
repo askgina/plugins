@@ -1,0 +1,44 @@
+---
+title: "Transactions & Portfolio"
+description: "Check holdings, review a send or swap, or execute it."
+owner: "Ask Gina web team"
+lastReviewed: "2026-08-24"
+kind: "guide"
+includeInDocsAgent: true
+relatedSlugs:
+  - overview
+  - wallet-and-account
+  - market-research
+  - networks-fees-and-pricing
+  - safety-support-and-limitations
+---
+
+# Transactions & Portfolio
+
+## Purpose
+
+Gina can show holdings, prepare a supported transfer or swap for review, or submit it. Your instruction decides whether Gina stops at a proposal or submits the transaction.
+
+## Suitable Use Cases
+
+Check holdings, review a proposal, or execute a send or swap.
+
+## Prerequisites and Authentication
+
+Sign in and fund the Gina Wallet first. A direct instruction to "send" or "swap" authorizes same-turn execution after Gina builds the transaction. To review without submission, say "prepare," "quote," "draft," "do not execute," or "ready for review." Gina then prepares the transaction but does not submit it.
+
+## Inputs and Expected Results
+
+Give the asset, amount, network, recipient, or history range. A review-only request returns a proposal. Check its network, contract, amount, recipient, output, and fees before giving a later send or swap instruction. If Gina submits, it returns a result with a transaction hash.
+
+## Tested Example
+
+> Prepare to send 5 USDC to 0x... on Base.
+
+Expected: a review-only proposal. Because the request says "prepare," Gina stops before submission.
+
+## Limitations and Safety
+
+Quotes expire. Routes and fees can change. A transaction hash does not guarantee finality. Gina cannot promise profit or recover a wrong send.
+
+Related: [Wallet](/product-guide/wallet-and-account), [Networks and fees](/product-guide/networks-fees-and-pricing), [Safety](/product-guide/safety-support-and-limitations), [Product Guide](/product-guide).

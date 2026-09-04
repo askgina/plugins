@@ -1,0 +1,49 @@
+---
+title: "FAQ"
+description: "Frequently asked questions about Gina Predictions MCP"
+---
+
+<AccordionGroup>
+  <Accordion title="What is Predictions MCP?">
+    Predictions MCP is an MCP server by Gina that lets you search, analyze, and trade on prediction markets (Polymarket) directly from any MCP-compatible client like Cursor, Claude Code, Codex, or Windsurf.
+  </Accordion>
+
+<Accordion title="Which MCP clients are supported?">
+  Any client that supports MCP over streamable HTTP: - **Claude Code** — via `claude mcp add` -
+  **Codex** — via `bunx add-mcp` or `.codex/config.toml` - **Cursor** — via Settings → MCP or
+  `.cursor/mcp.json` - **Windsurf** — via Settings → MCP - **OpenCode** — via `opencode mcp add` -
+  Any client supporting the generic JSON MCP config format
+</Accordion>
+
+<Accordion title="Why does a browser window open?">
+  That's the OAuth sign-in flow. You need to sign in to Gina and approve access for your MCP client.
+  This only happens once per session. After signing in, return to your client and retry
+  `tools/list`.
+</Accordion>
+
+<Accordion title="Do I need to copy-paste a token?">
+  No. Authentication happens automatically through OAuth in your browser. Your MCP client handles
+  the token exchange.
+</Accordion>
+
+<Accordion title="What can I do with it?">
+  - Search prediction markets (sports, politics, crypto, entertainment) - Get trending/popular
+  markets - View market details, odds, and volume - Execute trades on Polymarket - Track your open
+  positions and P&L
+</Accordion>
+
+<Accordion title="Is it safe?">
+  Yes. The `bash` tool runs in a sandboxed workspace: - Read-only commands (search, list, trending)
+  have no side effects - Trading actions require explicit confirmation for large orders - You can
+  start with read-only operations and only opt into trading when ready
+</Accordion>
+
+<Accordion title="Is it free?">
+  Every user gets a quota of free AI credits to start experimenting. Once you get to advanced usage,
+  you can use the crypto in your Gina wallet to top up credits.
+</Accordion>
+
+  <Accordion title="Where do I report issues?">
+    Start with [Troubleshooting](/predictions-mcp/troubleshooting). If you're still stuck, reach out on [Twitter/X](https://x.com/askginadotai).
+  </Accordion>
+</AccordionGroup>
