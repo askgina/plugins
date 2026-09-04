@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { ASK_GINA_SKILL_DEFINITIONS } from "@askgina/contracts";
 import { Data, Effect, Exit, FileSystem, Function, Path, PlatformError, Schema } from "effect";
 
-export const TARGET_NAMES = ["openai", "cursor", "claude", "copilot", "gemini"] as const;
+export const TARGET_NAMES = ["openai", "cursor", "claude", "copilot", "gemini", "devin"] as const;
 export type TargetName = (typeof TARGET_NAMES)[number];
 export const SKILL_NAMES = ASK_GINA_SKILL_DEFINITIONS.map((skill) => skill.name);
 
@@ -19,6 +19,7 @@ const CURSOR_SOURCE_ENTRIES = [
   "rules",
   "commands",
 ] as const;
+const DEVIN_SOURCE_ENTRIES = [".devin-plugin", ".mcp.json"] as const;
 const here = fileURLToPath(new URL(".", import.meta.url));
 
 type SyncEnvironment = FileSystem.FileSystem | Path.Path;
@@ -186,6 +187,19 @@ const assertSourceIsPortable = (
       );
     }
 
+    const legacyDevinOverlay = paths.join(packageRoot, "targets", "devin");
+    const legacyDevinOverlayExists = yield* withFileSystemError(
+      legacyDevinOverlay,
+      "cannot be inspected",
+      fs.exists(legacyDevinOverlay),
+    );
+    if (legacyDevinOverlayExists) {
+      return yield* pluginSkillSyncError(
+        legacyDevinOverlay,
+        "legacy Devin target overlay must not exist",
+      );
+    }
+
     const openAiFiles = [
       paths.join(packageRoot, ".codex-plugin", "plugin.json"),
       paths.join(packageRoot, ".mcp.json"),
@@ -236,6 +250,7 @@ const assertSourceIsPortable = (
       paths.join(packageRoot, "commands", "research-hyperliquid.md"),
       paths.join(packageRoot, "commands", "research-prediction-markets.md"),
     ] as const;
+    const devinManifest = paths.join(packageRoot, ".devin-plugin", "plugin.json");
     yield* Effect.forEach(cursorFiles, (candidate) =>
       Effect.gen(function* () {
         const symbolicLink = yield* fs
@@ -271,8 +286,24 @@ const assertSourceIsPortable = (
     yield* assertNoSymbolicLinks(paths.join(packageRoot, ".cursor-plugin"));
     yield* assertNoSymbolicLinks(paths.join(packageRoot, "rules"));
     yield* assertNoSymbolicLinks(paths.join(packageRoot, "commands"));
+    const devinManifestInfo = yield* withFileSystemError(
+      devinManifest,
+      "cannot be inspected",
+      fs.stat(devinManifest),
+    );
+    if (devinManifestInfo.type !== "File") {
+      return yield* pluginSkillSyncError(devinManifest, "required Devin manifest is not a file");
+    }
+    yield* withFileSystemError(
+      devinManifest,
+      "cannot be read",
+      fs.readFileString(devinManifest),
+    ).pipe(Effect.flatMap((source) => parseJson(devinManifest, source)));
+    yield* assertNoSymbolicLinks(paths.join(packageRoot, ".devin-plugin"));
     yield* Effect.forEach(
-      TARGET_NAMES.filter((target) => target !== "openai" && target !== "cursor"),
+      TARGET_NAMES.filter(
+        (target) => target !== "openai" && target !== "cursor" && target !== "devin",
+      ),
       (target) =>
         Effect.gen(function* () {
           const overlay = paths.join(packageRoot, "targets", target);
@@ -369,31 +400,15 @@ const copyTargetOverlay = (
     );
   });
 
-const copyOpenAiSourceSurfaces = (
+const copyRootSourceSurfaces = (
   packageRoot: string,
   destination: string,
+  entries: readonly string[],
 ): Effect.Effect<void, PluginSkillSyncError, SyncEnvironment> =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const paths = yield* Path.Path;
-    yield* Effect.forEach(OPENAI_SOURCE_ENTRIES, (entry) => {
-      const source = paths.join(packageRoot, entry);
-      return withFileSystemError(
-        source,
-        "cannot be copied",
-        fs.copy(source, paths.join(destination, entry), { overwrite: false }),
-      );
-    });
-  });
-
-const copyCursorSourceSurfaces = (
-  packageRoot: string,
-  destination: string,
-): Effect.Effect<void, PluginSkillSyncError, SyncEnvironment> =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const paths = yield* Path.Path;
-    yield* Effect.forEach(CURSOR_SOURCE_ENTRIES, (entry) => {
+    yield* Effect.forEach(entries, (entry) => {
       const source = paths.join(packageRoot, entry);
       return withFileSystemError(
         source,
@@ -464,9 +479,11 @@ const materializeTarget = (
     );
 
     if (target === "openai") {
-      yield* copyOpenAiSourceSurfaces(packageRoot, destination);
+      yield* copyRootSourceSurfaces(packageRoot, destination, OPENAI_SOURCE_ENTRIES);
     } else if (target === "cursor") {
-      yield* copyCursorSourceSurfaces(packageRoot, destination);
+      yield* copyRootSourceSurfaces(packageRoot, destination, CURSOR_SOURCE_ENTRIES);
+    } else if (target === "devin") {
+      yield* copyRootSourceSurfaces(packageRoot, destination, DEVIN_SOURCE_ENTRIES);
     } else {
       yield* copyTargetOverlay(paths.join(packageRoot, "targets", target), destination);
     }
@@ -531,6 +548,7 @@ export const createGeneratedPluginTargets = (
       claude: "",
       copilot: "",
       gemini: "",
+      devin: "",
     };
 
     yield* Effect.forEach(TARGET_NAMES, (target) => {

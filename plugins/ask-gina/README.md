@@ -10,6 +10,32 @@ The repository may build, verify, and archive these artifacts. It does not publi
 release, deploy, or submit them: packaging creates evidence, not publication
 authority.
 
+## Devin
+
+Install this package remotely by adding the direct `git-subdir` source to a
+Devin account or enterprise manifest:
+
+```json
+{
+  "requiredPlugins": [
+    {
+      "source": "git-subdir",
+      "url": "https://github.com/askgina/plugins.git",
+      "path": "plugins/ask-gina"
+    }
+  ]
+}
+```
+
+The repository root is not a Devin plugin, so its contributor-facing `AGENTS.md`
+never becomes a session rule. The repository is public, so this source needs no
+GitHub credentials. A future Devin marketplace must live in a dedicated
+repository whose root content is safe to install.
+
+For local authoring, run `devin plugins install ./plugins/ask-gina`. Devin loads
+the four canonical skills as `/ask-gina:<skill>` commands and connects the
+`ask-gina` MCP server from `.mcp.json`.
+
 ## Cursor and Grok Bot
 
 Ask Gina is a research assistant for crypto, prediction markets, perpetuals, and equities.

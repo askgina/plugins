@@ -208,6 +208,7 @@ const targetManifestPath: Readonly<Record<TargetName, string>> = {
   claude: ".claude-plugin/plugin.json",
   copilot: "plugin.json",
   gemini: "gemini-extension.json",
+  devin: ".devin-plugin/plugin.json",
 };
 
 const targetMcpPath: Readonly<Partial<Record<TargetName, string>>> = {
@@ -215,6 +216,7 @@ const targetMcpPath: Readonly<Partial<Record<TargetName, string>>> = {
   cursor: "mcp.json",
   claude: ".mcp.json",
   copilot: "mcp.json",
+  devin: ".mcp.json",
 };
 
 const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
@@ -223,6 +225,7 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
     ".agent-plugin",
     ".claude-plugin",
     ".cursor-plugin",
+    ".devin-plugin",
     "plugin.json",
     "mcp.json",
     "gemini-extension.json",
@@ -233,6 +236,7 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
     ".app.json",
     ".claude-plugin",
     ".codex-plugin",
+    ".devin-plugin",
     "plugin.json",
     ".mcp.json",
     "gemini-extension.json",
@@ -241,6 +245,7 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
     ".app.json",
     ".cursor-plugin",
     ".codex-plugin",
+    ".devin-plugin",
     "plugin.json",
     "mcp.json",
     "gemini-extension.json",
@@ -252,6 +257,7 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
     ".claude-plugin",
     ".cursor-plugin",
     ".codex-plugin",
+    ".devin-plugin",
     ".mcp.json",
     "gemini-extension.json",
     "rules",
@@ -262,9 +268,23 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
     ".claude-plugin",
     ".cursor-plugin",
     ".codex-plugin",
+    ".devin-plugin",
     "plugin.json",
     "mcp.json",
     ".mcp.json",
+    "rules",
+    "commands",
+  ],
+  devin: [
+    ".app.json",
+    ".agent-plugin",
+    ".claude-plugin",
+    ".codex-plugin",
+    ".cursor-plugin",
+    "plugin.json",
+    "mcp.json",
+    "gemini-extension.json",
+    "assets",
     "rules",
     "commands",
   ],
@@ -349,6 +369,29 @@ const validateManifest = (target: TargetName, manifest: unknown): boolean => {
     );
   }
 
+  if (target === "devin") {
+    return (
+      hasExactKeys(manifest, [
+        "name",
+        "version",
+        "description",
+        "author",
+        "homepage",
+        "repository",
+        "license",
+        "keywords",
+        "skills",
+        "mcpServers",
+      ]) &&
+      hasExactKeys(nested(manifest, "author"), ["name"]) &&
+      nested(manifest, "homepage") === "https://askgina.ai" &&
+      nested(manifest, "repository") === "https://github.com/askgina/plugins" &&
+      nested(manifest, "license") === "Apache-2.0" &&
+      nested(manifest, "skills") === "skills" &&
+      nested(manifest, "mcpServers") === ".mcp.json"
+    );
+  }
+
   return (
     hasExactKeys(manifest, ["name", "version", "description", "author"]) &&
     hasExactKeys(nested(manifest, "author"), ["name"])
@@ -356,7 +399,7 @@ const validateManifest = (target: TargetName, manifest: unknown): boolean => {
 };
 
 const validateMcp = (target: TargetName, manifest: unknown): boolean => {
-  const serverName = target === "openai" ? "ask-gina" : "gina";
+  const serverName = target === "openai" || target === "devin" ? "ask-gina" : "gina";
   const server = nested(manifest, "mcpServers", serverName);
   const rootKeys =
     target === "copilot"
@@ -387,7 +430,7 @@ const validateMcp = (target: TargetName, manifest: unknown): boolean => {
   }
   return (
     nested(server, "type") ===
-    (target === "openai" || target === "claude" ? "http" : "streamable-http")
+    (target === "openai" || target === "claude" || target === "devin" ? "http" : "streamable-http")
   );
 };
 
@@ -1022,6 +1065,19 @@ export const checkRepositoryConformance = (
       legacyCursorExists ? "legacy Cursor overlay must be removed" : undefined,
     );
 
+    const legacyDevinOverlay = paths.join(packageRoot, "targets", "devin");
+    const legacyDevinExists = yield* withFileSystemError(
+      legacyDevinOverlay,
+      "cannot be inspected",
+      fs.exists(legacyDevinOverlay),
+    );
+    addCheck(
+      "repository.legacy_devin.absent",
+      "Legacy targets/devin overlay is absent",
+      !legacyDevinExists,
+      legacyDevinExists ? "legacy Devin overlay must be removed" : undefined,
+    );
+
     const cursorMarketplacePath = paths.join(repositoryRoot, ".cursor-plugin", "marketplace.json");
     const cursorMarketplaceExists = yield* withFileSystemError(
       cursorMarketplacePath,
@@ -1130,6 +1186,58 @@ export const checkRepositoryConformance = (
         "repository.root_cursor.mcp_contract",
         "Root Cursor MCP configuration binds the production endpoint",
         validateMcp("cursor", mcp),
+      );
+    }
+
+    const rootDevinManifestPath = paths.join(repositoryRoot, ".devin-plugin", "plugin.json");
+    const rootDevinManifestExists = yield* withFileSystemError(
+      rootDevinManifestPath,
+      "cannot be inspected",
+      fs.exists(rootDevinManifestPath),
+    );
+    addCheck(
+      "repository.devin.root_manifest_absent",
+      "Repository root does not install contributor instructions as a Devin plugin",
+      !rootDevinManifestExists,
+      rootDevinManifestExists
+        ? "distribute plugins/ask-gina directly; the repository root contains contributor instructions"
+        : undefined,
+    );
+
+    const devinManifestPath = paths.join(packageRoot, ".devin-plugin", "plugin.json");
+    const devinManifestExists = yield* withFileSystemError(
+      devinManifestPath,
+      "cannot be inspected",
+      fs.exists(devinManifestPath),
+    );
+    const devinManifestType = devinManifestExists
+      ? (yield* withFileSystemError(
+          devinManifestPath,
+          "cannot be inspected",
+          fs.stat(devinManifestPath),
+        )).type
+      : undefined;
+    addCheck(
+      "repository.devin.plugin_manifest_exists",
+      "Canonical Devin plugin manifest exists as a regular file",
+      devinManifestExists && devinManifestType === "File",
+    );
+    if (devinManifestExists) {
+      const manifest = yield* readJson(fs, devinManifestPath);
+      addCheck(
+        "repository.devin.plugin_manifest_contract",
+        "Canonical Devin plugin manifest has the exact source and release contract",
+        validateManifest("devin", manifest),
+      );
+    }
+    if (
+      yield* withFileSystemError(openAiMcpPath, "cannot be inspected", fs.exists(openAiMcpPath))
+    ) {
+      const mcp = yield* readJson(fs, openAiMcpPath);
+      addCheck(
+        "repository.devin.plugin_mcp_contract",
+        "Canonical Devin plugin MCP configuration binds the production endpoint",
+        validateMcp("devin", mcp),
       );
     }
 
