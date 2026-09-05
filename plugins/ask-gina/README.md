@@ -27,14 +27,17 @@ Devin account or enterprise manifest:
 }
 ```
 
-The repository root is not a Devin plugin, so its contributor-facing `AGENTS.md`
-never becomes a session rule. The repository is public, so this source needs no
-GitHub credentials. A future Devin marketplace must live in a dedicated
-repository whose root content is safe to install.
+That `git-subdir` clones the whole `plugins/ask-gina/` directory, including
+Cursor extras and packaging internals. After install, Devin activates the four
+canonical skills as `/ask-gina:<skill>` and the `ask-gina` MCP server from
+`.mcp.json`. `devin plugins info` reports no rules, no hooks, and no second MCP
+server, so Cursor `mcp.json`, `rules/*.mdc`, and `commands/` stay on disk unused.
+The repository root is outside this path, so contributor-facing `AGENTS.md` is
+not installed. The repository is public, so this source needs no GitHub
+credentials. A future Devin marketplace must live in a dedicated repository
+whose root content is safe to install.
 
-For local authoring, run `devin plugins install ./plugins/ask-gina`. Devin loads
-the four canonical skills as `/ask-gina:<skill>` commands and connects the
-`ask-gina` MCP server from `.mcp.json`.
+For local authoring, run `devin plugins install ./plugins/ask-gina`.
 
 ## Cursor and Grok Bot
 

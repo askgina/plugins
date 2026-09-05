@@ -22,17 +22,20 @@ points directly at `plugins/ask-gina/`, so a clean checkout exposes the OpenAI
 source without a generation step. `.cursor-plugin/marketplace.json` is the
 template-native Cursor marketplace descriptor and points at the same plugin
 root. Devin has no separate marketplace descriptor in this repository. Remote
-consumers install `plugins/ask-gina/` directly with a `git-subdir` source. The
-repository root is not a Devin plugin, so its contributor-facing `AGENTS.md`
-never becomes an installed session rule. A future Devin marketplace must use a
-dedicated repository whose root content is safe to install. The directly
+consumers install `plugins/ask-gina/` directly with a `git-subdir` source, which
+clones that whole plugin directory. The repository root is not a Devin plugin,
+so its contributor-facing `AGENTS.md` never becomes an installed session rule.
+A future Devin marketplace must use a dedicated repository whose root content
+is safe to install. The directly
 loadable OpenAI files live at the plugin
 root: `.codex-plugin/plugin.json`, `.mcp.json`, `assets/icon.svg`, and `skills/`.
 The directly loadable Cursor files live beside them:
 `.cursor-plugin/plugin.json`, `mcp.json`, `assets/icon.svg`, `README.md`,
-`rules/`, `commands/`, and `skills/`. Devin loads
-`.devin-plugin/plugin.json`, `.mcp.json`, and the same canonical `skills/` from
-the plugin root.
+`rules/`, `commands/`, and `skills/`. After a Devin `git-subdir` or local
+install of that same directory, Devin activates `.devin-plugin/plugin.json`,
+`.mcp.json`, and the canonical `skills/`. Cursor `mcp.json`, `rules/*.mdc`, and
+`commands/` remain in the checkout; `devin plugins info` reports no rules, no
+hooks, and only the `ask-gina` MCP server.
 The repository is public. Automated remote marketplace proof still runs only on a
 trusted same-repository push and uses an ephemeral, read-only GitHub token only while
 Codex clones the marketplace. Pull-request jobs never receive this token. The smoke harness
@@ -51,7 +54,10 @@ OpenAI, Cursor, and Devin targets select only their root files and canonical ski
 Every remaining host combines its `targets/<host>/` overlay with the same
 canonical skills. Generated host trees are output, never authoring source.
 The Cursor generated host also includes `README.md`, `rules/`, and `commands/`.
-Those extras are Cursor-only. Grok Bot still loads skills and MCP.
+Those extras are Cursor-only. The generated Devin archive stays lean
+(`.devin-plugin`, `.mcp.json`, `skills/`) even though a `git-subdir` clone of
+`plugins/ask-gina/` contains the rest of the package. Grok Bot still loads
+skills and MCP.
 
 ## Runtime
 
