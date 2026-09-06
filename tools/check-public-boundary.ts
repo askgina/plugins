@@ -21,7 +21,7 @@ const PACKAGES = [
 ];
 const MAX_FINDINGS = 100;
 const MAX_TEXT_BYTES = 2 * 1024 * 1024;
-const DOCUMENTATION_JPEG_ASSETS: Record<string, true> = {
+const DOCUMENTATION_PNG_ASSETS: Record<string, true> = {
   "docs/images/product/agent-setup-read-only.png": true,
   "docs/images/product/create-prompt.png": true,
   "docs/images/product/perps-markets.png": true,
@@ -88,24 +88,6 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 const ABSOLUTE_OR_URI_SOURCE = /^(?:\/|[A-Za-z]:[\\/]|\\\\|[A-Za-z][A-Za-z\d+.-]*:)/u;
 
-const hasPngSignature = (bytes: Uint8Array): boolean =>
-  bytes.length >= 8 &&
-  bytes[0] === 0x89 &&
-  bytes[1] === 0x50 &&
-  bytes[2] === 0x4e &&
-  bytes[3] === 0x47 &&
-  bytes[4] === 0x0d &&
-  bytes[5] === 0x0a &&
-  bytes[6] === 0x1a &&
-  bytes[7] === 0x0a;
-
-const hasJpegSignature = (bytes: Uint8Array): boolean =>
-  bytes.length >= 4 &&
-  bytes[0] === 0xff &&
-  bytes[1] === 0xd8 &&
-  bytes[bytes.length - 2] === 0xff &&
-  bytes[bytes.length - 1] === 0xd9;
-
 export const isDeclaredPngAsset = ({
   label,
   bytes,
@@ -114,11 +96,21 @@ export const isDeclaredPngAsset = ({
   readonly bytes: Uint8Array;
 }): boolean => {
   const filename = label.slice(label.lastIndexOf("/") + 1);
-  if (DOCUMENTATION_JPEG_ASSETS[label] === true) return hasJpegSignature(bytes);
+  const isDeclaredPath =
+    DOCUMENTATION_PNG_ASSETS[label] === true ||
+    (OPENAI_ASSETS.includes(filename as (typeof OPENAI_ASSETS)[number]) &&
+      (label.startsWith("plugins/ask-gina/assets/") || label.includes(":assets/")));
   return (
-    OPENAI_ASSETS.includes(filename as (typeof OPENAI_ASSETS)[number]) &&
-    (label.startsWith("plugins/ask-gina/assets/") || label.includes(":assets/")) &&
-    hasPngSignature(bytes)
+    isDeclaredPath &&
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47 &&
+    bytes[4] === 0x0d &&
+    bytes[5] === 0x0a &&
+    bytes[6] === 0x1a &&
+    bytes[7] === 0x0a
   );
 };
 
