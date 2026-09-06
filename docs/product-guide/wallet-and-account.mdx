@@ -1,8 +1,8 @@
 ---
-title: "Wallet & Account"
-description: "Find EVM or Solana addresses, check custody, and export keys safely."
+title: "Wallet and account"
+description: "Find your receive address, inspect balances, and manage wallet access."
 owner: "Ask Gina web team"
-lastReviewed: "2026-08-24"
+lastReviewed: "2026-09-06"
 kind: "guide"
 includeInDocsAgent: true
 relatedSlugs:
@@ -12,32 +12,29 @@ relatedSlugs:
   - safety-support-and-limitations
 ---
 
-# Wallet & Account
+# Wallet and account
 
-## Purpose
+Gina creates a self-custodial EVM wallet and a separate Solana wallet when you sign in. Use each address only on its supported networks.
 
-Gina creates a self-custodial EVM wallet and a separate Solana wallet when you sign in. You own both wallets. Gina does not. Use the EVM address on supported EVM networks. Use the Solana address only on Solana.
+## Inspect balances
 
-## Suitable Use Cases
+Open the wallet area in the sidebar. **Spot**, **Perps**, and **Predictions** are separate account views; funds in one are not necessarily available in another.
 
-Find a receive address, check a balance, or export a key.
+![Wallet overview with total, Spot, Perps, and Predictions balances.](/images/product/wallet-balance.png)
 
-## Prerequisites and Authentication
+_Actual wallet component with illustrative Storybook balances._
 
-Sign in for wallet data or key export. The public Docs Agent cannot open your account.
+## Find a receive address
 
-## Inputs and Expected Results
+1. Sign in and open the wallet area.
+2. Choose **Fund**, or ask **“What is my address to receive USDC on Base?”**
+3. Match the address to your wallet and confirm the network before depositing.
+4. Refresh balances afterward. An in-flight deposit may not appear immediately.
 
-Name the asset and network. Gina returns the matching address or balance it can retrieve. For key export, open the wallet settings menu and choose Export Privy Wallet. The provider screen handles the export. The key never appears in chat.
+Ask **“Show my linked wallets”** for addresses or **“What do I hold across chains?”** for holdings. Missing data is not a zero balance.
 
-## Tested Example
+## Export a key
 
-> Give me the address to receive USDC on Base.
+Open wallet settings and choose **Export Privy Wallet**. The provider handles export; never paste the key into chat or support messages. The public Docs Agent cannot access your account.
 
-Expected: the Base EVM address and a reminder to deposit on the same network.
-
-## Limitations and Safety
-
-Confirm the address and network before depositing. A deposit to the wrong address or network may be unrecoverable. An exported key controls the wallet. Never paste a private key, recovery phrase, or code into chat.
-
-Related: [Transactions](/product-guide/transactions-and-portfolio), [Safety](/product-guide/safety-support-and-limitations), [Product Guide](/product-guide).
+Related: [Transactions](/product-guide/transactions-and-portfolio), [Networks and fees](/product-guide/networks-fees-and-pricing), [Safety](/product-guide/safety-support-and-limitations), [Product Guide](/product-guide).

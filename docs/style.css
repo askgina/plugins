@@ -1,0 +1,10 @@
+/* The chatbot corpus requires a source H1 matching frontmatter. Mintlify also
+   renders that title in its page header. Keep the Markdown contract while
+   avoiding a duplicate visible heading in the documentation preview/site. */
+#content-area > .prose > h1:first-child {
+  display: none;
+}
+
+body:has(#content-area > .prose > h1:first-child) #table-of-contents-content li:first-child {
+  display: none;
+}

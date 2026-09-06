@@ -1,0 +1,55 @@
+---
+title: "What is Gina?"
+description: "Your AI assistant for crypto research, a connected wallet, trading, and automations."
+---
+
+Gina is an AI assistant with a wallet. Ask about markets, see what you own, trade supported assets, and turn recurring tasks into automations—all from the [Gina web app](https://askgina.ai).
+
+## What you can do with Gina
+
+### Research markets
+
+Ask **“Compare ETH and SOL over the past seven days. Include prices, volume, and sources.”** Check the asset, network, time range, and source in the answer. You can explore spot tokens, prediction markets, and perpetual futures.
+
+Continue with [market research](/product-guide/market-research), [Predictions](/product-guide/predictions), or [Perps](/product-guide/perps).
+
+### Understand your wallet
+
+Ask **“Summarize my balances and open positions. Do not trade.”** Gina can help you review supported account holdings and activity. Sign in to access your account data.
+
+See [wallet and account](/product-guide/wallet-and-account) and [transactions and portfolio](/product-guide/transactions-and-portfolio).
+
+### Prepare a transaction
+
+Ask **“Prepare a quote to swap 10 USDC to ETH. Do not execute.”** Check the network, asset addresses, amount, route, and fees before requesting execution. A direct send or swap instruction can authorize an actual transaction; use explicit proposal-only wording while exploring.
+
+The web app supports execution. External assistants need the appropriate [write connection](/write-access/index); the research plugin is read-only.
+
+### Automate recurring work
+
+Create a morning market report, reuse a research recipe, or respond to a supported webhook event. Copy trading has its own setup and execution controls. Start with [Automations](/product-guide/recipes-and-webhooks), test the workflow, and inspect its result before enabling unattended execution.
+
+### Keep context for later
+
+Save a watchlist or research note in account Memory, then ask Gina to read it in a later conversation. [Files and memory](/product-guide/memory) explains how to name the file and check what was saved.
+
+## Start in the web app
+
+Open [Gina](https://askgina.ai), sign in, and choose **Chat**. Ask a research question first; you do not need to deposit funds to get a market answer. Follow [your first chat](/product-guide/index) for a complete example.
+
+Every new Gina user receives **3 million free credits each month**. Purchase additional credits using any cryptoasset in your Gina wallet. Network fees are sponsored once you have purchased credits on Gina. See [credits and network fees](/product-guide/networks-fees-and-pricing).
+
+## Use Gina in your assistant
+
+You can also connect Gina to a supported assistant through MCP, which provides tools the assistant can call. A plugin bundles host-specific setup and skills that teach the assistant how to use those tools.
+
+Start with [read-only access](/mcp-access/index) for research and account visibility. Trading and transfers require separate **write access (Degen mode)**. Installing a research skill does not grant execution permissions.
+
+<CardGroup cols={2}>
+  <Card title="Connect your assistant" icon="plug" href="/connect/index">
+    Find the supported setup route for your client.
+  </Card>
+  <Card title="Start here if you're an agent" icon="robot" href="/agents/start">
+    Choose access, authenticate, discover tools, and verify your first request.
+  </Card>
+</CardGroup>

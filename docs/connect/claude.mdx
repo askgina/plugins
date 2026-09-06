@@ -1,0 +1,42 @@
+---
+title: "Claude"
+description: "Connect Gina in Claude web, Desktop, or Claude Code."
+---
+
+## Claude web and Desktop
+
+Use a remote connector, rather than a local stdio server configuration:
+
+1. Open **Customize → Connectors → + → Add custom connector**.
+2. Enter **Ask Gina** and `https://askgina.ai/ai/gina/mcp`.
+3. Add the connector, choose **Connect**, and complete Gina OAuth.
+4. Enable Gina in the conversation's connectors or tools controls.
+
+For Team or Enterprise, an owner may need to add the connector first. See [Claude's remote connector guide](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp).
+
+## Claude Code: direct MCP
+
+Run:
+
+```sh
+claude mcp add --transport http ask-gina https://askgina.ai/ai/gina/mcp
+```
+
+Start Claude Code, open `/mcp`, select Ask Gina, and complete browser authentication. See [Claude Code MCP](https://code.claude.com/docs/en/mcp).
+
+## Claude Code: repository plugin
+
+To install the research skills together with their MCP configuration, use the repository-hosted marketplace:
+
+```text
+/plugin marketplace add askgina/plugins
+/plugin install ask-gina@ask-gina-plugins
+```
+
+Restart the session if prompted, then use `/mcp` to authenticate the included connection. Choose this route instead of adding a duplicate direct connection. The repository marketplace is distinct from a listing in Anthropic's public directory.
+
+## Verify your first result
+
+Ask **“Use Gina to show ETH in USD over the past seven days.”** Confirm a Gina tool ran and the response identifies ETH and the requested period. Follow [First successful request](/start/first-request) for the expected tool boundary and recovery steps.
+
+This connection is read-only. For trading or transfers, see [Write access (Degen mode)](/write-access/index). A direct connection does not automatically install [research skills](/agents/plugins-and-skills).

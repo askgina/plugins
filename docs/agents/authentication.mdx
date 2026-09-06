@@ -1,0 +1,41 @@
+---
+title: "Authentication and verification"
+description: "Connect with OAuth or explicitly scoped manual tokens."
+---
+
+<Frame caption="Choose read-only explicitly. Captured from the real Agent Setup component with no active tokens.">
+  <img
+    src="/images/product/agent-setup-read-only.png"
+    alt="Gina Agent Setup form with Read-only — view data selected and the Generate Token button."
+  />
+</Frame>
+
+## Connect with OAuth
+
+Use OAuth when your [client](/connect/index) supports it. Add the selected server URL, choose the client's connect or authenticate action, and complete Gina sign-in and consent in the browser. Return to the client and refresh its tools.
+
+The read endpoint requests `tools:read`; execution endpoints request `tools:execute`. OAuth authentication and installing skills are separate steps.
+
+## Use a manual token
+
+For a client that accepts a Bearer token:
+
+1. Sign in to [Gina Agent Setup](https://askgina.ai/agent-setup), also available as **Agent Setup** in the app sidebar.
+2. Under **Generate Token**, enter a descriptive **Token name**, such as your client and device.
+3. Set **Access level** to **Read-only — view data** for research. The form can default to **Full access — view and execute**; explicitly change it before continuing.
+4. Choose **Generate Token** and copy the generated configuration into the client's private MCP settings. Never commit the token or paste it into a chat.
+5. For execution, deliberately choose full access and retain only the required venue connection from the generated configuration.
+6. Refresh the client and run [the first-request test](/start/first-request).
+
+Tokens expire after 90 days. Use **Active Tokens → Revoke** in Agent Setup to revoke a token. Generate a replacement when needed and update the client's private settings.
+
+## Verify the right connection
+
+| Check        | Expected for read-only                                          |
+| ------------ | --------------------------------------------------------------- |
+| URL          | `https://askgina.ai/ai/gina/mcp`                                |
+| Scope        | `tools:read`                                                    |
+| Tools        | Named market and account reads; no `bash` or execution tools    |
+| First result | A successful Gina research response, not a generic model answer |
+
+A token with the wrong scope will not become valid by changing the URL. Reconnect through OAuth or generate a correctly scoped token. For errors, see [connection troubleshooting](/help/connections).

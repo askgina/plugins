@@ -1,189 +1,52 @@
 ---
-title: "Client Setup"
-description: "Configure any MCP client to connect to Gina's Predictions MCP"
+title: "Predictions client setup"
+description: "Connect predictions execution tools using the right host configuration."
 ---
 
-Detailed setup instructions for every supported MCP client.
+This is **write access (Degen mode)**. It requests `tools:execute` and can perform predictions actions. For research only, use [Gina Read](/mcp-access/gina-read).
 
-## Server URL
+## Claude Code
 
-All clients use the same URL:
-
-```
-https://askgina.ai/ai/predictions/mcp
+```sh
+claude mcp add --transport http predictions https://askgina.ai/ai/predictions/mcp
 ```
 
-## Setup by Client
+Open `/mcp` in Claude Code and complete OAuth. See [Claude setup](/connect/claude) for the host's authentication flow.
 
-<Tabs>
-  <Tab title="Claude Code">
-    ### Quick Install
+## Codex
 
-    Run in your **terminal** (not inside Claude Code):
+```sh
+codex mcp add predictions --url https://askgina.ai/ai/predictions/mcp
+codex mcp login predictions
+```
 
-    ```bash
-    claude mcp add predictions \
-      --transport http \
-      https://askgina.ai/ai/predictions/mcp
-    ```
+Alternatively, merge this into your Codex configuration, then run the login command:
 
-    Then **restart Claude Code**. Inside Claude Code, run `/mcp` to see the server status and trigger the OAuth sign-in flow.
+```toml
+[mcp_servers.predictions]
+url = "https://askgina.ai/ai/predictions/mcp"
+```
 
-    ### Manual Config
+## Cursor
 
-    Add to `~/.claude/settings.json` (or your project's `.claude/settings.json`):
-
-    ```json
-    {
-      "mcpServers": {
-        "predictions": {
-          "transport": "http",
-          "url": "https://askgina.ai/ai/predictions/mcp"
-        }
-      }
-    }
-    ```
-
-    Then restart Claude Code.
-
-  </Tab>
-  <Tab title="Codex">
-    ### Quick Install
-
-    ```bash
-    bunx add-mcp "https://askgina.ai/ai/predictions/mcp" \
-      --agent codex \
-      --name predictions \
-      --transport http \
-      -y
-    ```
-
-    ### Manual Config
-
-    Add to `.codex/config.toml`:
-
-    ```toml
-    [mcp_servers.predictions]
-    type = "http"
-    url = "https://askgina.ai/ai/predictions/mcp"
-    ```
-
-  </Tab>
-  <Tab title="Cursor">
-    ### Option A: Settings UI
-
-    1. Open **Cursor Settings** (⌘ + ,)
-    2. Navigate to **MCP**
-    3. Click **Add new MCP server**
-    4. Enter:
-       - **Name:** `predictions`
-       - **Type:** `http`
-       - **URL:** `https://askgina.ai/ai/predictions/mcp`
-    5. Click **Save**
-
-    ### Option B: Config File
-
-    Add to `.cursor/mcp.json` in your project (or `~/.cursor/mcp.json` globally):
-
-    ```json
-    {
-      "mcpServers": {
-        "predictions": {
-          "type": "http",
-          "url": "https://askgina.ai/ai/predictions/mcp"
-        }
-      }
-    }
-    ```
-
-    Then restart Cursor or reload the window.
-
-  </Tab>
-  <Tab title="Windsurf">
-    1. Open **Windsurf Settings**
-    2. Navigate to **MCP**
-    3. Click **Add Server**
-    4. Enter:
-       - **Name:** `predictions`
-       - **URL:** `https://askgina.ai/ai/predictions/mcp`
-    5. Save and restart
-  </Tab>
-  <Tab title="OpenCode">
-    ### Quick Install
-
-    ```bash
-    opencode mcp add predictions \
-      --transport http \
-      https://askgina.ai/ai/predictions/mcp
-    ```
-
-  </Tab>
-  <Tab title="Generic JSON">
-    For any MCP client that supports JSON config:
-
-    ```json
-    {
-      "mcpServers": {
-        "predictions": {
-          "transport": "http",
-          "url": "https://askgina.ai/ai/predictions/mcp"
-        }
-      }
-    }
-    ```
-
-  </Tab>
-</Tabs>
-
-## Sign In (OAuth)
-
-After adding the server, you need to authenticate:
-
-<Steps>
-  <Step title="Restart your client">
-    Restart your MCP client so it picks up the new server configuration.
-  </Step>
-  <Step title="Trigger auth">
-    Your client will automatically trigger the OAuth flow when it tries to connect. If it doesn't: -
-    **Cursor:** Go to Settings → MCP and check the server status - **Claude Code:** Run `/mcp`
-    inside Claude Code and select the `predictions` server - **Codex:** Run `codex mcp login
-    predictions`
-  </Step>
-  <Step title="Browser sign-in">A browser window opens. Sign in to Gina and approve access.</Step>
-  <Step title="Verify">
-    Back in your client, `bash` should now appear as an available tool. Try asking your AI: *"What
-    MCP tools do you have?"*
-  </Step>
-</Steps>
-
-### Manual Sign-In
-
-If sign-in doesn't trigger automatically:
-
-<Tabs>
-  <Tab title="Claude Code">
-    Inside Claude Code, run `/mcp`, select `predictions`, and complete sign-in in your browser.
-  </Tab>
-  <Tab title="Codex">```bash codex mcp login predictions ```</Tab>
-  <Tab title="OpenCode">```bash opencode mcp auth predictions ```</Tab>
-</Tabs>
-
-## Verify It Works
-
-After signing in, run:
+Merge the entry into `.cursor/mcp.json` or `~/.cursor/mcp.json`, preserving other servers:
 
 ```json
-{ "command": "echo ok" }
+{
+  "mcpServers": {
+    "predictions": {
+      "url": "https://askgina.ai/ai/predictions/mcp"
+    }
+  }
+}
 ```
 
-You should see `ok`. Then try a market search:
+Connect and complete Gina OAuth from Cursor's MCP settings.
 
-```json
-{ "command": "host-tools searchPredictionMarkets '{\"query\":\"NBA\"}'" }
-```
+## Other clients and manual tokens
 
-<Check>If you see JSON market data, you're all set!</Check>
+Use a [Streamable HTTP client](/connect/other-clients) with this venue URL. Check the host's support for execution tools before connecting. For Bearer-token clients, follow [authentication](/agents/authentication) and deliberately choose **Full access — view and execute**; keep only the required venue entry.
 
-## Connection Issues?
+The credential must be valid for this venue and carry `tools:execute`. A read-only token or an old Gina execute grant is not a substitute. Complete a fresh connection if the grant is rejected.
 
-See [Troubleshooting](/predictions-mcp/troubleshooting) for common fixes.
+Next: run the [read-only connection checks](/predictions-mcp/quick-start) before attempting execution.

@@ -1,0 +1,36 @@
+---
+title: "OpenClaw"
+description: "Connect native MCP and load Gina research skills separately."
+---
+
+OpenClaw is one way to run Gina tools and skills. The current research bundle comes from [askgina/plugins](https://github.com/askgina/plugins), not the older venue-specific skill bodies previously published in these docs.
+
+## Connect MCP
+
+In an OpenClaw version with native MCP support:
+
+1. Open **Settings → MCP → Add server**.
+2. Name the server `ask-gina`, choose **Streamable HTTP**, and enter `https://askgina.ai/ai/gina/mcp`.
+3. Configure OAuth in the server's scoped settings and save the server.
+4. Authenticate and probe the connection:
+
+```sh
+openclaw mcp login ask-gina
+openclaw mcp doctor ask-gina --probe
+```
+
+Follow [OpenClaw's MCP guide](https://docs.openclaw.ai/tools/mcp) for version-specific settings. If your client uses Bearer authentication, generate a read-only token using [Gina Agent Setup](/agents/authentication) and store it in the client's private server configuration. Do not paste a token into a skill file.
+
+## Load the research skills
+
+Clone the source repository and copy the desired complete directories from `plugins/ask-gina/skills/` into your workspace `.agents/skills/`. Alternatively, configure `skills.load.extraDirs` with the absolute path to the checked-out Gina skills directory. Start a new session and confirm the selected skills are available.
+
+See [OpenClaw skill loading](https://docs.openclaw.ai/tools/skills) and [Gina's skill catalog](/agents/plugins-and-skills). Skills and MCP authentication are separate: verify both.
+
+Legacy ClawHub venue skills may use execution endpoints. They are not interchangeable with the current four read-only research skills. For execution, follow the venue's current guide rather than an old copied skill body.
+
+## Verify your first result
+
+Ask **“Use Gina to show ETH in USD over the past seven days.”** Confirm a Gina tool ran and the response identifies ETH and the requested period. Follow [First successful request](/start/first-request) for the expected tool boundary and recovery steps.
+
+This connection is read-only. For trading or transfers, see [Write access (Degen mode)](/write-access/index). A direct connection does not automatically install [research skills](/agents/plugins-and-skills).

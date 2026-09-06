@@ -1,0 +1,27 @@
+---
+title: "Connect Gina"
+description: "Choose a client and connect the read-only research tools."
+---
+
+Start with a direct read-only connection. Your host must support remote MCP and the authentication method shown below. Access can depend on your host's plan or workspace policy.
+
+| Client                                      | Setup route                                                    | Authentication        | Skills and result UI                                        |
+| ------------------------------------------- | -------------------------------------------------------------- | --------------------- | ----------------------------------------------------------- |
+| [ChatGPT](/connect/chatgpt)                 | Custom connection in developer mode                            | OAuth                 | Direct tools; rich results depend on host support           |
+| [Claude](/connect/claude)                   | Remote connector; Claude Code also supports repository plugins | OAuth                 | Code plugin loads research skills; connector alone does not |
+| [Codex](/connect/codex)                     | Remote MCP configuration                                       | OAuth                 | Skills can be installed separately                          |
+| [Cursor](/connect/cursor-grok)              | MCP settings or local source plugin                            | OAuth                 | Source plugin includes skills and slash commands            |
+| [Grok web / Grok Bot](/connect/cursor-grok) | Web custom connector; Bot listing status unverified            | OAuth where supported | Web and Bot are separate surfaces                           |
+| [Perplexity](/connect/perplexity)           | Custom remote connector                                        | OAuth                 | Direct tools; Gina-specific rendering unverified            |
+| [OpenClaw](/connect/openclaw)               | Native MCP settings; optional skill directories                | OAuth or manual token | Skills load separately from MCP                             |
+| [Other MCP clients](/connect/other-clients) | Streamable HTTP connection                                     | OAuth or Bearer token | Depends on the client                                       |
+
+## Availability and verification
+
+These setup routes are checked against the hosts' documentation. Authenticated Gina smoke tests in every host have not yet been completed. A client supporting MCP does not guarantee every Gina result widget is available.
+
+Public Ask Gina marketplace listings for ChatGPT, Claude, and Cursor have not been verified here. Use the concrete direct-connection or source-install routes on these pages; do not interpret a repository manifest as marketplace approval.
+
+All setup examples in this section use **read-only access**. If you need execution, first choose [Write access (Degen mode)](/write-access/index), then follow the venue-specific setup and your host's execution restrictions.
+
+Next: [First successful request](/start/first-request).

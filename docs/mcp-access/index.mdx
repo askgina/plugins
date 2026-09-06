@@ -1,45 +1,33 @@
 ---
-title: "Choose Your MCP Access"
-description: "One read-only connection or three venue-specific write connections"
+title: "Choose your access"
+description: "Compare read-only research with venue-specific trading and transfers."
 ---
 
-Gina separates research from execution so each MCP connection has a clear authority boundary.
+Choose permissions before connecting a client. One read-only connection covers all markets; execution is split into three venue-specific connections.
 
-## Safe Mode: Gina Read
+| Access                    | Server URL                              | OAuth scope     | Purpose                                          |
+| ------------------------- | --------------------------------------- | --------------- | ------------------------------------------------ |
+| Read-only                 | `https://askgina.ai/ai/gina/mcp`        | `tools:read`    | Research and account visibility across markets   |
+| Write access (Degen mode) | `https://askgina.ai/ai/spot/mcp`        | `tools:execute` | Spot execution, swaps, transfers, and scheduling |
+| Write access (Degen mode) | `https://askgina.ai/ai/predictions/mcp` | `tools:execute` | Prediction-market execution                      |
+| Write access (Degen mode) | `https://askgina.ai/ai/perps/mcp`       | `tools:execute` | Perpetual-futures execution                      |
 
-Connect `https://askgina.ai/ai/gina/mcp` for read-only access across Spot, Predictions, and Perps. Gina Read exposes named research and account tools; it does not expose `bash` or write tools.
+## Read-only access
 
-<Card title="Gina Read" icon="shield" href="/mcp-access/gina-read">
-  Cross-market research and account visibility with `tools:read`. A packaged plugin for ChatGPT,
-  Codex, Claude, and other hosts is coming soon.
-</Card>
+Choose [Gina Read](/mcp-access/gina-read) for prices, market discovery, positions, linked addresses, holdings, and schedule visibility. It exposes named research tools. It cannot trade, transfer, change leverage, or create schedules.
 
-## Write Access: Degen Mode
+The [Ask Gina plugin and research skills](/agents/plugins-and-skills) use this connection. Installing the plugin does not grant execution access.
 
-Choose the market you want an agent to operate. Each connection uses `tools:execute`, exposes one sandboxed `bash` tool, and has its own host-tool allowlist.
+## Write access (Degen mode)
 
-<CardGroup cols={3}>
-  <Card title="Spot" icon="coins" href="/spot-mcp">
-    Token research, swaps, transfers, transaction execution, and scheduling.
-  </Card>
-  <Card title="Predictions" icon="chart-line" href="/predictions-mcp">
-    Polymarket discovery, portfolio workflows, and trading.
-  </Card>
-  <Card title="Perps" icon="chart-candlestick" href="/perps-mcp">
-    Hyperliquid and HIP-3 market, account, trading, and funding workflows.
-  </Card>
-</CardGroup>
+Choose [write access](/write-access/index) for an agent that should act on your behalf. Connect only the venue you need. Spot exposes native tools plus `bash`; Predictions and Perps expose `bash` with their own allowed host tools. See each venue's reference for the exact tool boundary.
 
-<Warning>
-  Write access can move funds or place trades. Connect only the venue you need, inspect tool
-  schemas, and review amounts, assets, destinations, and market sides before execution.
-</Warning>
+Write access can place orders or move funds. A request to prepare or quote differs from a request to execute; follow the selected venue's workflow.
 
-## Connection Matrix
+## Match the app's labels
 
-| Mode         | Server                | OAuth scope     | MCP tools                | Markets                    |
-| ------------ | --------------------- | --------------- | ------------------------ | -------------------------- |
-| Safe mode    | `/ai/gina/mcp`        | `tools:read`    | Named read tools         | Spot + Predictions + Perps |
-| Write access | `/ai/spot/mcp`        | `tools:execute` | 23 native tools + `bash` | Spot                       |
-| Write access | `/ai/predictions/mcp` | `tools:execute` | `bash`                   | Predictions                |
-| Write access | `/ai/perps/mcp`       | `tools:execute` | `bash`                   | Perps                      |
+In [Agent Setup](https://askgina.ai/agent-setup), **Read-only — view data** corresponds to Gina Read. **Full access — view and execute** corresponds to write access (Degen mode).
+
+The token form can start with full access selected. For research, explicitly select **Read-only — view data** before generating a token. An existing execute-scoped credential is not a read credential: reconnect or generate a token with the correct scope.
+
+Next: [choose your client](/connect/index), or [start here if you're an agent](/agents/start).

@@ -19,134 +19,196 @@
       "dark": "#1C1C1C"
     }
   },
-  "topbarLinks": [
-    {
-      "name": "App",
-      "url": "https://askgina.ai"
-    }
-  ],
   "topbarCtaButton": {
-    "name": "Get Started",
+    "name": "Open Gina",
     "url": "https://askgina.ai"
   },
-  "tabs": [
-    {
-      "name": "Product Guide",
-      "url": "product-guide"
-    },
-    {
-      "name": "MCP Access",
-      "url": "mcp-access"
-    },
-    {
-      "name": "Spot MCP",
-      "url": "spot-mcp"
-    },
-    {
-      "name": "Predictions MCP",
-      "url": "predictions-mcp"
-    },
-    {
-      "name": "Perps MCP",
-      "url": "perps-mcp"
-    },
-    {
-      "name": "OpenClaw Skills",
-      "url": "openclaw-skills"
-    },
-    {
-      "name": "Community Hub",
-      "url": "community-hub"
-    }
-  ],
   "navigation": [
     {
-      "group": "Product Guide",
+      "group": "Start here",
+      "pages": [
+        "index",
+        "product-guide/wallet-and-account",
+        {
+          "group": "Automations",
+          "pages": [
+            "product-guide/recipes-and-webhooks",
+            "product-guide/automations/recipes",
+            "product-guide/automations/schedules",
+            "product-guide/automations/webhooks",
+            "product-guide/automations/copy-trading"
+          ]
+        },
+        "product-guide/networks-fees-and-pricing"
+      ]
+    },
+    {
+      "group": "For agents",
+      "pages": ["agents/start", "agents/plugins-and-skills", "agents/authentication"]
+    },
+    {
+      "group": "Connect Gina",
+      "pages": [
+        "connect/index",
+        "mcp-access/index",
+        "start/first-request",
+        {
+          "group": "Choose a client",
+          "pages": [
+            "connect/chatgpt",
+            "connect/claude",
+            "connect/codex",
+            "connect/cursor-grok",
+            "connect/perplexity",
+            "connect/openclaw",
+            "connect/other-clients"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Read-only MCP",
+      "pages": [
+        "mcp-access/gina-read",
+        "read-only/account",
+        "read-only/spot",
+        "read-only/predictions",
+        "read-only/perps"
+      ]
+    },
+    {
+      "group": "Trading MCP (Degen Mode)",
+      "pages": [
+        "write-access/index",
+        {
+          "group": "Spot",
+          "pages": [
+            "spot-mcp/index",
+            "spot-mcp/introduction",
+            "spot-mcp/quick-start",
+            "spot-mcp/client-setup",
+            "spot-mcp/features",
+            "spot-mcp/troubleshooting",
+            "spot-mcp/faq"
+          ]
+        },
+        {
+          "group": "Predictions",
+          "pages": [
+            "predictions-mcp/index",
+            "predictions-mcp/introduction",
+            "predictions-mcp/quick-start",
+            "predictions-mcp/client-setup",
+            "predictions-mcp/features",
+            "predictions-mcp/features-discovery",
+            "predictions-mcp/features-trading",
+            "predictions-mcp/features-portfolio",
+            "predictions-mcp/features-advanced",
+            "predictions-mcp/troubleshooting",
+            "predictions-mcp/faq"
+          ]
+        },
+        {
+          "group": "Perps",
+          "pages": [
+            "perps-mcp/index",
+            "perps-mcp/introduction",
+            "perps-mcp/quick-start",
+            "perps-mcp/client-setup",
+            "perps-mcp/features",
+            "perps-mcp/troubleshooting",
+            "perps-mcp/faq"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Product guides",
       "pages": [
         "product-guide/index",
-        "product-guide/wallet-and-account",
         "product-guide/transactions-and-portfolio",
         "product-guide/market-research",
-        "product-guide/recipes-and-webhooks",
-        "product-guide/memory",
-        "product-guide/networks-fees-and-pricing",
-        "product-guide/safety-support-and-limitations",
-        "product-guide/leaderboard"
-      ]
-    },
-    {
-      "group": "Choose Access",
-      "pages": ["mcp-access/index", "mcp-access/gina-read"]
-    },
-    {
-      "group": "Spot MCP",
-      "pages": [
-        "spot-mcp/introduction",
-        "spot-mcp/quick-start",
-        "spot-mcp/client-setup",
-        "spot-mcp/features",
-        "spot-mcp/troubleshooting",
-        "spot-mcp/faq"
-      ]
-    },
-    {
-      "group": "Getting Started",
-      "pages": [
-        "predictions-mcp/introduction",
-        "predictions-mcp/quick-start",
-        "predictions-mcp/client-setup"
-      ]
-    },
-    {
-      "group": "What You Can Do",
-      "pages": [
-        "predictions-mcp/features",
-        "predictions-mcp/features-discovery",
-        "predictions-mcp/features-trading",
-        "predictions-mcp/features-portfolio",
-        "predictions-mcp/features-advanced"
+        "product-guide/predictions",
+        "product-guide/perps",
+        "product-guide/memory"
       ]
     },
     {
       "group": "Help",
-      "pages": ["predictions-mcp/troubleshooting", "predictions-mcp/faq"]
-    },
-    {
-      "group": "Perps MCP",
-      "pages": [
-        "perps-mcp/introduction",
-        "perps-mcp/quick-start",
-        "perps-mcp/client-setup",
-        "perps-mcp/features",
-        "perps-mcp/troubleshooting",
-        "perps-mcp/faq"
-      ]
-    },
-    {
-      "group": "OpenClaw Skills",
-      "pages": [
-        "openclaw-skills/index",
-        "openclaw-skills/gina-mcp",
-        "openclaw-skills/spot-mcp",
-        "openclaw-skills/predictions-mcp",
-        "openclaw-skills/perps-mcp"
-      ]
-    },
-    {
-      "group": "Community Hub",
-      "pages": [
-        "community-hub/index",
-        "community-hub/what-you-can-share",
-        "community-hub/capability-template",
-        "community-hub/submission-wizard-prompt",
-        "community-hub/publish-flow",
-        "community-hub/verification-levels",
-        "community-hub/safety-and-responsible-sharing",
-        "community-hub/faq"
-      ]
+      "pages": ["help/connections", "product-guide/safety-support-and-limitations"]
     }
   ],
   "footerSocials": {
     "twitter": "https://x.com/askginadotai"
-  }
+  },
+  "redirects": [
+    {
+      "source": "/openclaw-skills",
+      "destination": "/connect/openclaw"
+    },
+    {
+      "source": "/openclaw-skills/index",
+      "destination": "/connect/openclaw"
+    },
+    {
+      "source": "/openclaw-skills/gina-mcp",
+      "destination": "/agents/plugins-and-skills"
+    },
+    {
+      "source": "/openclaw-skills/spot-mcp",
+      "destination": "/spot-mcp/quick-start"
+    },
+    {
+      "source": "/openclaw-skills/predictions-mcp",
+      "destination": "/predictions-mcp/quick-start"
+    },
+    {
+      "source": "/openclaw-skills/perps-mcp",
+      "destination": "/perps-mcp/quick-start"
+    },
+    {
+      "source": "/community-hub/publish-flow",
+      "destination": "/product-guide/safety-support-and-limitations"
+    },
+    {
+      "source": "/community-hub/what-you-can-share",
+      "destination": "/product-guide/safety-support-and-limitations"
+    },
+    {
+      "source": "/community-hub/index",
+      "destination": "/product-guide/safety-support-and-limitations"
+    },
+    {
+      "source": "/community-hub/submission-wizard-prompt",
+      "destination": "/product-guide/safety-support-and-limitations"
+    },
+    {
+      "source": "/community-hub/verification-levels",
+      "destination": "/product-guide/safety-support-and-limitations"
+    },
+    {
+      "source": "/community-hub/faq",
+      "destination": "/product-guide/safety-support-and-limitations"
+    },
+    {
+      "source": "/community-hub/capability-template",
+      "destination": "/product-guide/safety-support-and-limitations"
+    },
+    {
+      "source": "/community-hub/safety-and-responsible-sharing",
+      "destination": "/product-guide/safety-support-and-limitations"
+    },
+    {
+      "source": "/product-guide/leaderboard",
+      "destination": "/product-guide/transactions-and-portfolio"
+    },
+    {
+      "source": "/community-hub",
+      "destination": "/product-guide/safety-support-and-limitations"
+    },
+    {
+      "source": "/start/what-gina-can-do",
+      "destination": "/index"
+    }
+  ]
 }
