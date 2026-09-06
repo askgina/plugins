@@ -1,0 +1,34 @@
+---
+title: "Codex"
+description: "Connect Gina through Codex MCP settings and OAuth."
+---
+
+Add the remote server using the Codex CLI:
+
+```sh
+codex mcp add ask-gina --url https://askgina.ai/ai/gina/mcp
+codex mcp login ask-gina
+```
+
+The login command opens the OAuth flow. Complete it in the browser, then start or refresh your Codex session.
+
+Alternatively, merge this entry into your Codex MCP configuration:
+
+```toml
+[mcp_servers.ask-gina]
+url = "https://askgina.ai/ai/gina/mcp"
+```
+
+Use the login command after configuring the server. Do not overwrite your other MCP settings. See [Codex MCP configuration](https://learn.chatgpt.com/docs/extend/mcp?surface=cli).
+
+## Add research skills
+
+The direct connection provides tools. To add the [four research skills](/agents/plugins-and-skills), copy their complete directories from `plugins/ask-gina/skills/` in [the source repository](https://github.com/askgina/plugins/tree/main/plugins/ask-gina/skills) into your project's `.agents/skills/` directory. Start a new session and confirm Codex lists them. Do not replace existing unrelated skills.
+
+No public package installation or marketplace approval is implied by this source route.
+
+## Verify your first result
+
+Ask **“Use Gina to show ETH in USD over the past seven days.”** Confirm a Gina tool ran and the response identifies ETH and the requested period. Follow [First successful request](/start/first-request) for the expected tool boundary and recovery steps.
+
+This connection is read-only. For trading or transfers, see [Write access (Degen mode)](/write-access/index). A direct connection does not automatically install [research skills](/agents/plugins-and-skills).

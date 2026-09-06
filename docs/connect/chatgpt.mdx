@@ -1,0 +1,24 @@
+---
+title: "ChatGPT"
+description: "Add a custom read-only Gina connection in ChatGPT."
+---
+
+Use a custom MCP connection when developer mode is available for your account. Your workspace administrator may need to enable it. This guide does not assume a published Ask Gina marketplace listing.
+
+## Add Gina
+
+1. In ChatGPT, open **Settings → Security and login → Developer mode** and enable developer mode if available.
+2. Open **Plugins**, choose the plus button, and enter **Ask Gina** as the name.
+3. Under **Connection**, enter `https://askgina.ai/ai/gina/mcp` and use OAuth authentication.
+4. Create the connection, complete Gina authentication, and review its discovered tools.
+5. Enable the connection in your conversation.
+
+Gina Read requests `tools:read`. Do not add an execution URL as a substitute for the read-only connection. ChatGPT may render structured results; a text result is sufficient to verify tools work.
+
+The host's current instructions are in [Connect from ChatGPT](https://developers.openai.com/plugins/deploy/connect-chatgpt). If developer mode is unavailable, use another [supported client](/connect/index).
+
+## Verify your first result
+
+Ask **“Use Gina to show ETH in USD over the past seven days.”** Confirm a Gina tool ran and the response identifies ETH and the requested period. Follow [First successful request](/start/first-request) for the expected tool boundary and recovery steps.
+
+This connection is read-only. For trading or transfers, see [Write access (Degen mode)](/write-access/index). A direct connection does not automatically install [research skills](/agents/plugins-and-skills).

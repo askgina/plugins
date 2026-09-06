@@ -1,52 +1,52 @@
 ---
-title: "Client Setup"
-description: "Configure an MCP client for Spot write access"
+title: "Spot client setup"
+description: "Connect spot execution tools using the right host configuration."
 ---
 
-## Server URL
+This is **write access (Degen mode)**. It requests `tools:execute` and can perform spot actions. For research only, use [Gina Read](/mcp-access/gina-read).
 
+## Claude Code
+
+```sh
+claude mcp add --transport http spot https://askgina.ai/ai/spot/mcp
 ```
-https://askgina.ai/ai/spot/mcp
+
+Open `/mcp` in Claude Code and complete OAuth. See [Claude setup](/connect/claude) for the host's authentication flow.
+
+## Codex
+
+```sh
+codex mcp add spot --url https://askgina.ai/ai/spot/mcp
+codex mcp login spot
 ```
 
-<Tabs>
-  <Tab title="Claude Code">
-    ```bash
-    claude mcp add spot --transport http https://askgina.ai/ai/spot/mcp
-    ```
+Alternatively, merge this into your Codex configuration, then run the login command:
 
-    Restart Claude Code and run `/mcp` to sign in.
+```toml
+[mcp_servers.spot]
+url = "https://askgina.ai/ai/spot/mcp"
+```
 
-  </Tab>
-  <Tab title="Codex">
-    ```bash
-    bunx add-mcp "https://askgina.ai/ai/spot/mcp" --agent codex --name spot --transport http -y
-    ```
+## Cursor
 
-    Or add:
+Merge the entry into `.cursor/mcp.json` or `~/.cursor/mcp.json`, preserving other servers:
 
-    ```toml
-    [mcp_servers.spot]
-    type = "http"
-    url = "https://askgina.ai/ai/spot/mcp"
-    ```
-
-  </Tab>
-  <Tab title="Cursor">
-    ```json
-    {
-      "mcpServers": {
-        "spot": {
-          "type": "http",
-          "url": "https://askgina.ai/ai/spot/mcp"
-        }
-      }
+```json
+{
+  "mcpServers": {
+    "spot": {
+      "url": "https://askgina.ai/ai/spot/mcp"
     }
-    ```
-  </Tab>
-  <Tab title="Windsurf">
-    Add an HTTP MCP server named `spot` with URL `https://askgina.ai/ai/spot/mcp`, then restart.
-  </Tab>
-</Tabs>
+  }
+}
+```
 
-The OAuth grant is bound to Spot and carries `tools:execute`. Gina Read tokens and legacy Gina execute tokens do not substitute for a Spot token.
+Connect and complete Gina OAuth from Cursor's MCP settings.
+
+## Other clients and manual tokens
+
+Use a [Streamable HTTP client](/connect/other-clients) with this venue URL. Check the host's support for execution tools before connecting. For Bearer-token clients, follow [authentication](/agents/authentication) and deliberately choose **Full access — view and execute**; keep only the required venue entry.
+
+The credential must be valid for this venue and carry `tools:execute`. A read-only token or an old Gina execute grant is not a substitute. Complete a fresh connection if the grant is rejected.
+
+Next: run the [read-only connection checks](/spot-mcp/quick-start) before attempting execution.

@@ -1,0 +1,48 @@
+---
+title: "Start here if you're an agent"
+description: "A complete bootstrap sequence for using Gina tools and skills."
+---
+
+Use this page to connect Gina and complete the user's task. Read the steps in order; follow linked host instructions rather than guessing configuration syntax.
+
+## 1. Identify the host and intent
+
+Identify whether you are running in ChatGPT, Claude, Codex, Cursor, OpenClaw, or another MCP client. Use the [compatibility matrix](/connect/index).
+
+For research or account visibility, choose Gina Read. If the user wants execution, choose the relevant [write connection](/write-access/index). Do not infer permission to execute from an installation request.
+
+## 2. Install or connect
+
+Follow the host's guide. Use its supported plugin route when available; otherwise configure direct MCP. Installing a skill alone does not connect tools. Do not invent package names, marketplace listings, or executable install scripts.
+
+The [plugin and skill guide](/agents/plugins-and-skills) identifies canonical skill paths and verified source installation routes. SDK and CLI source in the repository do not imply published packages.
+
+## 3. Load the applicable skill
+
+For the read-only plugin, select the skill matching the task: account review, spot research, Hyperliquid research, or prediction-market research. Follow its routing and error handling. These skills remain read-only even if other connections are installed.
+
+## 4. Authenticate
+
+Start the host's connection flow and let the user complete Gina OAuth in the browser. For a token-based client, direct the user to [manual authentication](/agents/authentication). Keep credentials in the host's private configuration, never in chat, committed files, or reports.
+
+If a user action is required, state exactly what they need to do and resume verification afterward.
+
+## 5. Discover and verify tools
+
+Refresh or list the connection's tools. For Gina Read, expect named research tools such as `getSimplePrice`, `getTokenChart`, and `getAccountAddresses`, possibly with a host prefix. There must be no `bash` or mutation tool from this connection.
+
+If the boundary differs, check the configured URL and scope before continuing. For write connections, compare discovery with the venue reference and inspect current schemas before constructing calls.
+
+## 6. Run a read-only smoke test
+
+Follow [First successful request](/start/first-request). Verify that Gina returned the requested asset and time range. Report missing data or authentication failures rather than substituting model memory.
+
+## 7. Complete the user's task
+
+Use the tool result as evidence. Preserve timestamps, units, market identity, and missing-data information. A read-only skill cannot fulfill a write request; route the user to the selected execution interface without claiming that the research connection can execute.
+
+For execution, follow the venue's documented authorization and result-verification behavior. Do not report a submitted or pending transaction as settled.
+
+## Documentation versus operational tools
+
+The [documentation index](https://docs.askgina.ai/llms.txt) helps you find instructions. Follow its Markdown links for full text. It is not an account connection and cannot trade or inspect a user's wallet. Gina's operational MCP URLs are listed in [Choose your access](/mcp-access/index).

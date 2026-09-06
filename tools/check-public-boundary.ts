@@ -21,6 +21,15 @@ const PACKAGES = [
 ];
 const MAX_FINDINGS = 100;
 const MAX_TEXT_BYTES = 2 * 1024 * 1024;
+const DOCUMENTATION_PNG_ASSETS: Record<string, true> = {
+  "docs/images/product/agent-setup-read-only.png": true,
+  "docs/images/product/create-prompt.png": true,
+  "docs/images/product/perps-markets.png": true,
+  "docs/images/product/prediction-outcomes.png": true,
+  "docs/images/product/recipient-review.png": true,
+  "docs/images/product/wallet-balance.png": true,
+  "docs/images/product/workflow-results.png": true,
+};
 const HIGH_CONFIDENCE_SECRET_KINDS: ReadonlySet<PublicTextViolationKind> = new Set([
   "basic-credential",
   "bearer-credential",
@@ -78,6 +87,32 @@ const fail = (message: string, cause?: unknown) =>
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 const ABSOLUTE_OR_URI_SOURCE = /^(?:\/|[A-Za-z]:[\\/]|\\\\|[A-Za-z][A-Za-z\d+.-]*:)/u;
+
+export const isDeclaredPngAsset = ({
+  label,
+  bytes,
+}: {
+  readonly label: string;
+  readonly bytes: Uint8Array;
+}): boolean => {
+  const filename = label.slice(label.lastIndexOf("/") + 1);
+  const isDeclaredPath =
+    DOCUMENTATION_PNG_ASSETS[label] === true ||
+    (OPENAI_ASSETS.includes(filename as (typeof OPENAI_ASSETS)[number]) &&
+      (label.startsWith("plugins/ask-gina/assets/") || label.includes(":assets/")));
+  return (
+    isDeclaredPath &&
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47 &&
+    bytes[4] === 0x0d &&
+    bytes[5] === 0x0a &&
+    bytes[6] === 0x1a &&
+    bytes[7] === 0x0a
+  );
+};
 
 export const inspectSourceMapText = (
   text: string,
@@ -282,21 +317,8 @@ const program = Effect.scoped(
         const bytes = yield* fs
           .readFile(absolute)
           .pipe(Effect.mapError((cause) => fail(`cannot read ${absolute}`, cause)));
-        const filename = path.basename(label);
-        const isDeclaredPngAsset =
-          OPENAI_ASSETS.includes(filename as (typeof OPENAI_ASSETS)[number]) &&
-          (label.startsWith("plugins/ask-gina/assets/") || label.includes(":assets/")) &&
-          bytes.length >= 8 &&
-          bytes[0] === 0x89 &&
-          bytes[1] === 0x50 &&
-          bytes[2] === 0x4e &&
-          bytes[3] === 0x47 &&
-          bytes[4] === 0x0d &&
-          bytes[5] === 0x0a &&
-          bytes[6] === 0x1a &&
-          bytes[7] === 0x0a;
         if (bytes.includes(0)) {
-          if (!isDeclaredPngAsset) addFinding("unscannable-binary-file", label);
+          if (!isDeclaredPngAsset({ label, bytes })) addFinding("unscannable-binary-file", label);
         } else {
           const text = new TextDecoder().decode(bytes);
           scanText(text, label, receipt);

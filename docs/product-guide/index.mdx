@@ -1,8 +1,8 @@
 ---
 title: "Ask Gina Product Guide"
-description: "Start here to learn what Gina does and when to sign in."
+description: "Open Gina, ask a research question, and find your next task."
 owner: "Ask Gina web team"
-lastReviewed: "2026-08-24"
+lastReviewed: "2026-09-06"
 kind: "guide"
 includeInDocsAgent: true
 relatedSlugs:
@@ -13,33 +13,29 @@ relatedSlugs:
   - memory
   - networks-fees-and-pricing
   - safety-support-and-limitations
-  - leaderboard
 ---
 
 # Ask Gina Product Guide
 
-Gina is a chat assistant for market research, wallet activity, transactions, and recipes. Public docs need no account. Sign in to use balances, files, recipes, or transactions. A chat response does not prove onchain settlement.
+Open [Gina](https://askgina.ai) in your browser to research markets, inspect your wallet, and run supported transactions or automations. No MCP installation is needed for the web app.
 
-## First hour
+## First chat
 
-1. **Sign in.** Ask "What is my Base USDC receive address?" **Outcome:** Gina returns your EVM address. Match it to the wallet screen.
-2. **Check a market.** Ask "Show ETH price over the last seven days." **Outcome:** Gina returns sourced spot price data.
-3. **Prepare a transfer.** Ask "Prepare to send 5 USDC to 0x... on Base." **Outcome:** Gina returns a proposal and does not submit it.
-4. **Review the proposal.** Check the address, network, amount, and fee. **Outcome:** you know what to verify before a real send.
+1. Choose **Log In** or **Launch Gina** and sign in.
+2. Choose **Chat** in the sidebar.
+3. Ask **“Show ETH's price in USD over the past seven days.”**
+4. Check the asset, time range, and source in the result. No deposit is needed.
+5. Use **Chats** to return to earlier conversations.
 
-Never paste a private key or recovery phrase into chat.
+## Next steps
 
-## What you can do
+- [Wallet](/product-guide/wallet-and-account): addresses and balances.
+- [Transactions](/product-guide/transactions-and-portfolio): holdings, proposals, and execution.
+- [Research](/product-guide/market-research), [Predictions](/product-guide/predictions), and [Perps](/product-guide/perps): markets and positions.
+- [Automations](/product-guide/recipes-and-webhooks): create, test, and schedule work.
+- [Files and memory](/product-guide/memory): reusable research.
+- [Agent Setup](/agents/authentication): connect external assistants.
 
-- [Wallet](/product-guide/wallet-and-account): EVM and Solana addresses, balances, and key export.
-- [Transactions](/product-guide/transactions-and-portfolio): holdings and when sends or swaps execute.
-- [Research](/product-guide/market-research): token prices, charts, and sourced research. Spot prices differ from Polymarket 15-minute markets.
-- [Recipes](/product-guide/recipes-and-webhooks): prompts run manually, on a schedule, or from a webhook.
-- [Memory](/product-guide/memory): private files for chat and recipes, separate from the MCP sandbox `/workspace`.
-- [Networks and fees](/product-guide/networks-fees-and-pricing): supported networks, fees, sponsorship, and credits.
-- [Safety and support](/product-guide/safety-support-and-limitations): limits and help.
-- [Leaderboard](/product-guide/leaderboard): season ranks, not payouts.
+A request to **send** or **swap** can authorize execution. Say **“prepare”**, **“quote”**, or **“do not execute”** to request a proposal only. A chat response does not prove settlement.
 
-## Predictions, perps, and MCP
-
-A signed-in account can also trade Polymarket and Hyperliquid perps in chat. Prompt catalogs live in [Predictions MCP](https://docs.askgina.ai/predictions-mcp) and Perps MCP. Claude, Codex, and Cursor use MCP to call these tools. MCP is not a separate product.
+Public docs need no account; balances, files, automations, and transactions do. Never paste a private key or recovery phrase into chat. See [fees](/product-guide/networks-fees-and-pricing) and [support](/product-guide/safety-support-and-limitations).

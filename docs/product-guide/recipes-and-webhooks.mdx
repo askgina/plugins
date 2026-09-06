@@ -1,8 +1,8 @@
 ---
-title: "Recipes & Webhooks"
-description: "Test a prompt, then run it yourself, on a schedule, or from a webhook."
+title: "Automations"
+description: "Build a workflow, inspect a simulated run, and choose when it runs."
 owner: "Ask Gina web team"
-lastReviewed: "2026-08-24"
+lastReviewed: "2026-09-06"
 kind: "guide"
 includeInDocsAgent: true
 relatedSlugs:
@@ -12,36 +12,43 @@ relatedSlugs:
   - safety-support-and-limitations
 ---
 
-# Recipes & Webhooks
+# Automations
 
-## Purpose
+Automations let Gina repeat a task without a new chat request each time. A recipe defines the work; a schedule or supported webhook determines when it runs. Creation and scheduling availability depend on your account.
 
-Automate a prompt that works in chat. First, run it once and check the answer. Then save it as a recipe.
+- [Recipes](/product-guide/automations/recipes): build and test a reusable task.
+- [Schedules](/product-guide/automations/schedules): choose a cadence and monitor runs.
+- [Webhooks](/product-guide/automations/webhooks): respond to supported events and inspect triggers.
+- [Copy trading](/product-guide/automations/copy-trading): review a trader and configure supported automated execution.
 
-## Suitable Use Cases
+## Create and test
 
-Recurring research, alerts, summaries, or Memory writes.
+1. Choose **Create** in the sidebar.
+2. Ask **“Each weekday at 9 AM Europe/London, summarize BTC and ETH market changes with sources. Do not trade.”**
+3. Review the workflow and inputs. Confirm it performs only the intended research.
+4. Keep **Simulated mode** enabled and choose **Run**.
+5. Inspect step statuses and output; correct failures before scheduling.
 
-## Prerequisites and Authentication
+![Create composer with Morning recap, BTC news, and Weekly summary suggestions.](/images/product/create-prompt.png)
 
-Sign in and check credits and permissions. For prediction-market automation in coding clients, see [Predictions MCP](https://docs.askgina.ai/predictions-mcp).
+_Actual Create component in Storybook._
 
-## Inputs and Expected Results
+Simulated runs can use live data while simulating side effects. **Run Live** may perform real actions; do not use live trading as an onboarding test.
 
-1. Run the prompt in chat.
-2. Add a schedule or connect a supported webhook. Set a time for a schedule. A webhook needs a supported event, valid signature, and payload.
-3. Check the recorded result after each run.
+![Run Results showing completion, execution mode, step timeline, and outputs.](/images/product/workflow-results.png)
 
-## Tested Example
+_Sample result illustrating live-run labels; no workflow was executed for this screenshot._
 
-> Each weekday, summarize this project's official announcements with links.
+## Schedule and monitor
 
-Expected: the tested prompt runs each weekday and records a result.
+Choose **Schedule**, select a suggested cadence or enter a custom one, and check its time zone. The panel uses **Schedule workflow now** or **Apply custom cadence**. Review the resulting schedule. Open **Automations** to inspect configured work and runs.
 
-## Limitations and Safety
+Accepted can mean queued, not completed. Runs may be late or fail because of data, limits, or timeouts.
 
-A source, timeout, usage limit, or bad webhook signature can fail a run. Accepted means queued, not finished. Runs can be late.
+## Recipes and webhooks
 
-Never put secrets in prompts or payloads. Do not rely on a recipe when a missed run could cause harm.
+Use the recipe's own trigger configuration for supported webhooks. Its event, signature, and payload must match; there is no universal payload. Never put secrets in prompts or payloads. Avoid relying on a run when failure could cause harm.
 
-Related: [Research](/product-guide/market-research), [Memory](/product-guide/memory), [Safety](/product-guide/safety-support-and-limitations), [Product Guide](/product-guide).
+Gina Read only inspects schedules; changes require [write access](/write-access/index). Account [Memory](/product-guide/memory) differs from MCP `/workspace`.
+
+Related: [Research](/product-guide/market-research), [Safety](/product-guide/safety-support-and-limitations), [Product Guide](/product-guide).
