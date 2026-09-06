@@ -31,3 +31,9 @@ Implementation tracker: [#42](https://github.com/askgina/plugins/issues/42).
 - Chatbot `vitest --run lib/docs/corpus.test.ts`: all 10 tests pass against the synchronized sources.
 - Local Mintlify homepage renders the product-first cards and updated sidebar, with no leaderboard/community sections.
 - Product-owner screenshots remain pending; insertion destinations are recorded in `screenshots.md`. No broken image placeholders added. Connector logos remain separate follow-up assets.
+
+## Standalone docs lint boundary
+
+The docs workflow deliberately runs under Node without workspace dependency installation. `vite.config.ts` exempts only `tools/docs/check.mjs` and `tools/docs/check.test.mjs` from five Effect migration diagnostics (Node imports, async functions, console, Date, fetch). General lint rules and `--deny-warnings` remain enabled; application and other tooling files retain the full Effect preset.
+
+Verified using oxlint 1.78.0 and oxlint-tsgolint 7.0.2001 patched by @effect/tsgo 0.36.5 in an isolated temporary installation: the original preset reproduces all 12 CI warnings, and the override extracted from vite.config.ts passes with zero warnings. Docs validation and all seven checker tests pass. This targeted reproduction does not substitute for the full CI build.
