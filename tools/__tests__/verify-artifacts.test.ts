@@ -5,7 +5,11 @@ import { assert, describe, it } from "@effect/vitest";
 import { ChildProcess } from "effect/unstable/process";
 import { Config, Effect, FileSystem, Path, Schema } from "effect";
 
-import { findEmbeddedSourceMapBoundaryRules, inspectSourceMapText } from "../check-public-boundary";
+import {
+  findEmbeddedSourceMapBoundaryRules,
+  inspectSourceMapText,
+  isDeclaredPngAsset,
+} from "../check-public-boundary";
 import { checkRepositoryConformance, type RepositorySummary } from "../check-target-conformance";
 import {
   ArtifactVerificationError,
@@ -250,6 +254,31 @@ describe("artifact and source conformance verification", () => {
         )?.unsafeSourcePath,
       );
     });
+
+    it("admits only reviewed PNG assets at their declared paths", () => {
+      const png = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]);
+      for (const path of [
+        "docs/images/product/agent-setup-read-only.png",
+        "docs/images/product/create-prompt.png",
+        "docs/images/product/perps-markets.png",
+        "docs/images/product/prediction-outcomes.png",
+        "docs/images/product/recipient-review.png",
+        "docs/images/product/wallet-balance.png",
+        "docs/images/product/workflow-results.png",
+      ]) {
+        assert.isTrue(isDeclaredPngAsset({ label: path, bytes: png }));
+      }
+      assert.isFalse(
+        isDeclaredPngAsset({ label: "docs/images/product/unreviewed.png", bytes: png }),
+      );
+      assert.isFalse(
+        isDeclaredPngAsset({
+          label: "docs/images/product/wallet-balance.png",
+          bytes: Uint8Array.from([0]),
+        }),
+      );
+    });
+
     it.effect("accepts the exact repository marketplace and clean root plugin layout", () =>
       Effect.scoped(
         Effect.gen(function* () {

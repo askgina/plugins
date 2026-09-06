@@ -16,47 +16,18 @@ The standalone chat composer story failed on the existing Inngest `BaseMiddlewar
 
 ## Reproduce temporary captures
 
-In the chatbot checkout, place this fixture in a temporary `stories/DocsCapture.stories.jsx`, run the existing Storybook, capture, and remove the temporary file. Existing Storybook providers supply mock authentication. Do not click Generate Token or Verify Recipient. Select read-only through the UI and crop the token form only.
+The two fixture-only captures came from a temporary `stories/DocsCapture.stories.jsx` in the chatbot checkout. This public repository does not retain imports from private application modules. Resolve the current component locations inside that checkout, run its existing Storybook, capture the images, and remove the temporary story afterward. Existing Storybook providers supply mock authentication.
 
-```jsx
-import React from "react";
-import { SWRConfig } from "swr";
-import { AgentSetupCatalogue } from "@/components/agent-setup-catalogue";
+For Agent Setup, render `AgentSetupCatalogue` full-screen inside an `SWRConfig` with an isolated empty cache and an empty `/api/mcp-tokens` fallback. Disable revalidation, open the catalogue with an inert change handler, select **Read-only — view data** through the UI, and crop the token form only. Do not click **Generate Token**.
 
-export default { title: "DocsCapture/AgentSetup", parameters: { layout: "fullscreen" } };
-export const ReadOnly = {
-  render: () => (
-    <SWRConfig
-      value={{
-        provider: () => new Map(),
-        fallback: { "/api/mcp-tokens": { tokens: [] } },
-        revalidateOnMount: false,
-        revalidateOnFocus: false,
-      }}
-    >
-      <AgentSetupCatalogue open={true} onOpenChange={() => {}} />
-    </SWRConfig>
-  ),
-};
+For recipient review, render `VerifyRecipientDisplay` in a 640-pixel-wide container with this synthetic unverified recipient:
 
-import { VerifyRecipientDisplay } from "@/components/messages/tools/verify-recipient-display";
-export const RecipientReview = {
-  render: () => (
-    <div style={{ maxWidth: 640, margin: 24 }}>
-      <VerifyRecipientDisplay
-        result={{
-          unverifiedRecipient: {
-            id: "docs-demo-recipient",
-            address: "0x1111111111111111111111111111111111111111",
-            chainType: "evm",
-            chainId: "8453",
-          },
-        }}
-      />
-    </div>
-  ),
-};
-```
+- ID: `docs-demo-recipient`
+- Address: `0x1111111111111111111111111111111111111111`
+- Chain type: `evm`
+- Chain ID: `8453`
+
+Do not click **Verify Recipient**.
 
 ## Product-first capture handoff
 
