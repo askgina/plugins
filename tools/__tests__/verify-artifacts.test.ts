@@ -255,7 +255,8 @@ describe("artifact and source conformance verification", () => {
       );
     });
 
-    it("admits only reviewed PNG assets at their declared paths", () => {
+    it("admits only reviewed JPEG screenshots at their declared paths", () => {
+      const jpeg = Uint8Array.from([0xff, 0xd8, 0xff, 0xd9]);
       const png = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]);
       for (const path of [
         "docs/images/product/agent-setup-read-only.png",
@@ -266,16 +267,20 @@ describe("artifact and source conformance verification", () => {
         "docs/images/product/wallet-balance.png",
         "docs/images/product/workflow-results.png",
       ]) {
-        assert.isTrue(isDeclaredPngAsset({ label: path, bytes: png }));
+        assert.isTrue(isDeclaredPngAsset({ label: path, bytes: jpeg }));
+        assert.isFalse(isDeclaredPngAsset({ label: path, bytes: png }));
       }
       assert.isFalse(
-        isDeclaredPngAsset({ label: "docs/images/product/unreviewed.png", bytes: png }),
+        isDeclaredPngAsset({ label: "docs/images/product/unreviewed.png", bytes: jpeg }),
       );
       assert.isFalse(
         isDeclaredPngAsset({
           label: "docs/images/product/wallet-balance.png",
           bytes: Uint8Array.from([0]),
         }),
+      );
+      assert.isTrue(
+        isDeclaredPngAsset({ label: "plugins/ask-gina/assets/hyperliquid-chart.png", bytes: png }),
       );
     });
 
