@@ -6,7 +6,7 @@ import {
   findPublicTextViolations,
   type PublicTextViolationKind,
 } from "../packages/evals/src/index";
-import { Data, Effect, FileSystem, Layer, Path, Schema } from "effect";
+import { Data, Effect, FileSystem, Function, Layer, Path, Schema } from "effect";
 
 import { extractCheckedTarGz } from "./archive-security";
 import {
@@ -94,21 +94,30 @@ const isDeclaredOpenAiPngAsset = (label: string, bytes: Uint8Array): boolean => 
   );
 };
 
-export const findPublicBinaryBoundaryRules = (
-  label: string,
-  bytes: Uint8Array,
-  inventory: readonly PublicSourceAsset[] = PUBLIC_SOURCE_ASSETS,
-): readonly string[] => {
-  if (
-    isDeclaredOpenAiPngAsset(label, bytes) ||
-    isAttestedPublicSourceAsset(label, bytes, inventory)
-  ) {
-    return [];
-  }
-  return bytes.includes(0) || inventory.some((asset) => asset.path === label)
-    ? ["unscannable-binary-file"]
-    : [];
-};
+export const findPublicBinaryBoundaryRules: {
+  (
+    bytes: Uint8Array,
+    inventory?: readonly PublicSourceAsset[],
+  ): (label: string) => readonly string[];
+  (label: string, bytes: Uint8Array, inventory?: readonly PublicSourceAsset[]): readonly string[];
+} = Function.dual(
+  (args) => typeof args[0] === "string",
+  (
+    label: string,
+    bytes: Uint8Array,
+    inventory: readonly PublicSourceAsset[] = PUBLIC_SOURCE_ASSETS,
+  ): readonly string[] => {
+    if (
+      isDeclaredOpenAiPngAsset(label, bytes) ||
+      isAttestedPublicSourceAsset(label, bytes, inventory)
+    ) {
+      return [];
+    }
+    return bytes.includes(0) || inventory.some((asset) => asset.path === label)
+      ? ["unscannable-binary-file"]
+      : [];
+  },
+);
 
 export const inspectSourceMapText = (
   text: string,

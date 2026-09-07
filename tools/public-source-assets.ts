@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { Function } from "effect";
 
 export type PublicSourceAssetKind = "woff2" | "webp";
 
@@ -47,21 +48,27 @@ export const PUBLIC_SOURCE_ASSETS: readonly PublicSourceAsset[] = [
   },
 ];
 
-export const isAttestedPublicSourceAsset = (
-  label: string,
-  bytes: Uint8Array,
-  inventory: readonly PublicSourceAsset[] = PUBLIC_SOURCE_ASSETS,
-): boolean => {
-  const asset = inventory.find((item) => item.path === label);
-  if (asset === undefined) return false;
-  if (bytes.length !== asset.bytes || !SHA_256.test(asset.sha256)) return false;
-  if (createHash("sha256").update(bytes).digest("hex") !== asset.sha256) return false;
-  if (asset.kind === "woff2") {
-    return bytes.length >= 4 && WOFF2_SIGNATURE.every((value, index) => bytes[index] === value);
-  }
-  return (
-    bytes.length >= 12 &&
-    WEBP_RIFF.every((value, index) => bytes[index] === value) &&
-    WEBP_FOURCC.every((value, index) => bytes[8 + index] === value)
-  );
-};
+export const isAttestedPublicSourceAsset: {
+  (bytes: Uint8Array, inventory?: readonly PublicSourceAsset[]): (label: string) => boolean;
+  (label: string, bytes: Uint8Array, inventory?: readonly PublicSourceAsset[]): boolean;
+} = Function.dual(
+  (args) => typeof args[0] === "string",
+  (
+    label: string,
+    bytes: Uint8Array,
+    inventory: readonly PublicSourceAsset[] = PUBLIC_SOURCE_ASSETS,
+  ): boolean => {
+    const asset = inventory.find((item) => item.path === label);
+    if (asset === undefined) return false;
+    if (bytes.length !== asset.bytes || !SHA_256.test(asset.sha256)) return false;
+    if (createHash("sha256").update(bytes).digest("hex") !== asset.sha256) return false;
+    if (asset.kind === "woff2") {
+      return bytes.length >= 4 && WOFF2_SIGNATURE.every((value, index) => bytes[index] === value);
+    }
+    return (
+      bytes.length >= 12 &&
+      WEBP_RIFF.every((value, index) => bytes[index] === value) &&
+      WEBP_FOURCC.every((value, index) => bytes[8 + index] === value)
+    );
+  },
+);

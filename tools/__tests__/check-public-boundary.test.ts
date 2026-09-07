@@ -1,7 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 
 import { findPublicBinaryBoundaryRules } from "../check-public-boundary";
-import { type PublicSourceAsset } from "../public-source-assets";
+import { isAttestedPublicSourceAsset, type PublicSourceAsset } from "../public-source-assets";
 
 const PNG = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]);
 const WOFF2 = Uint8Array.from([0x77, 0x4f, 0x46, 0x32, 0, 1, 2, 3]);
@@ -29,6 +29,11 @@ describe("public binary boundary", () => {
   it("admits only attested app bytes at their reviewed paths", () => {
     assert.deepStrictEqual(findPublicBinaryBoundaryRules(FONT_PATH, WOFF2, inventory), []);
     assert.deepStrictEqual(findPublicBinaryBoundaryRules(IMAGE_PATH, WEBP, inventory), []);
+    assert.deepStrictEqual(findPublicBinaryBoundaryRules(WOFF2, inventory)(FONT_PATH), []);
+    assert.deepStrictEqual(findPublicBinaryBoundaryRules(WEBP, inventory)(IMAGE_PATH), []);
+    assert.isTrue(isAttestedPublicSourceAsset(FONT_PATH, WOFF2, inventory));
+    assert.isTrue(isAttestedPublicSourceAsset(WOFF2, inventory)(FONT_PATH));
+    assert.isTrue(isAttestedPublicSourceAsset(WEBP, inventory)(IMAGE_PATH));
   });
 
   it("rejects tampered, misplaced, and unlisted binaries", () => {
@@ -49,11 +54,33 @@ describe("public binary boundary", () => {
       findPublicBinaryBoundaryRules("apps/evals/public/fonts/unlisted.woff2", WOFF2, inventory),
       ["unscannable-binary-file"],
     );
+    assert.deepStrictEqual(findPublicBinaryBoundaryRules(tampered, inventory)(FONT_PATH), [
+      "unscannable-binary-file",
+    ]);
+    assert.deepStrictEqual(
+      findPublicBinaryBoundaryRules(WOFF2, inventory)("apps/evals/src/geist-mono.woff2"),
+      ["unscannable-binary-file"],
+    );
+    assert.deepStrictEqual(
+      findPublicBinaryBoundaryRules(WOFF2, inventory)("apps/evals/public/fonts/unlisted.woff2"),
+      ["unscannable-binary-file"],
+    );
+    assert.isFalse(isAttestedPublicSourceAsset(tampered, inventory)(FONT_PATH));
+    assert.isFalse(
+      isAttestedPublicSourceAsset(WOFF2, inventory)("apps/evals/src/geist-mono.woff2"),
+    );
+    assert.isFalse(
+      isAttestedPublicSourceAsset(WOFF2, inventory)("apps/evals/public/fonts/unlisted.woff2"),
+    );
   });
 
   it("keeps OpenAI PNG admission path-bound", () => {
     assert.deepStrictEqual(
       findPublicBinaryBoundaryRules("plugins/ask-gina/assets/hyperliquid-chart.png", PNG),
+      [],
+    );
+    assert.deepStrictEqual(
+      findPublicBinaryBoundaryRules(PNG)("plugins/ask-gina/assets/hyperliquid-chart.png"),
       [],
     );
     assert.deepStrictEqual(
@@ -73,5 +100,10 @@ describe("public binary boundary", () => {
     assert.deepStrictEqual(findPublicBinaryBoundaryRules(FONT_PATH, WOFF2), [
       "unscannable-binary-file",
     ]);
+    assert.deepStrictEqual(findPublicBinaryBoundaryRules(WOFF2)(FONT_PATH), [
+      "unscannable-binary-file",
+    ]);
+    assert.isFalse(isAttestedPublicSourceAsset(FONT_PATH, WOFF2));
+    assert.isFalse(isAttestedPublicSourceAsset(WOFF2)(FONT_PATH));
   });
 });
