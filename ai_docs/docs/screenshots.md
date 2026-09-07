@@ -36,11 +36,11 @@
 
 Captured 2026-09-06 from actual components in the local chatbot checkout at commit `7b7b2bf16`. Images contain Storybook sample data, not a real account. Crops are made during browser capture, with no fabricated UI. No token was generated and no financial action was executed.
 
-| Asset                     | Story or component                                | Notes                                                                  |
-| ------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------- |
-| workflow-results.png      | create-workflowrunresults--completed-success      | Sample result displays live-run labels; no live workflow was executed. |
-| recipient-review.png      | VerifyRecipientDisplay, temporary fixture below   | Illustrative address, never a deposit destination.                     |
-| create-prompt.png         | create-herolanding-herochatinput--default         | Actual Create composer with example suggestions.                       |
+| Asset                | Story or component                              | Notes                                                                  |
+| -------------------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
+| workflow-results.png | create-workflowrunresults--completed-success    | Sample result displays live-run labels; no live workflow was executed. |
+| recipient-review.png | VerifyRecipientDisplay, temporary fixture below | Illustrative address, never a deposit destination.                     |
+| create-prompt.png    | create-herolanding-herochatinput--default       | Actual Create composer with example suggestions.                       |
 
 The standalone chat composer story failed on the existing Inngest `BaseMiddleware` mock. The older WelcomeScreen story renders but is no longer imported by app components, so it is deliberately not used as a current first-chat screenshot. A current signed-in first-chat capture remains a release verification item. No demo account was supplied during this run.
 
