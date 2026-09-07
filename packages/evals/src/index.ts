@@ -13,7 +13,12 @@ export {
   PluginEvalSuiteValidationError,
 } from "./load-suite";
 export { gradePluginEvalObservation, PluginEvalObservationMismatchError } from "./grading";
-export { replayPluginEvalObservationSet, PluginEvalReplayContractError } from "./replay";
+export {
+  replayPluginEvalObservationSet,
+  PluginEvalReplayContractError,
+  type PluginEvalReplayOptions,
+  type PluginEvalReplayResult,
+} from "./replay";
 export {
   runHermeticEvalReplay,
   type HermeticEvalReplayError,
@@ -24,6 +29,7 @@ export {
   LiveEvalSelectionError,
   runLiveEvalSuite,
   type LiveEvalOptions,
+  type LiveEvalResult,
   type LiveEvalTrialInput,
 } from "./live";
 export {
@@ -59,9 +65,40 @@ export {
   type SanitizedEvalRunReport,
 } from "./report";
 export {
+  makePublicEvalAttemptCapture,
+  makePublicEvalAttemptSummaries,
+  PublicEvalAttemptCaptureError,
+  PublicEvalAttemptWriteError,
+  writePublicEvalAttemptCapture,
+  type PublicEvalAttemptCaptureSource,
+  type PublicEvalAttemptCaptureWriteOptions,
+  type PublicEvalGradedAttempt,
+} from "./public-attempts";
+export {
+  makePublicEvalResult,
+  PublicEvalResultError,
+  type PublicEvalAdapterOptions,
+} from "./public-results";
+export {
+  decodePublicEvalExportRequest,
+  exportPublicEvalPublication,
+  makePublicEvalResultPublication,
+  makePublicEvalWithdrawalPublication,
+  PublicEvalExportRequestSchema,
+  PublicEvalPublicationError,
+  publicEvalPublicationSubjectSha256,
+  type PublicEvalExportRequest,
+  type PublicEvalPublicationErrorReason,
+  type PublicEvalPublicationExportOptions,
+  type PublicEvalPublicationExportResult,
+  type PublicEvalResultExportRequest,
+  type PublicEvalWithdrawalExportRequest,
+} from "./publication";
+export {
   ALLOWED_SYNTHETIC_FIXTURE_PROMPTS,
   findPublicTextViolations,
   HermeticEvalSanitizationError,
+  isSafePublicEvalText,
   SanitizedEvalAggregateSchema,
   SanitizedEvalDimensionSummarySchema,
   SanitizedEvalDistributionSchema,

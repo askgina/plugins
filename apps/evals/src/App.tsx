@@ -5,6 +5,7 @@ import { PageShell, Panel } from "./components/eval-ui";
 import { LeaderboardPage } from "./pages/leaderboard";
 import { ModelProfilePage } from "./pages/model-profile";
 import { TaskExplorerPage } from "./pages/task-explorer";
+import { HandoffPage } from "./pages/handoff";
 
 export function MethodologyPage() {
   return (
@@ -113,13 +114,16 @@ export default function App() {
         ? "Tasks"
         : route === "/methodology"
           ? "Methodology"
-          : "Leaderboard";
+          : route === "/handoff"
+            ? "Public results"
+            : "Leaderboard";
     document.title = `${section} · Ask Gina Evals`;
   }, [route]);
   if (route === "/models" || route.startsWith("/models/"))
     return <ModelProfilePage key={route} modelId={route.split("/")[2] || "kimi-k3"} />;
   if (route === "/tasks") return <TaskExplorerPage />;
   if (route === "/methodology") return <MethodologyPage />;
+  if (route === "/handoff") return <HandoffPage />;
   if (route === "/leaderboard" || route === "/") return <LeaderboardPage />;
   return (
     <PageShell active="leaderboard">

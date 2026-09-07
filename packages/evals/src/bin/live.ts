@@ -7,6 +7,7 @@ import {
   ASK_GINA_SKILL_DEFINITIONS,
   listCatalogToolNames,
   PRODUCTION_MCP_URL,
+  type PublicEvalAttemptCapture,
 } from "@askgina/contracts";
 import { createClient } from "@askgina/sdk";
 import { HttpClient } from "effect/unstable/http";
@@ -41,8 +42,13 @@ import {
   preflightLiveEvalSuite,
   runLiveEvalSuite,
 } from "../live";
+import {
+  assertPublicEvalAttemptOutputPath,
+  assertPublicEvalAttemptPlan,
+  makePublicEvalAttemptCapture,
+  writePublicEvalAttemptCapture,
+} from "../public-attempts";
 import { runResponsesApiPluginEvalTrial } from "../responses-api";
-import type { SanitizedEvalRunReport } from "../report";
 
 const GIT_STATUS_LIMIT_BYTES = 65_536;
 const CODEX_PREFLIGHT_LIMIT_BYTES = 1_048_576;
@@ -77,6 +83,7 @@ interface LiveEvalCliOptions {
   readonly accountClass: string;
   readonly caseIds?: readonly string[];
   readonly timeoutMs: number;
+  readonly attemptsOutputPath?: string;
 }
 
 class LiveEvalCliError extends Data.TaggedError("LiveEvalCliError")<{
@@ -93,7 +100,7 @@ class LiveEvalCliError extends Data.TaggedError("LiveEvalCliError")<{
 }> {}
 
 const usage =
-  "Usage: bun run eval:<responses|codex> -- --suite <suite.yaml> --run-id <id> --candidate <id> --model <model> --reasoning <mode> --repetitions <3..5> --account-class <class> [--case <id>] --timeout-ms <n>";
+  "Usage: bun run eval:<responses|codex> -- --suite <suite.yaml> --run-id <id> --candidate <id> --model <model> --reasoning <mode> --repetitions <3..5> --account-class <class> [--case <id>] --timeout-ms <n> [--attempts-output <new-attempts.json>]";
 
 const parsePositiveInteger = (value: string | undefined): number | undefined => {
   if (value === undefined || !/^\d+$/u.test(value)) return undefined;
@@ -114,14 +121,23 @@ const parseOptions = (
     let repetitions: number | undefined;
     let accountClass: string | undefined;
     let timeoutMs: number | undefined;
+    let attemptsOutputPath: string | undefined;
     const caseIds: string[] = [];
+    const seenFlags = new Set<string>();
 
     for (let index = 0; index < argv.length; index += 1) {
       const flag = argv[index];
       const value = argv[index + 1];
-      if (value === undefined || value.trim().length === 0) {
+      if (
+        flag === undefined ||
+        value === undefined ||
+        value.trim().length === 0 ||
+        value.startsWith("--") ||
+        (flag !== "--case" && seenFlags.has(flag))
+      ) {
         return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
       }
+      seenFlags.add(flag);
       switch (flag) {
         case "--runner":
           if (value !== "responses" && value !== "codex") {
@@ -156,6 +172,9 @@ const parseOptions = (
         case "--timeout-ms":
           timeoutMs = parsePositiveInteger(value);
           break;
+        case "--attempts-output":
+          attemptsOutputPath = value;
+          break;
         default:
           return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
       }
@@ -189,6 +208,7 @@ const parseOptions = (
       accountClass,
       ...(caseIds.length === 0 ? {} : { caseIds }),
       timeoutMs,
+      ...(attemptsOutputPath === undefined ? {} : { attemptsOutputPath }),
     };
   });
 
@@ -519,34 +539,43 @@ const errorTag = (error: unknown): string => {
   return typeof tag === "string" ? tag : "LiveEvalTrialError";
 };
 
-const writeReport = (root: string, report: SanitizedEvalRunReport) =>
+const writeReport = (outputPath: string, content: string) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const directory = path.join(root, ".plugin-eval-runs");
-    const output = path.join(
-      directory,
-      `${report.target}-${report.candidate}-${report.runId}.json`,
-    );
-    const encoded = yield* encodePrettyUnknownJson(report).pipe(
-      Effect.map((json) => `${json}\n`),
-      Effect.mapError(() => new LiveEvalCliError({ reason: "report-write-failed" })),
-    );
+    const output = path.resolve(outputPath);
     yield* fs
-      .makeDirectory(directory, { recursive: true })
+      .makeDirectory(path.dirname(output), { recursive: true })
       .pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "report-write-failed" })));
     yield* fs
-      .writeFileString(output, encoded, { flag: "wx", mode: 0o600 })
+      .writeFileString(output, content, { flag: "wx", mode: 0o600 })
       .pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "report-exists" })));
   });
 
 const run = (options: LiveEvalCliOptions) =>
   Effect.gen(function* () {
     const root = process.cwd();
+    const path = yield* Path.Path;
+    const target = options.runner === "responses" ? "responses_api" : "codex_cli";
+    const outputPath = path.join(
+      root,
+      ".plugin-eval-runs",
+      `${target}-${options.candidate}-${options.runId}.json`,
+    );
+    if (options.attemptsOutputPath !== undefined) {
+      yield* assertPublicEvalAttemptOutputPath(options.attemptsOutputPath, outputPath);
+    }
     const suite = yield* loadPluginEvalSuite(options.suitePath);
     yield* preflightLiveEvalSuite(suite).pipe(
       Effect.mapError(() => new LiveEvalCliError({ reason: "catalog-preflight-failed" })),
     );
+    if (options.attemptsOutputPath !== undefined) {
+      yield* assertPublicEvalAttemptPlan(
+        options.runId,
+        options.caseIds ?? suite.cases.map((evalCase) => evalCase.id),
+        options.repetitions,
+      );
+    }
     const codexEnvironment = yield* loadCodexEnvironment();
     yield* requireCleanSource(root, codexEnvironment);
     let codexRuntime: CodexEvalRuntime | undefined;
@@ -579,7 +608,7 @@ const run = (options: LiveEvalCliOptions) =>
       yield* requireCodexPluginAuth(codexRuntime, codexEnvironment);
     }
 
-    const report = yield* runLiveEvalSuite<
+    const { report, attempts } = yield* runLiveEvalSuite<
       LiveEvalCliError,
       HttpClient.HttpClient | ChildProcessSpawner | FileSystem.FileSystem | Path.Path
     >(
@@ -588,12 +617,13 @@ const run = (options: LiveEvalCliOptions) =>
         ...(options.caseIds === undefined ? {} : { caseIds: options.caseIds }),
         runId: options.runId,
         candidate: options.candidate,
-        target: options.runner === "responses" ? "responses_api" : "codex_cli",
+        target,
         model: options.model,
         displayedModel: options.model,
         reasoning: options.reasoning,
         repetitions: options.repetitions,
         accountClass: options.accountClass,
+        captureAttempts: options.attemptsOutputPath !== undefined,
       },
       (input) => {
         if (options.runner === "responses") {
@@ -630,7 +660,29 @@ const run = (options: LiveEvalCliOptions) =>
         }).pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "trial-failed" })));
       },
     );
-    yield* writeReport(root, report);
+    const encoded = yield* encodePrettyUnknownJson(report).pipe(
+      Effect.map((json) => `${json}\n`),
+      Effect.mapError(() => new LiveEvalCliError({ reason: "report-write-failed" })),
+    );
+    let capture: PublicEvalAttemptCapture | undefined;
+    if (options.attemptsOutputPath !== undefined) {
+      if (attempts === null) {
+        return yield* new LiveEvalCliError({ reason: "report-write-failed" });
+      }
+      capture = yield* makePublicEvalAttemptCapture({
+        runId: report.runId,
+        reportContent: encoded,
+        attempts,
+      });
+    }
+    yield* writeReport(outputPath, encoded);
+    if (options.attemptsOutputPath !== undefined && capture !== undefined) {
+      yield* writePublicEvalAttemptCapture({
+        outputPath: options.attemptsOutputPath,
+        reportPath: outputPath,
+        capture,
+      });
+    }
     yield* Console.log(
       `sanitized eval report written (${report.aggregate.overall.passed}/${report.aggregate.overall.total} passed)`,
     );

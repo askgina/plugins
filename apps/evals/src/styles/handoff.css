@@ -1,0 +1,108 @@
+.eval-handoff {
+  padding-bottom: 24px;
+}
+
+.eval-handoff-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.eval-handoff-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.eval-handoff-body {
+  padding: 10px 20px 22px;
+  color: #515151;
+  font-size: 13px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.eval-handoff-body p {
+  margin: 5px 0 13px;
+}
+
+.eval-handoff-notice {
+  margin: 0;
+  padding: 14px 20px;
+  border: 1px solid var(--eval-line);
+  border-left: 3px solid var(--eval-red);
+  border-radius: 8px;
+  background: #fafaf9;
+  color: #515151;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.eval-handoff-fields {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) minmax(0, 2fr);
+  gap: 7px 18px;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+
+.eval-handoff-fields dt {
+  color: #6f6f72;
+}
+
+.eval-handoff-fields dd {
+  margin: 0;
+}
+
+.eval-handoff-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.eval-handoff-table-scroll th,
+.eval-handoff-table-scroll td {
+  vertical-align: top;
+}
+
+.eval-handoff details > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.eval-handoff-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.eval-handoff-file {
+  display: grid;
+  gap: 6px;
+  max-width: 100%;
+  font-weight: 600;
+}
+
+.eval-handoff-file input {
+  max-width: 100%;
+  padding: 8px;
+  border: 1px solid var(--eval-line);
+  border-radius: 8px;
+  font-weight: 400;
+}
+
+@media (max-width: 760px) {
+  .eval-handoff-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .eval-handoff-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .eval-handoff-fields dd {
+    margin-bottom: 10px;
+  }
+}

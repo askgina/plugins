@@ -1,4 +1,4 @@
-import { catalogSha } from "@askgina/contracts";
+import { catalogSha, type PublicEvalAttemptSummary } from "@askgina/contracts";
 import { Effect, FileSystem, Path } from "effect";
 
 import type { PluginEvalReplayReport, PluginEvalRunManifest } from "./contracts";
@@ -16,10 +16,12 @@ import {
 } from "./load-suite";
 import type { PluginEvalObservationMismatchError } from "./grading";
 import { replayPluginEvalObservationSet, type PluginEvalReplayContractError } from "./replay";
+import type { PublicEvalAttemptCaptureError } from "./public-attempts";
 
 export interface HermeticEvalReplayOptions {
   readonly suitePath: string;
   readonly observationsPath: string;
+  readonly captureAttempts?: boolean;
 }
 
 export interface HermeticEvalReplayResult {
@@ -29,6 +31,7 @@ export interface HermeticEvalReplayResult {
   readonly catalogSha: string;
   readonly manifest: PluginEvalRunManifest;
   readonly report: PluginEvalReplayReport;
+  readonly attempts: readonly PublicEvalAttemptSummary[] | null;
 }
 
 export type HermeticEvalReplayError =
@@ -39,7 +42,8 @@ export type HermeticEvalReplayError =
   | PluginEvalObservationSetParseError
   | PluginEvalObservationSetValidationError
   | PluginEvalReplayContractError
-  | PluginEvalObservationMismatchError;
+  | PluginEvalObservationMismatchError
+  | PublicEvalAttemptCaptureError;
 
 /**
  * Replays only caller-selected local YAML fixtures. The program has no network,
@@ -48,6 +52,7 @@ export type HermeticEvalReplayError =
 export const runHermeticEvalReplay = ({
   suitePath,
   observationsPath,
+  captureAttempts = false,
 }: HermeticEvalReplayOptions): Effect.Effect<
   HermeticEvalReplayResult,
   HermeticEvalReplayError,
@@ -58,7 +63,7 @@ export const runHermeticEvalReplay = ({
       loadPluginEvalSuite(suitePath),
       loadPluginEvalObservationSet(observationsPath),
     ]);
-    const report = yield* replayPluginEvalObservationSet(suite, observationSet);
+    const { report, attempts } = yield* replayPluginEvalObservationSet(suite, observationSet, { captureAttempts });
 
     return {
       suiteId: suite.suite.id,
@@ -67,5 +72,6 @@ export const runHermeticEvalReplay = ({
       catalogSha,
       manifest: observationSet.manifest,
       report,
+      attempts,
     } satisfies HermeticEvalReplayResult;
   });

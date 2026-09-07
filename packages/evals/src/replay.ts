@@ -1,5 +1,5 @@
 import { Data, Effect, Function } from "effect";
-import { listCatalogToolNames } from "@askgina/contracts";
+import { listCatalogToolNames, type PublicEvalAttemptSummary } from "@askgina/contracts";
 
 import type {
   PluginEvalCaseScore,
@@ -12,6 +12,21 @@ import type {
   PluginEvalSuite,
 } from "./contracts";
 import { gradePluginEvalObservation, type PluginEvalObservationMismatchError } from "./grading";
+import {
+  makePublicEvalAttemptSummaries,
+  assertPublicEvalAttemptPlan,
+  type PublicEvalAttemptCaptureError,
+  type PublicEvalGradedAttempt,
+} from "./public-attempts";
+
+export interface PluginEvalReplayOptions {
+  readonly captureAttempts?: boolean;
+}
+
+export interface PluginEvalReplayResult {
+  readonly report: PluginEvalReplayReport;
+  readonly attempts: readonly PublicEvalAttemptSummary[] | null;
+}
 
 export class PluginEvalReplayContractError extends Data.TaggedError(
   "PluginEvalReplayContractError",
@@ -208,39 +223,55 @@ export const replayPluginEvalObservationSet = Function.dual<
   ) => (
     suite: PluginEvalSuite,
   ) => Effect.Effect<
-    PluginEvalReplayReport,
-    PluginEvalReplayContractError | PluginEvalObservationMismatchError
+    PluginEvalReplayResult,
+    PluginEvalReplayContractError | PluginEvalObservationMismatchError | PublicEvalAttemptCaptureError
   >,
   (
     suite: PluginEvalSuite,
     observationSet: PluginEvalObservationSet,
+    options?: PluginEvalReplayOptions,
   ) => Effect.Effect<
-    PluginEvalReplayReport,
-    PluginEvalReplayContractError | PluginEvalObservationMismatchError
+    PluginEvalReplayResult,
+    PluginEvalReplayContractError | PluginEvalObservationMismatchError | PublicEvalAttemptCaptureError
   >
->(2, (suite, observationSet) =>
+>((args) => args.length >= 2, (suite, observationSet, options) =>
   Effect.gen(function* () {
     yield* validateReplayContract(suite, observationSet);
+    const gradedAttempts: PublicEvalGradedAttempt[] | null = options?.captureAttempts === true ? [] : null;
+    if (gradedAttempts !== null) {
+      yield* assertPublicEvalAttemptPlan(
+        observationSet.manifest.run_id,
+        suite.cases.map((evalCase) => evalCase.id),
+        observationSet.manifest.repetitions,
+      );
+    }
     const casesById = new Map(suite.cases.map((evalCase) => [evalCase.id, evalCase]));
     const scores = yield* Effect.forEach(
       observationSet.observations,
-      (
-        observation,
-      ): Effect.Effect<
+      (observation): Effect.Effect<
         PluginEvalCaseScore,
         PluginEvalReplayContractError | PluginEvalObservationMismatchError
       > => {
         const evalCase = casesById.get(observation.case_id);
-        return evalCase === undefined
-          ? Effect.fail(
-              new PluginEvalReplayContractError({
-                reasons: [`observation references unknown case ${observation.case_id}`],
-              }),
-            )
-          : gradePluginEvalObservation(evalCase, observation);
+        if (evalCase === undefined) {
+          return Effect.fail(new PluginEvalReplayContractError({
+            reasons: [`observation references unknown case ${observation.case_id}`],
+          }));
+        }
+        const grade = gradePluginEvalObservation(evalCase, observation);
+        return gradedAttempts === null ? grade : grade.pipe(Effect.map((score) => {
+          gradedAttempts.push({
+            runId: observation.run_id,
+            caseId: observation.case_id,
+            repetition: observation.repetition,
+            score,
+          });
+          return score;
+        }));
       },
     );
-    return buildReplayReport(suite, observationSet, scores);
+    const attempts = gradedAttempts === null ? null : yield* makePublicEvalAttemptSummaries(observationSet, gradedAttempts);
+    return { report: buildReplayReport(suite, observationSet, scores), attempts };
   }).pipe(
     Effect.withSpan("plugin_evals.replay", {
       attributes: {

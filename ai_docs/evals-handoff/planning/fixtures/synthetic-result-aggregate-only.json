@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "eval-result.v1",
+  "resultId": "synthetic-result-2026-09-06-legacy",
+  "dataOrigin": "synthetic",
+  "measures": "conformance",
+  "run": {
+    "runId": "synthetic-run-2026-09-06-legacy",
+    "startedAt": "2026-09-06T08:00:00Z"
+  },
+  "source": {
+    "kind": "sanitized_aggregate",
+    "reportSchemaVersion": "v1",
+    "reportSha256": "a2fa396e06663f76f01696ca8ae6f92e57f1b366e9b36b0613dc3a225f07bf2a",
+    "attemptCaptureSha256": null
+  },
+  "benchmark": {
+    "suiteId": "synthetic-suite-gina-conformance",
+    "suiteVersion": 1,
+    "fixtureVersion": 1,
+    "catalogSha": "dc77091611330add854e83ea88e59ae3c9c04053093b960cb6bd45f062f2c0c4",
+    "target": "synthetic-target-gina-mcp",
+    "accountClass": "synthetic-account-class-test",
+    "cleanChat": true,
+    "repetitions": 3
+  },
+  "configuration": {
+    "availability": "labels_only",
+    "candidate": "synthetic-candidate-legacy",
+    "model": "synthetic-model-legacy",
+    "reasoning": null,
+    "pinnedSha256": null
+  },
+  "coverage": {
+    "planSource": "run_manifest",
+    "planSha256": null,
+    "statusSha256": null,
+    "status": "complete",
+    "plannedCases": 5,
+    "plannedAttempts": 15
+  },
+  "counts": {
+    "attempts": {
+      "total": 15,
+      "passed": 12,
+      "failed": 3
+    },
+    "cases": {
+      "total": 5,
+      "passedEveryAttempt": null,
+      "failedAnyAttempt": null
+    }
+  },
+  "dimensions": {
+    "routing": {
+      "passed": 14,
+      "failed": 1,
+      "notApplicable": 0
+    },
+    "arguments": {
+      "passed": 12,
+      "failed": 3,
+      "notApplicable": 0
+    },
+    "safety": {
+      "passed": 12,
+      "failed": 0,
+      "notApplicable": 3
+    },
+    "completion": {
+      "passed": 14,
+      "failed": 1,
+      "notApplicable": 0
+    },
+    "skillActivation": {
+      "passed": 9,
+      "failed": 1,
+      "notApplicable": 5
+    }
+  },
+  "metrics": {
+    "passRate": {
+      "availability": "available",
+      "unit": "ratio",
+      "value": 0.8,
+      "numerator": 12,
+      "denominator": 15
+    },
+    "latencyMs": {
+      "availability": "available",
+      "unit": "milliseconds",
+      "p50": 1750,
+      "p95": 4200,
+      "max": 4200,
+      "sampleCount": 15
+    },
+    "tokenUsage": {
+      "availability": "available",
+      "unit": "tokens",
+      "inputTokens": 16500,
+      "outputTokens": 4200,
+      "totalTokens": 20700,
+      "sampleCount": 15
+    },
+    "answerAccuracy": {
+      "availability": "not_evaluated",
+      "reason": "no_declared_method"
+    },
+    "usdCost": {
+      "availability": "not_evaluated",
+      "reason": "no_declared_method"
+    },
+    "uncertainty": {
+      "availability": "not_evaluated",
+      "reason": "no_declared_method"
+    }
+  },
+  "evidence": {
+    "attemptDetail": "aggregate_only"
+  },
+  "ranking": {
+    "status": "unranked",
+    "reasons": [
+      "pilot",
+      "synthetic",
+      "missing_pinned_configuration"
+    ]
+  },
+  "attempts": null
+}

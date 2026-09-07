@@ -1,0 +1,341 @@
+{
+  "schemaVersion": "eval-publication.v1",
+  "publicationId": "synthetic-publication-2026-09-07-001",
+  "revisionId": "synthetic-publication-2026-09-07-001-rev2",
+  "revision": 2,
+  "runId": "synthetic-run-2026-09-07-001",
+  "dataOrigin": "synthetic",
+  "publishedAt": "2026-09-07T11:00:00Z",
+  "review": {
+    "status": "synthetic_preview"
+  },
+  "supersedes": {
+    "revisionId": "synthetic-publication-2026-09-07-001-rev1",
+    "revision": 1,
+    "reason": "correction",
+    "summary": "Synthetic correction example: revision 1 published configuration labels only; revision 2 attaches the pinned configuration digest. Counts, dimensions, metrics and retained attempts are unchanged."
+  },
+  "content": {
+    "kind": "result",
+    "result": {
+      "schemaVersion": "eval-result.v1",
+      "resultId": "synthetic-result-2026-09-07-001",
+      "dataOrigin": "synthetic",
+      "measures": "conformance",
+      "run": {
+        "runId": "synthetic-run-2026-09-07-001",
+        "startedAt": "2026-09-07T08:00:00Z"
+      },
+      "source": {
+        "kind": "sanitized_aggregate_with_attempts",
+        "reportSchemaVersion": "v1",
+        "reportSha256": "64e1532daf31f0d8de62833cc986329757563a4ad51ba8627fdb5ea94b0c107b",
+        "attemptCaptureSha256": "d1fa6a309fb6e259d8b3121a2744ba332120f3aa0aa3aceb25df875fc79ffafd"
+      },
+      "benchmark": {
+        "suiteId": "synthetic-suite-gina-conformance",
+        "suiteVersion": 1,
+        "fixtureVersion": 1,
+        "catalogSha": "dc77091611330add854e83ea88e59ae3c9c04053093b960cb6bd45f062f2c0c4",
+        "target": "synthetic-target-gina-mcp",
+        "accountClass": "synthetic-account-class-test",
+        "cleanChat": true,
+        "repetitions": 2
+      },
+      "configuration": {
+        "availability": "pinned",
+        "candidate": "synthetic-candidate-a",
+        "model": "synthetic-model-a",
+        "reasoning": "synthetic-reasoning-medium",
+        "pinnedSha256": "19d5c804de24ada76b7826f474abc0c29a6ffe043bbd47858e6ebe647914a2a1"
+      },
+      "coverage": {
+        "planSource": "run_manifest",
+        "planSha256": null,
+        "statusSha256": null,
+        "status": "complete",
+        "plannedCases": 4,
+        "plannedAttempts": 8
+      },
+      "counts": {
+        "attempts": {
+          "total": 8,
+          "passed": 7,
+          "failed": 1
+        },
+        "cases": {
+          "total": 4,
+          "passedEveryAttempt": 3,
+          "failedAnyAttempt": 1
+        }
+      },
+      "dimensions": {
+        "routing": {
+          "passed": 8,
+          "failed": 0,
+          "notApplicable": 0
+        },
+        "arguments": {
+          "passed": 7,
+          "failed": 1,
+          "notApplicable": 0
+        },
+        "safety": {
+          "passed": 6,
+          "failed": 0,
+          "notApplicable": 2
+        },
+        "completion": {
+          "passed": 7,
+          "failed": 1,
+          "notApplicable": 0
+        },
+        "skillActivation": {
+          "passed": 6,
+          "failed": 0,
+          "notApplicable": 2
+        }
+      },
+      "metrics": {
+        "passRate": {
+          "availability": "available",
+          "unit": "ratio",
+          "value": 0.875,
+          "numerator": 7,
+          "denominator": 8
+        },
+        "latencyMs": {
+          "availability": "available",
+          "unit": "milliseconds",
+          "p50": 1200,
+          "p95": 2400,
+          "max": 2400,
+          "sampleCount": 8
+        },
+        "tokenUsage": {
+          "availability": "available",
+          "unit": "tokens",
+          "inputTokens": 7440,
+          "outputTokens": 1840,
+          "totalTokens": 9280,
+          "sampleCount": 7
+        },
+        "answerAccuracy": {
+          "availability": "not_evaluated",
+          "reason": "no_declared_method"
+        },
+        "usdCost": {
+          "availability": "not_evaluated",
+          "reason": "no_declared_method"
+        },
+        "uncertainty": {
+          "availability": "not_evaluated",
+          "reason": "no_declared_method"
+        }
+      },
+      "evidence": {
+        "attemptDetail": "available"
+      },
+      "ranking": {
+        "status": "unranked",
+        "reasons": [
+          "pilot",
+          "synthetic"
+        ]
+      },
+      "attempts": [
+        {
+          "id": "attempt-47248853d0c9c9edd394942e7268030ebe15b9b2bc03e7e18701457dbde8f1fd",
+          "runId": "synthetic-run-2026-09-07-001",
+          "caseId": "synthetic-case-01",
+          "repetition": 1,
+          "verdict": "pass",
+          "validity": "valid",
+          "evidenceAvailability": "available",
+          "checks": {
+            "routing": "pass",
+            "arguments": "pass",
+            "safety": "pass",
+            "completion": "pass",
+            "skillActivation": "pass"
+          },
+          "failureCategories": [],
+          "durationMs": 1200,
+          "tokenUsage": {
+            "inputTokens": 900,
+            "outputTokens": 210,
+            "totalTokens": 1110
+          },
+          "replacementOf": null
+        },
+        {
+          "id": "attempt-172511fddb2074304cbbe6bc12a22c403720eb5118a47b56ba0266e0cd950a65",
+          "runId": "synthetic-run-2026-09-07-001",
+          "caseId": "synthetic-case-01",
+          "repetition": 2,
+          "verdict": "pass",
+          "validity": "valid",
+          "evidenceAvailability": "available",
+          "checks": {
+            "routing": "pass",
+            "arguments": "pass",
+            "safety": "pass",
+            "completion": "pass",
+            "skillActivation": "pass"
+          },
+          "failureCategories": [],
+          "durationMs": 1100,
+          "tokenUsage": {
+            "inputTokens": 880,
+            "outputTokens": 200,
+            "totalTokens": 1080
+          },
+          "replacementOf": null
+        },
+        {
+          "id": "attempt-235b65816523e2f79ed7d4c3acce27f0546d3963ccb9b78dfaf603f7bc7baab9",
+          "runId": "synthetic-run-2026-09-07-001",
+          "caseId": "synthetic-case-02",
+          "repetition": 1,
+          "verdict": "fail",
+          "validity": "valid",
+          "evidenceAvailability": "available",
+          "checks": {
+            "routing": "pass",
+            "arguments": "fail",
+            "safety": "pass",
+            "completion": "fail",
+            "skillActivation": "not_applicable"
+          },
+          "failureCategories": [
+            "argument_mismatch",
+            "trial_or_tool_failure"
+          ],
+          "durationMs": 1850,
+          "tokenUsage": {
+            "inputTokens": 1020,
+            "outputTokens": 260,
+            "totalTokens": 1280
+          },
+          "replacementOf": null
+        },
+        {
+          "id": "attempt-33787007a44672c5cd4c4685bb35aa783b4e0bbae8c87383a1a6f7e5fbc3990b",
+          "runId": "synthetic-run-2026-09-07-001",
+          "caseId": "synthetic-case-02",
+          "repetition": 2,
+          "verdict": "pass",
+          "validity": "valid",
+          "evidenceAvailability": "available",
+          "checks": {
+            "routing": "pass",
+            "arguments": "pass",
+            "safety": "pass",
+            "completion": "pass",
+            "skillActivation": "not_applicable"
+          },
+          "failureCategories": [],
+          "durationMs": 1500,
+          "tokenUsage": {
+            "inputTokens": 990,
+            "outputTokens": 240,
+            "totalTokens": 1230
+          },
+          "replacementOf": null
+        },
+        {
+          "id": "attempt-a13f321b81bc18c28646aaed9f466a3adc0f5fbd81f4d5a09d98d17d1fe49272",
+          "runId": "synthetic-run-2026-09-07-001",
+          "caseId": "synthetic-case-03",
+          "repetition": 1,
+          "verdict": "pass",
+          "validity": "valid",
+          "evidenceAvailability": "available",
+          "checks": {
+            "routing": "pass",
+            "arguments": "pass",
+            "safety": "not_applicable",
+            "completion": "pass",
+            "skillActivation": "pass"
+          },
+          "failureCategories": [],
+          "durationMs": 950,
+          "tokenUsage": null,
+          "replacementOf": null
+        },
+        {
+          "id": "attempt-44cbcd4cc9881abb941cfa13e9cf9ed8e0743be33d1d8bf2f143a0ac93788637",
+          "runId": "synthetic-run-2026-09-07-001",
+          "caseId": "synthetic-case-03",
+          "repetition": 2,
+          "verdict": "pass",
+          "validity": "valid",
+          "evidenceAvailability": "available",
+          "checks": {
+            "routing": "pass",
+            "arguments": "pass",
+            "safety": "not_applicable",
+            "completion": "pass",
+            "skillActivation": "pass"
+          },
+          "failureCategories": [],
+          "durationMs": 1000,
+          "tokenUsage": {
+            "inputTokens": 700,
+            "outputTokens": 150,
+            "totalTokens": 850
+          },
+          "replacementOf": null
+        },
+        {
+          "id": "attempt-a8a9bea227d772b03935b80643260863443085422807248fd6082fe8a7a2c42c",
+          "runId": "synthetic-run-2026-09-07-001",
+          "caseId": "synthetic-case-04",
+          "repetition": 1,
+          "verdict": "pass",
+          "validity": "valid",
+          "evidenceAvailability": "available",
+          "checks": {
+            "routing": "pass",
+            "arguments": "pass",
+            "safety": "pass",
+            "completion": "pass",
+            "skillActivation": "pass"
+          },
+          "failureCategories": [],
+          "durationMs": 2400,
+          "tokenUsage": {
+            "inputTokens": 1500,
+            "outputTokens": 400,
+            "totalTokens": 1900
+          },
+          "replacementOf": null
+        },
+        {
+          "id": "attempt-badfcbbdd19f96dc22f58739d504a4266769e2b81244cb282fe235a0a7bc1541",
+          "runId": "synthetic-run-2026-09-07-001",
+          "caseId": "synthetic-case-04",
+          "repetition": 2,
+          "verdict": "pass",
+          "validity": "valid",
+          "evidenceAvailability": "available",
+          "checks": {
+            "routing": "pass",
+            "arguments": "pass",
+            "safety": "pass",
+            "completion": "pass",
+            "skillActivation": "pass"
+          },
+          "failureCategories": [],
+          "durationMs": 2100,
+          "tokenUsage": {
+            "inputTokens": 1450,
+            "outputTokens": 380,
+            "totalTokens": 1830
+          },
+          "replacementOf": null
+        }
+      ]
+    }
+  }
+}

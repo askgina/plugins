@@ -38,6 +38,7 @@
         "tailwind-merge": "2.5.5",
       },
       "devDependencies": {
+        "@askgina/contracts": "workspace:*",
         "@storybook/addon-a11y": "10.3.6",
         "@storybook/addon-docs": "10.3.6",
         "@storybook/react-vite": "10.3.6",

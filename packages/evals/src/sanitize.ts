@@ -258,6 +258,12 @@ export const findPublicTextViolations = (text: string): readonly PublicTextViola
   );
 };
 
+/** Value-free privacy check shared by public result and attempt boundaries. */
+export const isSafePublicEvalText = (value: string): boolean =>
+  !ADDRESS_VALUE.test(value) &&
+  !PRIVATE_HOST_VALUE.test(value) &&
+  findPublicTextViolations(value).length === 0;
+
 const inspectForbiddenContent = (value: unknown, path: string, reasons: string[]): void => {
   if (typeof value === "string") {
     if (value.length > 128) reasons.push(`${path} contains an unbounded string`);

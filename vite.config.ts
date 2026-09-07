@@ -51,6 +51,7 @@ export default defineConfig({
       cwd: fileURLToPath(new URL("packages/evals/", import.meta.url)),
       entry: {
         "bin/check-codex-marketplace": "src/bin/check-codex-marketplace.ts",
+        "bin/export-public-results": "src/bin/export-public-results.ts",
         "bin/live": "src/bin/live.ts",
         "bin/replay": "src/bin/replay.ts",
         index: "src/index.ts",

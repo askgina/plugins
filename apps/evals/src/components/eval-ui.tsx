@@ -4,14 +4,17 @@ import { dataset, families, type EvalModel, type FamilyFilter, type PageId } fro
 import { Button } from "./ui/button";
 import { DialogRoot, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 
-const navigation: readonly { id: PageId; label: string; href: string }[] = [
+type ShellPageId = PageId | "handoff";
+
+const navigation: readonly { id: ShellPageId; label: string; href: string }[] = [
   { id: "leaderboard", label: "Leaderboard", href: "#/leaderboard" },
   { id: "models", label: "Models", href: "#/models/kimi-k3" },
   { id: "tasks", label: "Tasks", href: "#/tasks" },
   { id: "methodology", label: "Methodology", href: "#/methodology" },
+  { id: "handoff", label: "Public results", href: "#/handoff" },
 ];
 
-export function PageShell({ active, children }: { active: PageId; children: ReactNode }) {
+export function PageShell({ active, children }: { active: ShellPageId; children: ReactNode }) {
   const [runOpen, setRunOpen] = useState(false);
   return (
     <div className="eval-app">
@@ -37,10 +40,14 @@ export function PageShell({ active, children }: { active: PageId; children: Reac
           ))}
         </nav>
         <div className="eval-header-actions">
-          <span className="eval-demo-label">Design concept · Illustrative data</span>
-          <Button className="eval-run-button" onClick={() => setRunOpen(true)}>
-            Run an evaluation <ArrowUpRight size={14} aria-hidden="true" />
-          </Button>
+          <span className="eval-demo-label">
+            {active === "handoff" ? "Public JSON handoff" : "Design concept · Illustrative data"}
+          </span>
+          {active !== "handoff" && (
+            <Button className="eval-run-button" onClick={() => setRunOpen(true)}>
+              Run an evaluation <ArrowUpRight size={14} aria-hidden="true" />
+            </Button>
+          )}
         </div>
       </header>
       <main id="eval-main" className="eval-main" tabIndex={-1}>
@@ -48,7 +55,11 @@ export function PageShell({ active, children }: { active: PageId; children: Reac
       </main>
       <footer className="eval-footer">
         <span>
-          {dataset.disclaimer} <a href="#/methodology">See methodology.</a>
+          {active === "handoff" ? (
+            "Public exports measure conformance, not answer accuracy or financial outcomes. Other pages use illustrative fixtures."
+          ) : (
+            <>{dataset.disclaimer} <a href="#/methodology">See methodology.</a></>
+          )}
         </span>
         <span>Open tools. Transparent results.</span>
       </footer>
