@@ -1,0 +1,29 @@
+---
+title: "Other MCP clients"
+description: "Configure Streamable HTTP and verify Gina tool discovery."
+---
+
+Your client needs remote **Streamable HTTP** MCP support and either OAuth or a configurable Bearer header. Follow its own configuration schema; MCP settings are not identical across hosts.
+
+## Configure a research connection
+
+Use these connection values:
+
+| Setting     | Value                            |
+| ----------- | -------------------------------- |
+| Name        | `ask-gina`                       |
+| Transport   | Streamable HTTP                  |
+| URL         | `https://askgina.ai/ai/gina/mcp` |
+| OAuth scope | `tools:read`                     |
+
+Prefer the client's OAuth flow. For a manual Bearer header, follow [authentication](/agents/authentication); use a correctly scoped token and private configuration. A client that only supports local stdio servers cannot connect directly with these values.
+
+## Plugin or skill support
+
+If the client supports skills, use [the canonical research skill directories](/agents/plugins-and-skills). If it only supports tools, you can still complete the first request without installing skills. Rich charts and slash commands depend on the host.
+
+## Verify your first result
+
+Ask **“Use Gina to show ETH in USD over the past seven days.”** Confirm a Gina tool ran and the response identifies ETH and the requested period. Follow [First successful request](/start/first-request) for the expected tool boundary and recovery steps.
+
+This connection is read-only. For trading or transfers, see [Write access (Degen mode)](/write-access/index). A direct connection does not automatically install [research skills](/agents/plugins-and-skills).

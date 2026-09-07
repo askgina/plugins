@@ -69,6 +69,21 @@ export default defineConfig({
   },
   lint: {
     ...effectTsgoRecommended,
+    overrides: [
+      ...(effectTsgoRecommended.overrides ?? []),
+      {
+        // The docs workflow runs these standalone Node checks without installing
+        // workspace dependencies. Keep general lint rules enabled for both files.
+        files: ["tools/docs/check.mjs", "tools/docs/check.test.mjs"],
+        rules: {
+          "effecttsgo/node-builtin-import": "off",
+          "effecttsgo/async-function": "off",
+          "effecttsgo/global-console": "off",
+          "effecttsgo/global-date": "off",
+          "effecttsgo/global-fetch": "off",
+        },
+      },
+    ],
     options: {
       ...effectTsgoRecommended.options,
       typeAware: true,

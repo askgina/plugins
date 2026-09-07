@@ -1,8 +1,8 @@
 ---
-title: "Memory"
-description: "Save private notes for later chats and recipes."
+title: "Files and memory"
+description: "Save research for future chats and understand the storage boundary."
 owner: "Ask Gina web team"
-lastReviewed: "2026-08-24"
+lastReviewed: "2026-09-06"
 kind: "guide"
 includeInDocsAgent: true
 relatedSlugs:
@@ -12,32 +12,20 @@ relatedSlugs:
   - safety-support-and-limitations
 ---
 
-# Memory
+# Files and memory
 
-## Purpose
+Open **Files** in the sidebar to browse available account files. Memory stores notes for later chats or recipes. Sign in and confirm your account has access.
 
-Save notes for later chats or recipes. First, write `Watch ETH and SOL` to `research/watchlist.md`, then read it.
+## Save and read a note
 
-## Suitable Use Cases
+1. Ask **“Write ‘Watch ETH and SOL’ to research/watchlist.md in my account Memory.”**
+2. Ask **“Read research/watchlist.md from my account Memory.”**
+3. Check the contents. A missing path should return an error.
 
-Store research, a watchlist, or recipe output for later use.
+A write creates or replaces the whole file. To edit, read first and supply the full replacement. Keep a copy of anything you cannot lose.
 
-## Prerequisites and Authentication
+Account Memory and an external MCP sandbox's `/workspace` are separate. Name the storage surface when ambiguous. A recipe with file access can read the named file; the public Docs Agent cannot access private files.
 
-Sign in and confirm your account includes Memory. Only you can open its files. The public Docs Agent cannot read or change them.
+Never store passwords, tokens, private keys, or recovery phrases in notes.
 
-## Inputs and Expected Results
-
-Give an operation and path. Read returns the current contents. Write creates or replaces the whole file. List returns Memory paths. To edit, read the file and write the full replacement. MCP `/workspace` is separate from account Memory.
-
-## Tested Example
-
-> Read research/watchlist.md.
-
-Expected: Gina returns the current contents. A missing path returns an error.
-
-## Limitations and Safety
-
-Do not store passwords, tokens, API keys, private keys, or recovery phrases. A recipe with file access can read the named file. Keep a copy of anything you cannot lose.
-
-Related: [Recipes](/product-guide/recipes-and-webhooks), [Research](/product-guide/market-research), [Safety](/product-guide/safety-support-and-limitations), [Product Guide](/product-guide).
+Related: [Automations](/product-guide/recipes-and-webhooks), [Research](/product-guide/market-research), [Safety](/product-guide/safety-support-and-limitations), [Product Guide](/product-guide).

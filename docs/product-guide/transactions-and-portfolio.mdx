@@ -1,8 +1,8 @@
 ---
-title: "Transactions & Portfolio"
-description: "Check holdings, review a send or swap, or execute it."
+title: "Transactions and portfolio"
+description: "Review holdings, request a proposal, and distinguish submission from settlement."
 owner: "Ask Gina web team"
-lastReviewed: "2026-08-24"
+lastReviewed: "2026-09-06"
 kind: "guide"
 includeInDocsAgent: true
 relatedSlugs:
@@ -13,32 +13,25 @@ relatedSlugs:
   - safety-support-and-limitations
 ---
 
-# Transactions & Portfolio
+# Transactions and portfolio
 
-## Purpose
+Open the wallet or ask **“Show my portfolio across chains.”** Check the account, chain, asset, and freshness. Missing provider data is not a zero balance.
 
-Gina can show holdings, prepare a supported transfer or swap for review, or submit it. Your instruction decides whether Gina stops at a proposal or submits the transaction.
+## Prepare without submitting
 
-## Suitable Use Cases
+1. Confirm the full recipient address, network, asset, and amount.
+2. Ask **“Prepare to send 5 USDC on Base to [recipient address]. Do not execute.”** Replace the bracketed text with the verified address.
+3. Check the proposal's recipient, network, contract, amount, and fees.
+4. Give a separate execution instruction only when ready. Review material changes first.
 
-Check holdings, review a proposal, or execute a send or swap.
+![Recipient verification card with an illustrative address and Verify Recipient button.](/images/product/recipient-review.png)
 
-## Prerequisites and Authentication
+_Actual recipient-verification component with a sample address. Never send funds to this example._
 
-Sign in and fund the Gina Wallet first. A direct instruction to "send" or "swap" authorizes same-turn execution after Gina builds the transaction. To review without submission, say "prepare," "quote," "draft," "do not execute," or "ready for review." Gina then prepares the transaction but does not submit it.
+## Execute and verify
 
-## Inputs and Expected Results
+A direct **send** or **swap** instruction authorizes same-turn execution; no special “confirm execute” phrase is required. For swaps, specify input asset, amount, output asset, and network. Quotes expire and fees can change.
 
-Give the asset, amount, network, recipient, or history range. A review-only request returns a proposal. Check its network, contract, amount, recipient, output, and fees before giving a later send or swap instruction. If Gina submits, it returns a result with a transaction hash.
+Inspect **Trade History** or the chat result. Match the hash to your requested action. Submitted can mean pending; a hash alone does not guarantee finality. Check status before repeating an unclear send. Gina cannot recover a wrong send.
 
-## Tested Example
-
-> Prepare to send 5 USDC to 0x... on Base.
-
-Expected: a review-only proposal. Because the request says "prepare," Gina stops before submission.
-
-## Limitations and Safety
-
-Quotes expire. Routes and fees can change. A transaction hash does not guarantee finality. Gina cannot promise profit or recover a wrong send.
-
-Related: [Wallet](/product-guide/wallet-and-account), [Networks and fees](/product-guide/networks-fees-and-pricing), [Safety](/product-guide/safety-support-and-limitations), [Product Guide](/product-guide).
+Related: [Wallet](/product-guide/wallet-and-account), [Fees](/product-guide/networks-fees-and-pricing), [Safety](/product-guide/safety-support-and-limitations), [Product Guide](/product-guide).

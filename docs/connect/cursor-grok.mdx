@@ -1,0 +1,40 @@
+---
+title: "Cursor and Grok"
+description: "Keep Cursor, Grok web, and Grok Bot setup distinct."
+---
+
+## Cursor: direct MCP
+
+Merge this into your project `.cursor/mcp.json` or user `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "ask-gina": {
+      "url": "https://askgina.ai/ai/gina/mcp"
+    }
+  }
+}
+```
+
+Open Cursor's MCP settings and connect Ask Gina. Complete Gina OAuth in the browser, then enable its tools. This URL-only configuration lets Cursor negotiate Streamable HTTP and OAuth. See [Cursor MCP](https://prod.cursor.com/docs/mcp).
+
+## Cursor: local source plugin
+
+For skills and slash commands, clone [askgina/plugins](https://github.com/askgina/plugins) and copy the complete `plugins/ask-gina` directory to `~/.cursor/plugins/local/ask-gina`. Use a real directory, not an external symlink. Preserve any existing installation rather than overwriting it blindly.
+
+Reload Cursor and connect the plugin's Gina MCP server. The plugin provides four research skills and the commands `/review-gina-account`, `/research-spot-tokens`, `/research-hyperliquid`, and `/research-prediction-markets`. Avoid enabling a duplicate direct MCP connection.
+
+## Grok web
+
+At [Grok connectors](https://grok.com/connectors), choose **New Connector → Custom**, enter `https://askgina.ai/ai/gina/mcp`, and complete authentication. Availability depends on the host. See [Grok's connector guide](https://docs.x.ai/grok/connectors).
+
+## Grok Bot
+
+Grok Bot is a separate surface from Grok web. The Gina plugin targets the Cursor marketplace route for Grok Bot; a live Ask Gina listing has not been verified here. Local Cursor installation does not install or verify Grok Bot. Do not use the web connector instructions as proof that the Bot is connected.
+
+## Verify your first result
+
+Ask **“Use Gina to show ETH in USD over the past seven days.”** Confirm a Gina tool ran and the response identifies ETH and the requested period. Follow [First successful request](/start/first-request) for the expected tool boundary and recovery steps.
+
+This connection is read-only. For trading or transfers, see [Write access (Degen mode)](/write-access/index). A direct connection does not automatically install [research skills](/agents/plugins-and-skills).

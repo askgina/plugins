@@ -1,0 +1,12 @@
+---
+title: "Account and portfolio"
+description: "Inspect linked wallets, holdings, and scheduled-prompt results."
+---
+
+Ask **“Show my linked wallets”** to retrieve linked addresses, or **“What do I hold across chains?”** to retrieve holdings. These are separate account views; an empty portfolio does not prove that no wallet is linked.
+
+Sign in to the account you want to inspect. For scheduled prompts, ask **“How did my automations run?”** Read-only access can inspect schedules and recent runs, but cannot create, pause, edit, or delete them.
+
+The `review-gina-account` skill selects `getAccountAddresses`, `getCrosschainPortfolio`, or `listScheduledPrompts` for the requested view. Check the returned chain, account, timestamps, and missing-provider information. Do not treat missing values as zero balances.
+
+Start with [Gina Read](/mcp-access/gina-read) and [connect your assistant](/connect/index). See [Plugins and skills](/agents/plugins-and-skills) for the canonical instructions.
