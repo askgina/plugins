@@ -66,10 +66,7 @@
         "completion": "fail",
         "skillActivation": "not_applicable"
       },
-      "failureCategories": [
-        "argument_mismatch",
-        "trial_or_tool_failure"
-      ],
+      "failureCategories": ["argument_mismatch", "trial_or_tool_failure"],
       "durationMs": 1850,
       "tokenUsage": {
         "inputTokens": 1020,

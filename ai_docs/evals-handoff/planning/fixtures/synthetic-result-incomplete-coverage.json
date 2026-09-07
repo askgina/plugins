@@ -116,11 +116,7 @@
   },
   "ranking": {
     "status": "unranked",
-    "reasons": [
-      "pilot",
-      "synthetic",
-      "incomplete_coverage"
-    ]
+    "reasons": ["pilot", "synthetic", "incomplete_coverage"]
   },
   "attempts": null
 }

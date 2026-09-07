@@ -119,11 +119,7 @@
   },
   "ranking": {
     "status": "unranked",
-    "reasons": [
-      "pilot",
-      "synthetic",
-      "missing_pinned_configuration"
-    ]
+    "reasons": ["pilot", "synthetic", "missing_pinned_configuration"]
   },
   "attempts": null
 }

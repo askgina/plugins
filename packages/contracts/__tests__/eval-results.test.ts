@@ -17,7 +17,9 @@ import {
 const SHA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const UNAVAILABLE = { availability: "not_evaluated", reason: "no_declared_method" } as const;
 const attemptId = (runId: string, caseId: string): string =>
-  `attempt-${createHash("sha256").update(JSON.stringify([runId, caseId, 1])).digest("hex")}`;
+  `attempt-${createHash("sha256")
+    .update(JSON.stringify([runId, caseId, 1]))
+    .digest("hex")}`;
 
 const PASS: PublicEvalAttemptSummary = {
   id: attemptId("synthetic-run", "case-one"),
@@ -104,7 +106,13 @@ const RESULT: PublicEvalResult = {
     skillActivation: { passed: 0, failed: 0, notApplicable: 2 },
   },
   metrics: {
-    passRate: { availability: "available", unit: "ratio", value: 0.5, numerator: 1, denominator: 2 },
+    passRate: {
+      availability: "available",
+      unit: "ratio",
+      value: 0.5,
+      numerator: 1,
+      denominator: 2,
+    },
     latencyMs: {
       availability: "available",
       unit: "milliseconds",
@@ -142,7 +150,11 @@ const APPROVED_PUBLICATION: PublicEvalPublication = {
   supersedes: null,
   content: {
     kind: "result",
-    result: { ...RESULT, dataOrigin: "measured", ranking: { status: "unranked", reasons: ["pilot"] } },
+    result: {
+      ...RESULT,
+      dataOrigin: "measured",
+      ranking: { status: "unranked", reasons: ["pilot"] },
+    },
   },
 };
 
@@ -193,25 +205,38 @@ describe("@askgina/contracts public eval boundaries", () => {
       yield* decodePublicEvalPublication(APPROVED_PUBLICATION);
       yield* decodePublicEvalIndex(INDEX);
 
-      yield* rejected(decodePublicEvalAttemptCapture({
-        ...CAPTURE,
-        attempts: [{ ...PASS, checks: { ...PASS.checks, privateDetail: "not public" } }, FAIL],
-      }));
-      yield* rejected(decodePublicEvalResult({
-        ...RESULT,
-        source: { ...RESULT.source, rawReport: "not public" },
-      }));
-      yield* rejected(decodePublicEvalPublication({
-        ...APPROVED_PUBLICATION,
-        review: { ...APPROVED_PUBLICATION.review, privateReviewerEmail: "owner@example.invalid" },
-      }));
-      yield* rejected(decodePublicEvalIndex({
-        ...INDEX,
-        publications: [{
-          ...WITHDRAWN_ENTRY,
-          revisions: [REMOVED_REVISION, { ...NOTICE_REVISION, privateStoragePath: "not public" }],
-        }],
-      }));
+      yield* rejected(
+        decodePublicEvalAttemptCapture({
+          ...CAPTURE,
+          attempts: [{ ...PASS, checks: { ...PASS.checks, privateDetail: "not public" } }, FAIL],
+        }),
+      );
+      yield* rejected(
+        decodePublicEvalResult({
+          ...RESULT,
+          source: { ...RESULT.source, rawReport: "not public" },
+        }),
+      );
+      yield* rejected(
+        decodePublicEvalPublication({
+          ...APPROVED_PUBLICATION,
+          review: { ...APPROVED_PUBLICATION.review, privateReviewerEmail: "owner@example.invalid" },
+        }),
+      );
+      yield* rejected(
+        decodePublicEvalIndex({
+          ...INDEX,
+          publications: [
+            {
+              ...WITHDRAWN_ENTRY,
+              revisions: [
+                REMOVED_REVISION,
+                { ...NOTICE_REVISION, privateStoragePath: "not public" },
+              ],
+            },
+          ],
+        }),
+      );
     }),
   );
 
@@ -223,7 +248,11 @@ describe("@askgina/contracts public eval boundaries", () => {
         id: attemptId("another-run", "case-two"),
       };
       yield* decodePublicEvalAttemptCapture(CAPTURE);
-      yield* decodePublicEvalAttemptCapture({ ...CAPTURE, runId: "another-run", attempts: [foreign] });
+      yield* decodePublicEvalAttemptCapture({
+        ...CAPTURE,
+        runId: "another-run",
+        attempts: [foreign],
+      });
       yield* rejected(decodePublicEvalAttemptCapture({ ...CAPTURE, attempts: [PASS, FAIL, FAIL] }));
       yield* rejected(decodePublicEvalAttemptCapture({ ...CAPTURE, attempts: [PASS, foreign] }));
     }),
@@ -239,24 +268,30 @@ describe("@askgina/contracts public eval boundaries", () => {
       };
       const capture = { ...CAPTURE, runId: canonical.runId, attempts: [canonical] };
       yield* decodePublicEvalAttemptCapture(capture);
-      yield* rejected(decodePublicEvalAttemptCapture({
-        ...capture,
-        attempts: [{ ...canonical, id: `attempt-${SHA}` }],
-      }));
+      yield* rejected(
+        decodePublicEvalAttemptCapture({
+          ...capture,
+          attempts: [{ ...canonical, id: `attempt-${SHA}` }],
+        }),
+      );
     }),
   );
 
   it.effect("requires failure categories to correspond to the failed checks", () =>
     Effect.gen(function* () {
       yield* decodePublicEvalAttemptCapture(CAPTURE);
-      yield* rejected(decodePublicEvalAttemptCapture({
-        ...CAPTURE,
-        attempts: [PASS, { ...FAIL, failureCategories: ["argument_mismatch"] }],
-      }));
-      yield* rejected(decodePublicEvalAttemptCapture({
-        ...CAPTURE,
-        attempts: [PASS, { ...FAIL, failureCategories: [] }],
-      }));
+      yield* rejected(
+        decodePublicEvalAttemptCapture({
+          ...CAPTURE,
+          attempts: [PASS, { ...FAIL, failureCategories: ["argument_mismatch"] }],
+        }),
+      );
+      yield* rejected(
+        decodePublicEvalAttemptCapture({
+          ...CAPTURE,
+          attempts: [PASS, { ...FAIL, failureCategories: [] }],
+        }),
+      );
     }),
   );
 
@@ -279,10 +314,12 @@ describe("@askgina/contracts public eval boundaries", () => {
         ranking: { status: "unranked", reasons: ["pilot", "synthetic", "incomplete_coverage"] },
       };
       yield* decodePublicEvalResult(incomplete);
-      yield* rejected(decodePublicEvalResult({
-        ...incomplete,
-        metrics: { ...incomplete.metrics, passRate: RESULT.metrics.passRate },
-      }));
+      yield* rejected(
+        decodePublicEvalResult({
+          ...incomplete,
+          metrics: { ...incomplete.metrics, passRate: RESULT.metrics.passRate },
+        }),
+      );
     }),
   );
 
@@ -294,14 +331,18 @@ describe("@askgina/contracts public eval boundaries", () => {
         ...RESULT,
         dimensions: { ...RESULT.dimensions, arguments: { passed: 1, failed: 1, notApplicable: 0 } },
       });
-      yield* rejected(decodePublicEvalResult({
-        ...RESULT,
-        dimensions: { ...RESULT.dimensions, routing: { passed: 0, failed: 2, notApplicable: 0 } },
-      }));
-      yield* rejected(decodePublicEvalResult({
-        ...RESULT,
-        dimensions: { ...RESULT.dimensions, routing: { passed: 2, failed: 0, notApplicable: 0 } },
-      }));
+      yield* rejected(
+        decodePublicEvalResult({
+          ...RESULT,
+          dimensions: { ...RESULT.dimensions, routing: { passed: 0, failed: 2, notApplicable: 0 } },
+        }),
+      );
+      yield* rejected(
+        decodePublicEvalResult({
+          ...RESULT,
+          dimensions: { ...RESULT.dimensions, routing: { passed: 2, failed: 0, notApplicable: 0 } },
+        }),
+      );
     }),
   );
 
@@ -314,10 +355,12 @@ describe("@askgina/contracts public eval boundaries", () => {
         review: { status: "synthetic_preview" },
         content: { kind: "result", result: RESULT },
       });
-      yield* rejected(decodePublicEvalPublication({
-        ...APPROVED_PUBLICATION,
-        content: { kind: "result", result: RESULT },
-      }));
+      yield* rejected(
+        decodePublicEvalPublication({
+          ...APPROVED_PUBLICATION,
+          content: { kind: "result", result: RESULT },
+        }),
+      );
     }),
   );
 
@@ -325,17 +368,23 @@ describe("@askgina/contracts public eval boundaries", () => {
     Effect.gen(function* () {
       yield* decodePublicEvalIndex(INDEX);
       const addressedResult = { ...REMOVED_REVISION, path: "synthetic/r1.json", sha256: SHA };
-      yield* rejected(decodePublicEvalIndex({
-        ...INDEX,
-        publications: [{
-          ...WITHDRAWN_ENTRY,
-          revisions: [{ ...addressedResult, state: "superseded" }, NOTICE_REVISION],
-        }],
-      }));
-      yield* rejected(decodePublicEvalIndex({
-        ...INDEX,
-        publications: [{ ...WITHDRAWN_ENTRY, revisions: [addressedResult, NOTICE_REVISION] }],
-      }));
+      yield* rejected(
+        decodePublicEvalIndex({
+          ...INDEX,
+          publications: [
+            {
+              ...WITHDRAWN_ENTRY,
+              revisions: [{ ...addressedResult, state: "superseded" }, NOTICE_REVISION],
+            },
+          ],
+        }),
+      );
+      yield* rejected(
+        decodePublicEvalIndex({
+          ...INDEX,
+          publications: [{ ...WITHDRAWN_ENTRY, revisions: [addressedResult, NOTICE_REVISION] }],
+        }),
+      );
     }),
   );
 });

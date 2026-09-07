@@ -25,7 +25,7 @@
         "kind": "sanitized_aggregate_with_attempts",
         "reportSchemaVersion": "v1",
         "reportSha256": "64e1532daf31f0d8de62833cc986329757563a4ad51ba8627fdb5ea94b0c107b",
-        "attemptCaptureSha256": "d1fa6a309fb6e259d8b3121a2744ba332120f3aa0aa3aceb25df875fc79ffafd"
+        "attemptCaptureSha256": "e63f2ffb6c466f81197fcd5621619a8a389f5744c22ffba935c326a24ebf229b"
       },
       "benchmark": {
         "suiteId": "synthetic-suite-gina-conformance",
@@ -133,11 +133,7 @@
       },
       "ranking": {
         "status": "unranked",
-        "reasons": [
-          "pilot",
-          "synthetic",
-          "missing_pinned_configuration"
-        ]
+        "reasons": ["pilot", "synthetic", "missing_pinned_configuration"]
       },
       "attempts": [
         {
@@ -203,10 +199,7 @@
             "completion": "fail",
             "skillActivation": "not_applicable"
           },
-          "failureCategories": [
-            "argument_mismatch",
-            "trial_or_tool_failure"
-          ],
+          "failureCategories": ["argument_mismatch", "trial_or_tool_failure"],
           "durationMs": 1850,
           "tokenUsage": {
             "inputTokens": 1020,

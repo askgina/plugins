@@ -25,7 +25,7 @@
           "state": "superseded",
           "publishedAt": "2026-09-07T09:00:00Z",
           "path": "synthetic-publication-correction-rev1.json",
-          "sha256": "bda23f679adc71ef38c09acfff938c26db1cda959740f2c3f7782142e48e1760"
+          "sha256": "a830e60b30f69b2d96cc945a6de49deaca97de986aeeab12ef07d102af831270"
         },
         {
           "revisionId": "synthetic-publication-2026-09-07-001-rev2",
@@ -34,7 +34,7 @@
           "state": "current",
           "publishedAt": "2026-09-07T11:00:00Z",
           "path": "synthetic-publication-correction-rev2.json",
-          "sha256": "7cf7f824da2541474ad300bb3da7b1f4b0747458d8dbca2838068bad80bb9158"
+          "sha256": "ae928c1e244d5f0fddc2b2b66848cd23ddd74cec03895cf7e94e486a3c542b5f"
         }
       ]
     },

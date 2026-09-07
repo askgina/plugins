@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { Schema, type SchemaAST } from "effect";
+import { Function, Schema, type SchemaAST } from "effect";
 
 /**
  * Public evaluation results contract (version one).
@@ -38,7 +38,9 @@ const NonNegativeIntSchema = Schema.Int.check(
   Schema.isLessThanOrEqualTo(Number.MAX_SAFE_INTEGER),
 );
 const PositiveIntSchema = NonNegativeIntSchema.check(Schema.isGreaterThan(0));
-const AttemptCountSchema = NonNegativeIntSchema.check(Schema.isLessThanOrEqualTo(PUBLIC_EVAL_MAX_ATTEMPTS));
+const AttemptCountSchema = NonNegativeIntSchema.check(
+  Schema.isLessThanOrEqualTo(PUBLIC_EVAL_MAX_ATTEMPTS),
+);
 const PlannedCountSchema = AttemptCountSchema.check(Schema.isGreaterThan(0));
 
 export const PublicEvalIdentifierSchema = Schema.NonEmptyString.check(
@@ -152,11 +154,10 @@ export type PublicEvalTokenUsage = typeof PublicEvalTokenUsageSchema.Type;
  * The exact bytes (as a UTF-8 string) whose SHA-256 hex digest, prefixed with
  * `attempt-`, forms an attempt identity. A JSON tuple has no ambiguous delimiter.
  */
-export const publicEvalAttemptIdentityInput = (
-  runId: string,
-  caseId: string,
-  repetition: number,
-): string => JSON.stringify([runId, caseId, repetition]);
+export const publicEvalAttemptIdentityInput = Function.dual<
+  (caseId: string, repetition: number) => (runId: string) => string,
+  (runId: string, caseId: string, repetition: number) => string
+>(3, (runId, caseId, repetition) => JSON.stringify([runId, caseId, repetition]));
 
 /** Failure categories are derived solely from failed checks, in check order. */
 export const publicEvalFailureCategories = (
@@ -189,10 +190,16 @@ export const PublicEvalAttemptSummarySchema = Schema.Struct({
     const expected = publicEvalFailureCategories(attempt.checks);
     const issues: Schema.FilterIssue[] = [];
     const digest = createHash("sha256")
-      .update(publicEvalAttemptIdentityInput(attempt.runId, attempt.caseId, attempt.repetition), "utf8")
+      .update(
+        publicEvalAttemptIdentityInput(attempt.runId, attempt.caseId, attempt.repetition),
+        "utf8",
+      )
       .digest("hex");
     if (attempt.id !== `attempt-${digest}`) {
-      issues.push({ path: ["id"], issue: "attempt id must match its canonical run/case/repetition digest" });
+      issues.push({
+        path: ["id"],
+        issue: "attempt id must match its canonical run/case/repetition digest",
+      });
     }
     if (
       attempt.failureCategories.length !== expected.length ||
@@ -241,7 +248,9 @@ export const PublicEvalAttemptCaptureSchema = Schema.Struct({
   schemaVersion: Schema.Literal("eval-attempts.v1"),
   runId: PublicEvalIdentifierSchema,
   sourceReportSha256: PublicEvalSha256Schema,
-  attempts: Schema.Array(PublicEvalAttemptSummarySchema).check(Schema.isMaxLength(PUBLIC_EVAL_MAX_ATTEMPTS)),
+  attempts: Schema.Array(PublicEvalAttemptSummarySchema).check(
+    Schema.isMaxLength(PUBLIC_EVAL_MAX_ATTEMPTS),
+  ),
 }).check(
   Schema.makeFilter((capture) =>
     attemptIdentityIssues(capture.runId, capture.attempts, ["attempts"]),
@@ -253,7 +262,12 @@ export type PublicEvalAttemptCapture = typeof PublicEvalAttemptCaptureSchema.Typ
 
 const PublicEvalMetricUnavailableSchema = Schema.Struct({
   availability: Schema.Literals(["not_evaluated", "not_applicable", "not_retained", "withheld"]),
-  reason: Schema.Literals(["no_declared_method", "incomplete_coverage", "not_captured", "privacy_review"]),
+  reason: Schema.Literals([
+    "no_declared_method",
+    "incomplete_coverage",
+    "not_captured",
+    "privacy_review",
+  ]),
 });
 
 const PublicEvalPassRateSchema = Schema.Union([
@@ -382,7 +396,9 @@ export const PublicEvalResultSchema = Schema.Struct({
     ),
   }),
   attempts: Schema.NullOr(
-    Schema.Array(PublicEvalAttemptSummarySchema).check(Schema.isMaxLength(PUBLIC_EVAL_MAX_ATTEMPTS)),
+    Schema.Array(PublicEvalAttemptSummarySchema).check(
+      Schema.isMaxLength(PUBLIC_EVAL_MAX_ATTEMPTS),
+    ),
   ),
 }).check(
   Schema.makeFilter((result) => {
@@ -397,7 +413,10 @@ export const PublicEvalResultSchema = Schema.Struct({
     if (result.counts.attempts.passed + result.counts.attempts.failed !== total) {
       fail(["counts", "attempts"], "passed + failed must equal total");
     }
-    if (result.coverage.plannedAttempts !== result.coverage.plannedCases * result.benchmark.repetitions) {
+    if (
+      result.coverage.plannedAttempts !==
+      result.coverage.plannedCases * result.benchmark.repetitions
+    ) {
       fail(["coverage", "plannedAttempts"], "must equal plannedCases * benchmark.repetitions");
     }
     if (total > result.coverage.plannedAttempts) {
@@ -407,8 +426,15 @@ export const PublicEvalResultSchema = Schema.Struct({
       fail(["coverage", "status"], "complete exactly when observed attempts equal plannedAttempts");
     }
     if (result.coverage.planSource === "run_manifest") {
-      if (!complete || result.coverage.planSha256 !== null || result.coverage.statusSha256 !== null) {
-        fail(["coverage"], "run_manifest requires complete sanitized coverage and null external plan/status hashes");
+      if (
+        !complete ||
+        result.coverage.planSha256 !== null ||
+        result.coverage.statusSha256 !== null
+      ) {
+        fail(
+          ["coverage"],
+          "run_manifest requires complete sanitized coverage and null external plan/status hashes",
+        );
       }
     } else if (result.coverage.planSha256 === null || result.coverage.statusSha256 === null) {
       fail(["coverage"], "declared_plan requires authoritative plan and status source hashes");
@@ -420,13 +446,19 @@ export const PublicEvalResultSchema = Schema.Struct({
       caseTotal * result.benchmark.repetitions < total ||
       (complete && caseTotal !== result.coverage.plannedCases)
     ) {
-      fail(["counts", "cases", "total"], "unique cases must agree with coverage, observed attempts and repetitions");
+      fail(
+        ["counts", "cases", "total"],
+        "unique cases must agree with coverage, observed attempts and repetitions",
+      );
     }
     let failedChecks = 0;
     for (const name of PUBLIC_EVAL_CHECK_NAMES) {
       const dimension = result.dimensions[name];
       if (dimension.passed + dimension.failed + dimension.notApplicable !== total) {
-        fail(["dimensions", name], "passed + failed + notApplicable must equal counts.attempts.total");
+        fail(
+          ["dimensions", name],
+          "passed + failed + notApplicable must equal counts.attempts.total",
+        );
       }
       if (dimension.failed > result.counts.attempts.failed) {
         fail(["dimensions", name, "failed"], "cannot exceed failed attempts");
@@ -434,22 +466,35 @@ export const PublicEvalResultSchema = Schema.Struct({
       failedChecks += dimension.failed;
     }
     if (failedChecks < result.counts.attempts.failed) {
-      fail(["counts", "attempts", "failed"], "each failed attempt requires at least one failed check");
+      fail(
+        ["counts", "attempts", "failed"],
+        "each failed attempt requires at least one failed check",
+      );
     }
     for (const name of REQUIRED_CHECK_NAMES) {
       if (result.dimensions[name].notApplicable !== 0) {
-        fail(["dimensions", name, "notApplicable"], "required grader dimensions are always evaluated");
+        fail(
+          ["dimensions", name, "notApplicable"],
+          "required grader dimensions are always evaluated",
+        );
       }
     }
-    if ((result.configuration.availability === "pinned") !== (result.configuration.pinnedSha256 !== null)) {
+    if (
+      (result.configuration.availability === "pinned") !==
+      (result.configuration.pinnedSha256 !== null)
+    ) {
       fail(["configuration", "pinnedSha256"], "present exactly when the configuration is pinned");
     }
 
     const passRate = result.metrics.passRate;
     if (passRate.availability === "available") {
-      if (!complete) fail(["metrics", "passRate"], "a headline pass rate requires complete coverage");
+      if (!complete)
+        fail(["metrics", "passRate"], "a headline pass rate requires complete coverage");
       if (passRate.numerator !== result.counts.attempts.passed || passRate.denominator !== total) {
-        fail(["metrics", "passRate"], "numerator and denominator must equal counts.attempts.passed and total");
+        fail(
+          ["metrics", "passRate"],
+          "numerator and denominator must equal counts.attempts.passed and total",
+        );
       } else if (passRate.value !== passRate.numerator / passRate.denominator) {
         fail(["metrics", "passRate", "value"], "value must equal numerator / denominator");
       }
@@ -472,7 +517,10 @@ export const PublicEvalResultSchema = Schema.Struct({
       fail(["attempts"], "present exactly when evidence.attemptDetail is available");
     }
     if ((result.source.attemptCaptureSha256 !== null) !== detailed) {
-      fail(["source", "attemptCaptureSha256"], "present exactly when evidence.attemptDetail is available");
+      fail(
+        ["source", "attemptCaptureSha256"],
+        "present exactly when evidence.attemptDetail is available",
+      );
     }
     if ((result.source.kind === "sanitized_aggregate_with_attempts") !== detailed) {
       fail(["source", "kind"], "source classification must agree with retained attempt detail");
@@ -480,7 +528,10 @@ export const PublicEvalResultSchema = Schema.Struct({
     const perCase = detailed && complete;
     const cases = result.counts.cases;
     if (!perCase && (cases.passedEveryAttempt !== null || cases.failedAnyAttempt !== null)) {
-      fail(["counts", "cases"], "per-case verdict counts require retained attempts and complete coverage");
+      fail(
+        ["counts", "cases"],
+        "per-case verdict counts require retained attempts and complete coverage",
+      );
     }
     if (result.attempts !== null) {
       const attempts = result.attempts;
@@ -520,7 +571,10 @@ export const PublicEvalResultSchema = Schema.Struct({
         }
       }
       if (passed !== result.counts.attempts.passed) {
-        fail(["counts", "attempts", "passed"], "must equal the number of retained attempts with verdict pass");
+        fail(
+          ["counts", "attempts", "passed"],
+          "must equal the number of retained attempts with verdict pass",
+        );
       }
       for (const name of PUBLIC_EVAL_CHECK_NAMES) {
         const counter = verdicts[name];
@@ -537,13 +591,18 @@ export const PublicEvalResultSchema = Schema.Struct({
         fail(["counts", "cases", "total"], "must equal the distinct caseIds of retained attempts");
       }
       if (latency.availability === "available" && attempts.length > 0) {
-        const durations = attempts.map((attempt) => attempt.durationMs).sort((left, right) => left - right);
+        const durations = attempts
+          .map((attempt) => attempt.durationMs)
+          .sort((left, right) => left - right);
         if (
           latency.p50 !== durations[Math.ceil(0.5 * durations.length) - 1] ||
           latency.p95 !== durations[Math.ceil(0.95 * durations.length) - 1] ||
           latency.max !== durations[durations.length - 1]
         ) {
-          fail(["metrics", "latencyMs"], "must match retained attempt durations using nearest-rank percentiles");
+          fail(
+            ["metrics", "latencyMs"],
+            "must match retained attempt durations using nearest-rank percentiles",
+          );
         }
       }
       if (
@@ -630,7 +689,10 @@ export const PublicEvalPublicationSchema = Schema.Struct({
       issues.push({ path, issue });
     };
     if ((publication.dataOrigin === "measured") !== (publication.review.status === "approved")) {
-      fail(["review"], "measured publications require a recorded manual approval; synthetic ones are previews");
+      fail(
+        ["review"],
+        "measured publications require a recorded manual approval; synthetic ones are previews",
+      );
     }
     if (
       publication.review.status === "approved" &&
@@ -710,7 +772,9 @@ export const PublicEvalIndexSchema = Schema.Struct({
   schemaVersion: Schema.Literal("eval-index.v1"),
   dataOrigin: PublicEvalDataOriginSchema,
   generatedAt: PublicEvalTimestampSchema,
-  publications: Schema.Array(PublicEvalIndexEntrySchema).check(Schema.isMaxLength(MAX_PUBLICATIONS)),
+  publications: Schema.Array(PublicEvalIndexEntrySchema).check(
+    Schema.isMaxLength(MAX_PUBLICATIONS),
+  ),
 }).check(
   Schema.makeFilter((index) => {
     const issues: Schema.FilterIssue[] = [];
@@ -728,7 +792,10 @@ export const PublicEvalIndexSchema = Schema.Struct({
       }
       publicationIds.add(publicationIdKey);
       if ((index.dataOrigin === "measured") !== (entry.review.status === "approved")) {
-        fail([...at, "review"], "measured entries require manual approval; synthetic entries are previews");
+        fail(
+          [...at, "review"],
+          "measured entries require manual approval; synthetic entries are previews",
+        );
       }
       if ((entry.summary !== null) !== (entry.status === "current")) {
         fail([...at, "summary"], "present exactly when the publication is current");
@@ -764,7 +831,10 @@ export const PublicEvalIndexSchema = Schema.Struct({
         }
         withdrawn ||= revision.kind === "withdrawal_notice";
         if (entry.status === "current" && removed) {
-          fail([...here, "state"], "corrected revisions stay reachable; only withdrawals remove bytes");
+          fail(
+            [...here, "state"],
+            "corrected revisions stay reachable; only withdrawals remove bytes",
+          );
         }
         if (entry.status === "withdrawn" && revision.kind === "result" && !removed) {
           fail([...here, "state"], "withdrawn result revisions must have their bytes removed");
@@ -787,9 +857,15 @@ export type PublicEvalIndex = typeof PublicEvalIndexSchema.Type;
 
 // --- Strict decode boundaries -------------------------------------------------
 
-const decodeAttemptCapture = Schema.decodeUnknownEffect(PublicEvalAttemptCaptureSchema, PUBLIC_EVAL_DECODE_OPTIONS);
+const decodeAttemptCapture = Schema.decodeUnknownEffect(
+  PublicEvalAttemptCaptureSchema,
+  PUBLIC_EVAL_DECODE_OPTIONS,
+);
 const decodeResult = Schema.decodeUnknownEffect(PublicEvalResultSchema, PUBLIC_EVAL_DECODE_OPTIONS);
-const decodePublication = Schema.decodeUnknownEffect(PublicEvalPublicationSchema, PUBLIC_EVAL_DECODE_OPTIONS);
+const decodePublication = Schema.decodeUnknownEffect(
+  PublicEvalPublicationSchema,
+  PUBLIC_EVAL_DECODE_OPTIONS,
+);
 const decodeIndex = Schema.decodeUnknownEffect(PublicEvalIndexSchema, PUBLIC_EVAL_DECODE_OPTIONS);
 
 export const decodePublicEvalAttemptCapture = (input: unknown) => decodeAttemptCapture(input);
