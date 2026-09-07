@@ -491,6 +491,8 @@ body,
   .eval-nav {
     order: 3;
     width: 100%;
+    min-width: 0;
+    overflow-x: auto;
     justify-content: space-between;
     margin: 0;
     gap: 15px;

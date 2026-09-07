@@ -58,7 +58,9 @@ export function PageShell({ active, children }: { active: ShellPageId; children:
           {active === "handoff" ? (
             "Public exports measure conformance, not answer accuracy or financial outcomes. Other pages use illustrative fixtures."
           ) : (
-            <>{dataset.disclaimer} <a href="#/methodology">See methodology.</a></>
+            <>
+              {dataset.disclaimer} <a href="#/methodology">See methodology.</a>
+            </>
           )}
         </span>
         <span>Open tools. Transparent results.</span>

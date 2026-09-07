@@ -16,5 +16,5 @@
     "skipLibCheck": true,
     "types": ["vite-plus/client"]
   },
-  "include": ["src", ".storybook", "vite.config.ts"]
+  "include": ["src", "__tests__", ".storybook", "vite.config.ts"]
 }

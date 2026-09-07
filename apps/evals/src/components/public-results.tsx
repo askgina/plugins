@@ -113,8 +113,8 @@ function SyntheticNotice({ origin }: { origin: PublicEvalDataOrigin }) {
   return (
     <Notice title="Synthetic preview data">
       <p>
-        This artifact contains synthetic preview data, not measured evaluation results.
-        Do not use these values to assess model or harness performance.
+        This artifact contains synthetic preview data, not measured evaluation results. Do not use
+        these values to assess model or harness performance.
       </p>
     </Notice>
   );
@@ -136,7 +136,8 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 function Unavailable({ metric }: { metric: MetricUnavailable }) {
   return (
     <>
-      {AVAILABILITY_LABELS[metric.availability]}. Reason: {UNAVAILABLE_REASON_LABELS[metric.reason]}.
+      {AVAILABILITY_LABELS[metric.availability]}. Reason: {UNAVAILABLE_REASON_LABELS[metric.reason]}
+      .
     </>
   );
 }
@@ -161,7 +162,9 @@ function ReviewFields({ review }: { review: Review }) {
       </Field>
       {review.status === "approved" && (
         <>
-          <Field label="Reviewed subject SHA-256"><code>{review.subjectSha256}</code></Field>
+          <Field label="Reviewed subject SHA-256">
+            <code>{review.subjectSha256}</code>
+          </Field>
           <Field label="Review record">{review.record}</Field>
         </>
       )}
@@ -348,7 +351,10 @@ function ResultSections({ result }: { result: PublicEvalResult }) {
       </Panel>
 
       <div className="eval-handoff-grid">
-        <Panel title="Pass rate" description="Exporter ratio, shown as a ratio rather than a score.">
+        <Panel
+          title="Pass rate"
+          description="Exporter ratio, shown as a ratio rather than a score."
+        >
           <div className="eval-handoff-body">
             <PassRateFields passRate={metrics.passRate} />
           </div>
@@ -369,8 +375,9 @@ function ResultSections({ result }: { result: PublicEvalResult }) {
               <Field label="Planned attempts">{INTEGER.format(coverage.plannedAttempts)}</Field>
               <Field label="Repetitions per case">{benchmark.repetitions}</Field>
               <Field label="Attempts observed">
-                {INTEGER.format(counts.attempts.total)} total · {INTEGER.format(counts.attempts.passed)}{" "}
-                passed · {INTEGER.format(counts.attempts.failed)} failed
+                {INTEGER.format(counts.attempts.total)} total ·{" "}
+                {INTEGER.format(counts.attempts.passed)} passed ·{" "}
+                {INTEGER.format(counts.attempts.failed)} failed
               </Field>
               <Field label="Unique cases observed">{INTEGER.format(counts.cases.total)}</Field>
               <Field label="Cases passing every attempt">
@@ -391,21 +398,19 @@ function ResultSections({ result }: { result: PublicEvalResult }) {
                   <Hash value={coverage.planSha256} missing="Not supplied" />
                 </Field>
                 <Field label="Status SHA-256">
-                  <Hash
-                    value={coverage.statusSha256}
-                    missing="Not supplied"
-                  />
+                  <Hash value={coverage.statusSha256} missing="Not supplied" />
                 </Field>
               </Fields>
             </details>
-            <p className="eval-muted">
-              Missing per-case counts remain unavailable, not zero.
-            </p>
+            <p className="eval-muted">Missing per-case counts remain unavailable, not zero.</p>
           </div>
         </Panel>
       </div>
 
-      <Panel title="Check dimensions" description="Verdict counts per grader check across observed attempts.">
+      <Panel
+        title="Check dimensions"
+        description="Verdict counts per grader check across observed attempts."
+      >
         <div className="eval-handoff-table-scroll">
           <table className="eval-table" aria-label="Check verdict counts per dimension">
             <thead>
@@ -500,10 +505,7 @@ function ResultSections({ result }: { result: PublicEvalResult }) {
                   : "Labels only. Configuration not pinned"}
               </Field>
               <Field label="Pinned SHA-256">
-                <Hash
-                  value={configuration.pinnedSha256}
-                  missing="Not supplied"
-                />
+                <Hash value={configuration.pinnedSha256} missing="Not supplied" />
               </Field>
               <Field label="Candidate">
                 <code>{configuration.candidate}</code>
@@ -521,7 +523,10 @@ function ResultSections({ result }: { result: PublicEvalResult }) {
             </Fields>
           </div>
         </Panel>
-        <Panel title="Benchmark conditions" description="Suite, fixtures, and run conditions, as exported.">
+        <Panel
+          title="Benchmark conditions"
+          description="Suite, fixtures, and run conditions, as exported."
+        >
           <div className="eval-handoff-body">
             <Fields>
               <Field label="Suite">
@@ -563,8 +568,12 @@ function AttemptRow({ attempt }: { attempt: PublicEvalAttemptSummary }) {
         <details>
           <summary>Attempt identity</summary>
           <Fields>
-            <Field label="Attempt"><code>{attempt.id}</code></Field>
-            <Field label="Run"><code>{attempt.runId}</code></Field>
+            <Field label="Attempt">
+              <code>{attempt.id}</code>
+            </Field>
+            <Field label="Run">
+              <code>{attempt.runId}</code>
+            </Field>
           </Fields>
         </details>
       </th>
@@ -576,10 +585,14 @@ function AttemptRow({ attempt }: { attempt: PublicEvalAttemptSummary }) {
           <summary>Checks and failure categories</summary>
           <Fields>
             {CHECK_NAMES.map((name) => (
-              <Field key={name} label={CHECK_LABELS[name]}>{attempt.checks[name]}</Field>
+              <Field key={name} label={CHECK_LABELS[name]}>
+                {attempt.checks[name]}
+              </Field>
             ))}
             <Field label="Approved failure categories">
-              {attempt.failureCategories.length === 0 ? "None listed" : attempt.failureCategories.join(", ")}
+              {attempt.failureCategories.length === 0
+                ? "None listed"
+                : attempt.failureCategories.join(", ")}
             </Field>
           </Fields>
         </details>
@@ -605,7 +618,10 @@ function AttemptsSection({ result }: { result: PublicEvalResult }) {
   const { attempts } = result;
   if (attempts === null) {
     return (
-      <Panel title="Attempts" description="Per-attempt rows are included only when attempt detail is retained.">
+      <Panel
+        title="Attempts"
+        description="Per-attempt rows are included only when attempt detail is retained."
+      >
         <p className="eval-handoff-body">
           Attempt detail: {EVIDENCE_LABELS[result.evidence.attemptDetail]}. No per-attempt rows are
           included in this result.
@@ -670,7 +686,9 @@ function IndexEntryRow({ entry }: { entry: IndexEntry }) {
         {entry.review.status === "approved" ? (
           <details>
             <summary>Review record</summary>
-            <p>Reviewed subject SHA-256: <code>{entry.review.subjectSha256}</code></p>
+            <p>
+              Reviewed subject SHA-256: <code>{entry.review.subjectSha256}</code>
+            </p>
             <p>{entry.review.record}</p>
           </details>
         ) : null}
@@ -705,8 +723,20 @@ function RevisionRow({ revision }: { revision: IndexRevision }) {
       <td>
         <Timestamp value={revision.publishedAt} />
       </td>
-      <td>{revision.state === "removed" || revision.path === null ? "Removed" : <code>{revision.path}</code>}</td>
-      <td>{revision.state === "removed" || revision.sha256 === null ? "Removed" : <code>{revision.sha256}</code>}</td>
+      <td>
+        {revision.state === "removed" || revision.path === null ? (
+          "Removed"
+        ) : (
+          <code>{revision.path}</code>
+        )}
+      </td>
+      <td>
+        {revision.state === "removed" || revision.sha256 === null ? (
+          "Removed"
+        ) : (
+          <code>{revision.sha256}</code>
+        )}
+      </td>
     </tr>
   );
 }
@@ -716,8 +746,8 @@ function RevisionHistory({ entry }: { entry: IndexEntry }) {
   return (
     <details>
       <summary>
-        <code>{entry.publicationId}</code>, {revisions} {revisions === 1 ? "revision" : "revisions"},{" "}
-        {entry.status === "current" ? "current" : "withdrawn"}
+        <code>{entry.publicationId}</code>, {revisions} {revisions === 1 ? "revision" : "revisions"}
+        , {entry.status === "current" ? "current" : "withdrawn"}
       </summary>
       <div className="eval-handoff-table-scroll">
         <table className="eval-table" aria-label={`Revisions of ${entry.publicationId}`}>
@@ -761,13 +791,16 @@ export function PublicIndexView({ index }: { index: PublicEvalIndex }) {
             </Field>
           </Fields>
           <p className="eval-muted">
-            This index reflects what the publisher recorded at generation time. On its own, a
-            local copy does not establish the current lifecycle of any publication; a newer index
-            may record later corrections or withdrawals.
+            This index reflects what the publisher recorded at generation time. On its own, a local
+            copy does not establish the current lifecycle of any publication; a newer index may
+            record later corrections or withdrawals.
           </p>
         </div>
       </Panel>
-      <Panel title="Publications" description="Status, review, and current revision per publication.">
+      <Panel
+        title="Publications"
+        description="Status, review, and current revision per publication."
+      >
         {publications.length === 0 ? (
           <p className="eval-handoff-body">No publications are listed.</p>
         ) : (
