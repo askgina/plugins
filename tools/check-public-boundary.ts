@@ -24,6 +24,7 @@ const MAX_TEXT_BYTES = 2 * 1024 * 1024;
 const DOCUMENTATION_PNG_ASSETS: Record<string, true> = {
   "docs/images/product/agent-setup-read-only.png": true,
   "docs/images/product/agent-setup-full-access.png": true,
+  "docs/images/product/automations-overview.png": true,
   "docs/images/product/chatgpt-perps-positions.png": true,
   "docs/images/product/chatgpt-prediction-up-down.png": true,
   "docs/images/product/chatgpt-prediction-sports.png": true,
