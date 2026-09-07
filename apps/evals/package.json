@@ -1,0 +1,43 @@
+{
+  "name": "askgina-evals-web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "vp build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build -o dist/storybook"
+  },
+  "dependencies": {
+    "@base-ui/react": "1.5.0",
+    "@fontsource/eb-garamond": "5.3.0",
+    "@radix-ui/colors": "3.0.0",
+    "@radix-ui/react-label": "2.1.0",
+    "@radix-ui/react-select": "2.1.2",
+    "@radix-ui/react-separator": "1.1.0",
+    "@radix-ui/react-slot": "1.2.4",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "lucide-react": "0.562.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "tailwind-merge": "2.5.5"
+  },
+  "devDependencies": {
+    "@storybook/addon-a11y": "10.3.6",
+    "@storybook/addon-docs": "10.3.6",
+    "@storybook/react-vite": "10.3.6",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "@vitejs/plugin-react": "6.1.1",
+    "postcss": "8.5.26",
+    "storybook": "10.3.6",
+    "tailwindcss": "4.3.3",
+    "tailwindcss-animate": "1.0.7",
+    "typescript": "7.0.2",
+    "vite-plus": "0.3.0"
+  }
+}

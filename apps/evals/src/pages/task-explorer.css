@@ -1,0 +1,483 @@
+.task-explorer {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 12px 52px 56px;
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr) 240px;
+  gap: 36px 28px;
+  align-items: start;
+  overflow-x: clip;
+}
+
+.task-editorial {
+  display: flex;
+  flex-direction: column;
+  min-height: 640px;
+  padding-top: 28px;
+}
+
+.task-editorial-title {
+  font-family: var(--landing-font-heading);
+  font-size: clamp(36px, 3.4vw, 46px);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 0.96;
+  margin: 0 0 18px;
+  color: var(--eval-ink);
+}
+
+.task-editorial-title span {
+  display: block;
+}
+
+.task-editorial-title .task-red-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-left: 8px;
+  border-radius: 50%;
+  background: #b31c2d;
+  vertical-align: 3px;
+}
+
+.task-editorial-copy {
+  margin: 0;
+  max-width: 240px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #515151;
+}
+
+.task-watercolor {
+  position: relative;
+  isolation: isolate;
+  flex: 1 1 auto;
+  min-height: 220px;
+  margin: 28px -36px 18px -18px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 18% 88%, #c56a4a40 0%, transparent 46%),
+    radial-gradient(ellipse at 82% 96%, #b31c2d26 0%, transparent 42%),
+    radial-gradient(ellipse at 48% 100%, #d8c39a66 0%, transparent 58%);
+}
+
+.task-watercolor-image {
+  position: absolute;
+  inset: auto -28% -10% -18%;
+  width: 150%;
+  height: 250px;
+  object-fit: cover;
+  object-position: center 62%;
+  opacity: 0.7;
+  pointer-events: none;
+  mask-image: linear-gradient(to top, #000 46%, transparent 92%);
+}
+
+.task-editorial-quote {
+  margin: 0;
+  padding-bottom: 8px;
+}
+
+.task-main {
+  min-width: 0;
+  padding-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.task-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
+}
+
+.task-sample {
+  display: grid;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.task-sample-trigger {
+  background: #fffefb;
+  border-color: #e7e2d8;
+}
+
+.task-sample-count {
+  margin: 0;
+  font-size: 11px;
+  color: #686a64;
+}
+
+.task-prompt-title {
+  margin: 0;
+  font-family: var(--font-heading), "EB Garamond", Georgia, "Times New Roman", serif;
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.04em;
+}
+
+.task-prompt {
+  margin: 0;
+  max-width: 42rem;
+  color: #4f4f4c;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.task-compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.task-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 20px 18px;
+  background: #fffefbcc;
+  border-color: var(--eval-line);
+  box-shadow: 0 5px 24px #18202b03;
+}
+
+.task-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.task-card-head h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.task-harness {
+  margin-left: 6px;
+  color: #686a64;
+  font-weight: 500;
+}
+
+.task-badge-pass {
+  background: #edf6ef;
+  color: #276247;
+  border-color: transparent;
+}
+
+.task-badge-partial {
+  background: #f7f1e4;
+  color: #7a5a22;
+  border-color: transparent;
+}
+
+.task-excerpt {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #454440;
+}
+
+.task-card h4,
+.task-payload h3,
+.task-payload h4,
+.task-evidence-modal h3,
+.task-evidence-body h3 {
+  margin: 6px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #686a64;
+}
+
+.task-calls,
+.task-rubric,
+.task-evidence-points,
+.task-evidence-modal ul,
+.task-provenance {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.task-calls li,
+.task-rubric li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.task-call-name {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.task-call-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #686a64;
+  white-space: nowrap;
+}
+
+.task-ok {
+  color: #276247;
+}
+
+.task-limited {
+  color: #8a5a1c;
+}
+
+.task-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  margin: 0;
+  font-size: 11px;
+  color: #6f6b64;
+}
+
+.task-card-label {
+  margin: 0;
+  font-size: 10px;
+  color: #686a64;
+}
+
+.task-evidence {
+  min-width: 0;
+  padding-top: 28px;
+}
+
+.task-evidence h2 {
+  margin: 0 0 16px;
+  font-family: var(--font-heading), "EB Garamond", Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+}
+
+.task-evidence-points li {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 10px;
+  color: #55524c;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.task-evidence-points strong {
+  font-weight: 600;
+  color: #2a2926;
+}
+
+.task-evidence-rule {
+  margin: 18px 0;
+  background: #e8e3d8;
+}
+
+.task-evidence-lead {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #7a766e;
+}
+
+.task-provenance {
+  justify-items: start;
+}
+
+.task-provenance button {
+  height: auto;
+  padding: 0;
+  color: #2f2d29;
+}
+
+.task-evidence-links {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  align-content: start;
+}
+
+.task-trace,
+.task-evidence-body {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.task-fixture-banner {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f7f1e4;
+  color: #7a5a22;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.task-payload {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.task-payload h3 {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  overflow-wrap: anywhere;
+}
+
+.task-evidence-body ul {
+  padding-left: 20px;
+  list-style: disc;
+}
+
+.task-evidence-body li {
+  padding-bottom: 8px;
+}
+
+.task-evidence-body blockquote {
+  margin: 0;
+  padding: 10px 14px;
+  border-left: 2px solid #e8e3d8;
+  color: #4f4f4c;
+}
+
+@media (max-width: 1100px) {
+  .task-explorer {
+    grid-template-columns: 270px minmax(0, 1fr);
+    padding: 12px 32px 48px;
+  }
+
+  .task-evidence {
+    grid-column: 1 / -1;
+    padding-top: 4px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "heading heading"
+      "points  links";
+    column-gap: 32px;
+    row-gap: 18px;
+    align-items: start;
+  }
+
+  .task-evidence h2 {
+    grid-area: heading;
+    margin-bottom: 0;
+  }
+
+  .task-evidence-points {
+    grid-area: points;
+  }
+
+  .task-evidence-rule {
+    display: none;
+  }
+
+  .task-evidence-links {
+    grid-area: links;
+  }
+
+  .task-evidence-lead {
+    grid-row: 1;
+    margin: 0;
+  }
+
+  .task-provenance {
+    grid-row: 2;
+  }
+}
+
+@media (max-width: 700px) {
+  .task-explorer {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 8px 20px 40px;
+    gap: 22px;
+  }
+
+  .task-editorial {
+    min-height: 0;
+    padding-top: 12px;
+  }
+
+  .task-watercolor {
+    min-height: 140px;
+    margin-right: -12px;
+  }
+
+  .task-compare {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .task-evidence {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "heading"
+      "points"
+      "rule"
+      "links";
+    gap: 14px;
+  }
+
+  .task-evidence-rule {
+    display: block;
+    grid-area: rule;
+    margin: 4px 0;
+  }
+
+  .task-toolbar {
+    align-items: stretch;
+  }
+
+  .task-sample {
+    min-width: 0;
+    width: 100%;
+    max-width: 360px;
+  }
+}
+
+@media (max-width: 375px) {
+  .task-explorer {
+    padding: 8px 16px 36px;
+    gap: 18px;
+  }
+
+  .task-editorial-title {
+    font-size: 34px;
+  }
+
+  .task-editorial-copy {
+    max-width: none;
+  }
+
+  .task-prompt-title {
+    font-size: 24px;
+  }
+
+  .task-watercolor {
+    margin-left: -8px;
+    margin-right: -8px;
+    min-height: 120px;
+  }
+
+  .task-toolbar {
+    flex-direction: column;
+  }
+
+  .task-sample {
+    max-width: none;
+  }
+}
