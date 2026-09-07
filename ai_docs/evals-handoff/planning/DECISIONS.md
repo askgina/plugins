@@ -6,7 +6,7 @@ Status: accepted by Eric in this conversation, including the final pragmatic gua
 
 Give Sid a versioned public-results contract, representative fixtures and working exports so he can build the frontend without inventing scoring, evidence or publication rules. Reuse the existing evaluator and app in `askgina/plugins`. Contract and fixtures unblock Sid first; adapters and exporter follow in parallel. Finished delivery still requires the real-data consumer proof below.
 
-Eric explicitly chose this temporary directory instead of GitHub. Keep the map, tickets, evidence and handoff material here. Local implementation and verification are authorized after the documentation step. No GitHub mutations, commits, pushes, PRs, merges, deployments, production permission or credential changes, live MCP calls, paid/live model calls or financial execution are authorized. Requiring genuine results does not authorize generating them through a live evaluation.
+Eric originally chose a temporary directory instead of GitHub. The requested portable checkpoint superseded temporary-only storage: canonical maps, tickets, field definitions and fixtures now live in this repository. Disposable proof inputs, copies and receipts may stay under `/tmp`. The documentation step is accepted; local implementation and verification are authorized. After local verification, Eric authorized splitting the continuation into multiple commits and pushing `review-wayfinder-maps`. This does not authorize GitHub issues, PRs, merges, deployments, production permission or credential changes, live MCP calls, paid/live model calls or financial execution. Requiring genuine results does not authorize generating them through a live evaluation. Pre-publication clean-install artifact verification used an isolated local source snapshot without changing branch history.
 
 ## Result meaning and comparison
 
@@ -48,7 +48,7 @@ Preserve the repository's Bun 1.4.0, Vite+ 0.3.0, Vitest 4.1.11 and Effect 4.0.0
 ## Sources and observed baseline
 
 - The accepted decisions above come from grilling rounds Q1 through Q14 and Eric's final "yes, pragmatic" confirmation.
-- Repository ownership: `AGENTS.md`; normal GitHub tracking conventions: `ai_docs/agents/issue-tracker.md`. Eric's explicit temporary-directory override applies here.
+- Repository ownership: `AGENTS.md`; normal GitHub tracking conventions: `ai_docs/agents/issue-tracker.md`. The explicit local-map override and later repository-backed checkpoint apply here.
 - Runtime constraints: `packages/contracts/README.md:3-14` and `packages/evals/README.md:7-11`.
 - Current saved output: `packages/evals/src/report.ts:30-42`; complete-run gate: `packages/evals/src/report.ts:99-106`; conformance completion: `packages/evals/src/grading.ts:186-201`.
 - The existing app is `apps/evals`; its `src/data.ts` values are illustrative, not measured results.

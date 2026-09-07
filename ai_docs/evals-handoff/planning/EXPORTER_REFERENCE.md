@@ -60,13 +60,13 @@ A correction keeps `publicationId`, data origin and `runId`, uses a globally unu
 }
 ```
 
-That object is the new request's `supersedes`. Earlier safe snapshots remain byte-for-byte unchanged and reachable as superseded revisions. The exporter reserves the version-one final revision slot for a withdrawal: result revisions are limited to 1 through 49.
+That object is the new request's `supersedes`. Earlier safe snapshots remain byte-for-byte unchanged and reachable as superseded revisions. Revision numbers are contiguous positive safe integers. There is no arbitrary revision-count cap or reserved final withdrawal slot.
 
 ## Configuration declaration
 
 `--configuration` supplies an independently reviewed declaration, not proof of the model/provider actually used. Its exact bytes are hashed only after the adapter validates it. Without it, the result says `labels_only` and remains unranked.
 
-The strict `eval-configuration.v1` JSON requires `candidate`, `model`, `target`, nullable `reasoning`, `suiteId`, positive `suiteVersion` / `fixtureVersion`, and `catalogSha`. Candidate/model/target/reasoning must match the report; benchmark provenance must match the independently supplied `expectedProvenance`. Optional `settings` accepts only `cleanChat: true`, `accountClass` and positive `repetitions`, each matching the report. Unknown keys and arbitrary runtime/provider settings reject. All strings are checked by the framework's public-text policy. The declaration does not expose prompts, tool payloads or a generic configuration dictionary.
+The strict `eval-configuration.v1` JSON requires `candidate`, `model`, `target`, nullable `reasoning`, `suiteId`, positive `suiteVersion` / `fixtureVersion`, and `catalogSha`. Candidate/model/target/reasoning must match the report; benchmark provenance must match the independently supplied `expectedProvenance`. Required `settings` contains exactly `cleanChat: true`, `accountClass` and positive `repetitions`, each matching the report. Required `identity` contains `evaluatorSha256`, `skillsSha256`, `toolchainSha256` and `runSettingsSha256`, each a lowercase SHA-256 digest of the independently retained component record. These declare immutable configuration identities, not provider or run attestation. Unknown keys and arbitrary runtime/provider settings reject. All strings are checked by the framework's public-text policy. The declaration does not expose prompts, tool payloads or a generic configuration dictionary.
 
 ## Recorded manual approval
 
@@ -106,7 +106,7 @@ Withdrawal forbids `--report`, `--attempts` and `--configuration`. The CLI resol
 }
 ```
 
-Other reason codes are `data_integrity` and `owner_request`. Measured notices require their own bound manual approval. A privacy withdrawal can delete previously indexed unsafe result or notice text, summary and review, but still checks exact prior hashes, schemas, origin, identity and predecessor links. Retained index identifiers and the new notice must be public-safe. Corrections and unrelated promotions do not get that exception. A later notice can replace a withdrawn notice, removing the earlier notice bytes too, while revision capacity remains. Withdrawn results cannot be restored through a result revision. The contract caps history at 50 total revisions; it does not promise unlimited notice revisions after the terminal slot is consumed.
+Other reason codes are `data_integrity` and `owner_request`. Measured notices require their own bound manual approval. A privacy withdrawal can delete previously indexed unsafe result or notice text, summary and review, but still checks exact prior hashes, schemas, origin, identity and predecessor links. Retained index identifiers and the new notice must be public-safe. Corrections and unrelated promotions do not get that exception. A later notice can replace a withdrawn notice, removing the earlier notice bytes too. Withdrawn results cannot be restored through a result revision. Revision counters remain positive safe integers; no arbitrary history cap prevents replacing an old notice.
 
 ## Files and failures
 

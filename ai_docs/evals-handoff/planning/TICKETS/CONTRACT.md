@@ -2,9 +2,9 @@
 
 [Map](../MAP.md) · [Accepted decisions](../DECISIONS.md)
 
-- Status: in progress
+- Status: complete, including repository and clean-install package gates
 - Accountable owner: Main
-- Implementation assignee: PublicContractWriter
+- Implementation assignee: Main; source workers have released their files
 - Blocked by: none
 - Releases: [aggregate adapter](AGGREGATE_ADAPTER.md), [attempt capture](ATTEMPT_CAPTURE.md), [exporter](PUBLICATION_EXPORT.md) and Sid's frontend work.
 
@@ -24,4 +24,4 @@ Sid can consume types, validated JSON and declared display derivations without e
 
 ## Evidence
 
-None yet. Attach chosen boundary, contract version, semantics/fixture paths and actual validation/browser-consumption receipts. Genuine reports are not required to unblock Sid. Synthetic fixtures do not close [final measured consumer proof](CONSUMER_HANDOFF.md).
+Documentation returned "Output accepted" and is complete. Source schemas, package-root exports, discovered contract regressions, the [field reference](../PUBLIC_CONTRACT.md) and [canonical synthetic fixtures](../fixtures/) are repository-backed. All nine examples decoded against built contracts. Real consumer TypeScript checks and the focused 123-test contracts/evals/app run passed. [HANDOFF.md](../../HANDOFF.md) records runtime evidence and final gate status. Version one rejects invalidation and scoring replacement rather than inventing approval rules. Genuine reports are not required to unblock Sid; synthetic fixtures do not close [measured consumer proof](CONSUMER_HANDOFF.md).

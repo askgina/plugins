@@ -2,10 +2,10 @@
 
 [Map](../MAP.md) · [Accepted decisions](../DECISIONS.md)
 
-- Status: in progress against concrete schemas; acceptance awaits contract finalization
+- Status: implemented and synthetically verified; genuine aggregate acceptance blocked
 - Accountable owner: Main
-- Implementation assignee: AggregateAdapter
-- Blocked by: [contract](CONTRACT.md)
+- Implementation assignee: Main; source workers have released their files
+- Blocked by: authorized existing measured aggregate evidence only
 - After contract: parallel with [attempt capture](ATTEMPT_CAPTURE.md) and [exporter](PUBLICATION_EXPORT.md); feeds [consumer proof](CONSUMER_HANDOFF.md).
 
 ## Target
@@ -25,4 +25,4 @@ The real local adapter/export path preserves source-supported counts and provena
 
 ## Evidence
 
-None yet. DECISIONS records no genuine durable reports available at this checkpoint. Complete implementation and labeled synthetic pipeline replay now. Attach exact exercised commands, outcomes and safe artifact references. Genuine closure requires an authorized durable aggregate report and its export in the consumer; until supplied, record that criterion as pending, not passed. Sanitization is not publication approval.
+The zero-observation/nonzero-total guard and typed-digest privacy checks are repaired. Focused regressions and compiled aggregate/detail/withheld/incomplete exports passed; the actual consumer displayed their declared states. Commands and receipts are in [HANDOFF.md](../../HANDOFF.md). Genuine closure still requires an authorized durable aggregate report and its export in the consumer. Sanitization is not publication approval.

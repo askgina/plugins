@@ -4,9 +4,9 @@ This note fixes interfaces for the first concurrent code workers under the accep
 
 ## Ownership
 
-- Contract worker owns `packages/contracts/src/eval-results.ts`, its exports from `packages/contracts/src/index.ts`, synthetic public JSON examples under this temporary directory, and a concise public field reference here. Do not add package exports/subpaths or browser runtime support.
+- Contract worker owns `packages/contracts/src/eval-results.ts`, its exports from `packages/contracts/src/index.ts`, and contract regressions under `packages/contracts/__tests__/`. Main maintains the canonical synthetic JSON examples in `ai_docs/evals-handoff/planning/fixtures/` and the adjacent `PUBLIC_CONTRACT.md`. These are repository-backed consumable artifacts; `/tmp` is only for disposable proof inputs, copies and receipts. Do not add package exports/subpaths or browser runtime support.
 - Capture worker owns `packages/evals/src/public-attempts.ts` and the existing replay/runner/live/bin callsites required to capture and optionally write safe summaries. Main owns changes to `packages/evals/src/index.ts`, root build configuration/scripts and packaging guards. Ask Main before touching those shared files.
-- Both workers skip builds, tests, formatters and linters until integration. They may add narrowly justified behavioral regressions, but do not run them concurrently.
+- Workers skip builds, tests, formatters and linters until integration. Put package regressions under each package's `__tests__/` directory because root Vitest excludes `src/*.test.ts`. Main builds contracts before real consumer typechecks and runs the full required gates, including `check`, `artifacts` and clean-install `verify:artifacts`.
 - Adapter/exporter/browser-consumer workers start after the result/publication schemas are concrete. They must consume those schemas rather than invent another convention.
 
 ## Shared attempt shape

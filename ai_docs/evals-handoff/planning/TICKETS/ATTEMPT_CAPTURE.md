@@ -2,10 +2,10 @@
 
 [Map](../MAP.md) · [Accepted decisions](../DECISIONS.md)
 
-- Status: preparation against the fixed attempt subset; integration awaits contract completion
+- Status: implemented and synthetically verified; genuine retained-evidence acceptance blocked
 - Accountable owner: Main
-- Implementation assignee: SafeCaptureWriter
-- Blocked by: [contract](CONTRACT.md)
+- Implementation assignee: Main; source workers have released their files
+- Blocked by: authorized genuine retained new-run evidence only
 - After contract: parallel with [aggregate adapter](AGGREGATE_ADAPTER.md) and [exporter](PUBLICATION_EXPORT.md); feeds [consumer proof](CONSUMER_HANDOFF.md).
 
 ## Target
@@ -24,4 +24,4 @@ Exercise the actual new-run capture-to-export path with labeled synthetic inputs
 
 ## Evidence
 
-None yet. Attach exact commands/outcomes, allowlist/category decisions and safe summary/export references. Genuine new-run case evidence is currently unavailable per DECISIONS. Finish reachable implementation and synthetic replay without live MCP, paid/model calls or financial execution. Closure still requires an actual authorized new-run case breakdown displayed by the local consumer from public exports; mark it pending rather than substituting a synthetic screenshot.
+The compiled replay produced three allowlisted attempts, preserving the original failure, with unchanged default aggregate bytes and mode-0600 exact-report-bound output. Canonical identity, saved-report BOM and private-content regressions are included under `packages/evals/__tests__/`. [HANDOFF.md](../../HANDOFF.md) records the CLI/browser evidence and final gates. Actual authorized retained new-run case evidence remains unavailable; synthetic screenshots do not close that criterion.

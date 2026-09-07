@@ -2,10 +2,10 @@
 
 Map: [Public eval results handoff for Sid](../MAP.md). Decisions: [Approved results handoff decisions](../DECISIONS.md).
 
-- Status: consumer implementation in progress; integrated proof awaits the three output branches
+- Status: consumer and synthetic runtime proof complete; measured acceptance blocked
 - Accountable owner: Main
-- Implementation assignee: BrowserConsumer; Main owns runtime proof
-- Blocked by: [Adapt existing sanitized aggregate reports](AGGREGATE_ADAPTER.md), [Capture safe case and attempt summaries](ATTEMPT_CAPTURE.md), [Export reviewed publications and revision index](PUBLICATION_EXPORT.md)
+- Implementation assignee: Main; implementation workers have released their files
+- Blocked by: authorized measured aggregate and retained new-run evidence, with recorded manual publication review
 
 Sid starts frontend work from [Define public results contract and fixtures](CONTRACT.md), field definitions and matching fixtures. This final integration proof does not delay his start or transfer framework policy ownership to him.
 
@@ -18,7 +18,7 @@ Prove a small browser-safe consumer in existing `apps/evals` using public export
 - Integrate the agreed DTO/type boundary without evaluator runtime imports. `@askgina/contracts` supports Node/Bun root ESM only; `@askgina/evals` is Bun-only. Do not expand either package's runtime guarantees.
 - Exercise the actual implemented local CLI/export path with permitted inputs, then launch the consumer in its browser runtime.
 - Display an actual authorized aggregate report export and an actual new-run case breakdown. Preserve aggregate-only limitations, missing/withheld/unranked states and the distinction between verdict, evidence availability, validity and publication lifecycle.
-- Document consumption, field semantics and declared derivations for Sid; he must not recreate grading, eligibility or disclosure policy. Keep documentation, commands, outcomes and evidence under this temporary directory.
+- Document consumption, field semantics and declared derivations for Sid; he must not recreate grading, eligibility or disclosure policy. Keep canonical documents and fixtures in this repository, with disposable proof copies and receipts under `/tmp`.
 
 ## Acceptance
 
@@ -29,6 +29,6 @@ Prove a small browser-safe consumer in existing `apps/evals` using public export
 
 ## Evidence and blockers
 
-Not implemented; not verified. Record provenance and public export paths, exact commands/outcomes, browser evidence, import-boundary verification and checks not run.
+The actual Chromium consumer displayed compiled synthetic exports, rejected altered same-ID bytes and malformed UTF-8/BOM, replaced selections, disclosed standalone/index-only limitations and enforced revision/withdrawal visibility. Mobile navigation no longer overflows. Four app regression tests are included in root Vitest. [HANDOFF.md](../../HANDOFF.md) records provenance, commands, screenshots and final gate status.
 
 Measured acceptance has two open blockers per DECISIONS: authorized genuine aggregate evidence and genuine retained new-run case evidence. Complete reachable implementation and execute the real local pipeline with explicitly synthetic inputs if needed. Synthetic execution and screenshots close neither blocker. Record each missing prerequisite; no new live evaluation is authorized.

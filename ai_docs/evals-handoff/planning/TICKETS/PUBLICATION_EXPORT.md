@@ -2,10 +2,10 @@
 
 Map: [Public eval results handoff for Sid](../MAP.md). Decisions: [Approved results handoff decisions](../DECISIONS.md).
 
-- Status: in progress against concrete schemas; acceptance awaits contract finalization
+- Status: implementation and synthetic acceptance complete, including repository gates
 - Accountable owner: Main
-- Implementation assignee: PublicationExporter
-- Blocked by: [Define public results contract and fixtures](CONTRACT.md) only
+- Implementation assignee: Main; source workers have released their files
+- Blocked by: none for implementation or synthetic acceptance
 - Releases: [Prove browser consumer and complete Sid handoff](CONSUMER_HANDOFF.md)
 
 ## Target
@@ -29,6 +29,6 @@ Implement static, reviewed immutable JSON snapshots and an index. Start alongsid
 
 ## Evidence
 
-Not implemented; not verified. Store exact executed commands and outcomes, snapshot/index references, approval record, correction/withdrawal receipts and checks not run under this temporary directory. Discover actual entrypoints during implementation; no future CLI command is assumed.
+The compiled exporter produced immutable snapshots and a revision index, preserved the first snapshot through correction, removed old result bytes on privacy withdrawal, and removed an old notice when replaced. Synthetic review cannot authorize measured publication. Canonical attempt, case-folded history, approval, hash, overwrite and filesystem regressions passed in the parent-run focused suite. [HANDOFF.md](../../HANDOFF.md) records exact commands, receipts and final gate status.
 
 Authorized measured aggregate and new-case evidence remain unavailable per DECISIONS. Synthetic pipeline execution proves local behavior only; it cannot close consumer measured-evidence acceptance. No new live evaluation is authorized.
