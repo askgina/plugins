@@ -23,7 +23,11 @@ const MAX_FINDINGS = 100;
 const MAX_TEXT_BYTES = 2 * 1024 * 1024;
 const DOCUMENTATION_PNG_ASSETS: Record<string, true> = {
   "docs/images/product/agent-setup-read-only.png": true,
+  "docs/images/product/chatgpt-prediction-up-down.png": true,
+  "docs/images/product/claude-perps-chart.png": true,
+  "docs/images/product/claude-prediction-market.png": true,
   "docs/images/product/create-prompt.png": true,
+  "docs/images/product/dashboard-home.png": true,
   "docs/images/product/perps-markets.png": true,
   "docs/images/product/prediction-outcomes.png": true,
   "docs/images/product/recipient-review.png": true,
