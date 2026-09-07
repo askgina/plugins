@@ -1,0 +1,32 @@
+---
+title: "Hermes"
+description: "Connect Hermes Agent to Gina's read-only MCP tools."
+---
+
+## Connect MCP
+
+Merge this server entry into `~/.hermes/config.yaml`:
+
+```yaml
+mcp_servers:
+  ask-gina:
+    url: https://askgina.ai/ai/gina/mcp
+    auth: oauth
+```
+
+Authenticate from a fresh terminal:
+
+```sh
+hermes mcp login ask-gina
+hermes chat
+```
+
+Complete Gina sign-in in your browser. Hermes discovers the server's tools when it connects. See [Hermes MCP documentation](https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp/) for remote-host authentication and version-specific configuration.
+
+For manual Bearer authentication, follow [Gina Agent Setup](/agents/authentication) and the host's `headers` configuration. Keep tokens in private client settings.
+
+## Verify your first result
+
+Ask **“Use Gina to show ETH in USD over the past seven days.”** Confirm a Gina tool ran and the response identifies ETH and the requested period. Follow [First successful request](/start/first-request) for troubleshooting.
+
+This configuration is read-only. Trading and transfers require separate [Write access (Degen mode)](/write-access/index). MCP setup does not install [Gina research skills](/agents/plugins-and-skills). Authenticated Gina testing and rich-result rendering in Hermes remain unverified.

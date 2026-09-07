@@ -39,3 +39,9 @@ Grok Build is another distinct surface: official docs support `grok mcp add --tr
 ## Acceptance evidence still needed
 
 For each advertised host: record host/version or web date, setup method, successful OAuth/token authorization, discovered read tools, one successful read request, and reconnect behavior. For listings, record the real listing URL and installed package identity. For write guides, verify endpoint/access labels separately and never use a real trade as the connection smoke test. This research did not create credentials, install plugins, authorize accounts, or run financial tools.
+
+## Client navigation update — 2026-09-07
+
+Grok Bot now has its own guide. Official [connection instructions](https://docs.x.ai/grok-bot/computer-and-apps#connect-an-app) document Settings → Plugins, Add, browser authentication, and attaching the connector with @. [Plugin settings](https://docs.x.ai/grok-bot/settings-and-notifications#plugins) distinguish Marketplace and Yours. Ask Gina listing availability and authenticated Bot testing remain unverified. Cursor and Grok web instructions are retained under Others.
+
+The new Hermes guide uses `mcp_servers`, a remote `url`, `auth: oauth`, and `hermes mcp login ask-gina`, based on the official [Hermes MCP guide](https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp/). Authenticated Gina compatibility and rich-result UI were not tested.

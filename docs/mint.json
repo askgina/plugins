@@ -58,8 +58,9 @@
             "connect/chatgpt",
             "connect/claude",
             "connect/codex",
-            "connect/cursor-grok",
+            "connect/grok-bot",
             "connect/perplexity",
+            "connect/hermes",
             "connect/openclaw",
             "connect/other-clients"
           ]
@@ -217,6 +218,10 @@
     {
       "source": "/start/what-gina-can-do",
       "destination": "/what-is-gina"
+    },
+    {
+      "source": "/connect/cursor-grok",
+      "destination": "/connect/other-clients"
     }
   ]
 }
