@@ -42,6 +42,8 @@ For each advertised host: record host/version or web date, setup method, success
 
 ## Client navigation update — 2026-09-07
 
+The product owner supplied a Grok Bot screenshot showing Gina MCP prediction research in the Gina Predictoor conversation. It is included in the Grok Bot guide; provenance is in `docs/screenshots.md`. This adds owner-supplied result evidence while marketplace availability, scopes, and the connection flow remain unverified.
+
 Grok Bot now has its own guide. Official [connection instructions](https://docs.x.ai/grok-bot/computer-and-apps#connect-an-app) document Settings → Plugins, Add, browser authentication, and attaching the connector with @. [Plugin settings](https://docs.x.ai/grok-bot/settings-and-notifications#plugins) distinguish Marketplace and Yours. Ask Gina listing availability and authenticated Bot testing remain unverified. Cursor and Grok web instructions are retained under Others.
 
 The new Hermes guide uses `mcp_servers`, a remote `url`, `auth: oauth`, and `hermes mcp login ask-gina`, based on the official [Hermes MCP guide](https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp/). Authenticated Gina compatibility and rich-result UI were not tested.

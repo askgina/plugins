@@ -35,6 +35,7 @@ const DOCUMENTATION_PNG_ASSETS: Record<string, true> = {
   "docs/images/product/create-prompt.png": true,
   "docs/images/product/credits-purchase.png": true,
   "docs/images/product/dashboard-home.png": true,
+  "docs/images/product/grok-bot-predictions.png": true,
   "docs/images/product/perps-markets.png": true,
   "docs/images/product/prediction-outcomes.png": true,
   "docs/images/product/recipient-review.png": true,
