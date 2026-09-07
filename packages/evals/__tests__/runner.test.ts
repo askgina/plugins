@@ -8,6 +8,7 @@ import {
   decodePluginEvalObservationSet,
   decodePluginEvalSuite,
   gradePluginEvalObservation,
+  loadPluginEvalObservationSet,
   loadPluginEvalSuite,
   LiveEvalSelectionError,
   PluginEvalReplayContractError,
@@ -104,6 +105,53 @@ describe("hermetic eval replay", () => {
         assert.isFalse(Object.hasOwn(result.report, "skill"));
         assert.isFalse(Object.hasOwn(result.report, "performance"));
         assert.isFalse(Object.hasOwn(result.report, "answer"));
+
+        const suite = yield* loadPluginEvalSuite(paths.suite);
+        const observationSet = yield* loadPluginEvalObservationSet(paths.observations);
+        const captured = yield* replayPluginEvalObservationSet(observationSet, {
+          captureAttempts: true,
+        })(suite);
+        assert.deepStrictEqual(captured.report, result.report);
+        if (captured.attempts === null) {
+          return yield* Effect.die("optional-options data-last capture returned no summaries");
+        }
+        assert.strictEqual(captured.attempts.length, result.report.observed);
+        assert.deepStrictEqual(
+          captured.attempts.map((attempt) => ({
+            caseId: attempt.caseId,
+            verdict: attempt.verdict,
+            routing: attempt.checks.routing,
+            arguments: attempt.checks.arguments,
+            completion: attempt.checks.completion,
+            safety: attempt.checks.safety,
+          })),
+          [
+            {
+              caseId: "exact-routing-arguments",
+              verdict: "pass",
+              routing: "pass",
+              arguments: "pass",
+              completion: "pass",
+              safety: "pass",
+            },
+            {
+              caseId: "no-tool-safety",
+              verdict: "pass",
+              routing: "pass",
+              arguments: "pass",
+              completion: "pass",
+              safety: "not_applicable",
+            },
+            {
+              caseId: "deterministic-routing-failure",
+              verdict: "fail",
+              routing: "fail",
+              arguments: "fail",
+              completion: "pass",
+              safety: "pass",
+            },
+          ],
+        );
       }),
     );
     it.effect("keeps the live smoke suite within the canonical read-tool catalog", () =>
@@ -290,7 +338,8 @@ describe("hermetic eval replay", () => {
                 {
                   sequence: 0,
                   // The second repeat routes to the wrong canonical tool; it must stay in the run.
-                  name: input.repetition === 2 ? "spot.getSimplePrice" : "gina.listScheduledPrompts",
+                  name:
+                    input.repetition === 2 ? "spot.getSimplePrice" : "gina.listScheduledPrompts",
                   arguments: {},
                   result_bytes: 0,
                   requested_scope: "tools:read",
@@ -419,74 +468,73 @@ describe("hermetic eval replay", () => {
         }
       }),
     );
-    it.effect("leaves default live output private when a legacy case id is not opted into capture", () =>
-      Effect.gen(function* () {
-        const paths = yield* fixturePaths;
-        const suite = yield* loadPluginEvalSuite(paths.liveSuite);
-        const baseCase = suite.cases[0];
-        if (baseCase === undefined) return yield* Effect.die("missing fixture case");
-        const privateSuite = {
-          ...suite,
-          cases: [{ ...baseCase, id: "legacy/private-case" }],
-        };
-        const liveOptions = {
-          suite: privateSuite,
-          runId: "legacy-private-case",
-          candidate: "test-candidate",
-          target: "responses_api" as const,
-          model: "test-model",
-          displayedModel: "test-model",
-          reasoning: "test",
-          repetitions: 3,
-          accountClass: "synthetic",
-        };
-
-        const { report, attempts } = yield* runLiveEvalSuite(liveOptions, (input) =>
-          Effect.succeed({
-            version: 1,
-            run_id: input.runId,
-            case_id: input.evalCase.id,
+    it.effect(
+      "leaves default live output private when a legacy case id is not opted into capture",
+      () =>
+        Effect.gen(function* () {
+          const paths = yield* fixturePaths;
+          const suite = yield* loadPluginEvalSuite(paths.liveSuite);
+          const baseCase = suite.cases[0];
+          if (baseCase === undefined) return yield* Effect.die("missing fixture case");
+          const privateSuite = {
+            ...suite,
+            cases: [{ ...baseCase, id: "legacy/private-case" }],
+          };
+          const liveOptions = {
+            suite: privateSuite,
+            runId: "legacy-private-case",
+            candidate: "test-candidate",
             target: "responses_api" as const,
-            model: input.model,
-            displayed_model: input.displayedModel,
-            repetition: input.repetition,
-            started_at: input.startedAt,
-            status: "completed" as const,
-            duration_ms: 1,
-            tool_calls: [
-              {
-                sequence: 0,
-                name: "gina.listScheduledPrompts",
-                arguments: {},
-                result_bytes: 0,
-                requested_scope: "tools:read",
-              },
-            ],
-            available_tools: listCatalogToolNames(),
-          }),
-        );
+            model: "test-model",
+            displayedModel: "test-model",
+            reasoning: "test",
+            repetitions: 3,
+            accountClass: "synthetic",
+          };
 
-        assert.strictEqual(attempts, null);
-        assert.strictEqual(report.repetitions, 3);
-        assert.deepStrictEqual(report.aggregate.overall, { passed: 3, total: 3 });
-        assert.deepStrictEqual(report.aggregate.dimensions.routing, { passed: 3, failed: 0 });
+          const { report, attempts } = yield* runLiveEvalSuite(liveOptions, (input) =>
+            Effect.succeed({
+              version: 1,
+              run_id: input.runId,
+              case_id: input.evalCase.id,
+              target: "responses_api" as const,
+              model: input.model,
+              displayed_model: input.displayedModel,
+              repetition: input.repetition,
+              started_at: input.startedAt,
+              status: "completed" as const,
+              duration_ms: 1,
+              tool_calls: [
+                {
+                  sequence: 0,
+                  name: "gina.listScheduledPrompts",
+                  arguments: {},
+                  result_bytes: 0,
+                  requested_scope: "tools:read",
+                },
+              ],
+              available_tools: listCatalogToolNames(),
+            }),
+          );
 
-        let trialInvocations = 0;
-        const optedIn = yield* Effect.result(
-          runLiveEvalSuite(
-            { ...liveOptions, captureAttempts: true },
-            () => {
+          assert.strictEqual(attempts, null);
+          assert.strictEqual(report.repetitions, 3);
+          assert.deepStrictEqual(report.aggregate.overall, { passed: 3, total: 3 });
+          assert.deepStrictEqual(report.aggregate.dimensions.routing, { passed: 3, failed: 0 });
+
+          let trialInvocations = 0;
+          const optedIn = yield* Effect.result(
+            runLiveEvalSuite({ ...liveOptions, captureAttempts: true }, () => {
               trialInvocations += 1;
               return Effect.die("trial should not run");
-            },
-          ),
-        );
-        assert.strictEqual(trialInvocations, 0);
-        assert.strictEqual(optedIn._tag, "Failure");
-        if (optedIn._tag === "Failure") {
-          assert.instanceOf(optedIn.failure, PublicEvalAttemptCaptureError);
-        }
-      }),
+            }),
+          );
+          assert.strictEqual(trialInvocations, 0);
+          assert.strictEqual(optedIn._tag, "Failure");
+          if (optedIn._tag === "Failure") {
+            assert.instanceOf(optedIn.failure, PublicEvalAttemptCaptureError);
+          }
+        }),
     );
     it.effect("scores skill activation only when observation evidence is present", () =>
       Effect.gen(function* () {

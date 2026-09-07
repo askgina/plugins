@@ -220,11 +220,14 @@ const validateReplayContract = (
 export const replayPluginEvalObservationSet = Function.dual<
   (
     observationSet: PluginEvalObservationSet,
+    options?: PluginEvalReplayOptions,
   ) => (
     suite: PluginEvalSuite,
   ) => Effect.Effect<
     PluginEvalReplayResult,
-    PluginEvalReplayContractError | PluginEvalObservationMismatchError | PublicEvalAttemptCaptureError
+    | PluginEvalReplayContractError
+    | PluginEvalObservationMismatchError
+    | PublicEvalAttemptCaptureError
   >,
   (
     suite: PluginEvalSuite,
@@ -232,54 +235,71 @@ export const replayPluginEvalObservationSet = Function.dual<
     options?: PluginEvalReplayOptions,
   ) => Effect.Effect<
     PluginEvalReplayResult,
-    PluginEvalReplayContractError | PluginEvalObservationMismatchError | PublicEvalAttemptCaptureError
+    | PluginEvalReplayContractError
+    | PluginEvalObservationMismatchError
+    | PublicEvalAttemptCaptureError
   >
->((args) => args.length >= 2, (suite, observationSet, options) =>
-  Effect.gen(function* () {
-    yield* validateReplayContract(suite, observationSet);
-    const gradedAttempts: PublicEvalGradedAttempt[] | null = options?.captureAttempts === true ? [] : null;
-    if (gradedAttempts !== null) {
-      yield* assertPublicEvalAttemptPlan(
-        observationSet.manifest.run_id,
-        suite.cases.map((evalCase) => evalCase.id),
-        observationSet.manifest.repetitions,
+>(
+  (args) =>
+    args.length >= 2 && typeof args[0] === "object" && args[0] !== null && "cases" in args[0],
+  (suite, observationSet, options) =>
+    Effect.gen(function* () {
+      yield* validateReplayContract(suite, observationSet);
+      const gradedAttempts: PublicEvalGradedAttempt[] | null =
+        options?.captureAttempts === true ? [] : null;
+      if (gradedAttempts !== null) {
+        yield* assertPublicEvalAttemptPlan(
+          observationSet.manifest.run_id,
+          suite.cases.map((evalCase) => evalCase.id),
+          observationSet.manifest.repetitions,
+        );
+      }
+      const casesById = new Map(suite.cases.map((evalCase) => [evalCase.id, evalCase]));
+      const scores = yield* Effect.forEach(
+        observationSet.observations,
+        (
+          observation,
+        ): Effect.Effect<
+          PluginEvalCaseScore,
+          PluginEvalReplayContractError | PluginEvalObservationMismatchError
+        > => {
+          const evalCase = casesById.get(observation.case_id);
+          if (evalCase === undefined) {
+            return Effect.fail(
+              new PluginEvalReplayContractError({
+                reasons: [`observation references unknown case ${observation.case_id}`],
+              }),
+            );
+          }
+          const grade = gradePluginEvalObservation(evalCase, observation);
+          return gradedAttempts === null
+            ? grade
+            : grade.pipe(
+                Effect.map((score) => {
+                  gradedAttempts.push({
+                    runId: observation.run_id,
+                    caseId: observation.case_id,
+                    repetition: observation.repetition,
+                    score,
+                  });
+                  return score;
+                }),
+              );
+        },
       );
-    }
-    const casesById = new Map(suite.cases.map((evalCase) => [evalCase.id, evalCase]));
-    const scores = yield* Effect.forEach(
-      observationSet.observations,
-      (observation): Effect.Effect<
-        PluginEvalCaseScore,
-        PluginEvalReplayContractError | PluginEvalObservationMismatchError
-      > => {
-        const evalCase = casesById.get(observation.case_id);
-        if (evalCase === undefined) {
-          return Effect.fail(new PluginEvalReplayContractError({
-            reasons: [`observation references unknown case ${observation.case_id}`],
-          }));
-        }
-        const grade = gradePluginEvalObservation(evalCase, observation);
-        return gradedAttempts === null ? grade : grade.pipe(Effect.map((score) => {
-          gradedAttempts.push({
-            runId: observation.run_id,
-            caseId: observation.case_id,
-            repetition: observation.repetition,
-            score,
-          });
-          return score;
-        }));
-      },
-    );
-    const attempts = gradedAttempts === null ? null : yield* makePublicEvalAttemptSummaries(observationSet, gradedAttempts);
-    return { report: buildReplayReport(suite, observationSet, scores), attempts };
-  }).pipe(
-    Effect.withSpan("plugin_evals.replay", {
-      attributes: {
-        "plugin_eval.run_id": observationSet.manifest.run_id,
-        "plugin_eval.suite_id": suite.suite.id,
-        "plugin_eval.target": observationSet.manifest.target,
-        "plugin_eval.model": observationSet.manifest.model,
-      },
-    }),
-  ),
+      const attempts =
+        gradedAttempts === null
+          ? null
+          : yield* makePublicEvalAttemptSummaries(observationSet, gradedAttempts);
+      return { report: buildReplayReport(suite, observationSet, scores), attempts };
+    }).pipe(
+      Effect.withSpan("plugin_evals.replay", {
+        attributes: {
+          "plugin_eval.run_id": observationSet.manifest.run_id,
+          "plugin_eval.suite_id": suite.suite.id,
+          "plugin_eval.target": observationSet.manifest.target,
+          "plugin_eval.model": observationSet.manifest.model,
+        },
+      }),
+    ),
 );

@@ -18,6 +18,7 @@ import { Data, Effect, Schema } from "effect";
 
 import { SanitizedEvalRunReportSchema, type SanitizedEvalRunReport } from "./report";
 import {
+  hasSafePublicEvalFields,
   isSafePublicEvalText,
   sanitizeEvalAggregate,
   type SanitizedEvalAggregate,
@@ -143,17 +144,6 @@ const decodeDeclaredCoverage = Schema.decodeUnknownEffect(
 const failure = (reason: PublicEvalResultErrorReason) => new PublicEvalResultError({ reason });
 const sha256Hex = (content: string): string =>
   createHash("sha256").update(content, "utf8").digest("hex");
-/** Checks every decoded public string, including record keys. Never inspects raw source bytes. */
-const hasSafePublicStrings = (value: unknown): boolean => {
-  if (typeof value === "string") return isSafePublicEvalText(value);
-  if (Array.isArray(value)) return value.every(hasSafePublicStrings);
-  if (value !== null && typeof value === "object") {
-    for (const [key, child] of Object.entries(value)) {
-      if (!isSafePublicEvalText(key) || !hasSafePublicStrings(child)) return false;
-    }
-  }
-  return true;
-};
 
 /** Complements the strict capture decoder with report-bound identities and full repeated slots. */
 const attemptIssue = (
@@ -166,7 +156,11 @@ const attemptIssue = (
   const slotsByCase = new Map<string, number>();
   let tokenSamples = 0;
   for (const attempt of attempts) {
-    const identity = publicEvalAttemptIdentityInput(report.runId, attempt.caseId, attempt.repetition);
+    const identity = publicEvalAttemptIdentityInput(
+      report.runId,
+      attempt.caseId,
+      attempt.repetition,
+    );
     if (attempt.id !== `attempt-${sha256Hex(identity)}` || !isSafePublicEvalText(attempt.caseId)) {
       return "invalid_attempt_capture";
     }
@@ -180,7 +174,8 @@ const attemptIssue = (
     if (slots !== report.repetitions) return "attempt_capture_coverage_mismatch";
   }
   // The result decoder checks token sums when available; check samples even when unavailable.
-  if (tokenSamples !== aggregate.tokenUsage.observations) return "attempt_capture_aggregate_mismatch";
+  if (tokenSamples !== aggregate.tokenUsage.observations)
+    return "attempt_capture_aggregate_mismatch";
   return null;
 };
 
@@ -189,7 +184,7 @@ const configurationIssue = (
   report: SanitizedEvalRunReport,
   expected: SanitizedEvalAggregateProvenance,
 ): PublicEvalResultErrorReason | null => {
-  if (!hasSafePublicStrings(declared)) return "invalid_configuration";
+  if (!hasSafePublicEvalFields(declared)) return "invalid_configuration";
   const settings = declared.settings;
   if (
     declared.candidate !== report.candidate ||
@@ -241,20 +236,31 @@ export const makePublicEvalResult = (
       Effect.mapError(() => failure("invalid_report")),
     );
     const reportSha256 = sha256Hex(options.reportJson);
-    if (!hasSafePublicStrings(report)) return yield* failure("invalid_report");
+    if (!hasSafePublicEvalFields(report)) return yield* failure("invalid_report");
     yield* decodeStartedAt(report.startedAt).pipe(Effect.mapError(() => failure("invalid_report")));
 
     const expected = options.expectedProvenance;
     const aggregate = yield* sanitizeEvalAggregate(report.aggregate, expected).pipe(
-      Effect.mapError(() => failure(
-        report.aggregate.suiteId !== expected?.suiteId ||
-        report.aggregate.suiteVersion !== expected?.suiteVersion ||
-        report.aggregate.fixtureVersion !== expected?.fixtureVersion ||
-        report.aggregate.catalogSha !== expected?.catalogSha
-          ? "provenance_mismatch"
-          : "report_rejected",
-      )),
+      Effect.mapError(() =>
+        failure(
+          report.aggregate.suiteId !== expected?.suiteId ||
+            report.aggregate.suiteVersion !== expected?.suiteVersion ||
+            report.aggregate.fixtureVersion !== expected?.fixtureVersion ||
+            report.aggregate.catalogSha !== expected?.catalogSha
+            ? "provenance_mismatch"
+            : "report_rejected",
+        ),
+      ),
     );
+    const sourceTokens = aggregate.tokenUsage;
+    if (
+      sourceTokens.observations === 0 &&
+      (sourceTokens.inputTokens !== 0 ||
+        sourceTokens.outputTokens !== 0 ||
+        sourceTokens.totalTokens !== 0)
+    ) {
+      return yield* failure("invalid_report");
+    }
     const total = aggregate.overall.total;
     if (total === 0) return yield* failure("no_observations");
     if (total % report.repetitions !== 0) return yield* failure("repetition_mismatch");
@@ -336,15 +342,21 @@ export const makePublicEvalResult = (
       passedEveryAttempt = caseTotal - failedCases.size;
     }
 
-    const dimension = (name: PublicEvalCheckName): PublicEvalResult["dimensions"][PublicEvalCheckName] => {
-      const source = name === "skillActivation" ? aggregate.skillActivation : aggregate.dimensions[name];
+    const dimension = (
+      name: PublicEvalCheckName,
+    ): PublicEvalResult["dimensions"][PublicEvalCheckName] => {
+      const source =
+        name === "skillActivation" ? aggregate.skillActivation : aggregate.dimensions[name];
       return {
         passed: source.passed,
         failed: source.failed,
         notApplicable: total - source.passed - source.failed,
       };
     };
-    const noDeclaredMethod = { availability: "not_evaluated", reason: "no_declared_method" } as const;
+    const noDeclaredMethod = {
+      availability: "not_evaluated",
+      reason: "no_declared_method",
+    } as const;
     const reasons: PublicEvalUnrankedReason[] = ["pilot"];
     if (options.dataOrigin === "synthetic") reasons.push("synthetic");
     if (!complete) reasons.push("incomplete_coverage");
@@ -429,14 +441,14 @@ export const makePublicEvalResult = (
       ranking: { status: "unranked", reasons },
       attempts,
     };
-    if (!hasSafePublicStrings(candidate)) return yield* failure("invalid_result");
     // Reuse the contract's aggregate, dimension, nearest-rank latency and token consistency checks.
     // Validate the supplied detail before any privacy withholding can remove it.
     const result = yield* decodePublicEvalResult(candidate).pipe(
-      Effect.mapError(() => failure(
-        attempts === null ? "invalid_result" : "attempt_capture_aggregate_mismatch",
-      )),
+      Effect.mapError(() =>
+        failure(attempts === null ? "invalid_result" : "attempt_capture_aggregate_mismatch"),
+      ),
     );
+    if (!hasSafePublicEvalFields(result)) return yield* failure("invalid_result");
     if (options.withholdAttempts !== true) return result;
     return yield* decodePublicEvalResult({
       ...result,

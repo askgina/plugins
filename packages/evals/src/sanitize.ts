@@ -12,6 +12,22 @@ const DIMENSION_NAMES = ["routing", "arguments", "safety", "completion"] as cons
 const REQUIRED_DIMENSION_NAMES = ["routing", "arguments", "completion"] as const;
 const SAFE_IDENTIFIER = /^[A-Za-z0-9](?:[A-Za-z0-9._:@/-]{0,126}[A-Za-z0-9])?$/;
 const SHA_256 = /^[a-f0-9]{64}$/;
+const PUBLIC_DIGEST_FIELDS: Readonly<Record<string, true>> = {
+  catalogSha: true,
+  reportSha256: true,
+  sourceReportSha256: true,
+  attemptCaptureSha256: true,
+  pinnedSha256: true,
+  planSha256: true,
+  statusSha256: true,
+  evaluatorSha256: true,
+  skillsSha256: true,
+  toolchainSha256: true,
+  runSettingsSha256: true,
+  subjectSha256: true,
+  sha256: true,
+};
+const ATTEMPT_DIGEST = /^attempt-[a-f0-9]{64}$/;
 const CREDENTIAL_KEY =
   /^(?:[A-Za-z0-9]+[_-])*(?:api[_-]?key|authorization|bearer|cookie|credential|password|private[_-]?key|secret(?:[_-]?key)?|session(?:[_-]?id)?|token(?:[_-]?id)?)$/i;
 const ACCOUNT_KEY = /^(?:[A-Za-z0-9]+[_-])*(?:account|address|email|wallet)(?:[_-]?id)?$/i;
@@ -264,8 +280,37 @@ export const isSafePublicEvalText = (value: string): boolean =>
   !PRIVATE_HOST_VALUE.test(value) &&
   findPublicTextViolations(value).length === 0;
 
+const hasSafePublicField = (value: unknown, field: string): boolean => {
+  if (typeof value === "string") {
+    if (Object.hasOwn(PUBLIC_DIGEST_FIELDS, field) && SHA_256.test(value)) return true;
+    if (field === "id" && ATTEMPT_DIGEST.test(value)) return true;
+    return isSafePublicEvalText(value);
+  }
+  if (Array.isArray(value)) {
+    for (const child of value) {
+      if (!hasSafePublicField(child, "")) return false;
+    }
+    return true;
+  }
+  if (isUnknownRecord(value)) {
+    for (const key in value) {
+      if (
+        Object.hasOwn(value, key) &&
+        (!isSafePublicEvalText(key) || !hasSafePublicField(value[key], key))
+      )
+        return false;
+    }
+  }
+  return true;
+};
+
+/** Checks schema-decoded public DTOs. Digest fields are not free-form identifiers or prose. */
+export const hasSafePublicEvalFields = (value: unknown): boolean => hasSafePublicField(value, "");
+
 const inspectForbiddenContent = (value: unknown, path: string, reasons: string[]): void => {
   if (typeof value === "string") {
+    if ((path === "aggregate.catalogSha" || path === "expected.catalogSha") && SHA_256.test(value))
+      return;
     if (value.length > 128) reasons.push(`${path} contains an unbounded string`);
     for (const violation of findPublicTextViolations(value)) {
       reasons.push(`${path} contains ${violation.kind} at offset ${violation.index}`);

@@ -45,7 +45,8 @@ const parseOptions = (
         return yield* new ReplayCliArgumentError();
       }
       if (flag === "--suite" && suitePath === undefined) suitePath = value;
-      else if (flag === "--observations" && observationsPath === undefined) observationsPath = value;
+      else if (flag === "--observations" && observationsPath === undefined)
+        observationsPath = value;
       else if (flag === "--output" && outputPath === undefined) outputPath = value;
       else if (flag === "--attempts-output" && attemptsOutputPath === undefined) {
         attemptsOutputPath = value;

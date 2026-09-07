@@ -1,4 +1,9 @@
-import { catalogSha, isGinaReadToolName, listCatalogToolNames, type PublicEvalAttemptSummary } from "@askgina/contracts";
+import {
+  catalogSha,
+  isGinaReadToolName,
+  listCatalogToolNames,
+  type PublicEvalAttemptSummary,
+} from "@askgina/contracts";
 import { Data, DateTime, Effect, Function } from "effect";
 
 import type { PluginEvalCase, PluginEvalObservation, PluginEvalSuite } from "./contracts";
@@ -165,7 +170,11 @@ export const runLiveEvalSuite = Function.dual<
         startedAt,
       });
       if (options.captureAttempts === true) {
-        yield* assertPublicEvalAttemptPlan(options.runId, cases.map((evalCase) => evalCase.id), options.repetitions);
+        yield* assertPublicEvalAttemptPlan(
+          options.runId,
+          cases.map((evalCase) => evalCase.id),
+          options.repetitions,
+        );
       }
       const observations: PluginEvalObservation[] = [];
 
@@ -181,10 +190,10 @@ export const runLiveEvalSuite = Function.dual<
             startedAt: DateTime.formatIso(yield* DateTime.now),
           });
           if (
-            options.captureAttempts === true && (
-              observation.run_id !== options.runId || observation.case_id !== evalCase.id ||
-              observation.repetition !== repetition
-            )
+            options.captureAttempts === true &&
+            (observation.run_id !== options.runId ||
+              observation.case_id !== evalCase.id ||
+              observation.repetition !== repetition)
           ) {
             return yield* new PublicEvalAttemptCaptureError({
               reasons: ["trial observation does not match the requested attempt"],
@@ -220,9 +229,13 @@ export const runLiveEvalSuite = Function.dual<
         },
         "live-memory",
       );
-      const { report, attempts } = yield* replayPluginEvalObservationSet(selectedSuite, observationSet, {
-        captureAttempts: options.captureAttempts === true,
-      });
+      const { report, attempts } = yield* replayPluginEvalObservationSet(
+        selectedSuite,
+        observationSet,
+        {
+          captureAttempts: options.captureAttempts === true,
+        },
+      );
       const sanitizedReport = yield* makeSanitizedEvalRunReport({
         suiteId: selectedSuite.suite.id,
         suiteVersion: selectedSuite.version,

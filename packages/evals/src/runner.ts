@@ -63,7 +63,9 @@ export const runHermeticEvalReplay = ({
       loadPluginEvalSuite(suitePath),
       loadPluginEvalObservationSet(observationsPath),
     ]);
-    const { report, attempts } = yield* replayPluginEvalObservationSet(suite, observationSet, { captureAttempts });
+    const { report, attempts } = yield* replayPluginEvalObservationSet(suite, observationSet, {
+      captureAttempts,
+    });
 
     return {
       suiteId: suite.suite.id,
