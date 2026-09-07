@@ -2,7 +2,7 @@
 
 ## Product-owner dashboard capture
 
-`dashboard-home.png` was supplied by the product owner on 2026-09-06 as `Screenshot 2026-09-06 at 16.59.53.png` for the homepage hero. It shows the actual Home dashboard in light mode, including the wallet panel, PnL calendar, quests, and automation summary. The 2990 × 1674 PNG is losslessly compressed to 973,426 bytes, removing its fully opaque alpha channel. Decoded RGBA pixels were verified identical to the supplied original. Account values are visible; their sample/live status was not specified. No credentials or trigger URLs are visible. The chat composer is not shown and remains a separate capture. Included in `docs/index.mdx`.
+`dashboard-home.png` was supplied by the product owner on 2026-09-06 as `Screenshot 2026-09-06 at 16.59.53.png` for the homepage hero. It shows the actual Home dashboard in light mode, including the wallet panel, PnL calendar, quests, and automation summary. The 2990 × 1674 PNG is losslessly compressed to 973,426 bytes, removing its fully opaque alpha channel. Decoded RGBA pixels were verified identical to the supplied original. Account values are visible; their sample/live status was not specified. No credentials or trigger URLs are visible. The chat composer is not shown and remains a separate capture. Included in `docs/what-is-gina.mdx`.
 
 ## Component captures
 
@@ -63,7 +63,7 @@ Do not click **Verify Recipient**.
 
 MCP screenshot coverage is complete for the available widgets and requested setup states. Account-overview and spot widgets do not exist as of the product owner’s 2026-09-07 clarification and are excluded from screenshot requests.
 
-The product owner is supplying screenshots. The home dashboard hero is included in `docs/index.mdx` after the opening product description and before the capabilities section. Remaining captures are pending; do not publish missing-image placeholders.
+The product owner is supplying screenshots. The home dashboard hero is included in `docs/what-is-gina.mdx` after the opening product description and before the capabilities section. Remaining captures are pending; do not publish missing-image placeholders.
 
 | Capture                                           | Page                                                       |
 | ------------------------------------------------- | ---------------------------------------------------------- |

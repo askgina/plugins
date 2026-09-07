@@ -27,7 +27,7 @@
     {
       "group": "Start here",
       "pages": [
-        "index",
+        "what-is-gina",
         "product-guide/wallet-and-account",
         {
           "group": "Automations",
@@ -143,6 +143,14 @@
   },
   "redirects": [
     {
+      "source": "/",
+      "destination": "/what-is-gina"
+    },
+    {
+      "source": "/index",
+      "destination": "/what-is-gina"
+    },
+    {
       "source": "/openclaw-skills",
       "destination": "/connect/openclaw"
     },
@@ -208,7 +216,7 @@
     },
     {
       "source": "/start/what-gina-can-do",
-      "destination": "/index"
+      "destination": "/what-is-gina"
     }
   ]
 }
