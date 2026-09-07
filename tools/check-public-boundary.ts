@@ -9,6 +9,11 @@ import {
 import { Data, Effect, FileSystem, Layer, Path, Schema } from "effect";
 
 import { extractCheckedTarGz } from "./archive-security";
+import {
+  PUBLIC_SOURCE_ASSETS,
+  isAttestedPublicSourceAsset,
+  type PublicSourceAsset,
+} from "./public-source-assets";
 import { OPENAI_ASSETS } from "./verify-artifacts";
 
 const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini", "devin"];
@@ -77,7 +82,33 @@ const fail = (message: string, cause?: unknown) =>
   new PublicBoundaryError(cause === undefined ? { message } : { message, cause });
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] as const;
 const ABSOLUTE_OR_URI_SOURCE = /^(?:\/|[A-Za-z]:[\\/]|\\\\|[A-Za-z][A-Za-z\d+.-]*:)/u;
+const isDeclaredOpenAiPngAsset = (label: string, bytes: Uint8Array): boolean => {
+  const filename = label.split("/").pop() ?? "";
+  return (
+    OPENAI_ASSETS.includes(filename as (typeof OPENAI_ASSETS)[number]) &&
+    (label.startsWith("plugins/ask-gina/assets/") || label.includes(":assets/")) &&
+    bytes.length >= PNG_SIGNATURE.length &&
+    PNG_SIGNATURE.every((value, index) => bytes[index] === value)
+  );
+};
+
+export const findPublicBinaryBoundaryRules = (
+  label: string,
+  bytes: Uint8Array,
+  inventory: readonly PublicSourceAsset[] = PUBLIC_SOURCE_ASSETS,
+): readonly string[] => {
+  if (
+    isDeclaredOpenAiPngAsset(label, bytes) ||
+    isAttestedPublicSourceAsset(label, bytes, inventory)
+  ) {
+    return [];
+  }
+  return bytes.includes(0) || inventory.some((asset) => asset.path === label)
+    ? ["unscannable-binary-file"]
+    : [];
+};
 
 export const inspectSourceMapText = (
   text: string,
@@ -282,32 +313,19 @@ const program = Effect.scoped(
         const bytes = yield* fs
           .readFile(absolute)
           .pipe(Effect.mapError((cause) => fail(`cannot read ${absolute}`, cause)));
-        const filename = path.basename(label);
-        const isDeclaredPngAsset =
-          OPENAI_ASSETS.includes(filename as (typeof OPENAI_ASSETS)[number]) &&
-          (label.startsWith("plugins/ask-gina/assets/") || label.includes(":assets/")) &&
-          bytes.length >= 8 &&
-          bytes[0] === 0x89 &&
-          bytes[1] === 0x50 &&
-          bytes[2] === 0x4e &&
-          bytes[3] === 0x47 &&
-          bytes[4] === 0x0d &&
-          bytes[5] === 0x0a &&
-          bytes[6] === 0x1a &&
-          bytes[7] === 0x0a;
-        if (bytes.includes(0)) {
-          if (!isDeclaredPngAsset) addFinding("unscannable-binary-file", label);
-        } else {
-          const text = new TextDecoder().decode(bytes);
-          scanText(text, label, receipt);
-          if (label.endsWith(".map")) {
-            const sourceMap = inspectSourceMapText(text);
-            if (sourceMap === undefined) addFinding("invalid-source-map", label);
-            else {
-              if (sourceMap.unsafeSourcePath) addFinding("absolute-source-map-path", label);
-              for (const [index, source] of sourceMap.sourcesContent.entries()) {
-                scanText(source, `${label}#${sourceMap.sources[index] ?? index}`, false);
-              }
+        for (const rule of findPublicBinaryBoundaryRules(label, bytes)) {
+          addFinding(rule, label);
+        }
+        if (bytes.includes(0)) return;
+        const text = new TextDecoder().decode(bytes);
+        scanText(text, label, receipt);
+        if (label.endsWith(".map")) {
+          const sourceMap = inspectSourceMapText(text);
+          if (sourceMap === undefined) addFinding("invalid-source-map", label);
+          else {
+            if (sourceMap.unsafeSourcePath) addFinding("absolute-source-map-path", label);
+            for (const [index, source] of sourceMap.sourcesContent.entries()) {
+              scanText(source, `${label}#${sourceMap.sources[index] ?? index}`, false);
             }
           }
         }
