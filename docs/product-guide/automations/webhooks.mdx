@@ -1,0 +1,22 @@
+---
+title: "Webhook-triggered recipes"
+description: "Understand event-triggered work and inspect why a recipe ran."
+---
+
+A webhook lets a supported integration trigger a recipe when an event occurs. A schedule runs by time; a webhook runs in response to an event. Availability and configuration depend on the recipe and provider.
+
+## Configure the supported trigger
+
+Use the trigger configuration supplied by the recipe or integration. Follow its required event type, authentication or signature requirements, and payload format. There is no universal Gina webhook payload or generic setup screen for every provider.
+
+Test the recipe before enabling event-triggered execution. Keep webhook credentials and usable trigger URLs private; do not put secrets into a prompt or a screenshot.
+
+## Inspect an event-triggered run
+
+1. Open the resulting run or conversation.
+2. Find **Webhook Trigger**. Review the provider, event type, received time, and displayed event fields.
+3. Use **Copy JSON** if you need the trigger details for your own debugging. Review and redact the contents before sharing them.
+4. Choose **Ask assistant about this trigger** when available to have Gina explain why the run fired.
+5. Inspect the recipe's steps and final output separately. Receiving a webhook does not prove the task completed.
+
+If the expected run is missing, check the provider's delivery result and the configured event and payload. If a run exists but failed, inspect that run's error before retrying, especially when the workflow can execute transactions.

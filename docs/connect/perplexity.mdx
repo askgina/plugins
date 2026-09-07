@@ -1,0 +1,22 @@
+---
+title: "Perplexity"
+description: "Configure a custom remote MCP connector with OAuth."
+---
+
+Use Perplexity's custom **remote** connector when enabled for your account or workspace. You do not need a local MCP bridge for this route.
+
+1. Open account **Settings → Connectors → + Custom connector**.
+2. Choose **Remote**.
+3. Enter **Ask Gina** and `https://askgina.ai/ai/gina/mcp`.
+4. Select **OAuth** as the authentication method and add the connector.
+5. Open its connector card, authenticate with Gina, and enable it for your query.
+
+See [Perplexity's remote connector guide](https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors). If your account lacks this option, check workspace policy or use another [client](/connect/index).
+
+The host configuration route is documented; an authenticated Gina test and Gina-specific result widgets in Perplexity have not been verified here. Use the actual tool response to check success.
+
+## Verify your first result
+
+Ask **“Use Gina to show ETH in USD over the past seven days.”** Confirm a Gina tool ran and the response identifies ETH and the requested period. Follow [First successful request](/start/first-request) for the expected tool boundary and recovery steps.
+
+This connection is read-only. For trading or transfers, see [Write access (Degen mode)](/write-access/index). A direct connection does not automatically install [research skills](/agents/plugins-and-skills).

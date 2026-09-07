@@ -1,0 +1,35 @@
+---
+title: "First successful request"
+description: "Connect Gina and verify a research result without trading."
+---
+
+By the end of this tutorial, your assistant will retrieve a seven-day ETH price chart through Gina. No wallet funding or trade is needed.
+
+## 1. Choose your assistant
+
+Open [Connect Gina](/connect/index) and follow your host's setup instructions. Use the read-only server:
+
+```text
+https://askgina.ai/ai/gina/mcp
+```
+
+Complete Gina authentication in the browser. If your client needs a manual token, follow [authentication](/agents/authentication) and explicitly select **Read-only — view data**.
+
+## 2. Check the connection
+
+Confirm the client has loaded Gina tools. Read-only access includes `getSimplePrice`, `getTokenChart`, and `getAccountAddresses`; a host may add a prefix to their names. It must not include `bash` or execution tools from this connection.
+
+## 3. Ask for a chart
+
+> Use Gina to show ETH's price in USD over the past seven days. Include the time range and identify any missing data.
+
+Expected: a Gina tool result with ETH price history, shown as a chart or summarized as text depending on the host. Confirm the asset, quote currency, and requested period. An answer from the model's memory is not a successful connection test.
+
+If authentication fails, reconnect. If no tools appear, refresh the host's tool list or start a new session. See [connection troubleshooting](/help/connections).
+
+## 4. Continue with a task
+
+- [Review your account](/read-only/account) to inspect linked wallets and holdings.
+- [Research prediction markets](/read-only/predictions) to find and compare outcomes.
+- [Research perps](/read-only/perps) to inspect Hyperliquid markets.
+- [Choose write access](/write-access/index) only when you want execution.

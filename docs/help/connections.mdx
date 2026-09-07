@@ -1,0 +1,21 @@
+---
+title: "Connection troubleshooting"
+description: "Recover from missing tools, authentication errors, and unexpected access."
+---
+
+| Problem                         | What to check                                                     | Next action                                                            |
+| ------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| No Gina tools                   | Connection enabled, correct URL, completed authentication         | Refresh tools or start a new session                                   |
+| Sign-in keeps returning         | Client supports remote MCP and OAuth; callback accepted           | Remove the failed connection and follow the host's current setup guide |
+| Unauthorized or wrong scope     | Read endpoint needs `tools:read`; execution needs `tools:execute` | Reconnect or generate a token with the matching access level           |
+| Read connection shows execution | Configured server and any separately enabled connections          | Check each connection's URL and tool list before using it              |
+| Expired manual token            | Expiry under Agent Setup → Active Tokens                          | Generate a replacement and update private client settings              |
+| Generic answer without tool use | Gina enabled for this chat; prompt selected a supported task      | Ask explicitly to use Gina and inspect tool activity                   |
+| Tool failed or data missing     | Error message, requested asset, account, time range               | Correct the input; retry once for an explicit transient failure        |
+| Missing chart or widget         | Host's supported result rendering                                 | Use the text result; a widget is not required for a successful call    |
+
+Do not repeatedly retry a transaction because its result is unclear. Follow the venue's status-verification instructions first.
+
+See [authentication](/agents/authentication), [host setup](/connect/index), or venue-specific help for [Spot](/spot-mcp/troubleshooting), [Predictions](/predictions-mcp/troubleshooting), and [Perps](/perps-mcp/troubleshooting).
+
+If you contact [Gina support](https://askgina.ai/support), include the client, server URL, time, and a redacted error. Do not include tokens, private keys, or recovery phrases.

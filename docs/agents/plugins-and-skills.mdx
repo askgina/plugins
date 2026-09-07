@@ -1,0 +1,33 @@
+---
+title: "Plugins and skills"
+description: "Understand the research plugin and its four canonical skills."
+---
+
+The Ask Gina plugin bundles a read-only MCP connection with four research skills. A **connection** makes tools available; a **skill** tells the agent when and how to use them. Authentication is still required.
+
+## Choose a research skill
+
+| Skill                         | Use it for                                                       | Example                                 |
+| ----------------------------- | ---------------------------------------------------------------- | --------------------------------------- |
+| `review-gina-account`         | Linked wallets, cross-chain holdings, scheduled prompts and runs | “Show my linked wallets.”               |
+| `research-spot-tokens`        | Spot prices, token metadata, charts, completed swap history      | “Chart ETH over the past week.”         |
+| `research-hyperliquid`        | Hyperliquid and HIP-3 markets, positions, orders, fills          | “Show my Hyperliquid positions.”        |
+| `research-prediction-markets` | Polymarket discovery, order books, positions                     | “Which prediction markets expire soon?” |
+
+These skills cannot place trades, transfer assets, change leverage, redeem positions, or create/edit schedules. Adding another MCP server does not change that boundary.
+
+## Install for your host
+
+Follow [your host's setup page](/connect/index). A host-specific plugin can include extra features, such as Cursor slash commands; direct MCP connections provide tools without automatically installing skills.
+
+The canonical skill sources are in [askgina/plugins](https://github.com/askgina/plugins/tree/main/plugins/ask-gina/skills). Each skill has a `SKILL.md` under `plugins/ask-gina/skills/<skill-name>/`. Use those sources rather than copying older skill bodies from documentation.
+
+For hosts with manual skill loading, install only the desired skill directories into the host's documented skill location, then start a new session. The repository's contributor instructions and build internals are not user skills.
+
+## OpenClaw and other clients
+
+OpenClaw is one client, not a separate Gina skill family. Follow [OpenClaw setup](/connect/openclaw) for the connection and skill-loading route. Legacy ClawHub commands are not the installation source for these four research skills.
+
+## Package availability
+
+Source code and host adapters do not establish marketplace approval. The [compatibility matrix](/connect/index) distinguishes direct connection routes from listing status. Do not assume SDK/CLI source can be installed from a public package registry.

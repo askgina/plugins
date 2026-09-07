@@ -7,59 +7,7 @@ Get connected and run your first perps market query.
 
 ## 1. Add the Server
 
-Pick your client and run the install command:
-
-<Tabs>
-  <Tab title="Claude Code">
-    Run in your **terminal** (not inside Claude Code):
-
-    ```bash
-    claude mcp add perps \
-      --transport http \
-      https://askgina.ai/ai/perps/mcp
-    ```
-
-    Then restart Claude Code. Run `/mcp` inside Claude Code to check the server status and trigger sign-in.
-
-  </Tab>
-  <Tab title="Codex">
-    ```bash
-    bunx add-mcp "https://askgina.ai/ai/perps/mcp" \
-      --agent codex \
-      --name perps \
-      --transport http \
-      -y
-    ```
-  </Tab>
-  <Tab title="Cursor">
-    Open Cursor Settings -> MCP -> **Add new MCP server**, then paste:
-
-    - **Name:** `perps`
-    - **Type:** `http`
-    - **URL:** `https://askgina.ai/ai/perps/mcp`
-
-    Or add it to your `.cursor/mcp.json`:
-
-    ```json
-    {
-      "mcpServers": {
-        "perps": {
-          "type": "http",
-          "url": "https://askgina.ai/ai/perps/mcp"
-        }
-      }
-    }
-    ```
-
-  </Tab>
-  <Tab title="Windsurf">
-    Open Windsurf Settings -> MCP -> **Add Server**, then set:
-
-    - **Name:** `perps`
-    - **URL:** `https://askgina.ai/ai/perps/mcp`
-
-  </Tab>
-</Tabs>
+Follow [Perps client setup](/perps-mcp/client-setup) to add the server and authenticate. Use the configuration for your host.
 
 ## 2. Connect & Sign In
 

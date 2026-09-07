@@ -7,59 +7,7 @@ Get connected and run your first prediction market query in under 2 minutes.
 
 ## 1. Add the Server
 
-Pick your client and run the install command:
-
-<Tabs>
-  <Tab title="Claude Code">
-    Run in your **terminal** (not inside Claude Code):
-
-    ```bash
-    claude mcp add predictions \
-      --transport http \
-      https://askgina.ai/ai/predictions/mcp
-    ```
-
-    Then restart Claude Code. Run `/mcp` inside Claude Code to check the server status and trigger sign-in.
-
-  </Tab>
-  <Tab title="Codex">
-    ```bash
-    bunx add-mcp "https://askgina.ai/ai/predictions/mcp" \
-      --agent codex \
-      --name predictions \
-      --transport http \
-      -y
-    ```
-  </Tab>
-  <Tab title="Cursor">
-    Open Cursor Settings → MCP → **Add new MCP server**, then paste:
-
-    - **Name:** `predictions`
-    - **Type:** `http`
-    - **URL:** `https://askgina.ai/ai/predictions/mcp`
-
-    Or add it to your `.cursor/mcp.json`:
-
-    ```json
-    {
-      "mcpServers": {
-        "predictions": {
-          "type": "http",
-          "url": "https://askgina.ai/ai/predictions/mcp"
-        }
-      }
-    }
-    ```
-
-  </Tab>
-  <Tab title="Windsurf">
-    Open Windsurf Settings → MCP → **Add Server**, then set:
-
-    - **Name:** `predictions`
-    - **URL:** `https://askgina.ai/ai/predictions/mcp`
-
-  </Tab>
-</Tabs>
+Follow [Predictions client setup](/predictions-mcp/client-setup) to add the server and authenticate. Use the configuration for your host.
 
 ## 2. Connect & Sign In
 

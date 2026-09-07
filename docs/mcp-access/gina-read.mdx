@@ -17,6 +17,10 @@ It requests `tools:read` and lists named tools for Spot prices and charts, Hyper
 <Check>No swap, transfer, trade, funding, or scheduling mutations</Check>
 <Check>One connection for reads across all three markets</Check>
 
+## Connect and try it
+
+Follow [your client setup](/connect/index), then run [First successful request](/start/first-request). For task examples, start with [account review](/read-only/account), [spot research](/read-only/spot), [prediction markets](/read-only/predictions), or [perps](/read-only/perps).
+
 ## When You Need to Write
 
 Add only the venue-specific server you need:
@@ -26,3 +30,40 @@ Add only the venue-specific server you need:
 - [Perps MCP](/perps-mcp) for Hyperliquid and HIP-3 execution
 
 Existing execute-scoped Gina credentials cannot be used on Gina Read. Reconnect through OAuth to receive a read-scoped token.
+
+## Read tool reference
+
+These are the canonical catalog names. Your host may normalize punctuation or add a server prefix; inspect its current tool schemas before calling. No tool in this catalog grants execution.
+
+| Tool                                     | Family      |
+| ---------------------------------------- | ----------- |
+| `gina.getCrosschainPortfolio`            | portfolio   |
+| `gina.getAccountAddresses`               | portfolio   |
+| `gina.listScheduledPrompts`              | portfolio   |
+| `spot.getTokenMetadata`                  | spot        |
+| `spot.getTokenChart`                     | spot        |
+| `spot.getSimplePrice`                    | spot        |
+| `spot.fetchSwapHistory`                  | spot        |
+| `perps.getHyperliquidAccount`            | perps       |
+| `perps.getHyperliquidPositions`          | perps       |
+| `perps.getHyperliquidOpenOrders`         | perps       |
+| `perps.getHyperliquidPortfolio`          | perps       |
+| `perps.getHyperliquidMarkets`            | perps       |
+| `perps.getHyperliquidPrice`              | perps       |
+| `perps.getHyperliquidPrices`             | perps       |
+| `perps.getHyperliquidAssetData`          | perps       |
+| `perps.getHyperliquidPerpDexes`          | perps       |
+| `perps.fetchHyperliquidTrades`           | perps       |
+| `perps.fetchHyperliquidCandles`          | perps       |
+| `perps.fetchHyperliquidOrderBook`        | perps       |
+| `perps.createHyperliquidTable`           | perps       |
+| `perps.executeSqlQuery`                  | perps       |
+| `predictions.searchPredictionMarkets`    | predictions |
+| `predictions.getExpiringMarkets`         | predictions |
+| `predictions.getPredictionOrderbook`     | predictions |
+| `predictions.getSeriesMarket`            | predictions |
+| `predictions.getPredictionMarketDetails` | predictions |
+| `predictions.fetchPolymarketData`        | predictions |
+| `predictions.fetchPolymarketHistory`     | predictions |
+| `predictions.getPolymarketPositions`     | predictions |
+| `predictions.getPolymarketOrderHistory`  | predictions |

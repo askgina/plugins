@@ -5,30 +5,7 @@ description: "Connect to Spot MCP and verify the sandbox"
 
 ## 1. Add the Server
 
-<Tabs>
-  <Tab title="Claude Code">
-    ```bash
-    claude mcp add spot --transport http https://askgina.ai/ai/spot/mcp
-    ```
-  </Tab>
-  <Tab title="Codex">
-    ```bash
-    bunx add-mcp "https://askgina.ai/ai/spot/mcp" --agent codex --name spot --transport http -y
-    ```
-  </Tab>
-  <Tab title="Generic JSON">
-    ```json
-    {
-      "mcpServers": {
-        "spot": {
-          "transport": "http",
-          "url": "https://askgina.ai/ai/spot/mcp"
-        }
-      }
-    }
-    ```
-  </Tab>
-</Tabs>
+Follow [Spot client setup](/spot-mcp/client-setup) to add the server and authenticate. Use the configuration for your host.
 
 ## 2. Sign In and Approve
 
