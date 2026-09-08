@@ -687,4 +687,48 @@ describe("public eval result adapter", () => {
         assert.include(result.ranking.reasons, "missing_pinned_configuration");
       }),
   );
+
+  it.effect("keeps slash-separated model identity through report and pinned configuration", () =>
+    Effect.gen(function* () {
+      const models = ["openai/gpt-5.1", "openrouter/openai/gpt-5.1"] as const;
+      for (const model of models) {
+        const labeledJson = serialize({ ...report, model });
+        const declaration = configurationJson({ model });
+        const result = yield* makePublicEvalResult(
+          options({
+            reportJson: labeledJson,
+            configurationJson: declaration,
+          }),
+        );
+        assert.strictEqual(result.configuration.model, model);
+        assert.strictEqual(result.configuration.pinnedSha256, sha256(declaration));
+      }
+
+      const slashCandidate = yield* failureOf(
+        options({ reportJson: serialize({ ...report, candidate: "openai/gpt-5.1" }) }),
+      );
+      assert.strictEqual(slashCandidate.reason, "invalid_report");
+
+      const rejectedModels = [
+        "/tmp",
+        "../foo",
+        "a//b",
+        "https://user:pass@host/model",
+        "openai/gpt-5.1?q=1",
+        "a".repeat(129),
+      ] as const;
+      for (const model of rejectedModels) {
+        const invalidReport = yield* failureOf(
+          options({ reportJson: serialize({ ...report, model }) }),
+          model,
+        );
+        assert.strictEqual(invalidReport.reason, "invalid_report", model);
+        const invalidConfiguration = yield* failureOf(
+          options({ configurationJson: configurationJson({ model }) }),
+          model,
+        );
+        assert.strictEqual(invalidConfiguration.reason, "invalid_configuration", model);
+      }
+    }),
+  );
 });

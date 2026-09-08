@@ -10,6 +10,8 @@ export type ParsedPublicArtifact =
 
 const WHITESPACE_ONLY = /^\s*$/u;
 const IDENTIFIER = /^[A-Za-z0-9](?:[A-Za-z0-9._:-]{0,126}[A-Za-z0-9])?$/u;
+const MODEL_IDENTIFIER =
+  /^[A-Za-z0-9](?:[A-Za-z0-9._:-]*[A-Za-z0-9])?(?:\/[A-Za-z0-9](?:[A-Za-z0-9._:-]*[A-Za-z0-9])?)*$/u;
 const SHA_256 = /^[a-f0-9]{64}$/u;
 const ATTEMPT_ID = /^attempt-[a-f0-9]{64}$/u;
 const UTC_TIMESTAMP = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{3})?Z$/u;
@@ -38,6 +40,9 @@ const isText = (value: unknown, max = 128): value is string =>
   typeof value === "string" && value.length > 0 && value.length <= max;
 
 const isIdentifier = (value: unknown): value is string => isText(value) && IDENTIFIER.test(value);
+
+const isModelIdentifier = (value: unknown): value is string =>
+  isText(value) && MODEL_IDENTIFIER.test(value);
 
 const isSha256 = (value: unknown): value is string =>
   typeof value === "string" && SHA_256.test(value);
@@ -231,7 +236,7 @@ const hasResult = (value: unknown): value is PublicEvalResult => {
     isObject(configuration) &&
     (configuration.availability === "pinned" || configuration.availability === "labels_only") &&
     isIdentifier(configuration.candidate) &&
-    isIdentifier(configuration.model) &&
+    isModelIdentifier(configuration.model) &&
     (configuration.reasoning === null || isIdentifier(configuration.reasoning)) &&
     (configuration.pinnedSha256 === null || isSha256(configuration.pinnedSha256)) &&
     isObject(coverage) &&
@@ -386,7 +391,7 @@ const hasIndex = (value: unknown): value is PublicEvalIndex => {
           (isObject(summary) &&
             isIdentifier(summary.suiteId) &&
             isIdentifier(summary.candidate) &&
-            isIdentifier(summary.model) &&
+            isModelIdentifier(summary.model) &&
             isTimestamp(summary.startedAt))) &&
         Array.isArray(revisions) &&
         revisions.length > 0

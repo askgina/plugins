@@ -97,6 +97,88 @@ describe("public artifact browser boundary", () => {
     });
   });
 
+  it("accepts nested OpenRouter model identities in publications and current-index summaries", () => {
+    const model = "openrouter/openai/gpt-5.1";
+    const current = publication(currentBytes);
+    if (current.content.kind !== "result") throw new Error("Expected a result publication fixture");
+    const entry = history.publications[0];
+    if (entry?.summary === null || entry?.summary === undefined) {
+      throw new Error("Expected a current index summary fixture");
+    }
+
+    expect(
+      parsePublicArtifact(
+        encode({
+          ...current,
+          content: {
+            ...current.content,
+            result: {
+              ...current.content.result,
+              configuration: { ...current.content.result.configuration, model },
+            },
+          },
+        }),
+      ).kind,
+    ).toBe("publication");
+    expect(
+      parsePublicArtifact(
+        encode({
+          ...history,
+          publications: [
+            { ...entry, summary: { ...entry.summary, model } },
+            ...history.publications.slice(1),
+          ],
+        }),
+      ).kind,
+    ).toBe("index");
+  });
+
+  it("rejects malformed model identities without relaxing generic identifiers", () => {
+    const current = publication(currentBytes);
+    if (current.content.kind !== "result") throw new Error("Expected a result publication fixture");
+    const entry = history.publications[0];
+    if (entry?.summary === null || entry?.summary === undefined) {
+      throw new Error("Expected a current index summary fixture");
+    }
+
+    const malformedModels = [
+      "openrouter//gpt-5.1",
+      "openrouter/../gpt-5.1",
+      `openrouter/${"a".repeat(118)}`,
+    ] as const;
+    for (const model of malformedModels) {
+      expect(
+        parsePublicArtifact(
+          encode({
+            ...current,
+            content: {
+              ...current.content,
+              result: {
+                ...current.content.result,
+                configuration: { ...current.content.result.configuration, model },
+              },
+            },
+          }),
+        ).kind,
+      ).toBe("unsupported");
+      expect(
+        parsePublicArtifact(
+          encode({
+            ...history,
+            publications: [
+              { ...entry, summary: { ...entry.summary, model } },
+              ...history.publications.slice(1),
+            ],
+          }),
+        ).kind,
+      ).toBe("unsupported");
+    }
+
+    expect(parsePublicArtifact(encode({ ...current, publicationId: "openai/gpt-5.1" })).kind).toBe(
+      "unsupported",
+    );
+  });
+
   it("rejects malformed UTF-8 and BOM-prefixed JSON rather than normalizing the input", () => {
     expect(
       parsePublicArtifact(new Uint8Array([0x7b, 0x22, 0xc0, 0xaf, 0x22, 0x7d]).buffer).kind,
