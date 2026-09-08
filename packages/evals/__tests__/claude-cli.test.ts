@@ -830,6 +830,8 @@ describe("Claude CLI trial adapter", () => {
         assert.strictEqual(captured.command, trialOptions.executablePath);
         assert.include(captured.args, "-p");
         assert.include(captured.args, "--restricted");
+        // Bare mode disables native Skill even when --tools explicitly includes it.
+        assert.notInclude(captured.args, "--bare");
         assert.include(captured.args, "--strict-mcp-config");
         assert.include(captured.args, "--permission-prompts");
         assert.include(captured.args, "none");
