@@ -91,7 +91,9 @@ The supported native Codex, Claude, and OMP paths use explicit API keys in
 isolated evaluation homes. They do not reuse a saved personal login. Saved-login
 reuse, refresh ownership, and personal-home integration remain deferred. OMP does
 not read `~/.omp` or inherit `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` /
-`OPENROUTER_API_KEY`.
+`OPENROUTER_API_KEY`. Native OMP also never exports those names into the
+isolated child. The child receives only `OMP_EVAL_PROVIDER_API_KEY` for
+the private `omp-eval` provider.
 
 Responses and Codex accept model IDs understood by their OpenAI backends, such as
 `gpt-5.1`. OpenRouter uses its `provider/model` namespace, such as
@@ -215,7 +217,21 @@ Containers run as a non-root user, with a read-only root filesystem and runtime
 mount, writable temporary filesystems, and no host Docker socket or personal OMP
 configuration mounted inside. Bootstrap installs the pinned ACP bridge dependencies.
 
-The selected provider API key is forwarded into the isolated child environment.
+Each trial writes a static `models.yml` with one private `omp-eval` provider
+and one selected-model entry. Public `--provider` / `--model` identity stays
+on the report, attempt, and observation. Native ACP uses `--provider omp-eval`
+and the original backend model id, including OpenRouter nested slugs. The
+child credential env is only `OMP_EVAL_PROVIDER_API_KEY`; the credential
+transformation hook matches that same name. Standard provider env names are
+not exported, so built-in discovery managers do not start.
+
+OpenAI and OpenRouter use Chat Completions, not the Responses transport that
+OMP can select for built-in providers. Anthropic uses its Messages API. The
+CLI's `--reasoning` value selects native `--thinking`, with explicit effort
+settings for OpenAI/OpenRouter and thinking budgets for Anthropic. The model
+entry leaves capacities, cost, and input modalities to OMP 18.1.14's bundled
+same-id metadata or defaults for unknown model ids.
+
 This local Docker provider does not broker credentials outside the container.
 The Gina bearer stays on the host, where canonical MCP reads execute. The native
 guard permits only the canonical MCP inventory and exact staged skill reads;
@@ -225,7 +241,8 @@ The guard waits up to five seconds for native MCP registration, within the trial
 deadline, then requires the exact tool inventory before any model request. This
 startup wait does not retry model or MCP calls. OMP itself can reissue failed
 provider requests; the absolute trial deadline still applies. Host-side JSON
-Schema validation rejects invalid arguments before MCP execution.
+Schema validation rejects invalid arguments before MCP execution. ACP does not
+provide a portable model-step limit.
 
 Skill activation requires a successful native read, not loaded metadata or an ACP
 intent title. Token usage comes only from native guard evidence and remains absent

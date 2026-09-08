@@ -51,23 +51,30 @@ const CONTAINER_GUARD_PATH = "/opt/omp-eval/omp-eval-guard.mjs";
 const CONTAINER_ACP_LAUNCHER_PATH = "/opt/omp-eval/omp-eval-acp.mjs";
 const CONTAINER_CONFIG_PATH = "/opt/omp-eval/config.yml";
 const CONTAINER_EVIDENCE_PATH = "/eval/omp-eval-evidence.json";
+const OMP_EVAL_PROVIDER_ALIAS = "omp-eval";
+const OMP_EVAL_PROVIDER_API_KEY_ENV = "OMP_EVAL_PROVIDER_API_KEY";
 const CANONICAL_ALLOWED_TOOLS = listCatalogToolNames();
 const UTF8_ENCODER = new TextEncoder();
 const SHA256_HEX = /^[a-f0-9]{64}$/u;
-const PROVIDER_API_KEY_ENV = {
-  openai: "OPENAI_API_KEY",
-  anthropic: "ANTHROPIC_API_KEY",
-  openrouter: "OPENROUTER_API_KEY",
-} as const;
-const PROVIDER_BASE_URL = {
-  openai: "https://api.openai.com/v1",
-  anthropic: "https://api.anthropic.com",
-  openrouter: "https://openrouter.ai/api/v1",
-} as const;
-const PROVIDER_API = {
-  openai: "openai-completions",
-  anthropic: "anthropic-messages",
-  openrouter: "openai-completions",
+const OMP_MODEL_THINKING_EFFORTS = ["minimal", "low", "medium", "high", "xhigh", "max"] as const;
+const PROVIDER_PROFILE = {
+  openai: {
+    baseUrl: "https://api.openai.com/v1",
+    api: "openai-completions",
+    thinkingMode: "effort",
+    thinkingFormat: "openai",
+  },
+  anthropic: {
+    baseUrl: "https://api.anthropic.com",
+    api: "anthropic-messages",
+    thinkingMode: "budget",
+  },
+  openrouter: {
+    baseUrl: "https://openrouter.ai/api/v1",
+    api: "openai-completions",
+    thinkingMode: "effort",
+    thinkingFormat: "openrouter",
+  },
 } as const;
 const OMP_REASONING = {
   off: true,
@@ -87,11 +94,11 @@ const CANONICAL_TOOL_NAMES: Record<string, true> = Object.fromEntries(
   CANONICAL_ALLOWED_TOOLS.map((name) => [name, true as const]),
 );
 
-export type OmpProvider = keyof typeof PROVIDER_API_KEY_ENV;
+export type OmpProvider = keyof typeof PROVIDER_PROFILE;
 export type OmpReasoning = keyof typeof OMP_REASONING;
 
 export const isOmpProvider = (value: string): value is OmpProvider =>
-  Object.hasOwn(PROVIDER_API_KEY_ENV, value);
+  Object.hasOwn(PROVIDER_PROFILE, value);
 
 const isOmpReasoning = (value: string): value is OmpReasoning =>
   Object.hasOwn(OMP_REASONING, value);
@@ -504,18 +511,46 @@ const nestedEvalConfig = [
   "",
 ].join("\n");
 
-const modelsYaml = (provider: OmpProvider, providerBaseUrl: string | undefined): string => {
-  const lines = ["providers:", `  ${provider}:`, `    apiKey: ${PROVIDER_API_KEY_ENV[provider]}`];
-  if (providerBaseUrl !== undefined) {
-    lines.push(`    baseUrl: ${yamlQuote(providerBaseUrl)}`);
-    lines.push(`    api: ${PROVIDER_API[provider]}`);
+const modelsYaml = (
+  provider: OmpProvider,
+  model: string,
+  providerBaseUrl: string | undefined,
+): string => {
+  const profile = PROVIDER_PROFILE[provider];
+  const lines = [
+    "providers:",
+    `  ${OMP_EVAL_PROVIDER_ALIAS}:`,
+    `    baseUrl: ${yamlQuote(providerBaseUrl ?? profile.baseUrl)}`,
+    `    apiKey: ${OMP_EVAL_PROVIDER_API_KEY_ENV}`,
+    "    auth: apiKey",
+    `    api: ${profile.api}`,
+    "    models:",
+    `      - id: ${JSON.stringify(model)}`,
+    "        reasoning: true",
+    "        thinking:",
+    `          mode: ${profile.thinkingMode}`,
+    "          efforts:",
+  ];
+  for (const effort of OMP_MODEL_THINKING_EFFORTS) {
+    lines.push(`            - ${effort}`);
+  }
+  if ("thinkingFormat" in profile) {
+    lines.push(
+      "        compat:",
+      "          supportsReasoningEffort: true",
+      `          thinkingFormat: ${profile.thinkingFormat}`,
+    );
   }
   lines.push("");
   return lines.join("\n");
 };
 
-const installCommand = (provider: OmpProvider, providerBaseUrl: string | undefined): string => {
-  const models = modelsYaml(provider, providerBaseUrl);
+const installCommand = (
+  provider: OmpProvider,
+  model: string,
+  providerBaseUrl: string | undefined,
+): string => {
+  const models = modelsYaml(provider, model, providerBaseUrl);
   return [
     'mkdir -p "$HOME/.local/bin" "$HOME/.omp/agent/skills"',
     `ln -sfn ${CONTAINER_ACP_LAUNCHER_PATH} "$HOME/.local/bin/omp"`,
@@ -1482,7 +1517,6 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                     evalCase.id,
                   );
                   yield* ensureBeforeDeadline(evalCase.id, validated.timeoutMs, deadlineMillis);
-                  const apiKeyEnv = PROVIDER_API_KEY_ENV[validated.provider];
                   const selectedSandbox =
                     validated.sandbox ??
                     createOmpDockerSandbox({
@@ -1512,7 +1546,11 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                     harnessId: "omp-acp",
                     source: {
                       type: "install-command",
-                      command: installCommand(validated.provider, validated.providerBaseUrl),
+                      command: installCommand(
+                        validated.provider,
+                        validated.model,
+                        validated.providerBaseUrl,
+                      ),
                     },
                     executable: "omp",
                     args: [
@@ -1521,7 +1559,7 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                       CONTAINER_GUARD_PATH,
                       "--no-extensions",
                       "--provider",
-                      validated.provider,
+                      OMP_EVAL_PROVIDER_ALIAS,
                       "--model",
                       validated.model,
                       "--thinking",
@@ -1533,18 +1571,18 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                     skillsDirectory: ".omp/agent/skills",
                     modelMapping: { type: "session-config-option", path: "model" },
                     mcpServers: {},
-                    credentialEnv: [apiKeyEnv],
+                    credentialEnv: [OMP_EVAL_PROVIDER_API_KEY_ENV],
                     credentialBrokering: ({ env, sandboxEnv }) => {
-                      const key = env[apiKeyEnv];
-                      const placeholder = sandboxEnv?.[apiKeyEnv];
+                      const key = env[OMP_EVAL_PROVIDER_API_KEY_ENV];
+                      const placeholder = sandboxEnv?.[OMP_EVAL_PROVIDER_API_KEY_ENV];
                       if (key === undefined || placeholder === undefined) {
                         throw new Error("OMP provider credentials unavailable");
                       }
                       const matchUrl =
-                        validated.providerBaseUrl ?? PROVIDER_BASE_URL[validated.provider];
+                        validated.providerBaseUrl ?? PROVIDER_PROFILE[validated.provider].baseUrl;
                       const officialAnthropic =
                         validated.provider === "anthropic" &&
-                        new URL(matchUrl).origin === PROVIDER_BASE_URL.anthropic;
+                        new URL(matchUrl).origin === PROVIDER_PROFILE.anthropic.baseUrl;
                       const header = officialAnthropic ? "x-api-key" : "authorization";
                       const prefix = officialAnthropic ? "" : "Bearer ";
                       return [
@@ -1555,7 +1593,7 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                         }),
                       ];
                     },
-                    auth: { [apiKeyEnv]: validated.apiKey },
+                    auth: { [OMP_EVAL_PROVIDER_API_KEY_ENV]: validated.apiKey },
                     env: { NO_COLOR: "1" },
                   });
                   const agent = new HarnessAgent({
