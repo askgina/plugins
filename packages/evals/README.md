@@ -236,13 +236,19 @@ This local Docker provider does not broker credentials outside the container.
 The Gina bearer stays on the host, where canonical MCP reads execute. The native
 guard permits only the canonical MCP inventory and exact staged skill reads;
 URL reads, other files, shell tools, and unregistered tool attempts fail the trial.
+Native intent tracing is disabled. ACP mappings use OMP's wire names, with a
+`skill://` classifier for reads; the guard still checks the exact allowed URI.
 The ACP launcher requires loaded guard evidence before forwarding the first prompt.
 The guard waits up to five seconds for native MCP registration, within the trial
 deadline, then requires the exact tool inventory before any model request. This
-startup wait does not retry model or MCP calls. OMP itself can reissue failed
-provider requests; the absolute trial deadline still applies. Host-side JSON
-Schema validation rejects invalid arguments before MCP execution. ACP does not
-provide a portable model-step limit.
+startup wait does not retry model or MCP calls. Native `retry.enabled` and
+`retry.modelFallback` are false, disabling agent-level TurnRecovery retries and
+configured model fallback. OMP 18.1.14's provider clients still retry some HTTP
+errors independently of those settings. Native stream/stop recovery can also
+reissue requests. There is no one-request guarantee; the absolute trial deadline
+still applies. Host-side JSON Schema validation rejects invalid
+arguments as forwarded by OMP before MCP execution. OMP may coerce the model's
+raw arguments before this check. ACP does not provide a portable model-step limit.
 
 Skill activation requires a successful native read, not loaded metadata or an ACP
 intent title. Token usage comes only from native guard evidence and remains absent

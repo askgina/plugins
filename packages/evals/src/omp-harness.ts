@@ -12,7 +12,7 @@ import {
   SKILL_NAMES,
   type SkillName,
 } from "@askgina/contracts";
-import type { StepResult, ToolSet } from "ai";
+import { jsonSchema, type StepResult, type ToolSet } from "ai";
 import {
   Clock,
   Data,
@@ -278,6 +278,19 @@ export const OMP_HARNESS_EXPECTED_NATIVE_TOOLS: readonly string[] = [
   "read",
   ...CANONICAL_ALLOWED_TOOLS.map(createOmpNativeToolName),
 ];
+const OMP_NATIVE_BUILTIN_INPUT_SCHEMA = jsonSchema<Record<string, unknown>>({
+  type: "object",
+});
+const OMP_NATIVE_TOOL_METADATA: ToolSet = Object.fromEntries(
+  OMP_HARNESS_EXPECTED_NATIVE_TOOLS.map((name) => [
+    name,
+    {
+      nativeName: name,
+      title: name === "read" ? "skill://" : name,
+      inputSchema: OMP_NATIVE_BUILTIN_INPUT_SCHEMA,
+    },
+  ]),
+);
 const ALLOWED_SKILL_URIS: readonly string[] = SKILL_NAMES.map((name) => `skill://${name}`);
 
 const isJsonValue = (value: unknown): boolean => {
@@ -486,6 +499,11 @@ const nestedEvalConfig = [
   "  batch: false",
   "dev:",
   "  autoqa: false",
+  "tools:",
+  "  intentTracing: false",
+  "retry:",
+  "  enabled: false",
+  "  modelFallback: false",
   "exa:",
   "  enabled: false",
   "async:",
@@ -1544,6 +1562,7 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                   };
                   const harness = createACP({
                     harnessId: "omp-acp",
+                    builtinTools: OMP_NATIVE_TOOL_METADATA,
                     source: {
                       type: "install-command",
                       command: installCommand(
