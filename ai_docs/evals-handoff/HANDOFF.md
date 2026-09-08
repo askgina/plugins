@@ -10,7 +10,7 @@ The contract and synthetic examples are ready for an independent frontend checko
 - Export requests, configuration identities and manual review: [EXPORTER_REFERENCE.md](planning/EXPORTER_REFERENCE.md).
 - The browser may import erased `PublicEvalResult`, `PublicEvalPublication` and `PublicEvalIndex` types. Do not import contracts/evaluator runtime, grade observations or implement publication policy in the frontend.
 
-From a checkout:
+From a checkout with Bun 1.4.0 and Node 24.15.0, matching CI:
 
 ```sh
 bun install --frozen-lockfile
@@ -20,6 +20,8 @@ bun run evals:dev
 ```
 
 Visit `/#/handoff`. Select one publication, one index, or one of each. Each selection replaces the previous documents. The file limit is 5 MiB each. A companion index checks the original snapshot bytes and supplies its recorded lifecycle; it does not prove that the local index is the latest or authenticate manual approval. Standalone snapshots and index-only views disclose those limits. Superseded snapshots are historical; tampered and withdrawn result bytes are hidden.
+
+For a current-result picker example, select `planning/fixtures/synthetic-publication-correction-rev2.json` with `planning/fixtures/synthetic-index.json`. The correction-rev1 and withdrawal-notice publication fixtures are also picker inputs. The five result/attempt-capture fixtures document DTOs; they are not publication/index picker inputs.
 
 `packages/evals/README.md` documents opt-in `--attempts-output` and `eval:export-public`. Use fresh, canonical output paths. Private inputs stay outside public output. No live evaluation is needed to develop against these fixtures.
 

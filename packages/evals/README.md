@@ -42,7 +42,11 @@ bun run eval:export-public -- \
   --output-dir /tmp/eval-public
 ```
 
-Run these from the repository with fresh output paths. The synthetic replay includes
+Run these from the repository with fresh, canonical output paths. The examples assume
+`/tmp` is a real directory. On macOS, replace `/tmp` with `/private/tmp`; exporter output
+paths containing symlink components are rejected.
+
+The synthetic replay includes
 a failed case; its exit `0` means replay and persistence succeeded, not that all cases
 passed. Inspect the aggregate counts. These commands make no live model or MCP calls.
 
