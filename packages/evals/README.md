@@ -1,13 +1,14 @@
 # @askgina/evals
 
 One schema and rubric drive hermetic replay, OpenAI Responses API trials,
-OpenRouter trials, Codex CLI trials, and Claude CLI trials. Live runners use the
-same suite cases, reasoning mode, case selection, repetition count, and
-sanitized aggregate shape. Model IDs and turn limits remain backend-specific.
+OpenRouter trials, Codex CLI trials, Claude CLI trials, and OMP HarnessAgent
+trials. Live runners use the same suite cases, reasoning mode, case selection,
+repetition count, and sanitized aggregate shape. Model IDs and turn limits remain
+backend-specific.
 
 `@askgina/evals` is a Bun 1.4.x-only compiled `dist` package. The root
-`eval:replay`, `eval:responses`, `eval:codex`, `eval:openrouter`, and
-`eval:claude` commands build the package graph, then execute
+`eval:replay`, `eval:responses`, `eval:codex`, `eval:openrouter`,
+`eval:claude`, and `eval:omp` commands build the package graph, then execute
 `packages/evals/dist/bin/*.js`; suite and observation YAML remain repository
 inputs.
 Artifact verification clean-installs the built tarball and exercises its compiled
@@ -78,23 +79,32 @@ The default live benchmark suite is `ask-gina-routing-smoke.yaml`.
 Every live runner requires `ASK_GINA_ACCESS_TOKEN`. The provider and native CLI
 credentials differ:
 
-| Runner        | Additional environment                                                                                                 |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Responses API | `OPENAI_API_KEY`                                                                                                       |
-| OpenRouter    | `OPENROUTER_API_KEY`                                                                                                   |
-| Codex CLI     | `OPENAI_API_KEY`, absolute `CODEX_EVAL_EXECUTABLE`, and its lowercase SHA-256 digest in `CODEX_EVAL_EXECUTABLE_SHA256` |
-| Claude CLI    | `ANTHROPIC_API_KEY` and absolute `CLAUDE_EVAL_EXECUTABLE`                                                              |
+| Runner        | Additional environment                                                                                                                      |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Responses API | `OPENAI_API_KEY`                                                                                                                            |
+| OpenRouter    | `OPENROUTER_API_KEY`                                                                                                                        |
+| Codex CLI     | `OPENAI_API_KEY`, absolute `CODEX_EVAL_EXECUTABLE`, and its lowercase SHA-256 digest in `CODEX_EVAL_EXECUTABLE_SHA256`                      |
+| Claude CLI    | `ANTHROPIC_API_KEY` and absolute `CLAUDE_EVAL_EXECUTABLE`                                                                                   |
+| OMP harness   | `OMP_EVAL_API_KEY`, absolute `OMP_EVAL_EXECUTABLE`, its lowercase SHA-256 digest in `OMP_EVAL_EXECUTABLE_SHA256`, and a local Docker engine |
 
-The supported native Codex and Claude paths use explicit API keys in isolated
-evaluation homes. They do not reuse a saved personal login. Saved-login reuse,
-refresh ownership, and personal-home integration remain deferred.
+The supported native Codex, Claude, and OMP paths use explicit API keys in
+isolated evaluation homes. They do not reuse a saved personal login. Saved-login
+reuse, refresh ownership, and personal-home integration remain deferred. OMP does
+not read `~/.omp` or inherit `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` /
+`OPENROUTER_API_KEY`.
 
 Responses and Codex accept model IDs understood by their OpenAI backends, such as
 `gpt-5.1`. OpenRouter uses its `provider/model` namespace, such as
 `openai/gpt-5.1`. Claude uses a Claude CLI model ID or alias without the
-`anthropic/` prefix, such as `claude-sonnet-4-5-20250929`. These examples show the
-required ID shapes. They do not declare a benchmark configuration or claim that a
-live run was performed.
+`anthropic/` prefix, such as `claude-sonnet-4-5-20250929`. OMP requires `--provider`
+to select `openai`, `anthropic`, or `openrouter`; `--model` uses that provider's
+backend ID. For example, `--provider openai --model gpt-5.1` records
+`openai/gpt-5.1`, while `--provider openrouter --model openai/gpt-5.1` records
+`openrouter/openai/gpt-5.1`. The report, attempt input, and observation keep that
+same identity. There is no separate displayed model. These examples show the
+required ID shapes.
+They do not declare a benchmark configuration or claim that a live run was
+performed.
 
 ```sh
 bun run eval:responses -- \
@@ -138,12 +148,26 @@ bun run eval:claude -- \
   --account-class eval \
   --timeout-ms 120000 \
   --max-turns 8
+
+bun run eval:omp -- \
+  --suite packages/evals/src/fixtures/ask-gina-routing-smoke.yaml \
+  --run-id local-omp-example \
+  --candidate main \
+  --provider openai \
+  --model gpt-5.1 \
+  --reasoning medium \
+  --repetitions 3 \
+  --account-class eval \
+  --timeout-ms 120000
 ```
 
 Repeat `--case <case-id>` to run a strict subset. `--timeout-ms` is required for
 the per-trial budget. `--max-steps` is optional only for OpenRouter, and
 `--max-turns` is optional only for Claude. Both default to `8` and accept `1` to
-`32`. The other runners reject those flags. Secrets have no command-line flags.
+`32`. `--provider` is required only for OMP. The other runners reject those
+flags. OMP rejects `--max-steps` and `--max-turns`. ACP does not expose a
+portable native model-step boundary, so OMP does not claim an equal step budget
+with OpenRouter or Claude. Secrets have no command-line flags.
 A missing required flag or backend credential fails closed. The CLI does not
 switch runners or auth methods. Add
 `--attempts-output /tmp/eval-private/attempts.json` to any command when retained,
@@ -153,10 +177,12 @@ section still apply.
 OpenRouter executes Gina tools through the local AI SDK MCP client. Responses
 uses OpenAI-hosted MCP. Neither proves native plugin activation, and these two
 execution paths retain separate runner identities. Codex and Claude load the
-repository plugin through their native CLIs. Task conformance and observed
-plugin activation are scored separately. The Claude adapter has offline
-verification only. Synthetic events and loopback model fixtures do not establish
-measured native-plugin activation; Claude's live activation remains unverified.
+repository plugin through their native CLIs. OMP talks to `omp acp` through
+HarnessAgent in Docker and keeps the `omp_harness` target distinct. Task
+conformance and observed plugin activation are scored separately. The Claude
+adapter has offline verification only. Synthetic events, loopback model
+fixtures, and OMP Docker/runtime proof do not establish measured native-plugin
+activation; Claude's live activation remains unverified.
 
 Claude requires a CLI supporting `--restricted` and `--permission-prompts none`;
 the flag set was checked against version `2.1.263`. Bare mode is not used because
@@ -181,6 +207,33 @@ and validated plugin skills, disables shell network and web search, and enables
 only the observed Gina MCP tools. Trials also use no approvals, ignored
 user/project rules, bounded output, and a minimal child environment. Unsupported
 platforms fail closed.
+
+OMP requires the tested `18.1.14` executable and a local Docker engine at
+`/var/run/docker.sock`. The CLI verifies its SHA-256 and snapshots it once, then
+starts a fresh Docker session per trial. The default Node image is digest-pinned.
+Containers run as a non-root user, with a read-only root filesystem and runtime
+mount, writable temporary filesystems, and no host Docker socket or personal OMP
+configuration mounted inside. Bootstrap installs the pinned ACP bridge dependencies.
+
+The selected provider API key is forwarded into the isolated child environment.
+This local Docker provider does not broker credentials outside the container.
+The Gina bearer stays on the host, where canonical MCP reads execute. The native
+guard permits only the canonical MCP inventory and exact staged skill reads;
+URL reads, other files, shell tools, and unregistered tool attempts fail the trial.
+The ACP launcher requires loaded guard evidence before forwarding the first prompt.
+The guard waits up to five seconds for native MCP registration, within the trial
+deadline, then requires the exact tool inventory before any model request. This
+startup wait does not retry model or MCP calls. OMP itself can reissue failed
+provider requests; the absolute trial deadline still applies. Host-side JSON
+Schema validation rejects invalid arguments before MCP execution.
+
+Skill activation requires a successful native read, not loaded metadata or an ACP
+intent title. Token usage comes only from native guard evidence and remains absent
+when unavailable. A successful result also requires completed native generation
+and removal of the owned Docker resources. Failed or cancelled trials allow up to
+eight seconds for cleanup without replacing the original failure. Synthetic model/MCP fixtures exercise
+the real OMP process and protocol; they do not prove real model behavior, production
+Gina connectivity, or measured native-plugin activation.
 
 Each live run writes exactly one mode-`0600` aggregate below the ignored
 `.plugin-eval-runs/` directory. Raw prompts, final answers, tool arguments,

@@ -26,6 +26,7 @@ export const PluginEvalTargetSchema = Schema.Literals([
   "browser_replay",
   "codex_cli",
   "claude_cli",
+  "omp_harness",
 ]);
 
 export const PluginEvalTurnSchema = Schema.Struct({

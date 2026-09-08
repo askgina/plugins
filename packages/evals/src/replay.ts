@@ -176,7 +176,8 @@ const validateReplayContract = (
       (observation.target === "responses_api" ||
         observation.target === "openrouter_api" ||
         observation.target === "codex_cli" ||
-        observation.target === "claude_cli");
+        observation.target === "claude_cli" ||
+        observation.target === "omp_harness");
     if (requiresCanonicalCatalog && observation.available_tools === undefined) {
       reasons.push(`${observation.case_id} completed without an imported MCP tool catalog`);
     }

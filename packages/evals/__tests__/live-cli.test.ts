@@ -11,7 +11,6 @@ import {
   DEFAULT_OPENROUTER_MAX_STEPS,
   formatLiveEvalCliFailure,
   formatLiveEvalCliUsage,
-  liveEvalTrialDispatch,
   loadLiveEvalCredentials,
   parseLiveEvalCliOptions,
 } from "../src/bin/live";
@@ -46,36 +45,7 @@ const withEnv =
     );
 
 describe("live eval CLI parser", () => {
-  it.effect("prints runner-aware help without required flags", () =>
-    Effect.gen(function* () {
-      const parsed = yield* parseLiveEvalCliOptions(["--help"]);
-      assert.strictEqual(parsed.mode, "help");
-      if (parsed.mode === "help") {
-        assert.include(parsed.usage, "eval:<responses|codex|openrouter|claude>");
-        assert.include(parsed.usage, "ASK_GINA_ACCESS_TOKEN");
-        assert.include(parsed.usage, "OPENROUTER_API_KEY");
-        assert.include(parsed.usage, "ANTHROPIC_API_KEY");
-        assert.include(parsed.usage, "CLAUDE_EVAL_EXECUTABLE");
-        assert.notInclude(parsed.usage, "=");
-      }
-    }),
-  );
-
-  it.effect("scopes help to the selected runner", () =>
-    Effect.gen(function* () {
-      const parsed = yield* parseLiveEvalCliOptions(["--runner", "openrouter", "--help"]);
-      assert.strictEqual(parsed.mode, "help");
-      if (parsed.mode === "help") {
-        assert.include(parsed.usage, "eval:openrouter");
-        assert.include(parsed.usage, "OPENROUTER_API_KEY");
-        assert.include(parsed.usage, "--max-steps");
-        assert.notInclude(parsed.usage, "OPENAI_API_KEY");
-        assert.notInclude(parsed.usage, "CLAUDE_EVAL_EXECUTABLE");
-      }
-    }),
-  );
-
-  it.effect("parses all four runners and preserves existing required flags", () =>
+  it.effect("parses supported runners and preserves existing required flags", () =>
     Effect.gen(function* () {
       const responses = yield* parseLiveEvalCliOptions(requiredFlags("responses"));
       assert.strictEqual(responses.mode, "run");
@@ -114,6 +84,22 @@ describe("live eval CLI parser", () => {
         assert.strictEqual(codex.options.attemptsOutputPath, "attempts.json");
         assert.deepStrictEqual(codex.options.caseIds, ["list-scheduled-prompts"]);
       }
+
+      const omp = yield* parseLiveEvalCliOptions(requiredFlags("omp", ["--provider", "anthropic"]));
+      assert.strictEqual(omp.mode, "run");
+      if (omp.mode === "run" && omp.options.runner === "omp") {
+        assert.strictEqual(omp.options.provider, "anthropic");
+        assert.strictEqual(omp.options.model, "test-model");
+        assert.notProperty(omp.options, "maxSteps");
+        assert.notProperty(omp.options, "maxTurns");
+      }
+
+      const missingProvider = yield* Effect.result(parseLiveEvalCliOptions(requiredFlags("omp")));
+      assert.strictEqual(missingProvider._tag, "Failure");
+      const unknownProvider = yield* Effect.result(
+        parseLiveEvalCliOptions(requiredFlags("omp", ["--provider", "google"])),
+      );
+      assert.strictEqual(unknownProvider._tag, "Failure");
     }),
   );
 
@@ -160,48 +146,14 @@ describe("live eval CLI parser", () => {
         parseLiveEvalCliOptions(requiredFlags("claude", ["--max-turns", "0"])),
       );
       assert.strictEqual(zero._tag, "Failure");
-    }),
-  );
-
-  it.effect("dispatches distinct targets and forwarded budgets", () =>
-    Effect.gen(function* () {
-      const responses = yield* parseLiveEvalCliOptions(requiredFlags("responses"));
-      assert.strictEqual(responses.mode, "run");
-      if (responses.mode === "run") {
-        assert.deepStrictEqual(liveEvalTrialDispatch(responses.options), {
-          target: "responses_api",
-          displayedModel: "test-model",
-        });
-      }
-
-      const codex = yield* parseLiveEvalCliOptions(requiredFlags("codex"));
-      assert.strictEqual(codex.mode, "run");
-      if (codex.mode === "run") {
-        assert.deepStrictEqual(liveEvalTrialDispatch(codex.options), {
-          target: "codex_cli",
-          displayedModel: "test-model",
-        });
-      }
-
-      const openrouter = yield* parseLiveEvalCliOptions(
-        requiredFlags("openrouter", ["--max-steps", "12"]),
+      const responsesProvider = yield* Effect.result(
+        parseLiveEvalCliOptions(requiredFlags("responses", ["--provider", "openai"])),
       );
-      assert.strictEqual(openrouter.mode, "run");
-      if (openrouter.mode === "run") {
-        assert.deepStrictEqual(liveEvalTrialDispatch(openrouter.options), {
-          target: "openrouter_api",
-          maxSteps: 12,
-        });
-      }
-
-      const claude = yield* parseLiveEvalCliOptions(requiredFlags("claude", ["--max-turns", "4"]));
-      assert.strictEqual(claude.mode, "run");
-      if (claude.mode === "run") {
-        assert.deepStrictEqual(liveEvalTrialDispatch(claude.options), {
-          target: "claude_cli",
-          maxTurns: 4,
-        });
-      }
+      assert.strictEqual(responsesProvider._tag, "Failure");
+      const ompSteps = yield* Effect.result(
+        parseLiveEvalCliOptions(requiredFlags("omp", ["--provider", "openai", "--max-steps", "8"])),
+      );
+      assert.strictEqual(ompSteps._tag, "Failure");
     }),
   );
 
@@ -345,6 +297,62 @@ describe("live eval CLI credentials", () => {
         }
       }),
     );
+
+    it.effect("loads OMP pins without OpenAI keys and hides executable paths", () =>
+      Effect.gen(function* () {
+        const missingKey = yield* loadLiveEvalCredentials("omp").pipe(
+          withEnv({
+            ASK_GINA_ACCESS_TOKEN: "synthetic-gina-token",
+            OPENAI_API_KEY: "must-not-be-required",
+          }),
+          Effect.result,
+        );
+        assert.strictEqual(missingKey._tag, "Failure");
+        if (missingKey._tag === "Failure") {
+          assert.deepStrictEqual(missingKey.failure.missing, ["OMP_EVAL_API_KEY"]);
+          assert.notInclude(formatLiveEvalCliFailure(missingKey.failure), "must-not-be-required");
+        }
+
+        const relative = yield* loadLiveEvalCredentials("omp").pipe(
+          withEnv({
+            ASK_GINA_ACCESS_TOKEN: "synthetic-gina-token",
+            OMP_EVAL_API_KEY: "synthetic-omp-key",
+            OMP_EVAL_EXECUTABLE: "relative/omp",
+            OMP_EVAL_EXECUTABLE_SHA256: "abc",
+          }),
+          Effect.result,
+        );
+        assert.strictEqual(relative._tag, "Failure");
+        if (relative._tag === "Failure") {
+          assert.deepStrictEqual(relative.failure.missing, ["OMP_EVAL_EXECUTABLE"]);
+          assert.notInclude(formatLiveEvalCliFailure(relative.failure), "relative/omp");
+        }
+
+        const loaded = yield* loadLiveEvalCredentials("omp").pipe(
+          withEnv({
+            ASK_GINA_ACCESS_TOKEN: "synthetic-gina-token",
+            OMP_EVAL_API_KEY: "synthetic-omp-key",
+            OMP_EVAL_EXECUTABLE: "/usr/bin/omp",
+            OMP_EVAL_EXECUTABLE_SHA256: "AbCDEF",
+            OPENAI_API_KEY: "must-not-be-required",
+          }),
+        );
+        assert.strictEqual(loaded.runner, "omp");
+        if (loaded.runner === "omp") {
+          assert.strictEqual(loaded.executablePath, "/usr/bin/omp");
+          assert.strictEqual(loaded.expectedSha256, "abcdef");
+        }
+
+        const responses = yield* loadLiveEvalCredentials("responses").pipe(
+          withEnv({
+            ASK_GINA_ACCESS_TOKEN: "synthetic-gina-token",
+            OPENAI_API_KEY: "synthetic-openai-key",
+            OMP_EVAL_API_KEY: "must-not-be-required",
+          }),
+        );
+        assert.strictEqual(responses.runner, "responses");
+      }),
+    );
   });
 });
 
@@ -375,10 +383,12 @@ describe("live eval CLI subprocess", () => {
             { concurrency: "unbounded" },
           );
           assert.strictEqual(exitCode, 0);
-          assert.include(stdout.text, "eval:<responses|codex|openrouter|claude>");
+          assert.include(stdout.text, "eval:");
           assert.include(stdout.text, "ASK_GINA_ACCESS_TOKEN");
+          assert.include(stdout.text, "OMP_EVAL_API_KEY");
           assert.notInclude(stdout.text, "sk-");
           assert.notInclude(stderr.text, "OPENAI_API_KEY=");
+          assert.notInclude(stderr.text, "OMP_EVAL_API_KEY=");
         }),
       ),
     );

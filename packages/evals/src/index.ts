@@ -74,6 +74,21 @@ export {
   type PluginEvalClaudeCliError,
 } from "./claude-cli";
 export {
+  prepareOmpHarnessRuntime,
+  runOmpHarnessPluginEvalTrial,
+  PluginEvalOmpHarnessExecutableError,
+  PluginEvalOmpHarnessRequestError,
+  PluginEvalOmpHarnessSpawnError,
+  PluginEvalOmpHarnessMcpError,
+  PluginEvalOmpHarnessProcessError,
+  PluginEvalOmpHarnessTimeoutError,
+  type PrepareOmpHarnessRuntimeOptions,
+  type PreparedOmpHarnessRuntime,
+  type OmpHarnessTrialOptions,
+  type OmpProvider,
+  type PluginEvalOmpHarnessError,
+} from "./omp-harness";
+export {
   makeSanitizedEvalRunReport,
   sanitizeEvalReplay,
   SanitizedEvalRunReportError,

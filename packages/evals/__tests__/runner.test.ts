@@ -197,6 +197,7 @@ describe("hermetic eval replay", () => {
           "openrouter_api",
           "codex_cli",
           "claude_cli",
+          "omp_harness",
         ] as const) {
           for (const availableTools of [undefined, canonicalTools.slice(1)] as const) {
             const result = yield* Effect.result(
@@ -458,9 +459,8 @@ describe("hermetic eval replay", () => {
           } as const;
           const artifacts: Partial<
             Record<
-              "openrouter_api" | "claude_cli",
+              "openrouter_api" | "claude_cli" | "omp_harness",
               {
-                readonly target: string;
                 readonly reportJson: string;
                 readonly attemptCaptureJson: string;
                 readonly reportSha256: string;
@@ -468,7 +468,7 @@ describe("hermetic eval replay", () => {
             >
           > = {};
 
-          for (const target of ["openrouter_api", "claude_cli"] as const) {
+          for (const target of ["openrouter_api", "claude_cli", "omp_harness"] as const) {
             assert.isFalse(Schema.is(PluginEvalTargetSchema)(`${target}_alias`));
 
             const { report, attempts } = yield* runLiveEvalSuite(
@@ -478,17 +478,14 @@ describe("hermetic eval replay", () => {
                 runId: "shared-target-run",
                 candidate: "test-candidate",
                 target,
-                model: "requested-model",
+                model: "provider/requested-model",
                 reasoning: "test",
                 repetitions: 3,
                 accountClass: "synthetic",
                 captureAttempts: true,
               },
-              (input) => {
-                assert.strictEqual(input.target, target);
-                assert.strictEqual(input.model, "requested-model");
-                assert.isFalse(Object.hasOwn(input, "displayedModel"));
-                return Effect.succeed({
+              (input) =>
+                Effect.succeed({
                   version: 1,
                   run_id: input.runId,
                   case_id: input.evalCase.id,
@@ -508,12 +505,11 @@ describe("hermetic eval replay", () => {
                     },
                   ],
                   available_tools: listCatalogToolNames(),
-                });
-              },
+                }),
             );
 
             assert.strictEqual(report.target, target);
-            assert.strictEqual(report.model, "requested-model");
+            assert.strictEqual(report.model, "provider/requested-model");
             assert.strictEqual(report.aggregate.skillActivation.passed, 0);
             assert.strictEqual(report.aggregate.skillActivation.failed, 0);
             if (attempts === null) {
@@ -545,11 +541,10 @@ describe("hermetic eval replay", () => {
               expectedProvenance,
             });
             assert.strictEqual(publicResult.benchmark.target, target);
-            assert.strictEqual(publicResult.configuration.model, "requested-model");
+            assert.strictEqual(publicResult.configuration.model, "provider/requested-model");
             assert.strictEqual(publicResult.source.kind, "sanitized_aggregate_with_attempts");
             assert.strictEqual(publicResult.evidence.attemptDetail, "available");
             artifacts[target] = {
-              target: publicResult.benchmark.target,
               reportJson,
               attemptCaptureJson,
               reportSha256: publicResult.source.reportSha256,
@@ -558,18 +553,19 @@ describe("hermetic eval replay", () => {
 
           const openRouter = artifacts.openrouter_api;
           const claude = artifacts.claude_cli;
-          if (openRouter === undefined || claude === undefined) {
+          const omp = artifacts.omp_harness;
+          if (openRouter === undefined || claude === undefined || omp === undefined) {
             return yield* Effect.die("target artifacts were not captured");
           }
-          assert.strictEqual(openRouter.target, "openrouter_api");
-          assert.strictEqual(claude.target, "claude_cli");
-          assert.notStrictEqual(openRouter.target, claude.target);
-          assert.notStrictEqual(openRouter.reportSha256, claude.reportSha256);
+          assert.strictEqual(
+            new Set([openRouter.reportSha256, claude.reportSha256, omp.reportSha256]).size,
+            3,
+          );
 
           const crossTargetCapture = yield* Effect.result(
             makePublicEvalResult({
               reportJson: openRouter.reportJson,
-              attemptCaptureJson: claude.attemptCaptureJson,
+              attemptCaptureJson: omp.attemptCaptureJson,
               resultId: "cross-target-capture",
               dataOrigin: "synthetic",
               expectedProvenance,

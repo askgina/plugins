@@ -35,6 +35,7 @@
     "eval:codex": "bun run build && bun packages/evals/dist/bin/live.js --runner codex",
     "eval:openrouter": "bun run build && bun packages/evals/dist/bin/live.js --runner openrouter",
     "eval:claude": "bun run build && bun packages/evals/dist/bin/live.js --runner claude",
+    "eval:omp": "bun run build && bun packages/evals/dist/bin/live.js --runner omp",
     "check:marketplace:codex": "bun run build && bun packages/evals/dist/bin/check-codex-marketplace.js",
     "effect-tsgo:patch": "bun scripts/effect-tsgo-patch-if-needed.ts",
     "prepare": "bun run effect-tsgo:patch",

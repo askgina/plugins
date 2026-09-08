@@ -21,6 +21,8 @@
     "check:marketplace:codex": "bun run build && bun dist/bin/check-codex-marketplace.js"
   },
   "dependencies": {
+    "@ai-sdk/harness": "1.0.102",
+    "@ai-sdk/harness-acp": "1.0.40",
     "@ai-sdk/mcp": "2.0.45",
     "@askgina/contracts": "workspace:*",
     "@askgina/plugin-core": "workspace:*",
@@ -28,9 +30,15 @@
     "@effect/platform-bun": "4.0.0-rc.111",
     "@openrouter/ai-sdk-provider": "3.0.0",
     "ai": "7.0.93",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "dockerode": "4.0.12",
     "effect": "4.0.0-rc.111",
     "yaml": "2.8.3",
     "zod": "4.1.8"
+  },
+  "devDependencies": {
+    "@types/dockerode": "4.0.1"
   },
   "engines": {
     "bun": "1.4.x"
