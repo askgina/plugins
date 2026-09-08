@@ -713,7 +713,7 @@ describe("public eval result adapter", () => {
         "/tmp",
         "../foo",
         "a//b",
-        "https://user:pass@host/model",
+        "https://example.com/model",
         "openai/gpt-5.1?q=1",
         "a".repeat(129),
       ] as const;
