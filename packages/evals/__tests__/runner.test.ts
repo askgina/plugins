@@ -1,8 +1,13 @@
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { isGinaReadToolName, listCatalogToolNames } from "@askgina/contracts";
+import {
+  catalogSha,
+  isGinaReadToolName,
+  listCatalogToolNames,
+  PublicEvalAttemptCaptureSchema,
+} from "@askgina/contracts";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer, Path } from "effect";
+import { Effect, Layer, Path, Schema } from "effect";
 
 import {
   decodePluginEvalObservationSet,
@@ -11,13 +16,17 @@ import {
   loadPluginEvalObservationSet,
   loadPluginEvalSuite,
   LiveEvalSelectionError,
+  makePublicEvalAttemptCapture,
+  makePublicEvalResult,
   PluginEvalReplayContractError,
+  PluginEvalTargetSchema,
+  PublicEvalResultError,
   replayPluginEvalObservationSet,
   runLiveEvalSuite,
   runHermeticEvalReplay,
 } from "../src/index";
 import { PublicEvalAttemptCaptureError } from "../src/public-attempts";
-import { makeSanitizedEvalRunReport } from "../src/report";
+import { makeSanitizedEvalRunReport, SanitizedEvalRunReportSchema } from "../src/report";
 
 const collectPublicStrings = (value: unknown): readonly string[] => {
   if (typeof value === "string") return [value];
@@ -175,7 +184,7 @@ describe("hermetic eval replay", () => {
         assert.isTrue(expectedTools.every(isGinaReadToolName));
       }),
     );
-    it.effect("requires canonical catalog evidence for both completed live targets", () =>
+    it.effect("requires canonical catalog evidence for completed live MCP targets", () =>
       Effect.gen(function* () {
         const paths = yield* fixturePaths;
         const suite = yield* loadPluginEvalSuite(paths.liveSuite);
@@ -183,7 +192,12 @@ describe("hermetic eval replay", () => {
         if (evalCase === undefined) return yield* Effect.die("missing fixture case");
         const canonicalTools = listCatalogToolNames();
 
-        for (const target of ["responses_api", "codex_cli"] as const) {
+        for (const target of [
+          "responses_api",
+          "openrouter_api",
+          "codex_cli",
+          "claude_cli",
+        ] as const) {
           for (const availableTools of [undefined, canonicalTools.slice(1)] as const) {
             const result = yield* Effect.result(
               replayPluginEvalObservationSet(suite, {
@@ -196,7 +210,7 @@ describe("hermetic eval replay", () => {
                   catalog_version: suite.suite.catalog_version,
                   allowed_tools: canonicalTools,
                   candidate: "test-candidate",
-                  target: "fixture",
+                  target,
                   model: "test-model",
                   started_at: "2026-08-25T00:00:00.000Z",
                   repetitions: 1,
@@ -228,6 +242,350 @@ describe("hermetic eval replay", () => {
           }
         }
       }),
+    );
+    it.effect("rejects typed replay identity drift before target catalog checks", () =>
+      Effect.gen(function* () {
+        const paths = yield* fixturePaths;
+        const suite = yield* loadPluginEvalSuite(paths.liveSuite);
+        const evalCase = suite.cases[0];
+        if (evalCase === undefined) return yield* Effect.die("missing fixture case");
+        const canonicalTools = listCatalogToolNames();
+        const captureModes = [undefined, { captureAttempts: true }] as const;
+        const manifest = {
+          version: 1 as const,
+          run_id: "typed-replay-invariants",
+          suite_id: suite.suite.id,
+          suite_version: suite.version,
+          catalog_version: suite.suite.catalog_version,
+          allowed_tools: canonicalTools,
+          candidate: "test-candidate",
+          target: "openrouter_api" as const,
+          model: "test-model",
+          started_at: "2026-08-25T00:00:00.000Z",
+          repetitions: 1,
+          clean_chat: true,
+          account_class: "synthetic",
+          artifact_policy: "sanitized" as const,
+        };
+        const observation = {
+          version: 1 as const,
+          run_id: "typed-replay-invariants",
+          case_id: evalCase.id,
+          target: "openrouter_api" as const,
+          model: "test-model",
+          repetition: 1,
+          started_at: "2026-08-25T00:00:01.000Z",
+          status: "completed" as const,
+          duration_ms: 1,
+          tool_calls: [] as const,
+          available_tools: canonicalTools,
+        };
+        const invalidSets = [
+          {
+            needle: "displayed_model does not match the manifest",
+            observationSet: {
+              version: 1 as const,
+              manifest: { ...manifest, displayed_model: "Shown model" },
+              observations: [observation],
+            },
+          },
+          {
+            needle: "run_id does not match the manifest",
+            observationSet: {
+              version: 1 as const,
+              manifest,
+              observations: [{ ...observation, run_id: "other-run" }],
+            },
+          },
+          {
+            needle: "model does not match the manifest",
+            observationSet: {
+              version: 1 as const,
+              manifest,
+              observations: [{ ...observation, model: "other-model" }],
+            },
+          },
+          {
+            needle: "target does not match the manifest",
+            observationSet: {
+              version: 1 as const,
+              manifest,
+              observations: [
+                {
+                  version: 1 as const,
+                  run_id: observation.run_id,
+                  case_id: observation.case_id,
+                  target: "fixture" as const,
+                  model: observation.model,
+                  repetition: observation.repetition,
+                  started_at: observation.started_at,
+                  status: observation.status,
+                  duration_ms: observation.duration_ms,
+                  tool_calls: observation.tool_calls,
+                },
+              ],
+            },
+          },
+          {
+            needle: "exceeds the manifest repetition count",
+            observationSet: {
+              version: 1 as const,
+              manifest,
+              observations: [{ ...observation, repetition: 2 }],
+            },
+          },
+          {
+            needle: "repetition must be a positive safe integer",
+            observationSet: {
+              version: 1 as const,
+              manifest,
+              observations: [{ ...observation, repetition: 1.5 }],
+            },
+          },
+          {
+            needle: "manifest repetitions must be a positive safe integer",
+            observationSet: {
+              version: 1 as const,
+              manifest: { ...manifest, repetitions: 1.5 },
+              observations: [observation],
+            },
+          },
+          {
+            needle: "is completed but has a top-level error",
+            observationSet: {
+              version: 1 as const,
+              manifest,
+              observations: [{ ...observation, error: "unexpected" }],
+            },
+          },
+          {
+            needle: "is failed but has no top-level error",
+            observationSet: {
+              version: 1 as const,
+              manifest,
+              observations: [{ ...observation, status: "failed" as const }],
+            },
+          },
+        ];
+
+        for (const invalid of invalidSets) {
+          for (const options of captureModes) {
+            const result = yield* Effect.result(
+              replayPluginEvalObservationSet(suite, invalid.observationSet, options),
+            );
+            assert.strictEqual(result._tag, "Failure");
+            if (result._tag === "Failure") {
+              assert.instanceOf(result.failure, PluginEvalReplayContractError);
+              if (result.failure instanceof PluginEvalReplayContractError) {
+                assert.include(result.failure.reasons.join("\n"), invalid.needle);
+              }
+            }
+          }
+        }
+      }),
+    );
+    it.effect("does not treat duplicate repetition-1 rows as complete replay coverage", () =>
+      Effect.gen(function* () {
+        const paths = yield* fixturePaths;
+        const suite = yield* loadPluginEvalSuite(paths.liveSuite);
+        const evalCase = suite.cases[0];
+        if (evalCase === undefined) return yield* Effect.die("missing fixture case");
+        const canonicalTools = listCatalogToolNames();
+        const singleCaseSuite = { ...suite, cases: [evalCase] };
+        const observationSet = {
+          version: 1 as const,
+          manifest: {
+            version: 1 as const,
+            run_id: "duplicate-repetition-coverage",
+            suite_id: suite.suite.id,
+            suite_version: suite.version,
+            catalog_version: suite.suite.catalog_version,
+            allowed_tools: canonicalTools,
+            candidate: "test-candidate",
+            target: "openrouter_api" as const,
+            model: "test-model",
+            started_at: "2026-08-25T00:00:00.000Z",
+            repetitions: 3,
+            clean_chat: true,
+            account_class: "synthetic",
+            artifact_policy: "sanitized" as const,
+          },
+          observations: [1, 2, 3].map((index) => ({
+            version: 1 as const,
+            run_id: "duplicate-repetition-coverage",
+            case_id: evalCase.id,
+            target: "openrouter_api" as const,
+            model: "test-model",
+            repetition: 1,
+            started_at: `2026-08-25T00:00:0${index}.000Z`,
+            status: "completed" as const,
+            duration_ms: index,
+            tool_calls: [],
+            available_tools: canonicalTools,
+          })),
+        };
+
+        for (const options of [undefined, { captureAttempts: true }] as const) {
+          const result = yield* Effect.result(
+            replayPluginEvalObservationSet(singleCaseSuite, observationSet, options),
+          );
+          assert.strictEqual(result._tag, "Failure");
+          if (result._tag === "Failure") {
+            assert.instanceOf(result.failure, PluginEvalReplayContractError);
+            if (result.failure instanceof PluginEvalReplayContractError) {
+              assert.include(
+                result.failure.reasons.join("\n"),
+                `Duplicate observation attempt: ${evalCase.id}#1`,
+              );
+            }
+          }
+        }
+      }),
+    );
+    it.effect(
+      "keeps new live targets distinct without inventing displayed-model or skill evidence",
+      () =>
+        Effect.gen(function* () {
+          const paths = yield* fixturePaths;
+          const suite = yield* loadPluginEvalSuite(paths.liveSuite);
+          const evalCase = suite.cases[0];
+          if (evalCase === undefined) return yield* Effect.die("missing fixture case");
+          const expectedProvenance = {
+            suiteId: suite.suite.id,
+            suiteVersion: suite.version,
+            fixtureVersion: 1,
+            catalogSha,
+          } as const;
+          const artifacts: Partial<
+            Record<
+              "openrouter_api" | "claude_cli",
+              {
+                readonly target: string;
+                readonly reportJson: string;
+                readonly attemptCaptureJson: string;
+                readonly reportSha256: string;
+              }
+            >
+          > = {};
+
+          for (const target of ["openrouter_api", "claude_cli"] as const) {
+            assert.isFalse(Schema.is(PluginEvalTargetSchema)(`${target}_alias`));
+
+            const { report, attempts } = yield* runLiveEvalSuite(
+              {
+                suite,
+                caseIds: [evalCase.id],
+                runId: "shared-target-run",
+                candidate: "test-candidate",
+                target,
+                model: "requested-model",
+                reasoning: "test",
+                repetitions: 3,
+                accountClass: "synthetic",
+                captureAttempts: true,
+              },
+              (input) => {
+                assert.strictEqual(input.target, target);
+                assert.strictEqual(input.model, "requested-model");
+                assert.isFalse(Object.hasOwn(input, "displayedModel"));
+                return Effect.succeed({
+                  version: 1,
+                  run_id: input.runId,
+                  case_id: input.evalCase.id,
+                  target: input.target,
+                  model: input.model,
+                  repetition: input.repetition,
+                  started_at: input.startedAt,
+                  status: "completed" as const,
+                  duration_ms: input.repetition,
+                  tool_calls: [
+                    {
+                      sequence: 0,
+                      name: "gina.listScheduledPrompts",
+                      arguments: {},
+                      result_bytes: 0,
+                      requested_scope: "tools:read",
+                    },
+                  ],
+                  available_tools: listCatalogToolNames(),
+                });
+              },
+            );
+
+            assert.strictEqual(report.target, target);
+            assert.strictEqual(report.model, "requested-model");
+            assert.strictEqual(report.aggregate.skillActivation.passed, 0);
+            assert.strictEqual(report.aggregate.skillActivation.failed, 0);
+            if (attempts === null) {
+              return yield* Effect.die("opt-in capture returned no summaries");
+            }
+            assert.strictEqual(attempts.length, 3);
+            assert.isTrue(
+              attempts.every((attempt) => attempt.checks.skillActivation === "not_applicable"),
+            );
+
+            const encodedReport = yield* Schema.encodeEffect(
+              Schema.fromJsonString(SanitizedEvalRunReportSchema, { space: 2 }),
+            )(report);
+            const reportJson = `${encodedReport}\n`;
+            const capture = yield* makePublicEvalAttemptCapture({
+              runId: report.runId,
+              reportContent: reportJson,
+              attempts,
+            });
+            const encodedCapture = yield* Schema.encodeEffect(
+              Schema.fromJsonString(PublicEvalAttemptCaptureSchema, { space: 2 }),
+            )(capture);
+            const attemptCaptureJson = `${encodedCapture}\n`;
+            const publicResult = yield* makePublicEvalResult({
+              reportJson,
+              attemptCaptureJson,
+              resultId: `result-${target}`,
+              dataOrigin: "synthetic",
+              expectedProvenance,
+            });
+            assert.strictEqual(publicResult.benchmark.target, target);
+            assert.strictEqual(publicResult.configuration.model, "requested-model");
+            assert.strictEqual(publicResult.source.kind, "sanitized_aggregate_with_attempts");
+            assert.strictEqual(publicResult.evidence.attemptDetail, "available");
+            artifacts[target] = {
+              target: publicResult.benchmark.target,
+              reportJson,
+              attemptCaptureJson,
+              reportSha256: publicResult.source.reportSha256,
+            };
+          }
+
+          const openRouter = artifacts.openrouter_api;
+          const claude = artifacts.claude_cli;
+          if (openRouter === undefined || claude === undefined) {
+            return yield* Effect.die("target artifacts were not captured");
+          }
+          assert.strictEqual(openRouter.target, "openrouter_api");
+          assert.strictEqual(claude.target, "claude_cli");
+          assert.notStrictEqual(openRouter.target, claude.target);
+          assert.notStrictEqual(openRouter.reportSha256, claude.reportSha256);
+
+          const crossTargetCapture = yield* Effect.result(
+            makePublicEvalResult({
+              reportJson: openRouter.reportJson,
+              attemptCaptureJson: claude.attemptCaptureJson,
+              resultId: "cross-target-capture",
+              dataOrigin: "synthetic",
+              expectedProvenance,
+            }),
+          );
+          assert.strictEqual(crossTargetCapture._tag, "Failure");
+          if (crossTargetCapture._tag === "Failure") {
+            assert.instanceOf(crossTargetCapture.failure, PublicEvalResultError);
+            if (crossTargetCapture.failure instanceof PublicEvalResultError) {
+              assert.strictEqual(
+                crossTargetCapture.failure.reason,
+                "attempt_capture_hash_mismatch",
+              );
+            }
+          }
+        }),
     );
     it.effect("rejects out-of-catalog expectation tools before invoking a transport", () =>
       Effect.gen(function* () {

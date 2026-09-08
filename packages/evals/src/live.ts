@@ -6,7 +6,12 @@ import {
 } from "@askgina/contracts";
 import { Data, DateTime, Effect, Function } from "effect";
 
-import type { PluginEvalCase, PluginEvalObservation, PluginEvalSuite } from "./contracts";
+import type {
+  PluginEvalCase,
+  PluginEvalObservation,
+  PluginEvalSuite,
+  PluginEvalTarget,
+} from "./contracts";
 import type { PluginEvalObservationMismatchError } from "./grading";
 import {
   decodePluginEvalObservationSet,
@@ -36,9 +41,9 @@ export interface LiveEvalOptions {
   readonly captureAttempts?: boolean;
   readonly runId: string;
   readonly candidate: string;
-  readonly target: string;
+  readonly target: PluginEvalTarget;
   readonly model: string;
-  readonly displayedModel: string;
+  readonly displayedModel?: string;
   readonly reasoning: string;
   readonly repetitions: number;
   readonly accountClass: string;
@@ -47,9 +52,9 @@ export interface LiveEvalOptions {
 export interface LiveEvalTrialInput {
   readonly evalCase: PluginEvalCase;
   readonly runId: string;
-  readonly target: string;
+  readonly target: PluginEvalTarget;
   readonly model: string;
-  readonly displayedModel: string;
+  readonly displayedModel?: string;
   readonly repetition: number;
   readonly startedAt: string;
 }
@@ -185,7 +190,9 @@ export const runLiveEvalSuite = Function.dual<
             runId: options.runId,
             target: options.target,
             model: options.model,
-            displayedModel: options.displayedModel,
+            ...(options.displayedModel === undefined
+              ? {}
+              : { displayedModel: options.displayedModel }),
             repetition,
             startedAt: DateTime.formatIso(yield* DateTime.now),
           });
@@ -217,7 +224,9 @@ export const runLiveEvalSuite = Function.dual<
             candidate: options.candidate,
             target: options.target,
             model: options.model,
-            displayed_model: options.displayedModel,
+            ...(options.displayedModel === undefined
+              ? {}
+              : { displayed_model: options.displayedModel }),
             reasoning: options.reasoning,
             started_at: startedAt,
             repetitions: options.repetitions,

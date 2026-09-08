@@ -122,6 +122,7 @@ export {
   PluginEvalReplayReportSchema,
   PluginEvalRunManifestSchema,
   PluginEvalSuiteSchema,
+  PluginEvalTargetSchema,
   PluginEvalToolCallSchema,
   type PluginEvalCase,
   type PluginEvalCaseScore,
@@ -132,5 +133,6 @@ export {
   type PluginEvalObservationSet,
   type PluginEvalReplayReport,
   type PluginEvalSuite,
+  type PluginEvalTarget,
   type PluginEvalToolCall,
 } from "./contracts";

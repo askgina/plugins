@@ -608,6 +608,50 @@ describe("public eval result adapter", () => {
     }),
   );
 
+  it.effect("separates public identity by observation target at the same requested model", () =>
+    Effect.gen(function* () {
+      const model = "shared-requested-model";
+      const labeled = {
+        openrouter_api: { ...report, target: "openrouter_api", model },
+        claude_cli: { ...report, target: "claude_cli", model },
+      } as const;
+      const results = {
+        openrouter_api: yield* makePublicEvalResult(
+          options({
+            reportJson: serialize(labeled.openrouter_api),
+            resultId: "synthetic-openrouter-api",
+          }),
+        ),
+        claude_cli: yield* makePublicEvalResult(
+          options({
+            reportJson: serialize(labeled.claude_cli),
+            resultId: "synthetic-claude-cli",
+          }),
+        ),
+      };
+
+      assert.strictEqual(results.openrouter_api.configuration.model, model);
+      assert.strictEqual(results.claude_cli.configuration.model, model);
+      assert.strictEqual(results.openrouter_api.benchmark.target, "openrouter_api");
+      assert.strictEqual(results.claude_cli.benchmark.target, "claude_cli");
+      assert.notStrictEqual(
+        results.openrouter_api.benchmark.target,
+        results.claude_cli.benchmark.target,
+      );
+
+      const mismatched = yield* failureOf(
+        options({
+          reportJson: serialize(labeled.openrouter_api),
+          configurationJson: configurationJson({
+            model,
+            target: "claude_cli",
+          }),
+        }),
+      );
+      assert.strictEqual(mismatched.reason, "configuration_mismatch");
+    }),
+  );
+
   it.effect(
     "pins only a declaration that matches the report and leaves the default labels_only",
     () =>

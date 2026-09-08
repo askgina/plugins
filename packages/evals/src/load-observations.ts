@@ -40,12 +40,26 @@ const parseObservationYaml = (
     catch: (cause) => new PluginEvalObservationSetParseError({ path, reason: String(cause) }),
   });
 
-const validateObservationSetInvariants = (
-  observationSet: PluginEvalObservationSet,
-  path: string,
-): Effect.Effect<PluginEvalObservationSet, PluginEvalObservationSetValidationError> => {
+export const validateObservationSetInvariants = Function.dual<
+  (
+    path: string,
+  ) => (
+    observationSet: PluginEvalObservationSet,
+  ) => Effect.Effect<PluginEvalObservationSet, PluginEvalObservationSetValidationError>,
+  (
+    observationSet: PluginEvalObservationSet,
+    path: string,
+  ) => Effect.Effect<PluginEvalObservationSet, PluginEvalObservationSetValidationError>
+>(2, (observationSet, path) => {
   const reasons: string[] = [];
   const seenAttempts = new Set<string>();
+  const hasValidManifestRepetitions =
+    Number.isSafeInteger(observationSet.manifest.repetitions) &&
+    observationSet.manifest.repetitions > 0;
+
+  if (!hasValidManifestRepetitions) {
+    reasons.push("manifest repetitions must be a positive safe integer");
+  }
 
   for (const observation of observationSet.observations) {
     const attemptKey = `${observation.case_id}#${observation.repetition}`;
@@ -63,13 +77,26 @@ const validateObservationSetInvariants = (
     if (observation.model !== observationSet.manifest.model) {
       reasons.push(`${attemptKey} model does not match the manifest`);
     }
-    if (observation.repetition > observationSet.manifest.repetitions) {
+    if (observation.displayed_model !== observationSet.manifest.displayed_model) {
+      reasons.push(`${attemptKey} displayed_model does not match the manifest`);
+    }
+    const hasValidRepetition =
+      Number.isSafeInteger(observation.repetition) && observation.repetition > 0;
+    if (!hasValidRepetition) {
+      reasons.push(`${attemptKey} repetition must be a positive safe integer`);
+    } else if (
+      hasValidManifestRepetitions &&
+      observation.repetition > observationSet.manifest.repetitions
+    ) {
       reasons.push(`${attemptKey} exceeds the manifest repetition count`);
     }
     if (observation.status === "completed" && observation.error !== undefined) {
       reasons.push(`${attemptKey} is completed but has a top-level error`);
     }
-    if (observation.status !== "completed" && observation.error === undefined) {
+    if (
+      observation.status !== "completed" &&
+      (observation.error === undefined || observation.error.length === 0)
+    ) {
       reasons.push(`${attemptKey} is ${observation.status} but has no top-level error`);
     }
 
@@ -84,7 +111,7 @@ const validateObservationSetInvariants = (
   return reasons.length === 0
     ? Effect.succeed(observationSet)
     : Effect.fail(new PluginEvalObservationSetValidationError({ path, reasons }));
-};
+});
 
 export const decodePluginEvalObservationSet = Function.dual<
   (

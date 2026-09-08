@@ -20,10 +20,12 @@ export const PluginEvalCategorySchema = Schema.Literals([
 export const PluginEvalTargetSchema = Schema.Literals([
   "fixture",
   "responses_api",
+  "openrouter_api",
   "chatgpt_developer",
   "chatgpt_plugin",
   "browser_replay",
   "codex_cli",
+  "claude_cli",
 ]);
 
 export const PluginEvalTurnSchema = Schema.Struct({
@@ -238,6 +240,7 @@ export const PluginEvalReplayReportSchema = Schema.Struct({
   scores: Schema.Array(PluginEvalCaseScoreSchema).check(Schema.isMinLength(1)),
 });
 
+export type PluginEvalTarget = typeof PluginEvalTargetSchema.Type;
 export type PluginEvalCase = typeof PluginEvalCaseSchema.Type;
 export type PluginEvalSuite = typeof PluginEvalSuiteSchema.Type;
 export type PluginEvalRunManifest = typeof PluginEvalRunManifestSchema.Type;
