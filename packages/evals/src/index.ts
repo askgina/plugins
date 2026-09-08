@@ -42,6 +42,15 @@ export {
   type ResponsesApiTrialOptions,
 } from "./responses-api";
 export {
+  PluginEvalOpenRouterGenerationError,
+  PluginEvalOpenRouterMcpError,
+  PluginEvalOpenRouterRequestError,
+  PluginEvalOpenRouterTimeoutError,
+  runOpenRouterPluginEvalTrial,
+  type PluginEvalOpenRouterError,
+  type OpenRouterTrialOptions,
+} from "./openrouter";
+export {
   attestCodexExecutable,
   PluginEvalCodexCliExecutableError,
   PluginEvalCodexCliProcessError,
@@ -56,6 +65,14 @@ export {
   type CodexCliTrialRunner,
   type PluginEvalCodexCliError,
 } from "./codex-cli";
+export {
+  PluginEvalClaudeCliProcessError,
+  PluginEvalClaudeCliSpawnError,
+  PluginEvalClaudeCliTimeoutError,
+  runClaudeCliPluginEvalTrial,
+  type ClaudeCliTrialOptions,
+  type PluginEvalClaudeCliError,
+} from "./claude-cli";
 export {
   makeSanitizedEvalRunReport,
   sanitizeEvalReplay,
