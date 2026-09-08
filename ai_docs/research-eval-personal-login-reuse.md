@@ -4,9 +4,11 @@ Research date: 2026-09-08. This source-only report resolves [the personal-login 
 
 ## Finding
 
-The reviewed native Codex release, `rust-v0.153.4`, couples model authentication to `CODEX_HOME`. It does not expose a first-class independent auth-store path that lets a temporary eval home borrow the personal login while all eval configuration, plugin installation and MCP credential state remain elsewhere.
+The reviewed native Codex release, `rust-v0.153.4`, supports caller-supplied `--config` settings and `--ignore-user-config`, which skips personal `config.toml` while retaining authentication through `CODEX_HOME`. This establishes a native configuration/authentication separation mechanism for an SDK-facing adapter. The stock TypeScript SDK supplies configuration overrides but does not expose that ignore flag.
 
-This is **not** a finding that local personal-login evals are impossible. Native execution against the personal `CODEX_HOME` can reuse its login. It means the policy must distinguish that same-home mode from the stronger requirement that every eval-owned file live outside the personal home. Whether an explicitly managed eval profile can coexist safely with personal state remains a policy choice and requires later runtime proof.
+Native storage paths remain coupled to `CODEX_HOME`. No independent auth-store path was established for a different temporary home, but a separate home is not required merely to keep evaluation settings in caller code. This report does not establish separation of every plugin/MCP storage path or exclusion of every ambient configuration layer.
+
+This is not a finding that local personal-login evals are impossible or that eval configuration must be written into the personal home. Native execution against the personal `CODEX_HOME` can reuse its login. The owner subsequently clarified that eval configuration must live at the AI SDK/application level and point to existing local authentication. Independent on-disk roots and programmatically supplied session configuration are different questions.
 
 ## Evidence
 
@@ -36,7 +38,7 @@ That temporary-home setup and its cleanup cannot simply be redirected to a perso
 
 | Approach | Source result and remaining boundary |
 | --- | --- |
-| Native execution using the personal `CODEX_HOME` | Native login reuse exists. Eval-specific profile/plugin/MCP setup and ambient-state control need an explicit local policy and subsequent proof. No safety claim follows from changing one path. |
+| Native execution using the personal `CODEX_HOME` | Native login reuse exists. Caller-supplied session configuration is distinct from writing an eval profile into that home. Ambient-state exclusion, plugin/MCP setup and credential visibility still require proof. |
 | Temporary eval home plus a separate native personal-auth pointer | No such first-class split was established in the pinned source. Do not invent an auth-path flag or assume keyring mode provides it. |
 | A separate eval-home login on the same account | The owner rejected the additional-login requirement. It is not the selected solution. |
 | Whole-home copying, auth-file symlinks or custom token-copy/refresh logic | Not established as a supported solution here. In particular, refresh/write-back behavior cannot be inferred from a file appearing readable. |
@@ -44,10 +46,30 @@ That temporary-home setup and its cleanup cannot simply be redirected to a perso
 
 The [advanced Codex CI handoff guide](https://learn.chatgpt.com/docs/auth/ci-cd-auth) concerns copied auth state with serialized write-back and excludes public/open-source repositories. Consumer CI execution is outside this map. That restriction neither establishes a local split-store mechanism nor prohibits ordinary native local login reuse.
 
-## Decision now required
+## Owner clarification
 
-The authentication-policy ticket must decide whether the local runner may use the personal Codex home with explicitly managed eval-only setup, preserving unrelated state and the approved restricted profile. This is different from allowing arbitrary personal-home mutation or exposing its credentials to model tools.
+The [owner's answer](https://github.com/askgina/plugins/issues/51#issuecomment-5585295249) was: "yo we want configuration to be at the ai sdk level but point to our local auth please thx".
 
-If all eval-owned configuration, plugins and MCP credentials must instead remain outside the personal home, the reviewed runtime lacks the separate auth-store handle needed for the chosen no-additional-login requirement. That combination cannot be marked supported on this evidence. Do not silently substitute API keys or the rejected extra login.
+Neither offered personal-home setup option was selected. The chosen requirement is AI SDK/application-owned evaluation configuration referencing the existing native local authentication. The earlier report's framing of eval-profile coexistence versus fully separate storage roots was too narrow. Do not treat that framing as the owner's requirement or as a blocker on SDK/session-supplied settings. Do not write eval settings into personal `config.toml`, mandate another login or substitute API-key auth on this authority.
 
-Any selected same-home design still needs separately authorized proof of restricted configuration, exclusion of unrelated plugins/rules/MCP servers, credential visibility, native refresh ownership and cleanup limited to evaluator-owned artifacts. Local entitlement, real login reuse, refresh and model/MCP execution remain unproven.
+The exact adapter still needs separately authorized proof of restricted configuration, exclusion of unrelated plugins/rules/MCP servers, credential visibility, native refresh ownership and cleanup limited to evaluator-owned artifacts. Local entitlement, real login reuse, refresh and model/MCP execution remain unproven.
+
+## SDK configuration with native local auth
+
+The follow-up inspected native Codex `rust-v0.153.4` and Vercel AI `6359fd58fe68eaade096b5d923bac26de84ca3bd`. These are distinct source snapshots, not a tested compatible package pair. The reviewed stock Vercel adapter pins an older Codex SDK, so its transitive runtime must not be assumed to expose newer flags.
+
+### Native option flow
+
+The Codex TypeScript SDK accepts `config` and `configOverrides`, serializes them into repeated CLI `--config` arguments, and does not write personal `config.toml`. Thread options supply model, working directory, sandbox policy, network access and web search settings. An explicit `env` replaces inherited process environment; it can retain the existing `CODEX_HOME` for the native process. API-key injection is a separate optional path, not a way to pass saved OAuth tokens. See [SDK options](https://github.com/openai/codex/blob/rust-v0.153.4/sdk/typescript/src/codexOptions.ts), [subprocess construction](https://github.com/openai/codex/blob/rust-v0.153.4/sdk/typescript/src/exec.ts) and [documented override precedence](https://github.com/openai/codex/blob/rust-v0.153.4/sdk/typescript/README.md#passing---config-overrides).
+
+Ordinary overrides are overlays, not removal of ambient settings. Native exec separately exposes `--ignore-user-config`, documented as "Do not load `$CODEX_HOME/config.toml`; auth still uses `CODEX_HOME`." It also exposes `--ignore-rules` for execpolicy rules and `--ephemeral` for session persistence. These flags have separate purposes. In particular, skipping execpolicy rules does not prove that all instructions, skills or project configuration are excluded. See [native flags](https://github.com/openai/codex/blob/rust-v0.153.4/codex-rs/exec/src/cli.rs) and [loader wiring](https://github.com/openai/codex/blob/rust-v0.153.4/codex-rs/exec/src/lib.rs).
+
+The reviewed TypeScript SDK does not emit `--ignore-user-config` or expose an option for it. Therefore the native CLI supports the needed personal-config exclusion, but the wrapper is not sufficient unchanged. An SDK-facing local adapter can supply the native flags; that is an implementation boundary, not a completed implementation. The parent independently verified the native flag declaration and SDK documentation.
+
+### Stock Vercel adapter limit
+
+The stock Codex harness does not throw merely because an API key is absent. Its auth resolver returns no key in that case. This corrects the stronger reading of the earlier saved-login report. However, the adapter has no first-class host-local credential-store selector and starts Codex through a sandbox bridge. Base URL, Gateway and header options can also select an API-key provider. Empty auth settings alone do not prove local login reuse. See [auth resolution](https://github.com/vercel/ai/blob/6359fd58fe68eaade096b5d923bac26de84ca3bd/packages/harness-codex/src/codex-auth.ts) and [bridge construction](https://github.com/vercel/ai/blob/6359fd58fe68eaade096b5d923bac26de84ca3bd/packages/harness-codex/src/bridge/index.ts).
+
+That bridge already translates SDK-owned instructions, model and MCP settings into native configuration. Its web search is disabled unless enabled, so the earlier blanket statement that stock Codex web search cannot be disabled was too broad. But the adapter rejects built-in filtering, requires allow-all permission mode, and constructs a danger-full-access native thread. It cannot be declared compliant with the approved restricted baseline unchanged. Its skill materialization also is not installed-plugin activation proof. See [adapter](https://github.com/vercel/ai/blob/6359fd58fe68eaade096b5d923bac26de84ca3bd/packages/harness-codex/src/codex-harness.ts) and the bridge above.
+
+AI SDK's [HarnessV1 contract](https://github.com/vercel/ai/blob/6359fd58fe68eaade096b5d923bac26de84ca3bd/packages/harness/src/v1/harness-v1.ts) provides the native-adapter integration boundary. The source-supported direction is AI SDK-facing configuration translated into native per-run settings and personal-config exclusion, with Codex retaining local auth custody. It is not OAuth extraction into an AI SDK Core provider, a required new login, or permission to mutate personal eval profiles. Implementing the adapter and proving the remaining isolation, plugin and MCP behavior belong to the later cutover plan.
