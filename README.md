@@ -18,6 +18,25 @@ Callers supply a bearer token or oauth authenticate.
 
 The contracts and SDK packages have no CommonJS, browser, edge, or subpath entrypoints.
 
+## Public evals app
+
+`apps/evals` is a private React/Vite app with the Ask Gina landing-page typography,
+watercolor artwork, UI components, and Storybook. It has a leaderboard, model
+profiles, task evidence explorer, and methodology page. All scores and traces are
+illustrative fixtures, not measured benchmarks. It makes no live tool or wallet calls.
+
+```sh
+bun run evals:dev       # App on port 5173
+bun run storybook       # Stories on port 6006
+bun run evals:typecheck
+```
+
+CI also runs `evals:build` and `build-storybook`. Their outputs stay in
+`apps/evals/dist/app` and `apps/evals/dist/storybook`, separate from published
+package artifacts. Storybook uses the existing TypeScript 7 toolchain plus a
+TypeScript 5 compiler-API alias and the two docgen compatibility patches under
+`patches/`. Local fonts and artwork are pinned in `tools/public-source-assets.ts`.
+
 ## Commands
 
 ```sh

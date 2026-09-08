@@ -1,4 +1,9 @@
-import { catalogSha, isGinaReadToolName, listCatalogToolNames } from "@askgina/contracts";
+import {
+  catalogSha,
+  isGinaReadToolName,
+  listCatalogToolNames,
+  type PublicEvalAttemptSummary,
+} from "@askgina/contracts";
 import { Data, DateTime, Effect, Function } from "effect";
 
 import type { PluginEvalCase, PluginEvalObservation, PluginEvalSuite } from "./contracts";
@@ -15,6 +20,12 @@ import {
   type SanitizedEvalRunReportError,
 } from "./report";
 import type { HermeticEvalSanitizationError } from "./sanitize";
+import { assertPublicEvalAttemptPlan, PublicEvalAttemptCaptureError } from "./public-attempts";
+
+export interface LiveEvalResult {
+  readonly report: SanitizedEvalRunReport;
+  readonly attempts: readonly PublicEvalAttemptSummary[] | null;
+}
 export const MINIMUM_LIVE_REPETITIONS = 3;
 export const MAXIMUM_LIVE_REPETITIONS = 5;
 export const MAXIMUM_LIVE_CASES = 64;
@@ -22,6 +33,7 @@ export const MAXIMUM_LIVE_CASES = 64;
 export interface LiveEvalOptions {
   readonly suite: PluginEvalSuite;
   readonly caseIds?: readonly string[];
+  readonly captureAttempts?: boolean;
   readonly runId: string;
   readonly candidate: string;
   readonly target: string;
@@ -100,10 +112,11 @@ type LiveEvalSuiteError<TrialError> =
   | PluginEvalReplayContractError
   | PluginEvalObservationMismatchError
   | HermeticEvalSanitizationError
-  | SanitizedEvalRunReportError;
+  | SanitizedEvalRunReportError
+  | PublicEvalAttemptCaptureError;
 
 type LiveEvalSuiteEffect<TrialError, Requirements> = Effect.Effect<
-  SanitizedEvalRunReport,
+  LiveEvalResult,
   LiveEvalSuiteError<TrialError>,
   Requirements
 >;
@@ -156,21 +169,37 @@ export const runLiveEvalSuite = Function.dual<
         accountClass: options.accountClass,
         startedAt,
       });
+      if (options.captureAttempts === true) {
+        yield* assertPublicEvalAttemptPlan(
+          options.runId,
+          cases.map((evalCase) => evalCase.id),
+          options.repetitions,
+        );
+      }
       const observations: PluginEvalObservation[] = [];
 
       for (let repetition = 1; repetition <= options.repetitions; repetition += 1) {
         for (const evalCase of cases) {
-          observations.push(
-            yield* runTrial({
-              evalCase,
-              runId: options.runId,
-              target: options.target,
-              model: options.model,
-              displayedModel: options.displayedModel,
-              repetition,
-              startedAt: DateTime.formatIso(yield* DateTime.now),
-            }),
-          );
+          const observation = yield* runTrial({
+            evalCase,
+            runId: options.runId,
+            target: options.target,
+            model: options.model,
+            displayedModel: options.displayedModel,
+            repetition,
+            startedAt: DateTime.formatIso(yield* DateTime.now),
+          });
+          if (
+            options.captureAttempts === true &&
+            (observation.run_id !== options.runId ||
+              observation.case_id !== evalCase.id ||
+              observation.repetition !== repetition)
+          ) {
+            return yield* new PublicEvalAttemptCaptureError({
+              reasons: ["trial observation does not match the requested attempt"],
+            });
+          }
+          observations.push(observation);
         }
       }
 
@@ -200,8 +229,14 @@ export const runLiveEvalSuite = Function.dual<
         },
         "live-memory",
       );
-      const report = yield* replayPluginEvalObservationSet(selectedSuite, observationSet);
-      return yield* makeSanitizedEvalRunReport({
+      const { report, attempts } = yield* replayPluginEvalObservationSet(
+        selectedSuite,
+        observationSet,
+        {
+          captureAttempts: options.captureAttempts === true,
+        },
+      );
+      const sanitizedReport = yield* makeSanitizedEvalRunReport({
         suiteId: selectedSuite.suite.id,
         suiteVersion: selectedSuite.version,
         fixtureVersion: observationSet.version,
@@ -209,5 +244,6 @@ export const runLiveEvalSuite = Function.dual<
         manifest: observationSet.manifest,
         report,
       });
+      return { report: sanitizedReport, attempts };
     }),
 );

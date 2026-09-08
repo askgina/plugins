@@ -233,6 +233,23 @@ describe("public eval text detection", () => {
 });
 
 describe("eval aggregate sanitization", () => {
+  it.effect(
+    "accepts address-shaped catalog digests without allowing them as public identifiers",
+    () =>
+      Effect.gen(function* () {
+        const digest = `bc1${"a".repeat(61)}`;
+        const sanitized = yield* sanitizeEvalAggregate(
+          { ...aggregate, catalogSha: digest },
+          { ...expected, catalogSha: digest },
+        );
+        assert.strictEqual(sanitized.catalogSha, digest);
+        const reasons = yield* failureReasons(
+          { ...aggregate, suiteId: digest },
+          { ...expected, suiteId: digest },
+        );
+        assert.include(reasons.join("\n"), "account/address data");
+      }),
+  );
   it.effect("accepts only the pinned provenance and four-dimension aggregate", () =>
     Effect.gen(function* () {
       const sanitized = yield* sanitizeEvalAggregate(aggregate, expected);

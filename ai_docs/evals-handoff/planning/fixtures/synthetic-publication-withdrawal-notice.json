@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "eval-publication.v1",
+  "publicationId": "synthetic-publication-2026-09-04-withdrawn",
+  "revisionId": "synthetic-publication-2026-09-04-withdrawn-rev2",
+  "revision": 2,
+  "runId": "synthetic-run-2026-09-04-withdrawn",
+  "dataOrigin": "synthetic",
+  "publishedAt": "2026-09-05T09:30:00Z",
+  "review": {
+    "status": "synthetic_preview"
+  },
+  "supersedes": {
+    "revisionId": "synthetic-publication-2026-09-04-withdrawn-rev1",
+    "revision": 1,
+    "reason": "withdrawal",
+    "summary": "Synthetic withdrawal example: revision 1 was withdrawn after a privacy review and its snapshot bytes were removed; only this notice remains."
+  },
+  "content": {
+    "kind": "withdrawal_notice",
+    "reason": "privacy",
+    "withdrawnAt": "2026-09-05T09:00:00Z",
+    "notice": "This synthetic publication was withdrawn after a privacy review. The withdrawn revision's bytes were removed and no scores, counts or attempt summaries from it are retained or restorable."
+  }
+}

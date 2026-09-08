@@ -1,5 +1,7 @@
 import { Schema } from "effect";
 
+export * from "./eval-results";
+
 export const PRODUCTION_MCP_URL = "https://askgina.ai/ai/gina/mcp";
 
 export const READ_SCOPE = "tools:read";

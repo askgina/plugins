@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "eval-result.v1",
+  "resultId": "synthetic-result-2026-09-07-002",
+  "dataOrigin": "synthetic",
+  "measures": "conformance",
+  "run": {
+    "runId": "synthetic-run-2026-09-07-002",
+    "startedAt": "2026-09-07T08:30:00Z"
+  },
+  "source": {
+    "kind": "sanitized_aggregate",
+    "reportSchemaVersion": "v1",
+    "reportSha256": "dbeea3cc390c75809f3d9187d885bf84e3a98d64a18ed8f19cb981735007f2ec",
+    "attemptCaptureSha256": null
+  },
+  "benchmark": {
+    "suiteId": "synthetic-suite-gina-conformance",
+    "suiteVersion": 1,
+    "fixtureVersion": 1,
+    "catalogSha": "dc77091611330add854e83ea88e59ae3c9c04053093b960cb6bd45f062f2c0c4",
+    "target": "synthetic-target-gina-mcp",
+    "accountClass": "synthetic-account-class-test",
+    "cleanChat": true,
+    "repetitions": 2
+  },
+  "configuration": {
+    "availability": "pinned",
+    "candidate": "synthetic-candidate-b",
+    "model": "synthetic-model-b",
+    "reasoning": null,
+    "pinnedSha256": "8a6047d55fa8a3c5a98065a331cf20db1f3cb6a4b68c116f09b962dd99fc0cb5"
+  },
+  "coverage": {
+    "planSource": "run_manifest",
+    "planSha256": null,
+    "statusSha256": null,
+    "status": "complete",
+    "plannedCases": 3,
+    "plannedAttempts": 6
+  },
+  "counts": {
+    "attempts": {
+      "total": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    "cases": {
+      "total": 3,
+      "passedEveryAttempt": null,
+      "failedAnyAttempt": null
+    }
+  },
+  "dimensions": {
+    "routing": {
+      "passed": 6,
+      "failed": 0,
+      "notApplicable": 0
+    },
+    "arguments": {
+      "passed": 6,
+      "failed": 0,
+      "notApplicable": 0
+    },
+    "safety": {
+      "passed": 6,
+      "failed": 0,
+      "notApplicable": 0
+    },
+    "completion": {
+      "passed": 6,
+      "failed": 0,
+      "notApplicable": 0
+    },
+    "skillActivation": {
+      "passed": 4,
+      "failed": 0,
+      "notApplicable": 2
+    }
+  },
+  "metrics": {
+    "passRate": {
+      "availability": "available",
+      "unit": "ratio",
+      "value": 1,
+      "numerator": 6,
+      "denominator": 6
+    },
+    "latencyMs": {
+      "availability": "withheld",
+      "reason": "privacy_review"
+    },
+    "tokenUsage": {
+      "availability": "not_retained",
+      "reason": "not_captured"
+    },
+    "answerAccuracy": {
+      "availability": "not_evaluated",
+      "reason": "no_declared_method"
+    },
+    "usdCost": {
+      "availability": "not_evaluated",
+      "reason": "no_declared_method"
+    },
+    "uncertainty": {
+      "availability": "not_evaluated",
+      "reason": "no_declared_method"
+    }
+  },
+  "evidence": {
+    "attemptDetail": "withheld"
+  },
+  "ranking": {
+    "status": "unranked",
+    "reasons": ["pilot", "synthetic"]
+  },
+  "attempts": null
+}

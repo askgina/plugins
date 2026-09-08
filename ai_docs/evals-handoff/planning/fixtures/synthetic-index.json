@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "eval-index.v1",
+  "dataOrigin": "synthetic",
+  "generatedAt": "2026-09-07T12:00:00Z",
+  "publications": [
+    {
+      "publicationId": "synthetic-publication-2026-09-07-001",
+      "runId": "synthetic-run-2026-09-07-001",
+      "review": {
+        "status": "synthetic_preview"
+      },
+      "status": "current",
+      "currentRevisionId": "synthetic-publication-2026-09-07-001-rev2",
+      "summary": {
+        "suiteId": "synthetic-suite-gina-conformance",
+        "candidate": "synthetic-candidate-a",
+        "model": "synthetic-model-a",
+        "startedAt": "2026-09-07T08:00:00Z"
+      },
+      "revisions": [
+        {
+          "revisionId": "synthetic-publication-2026-09-07-001-rev1",
+          "revision": 1,
+          "kind": "result",
+          "state": "superseded",
+          "publishedAt": "2026-09-07T09:00:00Z",
+          "path": "synthetic-publication-correction-rev1.json",
+          "sha256": "a830e60b30f69b2d96cc945a6de49deaca97de986aeeab12ef07d102af831270"
+        },
+        {
+          "revisionId": "synthetic-publication-2026-09-07-001-rev2",
+          "revision": 2,
+          "kind": "result",
+          "state": "current",
+          "publishedAt": "2026-09-07T11:00:00Z",
+          "path": "synthetic-publication-correction-rev2.json",
+          "sha256": "ae928c1e244d5f0fddc2b2b66848cd23ddd74cec03895cf7e94e486a3c542b5f"
+        }
+      ]
+    },
+    {
+      "publicationId": "synthetic-publication-2026-09-04-withdrawn",
+      "runId": "synthetic-run-2026-09-04-withdrawn",
+      "review": {
+        "status": "synthetic_preview"
+      },
+      "status": "withdrawn",
+      "currentRevisionId": "synthetic-publication-2026-09-04-withdrawn-rev2",
+      "summary": null,
+      "revisions": [
+        {
+          "revisionId": "synthetic-publication-2026-09-04-withdrawn-rev1",
+          "revision": 1,
+          "kind": "result",
+          "state": "removed",
+          "publishedAt": "2026-09-04T12:00:00Z",
+          "path": null,
+          "sha256": null
+        },
+        {
+          "revisionId": "synthetic-publication-2026-09-04-withdrawn-rev2",
+          "revision": 2,
+          "kind": "withdrawal_notice",
+          "state": "current",
+          "publishedAt": "2026-09-05T09:30:00Z",
+          "path": "synthetic-publication-withdrawal-notice.json",
+          "sha256": "f6fc8441979a958892853d140425825418d52b5f079634ab77bba9581635d58d"
+        }
+      ]
+    }
+  ]
+}

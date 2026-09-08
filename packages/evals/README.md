@@ -19,6 +19,49 @@ bun run eval:replay -- \
   --output /tmp/plugin-eval-report.json
 ```
 
+## Retained attempt summaries and public exports
+
+Replay and live commands remain aggregate-only unless `--attempts-output` is supplied.
+Opt-in capture writes a separate, exclusive mode-`0600` JSON file bound to the exact
+saved report bytes. It retains public identities, existing check verdicts, approved
+failure categories, durations and available token counts, never raw observations.
+Capture requires a saved report and does not change grading or its aggregate output.
+
+```sh
+bun run eval:replay -- \
+  --suite packages/evals/src/fixtures/model-smoke.yaml \
+  --observations packages/evals/src/fixtures/synthetic-observations.yaml \
+  --output /tmp/eval-private/report.json \
+  --attempts-output /tmp/eval-private/attempts.json
+
+bun run eval:export-public -- \
+  --manifest /tmp/eval-private/result-request.json \
+  --report /tmp/eval-private/report.json \
+  --attempts /tmp/eval-private/attempts.json \
+  --configuration /tmp/eval-private/configuration.json \
+  --output-dir /tmp/eval-public
+```
+
+Run these from the repository with fresh, canonical output paths. The examples assume
+`/tmp` is a real directory. On macOS, replace `/tmp` with `/private/tmp`; exporter output
+paths containing symlink components are rejected.
+
+The synthetic replay includes
+a failed case; its exit `0` means replay and persistence succeeded, not that all cases
+passed. Inspect the aggregate counts. These commands make no live model or MCP calls.
+
+The exporter requires an explicit manifest. Measured publications require recorded
+manual approval bound to the complete proposed publication; synthetic previews remain
+separate and labeled. Configuration declarations require immutable component hashes
+and matching run settings. Missing configuration stays `labels_only`; all v1 results
+are unranked. Source inputs must stay outside the public output directory.
+Corrections create immutable revisions. Privacy withdrawal removes previous snapshot
+bytes, including older notices, and retains only safe index references and a notice.
+
+Canonical DTO fixtures, field definitions, request formats and consumer instructions
+live in `ai_docs/evals-handoff/` in the repository. The existing app reads publication
+and index JSON at `/#/handoff`, using erased contract types, not evaluator runtime.
+
 ## Live trials
 
 Live commands require a clean Git worktree, three to five repetitions, and the

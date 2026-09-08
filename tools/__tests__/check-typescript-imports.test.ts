@@ -44,5 +44,35 @@ describe("TypeScript import specifiers", () => {
         }),
       ),
     );
+
+    it.effect("discovers stale imports in app TSX while ignoring generated output", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "typescript-app-import-test-" });
+          const appRoot = path.join(root, "apps", "evals");
+          yield* fs.makeDirectory(path.join(appRoot, "src"), { recursive: true });
+          yield* fs.makeDirectory(path.join(appRoot, "dist", "storybook"), { recursive: true });
+          yield* fs.writeFileString(path.join(appRoot, "src", "target.ts"), "export {}\n");
+          yield* fs.writeFileString(
+            path.join(appRoot, "src", "screen.tsx"),
+            'import "./target.js";\nexport const screen = <main />;\n',
+          );
+          yield* fs.writeFileString(
+            path.join(appRoot, "dist", "storybook", "generated.tsx"),
+            'import "../../src/target.js";\nexport const generated = <main />;\n',
+          );
+
+          assert.deepStrictEqual(yield* findTypeScriptJsSpecifiers(root), [
+            {
+              file: "apps/evals/src/screen.tsx",
+              line: 1,
+              specifier: "./target.js",
+            },
+          ]);
+        }),
+      ),
+    );
   });
 });

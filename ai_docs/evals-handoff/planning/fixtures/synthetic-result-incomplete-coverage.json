@@ -1,0 +1,122 @@
+{
+  "schemaVersion": "eval-result.v1",
+  "resultId": "synthetic-result-2026-09-07-003",
+  "dataOrigin": "synthetic",
+  "measures": "conformance",
+  "run": {
+    "runId": "synthetic-run-2026-09-07-003",
+    "startedAt": "2026-09-07T09:00:00Z"
+  },
+  "source": {
+    "kind": "sanitized_aggregate",
+    "reportSchemaVersion": "v1",
+    "reportSha256": "cfd692bf67583fdd87f1a4cc3bc78368c94bd387e88a51588e28a381f6066361",
+    "attemptCaptureSha256": null
+  },
+  "benchmark": {
+    "suiteId": "synthetic-suite-gina-conformance",
+    "suiteVersion": 1,
+    "fixtureVersion": 1,
+    "catalogSha": "dc77091611330add854e83ea88e59ae3c9c04053093b960cb6bd45f062f2c0c4",
+    "target": "synthetic-target-gina-mcp",
+    "accountClass": "synthetic-account-class-test",
+    "cleanChat": true,
+    "repetitions": 2
+  },
+  "configuration": {
+    "availability": "pinned",
+    "candidate": "synthetic-candidate-c",
+    "model": "synthetic-model-c",
+    "reasoning": "synthetic-reasoning-high",
+    "pinnedSha256": "647b42dee3e6532c905f0f031a56041cd9bba3306cc0a5037f04ea9fdd60175c"
+  },
+  "coverage": {
+    "planSource": "declared_plan",
+    "planSha256": "8780e5e02a8ef811267f42ac262b746a0be280d97dc18778f3b2e10ba0644ace",
+    "statusSha256": "89daf758488d319f52c1a02247a764d18c1e286b277cc89014f67d8992b7a209",
+    "status": "incomplete",
+    "plannedCases": 5,
+    "plannedAttempts": 10
+  },
+  "counts": {
+    "attempts": {
+      "total": 6,
+      "passed": 5,
+      "failed": 1
+    },
+    "cases": {
+      "total": 3,
+      "passedEveryAttempt": null,
+      "failedAnyAttempt": null
+    }
+  },
+  "dimensions": {
+    "routing": {
+      "passed": 6,
+      "failed": 0,
+      "notApplicable": 0
+    },
+    "arguments": {
+      "passed": 5,
+      "failed": 1,
+      "notApplicable": 0
+    },
+    "safety": {
+      "passed": 4,
+      "failed": 0,
+      "notApplicable": 2
+    },
+    "completion": {
+      "passed": 6,
+      "failed": 0,
+      "notApplicable": 0
+    },
+    "skillActivation": {
+      "passed": 5,
+      "failed": 0,
+      "notApplicable": 1
+    }
+  },
+  "metrics": {
+    "passRate": {
+      "availability": "not_evaluated",
+      "reason": "incomplete_coverage"
+    },
+    "latencyMs": {
+      "availability": "available",
+      "unit": "milliseconds",
+      "p50": 1400,
+      "p95": 2200,
+      "max": 2200,
+      "sampleCount": 6
+    },
+    "tokenUsage": {
+      "availability": "available",
+      "unit": "tokens",
+      "inputTokens": 5400,
+      "outputTokens": 1300,
+      "totalTokens": 6700,
+      "sampleCount": 6
+    },
+    "answerAccuracy": {
+      "availability": "not_evaluated",
+      "reason": "no_declared_method"
+    },
+    "usdCost": {
+      "availability": "not_evaluated",
+      "reason": "no_declared_method"
+    },
+    "uncertainty": {
+      "availability": "not_evaluated",
+      "reason": "no_declared_method"
+    }
+  },
+  "evidence": {
+    "attemptDetail": "not_retained"
+  },
+  "ranking": {
+    "status": "unranked",
+    "reasons": ["pilot", "synthetic", "incomplete_coverage"]
+  },
+  "attempts": null
+}

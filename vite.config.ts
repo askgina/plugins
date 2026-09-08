@@ -51,6 +51,7 @@ export default defineConfig({
       cwd: fileURLToPath(new URL("packages/evals/", import.meta.url)),
       entry: {
         "bin/check-codex-marketplace": "src/bin/check-codex-marketplace.ts",
+        "bin/export-public-results": "src/bin/export-public-results.ts",
         "bin/live": "src/bin/live.ts",
         "bin/replay": "src/bin/replay.ts",
         index: "src/index.ts",
@@ -65,7 +66,7 @@ export default defineConfig({
     },
   ],
   fmt: {
-    ignorePatterns: ["dist/**"],
+    ignorePatterns: ["dist/**", "apps/*/dist/**"],
   },
   lint: {
     ...effectTsgoRecommended,
@@ -96,6 +97,7 @@ export default defineConfig({
   },
   test: {
     include: [
+      "apps/evals/__tests__/**/*.test.ts",
       "packages/**/__tests__/**/*.test.ts",
       "plugins/**/__tests__/**/*.test.ts",
       "tools/**/__tests__/**/*.test.ts",

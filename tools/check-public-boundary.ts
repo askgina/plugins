@@ -6,9 +6,14 @@ import {
   findPublicTextViolations,
   type PublicTextViolationKind,
 } from "../packages/evals/src/index";
-import { Data, Effect, FileSystem, Layer, Path, Schema } from "effect";
+import { Data, Effect, FileSystem, Function, Layer, Path, Schema } from "effect";
 
 import { extractCheckedTarGz } from "./archive-security";
+import {
+  PUBLIC_SOURCE_ASSETS,
+  isAttestedPublicSourceAsset,
+  type PublicSourceAsset,
+} from "./public-source-assets";
 import { OPENAI_ASSETS } from "./verify-artifacts";
 
 const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini", "devin"];
@@ -99,6 +104,31 @@ const fail = (message: string, cause?: unknown) =>
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 const ABSOLUTE_OR_URI_SOURCE = /^(?:\/|[A-Za-z]:[\\/]|\\\\|[A-Za-z][A-Za-z\d+.-]*:)/u;
+
+export const findPublicBinaryBoundaryRules: {
+  (
+    bytes: Uint8Array,
+    inventory?: readonly PublicSourceAsset[],
+  ): (label: string) => readonly string[];
+  (label: string, bytes: Uint8Array, inventory?: readonly PublicSourceAsset[]): readonly string[];
+} = Function.dual(
+  (args) => typeof args[0] === "string",
+  (
+    label: string,
+    bytes: Uint8Array,
+    inventory: readonly PublicSourceAsset[] = PUBLIC_SOURCE_ASSETS,
+  ): readonly string[] => {
+    if (
+      isDeclaredPngAsset({ label, bytes }) ||
+      isAttestedPublicSourceAsset(label, bytes, inventory)
+    ) {
+      return [];
+    }
+    return bytes.includes(0) || inventory.some((asset) => asset.path === label)
+      ? ["unscannable-binary-file"]
+      : [];
+  },
+);
 
 export const isDeclaredPngAsset = ({
   label,
@@ -329,19 +359,19 @@ const program = Effect.scoped(
         const bytes = yield* fs
           .readFile(absolute)
           .pipe(Effect.mapError((cause) => fail(`cannot read ${absolute}`, cause)));
-        if (bytes.includes(0)) {
-          if (!isDeclaredPngAsset({ label, bytes })) addFinding("unscannable-binary-file", label);
-        } else {
-          const text = new TextDecoder().decode(bytes);
-          scanText(text, label, receipt);
-          if (label.endsWith(".map")) {
-            const sourceMap = inspectSourceMapText(text);
-            if (sourceMap === undefined) addFinding("invalid-source-map", label);
-            else {
-              if (sourceMap.unsafeSourcePath) addFinding("absolute-source-map-path", label);
-              for (const [index, source] of sourceMap.sourcesContent.entries()) {
-                scanText(source, `${label}#${sourceMap.sources[index] ?? index}`, false);
-              }
+        for (const rule of findPublicBinaryBoundaryRules(label, bytes)) {
+          addFinding(rule, label);
+        }
+        if (bytes.includes(0)) return;
+        const text = new TextDecoder().decode(bytes);
+        scanText(text, label, receipt);
+        if (label.endsWith(".map")) {
+          const sourceMap = inspectSourceMapText(text);
+          if (sourceMap === undefined) addFinding("invalid-source-map", label);
+          else {
+            if (sourceMap.unsafeSourcePath) addFinding("absolute-source-map-path", label);
+            for (const [index, source] of sourceMap.sourcesContent.entries()) {
+              scanText(source, `${label}#${sourceMap.sources[index] ?? index}`, false);
             }
           }
         }

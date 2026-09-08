@@ -38,14 +38,14 @@ const listTypeScriptFiles = (root: string) =>
               .stat(absolute)
               .pipe(Effect.mapError((cause) => fail(`cannot inspect ${absolute}`, cause)));
             if (info.type === "Directory") return yield* visit(absolute, relative);
-            return info.type === "File" && name.endsWith(".ts") ? [relative] : [];
+            return info.type === "File" && /\.tsx?$/u.test(name) ? [relative] : [];
           }),
         );
         return nested.flat();
       });
 
     const files = (yield* fs.exists(path.join(root, "vite.config.ts"))) ? ["vite.config.ts"] : [];
-    for (const sourceRoot of ["packages", "plugins", "scripts", "tools"]) {
+    for (const sourceRoot of ["apps", "packages", "plugins", "scripts", "tools"]) {
       const directory = path.join(root, sourceRoot);
       if (!(yield* fs.exists(directory))) continue;
       const nested = yield* visit(directory, sourceRoot);

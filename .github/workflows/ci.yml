@@ -28,12 +28,15 @@ jobs:
           bun-version: 1.4.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: 24.7.0
+          node-version: 24.15.0
       - run: bun install --frozen-lockfile
       - run: bun run audit
       - run: bun run fmt:check
       - run: bun run lint
       - run: bun run check
+      - run: bun run evals:typecheck
+      - run: bun run evals:build
+      - run: bun run build-storybook
       - run: bun run test
       - run: bun run check:target-conformance
       - run: bun run artifacts

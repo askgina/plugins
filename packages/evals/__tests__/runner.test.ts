@@ -8,6 +8,7 @@ import {
   decodePluginEvalObservationSet,
   decodePluginEvalSuite,
   gradePluginEvalObservation,
+  loadPluginEvalObservationSet,
   loadPluginEvalSuite,
   LiveEvalSelectionError,
   PluginEvalReplayContractError,
@@ -15,6 +16,7 @@ import {
   runLiveEvalSuite,
   runHermeticEvalReplay,
 } from "../src/index";
+import { PublicEvalAttemptCaptureError } from "../src/public-attempts";
 import { makeSanitizedEvalRunReport } from "../src/report";
 
 const collectPublicStrings = (value: unknown): readonly string[] => {
@@ -52,6 +54,7 @@ describe("hermetic eval replay", () => {
         assert.strictEqual(result.suiteVersion, 1);
         assert.strictEqual(result.fixtureVersion, 1);
         assert.strictEqual(result.report.observed, 3);
+        assert.strictEqual(result.attempts, null);
         assert.deepStrictEqual(result.report.overall, {
           passed: 2,
           failed: 1,
@@ -102,6 +105,53 @@ describe("hermetic eval replay", () => {
         assert.isFalse(Object.hasOwn(result.report, "skill"));
         assert.isFalse(Object.hasOwn(result.report, "performance"));
         assert.isFalse(Object.hasOwn(result.report, "answer"));
+
+        const suite = yield* loadPluginEvalSuite(paths.suite);
+        const observationSet = yield* loadPluginEvalObservationSet(paths.observations);
+        const captured = yield* replayPluginEvalObservationSet(observationSet, {
+          captureAttempts: true,
+        })(suite);
+        assert.deepStrictEqual(captured.report, result.report);
+        if (captured.attempts === null) {
+          return yield* Effect.die("optional-options data-last capture returned no summaries");
+        }
+        assert.strictEqual(captured.attempts.length, result.report.observed);
+        assert.deepStrictEqual(
+          captured.attempts.map((attempt) => ({
+            caseId: attempt.caseId,
+            verdict: attempt.verdict,
+            routing: attempt.checks.routing,
+            arguments: attempt.checks.arguments,
+            completion: attempt.checks.completion,
+            safety: attempt.checks.safety,
+          })),
+          [
+            {
+              caseId: "exact-routing-arguments",
+              verdict: "pass",
+              routing: "pass",
+              arguments: "pass",
+              completion: "pass",
+              safety: "pass",
+            },
+            {
+              caseId: "no-tool-safety",
+              verdict: "pass",
+              routing: "pass",
+              arguments: "pass",
+              completion: "pass",
+              safety: "not_applicable",
+            },
+            {
+              caseId: "deterministic-routing-failure",
+              verdict: "fail",
+              routing: "fail",
+              arguments: "fail",
+              completion: "pass",
+              safety: "pass",
+            },
+          ],
+        );
       }),
     );
     it.effect("keeps the live smoke suite within the canonical read-tool catalog", () =>
@@ -258,7 +308,7 @@ describe("hermetic eval replay", () => {
       Effect.gen(function* () {
         const paths = yield* fixturePaths;
         const suite = yield* loadPluginEvalSuite(paths.liveSuite);
-        const report = yield* runLiveEvalSuite(
+        const { report, attempts } = yield* runLiveEvalSuite(
           {
             suite,
             caseIds: ["list-scheduled-prompts"],
@@ -270,6 +320,7 @@ describe("hermetic eval replay", () => {
             reasoning: "test",
             repetitions: 3,
             accountClass: "synthetic",
+            captureAttempts: true,
           },
           (input) =>
             Effect.succeed({
@@ -286,7 +337,9 @@ describe("hermetic eval replay", () => {
               tool_calls: [
                 {
                   sequence: 0,
-                  name: "gina.listScheduledPrompts",
+                  // The second repeat routes to the wrong canonical tool; it must stay in the run.
+                  name:
+                    input.repetition === 2 ? "spot.getSimplePrice" : "gina.listScheduledPrompts",
                   arguments: {},
                   result_bytes: 0,
                   requested_scope: "tools:read",
@@ -297,9 +350,191 @@ describe("hermetic eval replay", () => {
         );
 
         assert.strictEqual(report.repetitions, 3);
-        assert.deepStrictEqual(report.aggregate.overall, { passed: 3, total: 3 });
-        assert.deepStrictEqual(report.aggregate.dimensions.routing, { passed: 3, failed: 0 });
+        assert.deepStrictEqual(report.aggregate.overall, { passed: 2, total: 3 });
+        assert.deepStrictEqual(report.aggregate.dimensions.routing, { passed: 2, failed: 1 });
+        assert.deepStrictEqual(report.aggregate.dimensions.arguments, { passed: 3, failed: 0 });
+        assert.deepStrictEqual(report.aggregate.dimensions.completion, { passed: 3, failed: 0 });
+        assert.deepStrictEqual(report.aggregate.dimensions.safety, { passed: 3, failed: 0 });
+        assert.deepStrictEqual(report.aggregate.skillActivation, { passed: 0, failed: 0 });
+        if (attempts === null) {
+          return yield* Effect.die("opt-in capture returned no summaries");
+        }
+
+        assert.deepStrictEqual(
+          attempts.map((attempt) => ({
+            caseId: attempt.caseId,
+            repetition: attempt.repetition,
+            verdict: attempt.verdict,
+            checks: attempt.checks,
+            failureCategories: attempt.failureCategories,
+          })),
+          [
+            {
+              caseId: "list-scheduled-prompts",
+              repetition: 1,
+              verdict: "pass",
+              checks: {
+                routing: "pass",
+                arguments: "pass",
+                safety: "pass",
+                completion: "pass",
+                skillActivation: "not_applicable",
+              },
+              failureCategories: [],
+            },
+            {
+              caseId: "list-scheduled-prompts",
+              repetition: 2,
+              verdict: "fail",
+              checks: {
+                routing: "fail",
+                arguments: "pass",
+                safety: "pass",
+                completion: "pass",
+                skillActivation: "not_applicable",
+              },
+              failureCategories: ["routing_mismatch"],
+            },
+            {
+              caseId: "list-scheduled-prompts",
+              repetition: 3,
+              verdict: "pass",
+              checks: {
+                routing: "pass",
+                arguments: "pass",
+                safety: "pass",
+                completion: "pass",
+                skillActivation: "not_applicable",
+              },
+              failureCategories: [],
+            },
+          ],
+        );
       }),
+    );
+    it.effect("rejects a live trial that answers for a different repetition than requested", () =>
+      Effect.gen(function* () {
+        const paths = yield* fixturePaths;
+        const suite = yield* loadPluginEvalSuite(paths.liveSuite);
+        let trialInvocations = 0;
+        const result = yield* Effect.result(
+          runLiveEvalSuite(
+            {
+              suite,
+              caseIds: ["list-scheduled-prompts"],
+              runId: "wrong-repetition-test",
+              candidate: "test-candidate",
+              target: "responses_api",
+              model: "test-model",
+              displayedModel: "test-model",
+              reasoning: "test",
+              repetitions: 3,
+              accountClass: "synthetic",
+              captureAttempts: true,
+            },
+            (input) => {
+              trialInvocations += 1;
+              return Effect.succeed({
+                version: 1,
+                run_id: input.runId,
+                case_id: input.evalCase.id,
+                target: "responses_api" as const,
+                model: input.model,
+                displayed_model: input.displayedModel,
+                // Rotate 1 -> 2, 2 -> 3, 3 -> 1: complete coverage, wrong requested attempt.
+                repetition: input.repetition === 3 ? 1 : input.repetition + 1,
+                started_at: input.startedAt,
+                status: "completed" as const,
+                duration_ms: 1,
+                tool_calls: [
+                  {
+                    sequence: 0,
+                    name: "gina.listScheduledPrompts",
+                    arguments: {},
+                    result_bytes: 0,
+                    requested_scope: "tools:read",
+                  },
+                ],
+                available_tools: listCatalogToolNames(),
+              });
+            },
+          ),
+        );
+
+        assert.strictEqual(trialInvocations, 1);
+        assert.strictEqual(result._tag, "Failure");
+        if (result._tag === "Failure") {
+          assert.instanceOf(result.failure, PublicEvalAttemptCaptureError);
+        }
+      }),
+    );
+    it.effect(
+      "leaves default live output private when a legacy case id is not opted into capture",
+      () =>
+        Effect.gen(function* () {
+          const paths = yield* fixturePaths;
+          const suite = yield* loadPluginEvalSuite(paths.liveSuite);
+          const baseCase = suite.cases[0];
+          if (baseCase === undefined) return yield* Effect.die("missing fixture case");
+          const privateSuite = {
+            ...suite,
+            cases: [{ ...baseCase, id: "legacy/private-case" }],
+          };
+          const liveOptions = {
+            suite: privateSuite,
+            runId: "legacy-private-case",
+            candidate: "test-candidate",
+            target: "responses_api" as const,
+            model: "test-model",
+            displayedModel: "test-model",
+            reasoning: "test",
+            repetitions: 3,
+            accountClass: "synthetic",
+          };
+
+          const { report, attempts } = yield* runLiveEvalSuite(liveOptions, (input) =>
+            Effect.succeed({
+              version: 1,
+              run_id: input.runId,
+              case_id: input.evalCase.id,
+              target: "responses_api" as const,
+              model: input.model,
+              displayed_model: input.displayedModel,
+              repetition: input.repetition,
+              started_at: input.startedAt,
+              status: "completed" as const,
+              duration_ms: 1,
+              tool_calls: [
+                {
+                  sequence: 0,
+                  name: "gina.listScheduledPrompts",
+                  arguments: {},
+                  result_bytes: 0,
+                  requested_scope: "tools:read",
+                },
+              ],
+              available_tools: listCatalogToolNames(),
+            }),
+          );
+
+          assert.strictEqual(attempts, null);
+          assert.strictEqual(report.repetitions, 3);
+          assert.deepStrictEqual(report.aggregate.overall, { passed: 3, total: 3 });
+          assert.deepStrictEqual(report.aggregate.dimensions.routing, { passed: 3, failed: 0 });
+
+          let trialInvocations = 0;
+          const optedIn = yield* Effect.result(
+            runLiveEvalSuite({ ...liveOptions, captureAttempts: true }, () => {
+              trialInvocations += 1;
+              return Effect.die("trial should not run");
+            }),
+          );
+          assert.strictEqual(trialInvocations, 0);
+          assert.strictEqual(optedIn._tag, "Failure");
+          if (optedIn._tag === "Failure") {
+            assert.instanceOf(optedIn.failure, PublicEvalAttemptCaptureError);
+          }
+        }),
     );
     it.effect("scores skill activation only when observation evidence is present", () =>
       Effect.gen(function* () {

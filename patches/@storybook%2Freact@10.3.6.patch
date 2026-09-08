@@ -1,0 +1,22 @@
+diff --git a/dist/preset.js b/dist/preset.js
+index a13dfb5c4060995a6677d628a8774970edb2e6ae..e980b569392160fe64daae7f5d41c0aa2924aa19 100644
+--- a/dist/preset.js
++++ b/dist/preset.js
+@@ -11208,7 +11208,7 @@ var REACT_NODE_TYPES = /* @__PURE__ */ new Set([
+ ]);
+ var getTsConfig2 = async () => {
+   try {
+-    let ts2 = await import("typescript"), tsconfigPath = ts2.findConfigFile(process.cwd(), ts2.sys.fileExists);
++    let ts2 = await import("typescript-api"), tsconfigPath = ts2.findConfigFile(process.cwd(), ts2.sys.fileExists);
+     if (console.log({ tsconfigPath }), tsconfigPath === void 0)
+       return {};
+     let basePath = dirname4(tsconfigPath), { config, error } = ts2.readConfigFile(tsconfigPath, ts2.sys.readFile);
+@@ -11567,7 +11567,7 @@ import { dirname as dirname5 } from "node:path";
+ import {
+   withCompilerOptions
+ } from "react-docgen-typescript";
+-import ts from "typescript";
++import ts from "typescript-api";
+ var LARGE_NON_USER_SOURCE_THRESHOLD = 30, getPropSource = (prop) => prop.parent?.fileName ?? prop.declarations?.[0]?.fileName, getLargeNonUserPropSources = (props) => {
+   let countBySource = /* @__PURE__ */ new Map();
+   for (let prop of Object.values(props)) {
