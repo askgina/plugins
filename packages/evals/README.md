@@ -1,11 +1,15 @@
 # @askgina/evals
 
-One schema and rubric drive hermetic replay, OpenAI Responses API trials, and
-Codex CLI trials. Live runners use the same suite cases, model, reasoning mode,
-case selection, repetition count, and sanitized aggregate shape.
+One schema and rubric drive hermetic replay, OpenAI Responses API trials,
+OpenRouter trials, Codex CLI trials, and Claude CLI trials. Live runners use the
+same suite cases, reasoning mode, case selection, repetition count, and
+sanitized aggregate shape. Model IDs and turn limits remain backend-specific.
 
 `@askgina/evals` is a Bun 1.4.x-only compiled `dist` package. The root
-`eval:replay`, `eval:responses`, and `eval:codex` commands build the package graph, then execute `packages/evals/dist/bin/*.js`; suite and observation YAML remain repository inputs.
+`eval:replay`, `eval:responses`, `eval:codex`, `eval:openrouter`, and
+`eval:claude` commands build the package graph, then execute
+`packages/evals/dist/bin/*.js`; suite and observation YAML remain repository
+inputs.
 Artifact verification clean-installs the built tarball and exercises its compiled
 import and replay entrypoint. The package supports only its root ESM import; Node.js,
 CommonJS, browser and edge runtimes, and subpath imports are unsupported.
@@ -64,29 +68,38 @@ and index JSON at `/#/handoff`, using erased contract types, not evaluator runti
 
 ## Live trials
 
-Live commands require a clean Git worktree, three to five repetitions, and the
-same `--suite`, `--model`, `--reasoning`, and `--timeout-ms` values when comparing
-runners. The default live benchmark suite is `ask-gina-routing-smoke.yaml`. Both
-runners require `ASK_GINA_ACCESS_TOKEN` and `OPENAI_API_KEY` in the process
-environment. Codex trials additionally require an absolute executable path in
-`CODEX_EVAL_EXECUTABLE` and its lowercase SHA-256 digest in
-`CODEX_EVAL_EXECUTABLE_SHA256`. On Linux, the runner rejects group- or
-world-writable inputs, copies the verified bytes into a private non-writable
-snapshot, unlinks it, and launches its open descriptor; unsupported platforms fail
-closed. It then installs and validates the repository plugin under a fresh temporary
-`CODEX_HOME`, seeds only
-the temporary Gina MCP credential, verifies the exact MCP endpoint and OAuth
-status and production catalog, then runs with an enforced permission profile.
-The profile denies reads from `CODEX_HOME`, read-allows only the minimal runtime,
-empty trial working tree, and validated plugin skills, disables shell network and
-web search, and enables only the observed Gina MCP tools. Trials also use no
-approvals, ignored user/project rules, bounded output, and a minimal child
-environment.
+Live commands require a clean Git worktree and three to five repetitions. Use the
+same suite, case selection, reasoning setting, repetition count, account class,
+and timeout for a controlled comparison. Model IDs use each backend's namespace,
+so the literal `--model` value may differ for the same model family. Record that
+mapping with the result instead of presenting the strings as identical settings.
+The default live benchmark suite is `ask-gina-routing-smoke.yaml`.
+
+Every live runner requires `ASK_GINA_ACCESS_TOKEN`. The provider and native CLI
+credentials differ:
+
+| Runner        | Additional environment                                                                                                 |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Responses API | `OPENAI_API_KEY`                                                                                                       |
+| OpenRouter    | `OPENROUTER_API_KEY`                                                                                                   |
+| Codex CLI     | `OPENAI_API_KEY`, absolute `CODEX_EVAL_EXECUTABLE`, and its lowercase SHA-256 digest in `CODEX_EVAL_EXECUTABLE_SHA256` |
+| Claude CLI    | `ANTHROPIC_API_KEY` and absolute `CLAUDE_EVAL_EXECUTABLE`                                                              |
+
+The supported native Codex and Claude paths use explicit API keys in isolated
+evaluation homes. They do not reuse a saved personal login. Saved-login reuse,
+refresh ownership, and personal-home integration remain deferred.
+
+Responses and Codex accept model IDs understood by their OpenAI backends, such as
+`gpt-5.1`. OpenRouter uses its `provider/model` namespace, such as
+`openai/gpt-5.1`. Claude uses a Claude CLI model ID or alias without the
+`anthropic/` prefix, such as `claude-sonnet-4-5-20250929`. These examples show the
+required ID shapes. They do not declare a benchmark configuration or claim that a
+live run was performed.
 
 ```sh
 bun run eval:responses -- \
   --suite packages/evals/src/fixtures/ask-gina-routing-smoke.yaml \
-  --run-id 2026-08-25-main \
+  --run-id local-responses-example \
   --candidate main \
   --model gpt-5.1 \
   --reasoning medium \
@@ -96,20 +109,82 @@ bun run eval:responses -- \
 
 bun run eval:codex -- \
   --suite packages/evals/src/fixtures/ask-gina-routing-smoke.yaml \
-  --run-id 2026-08-25-main \
+  --run-id local-codex-example \
   --candidate main \
   --model gpt-5.1 \
   --reasoning medium \
   --repetitions 3 \
   --account-class eval \
   --timeout-ms 120000
+
+bun run eval:openrouter -- \
+  --suite packages/evals/src/fixtures/ask-gina-routing-smoke.yaml \
+  --run-id local-openrouter-example \
+  --candidate main \
+  --model openai/gpt-5.1 \
+  --reasoning medium \
+  --repetitions 3 \
+  --account-class eval \
+  --timeout-ms 120000 \
+  --max-steps 8
+
+bun run eval:claude -- \
+  --suite packages/evals/src/fixtures/ask-gina-routing-smoke.yaml \
+  --run-id local-claude-example \
+  --candidate main \
+  --model claude-sonnet-4-5-20250929 \
+  --reasoning medium \
+  --repetitions 3 \
+  --account-class eval \
+  --timeout-ms 120000 \
+  --max-turns 8
 ```
 
-Repeat `--case <case-id>` to run a strict subset. `--timeout-ms` is required so
-both runners share the same per-trial budget. Secrets have no command-line flags.
+Repeat `--case <case-id>` to run a strict subset. `--timeout-ms` is required for
+the per-trial budget. `--max-steps` is optional only for OpenRouter, and
+`--max-turns` is optional only for Claude. Both default to `8` and accept `1` to
+`32`. The other runners reject those flags. Secrets have no command-line flags.
+A missing required flag or backend credential fails closed. The CLI does not
+switch runners or auth methods. Add
+`--attempts-output /tmp/eval-private/attempts.json` to any command when retained,
+report-bound attempt summaries are required. The capture rules in the previous
+section still apply.
+
+OpenRouter executes Gina tools through the local AI SDK MCP client. Responses
+uses OpenAI-hosted MCP. Neither proves native plugin activation, and these two
+execution paths retain separate runner identities. Codex and Claude load the
+repository plugin through their native CLIs. Task conformance and observed
+plugin activation are scored separately. The Claude adapter has offline
+verification only. Synthetic events and loopback model fixtures do not establish
+measured native-plugin activation; Claude's live activation remains unverified.
+
+Claude requires a CLI supporting `--restricted` and `--permission-prompts none`;
+the flag set was checked against version `2.1.263`. Bare mode is not used because
+it suppresses the native Skill tool in this version.
+The runner stages a complete session-only plugin and keeps its credentials in a
+separate temporary config directory. It never installs into your personal home.
+The isolated child sets `CLAUDE_CODE_MAX_RETRIES=0` and
+`CLAUDE_CODE_DISABLE_NONSTREAMING_FALLBACK=1`, and does not inherit the retry
+watchdog. These disable the main API retry budget and non-streaming fallback.
+Claude documents additional pre-response stall/drop reissues outside that budget,
+so this is not a guarantee of one HTTP request per model step. The trial deadline
+still bounds the native process.
+`--max-steps` bounds OpenRouter generation steps, and `--max-turns` bounds Claude
+turns. Neither is a count of individual tool calls.
+
+For Codex, the runner verifies and snapshots the configured executable on Linux,
+installs and validates the repository plugin under a fresh temporary `CODEX_HOME`,
+and seeds only the temporary Gina MCP credential. It verifies the production MCP
+endpoint, OAuth status, and catalog before the trial. The enforced profile denies
+reads from `CODEX_HOME`, allows only the minimal runtime, empty trial working tree,
+and validated plugin skills, disables shell network and web search, and enables
+only the observed Gina MCP tools. Trials also use no approvals, ignored
+user/project rules, bounded output, and a minimal child environment. Unsupported
+platforms fail closed.
 
 Each live run writes exactly one mode-`0600` aggregate below the ignored
 `.plugin-eval-runs/` directory. Raw prompts, final answers, tool arguments,
 provider payloads, HTTP bodies, child output, and credential material are never
 persisted. A nonzero exit means the run failed or at least one rubric case did
-not pass.
+not pass. Exporting a measured result still requires the recorded manual approval
+described above. Running or capturing attempts does not approve publication.
