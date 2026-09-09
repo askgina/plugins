@@ -1,7 +1,7 @@
 import * as BunPath from "@effect/platform-bun/BunPath";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { assert, describe, it } from "@effect/vitest";
-import { Config, ConfigProvider, Effect, FileSystem, Option, Path } from "effect";
+import { Config, ConfigProvider, Effect, FileSystem, Path } from "effect";
 import { ChildProcess } from "effect/unstable/process";
 
 import { collectBoundedUtf8Output } from "../src/bounded-output";
@@ -453,26 +453,18 @@ describe("live eval CLI subprocess", () => {
       Effect.scoped(
         Effect.gen(function* () {
           const pathValue = yield* Config.string("PATH");
-          const tsconfigOverride = yield* Config.option(
-            Config.string("ASK_GINA_EVALS_TSCONFIG_OVERRIDE"),
-          ).pipe(Effect.map(Option.getOrUndefined));
-          const argv =
-            tsconfigOverride === undefined || tsconfigOverride.length === 0
-              ? ["packages/evals/src/bin/live.ts", "--help"]
-              : [
-                  "--tsconfig-override",
-                  tsconfigOverride,
-                  "packages/evals/src/bin/live.ts",
-                  "--help",
-                ];
-          const child = yield* ChildProcess.make("bun", argv, {
-            cwd: process.cwd(),
-            env: { PATH: pathValue },
-            extendEnv: false,
-            stdin: "ignore",
-            stdout: "pipe",
-            stderr: "pipe",
-          });
+          const child = yield* ChildProcess.make(
+            "bun",
+            ["packages/evals/src/bin/live.ts", "--help"],
+            {
+              cwd: process.cwd(),
+              env: { PATH: pathValue },
+              extendEnv: false,
+              stdin: "ignore",
+              stdout: "pipe",
+              stderr: "pipe",
+            },
+          );
           const [stdout, stderr, exitCode] = yield* Effect.all(
             [
               collectBoundedUtf8Output(child.stdout, 65_536),
