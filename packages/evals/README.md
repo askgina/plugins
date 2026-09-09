@@ -138,7 +138,8 @@ bun run eval:openrouter -- \
   --repetitions 3 \
   --account-class eval \
   --timeout-ms 120000 \
-  --max-steps 8
+  --max-steps 8 \
+  --openrouter-endpoint openai
 
 bun run eval:claude -- \
   --suite packages/evals/src/fixtures/ask-gina-routing-smoke.yaml \
@@ -164,9 +165,10 @@ bun run eval:omp -- \
 ```
 
 Repeat `--case <case-id>` to run a strict subset. `--timeout-ms` is required for
-the per-trial budget. `--max-steps` is optional only for OpenRouter, and
-`--max-turns` is optional only for Claude. Both default to `8` and accept `1` to
-`32`. `--provider` is required only for OMP. The other runners reject those
+the per-trial budget. `--openrouter-endpoint` is required for OpenRouter and has
+no default. `--max-steps` is optional only for OpenRouter, and `--max-turns` is
+optional only for Claude. Both default to `8` and accept `1` to `32`.
+`--provider` is required only for OMP. The other runners reject those
 flags. OMP rejects `--max-steps` and `--max-turns`. ACP does not expose a
 portable native model-step boundary, so OMP does not claim an equal step budget
 with OpenRouter or Claude. Secrets have no command-line flags.
@@ -176,9 +178,12 @@ switch runners or auth methods. Add
 report-bound attempt summaries are required. The capture rules in the previous
 section still apply.
 
-OpenRouter executes Gina tools through the local AI SDK MCP client. Responses
-uses OpenAI-hosted MCP. Neither proves native plugin activation, and these two
-execution paths retain separate runner identities. Codex and Claude load the
+OpenRouter executes Gina tools through the local AI SDK MCP client. Its offline
+real-SDK intercepted-transport proof establishes only requested serialization,
+not the provider-selected endpoint, gateway translation, or native HarnessAgent
+behavior. Responses uses OpenAI-hosted MCP. Neither proves native plugin
+activation, and these two execution paths retain separate runner identities.
+Codex and Claude load the
 repository plugin through their native CLIs. OMP talks to `omp acp` through
 HarnessAgent in Docker and keeps the `omp_harness` target distinct. Task
 conformance and observed plugin activation are scored separately. The Claude
