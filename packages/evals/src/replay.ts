@@ -12,6 +12,7 @@ import type {
   PluginEvalSuite,
 } from "./contracts";
 import { gradePluginEvalObservation, type PluginEvalObservationMismatchError } from "./grading";
+import { validateObservationSetInvariants } from "./load-observations";
 import {
   makePublicEvalAttemptSummaries,
   assertPublicEvalAttemptPlan,
@@ -172,7 +173,11 @@ const validateReplayContract = (
     }
     const requiresCanonicalCatalog =
       observation.status === "completed" &&
-      (observation.target === "responses_api" || observation.target === "codex_cli");
+      (observation.target === "responses_api" ||
+        observation.target === "openrouter_api" ||
+        observation.target === "codex_cli" ||
+        observation.target === "claude_cli" ||
+        observation.target === "omp_harness");
     if (requiresCanonicalCatalog && observation.available_tools === undefined) {
       reasons.push(`${observation.case_id} completed without an imported MCP tool catalog`);
     }
@@ -244,6 +249,9 @@ export const replayPluginEvalObservationSet = Function.dual<
     args.length >= 2 && typeof args[0] === "object" && args[0] !== null && "cases" in args[0],
   (suite, observationSet, options) =>
     Effect.gen(function* () {
+      yield* validateObservationSetInvariants(observationSet, "replay").pipe(
+        Effect.mapError((error) => new PluginEvalReplayContractError({ reasons: error.reasons })),
+      );
       yield* validateReplayContract(suite, observationSet);
       const gradedAttempts: PublicEvalGradedAttempt[] | null =
         options?.captureAttempts === true ? [] : null;

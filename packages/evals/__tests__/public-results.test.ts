@@ -608,6 +608,50 @@ describe("public eval result adapter", () => {
     }),
   );
 
+  it.effect("separates public identity by observation target at the same requested model", () =>
+    Effect.gen(function* () {
+      const model = "shared-requested-model";
+      const labeled = {
+        openrouter_api: { ...report, target: "openrouter_api", model },
+        claude_cli: { ...report, target: "claude_cli", model },
+      } as const;
+      const results = {
+        openrouter_api: yield* makePublicEvalResult(
+          options({
+            reportJson: serialize(labeled.openrouter_api),
+            resultId: "synthetic-openrouter-api",
+          }),
+        ),
+        claude_cli: yield* makePublicEvalResult(
+          options({
+            reportJson: serialize(labeled.claude_cli),
+            resultId: "synthetic-claude-cli",
+          }),
+        ),
+      };
+
+      assert.strictEqual(results.openrouter_api.configuration.model, model);
+      assert.strictEqual(results.claude_cli.configuration.model, model);
+      assert.strictEqual(results.openrouter_api.benchmark.target, "openrouter_api");
+      assert.strictEqual(results.claude_cli.benchmark.target, "claude_cli");
+      assert.notStrictEqual(
+        results.openrouter_api.benchmark.target,
+        results.claude_cli.benchmark.target,
+      );
+
+      const mismatched = yield* failureOf(
+        options({
+          reportJson: serialize(labeled.openrouter_api),
+          configurationJson: configurationJson({
+            model,
+            target: "claude_cli",
+          }),
+        }),
+      );
+      assert.strictEqual(mismatched.reason, "configuration_mismatch");
+    }),
+  );
+
   it.effect(
     "pins only a declaration that matches the report and leaves the default labels_only",
     () =>
@@ -642,5 +686,49 @@ describe("public eval result adapter", () => {
         assert.strictEqual(result.configuration.pinnedSha256, null);
         assert.include(result.ranking.reasons, "missing_pinned_configuration");
       }),
+  );
+
+  it.effect("keeps slash-separated model identity through report and pinned configuration", () =>
+    Effect.gen(function* () {
+      const models = ["openai/gpt-5.1", "openrouter/openai/gpt-5.1"] as const;
+      for (const model of models) {
+        const labeledJson = serialize({ ...report, model });
+        const declaration = configurationJson({ model });
+        const result = yield* makePublicEvalResult(
+          options({
+            reportJson: labeledJson,
+            configurationJson: declaration,
+          }),
+        );
+        assert.strictEqual(result.configuration.model, model);
+        assert.strictEqual(result.configuration.pinnedSha256, sha256(declaration));
+      }
+
+      const slashCandidate = yield* failureOf(
+        options({ reportJson: serialize({ ...report, candidate: "openai/gpt-5.1" }) }),
+      );
+      assert.strictEqual(slashCandidate.reason, "invalid_report");
+
+      const rejectedModels = [
+        "/tmp",
+        "../foo",
+        "a//b",
+        "https://example.com/model",
+        "openai/gpt-5.1?q=1",
+        "a".repeat(129),
+      ] as const;
+      for (const model of rejectedModels) {
+        const invalidReport = yield* failureOf(
+          options({ reportJson: serialize({ ...report, model }) }),
+          model,
+        );
+        assert.strictEqual(invalidReport.reason, "invalid_report", model);
+        const invalidConfiguration = yield* failureOf(
+          options({ configurationJson: configurationJson({ model }) }),
+          model,
+        );
+        assert.strictEqual(invalidConfiguration.reason, "invalid_configuration", model);
+      }
+    }),
   );
 });

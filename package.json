@@ -33,6 +33,9 @@
     "eval:export-public": "bun run build && bun packages/evals/dist/bin/export-public-results.js",
     "eval:responses": "bun run build && bun packages/evals/dist/bin/live.js --runner responses",
     "eval:codex": "bun run build && bun packages/evals/dist/bin/live.js --runner codex",
+    "eval:openrouter": "bun run build && bun packages/evals/dist/bin/live.js --runner openrouter",
+    "eval:claude": "bun run build && bun packages/evals/dist/bin/live.js --runner claude",
+    "eval:omp": "bun run build && bun packages/evals/dist/bin/live.js --runner omp",
     "check:marketplace:codex": "bun run build && bun packages/evals/dist/bin/check-codex-marketplace.js",
     "effect-tsgo:patch": "bun scripts/effect-tsgo-patch-if-needed.ts",
     "prepare": "bun run effect-tsgo:patch",
@@ -57,6 +60,7 @@
   },
   "overrides": {
     "@effect/platform-node-shared": "4.0.0-rc.111",
+    "dockerode>uuid": "11.1.1",
     "esbuild": "0.28.1",
     "oxlint": "1.78.0",
     "qs": "6.16.0"

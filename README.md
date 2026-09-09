@@ -59,3 +59,20 @@ four-skill candidate archive, and contract, package, target, and eval receipts
 under ignored `dist/`. `bun run verify:artifacts` performs clean
 tarball installs and runtime checks. Nothing here publishes, releases, deploys,
 submits, or calls production during pull-request CI.
+
+Live eval runners are `bun run eval:responses`, `eval:codex`, `eval:openrouter`,
+`eval:claude`, and `eval:omp`. Hermetic replay is `eval:replay`. Every live runner
+requires `ASK_GINA_ACCESS_TOKEN`. Responses and Codex also need `OPENAI_API_KEY`;
+Codex adds `CODEX_EVAL_EXECUTABLE` and `CODEX_EVAL_EXECUTABLE_SHA256`; OpenRouter
+needs `OPENROUTER_API_KEY`; Claude needs `ANTHROPIC_API_KEY` and
+`CLAUDE_EVAL_EXECUTABLE`; OMP needs `OMP_EVAL_API_KEY`,
+`OMP_EVAL_EXECUTABLE`, `OMP_EVAL_EXECUTABLE_SHA256`, a local Docker engine, and
+`--provider openai|anthropic|openrouter`. Optional `--max-steps` applies only to
+OpenRouter and `--max-turns` only to Claude. Both default to 8 and accept 1 to 32.
+OMP has no step or turn flag. Native Codex, Claude, and OMP paths use explicit API
+keys, not a saved personal login. OpenRouter uses local AI SDK MCP; Responses uses
+OpenAI-hosted MCP. Neither proves native plugin activation. Codex and Claude
+adapters distinguish native skill events from task conformance. Claude's live
+plugin activation remains unverified; offline fixtures and OMP Docker/runtime
+proof are not measured native-agent evidence. Flags, capture, and publication
+rules are in `packages/evals/README.md`.

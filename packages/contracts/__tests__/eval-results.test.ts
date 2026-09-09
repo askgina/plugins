@@ -1,12 +1,15 @@
 import { createHash } from "node:crypto";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import {
   type PublicEvalAttemptCapture,
   type PublicEvalAttemptSummary,
   type PublicEvalIndex,
   type PublicEvalPublication,
   type PublicEvalResult,
+  PUBLIC_EVAL_DECODE_OPTIONS,
+  PublicEvalIdentifierSchema,
+  PublicEvalModelSchema,
   decodePublicEvalAttemptCapture,
   decodePublicEvalIndex,
   decodePublicEvalPublication,
@@ -385,6 +388,54 @@ describe("@askgina/contracts public eval boundaries", () => {
           publications: [{ ...WITHDRAWN_ENTRY, revisions: [addressedResult, NOTICE_REVISION] }],
         }),
       );
+    }),
+  );
+
+  it.effect("keeps slash-separated model identity while identifiers reject path-like values", () =>
+    Effect.gen(function* () {
+      const decodeIdentifier = Schema.decodeUnknownEffect(
+        PublicEvalIdentifierSchema,
+        PUBLIC_EVAL_DECODE_OPTIONS,
+      );
+      const decodeModel = Schema.decodeUnknownEffect(
+        PublicEvalModelSchema,
+        PUBLIC_EVAL_DECODE_OPTIONS,
+      );
+      const accepted = ["openai/gpt-5.1", "openrouter/openai/gpt-5.1", "synthetic-model"] as const;
+      for (const model of accepted) {
+        assert.strictEqual(yield* decodeModel(model), model);
+        const decoded = yield* decodePublicEvalResult({
+          ...RESULT,
+          configuration: { ...RESULT.configuration, model },
+        });
+        assert.strictEqual(decoded.configuration.model, model);
+      }
+
+      yield* rejected(decodeIdentifier("openai/gpt-5.1"));
+      yield* rejected(
+        decodePublicEvalResult({
+          ...RESULT,
+          resultId: "openai/gpt-5.1",
+        }),
+      );
+
+      const rejectedModels = [
+        "/tmp",
+        "../foo",
+        "a//b",
+        "https://example.com/model",
+        "openai/gpt-5.1?q=1",
+        "a".repeat(129),
+      ] as const;
+      for (const model of rejectedModels) {
+        yield* rejected(decodeModel(model));
+        yield* rejected(
+          decodePublicEvalResult({
+            ...RESULT,
+            configuration: { ...RESULT.configuration, model },
+          }),
+        );
+      }
     }),
   );
 });

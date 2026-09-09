@@ -1,3 +1,4 @@
+import { PublicEvalModelSchema } from "@askgina/contracts";
 import { Data, Effect, Schema } from "effect";
 
 import type { PluginEvalReplayReport, PluginEvalRunManifest } from "./contracts";
@@ -32,7 +33,7 @@ export const SanitizedEvalRunReportSchema = Schema.Struct({
   runId: SafeRunLabelSchema,
   candidate: SafeRunLabelSchema,
   target: SafeRunLabelSchema,
-  model: SafeRunLabelSchema,
+  model: PublicEvalModelSchema,
   reasoning: Schema.optional(SafeRunLabelSchema),
   repetitions: PositiveIntSchema,
   startedAt: UtcTimestampSchema,
@@ -51,7 +52,7 @@ const SanitizedRunMetadataSchema = Schema.Struct({
   runId: SafeRunLabelSchema,
   candidate: SafeRunLabelSchema,
   target: SafeRunLabelSchema,
-  model: SafeRunLabelSchema,
+  model: PublicEvalModelSchema,
   reasoning: Schema.optional(SafeRunLabelSchema),
   accountClass: SafeRunLabelSchema,
   startedAt: UtcTimestampSchema,

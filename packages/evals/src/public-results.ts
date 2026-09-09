@@ -4,6 +4,7 @@ import {
   PUBLIC_EVAL_DECODE_OPTIONS,
   PublicEvalAttemptCaptureSchema,
   PublicEvalIdentifierSchema,
+  PublicEvalModelSchema,
   PublicEvalSha256Schema,
   PublicEvalTimestampSchema,
   decodePublicEvalResult,
@@ -95,7 +96,7 @@ const PositiveIntSchema = Schema.Int.check(Schema.isGreaterThan(0));
 const PublicEvalConfigurationSchema = Schema.Struct({
   schemaVersion: Schema.Literal("eval-configuration.v1"),
   candidate: PublicEvalIdentifierSchema,
-  model: PublicEvalIdentifierSchema,
+  model: PublicEvalModelSchema,
   target: PublicEvalIdentifierSchema,
   reasoning: Schema.NullOr(PublicEvalIdentifierSchema),
   suiteId: PublicEvalIdentifierSchema,

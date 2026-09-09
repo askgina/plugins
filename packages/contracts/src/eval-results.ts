@@ -14,6 +14,8 @@ import { Function, Schema, type SchemaAST } from "effect";
  */
 
 const IDENTIFIER = /^[A-Za-z0-9](?:[A-Za-z0-9._:-]{0,126}[A-Za-z0-9])?$/u;
+const MODEL_IDENTIFIER =
+  /^[A-Za-z0-9](?:[A-Za-z0-9._:-]*[A-Za-z0-9])?(?:\/[A-Za-z0-9](?:[A-Za-z0-9._:-]*[A-Za-z0-9])?)*$/u;
 const SHA_256 = /^[a-f0-9]{64}$/u;
 const ATTEMPT_ID = /^attempt-[a-f0-9]{64}$/u;
 const UTC_TIMESTAMP = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{3})?Z$/u;
@@ -46,6 +48,10 @@ const PlannedCountSchema = AttemptCountSchema.check(Schema.isGreaterThan(0));
 export const PublicEvalIdentifierSchema = Schema.NonEmptyString.check(
   Schema.isMaxLength(128),
   Schema.isPattern(IDENTIFIER),
+);
+export const PublicEvalModelSchema = Schema.NonEmptyString.check(
+  Schema.isMaxLength(128),
+  Schema.isPattern(MODEL_IDENTIFIER),
 );
 export const PublicEvalSha256Schema = Schema.String.check(Schema.isPattern(SHA_256));
 export const PublicEvalTimestampSchema = Schema.NonEmptyString.check(
@@ -347,7 +353,7 @@ export const PublicEvalResultSchema = Schema.Struct({
   configuration: Schema.Struct({
     availability: Schema.Literals(["pinned", "labels_only"]),
     candidate: PublicEvalIdentifierSchema,
-    model: PublicEvalIdentifierSchema,
+    model: PublicEvalModelSchema,
     reasoning: Schema.NullOr(PublicEvalIdentifierSchema),
     pinnedSha256: Schema.NullOr(PublicEvalSha256Schema),
   }),
@@ -761,7 +767,7 @@ const PublicEvalIndexEntrySchema = Schema.Struct({
     Schema.Struct({
       suiteId: PublicEvalIdentifierSchema,
       candidate: PublicEvalIdentifierSchema,
-      model: PublicEvalIdentifierSchema,
+      model: PublicEvalModelSchema,
       startedAt: PublicEvalTimestampSchema,
     }),
   ),

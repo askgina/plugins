@@ -42,6 +42,15 @@ export {
   type ResponsesApiTrialOptions,
 } from "./responses-api";
 export {
+  PluginEvalOpenRouterGenerationError,
+  PluginEvalOpenRouterMcpError,
+  PluginEvalOpenRouterRequestError,
+  PluginEvalOpenRouterTimeoutError,
+  runOpenRouterPluginEvalTrial,
+  type PluginEvalOpenRouterError,
+  type OpenRouterTrialOptions,
+} from "./openrouter";
+export {
   attestCodexExecutable,
   PluginEvalCodexCliExecutableError,
   PluginEvalCodexCliProcessError,
@@ -56,6 +65,29 @@ export {
   type CodexCliTrialRunner,
   type PluginEvalCodexCliError,
 } from "./codex-cli";
+export {
+  PluginEvalClaudeCliProcessError,
+  PluginEvalClaudeCliSpawnError,
+  PluginEvalClaudeCliTimeoutError,
+  runClaudeCliPluginEvalTrial,
+  type ClaudeCliTrialOptions,
+  type PluginEvalClaudeCliError,
+} from "./claude-cli";
+export {
+  prepareOmpHarnessRuntime,
+  runOmpHarnessPluginEvalTrial,
+  PluginEvalOmpHarnessExecutableError,
+  PluginEvalOmpHarnessRequestError,
+  PluginEvalOmpHarnessSpawnError,
+  PluginEvalOmpHarnessMcpError,
+  PluginEvalOmpHarnessProcessError,
+  PluginEvalOmpHarnessTimeoutError,
+  type PrepareOmpHarnessRuntimeOptions,
+  type PreparedOmpHarnessRuntime,
+  type OmpHarnessTrialOptions,
+  type OmpProvider,
+  type PluginEvalOmpHarnessError,
+} from "./omp-harness";
 export {
   makeSanitizedEvalRunReport,
   sanitizeEvalReplay,
@@ -122,6 +154,7 @@ export {
   PluginEvalReplayReportSchema,
   PluginEvalRunManifestSchema,
   PluginEvalSuiteSchema,
+  PluginEvalTargetSchema,
   PluginEvalToolCallSchema,
   type PluginEvalCase,
   type PluginEvalCaseScore,
@@ -132,5 +165,6 @@ export {
   type PluginEvalObservationSet,
   type PluginEvalReplayReport,
   type PluginEvalSuite,
+  type PluginEvalTarget,
   type PluginEvalToolCall,
 } from "./contracts";
