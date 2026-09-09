@@ -16,6 +16,7 @@ export { isExactOpenRouterEndpointSlug } from "./profile-identity";
 
 const DEFAULT_TIMEOUT_MS = 120_000;
 const DEFAULT_MAX_STEPS = 8;
+export const DEFAULT_OPENROUTER_MAX_TOOL_CALLS = 8;
 const MAX_MAX_STEPS = 32;
 const MAX_MCP_TOOL_PAGES = 32;
 const MAX_MCP_CLOSE_WAIT_MS = 1_000;
@@ -47,6 +48,7 @@ export interface OpenRouterTrialOptions {
   readonly allowedTools: readonly string[];
   readonly timeoutMs?: number;
   readonly maxSteps?: number;
+  readonly maxToolCalls?: number;
 }
 
 interface ValidatedOpenRouterTrialOptions {
@@ -61,6 +63,7 @@ interface ValidatedOpenRouterTrialOptions {
   readonly allowedTools: readonly string[];
   readonly timeoutMs: number;
   readonly maxSteps: number;
+  readonly maxToolCalls: number;
 }
 
 export class PluginEvalOpenRouterRequestError extends Data.TaggedError(
@@ -79,7 +82,7 @@ export class PluginEvalOpenRouterGenerationError extends Data.TaggedError(
   "PluginEvalOpenRouterGenerationError",
 )<{
   readonly caseId: string;
-  readonly reason: "generation-failed";
+  readonly reason: "generation-failed" | "tool-budget-exhausted";
 }> {}
 
 export class PluginEvalOpenRouterTimeoutError extends Data.TaggedError(
@@ -110,6 +113,7 @@ const validateOptions = (
 ): Effect.Effect<ValidatedOpenRouterTrialOptions, PluginEvalOpenRouterRequestError> => {
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const maxSteps = options.maxSteps ?? DEFAULT_MAX_STEPS;
+  const maxToolCalls = options.maxToolCalls ?? DEFAULT_OPENROUTER_MAX_TOOL_CALLS;
   const commonOptionsAreValid =
     options.serverUrl === PRODUCTION_MCP_URL &&
     options.apiKey.trim().length > 0 &&
@@ -124,6 +128,9 @@ const validateOptions = (
     Number.isSafeInteger(maxSteps) &&
     maxSteps > 0 &&
     maxSteps <= MAX_MAX_STEPS &&
+    Number.isSafeInteger(maxToolCalls) &&
+    maxToolCalls > 0 &&
+    maxToolCalls <= MAX_MAX_STEPS &&
     catalogsMatch(options.allowedTools, CANONICAL_ALLOWED_TOOLS);
 
   if (!commonOptionsAreValid) {
@@ -155,6 +162,7 @@ const validateOptions = (
     allowedTools: [...options.allowedTools],
     timeoutMs,
     maxSteps,
+    maxToolCalls,
   });
 };
 
@@ -491,6 +499,8 @@ export const runOpenRouterPluginEvalTrial = Function.dual<
               const wireTools: ToolSet = {};
               const wireToolOrder: string[] = [];
               const wireToCanonical = new Map<string, string>();
+              let admittedToolCalls = 0;
+              let toolCallBudgetError: PluginEvalOpenRouterGenerationError | undefined;
               for (const canonicalName of discoveredTools) {
                 const wireName = canonicalName.replaceAll(".", "_");
                 const tool = tools[canonicalName];
@@ -504,7 +514,24 @@ export const runOpenRouterPluginEvalTrial = Function.dual<
                     reason: "catalog-mismatch",
                   });
                 }
-                wireTools[wireName] = tool;
+                const execute = tool.execute;
+                wireTools[wireName] =
+                  execute === undefined
+                    ? tool
+                    : {
+                        ...tool,
+                        execute: (input, executeOptions) => {
+                          if (admittedToolCalls >= validated.maxToolCalls) {
+                            toolCallBudgetError ??= new PluginEvalOpenRouterGenerationError({
+                              caseId: evalCase.id,
+                              reason: "tool-budget-exhausted",
+                            });
+                            throw new Error("MCP tool-call budget exhausted");
+                          }
+                          admittedToolCalls += 1;
+                          return execute(input, executeOptions);
+                        },
+                      };
                 wireToolOrder.push(wireName);
                 wireToCanonical.set(wireName, canonicalName);
               }
@@ -546,6 +573,14 @@ export const runOpenRouterPluginEvalTrial = Function.dual<
                     caseId: evalCase.id,
                     reason: "generation-failed",
                   }),
+              ).pipe(
+                Effect.matchEffect({
+                  onSuccess: (value) =>
+                    toolCallBudgetError === undefined
+                      ? Effect.succeed(value)
+                      : Effect.fail(toolCallBudgetError),
+                  onFailure: (error) => Effect.fail(toolCallBudgetError ?? error),
+                }),
               );
               yield* ensureBeforeDeadline(evalCase.id, validated.timeoutMs, deadlineMillis);
 

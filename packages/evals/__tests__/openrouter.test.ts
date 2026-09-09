@@ -10,6 +10,7 @@ import { beforeEach, vi } from "vitest";
 
 import type { PluginEvalCase } from "../src/contracts";
 import {
+  DEFAULT_OPENROUTER_MAX_TOOL_CALLS,
   PluginEvalOpenRouterGenerationError,
   PluginEvalOpenRouterMcpError,
   PluginEvalOpenRouterRequestError,
@@ -136,6 +137,20 @@ describe("OpenRouter trial adapter", () => {
       if (maxStepsResult._tag === "Failure") {
         assert.instanceOf(maxStepsResult.failure, PluginEvalOpenRouterRequestError);
         assert.strictEqual(maxStepsResult.failure.reason, "invalid-options");
+      }
+
+      const invalidToolCallBudgets = [0, 33, -1, 1.5, Number.NaN];
+      for (const maxToolCalls of invalidToolCallBudgets) {
+        const maxToolCallsResult = yield* Effect.result(
+          runOpenRouterPluginEvalTrial(evalCase, { ...options, maxToolCalls }),
+        );
+        assert.strictEqual(createMCPClientMock.mock.calls.length, 0);
+        assert.strictEqual(generateTextMock.mock.calls.length, 0);
+        assert.strictEqual(maxToolCallsResult._tag, "Failure");
+        if (maxToolCallsResult._tag === "Failure") {
+          assert.instanceOf(maxToolCallsResult.failure, PluginEvalOpenRouterRequestError);
+          assert.strictEqual(maxToolCallsResult.failure.reason, "invalid-options");
+        }
       }
 
       const subsetResult = yield* Effect.result(
@@ -758,6 +773,265 @@ describe("OpenRouter trial adapter", () => {
         assert.instanceOf(result.failure, PluginEvalOpenRouterTimeoutError);
       }
       assert.strictEqual(client.close.mock.calls.length, 1);
+    }),
+  );
+
+  // Offline real-SDK smoke (no credentials, no network):
+  // bun test packages/evals/__tests__/openrouter.test.ts -t "OpenRouter trial adapter"
+  // The routing test importActuals generateText + createOpenRouter with intercepted fetch.
+  // These cases call the wrapped execute functions generateText receives, including a
+  // >8 parallel batch in one generation step — the SDK execute boundary, not maxSteps.
+  const mockExecutableClient = (dispatched: string[]) => {
+    const client = mockClient();
+    client.toolsFromDefinitions.mockImplementation(
+      (definitions: { tools: readonly { name: string }[] }) =>
+        Object.fromEntries(
+          definitions.tools.map((tool) => [
+            tool.name,
+            {
+              name: tool.name,
+              execute: () => {
+                dispatched.push(tool.name);
+                return { ok: true };
+              },
+            },
+          ]),
+        ),
+    );
+    return client;
+  };
+
+  const invokeWrappedExecutes = (
+    config: { tools?: Record<string, { execute?: (input: unknown) => unknown }> },
+    count: number,
+  ): readonly unknown[] => {
+    const execute = config.tools?.spot_getSimplePrice?.execute;
+    const rejections: unknown[] = [];
+    for (let index = 0; index < count; index += 1) {
+      try {
+        execute?.({ ids: "ethereum", n: index });
+      } catch (error) {
+        rejections.push(error);
+      }
+    }
+    return rejections;
+  };
+
+  const completedGeneration = {
+    text: "ETH is $3,200.",
+    finishReason: "stop",
+    usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
+    steps: [],
+  };
+
+  it.effect("does not treat maxSteps as the MCP tool-call budget", () =>
+    Effect.gen(function* () {
+      const dispatched: string[] = [];
+      const client = mockExecutableClient(dispatched);
+      createMCPClientMock.mockResolvedValue(client as never);
+      generateTextMock.mockImplementation(((config: {
+        tools?: Record<string, { execute?: (input: unknown) => unknown }>;
+        stopWhen?: unknown;
+      }) => {
+        invokeWrappedExecutes(config, 9);
+        return Promise.resolve(completedGeneration);
+      }) as never);
+
+      const result = yield* Effect.result(
+        runOpenRouterPluginEvalTrial(evalCase, { ...options, maxSteps: 32 }),
+      );
+      const generateConfig = generateTextMock.mock.calls[0]?.[0] as { stopWhen?: unknown };
+
+      assert.strictEqual(DEFAULT_OPENROUTER_MAX_TOOL_CALLS, 8);
+      assert.strictEqual(generateTextMock.mock.calls.length, 1);
+      assert.strictEqual(generateConfig.stopWhen, 32);
+      assert.strictEqual(dispatched.length, 8);
+      assert.strictEqual(
+        dispatched.every((name) => name === "spot.getSimplePrice"),
+        true,
+      );
+      assert.strictEqual(result._tag, "Failure");
+      if (result._tag === "Failure") {
+        assert.instanceOf(result.failure, PluginEvalOpenRouterGenerationError);
+        assert.strictEqual(result.failure.reason, "tool-budget-exhausted");
+        assert.notInclude(serialized(result.failure), options.apiKey);
+        assert.notInclude(serialized(result.failure), "MCP tool-call budget exhausted");
+      }
+      assert.strictEqual(client.close.mock.calls.length, 1);
+    }),
+  );
+
+  it.effect("rejects a ninth MCP tool execution in one generation step", () =>
+    Effect.gen(function* () {
+      const dispatched: string[] = [];
+      const client = mockExecutableClient(dispatched);
+      createMCPClientMock.mockResolvedValue(client as never);
+      generateTextMock.mockImplementation(((config: {
+        tools?: Record<string, { execute?: (input: unknown) => unknown }>;
+      }) => {
+        const rejections = invokeWrappedExecutes(config, 9);
+        assert.strictEqual(rejections.length, 1);
+        return Promise.resolve(completedGeneration);
+      }) as never);
+
+      const result = yield* Effect.result(runOpenRouterPluginEvalTrial(evalCase, options));
+
+      assert.strictEqual(generateTextMock.mock.calls.length, 1);
+      assert.strictEqual(dispatched.length, 8);
+      assert.strictEqual(result._tag, "Failure");
+      if (result._tag === "Failure") {
+        assert.instanceOf(result.failure, PluginEvalOpenRouterGenerationError);
+        assert.strictEqual(result.failure.reason, "tool-budget-exhausted");
+      }
+    }),
+  );
+
+  it.effect("remaps a generation throw after tool-budget exhaustion", () =>
+    Effect.gen(function* () {
+      const dispatched: string[] = [];
+      const client = mockExecutableClient(dispatched);
+      createMCPClientMock.mockResolvedValue(client as never);
+      generateTextMock.mockImplementation(((config: {
+        tools?: Record<string, { execute?: (input: unknown) => unknown }>;
+      }) => {
+        invokeWrappedExecutes(config, 8);
+        config.tools?.spot_getSimplePrice?.execute?.({ ids: "ethereum" });
+        return Promise.resolve(completedGeneration);
+      }) as never);
+
+      const result = yield* Effect.result(runOpenRouterPluginEvalTrial(evalCase, options));
+
+      assert.strictEqual(generateTextMock.mock.calls.length, 1);
+      assert.strictEqual(dispatched.length, 8);
+      assert.strictEqual(result._tag, "Failure");
+      if (result._tag === "Failure") {
+        assert.instanceOf(result.failure, PluginEvalOpenRouterGenerationError);
+        assert.strictEqual(result.failure.reason, "tool-budget-exhausted");
+        assert.notInclude(serialized(result.failure), "generation-failed");
+      }
+    }),
+  );
+
+  it.effect("shares one per-trial counter across concurrent MCP tool executes", () =>
+    Effect.gen(function* () {
+      const dispatched: string[] = [];
+      const client = mockExecutableClient(dispatched);
+      createMCPClientMock.mockResolvedValue(client as never);
+      generateTextMock.mockImplementation(((config: {
+        tools?: Record<string, { execute?: (input: unknown) => unknown }>;
+      }) => {
+        const executePrice = config.tools?.spot_getSimplePrice?.execute;
+        const executePortfolio = config.tools?.gina_getCrosschainPortfolio?.execute;
+        const attempts = Array.from({ length: 9 }, (_, index) => {
+          const execute = index % 2 === 0 ? executePrice : executePortfolio;
+          try {
+            return Promise.resolve(execute?.({ n: index }));
+          } catch (error) {
+            return Promise.reject(error);
+          }
+        });
+        return Promise.allSettled(attempts).then(() => completedGeneration);
+      }) as never);
+
+      const result = yield* Effect.result(
+        runOpenRouterPluginEvalTrial(evalCase, { ...options, maxSteps: 1 }),
+      );
+
+      assert.strictEqual(generateTextMock.mock.calls.length, 1);
+      assert.strictEqual(dispatched.length, 8);
+      assert.strictEqual(result._tag, "Failure");
+      if (result._tag === "Failure") {
+        assert.instanceOf(result.failure, PluginEvalOpenRouterGenerationError);
+        assert.strictEqual(result.failure.reason, "tool-budget-exhausted");
+      }
+    }),
+  );
+
+  it.effect("allows exactly eight MCP tool executions and keeps captured names", () =>
+    Effect.gen(function* () {
+      const dispatched: string[] = [];
+      const client = mockExecutableClient(dispatched);
+      createMCPClientMock.mockResolvedValue(client as never);
+      generateTextMock.mockImplementation(((config: {
+        tools?: Record<string, { execute?: (input: unknown) => unknown }>;
+      }) => {
+        invokeWrappedExecutes(config, 8);
+        return Promise.resolve({
+          text: "ETH is $3,200.",
+          finishReason: "stop",
+          usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
+          steps: [
+            {
+              usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
+              toolCalls: Array.from({ length: 8 }, (_, index) => ({
+                type: "tool-call",
+                toolCallId: `call_${index + 1}`,
+                toolName: "spot_getSimplePrice",
+                input: { ids: "ethereum", n: index },
+              })),
+              content: Array.from({ length: 8 }, (_, index) => ({
+                type: "tool-result",
+                toolCallId: `call_${index + 1}`,
+                toolName: "spot_getSimplePrice",
+                output: { ok: true },
+              })),
+              performance: {
+                toolExecutionMs: Object.fromEntries(
+                  Array.from({ length: 8 }, (_, index) => [`call_${index + 1}`, 1]),
+                ),
+              },
+            },
+          ],
+        });
+      }) as never);
+
+      const observation = yield* runOpenRouterPluginEvalTrial(evalCase, {
+        ...options,
+        maxToolCalls: DEFAULT_OPENROUTER_MAX_TOOL_CALLS,
+      });
+
+      assert.strictEqual(generateTextMock.mock.calls.length, 1);
+      assert.strictEqual(dispatched.length, 8);
+      assert.strictEqual(observation.status, "completed");
+      assert.strictEqual(observation.error, undefined);
+      assert.strictEqual(observation.activated_skills, undefined);
+      assert.strictEqual(observation.tool_calls.length, 8);
+      assert.deepStrictEqual(
+        observation.tool_calls.map((call) => call.name),
+        Array.from({ length: 8 }, () => "spot.getSimplePrice"),
+      );
+      assert.deepStrictEqual(observation.tool_calls[0]?.arguments, { ids: "ethereum", n: 0 });
+      assert.strictEqual(
+        observation.tool_calls.every((call) => call.error === undefined),
+        true,
+      );
+    }),
+  );
+
+  it.effect("honors a tighter maxToolCalls independently of maxSteps", () =>
+    Effect.gen(function* () {
+      const dispatched: string[] = [];
+      const client = mockExecutableClient(dispatched);
+      createMCPClientMock.mockResolvedValue(client as never);
+      generateTextMock.mockImplementation(((config: {
+        tools?: Record<string, { execute?: (input: unknown) => unknown }>;
+      }) => {
+        invokeWrappedExecutes(config, 2);
+        return Promise.resolve(completedGeneration);
+      }) as never);
+
+      const result = yield* Effect.result(
+        runOpenRouterPluginEvalTrial(evalCase, { ...options, maxSteps: 8, maxToolCalls: 1 }),
+      );
+      const generateConfig = generateTextMock.mock.calls[0]?.[0] as { stopWhen?: unknown };
+
+      assert.strictEqual(generateConfig.stopWhen, 8);
+      assert.strictEqual(dispatched.length, 1);
+      assert.strictEqual(result._tag, "Failure");
+      if (result._tag === "Failure") {
+        assert.instanceOf(result.failure, PluginEvalOpenRouterGenerationError);
+        assert.strictEqual(result.failure.reason, "tool-budget-exhausted");
+      }
     }),
   );
 });
