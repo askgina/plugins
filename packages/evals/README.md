@@ -263,9 +263,13 @@ eight seconds for cleanup without replacing the original failure. Synthetic mode
 the real OMP process and protocol; they do not prove real model behavior, production
 Gina connectivity, or measured native-plugin activation.
 
-Each live run writes exactly one mode-`0600` aggregate below the ignored
-`.plugin-eval-runs/` directory. Raw prompts, final answers, tool arguments,
-provider payloads, HTTP bodies, child output, and credential material are never
-persisted. A nonzero exit means the run failed or at least one rubric case did
+Each live run writes a mode-`0600` v1 aggregate below the ignored
+`.plugin-eval-runs/` directory. OpenRouter also writes a sibling
+`*.requested-routing-v1.json` file bound to that aggregate by
+`sourceReportSha256` of the exact UTF-8 report bytes. Keep both files. The
+routing file is requested-endpoint evidence, not observed gateway routing or a
+full profile identity. Other runners still write only the aggregate. Raw
+prompts, final answers, tool arguments, provider payloads, HTTP bodies, child
+output, and credential material are never persisted. A nonzero exit means the run failed or at least one rubric case did
 not pass. Exporting a measured result still requires the recorded manual approval
 described above. Running or capturing attempts does not approve publication.
