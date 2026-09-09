@@ -264,12 +264,31 @@ the real OMP process and protocol; they do not prove real model behavior, produc
 Gina connectivity, or measured native-plugin activation.
 
 Each live run writes a mode-`0600` v1 aggregate below the ignored
-`.plugin-eval-runs/` directory. OpenRouter also writes a sibling
-`*.requested-routing-v1.json` file bound to that aggregate by
-`sourceReportSha256` of the exact UTF-8 report bytes. Keep both files. The
-routing file is requested-endpoint evidence, not observed gateway routing or a
-full profile identity. Other runners still write only the aggregate. Raw
+`.plugin-eval-runs/` directory. OpenRouter writes three sibling mode-`0600`
+files: the report `.json`, `.requested-routing-v1.json`, and
+`.configuration-v1.json`. Keep all three. The routing and configuration files
+bind to the exact UTF-8 report bytes by `sourceReportSha256`. Configuration
+identity also records `configurationSha256` of the canonical configuration
+digest. That digest is independent of run ID, report bytes, and JSON key
+order. It captures requested OpenRouter routing, settings, runtime,
+generation-step and deadline budgets, and auth class, plus actual installed
+runtime, package, lock, and source facts, credential-free. `--max-steps` is
+recorded as `generationSteps`. The OpenRouter CLI independently limits each
+trial to eight task-tool executions, including parallel calls, and records
+that limit as `taskToolCalls`. Exhausted calls are rejected before MCP dispatch.
+Library evidence without an enforced task-call limit records null. Effective
+provider observations that are not known stay explicit unknowns. Accepted omissions are temperature, top_p,
+output-token-limit, and service-tier. The configuration file is requested
+evidence, not observed gateway routing, admission, comparability, or
+publication approval. Other runners still write only the aggregate. Raw
 prompts, final answers, tool arguments, provider payloads, HTTP bodies, child
-output, and credential material are never persisted. A nonzero exit means the run failed or at least one rubric case did
-not pass. Exporting a measured result still requires the recorded manual approval
+output, and credential material are never persisted.
+
+OpenRouter preflights the three sibling paths before credentials or trials.
+Existing report, requested-routing, or configuration files fail closed. After
+a successful run it writes requested-routing and configuration evidence
+first, then the v1 report (`wx`, mode `0600`). If the report write fails
+after evaluator-owned companions exist, those companions are deleted. A
+nonzero exit means the run failed or at least one rubric case did not pass.
+Exporting a measured result still requires the recorded manual approval
 described above. Running or capturing attempts does not approve publication.

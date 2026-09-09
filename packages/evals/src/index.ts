@@ -33,6 +33,16 @@ export {
   type LiveEvalTrialInput,
 } from "./live";
 export {
+  LiveEvalConfigurationCaptureError,
+  LiveEvalConfigurationEvidenceSchema,
+  captureOpenRouterConfiguration,
+  liveEvalConfigurationEvidenceOutputPath,
+  makeLiveEvalConfigurationEvidence,
+  writeLiveEvalConfigurationEvidence,
+  type LiveEvalConfigurationCaptureType,
+  type LiveEvalConfigurationEvidence,
+} from "./configuration";
+export {
   LiveEvalRequestedRoutingEvidenceError,
   LiveEvalRequestedRoutingEvidenceSchema,
   LiveEvalRequestedRoutingSchema,
@@ -53,6 +63,7 @@ export {
   type ResponsesApiTrialOptions,
 } from "./responses-api";
 export {
+  DEFAULT_OPENROUTER_MAX_TOOL_CALLS,
   PluginEvalOpenRouterGenerationError,
   PluginEvalOpenRouterMcpError,
   PluginEvalOpenRouterRequestError,

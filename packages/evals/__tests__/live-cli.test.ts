@@ -1,7 +1,7 @@
 import * as BunPath from "@effect/platform-bun/BunPath";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { assert, describe, it } from "@effect/vitest";
-import { Config, ConfigProvider, Effect, FileSystem, Path, PlatformError } from "effect";
+import { Config, ConfigProvider, Effect, FileSystem, Path, PlatformError, Schema } from "effect";
 import { ChildProcess } from "effect/unstable/process";
 
 import { collectBoundedUtf8Output } from "../src/bounded-output";
@@ -16,6 +16,12 @@ import {
   parseLiveEvalCliOptions,
   writeLiveEvalReportWithRequestedRoutingEvidence,
 } from "../src/bin/live";
+import { makeLiveEvalConfigurationEvidence } from "../src/configuration";
+import type { LiveEvalConfigurationCaptureType } from "../src/configuration";
+import { DEFAULT_OPENROUTER_MAX_TOOL_CALLS } from "../src/openrouter";
+import type { SanitizedEvalRunReport } from "../src/report";
+import aggregateFixture from "../src/fixtures/sanitized-aggregate.json";
+import { SanitizedEvalAggregateSchema } from "../src/sanitize";
 
 const openRouterRequestedRouting = {
   kind: "openrouter-endpoint" as const,
@@ -23,6 +29,67 @@ const openRouterRequestedRouting = {
   allow_fallbacks: false as const,
   require_parameters: true as const,
 };
+
+const digest = (label: string): string => label.repeat(64).slice(0, 64);
+
+const configurationCapture: LiveEvalConfigurationCaptureType = {
+  evaluatorSha256: digest("a"),
+  skillsSha256: digest("b"),
+  toolchainSha256: digest("c"),
+  runtime: {
+    bun: { version: "1.4.0", executableSha256: digest("d") },
+    lockSha256: digest("e"),
+    packages: [
+      {
+        name: "ai",
+        version: "7.0.93",
+        metadataSha256: digest("1"),
+        sourceSha256: digest("2"),
+        sourceScope: "entrypoint",
+      },
+      {
+        name: "@openrouter/ai-sdk-provider",
+        version: "3.0.0",
+        metadataSha256: digest("3"),
+        sourceSha256: digest("4"),
+        sourceScope: "entrypoint",
+      },
+      {
+        name: "@ai-sdk/mcp",
+        version: "2.0.45",
+        metadataSha256: digest("5"),
+        sourceSha256: digest("6"),
+        sourceScope: "entrypoint",
+      },
+    ],
+  },
+};
+
+const configurationReport: SanitizedEvalRunReport = {
+  schemaVersion: "v1",
+  runId: "run-1",
+  candidate: "cand-1",
+  target: "openrouter_api",
+  model: "openai/gpt-5.6-sol",
+  reasoning: "medium",
+  repetitions: 3,
+  startedAt: "2026-09-09T00:00:00.000Z",
+  cleanChat: true,
+  accountClass: "local",
+  aggregate: Schema.decodeUnknownSync(SanitizedEvalAggregateSchema)(aggregateFixture),
+};
+
+const configurationEvidence = (reportContent: string) =>
+  makeLiveEvalConfigurationEvidence({
+    report: configurationReport,
+    reportContent,
+    requestedRouting: openRouterRequestedRouting,
+    maxSteps: DEFAULT_OPENROUTER_MAX_STEPS,
+    maxToolCalls: DEFAULT_OPENROUTER_MAX_TOOL_CALLS,
+    timeoutMs: 120_000,
+    capture: configurationCapture,
+  });
+const configurationReportContent = `${JSON.stringify(configurationReport)}\n`;
 
 const requiredFlags = (runner: string, extra: readonly string[] = []): readonly string[] => [
   "--runner",
@@ -508,7 +575,8 @@ describe("live eval CLI subprocess", () => {
           );
           const evidencePath = `${reportPath.slice(0, reportPath.length - ".json".length)}.requested-routing-v1.json`;
           yield* fs.makeDirectory(path.dirname(reportPath), { recursive: true });
-          yield* fs.writeFileString(evidencePath, "{}\n", { flag: "wx", mode: 0o600 });
+          const preexistingBytes = "{}\n";
+          yield* fs.writeFileString(evidencePath, preexistingBytes, { flag: "wx", mode: 0o600 });
           const child = yield* ChildProcess.make(
             "bun",
             [
@@ -558,7 +626,76 @@ describe("live eval CLI subprocess", () => {
           assert.notInclude(output, "missing ASK_GINA_ACCESS_TOKEN");
           assert.notInclude(output, "missing OPENROUTER_API_KEY");
           assert.isFalse(yield* fs.exists(reportPath));
-          assert.isTrue(yield* fs.exists(evidencePath));
+          assert.strictEqual(yield* fs.readFileString(evidencePath), preexistingBytes);
+        }),
+      ),
+    );
+
+    it.effect("rejects attempts-output collision with each companion before credentials", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const pathValue = yield* Config.string("PATH");
+          const liveCli = path.join(process.cwd(), "packages/evals/src/bin/live.ts");
+          const candidate = "cand-1";
+          const runId = "run-1";
+          const reportRelative = path.join(
+            ".plugin-eval-runs",
+            `openrouter_api-${candidate}-${runId}.json`,
+          );
+          const reportStem = reportRelative.slice(0, reportRelative.length - ".json".length);
+          yield* Effect.forEach(
+            [
+              reportRelative,
+              `${reportStem}.requested-routing-v1.json`,
+              `${reportStem}.configuration-v1.json`,
+            ] as const,
+            (attemptsOutput) =>
+              Effect.scoped(
+                Effect.gen(function* () {
+                  const cwd = yield* fs.makeTempDirectoryScoped({
+                    prefix: "live-cli-attempts-collision-",
+                  });
+                  const child = yield* ChildProcess.make(
+                    "bun",
+                    [
+                      liveCli,
+                      ...requiredFlags("openrouter", ["--attempts-output", attemptsOutput]),
+                    ],
+                    {
+                      cwd,
+                      env: { PATH: pathValue },
+                      extendEnv: false,
+                      stdin: "ignore",
+                      stdout: "pipe",
+                      stderr: "pipe",
+                    },
+                  );
+                  const [stdout, stderr, exitCode] = yield* Effect.all(
+                    [
+                      collectBoundedUtf8Output(child.stdout, 65_536),
+                      collectBoundedUtf8Output(child.stderr, 65_536),
+                      child.exitCode,
+                    ],
+                    { concurrency: "unbounded" },
+                  );
+                  const output = `${stdout.text}\n${stderr.text}`;
+                  assert.notStrictEqual(exitCode, 0);
+                  assert.include(output, "live eval failed");
+                  assert.notInclude(output, "Usage:");
+                  assert.notInclude(output, "missing ASK_GINA_ACCESS_TOKEN");
+                  assert.notInclude(output, "missing OPENROUTER_API_KEY");
+                  assert.isFalse(yield* fs.exists(path.join(cwd, reportRelative)));
+                  assert.isFalse(
+                    yield* fs.exists(path.join(cwd, `${reportStem}.requested-routing-v1.json`)),
+                  );
+                  assert.isFalse(
+                    yield* fs.exists(path.join(cwd, `${reportStem}.configuration-v1.json`)),
+                  );
+                }),
+              ),
+          );
         }),
       ),
     );
@@ -577,13 +714,17 @@ describe("live eval durable outputs", () => {
           directory,
           "openrouter_api-cand-run.requested-routing-v1.json",
         );
-        yield* fs.writeFileString(identityPath, "{}\n", { flag: "wx" });
-        const result = yield* Effect.result(assertLiveEvalDurableOutputs(reportPath, identityPath));
+        const preexistingBytes = "{}\n";
+        yield* fs.writeFileString(identityPath, preexistingBytes, { flag: "wx" });
+        const result = yield* Effect.result(
+          assertLiveEvalDurableOutputs(reportPath, identityPath, undefined),
+        );
         assert.strictEqual(result._tag, "Failure");
         if (result._tag === "Failure") {
           assert.strictEqual(result.failure.reason, "identity-write-failed");
         }
         assert.isFalse(yield* fs.exists(reportPath));
+        assert.strictEqual(yield* fs.readFileString(identityPath), preexistingBytes);
       }),
     );
 
@@ -594,7 +735,7 @@ describe("live eval durable outputs", () => {
         const directory = yield* fs.makeTempDirectoryScoped({ prefix: "live-cli-collision-" });
         const reportPath = path.join(directory, "openrouter_api-cand-run.json");
         const preflight = yield* Effect.result(
-          assertLiveEvalDurableOutputs(reportPath, reportPath),
+          assertLiveEvalDurableOutputs(reportPath, reportPath, undefined),
         );
         assert.strictEqual(preflight._tag, "Failure");
         if (preflight._tag === "Failure") {
@@ -602,12 +743,18 @@ describe("live eval durable outputs", () => {
         }
         assert.isFalse(yield* fs.exists(reportPath));
 
+        const configurationPath = path.join(
+          directory,
+          "openrouter_api-cand-run.configuration-v1.json",
+        );
         const written = yield* Effect.result(
           writeLiveEvalReportWithRequestedRoutingEvidence({
             reportPath,
             reportContent: "{}\n",
             identityPath: reportPath,
             requestedRouting: openRouterRequestedRouting,
+            configurationPath,
+            configurationEvidence: configurationEvidence("{}\n"),
           }),
         );
         assert.strictEqual(written._tag, "Failure");
@@ -615,6 +762,38 @@ describe("live eval durable outputs", () => {
           assert.strictEqual(written.failure.reason, "identity-write-failed");
         }
         assert.isFalse(yield* fs.exists(reportPath));
+        assert.isFalse(yield* fs.exists(configurationPath));
+      }),
+    );
+
+    it.effect("rejects a preexisting configuration-evidence path", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectoryScoped({
+          prefix: "live-cli-config-preflight-",
+        });
+        const reportPath = path.join(directory, "openrouter_api-cand-run.json");
+        const identityPath = path.join(
+          directory,
+          "openrouter_api-cand-run.requested-routing-v1.json",
+        );
+        const configurationPath = path.join(
+          directory,
+          "openrouter_api-cand-run.configuration-v1.json",
+        );
+        const preexistingBytes = "{}\n";
+        yield* fs.writeFileString(configurationPath, preexistingBytes, { flag: "wx", mode: 0o600 });
+        const result = yield* Effect.result(
+          assertLiveEvalDurableOutputs(reportPath, identityPath, configurationPath),
+        );
+        assert.strictEqual(result._tag, "Failure");
+        if (result._tag === "Failure") {
+          assert.strictEqual(result.failure.reason, "configuration-write-failed");
+        }
+        assert.isFalse(yield* fs.exists(reportPath));
+        assert.isFalse(yield* fs.exists(identityPath));
+        assert.strictEqual(yield* fs.readFileString(configurationPath), preexistingBytes);
       }),
     );
 
@@ -628,13 +807,19 @@ describe("live eval durable outputs", () => {
           directory,
           "openrouter_api-cand-run.requested-routing-v1.json",
         );
+        const configurationPath = path.join(
+          directory,
+          "openrouter_api-cand-run.configuration-v1.json",
+        );
         yield* fs.writeFileString(reportPath, "occupied\n", { flag: "wx", mode: 0o600 });
         const result = yield* Effect.result(
           writeLiveEvalReportWithRequestedRoutingEvidence({
             reportPath,
-            reportContent: "{}\n",
+            reportContent: configurationReportContent,
             identityPath,
             requestedRouting: openRouterRequestedRouting,
+            configurationPath,
+            configurationEvidence: configurationEvidence(configurationReportContent),
           }),
         );
         assert.strictEqual(result._tag, "Failure");
@@ -642,6 +827,7 @@ describe("live eval durable outputs", () => {
           assert.strictEqual(result.failure.reason, "report-exists");
         }
         assert.isFalse(yield* fs.exists(identityPath));
+        assert.isFalse(yield* fs.exists(configurationPath));
         assert.strictEqual(yield* fs.readFileString(reportPath), "occupied\n");
       }),
     );
@@ -657,6 +843,10 @@ describe("live eval durable outputs", () => {
         const identityPath = path.join(
           directory,
           "openrouter_api-cand-run.requested-routing-v1.json",
+        );
+        const configurationPath = path.join(
+          directory,
+          "openrouter_api-cand-run.configuration-v1.json",
         );
         const resolvedIdentity = path.resolve(identityPath);
         yield* fs.writeFileString(reportPath, "occupied\n", { flag: "wx", mode: 0o600 });
@@ -678,9 +868,11 @@ describe("live eval durable outputs", () => {
         const result = yield* Effect.result(
           writeLiveEvalReportWithRequestedRoutingEvidence({
             reportPath,
-            reportContent: "{}\n",
+            reportContent: configurationReportContent,
             identityPath,
             requestedRouting: openRouterRequestedRouting,
+            configurationPath,
+            configurationEvidence: configurationEvidence(configurationReportContent),
           }).pipe(Effect.provideService(FileSystem.FileSystem, refusedCleanup)),
         );
         assert.strictEqual(result._tag, "Failure");
@@ -688,6 +880,60 @@ describe("live eval durable outputs", () => {
           assert.strictEqual(result.failure.reason, "identity-write-failed");
         }
         assert.isTrue(yield* fs.exists(identityPath));
+        assert.isFalse(yield* fs.exists(configurationPath));
+        assert.strictEqual(yield* fs.readFileString(reportPath), "occupied\n");
+      }),
+    );
+
+    it.effect("still attempts routing cleanup when configuration cleanup fails", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectoryScoped({
+          prefix: "live-cli-config-cleanup-failed-",
+        });
+        const reportPath = path.join(directory, "openrouter_api-cand-run.json");
+        const identityPath = path.join(
+          directory,
+          "openrouter_api-cand-run.requested-routing-v1.json",
+        );
+        const configurationPath = path.join(
+          directory,
+          "openrouter_api-cand-run.configuration-v1.json",
+        );
+        const resolvedConfiguration = path.resolve(configurationPath);
+        yield* fs.writeFileString(reportPath, "occupied\n", { flag: "wx", mode: 0o600 });
+        const refusedCleanup: FileSystem.FileSystem = {
+          ...fs,
+          remove: (file, options) =>
+            path.resolve(file) === resolvedConfiguration
+              ? Effect.fail(
+                  PlatformError.systemError({
+                    _tag: "PermissionDenied",
+                    module: "FileSystem",
+                    method: "remove",
+                    description: "refused configuration cleanup",
+                    pathOrDescriptor: file,
+                  }),
+                )
+              : fs.remove(file, options),
+        };
+        const result = yield* Effect.result(
+          writeLiveEvalReportWithRequestedRoutingEvidence({
+            reportPath,
+            reportContent: configurationReportContent,
+            identityPath,
+            requestedRouting: openRouterRequestedRouting,
+            configurationPath,
+            configurationEvidence: configurationEvidence(configurationReportContent),
+          }).pipe(Effect.provideService(FileSystem.FileSystem, refusedCleanup)),
+        );
+        assert.strictEqual(result._tag, "Failure");
+        if (result._tag === "Failure") {
+          assert.strictEqual(result.failure.reason, "configuration-write-failed");
+        }
+        assert.isFalse(yield* fs.exists(identityPath));
+        assert.isTrue(yield* fs.exists(configurationPath));
         assert.strictEqual(yield* fs.readFileString(reportPath), "occupied\n");
       }),
     );

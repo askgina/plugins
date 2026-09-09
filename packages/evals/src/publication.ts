@@ -14,6 +14,7 @@ import {
 } from "@askgina/contracts";
 import { Data, DateTime, Effect, FileSystem, Function, Option, Path, Schema } from "effect";
 
+import { canonicalJson } from "./canonical-json";
 import { hasSafePublicEvalFields } from "./sanitize";
 
 export type PublicEvalPublicationErrorReason =
@@ -156,17 +157,6 @@ export const decodePublicEvalExportRequest = (
         ? Effect.succeed(request)
         : Effect.fail(error("unsafe_text")),
     ),
-  );
-
-const canonicalJson = (input: unknown): string =>
-  JSON.stringify(input, (_key, value: unknown) =>
-    value !== null && typeof value === "object" && !Array.isArray(value)
-      ? Object.fromEntries(
-          Object.entries(value).sort(([left], [right]) =>
-            left < right ? -1 : left > right ? 1 : 0,
-          ),
-        )
-      : value,
   );
 
 /** Canonical approval subject; deliberately excludes the approval record itself. */
