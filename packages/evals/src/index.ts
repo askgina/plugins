@@ -33,6 +33,17 @@ export {
   type LiveEvalTrialInput,
 } from "./live";
 export {
+  LiveEvalRequestedRoutingEvidenceError,
+  LiveEvalRequestedRoutingEvidenceSchema,
+  LiveEvalRequestedRoutingSchema,
+  liveEvalRequestedRoutingEvidenceOutputPath,
+  makeLiveEvalRequestedRoutingEvidence,
+  sha256Hex,
+  writeLiveEvalRequestedRoutingEvidence,
+  type LiveEvalRequestedRouting,
+  type LiveEvalRequestedRoutingEvidence,
+} from "./profile-identity";
+export {
   PluginEvalResponsesDecodeError,
   PluginEvalResponsesHttpError,
   PluginEvalResponsesRequestError,

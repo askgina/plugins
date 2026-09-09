@@ -19,6 +19,7 @@ import {
   Data,
   Effect,
   FileSystem,
+  Function,
   Layer,
   Option,
   Path,
@@ -50,6 +51,11 @@ import {
   type OmpProvider,
 } from "../omp-harness";
 import { isExactOpenRouterEndpointSlug, runOpenRouterPluginEvalTrial } from "../openrouter";
+import {
+  liveEvalRequestedRoutingEvidenceOutputPath,
+  makeLiveEvalRequestedRoutingEvidence,
+  writeLiveEvalRequestedRoutingEvidence,
+} from "../profile-identity";
 import {
   assertPublicEvalAttemptOutputPath,
   assertPublicEvalAttemptPlan,
@@ -171,7 +177,8 @@ export class LiveEvalCliError extends Data.TaggedError("LiveEvalCliError")<{
     | "trial-failed"
     | "catalog-preflight-failed"
     | "report-exists"
-    | "report-write-failed";
+    | "report-write-failed"
+    | "identity-write-failed";
   readonly missing?: readonly string[];
 }> {}
 
@@ -949,12 +956,48 @@ const writeReport = (outputPath: string, content: string) =>
       .pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "report-exists" })));
   });
 
+export const assertLiveEvalDurableOutputs = Function.dual<
+  (
+    identityPath: string | undefined,
+  ) => (
+    reportPath: string,
+  ) => Effect.Effect<void, LiveEvalCliError, FileSystem.FileSystem | Path.Path>,
+  (
+    reportPath: string,
+    identityPath: string | undefined,
+  ) => Effect.Effect<void, LiveEvalCliError, FileSystem.FileSystem | Path.Path>
+>(2, (reportPath, identityPath) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const report = path.resolve(reportPath);
+    if (
+      yield* fs
+        .exists(report)
+        .pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "report-write-failed" })))
+    ) {
+      return yield* new LiveEvalCliError({ reason: "report-exists" });
+    }
+    if (identityPath === undefined) return;
+    const identity = path.resolve(identityPath);
+    if (identity === report) {
+      return yield* new LiveEvalCliError({ reason: "identity-write-failed" });
+    }
+    if (
+      yield* fs
+        .exists(identity)
+        .pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "identity-write-failed" })))
+    ) {
+      return yield* new LiveEvalCliError({ reason: "identity-write-failed" });
+    }
+  }),
+);
+
 const run = (options: LiveEvalCliOptions) =>
   Effect.scoped(
     Effect.gen(function* () {
       const root = process.cwd();
       const path = yield* Path.Path;
-      const credentials = yield* loadLiveEvalCredentials(options.runner);
       const dispatch = liveEvalTrialDispatch(options);
       const model = dispatch.model ?? options.model;
       const outputPath = path.join(
@@ -962,9 +1005,15 @@ const run = (options: LiveEvalCliOptions) =>
         ".plugin-eval-runs",
         `${dispatch.target}-${options.candidate}-${options.runId}.json`,
       );
+      const identityPath =
+        options.runner === "openrouter"
+          ? liveEvalRequestedRoutingEvidenceOutputPath(path, outputPath)
+          : undefined;
+      yield* assertLiveEvalDurableOutputs(outputPath, identityPath);
       if (options.attemptsOutputPath !== undefined) {
         yield* assertPublicEvalAttemptOutputPath(options.attemptsOutputPath, outputPath);
       }
+      const credentials = yield* loadLiveEvalCredentials(options.runner);
       const suite = yield* loadPluginEvalSuite(options.suitePath);
       yield* preflightLiveEvalSuite(suite).pipe(
         Effect.mapError(() => new LiveEvalCliError({ reason: "catalog-preflight-failed" })),
@@ -1015,7 +1064,7 @@ const run = (options: LiveEvalCliOptions) =>
         yield* requireCodexPluginAuth(codexRuntime, isolatedEnvironment);
       }
 
-      const { report, attempts } = yield* runLiveEvalSuite<
+      const { report, attempts, requestedRouting } = yield* runLiveEvalSuite<
         LiveEvalCliError,
         HttpClient.HttpClient | ChildProcessSpawner | FileSystem.FileSystem | Path.Path
       >(
@@ -1033,6 +1082,16 @@ const run = (options: LiveEvalCliOptions) =>
           repetitions: options.repetitions,
           accountClass: options.accountClass,
           captureAttempts: options.attemptsOutputPath !== undefined,
+          ...(options.runner === "openrouter"
+            ? {
+                requestedRouting: {
+                  kind: "openrouter-endpoint" as const,
+                  endpoint: options.endpoint,
+                  allow_fallbacks: false as const,
+                  require_parameters: true as const,
+                },
+              }
+            : {}),
         },
         (input) => {
           switch (options.runner) {
@@ -1147,7 +1206,27 @@ const run = (options: LiveEvalCliOptions) =>
           attempts,
         });
       }
-      yield* writeReport(outputPath, encoded);
+      if (requestedRouting !== undefined && identityPath !== undefined) {
+        yield* writeLiveEvalRequestedRoutingEvidence({
+          outputPath: identityPath,
+          reportPath: outputPath,
+          reportContent: encoded,
+          evidence: makeLiveEvalRequestedRoutingEvidence({
+            reportContent: encoded,
+            requestedRouting,
+          }),
+        }).pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "identity-write-failed" })));
+        yield* writeReport(outputPath, encoded).pipe(
+          Effect.tapError(() =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              yield* fs.remove(identityPath).pipe(Effect.ignore);
+            }),
+          ),
+        );
+      } else {
+        yield* writeReport(outputPath, encoded);
+      }
       if (options.attemptsOutputPath !== undefined && capture !== undefined) {
         yield* writePublicEvalAttemptCapture({
           outputPath: options.attemptsOutputPath,

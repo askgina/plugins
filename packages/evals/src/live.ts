@@ -26,10 +26,12 @@ import {
 } from "./report";
 import type { HermeticEvalSanitizationError } from "./sanitize";
 import { assertPublicEvalAttemptPlan, PublicEvalAttemptCaptureError } from "./public-attempts";
+import type { LiveEvalRequestedRouting } from "./profile-identity";
 
 export interface LiveEvalResult {
   readonly report: SanitizedEvalRunReport;
   readonly attempts: readonly PublicEvalAttemptSummary[] | null;
+  readonly requestedRouting?: LiveEvalRequestedRouting;
 }
 export const MINIMUM_LIVE_REPETITIONS = 3;
 export const MAXIMUM_LIVE_REPETITIONS = 5;
@@ -47,6 +49,7 @@ export interface LiveEvalOptions {
   readonly reasoning: string;
   readonly repetitions: number;
   readonly accountClass: string;
+  readonly requestedRouting?: LiveEvalRequestedRouting;
 }
 
 export interface LiveEvalTrialInput {
@@ -67,7 +70,9 @@ export class LiveEvalSelectionError extends Data.TaggedError("LiveEvalSelectionE
     | "out-of-catalog-tool"
     | "too-many-cases"
     | "unsupported-turns"
-    | "unknown-case";
+    | "unknown-case"
+    | "missing-requested-routing"
+    | "unexpected-requested-routing";
 }> {}
 
 export const preflightLiveEvalSuite = (
@@ -148,6 +153,12 @@ export const runLiveEvalSuite = Function.dual<
   ): LiveEvalSuiteEffect<TrialError, Requirements> =>
     Effect.gen(function* () {
       yield* preflightLiveEvalSuite(options.suite);
+      if (options.target === "openrouter_api" && options.requestedRouting === undefined) {
+        return yield* new LiveEvalSelectionError({ reason: "missing-requested-routing" });
+      }
+      if (options.target !== "openrouter_api" && options.requestedRouting !== undefined) {
+        return yield* new LiveEvalSelectionError({ reason: "unexpected-requested-routing" });
+      }
       if (
         !Number.isSafeInteger(options.repetitions) ||
         options.repetitions < MINIMUM_LIVE_REPETITIONS ||
@@ -253,6 +264,12 @@ export const runLiveEvalSuite = Function.dual<
         manifest: observationSet.manifest,
         report,
       });
-      return { report: sanitizedReport, attempts };
+      return {
+        report: sanitizedReport,
+        attempts,
+        ...(options.requestedRouting === undefined
+          ? {}
+          : { requestedRouting: options.requestedRouting }),
+      };
     }),
 );

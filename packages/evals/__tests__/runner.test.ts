@@ -483,6 +483,16 @@ describe("hermetic eval replay", () => {
                 repetitions: 3,
                 accountClass: "synthetic",
                 captureAttempts: true,
+                ...(target === "openrouter_api"
+                  ? {
+                      requestedRouting: {
+                        kind: "openrouter-endpoint" as const,
+                        endpoint: "openai",
+                        allow_fallbacks: false as const,
+                        require_parameters: true as const,
+                      },
+                    }
+                  : {}),
               },
               (input) =>
                 Effect.succeed({

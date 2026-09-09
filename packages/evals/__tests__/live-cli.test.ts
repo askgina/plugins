@@ -1,7 +1,7 @@
 import * as BunPath from "@effect/platform-bun/BunPath";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { assert, describe, it } from "@effect/vitest";
-import { Config, ConfigProvider, Effect, Option } from "effect";
+import { Config, ConfigProvider, Effect, FileSystem, Option, Path } from "effect";
 import { ChildProcess } from "effect/unstable/process";
 
 import { collectBoundedUtf8Output } from "../src/bounded-output";
@@ -9,6 +9,7 @@ import { collectBoundedUtf8Output } from "../src/bounded-output";
 import {
   DEFAULT_CLAUDE_MAX_TURNS,
   DEFAULT_OPENROUTER_MAX_STEPS,
+  assertLiveEvalDurableOutputs,
   formatLiveEvalCliFailure,
   formatLiveEvalCliUsage,
   loadLiveEvalCredentials,
@@ -489,6 +490,30 @@ describe("live eval CLI subprocess", () => {
           assert.notInclude(stderr.text, "OMP_EVAL_API_KEY=");
         }),
       ),
+    );
+  });
+});
+
+describe("live eval durable outputs", () => {
+  it.layer(BunServices.layer)((it) => {
+    it.effect("rejects a preexisting routing-evidence path before credentials or trials", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectory(undefined);
+        const reportPath = path.join(directory, "openrouter_api-cand-run.json");
+        const identityPath = path.join(
+          directory,
+          "openrouter_api-cand-run.requested-routing-v1.json",
+        );
+        yield* fs.writeFileString(identityPath, "{}\n", { flag: "wx" });
+        const result = yield* Effect.result(assertLiveEvalDurableOutputs(reportPath, identityPath));
+        assert.strictEqual(result._tag, "Failure");
+        if (result._tag === "Failure") {
+          assert.strictEqual(result.failure.reason, "identity-write-failed");
+        }
+        assert.isFalse(yield* fs.exists(reportPath));
+      }),
     );
   });
 });
