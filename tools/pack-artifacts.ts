@@ -90,7 +90,7 @@ const PACKAGES = [
       /^codex-cli-[A-Za-z0-9_-]+\.js\.map$/u,
       /^index\.d\.ts$/u,
       /^index\.js$/u,
-      /^omp-harness-[A-Za-z0-9_-]+\.d\.ts$/u,
+      /^profile-identity-[A-Za-z0-9_-]+\.d\.ts$/u,
       /^publication-[A-Za-z0-9_-]+\.js$/u,
       /^publication-[A-Za-z0-9_-]+\.js\.map$/u,
       /^replay-[A-Za-z0-9_-]+\.js$/u,
