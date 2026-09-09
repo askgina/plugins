@@ -49,7 +49,7 @@ import {
   runOmpHarnessPluginEvalTrial,
   type OmpProvider,
 } from "../omp-harness";
-import { runOpenRouterPluginEvalTrial } from "../openrouter";
+import { isExactOpenRouterEndpointSlug, runOpenRouterPluginEvalTrial } from "../openrouter";
 import {
   assertPublicEvalAttemptOutputPath,
   assertPublicEvalAttemptPlan,
@@ -147,7 +147,11 @@ interface LiveEvalCliSharedOptions {
 
 export type LiveEvalCliOptions =
   | (LiveEvalCliSharedOptions & { readonly runner: "responses" | "codex" })
-  | (LiveEvalCliSharedOptions & { readonly runner: "openrouter"; readonly maxSteps: number })
+  | (LiveEvalCliSharedOptions & {
+      readonly runner: "openrouter";
+      readonly maxSteps: number;
+      readonly endpoint: string;
+    })
   | (LiveEvalCliSharedOptions & { readonly runner: "claude"; readonly maxTurns: number })
   | (LiveEvalCliSharedOptions & { readonly runner: "omp"; readonly provider: OmpProvider });
 
@@ -177,8 +181,8 @@ const REQUIRED_LIVE_EVAL_FLAGS =
 export const formatLiveEvalCliUsage = (runner?: LiveEvalRunner): string => {
   if (runner === "openrouter") {
     return [
-      `Usage: bun run eval:openrouter -- ${REQUIRED_LIVE_EVAL_FLAGS} [--max-steps <1..${MAXIMUM_LIVE_EVAL_TOOL_BUDGET}>]`,
-      `--max-steps default ${DEFAULT_OPENROUTER_MAX_STEPS}. Environment: ${ASK_GINA_ACCESS_TOKEN}, ${OPENROUTER_API_KEY}`,
+      `Usage: bun run eval:openrouter -- ${REQUIRED_LIVE_EVAL_FLAGS} --openrouter-endpoint <slug> [--max-steps <1..${MAXIMUM_LIVE_EVAL_TOOL_BUDGET}>]`,
+      `--openrouter-endpoint is required and has no default. --max-steps default ${DEFAULT_OPENROUTER_MAX_STEPS}. Environment: ${ASK_GINA_ACCESS_TOKEN}, ${OPENROUTER_API_KEY}`,
     ].join("\n");
   }
   if (runner === "claude") {
@@ -207,7 +211,7 @@ export const formatLiveEvalCliUsage = (runner?: LiveEvalRunner): string => {
   }
   return [
     `Usage: bun run eval:<responses|codex|openrouter|claude|omp> -- ${REQUIRED_LIVE_EVAL_FLAGS}`,
-    `OpenRouter-only: [--max-steps <1..${MAXIMUM_LIVE_EVAL_TOOL_BUDGET}>] (default ${DEFAULT_OPENROUTER_MAX_STEPS}). Claude-only: [--max-turns <1..${MAXIMUM_LIVE_EVAL_TOOL_BUDGET}>] (default ${DEFAULT_CLAUDE_MAX_TURNS}). OMP-only: --provider <openai|anthropic|openrouter>.`,
+    `OpenRouter-only: --openrouter-endpoint <slug> [--max-steps <1..${MAXIMUM_LIVE_EVAL_TOOL_BUDGET}>] (default ${DEFAULT_OPENROUTER_MAX_STEPS}). Claude-only: [--max-turns <1..${MAXIMUM_LIVE_EVAL_TOOL_BUDGET}>] (default ${DEFAULT_CLAUDE_MAX_TURNS}). OMP-only: --provider <openai|anthropic|openrouter>.`,
     `Environment: ${ASK_GINA_ACCESS_TOKEN} always; ${OPENAI_API_KEY} (responses, codex); ${OPENROUTER_API_KEY} (openrouter); ${ANTHROPIC_API_KEY} and ${CLAUDE_EVAL_EXECUTABLE} (claude); ${CODEX_EVAL_EXECUTABLE} and ${CODEX_EVAL_EXECUTABLE_SHA256} (codex); ${OMP_EVAL_API_KEY}, ${OMP_EVAL_EXECUTABLE}, and ${OMP_EVAL_EXECUTABLE_SHA256} (omp).`,
   ].join("\n");
 };
@@ -249,6 +253,7 @@ export const parseLiveEvalCliOptions = (
     let maxSteps: number | undefined;
     let maxTurns: number | undefined;
     let provider: OmpProvider | undefined;
+    let endpoint: string | undefined;
     const caseIds: string[] = [];
     const seenFlags = new Set<string>();
     const help = argv.some((flag) => flag === "--help" || flag === "-h");
@@ -328,6 +333,9 @@ export const parseLiveEvalCliOptions = (
             break;
           }
           return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
+        case "--openrouter-endpoint":
+          endpoint = value;
+          break;
         default:
           return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
       }
@@ -359,6 +367,9 @@ export const parseLiveEvalCliOptions = (
     if (runner !== "omp" && seenFlags.has("--provider")) {
       return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
     }
+    if (runner !== "openrouter" && seenFlags.has("--openrouter-endpoint")) {
+      return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
+    }
 
     const shared = {
       suitePath,
@@ -374,9 +385,17 @@ export const parseLiveEvalCliOptions = (
     } satisfies LiveEvalCliSharedOptions;
 
     if (runner === "openrouter") {
+      if (endpoint === undefined || !isExactOpenRouterEndpointSlug(endpoint, model)) {
+        return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
+      }
       return {
         mode: "run",
-        options: { ...shared, runner, maxSteps: maxSteps ?? DEFAULT_OPENROUTER_MAX_STEPS },
+        options: {
+          ...shared,
+          runner,
+          maxSteps: maxSteps ?? DEFAULT_OPENROUTER_MAX_STEPS,
+          endpoint,
+        },
       };
     }
     if (runner === "claude") {
@@ -1040,6 +1059,7 @@ const run = (options: LiveEvalCliOptions) =>
                 apiKey: Redacted.value(credentials.openRouterApiKey),
                 mcpAuthorization: Redacted.value(credentials.accessToken),
                 model: options.model,
+                endpoint: options.endpoint,
                 reasoning: options.reasoning,
                 runId: input.runId,
                 repetition: input.repetition,

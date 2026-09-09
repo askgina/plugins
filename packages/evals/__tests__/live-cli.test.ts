@@ -1,7 +1,7 @@
 import * as BunPath from "@effect/platform-bun/BunPath";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { assert, describe, it } from "@effect/vitest";
-import { Config, ConfigProvider, Effect } from "effect";
+import { Config, ConfigProvider, Effect, Option } from "effect";
 import { ChildProcess } from "effect/unstable/process";
 
 import { collectBoundedUtf8Output } from "../src/bounded-output";
@@ -34,6 +34,7 @@ const requiredFlags = (runner: string, extra: readonly string[] = []): readonly 
   "local",
   "--timeout-ms",
   "120000",
+  ...(runner === "openrouter" ? ["--openrouter-endpoint", "openai"] : []),
   ...extra,
 ];
 
@@ -62,6 +63,7 @@ describe("live eval CLI parser", () => {
       assert.strictEqual(openrouter.mode, "run");
       if (openrouter.mode === "run" && openrouter.options.runner === "openrouter") {
         assert.strictEqual(openrouter.options.maxSteps, DEFAULT_OPENROUTER_MAX_STEPS);
+        assert.strictEqual(openrouter.options.endpoint, "openai");
       }
 
       const claude = yield* parseLiveEvalCliOptions(requiredFlags("claude"));
@@ -154,6 +156,94 @@ describe("live eval CLI parser", () => {
         parseLiveEvalCliOptions(requiredFlags("omp", ["--provider", "openai", "--max-steps", "8"])),
       );
       assert.strictEqual(ompSteps._tag, "Failure");
+      const responsesEndpoint = yield* Effect.result(
+        parseLiveEvalCliOptions(requiredFlags("responses", ["--openrouter-endpoint", "openai"])),
+      );
+      assert.strictEqual(responsesEndpoint._tag, "Failure");
+    }),
+  );
+
+  it.effect("requires an exact OpenRouter endpoint before credentials", () =>
+    Effect.gen(function* () {
+      const missing = yield* Effect.result(
+        parseLiveEvalCliOptions([
+          "--runner",
+          "openrouter",
+          "--suite",
+          "suite.yaml",
+          "--run-id",
+          "run-1",
+          "--candidate",
+          "cand-1",
+          "--model",
+          "openai/gpt-4o",
+          "--reasoning",
+          "medium",
+          "--repetitions",
+          "3",
+          "--account-class",
+          "local",
+          "--timeout-ms",
+          "120000",
+        ]),
+      );
+      assert.strictEqual(missing._tag, "Failure");
+      if (missing._tag === "Failure") {
+        assert.strictEqual(missing.failure.reason, "invalid-arguments");
+        assert.include(formatLiveEvalCliFailure(missing.failure), "--openrouter-endpoint");
+      }
+
+      const sameAsModel = yield* Effect.result(
+        parseLiveEvalCliOptions([
+          "--runner",
+          "openrouter",
+          "--suite",
+          "suite.yaml",
+          "--run-id",
+          "run-1",
+          "--candidate",
+          "cand-1",
+          "--model",
+          "openai/gpt-4o",
+          "--reasoning",
+          "medium",
+          "--repetitions",
+          "3",
+          "--account-class",
+          "local",
+          "--timeout-ms",
+          "120000",
+          "--openrouter-endpoint",
+          "openai/gpt-4o",
+        ]),
+      );
+      assert.strictEqual(sameAsModel._tag, "Failure");
+
+      const malformed = yield* Effect.result(
+        parseLiveEvalCliOptions([
+          "--runner",
+          "openrouter",
+          "--suite",
+          "suite.yaml",
+          "--run-id",
+          "run-1",
+          "--candidate",
+          "cand-1",
+          "--model",
+          "openai/gpt-4o",
+          "--reasoning",
+          "medium",
+          "--repetitions",
+          "3",
+          "--account-class",
+          "local",
+          "--timeout-ms",
+          "120000",
+          "--openrouter-endpoint",
+          "openai,anthropic",
+        ]),
+      );
+      assert.strictEqual(malformed._tag, "Failure");
     }),
   );
 
@@ -362,18 +452,26 @@ describe("live eval CLI subprocess", () => {
       Effect.scoped(
         Effect.gen(function* () {
           const pathValue = yield* Config.string("PATH");
-          const child = yield* ChildProcess.make(
-            "bun",
-            ["packages/evals/src/bin/live.ts", "--help"],
-            {
-              cwd: process.cwd(),
-              env: { PATH: pathValue },
-              extendEnv: false,
-              stdin: "ignore",
-              stdout: "pipe",
-              stderr: "pipe",
-            },
-          );
+          const tsconfigOverride = yield* Config.option(
+            Config.string("ASK_GINA_EVALS_TSCONFIG_OVERRIDE"),
+          ).pipe(Effect.map(Option.getOrUndefined));
+          const argv =
+            tsconfigOverride === undefined || tsconfigOverride.length === 0
+              ? ["packages/evals/src/bin/live.ts", "--help"]
+              : [
+                  "--tsconfig-override",
+                  tsconfigOverride,
+                  "packages/evals/src/bin/live.ts",
+                  "--help",
+                ];
+          const child = yield* ChildProcess.make("bun", argv, {
+            cwd: process.cwd(),
+            env: { PATH: pathValue },
+            extendEnv: false,
+            stdin: "ignore",
+            stdout: "pipe",
+            stderr: "pipe",
+          });
           const [stdout, stderr, exitCode] = yield* Effect.all(
             [
               collectBoundedUtf8Output(child.stdout, 65_536),

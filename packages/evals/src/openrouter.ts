@@ -20,6 +20,9 @@ const INCOMPLETE_GENERATION_ERROR = "OpenRouter generation did not complete with
 const UTF8_ENCODER = new TextEncoder();
 const CANONICAL_ALLOWED_TOOLS = listCatalogToolNames();
 const OPENROUTER_WIRE_TOOL_NAME = /^[A-Za-z0-9_-]{1,64}$/;
+const OPENROUTER_ENDPOINT_MAX_LENGTH = 128;
+const OPENROUTER_ENDPOINT_SLUG =
+  /^[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?(?:\/[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?){0,3}$/;
 
 const OPENROUTER_REASONING_EFFORTS = {
   none: true,
@@ -36,6 +39,7 @@ export interface OpenRouterTrialOptions {
   readonly apiKey: string;
   readonly mcpAuthorization: string;
   readonly model: string;
+  readonly endpoint: string;
   readonly reasoning: string;
   readonly runId: string;
   readonly repetition: number;
@@ -49,6 +53,7 @@ interface ValidatedOpenRouterTrialOptions {
   readonly apiKey: string;
   readonly mcpAuthorization: string;
   readonly model: string;
+  readonly endpoint: string;
   readonly reasoning: OpenRouterReasoningEffort;
   readonly runId: string;
   readonly repetition: number;
@@ -99,6 +104,26 @@ const catalogsMatch = (left: readonly string[], right: readonly string[]): boole
 const isReasoningEffort = (value: string): value is OpenRouterReasoningEffort =>
   Object.hasOwn(OPENROUTER_REASONING_EFFORTS, value);
 
+const modelBaseName = (model: string): string => {
+  const separator = model.lastIndexOf("/");
+  return separator === -1 ? model : model.slice(separator + 1);
+};
+
+export const isExactOpenRouterEndpointSlug = Function.dual<
+  (model: string) => (endpoint: string) => boolean,
+  (endpoint: string, model: string) => boolean
+>(
+  2,
+  (endpoint, model) =>
+    typeof endpoint === "string" &&
+    endpoint.length > 0 &&
+    endpoint.length <= OPENROUTER_ENDPOINT_MAX_LENGTH &&
+    endpoint === endpoint.trim() &&
+    OPENROUTER_ENDPOINT_SLUG.test(endpoint) &&
+    endpoint !== model &&
+    endpoint !== modelBaseName(model),
+);
+
 const validateOptions = (
   evalCase: PluginEvalCase,
   options: OpenRouterTrialOptions,
@@ -110,6 +135,7 @@ const validateOptions = (
     options.apiKey.trim().length > 0 &&
     options.mcpAuthorization.trim().length > 0 &&
     options.model.trim().length > 0 &&
+    isExactOpenRouterEndpointSlug(options.endpoint, options.model) &&
     options.runId.trim().length > 0 &&
     Number.isSafeInteger(options.repetition) &&
     options.repetition > 0 &&
@@ -141,6 +167,7 @@ const validateOptions = (
     apiKey: options.apiKey,
     mcpAuthorization: options.mcpAuthorization,
     model: options.model,
+    endpoint: options.endpoint,
     reasoning: options.reasoning,
     runId: options.runId,
     repetition: options.repetition,
@@ -508,8 +535,16 @@ export const runOpenRouterPluginEvalTrial = Function.dual<
                     apiKey: validated.apiKey,
                     compatibility: "strict",
                   });
+                  const routing = {
+                    only: [validated.endpoint],
+                    allow_fallbacks: false,
+                    require_parameters: true,
+                  };
                   return generateText({
-                    model: openrouter(validated.model, { usage: { include: true } }),
+                    model: openrouter(validated.model, {
+                      usage: { include: true },
+                      provider: routing,
+                    }),
                     messages: evalCase.turns.map(({ role, content }) => ({ role, content })),
                     allowSystemInMessages: true,
                     tools: wireTools,
@@ -521,6 +556,7 @@ export const runOpenRouterPluginEvalTrial = Function.dual<
                     providerOptions: {
                       openrouter: {
                         reasoning: { effort: validated.reasoning },
+                        provider: routing,
                       },
                     },
                   });
