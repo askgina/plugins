@@ -119,6 +119,43 @@ describe("requested routing evidence", () => {
           assert.strictEqual(missing.failure.reason, "missing-requested-routing");
         }
 
+        const invalidRequestedRoutings: ReadonlyArray<readonly [string, unknown]> = [
+          ["allows fallbacks", { ...openRouterRouting("openai"), allow_fallbacks: true }],
+          ["uses the wrong kind", { ...openRouterRouting("openai"), kind: "openrouter-model" }],
+          ["matches the model", openRouterRouting("openai/gpt-5.6-sol")],
+          ["matches the model basename", openRouterRouting("gpt-5.6-sol")],
+          ["uses a malformed slug", openRouterRouting("openai//flex")],
+        ];
+        for (const [name, requestedRouting] of invalidRequestedRoutings) {
+          let trialInvocations = 0;
+          const invalid = yield* Effect.result(
+            runLiveEvalSuite(
+              {
+                suite,
+                caseIds: [evalCase.id],
+                runId: `routing-invalid-${name}`,
+                candidate: "test-candidate",
+                target: "openrouter_api",
+                model: "openai/gpt-5.6-sol",
+                reasoning: "medium",
+                repetitions: 3,
+                accountClass: "synthetic",
+                requestedRouting,
+              },
+              () => {
+                trialInvocations += 1;
+                return Effect.die(`trial should not run for ${name}`);
+              },
+            ),
+          );
+          assert.strictEqual(invalid._tag, "Failure", name);
+          if (invalid._tag === "Failure") {
+            assert.instanceOf(invalid.failure, LiveEvalSelectionError, name);
+            assert.strictEqual(invalid.failure.reason, "invalid-requested-routing", name);
+          }
+          assert.strictEqual(trialInvocations, 0, name);
+        }
+
         const directory = yield* fs.makeTempDirectory(undefined);
         const openaiReportPath = path.join(directory, "openai.json");
         const flexReportPath = path.join(directory, "flex.json");

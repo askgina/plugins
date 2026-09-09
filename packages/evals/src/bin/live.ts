@@ -55,6 +55,7 @@ import {
   liveEvalRequestedRoutingEvidenceOutputPath,
   makeLiveEvalRequestedRoutingEvidence,
   writeLiveEvalRequestedRoutingEvidence,
+  type LiveEvalRequestedRouting,
 } from "../profile-identity";
 import {
   assertPublicEvalAttemptOutputPath,
@@ -956,6 +957,34 @@ const writeReport = (outputPath: string, content: string) =>
       .pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "report-exists" })));
   });
 
+export const writeLiveEvalReportWithRequestedRoutingEvidence = (options: {
+  readonly reportPath: string;
+  readonly reportContent: string;
+  readonly identityPath: string;
+  readonly requestedRouting: LiveEvalRequestedRouting;
+}): Effect.Effect<void, LiveEvalCliError, FileSystem.FileSystem | Path.Path> =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const identityPath = path.resolve(options.identityPath);
+    yield* writeLiveEvalRequestedRoutingEvidence({
+      outputPath: identityPath,
+      reportPath: options.reportPath,
+      reportContent: options.reportContent,
+      evidence: makeLiveEvalRequestedRoutingEvidence({
+        reportContent: options.reportContent,
+        requestedRouting: options.requestedRouting,
+      }),
+    }).pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "identity-write-failed" })));
+    const written = yield* Effect.result(writeReport(options.reportPath, options.reportContent));
+    if (written._tag === "Failure") {
+      yield* fs
+        .remove(identityPath)
+        .pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "identity-write-failed" })));
+      return yield* written.failure;
+    }
+  });
+
 export const assertLiveEvalDurableOutputs = Function.dual<
   (
     identityPath: string | undefined,
@@ -1207,23 +1236,12 @@ const run = (options: LiveEvalCliOptions) =>
         });
       }
       if (requestedRouting !== undefined && identityPath !== undefined) {
-        yield* writeLiveEvalRequestedRoutingEvidence({
-          outputPath: identityPath,
+        yield* writeLiveEvalReportWithRequestedRoutingEvidence({
           reportPath: outputPath,
           reportContent: encoded,
-          evidence: makeLiveEvalRequestedRoutingEvidence({
-            reportContent: encoded,
-            requestedRouting,
-          }),
-        }).pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "identity-write-failed" })));
-        yield* writeReport(outputPath, encoded).pipe(
-          Effect.tapError(() =>
-            Effect.gen(function* () {
-              const fs = yield* FileSystem.FileSystem;
-              yield* fs.remove(identityPath).pipe(Effect.ignore);
-            }),
-          ),
-        );
+          identityPath,
+          requestedRouting,
+        });
       } else {
         yield* writeReport(outputPath, encoded);
       }

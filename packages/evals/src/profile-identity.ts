@@ -2,9 +2,37 @@ import { createHash } from "node:crypto";
 
 import { Data, Effect, FileSystem, Function, Path, Schema } from "effect";
 
+const OPENROUTER_ENDPOINT_MAX_LENGTH = 128;
+const OPENROUTER_ENDPOINT_SLUG =
+  /^[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?(?:\/[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?){0,3}$/;
+
+const modelBaseName = (model: string): string => {
+  const separator = model.lastIndexOf("/");
+  return separator === -1 ? model : model.slice(separator + 1);
+};
+
+export const isExactOpenRouterEndpointSlug = Function.dual<
+  (model: string) => (endpoint: string) => boolean,
+  (endpoint: string, model: string) => boolean
+>(
+  2,
+  (endpoint, model) =>
+    typeof endpoint === "string" &&
+    endpoint.length > 0 &&
+    endpoint.length <= OPENROUTER_ENDPOINT_MAX_LENGTH &&
+    endpoint === endpoint.trim() &&
+    OPENROUTER_ENDPOINT_SLUG.test(endpoint) &&
+    endpoint !== model &&
+    endpoint !== modelBaseName(model),
+);
+
 export const LiveEvalRequestedRoutingSchema = Schema.Struct({
   kind: Schema.Literal("openrouter-endpoint"),
-  endpoint: Schema.NonEmptyString.check(Schema.isMaxLength(128)),
+  endpoint: Schema.NonEmptyString.check(
+    Schema.isMaxLength(OPENROUTER_ENDPOINT_MAX_LENGTH),
+    Schema.isPattern(OPENROUTER_ENDPOINT_SLUG),
+    Schema.makeFilter((endpoint) => endpoint === endpoint.trim()),
+  ),
   allow_fallbacks: Schema.Literal(false),
   require_parameters: Schema.Literal(true),
 });

@@ -10,6 +10,9 @@ import type {
   PluginEvalTokenUsage,
   PluginEvalToolCall,
 } from "./contracts";
+import { isExactOpenRouterEndpointSlug } from "./profile-identity";
+
+export { isExactOpenRouterEndpointSlug } from "./profile-identity";
 
 const DEFAULT_TIMEOUT_MS = 120_000;
 const DEFAULT_MAX_STEPS = 8;
@@ -20,9 +23,6 @@ const INCOMPLETE_GENERATION_ERROR = "OpenRouter generation did not complete with
 const UTF8_ENCODER = new TextEncoder();
 const CANONICAL_ALLOWED_TOOLS = listCatalogToolNames();
 const OPENROUTER_WIRE_TOOL_NAME = /^[A-Za-z0-9_-]{1,64}$/;
-const OPENROUTER_ENDPOINT_MAX_LENGTH = 128;
-const OPENROUTER_ENDPOINT_SLUG =
-  /^[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?(?:\/[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?){0,3}$/;
 
 const OPENROUTER_REASONING_EFFORTS = {
   none: true,
@@ -103,26 +103,6 @@ const catalogsMatch = (left: readonly string[], right: readonly string[]): boole
 
 const isReasoningEffort = (value: string): value is OpenRouterReasoningEffort =>
   Object.hasOwn(OPENROUTER_REASONING_EFFORTS, value);
-
-const modelBaseName = (model: string): string => {
-  const separator = model.lastIndexOf("/");
-  return separator === -1 ? model : model.slice(separator + 1);
-};
-
-export const isExactOpenRouterEndpointSlug = Function.dual<
-  (model: string) => (endpoint: string) => boolean,
-  (endpoint: string, model: string) => boolean
->(
-  2,
-  (endpoint, model) =>
-    typeof endpoint === "string" &&
-    endpoint.length > 0 &&
-    endpoint.length <= OPENROUTER_ENDPOINT_MAX_LENGTH &&
-    endpoint === endpoint.trim() &&
-    OPENROUTER_ENDPOINT_SLUG.test(endpoint) &&
-    endpoint !== model &&
-    endpoint !== modelBaseName(model),
-);
 
 const validateOptions = (
   evalCase: PluginEvalCase,

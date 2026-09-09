@@ -4,7 +4,7 @@ import {
   listCatalogToolNames,
   type PublicEvalAttemptSummary,
 } from "@askgina/contracts";
-import { Data, DateTime, Effect, Function } from "effect";
+import { Data, DateTime, Effect, Function, Schema } from "effect";
 
 import type {
   PluginEvalCase,
@@ -26,7 +26,11 @@ import {
 } from "./report";
 import type { HermeticEvalSanitizationError } from "./sanitize";
 import { assertPublicEvalAttemptPlan, PublicEvalAttemptCaptureError } from "./public-attempts";
-import type { LiveEvalRequestedRouting } from "./profile-identity";
+import {
+  isExactOpenRouterEndpointSlug,
+  LiveEvalRequestedRoutingSchema,
+  type LiveEvalRequestedRouting,
+} from "./profile-identity";
 
 export interface LiveEvalResult {
   readonly report: SanitizedEvalRunReport;
@@ -49,7 +53,7 @@ export interface LiveEvalOptions {
   readonly reasoning: string;
   readonly repetitions: number;
   readonly accountClass: string;
-  readonly requestedRouting?: LiveEvalRequestedRouting;
+  readonly requestedRouting?: unknown;
 }
 
 export interface LiveEvalTrialInput {
@@ -72,6 +76,7 @@ export class LiveEvalSelectionError extends Data.TaggedError("LiveEvalSelectionE
     | "unsupported-turns"
     | "unknown-case"
     | "missing-requested-routing"
+    | "invalid-requested-routing"
     | "unexpected-requested-routing";
 }> {}
 
@@ -159,6 +164,21 @@ export const runLiveEvalSuite = Function.dual<
       if (options.target !== "openrouter_api" && options.requestedRouting !== undefined) {
         return yield* new LiveEvalSelectionError({ reason: "unexpected-requested-routing" });
       }
+      const requestedRouting =
+        options.target === "openrouter_api"
+          ? yield* Schema.decodeUnknownEffect(LiveEvalRequestedRoutingSchema, {
+              errors: "all",
+              onExcessProperty: "error",
+            })(options.requestedRouting).pipe(
+              Effect.mapError(
+                () => new LiveEvalSelectionError({ reason: "invalid-requested-routing" }),
+              ),
+              Effect.filterOrFail(
+                (decoded) => isExactOpenRouterEndpointSlug(decoded.endpoint, options.model),
+                () => new LiveEvalSelectionError({ reason: "invalid-requested-routing" }),
+              ),
+            )
+          : undefined;
       if (
         !Number.isSafeInteger(options.repetitions) ||
         options.repetitions < MINIMUM_LIVE_REPETITIONS ||
@@ -267,9 +287,7 @@ export const runLiveEvalSuite = Function.dual<
       return {
         report: sanitizedReport,
         attempts,
-        ...(options.requestedRouting === undefined
-          ? {}
-          : { requestedRouting: options.requestedRouting }),
+        ...(requestedRouting === undefined ? {} : { requestedRouting }),
       };
     }),
 );
