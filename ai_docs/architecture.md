@@ -23,10 +23,17 @@ source without a generation step. `.cursor-plugin/marketplace.json` is the
 template-native Cursor marketplace descriptor and points at the same plugin
 root. Devin has no separate marketplace descriptor in this repository. Remote
 consumers install `plugins/ask-gina/` directly with a `git-subdir` source, which
-clones that whole plugin directory. The repository root is not a Devin plugin,
-so its contributor-facing `AGENTS.md` never becomes an installed session rule.
-A future Devin marketplace must use a dedicated repository whose root content
-is safe to install. The directly
+clones that whole plugin directory. Devin's public marketplace
+(`CognitionAI/devin-marketplace`) lists the plugin as a pinned `git-subdir`
+entry in root `.devin-plugin/plugin.json` `optionalPlugins` and reads
+`displayName`, `logo`, and category `keywords` (`Finance`) from
+`plugins/ask-gina/.devin-plugin/plugin.json` at the pinned `sha`, so marketplace
+card metadata is authored in that manifest and a plugin change is published to
+the marketplace only by bumping the pin there. The repository root is not a
+Devin plugin, so its contributor-facing `AGENTS.md` never becomes an installed
+session rule. A self-hosted Devin marketplace meta-plugin would need a dedicated
+repository whose root content is safe to install; this repository root is not
+one. The directly
 loadable OpenAI files live at the plugin
 root: `.codex-plugin/plugin.json`, `.mcp.json`, `assets/icon.svg`, and `skills/`.
 The directly loadable Cursor files live beside them:
@@ -55,7 +62,8 @@ Every remaining host combines its `targets/<host>/` overlay with the same
 canonical skills. Generated host trees are output, never authoring source.
 The Cursor generated host also includes `README.md`, `rules/`, and `commands/`.
 Those extras are Cursor-only. The generated Devin archive stays lean
-(`.devin-plugin`, `.mcp.json`, `skills/`) even though a `git-subdir` clone of
+(`.devin-plugin`, `.mcp.json`, `assets/icon.svg` because the manifest `logo`
+points at it, and `skills/`) even though a `git-subdir` clone of
 `plugins/ask-gina/` contains the rest of the package. Grok Bot still loads
 skills and MCP.
 

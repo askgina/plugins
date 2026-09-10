@@ -74,14 +74,14 @@ const EXPECTED_MCP_APP_BOUND_TOOLS: readonly string[] = [
 
 const EXPECTED_PREDICTION_SKILL_TOOLS = [
   "predictions.searchPredictionMarkets",
-  "predictions.getExpiringMarkets",
   "predictions.getPredictionOrderbook",
-  "predictions.getSeriesMarket",
-  "predictions.getPredictionMarketDetails",
   "predictions.fetchPolymarketData",
   "predictions.fetchPolymarketHistory",
   "predictions.getPolymarketPositions",
   "predictions.getPolymarketOrderHistory",
+  "predictions.renderPredictionPodium",
+  "predictions.renderPredictionBinaryMarket",
+  "predictions.renderPredictionCollection",
 ] as const;
 
 const familyFromName = (name: (typeof EXPECTED_TOOL_NAMES)[number]) =>
@@ -144,7 +144,12 @@ describe("@askgina/contracts", () => {
       assert.isFalse(isGinaDynamicWidgetTool("gina.getCrosschainPortfolio"));
       assert.isFalse(isGinaDynamicWidgetTool(undefined));
 
-      assert.deepStrictEqual(GINA_RENDER_TOOL_NAMES, ["gina.renderReadOnlyDashboard"]);
+      assert.deepStrictEqual(GINA_RENDER_TOOL_NAMES, [
+        "gina.renderReadOnlyDashboard",
+        "predictions.renderPredictionPodium",
+        "predictions.renderPredictionBinaryMarket",
+        "predictions.renderPredictionCollection",
+      ]);
       assert.isTrue(GINA_RENDER_TOOL_NAMES.every((name: string) => isGinaRenderToolName(name)));
       assert.isFalse(isGinaRenderToolName("predictions.searchPredictionMarkets"));
       assert.isFalse(isGinaRenderToolName(undefined));
@@ -172,14 +177,15 @@ describe("@askgina/contracts", () => {
       );
 
       for (const skill of ASK_GINA_SKILL_DEFINITIONS) {
+        if (skill.name === "research-prediction-markets") {
+          continue;
+        }
         const family =
           skill.name === "review-gina-account"
             ? "portfolio"
             : skill.name === "research-spot-tokens"
               ? "spot"
-              : skill.name === "research-hyperliquid"
-                ? "perps"
-                : "predictions";
+              : "perps";
         assert.deepStrictEqual(
           skill.tools,
           GINA_READ_TOOL_CATALOG.filter((tool) => tool.family === family).map((tool) => tool.name),
@@ -188,7 +194,9 @@ describe("@askgina/contracts", () => {
       const predictionSkill = ASK_GINA_SKILL_DEFINITIONS.find(
         (skill) => skill.name === "research-prediction-markets",
       );
-      assert.deepStrictEqual(predictionSkill?.tools, EXPECTED_PREDICTION_SKILL_TOOLS);
+      assert.ok(predictionSkill);
+      const skillTools: readonly string[] = predictionSkill.tools;
+      assert.deepStrictEqual(skillTools, EXPECTED_PREDICTION_SKILL_TOOLS);
     }),
   );
 

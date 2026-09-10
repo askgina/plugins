@@ -284,7 +284,6 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
     "plugin.json",
     "mcp.json",
     "gemini-extension.json",
-    "assets",
     "rules",
     "commands",
   ],
@@ -373,20 +372,24 @@ const validateManifest = (target: TargetName, manifest: unknown): boolean => {
     return (
       hasExactKeys(manifest, [
         "name",
+        "displayName",
         "version",
         "description",
         "author",
         "homepage",
         "repository",
         "license",
+        "logo",
         "keywords",
         "skills",
         "mcpServers",
       ]) &&
       hasExactKeys(nested(manifest, "author"), ["name"]) &&
+      nested(manifest, "displayName") === "Ask Gina" &&
       nested(manifest, "homepage") === "https://askgina.ai" &&
       nested(manifest, "repository") === "https://github.com/askgina/plugins" &&
       nested(manifest, "license") === "Apache-2.0" &&
+      nested(manifest, "logo") === "assets/icon.svg" &&
       nested(manifest, "skills") === "skills" &&
       nested(manifest, "mcpServers") === ".mcp.json"
     );
@@ -519,6 +522,15 @@ export const checkGeneratedTargetConformance: {
         addCheck(
           "openai.assets.icon_exists",
           "OpenAI icon asset exists",
+          yield* withFileSystemError(iconPath, "cannot be inspected", fs.exists(iconPath)),
+        );
+      }
+
+      if (target === "devin") {
+        const iconPath = paths.join(generatedTargetRoot, "assets", "icon.svg");
+        addCheck(
+          "devin.assets.icon_exists",
+          "Devin manifest logo asset exists",
           yield* withFileSystemError(iconPath, "cannot be inspected", fs.exists(iconPath)),
         );
       }

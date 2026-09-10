@@ -34,8 +34,16 @@ canonical skills as `/ask-gina:<skill>` and the `ask-gina` MCP server from
 server, so Cursor `mcp.json`, `rules/*.mdc`, and `commands/` stay on disk unused.
 The repository root is outside this path, so contributor-facing `AGENTS.md` is
 not installed. The repository is public, so this source needs no GitHub
-credentials. A future Devin marketplace must live in a dedicated repository
-whose root content is safe to install.
+credentials. A self-hosted Devin marketplace meta-plugin would need a dedicated
+repository whose root content is safe to install; this repository root is not
+one.
+
+The public Devin marketplace listing is a pinned `git-subdir` entry for
+`plugins/ask-gina` in `CognitionAI/devin-marketplace`'s root
+`.devin-plugin/plugin.json` `optionalPlugins`. That repository carries no
+display metadata, so the card reads `displayName`, `logo` (`assets/icon.svg`),
+and the category `keywords` (`Finance`) from `.devin-plugin/plugin.json` here at
+the pinned commit. After changing this plugin, bump the `sha` there with a PR.
 
 For local authoring, run `devin plugins install ./plugins/ask-gina`.
 

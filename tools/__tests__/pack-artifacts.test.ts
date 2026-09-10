@@ -777,9 +777,17 @@ describe("plugin target packing", () => {
           assert.deepStrictEqual((yield* fs.readDirectory(fixture.stage)).sort(), [
             ".devin-plugin",
             ".mcp.json",
+            "assets",
             "skills",
           ]);
-          for (const relative of [[".devin-plugin", "plugin.json"], [".mcp.json"]] as const) {
+          assert.deepStrictEqual(yield* fs.readDirectory(path.join(fixture.stage, "assets")), [
+            "icon.svg",
+          ]);
+          for (const relative of [
+            [".devin-plugin", "plugin.json"],
+            [".mcp.json"],
+            ["assets", "icon.svg"],
+          ] as const) {
             assert.strictEqual(
               yield* fs.readFileString(path.join(fixture.stage, ...relative)),
               yield* fs.readFileString(path.join(fixture.plugin, ...relative)),
