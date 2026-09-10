@@ -3,8 +3,10 @@
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunHttpClient from "@effect/platform-bun/BunHttpClient";
 import * as BunServices from "@effect/platform-bun/BunServices";
+import { createMCPClient } from "@ai-sdk/mcp";
 import {
   ASK_GINA_SKILL_DEFINITIONS,
+  catalogSha,
   listCatalogToolNames,
   PRODUCTION_MCP_URL,
   type PublicEvalAttemptCapture,
@@ -19,6 +21,7 @@ import {
   Data,
   Effect,
   FileSystem,
+  Function,
   Layer,
   Option,
   Path,
@@ -27,36 +30,62 @@ import {
   Stream,
 } from "effect";
 
-import { runClaudeCliPluginEvalTrial } from "../claude-cli";
+import { runClaudeCliPluginEvalTrial, type PluginEvalClaudeCliError } from "../claude-cli";
 import {
   CODEX_CLI_ALLOWED_ENVIRONMENT_NAMES,
   attestCodexExecutable,
   openAttestedCodexExecutable,
   runCodexCliPluginEvalTrial,
   type AttestedCodexExecutable,
+  type PluginEvalCodexCliError,
 } from "../codex-cli";
 import { collectBoundedUtf8Output } from "../bounded-output";
+import {
+  captureOpenRouterConfiguration,
+  liveEvalConfigurationEvidenceOutputPath,
+  makeLiveEvalConfigurationEvidence,
+  writeLiveEvalConfigurationEvidence,
+  type LiveEvalConfigurationEvidence,
+} from "../configuration";
 import { loadPluginEvalSuite } from "../load-suite";
 import {
   MAXIMUM_LIVE_REPETITIONS,
   MINIMUM_LIVE_REPETITIONS,
   preflightLiveEvalSuite,
   runLiveEvalSuite,
+  selectCases,
 } from "../live";
 import {
   isOmpProvider,
   prepareOmpHarnessRuntime,
   runOmpHarnessPluginEvalTrial,
   type OmpProvider,
+  type PluginEvalOmpHarnessError,
 } from "../omp-harness";
-import { runOpenRouterPluginEvalTrial } from "../openrouter";
+import {
+  DEFAULT_OPENROUTER_MAX_TOOL_CALLS,
+  isExactOpenRouterEndpointSlug,
+  runOpenRouterPluginEvalTrial,
+  type PluginEvalOpenRouterError,
+} from "../openrouter";
+import { ALPHA_GINA_READ_SERVER_URL, isAllowedGinaReadServerUrl } from "../server-url";
+import {
+  liveEvalRequestedRoutingEvidenceOutputPath,
+  makeLiveEvalRequestedRoutingEvidence,
+  writeLiveEvalRequestedRoutingEvidence,
+  type LiveEvalRequestedRouting,
+} from "../profile-identity";
 import {
   assertPublicEvalAttemptOutputPath,
   assertPublicEvalAttemptPlan,
   makePublicEvalAttemptCapture,
   writePublicEvalAttemptCapture,
 } from "../public-attempts";
-import { runResponsesApiPluginEvalTrial } from "../responses-api";
+import { runResponsesApiPluginEvalTrial, type PluginEvalResponsesError } from "../responses-api";
+import { isSafePublicEvalText } from "../sanitize";
+import type { PluginEvalObservation } from "../contracts";
+import { OpenRouterBudgetError, preflightOpenRouterBudget } from "../openrouter-budget";
+import { createLiveEvalJournal, LiveEvalJournalError, withJournaledTrial } from "../trial-journal";
 
 const GIT_STATUS_LIMIT_BYTES = 65_536;
 const CODEX_PREFLIGHT_LIMIT_BYTES = 1_048_576;
@@ -147,7 +176,14 @@ interface LiveEvalCliSharedOptions {
 
 export type LiveEvalCliOptions =
   | (LiveEvalCliSharedOptions & { readonly runner: "responses" | "codex" })
-  | (LiveEvalCliSharedOptions & { readonly runner: "openrouter"; readonly maxSteps: number })
+  | (LiveEvalCliSharedOptions & {
+      readonly runner: "openrouter";
+      readonly maxSteps: number;
+      readonly endpoint: string;
+      readonly serverUrl: string;
+      readonly maxCostUsd: number;
+      readonly expectedProvider: string;
+    })
   | (LiveEvalCliSharedOptions & { readonly runner: "claude"; readonly maxTurns: number })
   | (LiveEvalCliSharedOptions & { readonly runner: "omp"; readonly provider: OmpProvider });
 
@@ -167,7 +203,9 @@ export class LiveEvalCliError extends Data.TaggedError("LiveEvalCliError")<{
     | "trial-failed"
     | "catalog-preflight-failed"
     | "report-exists"
-    | "report-write-failed";
+    | "report-write-failed"
+    | "identity-write-failed"
+    | "configuration-write-failed";
   readonly missing?: readonly string[];
 }> {}
 
@@ -177,8 +215,8 @@ const REQUIRED_LIVE_EVAL_FLAGS =
 export const formatLiveEvalCliUsage = (runner?: LiveEvalRunner): string => {
   if (runner === "openrouter") {
     return [
-      `Usage: bun run eval:openrouter -- ${REQUIRED_LIVE_EVAL_FLAGS} [--max-steps <1..${MAXIMUM_LIVE_EVAL_TOOL_BUDGET}>]`,
-      `--max-steps default ${DEFAULT_OPENROUTER_MAX_STEPS}. Environment: ${ASK_GINA_ACCESS_TOKEN}, ${OPENROUTER_API_KEY}`,
+      `Usage: bun run eval:openrouter -- ${REQUIRED_LIVE_EVAL_FLAGS} --openrouter-endpoint <slug> --expected-provider <label> --max-cost-usd <amount> [--max-steps <1..${MAXIMUM_LIVE_EVAL_TOOL_BUDGET}>] [--server-url <${PRODUCTION_MCP_URL}|${ALPHA_GINA_READ_SERVER_URL}>]`,
+      `Endpoint, expected provider label and maximum USD are required, with no defaults. The provider label is not an endpoint slug. A non-resetting provider key limit must fit the requested maximum; in-flight overshoot remains unproven. --max-steps default ${DEFAULT_OPENROUTER_MAX_STEPS}. --server-url default ${PRODUCTION_MCP_URL}. Environment: ${ASK_GINA_ACCESS_TOKEN}, ${OPENROUTER_API_KEY}`,
     ].join("\n");
   }
   if (runner === "claude") {
@@ -207,7 +245,7 @@ export const formatLiveEvalCliUsage = (runner?: LiveEvalRunner): string => {
   }
   return [
     `Usage: bun run eval:<responses|codex|openrouter|claude|omp> -- ${REQUIRED_LIVE_EVAL_FLAGS}`,
-    `OpenRouter-only: [--max-steps <1..${MAXIMUM_LIVE_EVAL_TOOL_BUDGET}>] (default ${DEFAULT_OPENROUTER_MAX_STEPS}). Claude-only: [--max-turns <1..${MAXIMUM_LIVE_EVAL_TOOL_BUDGET}>] (default ${DEFAULT_CLAUDE_MAX_TURNS}). OMP-only: --provider <openai|anthropic|openrouter>.`,
+    `OpenRouter-only: --openrouter-endpoint <slug> --expected-provider <label> --max-cost-usd <amount> [--max-steps <1..${MAXIMUM_LIVE_EVAL_TOOL_BUDGET}>] (default ${DEFAULT_OPENROUTER_MAX_STEPS}) [--server-url <${PRODUCTION_MCP_URL}|${ALPHA_GINA_READ_SERVER_URL}>] (default ${PRODUCTION_MCP_URL}). Claude-only: [--max-turns <1..${MAXIMUM_LIVE_EVAL_TOOL_BUDGET}>] (default ${DEFAULT_CLAUDE_MAX_TURNS}). OMP-only: --provider <openai|anthropic|openrouter>.`,
     `Environment: ${ASK_GINA_ACCESS_TOKEN} always; ${OPENAI_API_KEY} (responses, codex); ${OPENROUTER_API_KEY} (openrouter); ${ANTHROPIC_API_KEY} and ${CLAUDE_EVAL_EXECUTABLE} (claude); ${CODEX_EVAL_EXECUTABLE} and ${CODEX_EVAL_EXECUTABLE_SHA256} (codex); ${OMP_EVAL_API_KEY}, ${OMP_EVAL_EXECUTABLE}, and ${OMP_EVAL_EXECUTABLE_SHA256} (omp).`,
   ].join("\n");
 };
@@ -249,6 +287,10 @@ export const parseLiveEvalCliOptions = (
     let maxSteps: number | undefined;
     let maxTurns: number | undefined;
     let provider: OmpProvider | undefined;
+    let endpoint: string | undefined;
+    let serverUrl: string | undefined;
+    let maxCostUsd: number | undefined;
+    let expectedProvider: string | undefined;
     const caseIds: string[] = [];
     const seenFlags = new Set<string>();
     const help = argv.some((flag) => flag === "--help" || flag === "-h");
@@ -328,6 +370,31 @@ export const parseLiveEvalCliOptions = (
             break;
           }
           return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
+        case "--openrouter-endpoint":
+          endpoint = value;
+          break;
+        case "--server-url":
+          serverUrl = value;
+          break;
+        case "--max-cost-usd": {
+          const parsed = Number(value);
+          if (!/^\d+(?:\.\d+)?$/u.test(value) || !Number.isFinite(parsed) || parsed <= 0) {
+            return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
+          }
+          maxCostUsd = parsed;
+          break;
+        }
+        case "--expected-provider":
+          if (
+            value !== value.trim() ||
+            value.length > 128 ||
+            /\p{Cc}/u.test(value) ||
+            !isSafePublicEvalText(value)
+          ) {
+            return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
+          }
+          expectedProvider = value;
+          break;
         default:
           return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
       }
@@ -359,6 +426,15 @@ export const parseLiveEvalCliOptions = (
     if (runner !== "omp" && seenFlags.has("--provider")) {
       return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
     }
+    if (runner !== "openrouter" && seenFlags.has("--openrouter-endpoint")) {
+      return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
+    }
+    if (
+      runner !== "openrouter" &&
+      ["--server-url", "--max-cost-usd", "--expected-provider"].some((flag) => seenFlags.has(flag))
+    ) {
+      return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
+    }
 
     const shared = {
       suitePath,
@@ -374,9 +450,29 @@ export const parseLiveEvalCliOptions = (
     } satisfies LiveEvalCliSharedOptions;
 
     if (runner === "openrouter") {
+      if (
+        endpoint === undefined ||
+        !isExactOpenRouterEndpointSlug(endpoint, model) ||
+        maxCostUsd === undefined ||
+        expectedProvider === undefined
+      ) {
+        return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
+      }
+      const resolvedServerUrl = serverUrl ?? PRODUCTION_MCP_URL;
+      if (!isAllowedGinaReadServerUrl(resolvedServerUrl)) {
+        return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
+      }
       return {
         mode: "run",
-        options: { ...shared, runner, maxSteps: maxSteps ?? DEFAULT_OPENROUTER_MAX_STEPS },
+        options: {
+          ...shared,
+          runner,
+          maxSteps: maxSteps ?? DEFAULT_OPENROUTER_MAX_STEPS,
+          endpoint,
+          serverUrl: resolvedServerUrl,
+          maxCostUsd,
+          expectedProvider,
+        },
       };
     }
     if (runner === "claude") {
@@ -852,7 +948,13 @@ const setupClaudeRuntime = (root: string, executablePath: string) =>
     } satisfies ClaudeEvalRuntime;
   });
 
-const requireLiveCatalog = (accessToken: Redacted.Redacted<string>) => {
+const requireLiveCatalog = (accessToken: Redacted.Redacted<string>, serverUrl: string) => {
+  if (!isAllowedGinaReadServerUrl(serverUrl)) {
+    return Effect.fail(new LiveEvalCliError({ reason: "invalid-arguments" }));
+  }
+  if (serverUrl !== PRODUCTION_MCP_URL) {
+    return listAllowedGinaReadCatalog(accessToken, serverUrl);
+  }
   const client = createClient({
     accessToken: Redacted.value(accessToken),
   });
@@ -861,6 +963,43 @@ const requireLiveCatalog = (accessToken: Redacted.Redacted<string>) => {
     Effect.mapError(() => new LiveEvalCliError({ reason: "catalog-preflight-failed" })),
   );
 };
+
+const listAllowedGinaReadCatalog = (
+  accessToken: Redacted.Redacted<string>,
+  serverUrl: string,
+): Effect.Effect<readonly string[], LiveEvalCliError> =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const client = yield* Effect.acquireRelease(
+        Effect.tryPromise({
+          try: () =>
+            createMCPClient({
+              transport: {
+                type: "http",
+                url: serverUrl,
+                headers: { Authorization: `Bearer ${Redacted.value(accessToken)}` },
+                redirect: "error",
+              },
+              maxRetries: 0,
+              clientName: "ask-gina-live-eval",
+            }),
+          catch: () => new LiveEvalCliError({ reason: "catalog-preflight-failed" }),
+        }),
+        (mcpClient) =>
+          Effect.promise(() =>
+            Promise.resolve(mcpClient.close()).then(
+              () => undefined,
+              () => undefined,
+            ),
+          ),
+      );
+      const listed = yield* Effect.tryPromise({
+        try: () => client.listTools(),
+        catch: () => new LiveEvalCliError({ reason: "catalog-preflight-failed" }),
+      });
+      return listed.tools.map((tool) => tool.name);
+    }),
+  );
 
 const requireCodexPluginAuth = (
   runtime: CodexEvalRuntime,
@@ -901,6 +1040,9 @@ const errorTag = (error: unknown): string => {
 };
 
 export const formatLiveEvalCliFailure = (error: unknown): string => {
+  if (error instanceof OpenRouterBudgetError || error instanceof LiveEvalJournalError) {
+    return `live eval failed (${error._tag}): ${error.reason}`;
+  }
   if (errorTag(error) === "LiveEvalCliError" && typeof error === "object" && error !== null) {
     if (Reflect.get(error, "reason") === "invalid-arguments") {
       return formatLiveEvalCliUsage();
@@ -930,12 +1072,115 @@ const writeReport = (outputPath: string, content: string) =>
       .pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "report-exists" })));
   });
 
+export const writeLiveEvalReportWithRequestedRoutingEvidence = (options: {
+  readonly reportPath: string;
+  readonly reportContent: string;
+  readonly identityPath: string;
+  readonly requestedRouting: LiveEvalRequestedRouting;
+  readonly configurationPath: string;
+  readonly configurationEvidence: LiveEvalConfigurationEvidence;
+}): Effect.Effect<void, LiveEvalCliError, FileSystem.FileSystem | Path.Path> =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const identityPath = path.resolve(options.identityPath);
+    const configurationPath = path.resolve(options.configurationPath);
+    yield* writeLiveEvalRequestedRoutingEvidence({
+      outputPath: identityPath,
+      reportPath: options.reportPath,
+      reportContent: options.reportContent,
+      evidence: makeLiveEvalRequestedRoutingEvidence({
+        reportContent: options.reportContent,
+        requestedRouting: options.requestedRouting,
+      }),
+    }).pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "identity-write-failed" })));
+    const configuration = yield* Effect.result(
+      writeLiveEvalConfigurationEvidence({
+        outputPath: configurationPath,
+        reportPath: options.reportPath,
+        reportContent: options.reportContent,
+        evidence: options.configurationEvidence,
+      }).pipe(
+        Effect.mapError(() => new LiveEvalCliError({ reason: "configuration-write-failed" })),
+      ),
+    );
+    if (configuration._tag === "Failure") {
+      yield* fs
+        .remove(identityPath)
+        .pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "identity-write-failed" })));
+      return yield* configuration.failure;
+    }
+    const written = yield* Effect.result(writeReport(options.reportPath, options.reportContent));
+    if (written._tag === "Failure") {
+      const configurationCleanup = yield* Effect.result(fs.remove(configurationPath));
+      const routingCleanup = yield* Effect.result(fs.remove(identityPath));
+      if (configurationCleanup._tag === "Failure") {
+        return yield* new LiveEvalCliError({ reason: "configuration-write-failed" });
+      }
+      if (routingCleanup._tag === "Failure") {
+        return yield* new LiveEvalCliError({ reason: "identity-write-failed" });
+      }
+      return yield* written.failure;
+    }
+  });
+
+export const assertLiveEvalDurableOutputs = Function.dual<
+  (
+    identityPath: string | undefined,
+    configurationPath: string | undefined,
+  ) => (
+    reportPath: string,
+  ) => Effect.Effect<void, LiveEvalCliError, FileSystem.FileSystem | Path.Path>,
+  (
+    reportPath: string,
+    identityPath: string | undefined,
+    configurationPath: string | undefined,
+  ) => Effect.Effect<void, LiveEvalCliError, FileSystem.FileSystem | Path.Path>
+>(3, (reportPath, identityPath, configurationPath) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const report = path.resolve(reportPath);
+    if (
+      yield* fs
+        .exists(report)
+        .pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "report-write-failed" })))
+    ) {
+      return yield* new LiveEvalCliError({ reason: "report-exists" });
+    }
+    const companions: ReadonlyArray<
+      readonly [string, "identity-write-failed" | "configuration-write-failed"]
+    > = [
+      ...(identityPath === undefined
+        ? []
+        : ([[path.resolve(identityPath), "identity-write-failed"]] as const)),
+      ...(configurationPath === undefined
+        ? []
+        : ([[path.resolve(configurationPath), "configuration-write-failed"]] as const)),
+    ];
+    const seen = new Set<string>([report]);
+    for (const [companion, reason] of companions) {
+      if (seen.has(companion)) {
+        return yield* new LiveEvalCliError({ reason });
+      }
+      seen.add(companion);
+      if (
+        yield* fs.exists(companion).pipe(Effect.mapError(() => new LiveEvalCliError({ reason })))
+      ) {
+        return yield* new LiveEvalCliError({ reason });
+      }
+    }
+  }),
+);
+
 const run = (options: LiveEvalCliOptions) =>
   Effect.scoped(
     Effect.gen(function* () {
       const root = process.cwd();
       const path = yield* Path.Path;
-      const credentials = yield* loadLiveEvalCredentials(options.runner);
+      const runGenerationEvidence = Effect.runPromiseWith(
+        yield* Effect.context<FileSystem.FileSystem>(),
+      );
       const dispatch = liveEvalTrialDispatch(options);
       const model = dispatch.model ?? options.model;
       const outputPath = path.join(
@@ -943,20 +1188,61 @@ const run = (options: LiveEvalCliOptions) =>
         ".plugin-eval-runs",
         `${dispatch.target}-${options.candidate}-${options.runId}.json`,
       );
+      const identityPath =
+        options.runner === "openrouter"
+          ? liveEvalRequestedRoutingEvidenceOutputPath(path, outputPath)
+          : undefined;
+      const configurationPath =
+        options.runner === "openrouter"
+          ? liveEvalConfigurationEvidenceOutputPath(path, outputPath, "configuration-v2")
+          : undefined;
+      const journalPath = outputPath.replace(/\.json$/u, ".journal-v1.jsonl");
+      yield* assertLiveEvalDurableOutputs(outputPath, identityPath, configurationPath);
+      yield* assertPublicEvalAttemptOutputPath(journalPath, outputPath);
       if (options.attemptsOutputPath !== undefined) {
         yield* assertPublicEvalAttemptOutputPath(options.attemptsOutputPath, outputPath);
+        yield* assertPublicEvalAttemptOutputPath(options.attemptsOutputPath, journalPath);
+        if (identityPath !== undefined) {
+          yield* assertPublicEvalAttemptOutputPath(options.attemptsOutputPath, identityPath);
+        }
+        if (configurationPath !== undefined) {
+          yield* assertPublicEvalAttemptOutputPath(options.attemptsOutputPath, configurationPath);
+        }
       }
       const suite = yield* loadPluginEvalSuite(options.suitePath);
       yield* preflightLiveEvalSuite(suite).pipe(
         Effect.mapError(() => new LiveEvalCliError({ reason: "catalog-preflight-failed" })),
       );
+      const plannedCases = yield* selectCases(suite, options.caseIds);
+      const plannedCaseIds = plannedCases.map((evalCase) => evalCase.id);
       if (options.attemptsOutputPath !== undefined) {
-        yield* assertPublicEvalAttemptPlan(
-          options.runId,
-          options.caseIds ?? suite.cases.map((evalCase) => evalCase.id),
-          options.repetitions,
-        );
+        yield* assertPublicEvalAttemptPlan(options.runId, plannedCaseIds, options.repetitions);
       }
+      const configurationCapture =
+        options.runner === "openrouter"
+          ? yield* captureOpenRouterConfiguration({
+              evaluatorEntrypointUrl: import.meta.url,
+            }).pipe(
+              Effect.mapError(() => new LiveEvalCliError({ reason: "configuration-write-failed" })),
+            )
+          : undefined;
+      const journal = yield* createLiveEvalJournal({
+        outputPath: journalPath,
+        runId: options.runId,
+        candidate: options.candidate,
+        target: dispatch.target,
+        model,
+        serverUrl: options.runner === "openrouter" ? options.serverUrl : PRODUCTION_MCP_URL,
+        suiteId: suite.suite.id,
+        suiteVersion: suite.version,
+        fixtureVersion: 1,
+        catalogSha,
+        reasoning: options.reasoning,
+        accountClass: options.accountClass,
+        caseIds: plannedCaseIds,
+        repetitions: options.repetitions,
+      });
+      const credentials = yield* loadLiveEvalCredentials(options.runner);
       const isolatedEnvironment = yield* loadCodexEnvironment();
       yield* requireCleanSource(root, isolatedEnvironment);
       let codexRuntime: CodexEvalRuntime | undefined;
@@ -990,14 +1276,16 @@ const run = (options: LiveEvalCliOptions) =>
         }).pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "omp-preflight-failed" })));
         ompRuntimeDirectory = prepared.runtimeDirectory;
       }
-      const availableTools = yield* requireLiveCatalog(credentials.accessToken);
+      const catalogServerUrl =
+        options.runner === "openrouter" ? options.serverUrl : PRODUCTION_MCP_URL;
+      const availableTools = yield* requireLiveCatalog(credentials.accessToken, catalogServerUrl);
       if (codexRuntime !== undefined) {
         yield* seedCodexOAuthCredential(codexRuntime, credentials.accessToken);
         yield* requireCodexPluginAuth(codexRuntime, isolatedEnvironment);
       }
 
-      const { report, attempts } = yield* runLiveEvalSuite<
-        LiveEvalCliError,
+      const { report, attempts, requestedRouting, selectedCaseIds } = yield* runLiveEvalSuite<
+        LiveEvalCliError | LiveEvalJournalError | OpenRouterBudgetError,
         HttpClient.HttpClient | ChildProcessSpawner | FileSystem.FileSystem | Path.Path
       >(
         {
@@ -1014,103 +1302,156 @@ const run = (options: LiveEvalCliOptions) =>
           repetitions: options.repetitions,
           accountClass: options.accountClass,
           captureAttempts: options.attemptsOutputPath !== undefined,
+          ...(options.runner === "openrouter"
+            ? {
+                requestedRouting: {
+                  kind: "openrouter-endpoint" as const,
+                  endpoint: options.endpoint,
+                  allow_fallbacks: false as const,
+                  require_parameters: true as const,
+                },
+              }
+            : {}),
         },
-        (input) => {
-          switch (options.runner) {
-            case "responses":
-              if (credentials.runner !== "responses") {
-                return Effect.fail(missingCredentials([OPENAI_API_KEY]));
-              }
-              return runResponsesApiPluginEvalTrial(input.evalCase, {
-                apiKey: Redacted.value(credentials.openAiApiKey),
-                mcpAuthorization: Redacted.value(credentials.accessToken),
-                model: options.model,
-                reasoning: options.reasoning,
-                runId: input.runId,
+        (input) =>
+          Effect.gen(function* () {
+            const budgetEvidence =
+              options.runner === "openrouter" && credentials.runner === "openrouter"
+                ? yield* preflightOpenRouterBudget({
+                    apiKey: credentials.openRouterApiKey,
+                    maximumUsd: options.maxCostUsd,
+                  })
+                : undefined;
+            return yield* withJournaledTrial(
+              journal,
+              {
+                caseId: input.evalCase.id,
                 repetition: input.repetition,
-                serverUrl: PRODUCTION_MCP_URL,
-                allowedTools: listCatalogToolNames(),
-                timeoutMs: options.timeoutMs,
-              }).pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "trial-failed" })));
-            case "openrouter":
-              if (credentials.runner !== "openrouter") {
-                return Effect.fail(missingCredentials([OPENROUTER_API_KEY]));
-              }
-              return runOpenRouterPluginEvalTrial(input.evalCase, {
-                apiKey: Redacted.value(credentials.openRouterApiKey),
-                mcpAuthorization: Redacted.value(credentials.accessToken),
-                model: options.model,
-                reasoning: options.reasoning,
-                runId: input.runId,
-                repetition: input.repetition,
-                serverUrl: PRODUCTION_MCP_URL,
-                allowedTools: listCatalogToolNames(),
-                timeoutMs: options.timeoutMs,
-                maxSteps: dispatch.maxSteps,
-              }).pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "trial-failed" })));
-            case "claude":
-              if (credentials.runner !== "claude" || claudeRuntime === undefined) {
-                return Effect.fail(new LiveEvalCliError({ reason: "claude-preflight-failed" }));
-              }
-              return runClaudeCliPluginEvalTrial(input.evalCase, {
-                runId: input.runId,
-                repetition: input.repetition,
-                availableTools,
-                workingDirectory: claudeRuntime.workingDirectory,
-                executablePath: claudeRuntime.executablePath,
-                pluginDirectory: claudeRuntime.pluginDirectory,
-                mcpAuthorization: credentials.accessToken,
-                apiKey: credentials.apiKey,
-                model: options.model,
-                reasoning: options.reasoning,
-                parentEnvironment: isolatedEnvironment,
-                timeoutMs: options.timeoutMs,
-                maxTurns: dispatch.maxTurns,
-              }).pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "trial-failed" })));
-            case "codex":
-              if (credentials.runner !== "codex" || codexRuntime === undefined) {
-                return Effect.fail(new LiveEvalCliError({ reason: "codex-preflight-failed" }));
-              }
-              return runCodexCliPluginEvalTrial(input.evalCase, {
-                openAiApiKey: credentials.openAiApiKey,
-                model: options.model,
-                displayedModel: options.model,
-                reasoning: options.reasoning,
-                runId: input.runId,
-                repetition: input.repetition,
-                workingDirectory: codexRuntime.workingDirectory,
-                executable: codexRuntime.executable,
-                codexHome: codexRuntime.codexHome,
-                pluginId: codexRuntime.pluginId,
-                pluginSkillRoot: codexRuntime.pluginSkillRoot,
-                parentEnvironment: isolatedEnvironment,
-                availableTools,
-                timeoutMs: options.timeoutMs,
-              }).pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "trial-failed" })));
-            case "omp":
-              if (credentials.runner !== "omp" || ompRuntimeDirectory === undefined) {
-                return Effect.fail(new LiveEvalCliError({ reason: "omp-preflight-failed" }));
-              }
-              return runOmpHarnessPluginEvalTrial(input.evalCase, {
-                runId: input.runId,
-                repetition: input.repetition,
-                availableTools,
-                runtimeDirectory: ompRuntimeDirectory,
-                provider: options.provider,
-                model: options.model,
-                reasoning: options.reasoning,
-                apiKey: credentials.apiKey,
-                mcpAuthorization: credentials.accessToken,
-                timeoutMs: options.timeoutMs,
-              }).pipe(
-                Effect.filterOrFail(
-                  (observation) => observation.model === input.model,
-                  () => new LiveEvalCliError({ reason: "trial-failed" }),
-                ),
-                Effect.mapError(() => new LiveEvalCliError({ reason: "trial-failed" })),
-              );
-          }
-        },
+                ...(budgetEvidence === undefined ? {} : { budgetEvidence }),
+              },
+              (
+                dispatchId,
+              ): Effect.Effect<
+                PluginEvalObservation,
+                | LiveEvalCliError
+                | PluginEvalResponsesError
+                | PluginEvalOpenRouterError
+                | PluginEvalClaudeCliError
+                | PluginEvalCodexCliError
+                | PluginEvalOmpHarnessError,
+                HttpClient.HttpClient | ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+              > => {
+                switch (options.runner) {
+                  case "responses":
+                    if (credentials.runner !== "responses") {
+                      return Effect.fail(missingCredentials([OPENAI_API_KEY]));
+                    }
+                    return runResponsesApiPluginEvalTrial(input.evalCase, {
+                      apiKey: Redacted.value(credentials.openAiApiKey),
+                      mcpAuthorization: Redacted.value(credentials.accessToken),
+                      model: options.model,
+                      reasoning: options.reasoning,
+                      runId: input.runId,
+                      repetition: input.repetition,
+                      serverUrl: PRODUCTION_MCP_URL,
+                      allowedTools: listCatalogToolNames(),
+                      timeoutMs: options.timeoutMs,
+                    });
+                  case "openrouter":
+                    if (credentials.runner !== "openrouter") {
+                      return Effect.fail(missingCredentials([OPENROUTER_API_KEY]));
+                    }
+                    return runOpenRouterPluginEvalTrial(input.evalCase, {
+                      apiKey: Redacted.value(credentials.openRouterApiKey),
+                      mcpAuthorization: Redacted.value(credentials.accessToken),
+                      model: options.model,
+                      endpoint: options.endpoint,
+                      expectedProvider: options.expectedProvider,
+                      onGenerationEvidence: (evidence) =>
+                        runGenerationEvidence(journal.generation(dispatchId, evidence)),
+                      reasoning: options.reasoning,
+                      runId: input.runId,
+                      repetition: input.repetition,
+                      serverUrl: options.serverUrl,
+                      allowedTools: listCatalogToolNames(),
+                      timeoutMs: options.timeoutMs,
+                      maxSteps: dispatch.maxSteps,
+                      maxToolCalls: DEFAULT_OPENROUTER_MAX_TOOL_CALLS,
+                    });
+                  case "claude":
+                    if (credentials.runner !== "claude" || claudeRuntime === undefined) {
+                      return Effect.fail(
+                        new LiveEvalCliError({ reason: "claude-preflight-failed" }),
+                      );
+                    }
+                    return runClaudeCliPluginEvalTrial(input.evalCase, {
+                      runId: input.runId,
+                      repetition: input.repetition,
+                      availableTools,
+                      workingDirectory: claudeRuntime.workingDirectory,
+                      executablePath: claudeRuntime.executablePath,
+                      pluginDirectory: claudeRuntime.pluginDirectory,
+                      mcpAuthorization: credentials.accessToken,
+                      apiKey: credentials.apiKey,
+                      model: options.model,
+                      reasoning: options.reasoning,
+                      parentEnvironment: isolatedEnvironment,
+                      timeoutMs: options.timeoutMs,
+                      maxTurns: dispatch.maxTurns,
+                    });
+                  case "codex":
+                    if (credentials.runner !== "codex" || codexRuntime === undefined) {
+                      return Effect.fail(
+                        new LiveEvalCliError({ reason: "codex-preflight-failed" }),
+                      );
+                    }
+                    return runCodexCliPluginEvalTrial(input.evalCase, {
+                      openAiApiKey: credentials.openAiApiKey,
+                      model: options.model,
+                      displayedModel: options.model,
+                      reasoning: options.reasoning,
+                      runId: input.runId,
+                      repetition: input.repetition,
+                      workingDirectory: codexRuntime.workingDirectory,
+                      executable: codexRuntime.executable,
+                      codexHome: codexRuntime.codexHome,
+                      pluginId: codexRuntime.pluginId,
+                      pluginSkillRoot: codexRuntime.pluginSkillRoot,
+                      parentEnvironment: isolatedEnvironment,
+                      availableTools,
+                      timeoutMs: options.timeoutMs,
+                    });
+                  case "omp":
+                    if (credentials.runner !== "omp" || ompRuntimeDirectory === undefined) {
+                      return Effect.fail(new LiveEvalCliError({ reason: "omp-preflight-failed" }));
+                    }
+                    return runOmpHarnessPluginEvalTrial(input.evalCase, {
+                      runId: input.runId,
+                      repetition: input.repetition,
+                      availableTools,
+                      runtimeDirectory: ompRuntimeDirectory,
+                      provider: options.provider,
+                      model: options.model,
+                      reasoning: options.reasoning,
+                      apiKey: credentials.apiKey,
+                      mcpAuthorization: credentials.accessToken,
+                      timeoutMs: options.timeoutMs,
+                    }).pipe(
+                      Effect.filterOrFail(
+                        (observation) => observation.model === input.model,
+                        () => new LiveEvalCliError({ reason: "trial-failed" }),
+                      ),
+                    );
+                }
+              },
+            ).pipe(
+              Effect.mapError((error) =>
+                error instanceof LiveEvalJournalError
+                  ? error
+                  : new LiveEvalCliError({ reason: "trial-failed" }),
+              ),
+            );
+          }),
       );
       const encoded = yield* encodePrettyUnknownJson(report).pipe(
         Effect.map((json) => `${json}\n`),
@@ -1127,7 +1468,36 @@ const run = (options: LiveEvalCliOptions) =>
           attempts,
         });
       }
-      yield* writeReport(outputPath, encoded);
+      yield* journal.bindReport(encoded, selectedCaseIds);
+      if (
+        requestedRouting !== undefined &&
+        identityPath !== undefined &&
+        configurationPath !== undefined &&
+        configurationCapture !== undefined &&
+        options.runner === "openrouter"
+      ) {
+        yield* writeLiveEvalReportWithRequestedRoutingEvidence({
+          reportPath: outputPath,
+          reportContent: encoded,
+          identityPath,
+          requestedRouting,
+          configurationPath,
+          configurationEvidence: makeLiveEvalConfigurationEvidence({
+            report,
+            reportContent: encoded,
+            requestedRouting,
+            maxSteps: options.maxSteps,
+            maxToolCalls: DEFAULT_OPENROUTER_MAX_TOOL_CALLS,
+            timeoutMs: options.timeoutMs,
+            capture: configurationCapture,
+            serverUrl: options.serverUrl,
+            maxCostUsd: options.maxCostUsd,
+            expectedProvider: options.expectedProvider,
+          }),
+        });
+      } else {
+        yield* writeReport(outputPath, encoded);
+      }
       if (options.attemptsOutputPath !== undefined && capture !== undefined) {
         yield* writePublicEvalAttemptCapture({
           outputPath: options.attemptsOutputPath,

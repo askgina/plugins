@@ -255,6 +255,29 @@ describe("artifact and source conformance verification", () => {
       );
     });
 
+    it("admits public loopback code templates but rejects concrete private endpoints", () => {
+      const base = ["http:", "", "localhost"].join("/");
+      const relay = ["http:", "", "127.0.0.1:${relayPort}"].join("/");
+      const inspect = (source: string, content: string) =>
+        findEmbeddedSourceMapBoundaryRules(
+          JSON.stringify({ version: 3, sources: [source], sourcesContent: [content] }),
+        );
+      assert.deepStrictEqual(inspect("../src/bridge.ts", `new URL(input, '${base}');`), []);
+      assert.deepStrictEqual(inspect("../src/relay.ts", `fetch('${relay}');`), []);
+      assert.include(inspect("../config.json", JSON.stringify({ base })), "private-host");
+      assert.include(inspect("../src/bridge.ts", `fetch('${base}:3430/private');`), "private-host");
+      assert.include(inspect("../src/bridge.ts", `fetch('${base}/private');`), "private-host");
+      assert.include(
+        inspect("../src/bridge.ts", `fetch('${base}:\${port}/private');`),
+        "private-host",
+      );
+      assert.include(inspect("../src/bridge.ts", `fetch('${base}\\/private');`), "private-host");
+      assert.include(
+        inspect("../src/bridge.ts", `fetch('${base}\\u002fprivate');`),
+        "private-host",
+      );
+    });
+
     it("admits only reviewed PNG assets at their declared paths", () => {
       const png = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]);
       const jpeg = Uint8Array.from([0xff, 0xd8, 0xff, 0xd9]);

@@ -1,9 +1,22 @@
 #!/usr/bin/env bun
 
+import { createRequire } from "node:module";
+
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { ChildProcess } from "effect/unstable/process";
-import { Crypto, Data, Effect, FileSystem, Function, Layer, Path, Schema, Stream } from "effect";
+import {
+  Config,
+  Crypto,
+  Data,
+  Effect,
+  FileSystem,
+  Function,
+  Layer,
+  Path,
+  Schema,
+  Stream,
+} from "effect";
 
 import { runHermeticEvalReplay, sanitizeEvalReplay } from "../packages/evals/src/index";
 import { copyCheckedRegularFile } from "./archive-security";
@@ -86,10 +99,13 @@ const PACKAGES = [
       /^bin\/replay\.d\.ts$/u,
       /^bin\/replay\.js$/u,
       /^bin\/replay\.js\.map$/u,
+      /^canonical-json-[A-Za-z0-9_-]+\.js$/u,
+      /^canonical-json-[A-Za-z0-9_-]+\.js\.map$/u,
       /^codex-cli-[A-Za-z0-9_-]+\.js$/u,
       /^codex-cli-[A-Za-z0-9_-]+\.js\.map$/u,
       /^index\.d\.ts$/u,
       /^index\.js$/u,
+      /^index\.js\.map$/u,
       /^omp-harness-[A-Za-z0-9_-]+\.d\.ts$/u,
       /^publication-[A-Za-z0-9_-]+\.js$/u,
       /^publication-[A-Za-z0-9_-]+\.js\.map$/u,
@@ -97,13 +113,18 @@ const PACKAGES = [
       /^replay-[A-Za-z0-9_-]+\.js\.map$/u,
       /^report-[A-Za-z0-9_-]+\.js$/u,
       /^report-[A-Za-z0-9_-]+\.js\.map$/u,
-      /^responses-api-[A-Za-z0-9_-]+\.js$/u,
-      /^responses-api-[A-Za-z0-9_-]+\.js\.map$/u,
       /^runner-[A-Za-z0-9_-]+\.js$/u,
       /^runner-[A-Za-z0-9_-]+\.js\.map$/u,
+      /^trial-journal-[A-Za-z0-9_-]+\.js$/u,
+      /^trial-journal-[A-Za-z0-9_-]+\.js\.map$/u,
+      /^bridge\/package\.json$/u,
+      /^bridge\/pnpm-lock\.yaml$/u,
+      /^bridge\/index\.mjs$/u,
+      /^bridge\/codex-sdk-0\.153\.4\.patch$/u,
     ],
   },
 ];
+const EVALS_BUNDLED_DEPENDENCIES = ["@ai-sdk/harness", "@ai-sdk/harness-codex"] as const;
 const TARGET_MANIFESTS: Readonly<Record<Host, string>> = {
   openai: ".codex-plugin/plugin.json",
   cursor: ".cursor-plugin/plugin.json",
@@ -343,12 +364,116 @@ const packageDefinition = (name: string) => {
     : Effect.succeed(definition);
 };
 
+type AdmittedDependencyRoot = {
+  readonly name: string;
+  readonly liveRoot: string;
+  readonly snapshotRoot: string;
+};
+
+const confinedRelative = (path: Path.Path, root: string, file: string): string | undefined => {
+  const relative = path.relative(root, file);
+  if (
+    relative === ".." ||
+    relative.startsWith("../") ||
+    relative.startsWith("..\\") ||
+    path.isAbsolute(relative) ||
+    relative
+      .split("/")
+      .some((segment) => segment.length === 0 || segment === "." || segment === "..")
+  ) {
+    return undefined;
+  }
+  return relative;
+};
+
+const declaredPackageDependencyVersion = (
+  metadata: Record<string, unknown>,
+  name: string,
+): string | undefined => {
+  if (
+    isObject(metadata.dependencies) &&
+    typeof metadata.dependencies[name] === "string" &&
+    metadata.dependencies[name].length > 0
+  ) {
+    return metadata.dependencies[name];
+  }
+  if (
+    isObject(metadata.devDependencies) &&
+    typeof metadata.devDependencies[name] === "string" &&
+    metadata.devDependencies[name].length > 0
+  ) {
+    return metadata.devDependencies[name];
+  }
+};
+
+const resolveInstalledPackageRoot = (packageRoot: string, name: string) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const manifest = path.join(packageRoot, "package.json");
+    const resolved = yield* Effect.try({
+      try: () => createRequire(manifest).resolve(`${name}/package.json`),
+      catch: (cause) => fail(`cannot resolve bundled dependency ${name}`, cause),
+    });
+    const realManifest = yield* fs
+      .realPath(resolved)
+      .pipe(
+        Effect.mapError((cause) => fail(`cannot canonicalize bundled dependency ${name}`, cause)),
+      );
+    const installed = yield* readJson(realManifest);
+    if (!isObject(installed)) {
+      return yield* fail(`bundled dependency ${name} package.json must be an object`);
+    }
+    if (installed.name !== name) {
+      return yield* fail(`bundled dependency ${name} identity is invalid`);
+    }
+    const version = yield* requiredString(installed.version, `${name} version`);
+    const root = yield* fs
+      .realPath(path.dirname(realManifest))
+      .pipe(
+        Effect.mapError((cause) => fail(`cannot canonicalize bundled dependency ${name}`, cause)),
+      );
+    return { name, version, root };
+  });
+
+const evalsBundledDependencyRoots = (livePackageRoot: string, sourcePackageRoot: string) =>
+  Effect.gen(function* () {
+    const path = yield* Path.Path;
+    const liveMetadata = yield* readJson(path.join(livePackageRoot, "package.json"));
+    const sourceMetadata = yield* readJson(path.join(sourcePackageRoot, "package.json"));
+    if (!isObject(liveMetadata) || !isObject(sourceMetadata)) {
+      return yield* fail("@askgina/evals package.json must be an object");
+    }
+    return yield* Effect.forEach(EVALS_BUNDLED_DEPENDENCIES, (name) =>
+      Effect.gen(function* () {
+        const liveDeclared = declaredPackageDependencyVersion(liveMetadata, name);
+        const sourceDeclared = declaredPackageDependencyVersion(sourceMetadata, name);
+        if (liveDeclared === undefined || sourceDeclared === undefined) {
+          return yield* fail(`@askgina/evals does not declare bundled dependency ${name}`);
+        }
+        if (liveDeclared !== sourceDeclared) {
+          return yield* fail(`bundled dependency ${name} versions are inconsistent`);
+        }
+        const live = yield* resolveInstalledPackageRoot(livePackageRoot, name);
+        const snapshot = yield* resolveInstalledPackageRoot(sourcePackageRoot, name);
+        if (live.version !== liveDeclared || snapshot.version !== sourceDeclared) {
+          return yield* fail(
+            `bundled dependency ${name} version does not match the package manifest`,
+          );
+        }
+        return { name, liveRoot: live.root, snapshotRoot: snapshot.root };
+      }),
+    );
+  });
+
 const verifyEmbeddedSourceMap = (
   livePackageRoot: string,
   sourcePackageRoot: string,
   mapFile: string,
+  admittedRoots: readonly AdmittedDependencyRoot[] = [],
 ) =>
   Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const value = yield* readJson(mapFile);
     if (!isObject(value) || value.version !== 3) {
@@ -399,15 +524,46 @@ const verifyEmbeddedSourceMap = (
       const liveSource = path.resolve(path.dirname(mapFile), sourceValue);
       const packageRelative = path.relative(livePackageRoot, liveSource);
       if (
-        packageRelative === ".." ||
-        packageRelative.startsWith("../") ||
-        packageRelative.startsWith("..\\") ||
-        path.isAbsolute(packageRelative) ||
-        !packageRelative.endsWith(".ts")
+        packageRelative !== ".." &&
+        !packageRelative.startsWith("../") &&
+        !packageRelative.startsWith("..\\") &&
+        !path.isAbsolute(packageRelative) &&
+        packageRelative.endsWith(".ts") &&
+        !packageRelative.split("/").includes("node_modules")
       ) {
+        const expected = yield* readText(path.join(sourcePackageRoot, packageRelative));
+        if (content !== expected) {
+          return yield* fail(`compiled source map content is stale: ${sourceValue}`);
+        }
+        continue;
+      }
+      const liveReal = yield* fs
+        .realPath(liveSource)
+        .pipe(
+          Effect.mapError((cause) =>
+            fail(`compiled source map escapes its package: ${sourceValue}`, cause),
+          ),
+        );
+      const admitted = admittedRoots.find(
+        (root) => confinedRelative(path, root.liveRoot, liveReal) !== undefined,
+      );
+      const member =
+        admitted === undefined ? undefined : confinedRelative(path, admitted.liveRoot, liveReal);
+      if (admitted === undefined || member === undefined || !member.endsWith(".ts")) {
         return yield* fail(`compiled source map escapes its package: ${sourceValue}`);
       }
-      const expected = yield* readText(path.join(sourcePackageRoot, packageRelative));
+      const snapshotFile = path.join(admitted.snapshotRoot, member);
+      const snapshotReal = yield* fs
+        .realPath(snapshotFile)
+        .pipe(
+          Effect.mapError((cause) =>
+            fail(`compiled source map escapes its package: ${sourceValue}`, cause),
+          ),
+        );
+      if (confinedRelative(path, admitted.snapshotRoot, snapshotReal) !== member) {
+        return yield* fail(`compiled source map escapes its package: ${sourceValue}`);
+      }
+      const expected = yield* readText(snapshotReal);
       if (content !== expected) {
         return yield* fail(`compiled source map content is stale: ${sourceValue}`);
       }
@@ -503,8 +659,17 @@ const verifyCompiledPackageOutputImpl = (
     );
     const maps = files.filter((file) => file.endsWith(".map"));
     if (maps.length === 0) return yield* fail(`${definition.name} has no compiled source maps`);
+    const admittedRoots =
+      definition.name === "@askgina/evals"
+        ? yield* evalsBundledDependencyRoots(livePackageRoot, sourcePackageRoot)
+        : [];
     yield* Effect.forEach(maps, (file) =>
-      verifyEmbeddedSourceMap(livePackageRoot, sourcePackageRoot, path.join(dist, file)),
+      verifyEmbeddedSourceMap(
+        livePackageRoot,
+        sourcePackageRoot,
+        path.join(dist, file),
+        admittedRoots,
+      ),
     );
     return { allowlist, files };
   });
@@ -655,66 +820,40 @@ const buildSnapshotPackages = (root: string, snapshot: string) =>
     if (!/^v24\./u.test(nodeVersion)) {
       return yield* fail(`source commit build requires Node 24, received ${nodeVersion}`);
     }
-    const linkNodeModules = (relative: string, required: boolean) =>
-      Effect.gen(function* () {
-        const installed = path.join(root, relative, "node_modules");
-        if (!(yield* fs.exists(installed))) {
-          if (required) return yield* fail("installed dependencies are unavailable");
-          return;
-        }
-        const linked = path.join(snapshot, relative, "node_modules");
-        yield* fs
-          .makeDirectory(linked, { recursive: true })
-          .pipe(Effect.mapError((cause) => fail(`cannot create ${relative}/node_modules`, cause)));
-        const names = yield* fs
-          .readDirectory(installed)
-          .pipe(Effect.mapError((cause) => fail(`cannot list ${relative}/node_modules`, cause)));
-        yield* Effect.forEach(names.sort(), (name) =>
-          Effect.gen(function* () {
-            if (name === ".vite" || name === ".vite-temp") return;
-            if (name !== "@askgina") {
-              yield* fs
-                .symlink(path.join(installed, name), path.join(linked, name))
-                .pipe(
-                  Effect.mapError((cause) =>
-                    fail(`cannot link build dependency ${relative}/node_modules/${name}`, cause),
-                  ),
-                );
-              return;
-            }
-            const installedScope = path.join(installed, name);
-            const linkedScope = path.join(linked, name);
-            yield* fs
-              .makeDirectory(linkedScope, { recursive: true })
-              .pipe(Effect.mapError((cause) => fail("cannot link workspace dependencies", cause)));
-            const workspaceNames = yield* fs
-              .readDirectory(installedScope)
-              .pipe(Effect.mapError((cause) => fail("cannot list workspace dependencies", cause)));
-            yield* Effect.forEach(workspaceNames.sort(), (workspaceName) =>
-              Effect.gen(function* () {
-                const definition = PACKAGES.find(
-                  (candidate) => candidate.name === `@askgina/${workspaceName}`,
-                );
-                if (definition === undefined) {
-                  return yield* fail(`unknown workspace dependency: @askgina/${workspaceName}`);
-                }
-                yield* fs
-                  .symlink(
-                    path.join(snapshot, definition.directory),
-                    path.join(linkedScope, workspaceName),
-                  )
-                  .pipe(
-                    Effect.mapError((cause) =>
-                      fail(`cannot link workspace dependency ${definition.name}`, cause),
-                    ),
-                  );
-              }),
-            );
-          }),
-        );
-      });
-    yield* linkNodeModules("", true);
-    yield* Effect.forEach(PACKAGES, (definition) => linkNodeModules(definition.directory, false));
+    const bun = Bun.which("bun");
+    if (bun === null) return yield* fail("Bun is unavailable for the source commit install");
+    const home = yield* fs
+      .makeTempDirectoryScoped({ prefix: "askgina-pack-home-" })
+      .pipe(Effect.mapError((cause) => fail("cannot create snapshot install home", cause)));
+    const npmrc = path.join(home, "npmrc");
+    yield* fs
+      .writeFileString(npmrc, "")
+      .pipe(Effect.mapError((cause) => fail("cannot create snapshot npmrc", cause)));
+    const originalHome = yield* Config.string("HOME").pipe(
+      Effect.mapError((cause) => fail("cannot read HOME for Bun cache", cause)),
+    );
+    const packageCache = yield* Config.string("BUN_INSTALL_CACHE_DIR").pipe(
+      Config.withDefault(path.join(originalHome, ".bun/install/cache")),
+    );
+    if (!(yield* fs.exists(packageCache))) {
+      return yield* fail("offline Bun package cache is unavailable");
+    }
+    const installEnvironment = {
+      PATH: `${path.dirname(bun)}:${path.dirname(node)}:/usr/bin:/bin`,
+      HOME: home,
+      BUN_INSTALL_CACHE_DIR: packageCache,
+      NPM_CONFIG_USERCONFIG: npmrc,
+    };
+    yield* runCommand(
+      bun,
+      ["install", "--frozen-lockfile", "--offline", "--ignore-scripts", "--backend=copyfile"],
+      snapshot,
+      installEnvironment,
+    );
+    const patchScript = path.join(snapshot, "scripts/effect-tsgo-patch-if-needed.ts");
+    if (yield* fs.exists(patchScript)) {
+      yield* runCommand(bun, [patchScript], snapshot, installEnvironment);
+    }
     const buildBin = path.join(snapshot, ".build-bin");
     yield* fs
       .makeDirectory(buildBin)

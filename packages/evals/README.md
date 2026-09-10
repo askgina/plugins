@@ -15,6 +15,45 @@ Artifact verification clean-installs the built tarball and exercises its compile
 import and replay entrypoint. The package supports only its root ESM import; Node.js,
 CommonJS, browser and edge runtimes, and subpath imports are unsupported.
 
+`createCodex`, `CodexHarnessSettings`, `CodexNativeAuthStore`, and
+`CodexNativeAuthLease` are the patched official `@ai-sdk/harness-codex` factory
+and settings, bundled into this package so installed consumers do not resolve
+the stock npm adapter. Import both `HarnessAgent` and `createCodex` from
+`@askgina/evals`. The bundled HarnessAgent checks lifecycle support before
+detach or suspend can discard the session handle. Native startup with a stock
+HarnessAgent lacking that check is rejected before acquiring the auth store.
+`CodexHarnessSettings.restricted` may supply `readablePaths` and a host
+`nativeAuthStore`. The host must implement `acquire` and `onCleanupFailure`;
+each acquired lease supplies `codexHome` and `release`. The failure callback
+receives only `sandbox-settlement` or `lease-release`, never private diagnostics.
+It must record unresolved cleanup even when HarnessAgent's best-effort cleanup
+returns or an aborted acquisition settles later.
+
+The lease remains held until the sandbox owner finishes stopping or destroying
+its sandbox. Unsupported native resume, continue, detach, and suspend do not
+authorize the adapter to stop a caller-owned sandbox. A rejected detach or
+suspend leaves the session usable for explicit cleanup. Hosts must settle
+borrowed resources in their own finalizer. A failed stop does not release the lease.
+The host must present an auth-store view that excludes personal skills, plugins,
+memories, and hooks while preserving native refresh custody. The SDK's
+`exec --ignore-user-config --ignore-rules --ephemeral` flags do not exclude
+those other files. This package supplies neither that view nor an all-process
+lock. Native credential-bearing evaluation remains disabled until the host
+provides and independently proves both, plus native sandbox enforcement.
+
+Restricted caller configuration accepts only exact `model_reasoning_summary`
+and `model_verbosity` keys with their supported values. The adapter forces detailed
+reasoning summaries and installs its own read-only filesystem, denied auth-home,
+network-disabled, web-search-disabled policy. Dotted or quoted configuration
+namespaces and extra MCP servers are rejected. Exec cannot support per-call
+builtin approval/filter callbacks; requesting them remains an error. These
+restrictions do not turn this export into an enabled native CLI runner.
+
+The bundled `@ai-sdk/harness` 1.0.102 and `@ai-sdk/harness-codex` 1.0.104
+are Copyright 2023 Vercel, Inc., licensed under Apache-2.0. This distribution
+modifies their isolation and lifecycle handling. The repository's `patches/`
+directory contains those changes; this package includes the Apache-2.0 license.
+
 ## Hermetic replay
 
 ```sh
@@ -26,11 +65,15 @@ bun run eval:replay -- \
 
 ## Retained attempt summaries and public exports
 
-Replay and live commands remain aggregate-only unless `--attempts-output` is supplied.
-Opt-in capture writes a separate, exclusive mode-`0600` JSON file bound to the exact
-saved report bytes. It retains public identities, existing check verdicts, approved
-failure categories, durations and available token counts, never raw observations.
-Capture requires a saved report and does not change grading or its aggregate output.
+`--attempts-output` remains an optional grader companion. Without it, replay stays
+aggregate-only. Every live CLI always writes the v1 aggregate and a
+`.journal-v1.jsonl` sibling described below. That journal is not a grader
+artifact and does not change grading or the v1 aggregate. Opt-in attempt
+capture writes a separate, exclusive mode-`0600` JSON file bound to the exact
+saved report bytes. It retains public identities,
+existing check verdicts, approved failure categories, durations and available
+token counts, never raw observations. Capture requires a saved report and does
+not change grading or its aggregate output.
 
 ```sh
 bun run eval:replay -- \
@@ -88,8 +131,10 @@ credentials differ:
 | OMP harness   | `OMP_EVAL_API_KEY`, absolute `OMP_EVAL_EXECUTABLE`, its lowercase SHA-256 digest in `OMP_EVAL_EXECUTABLE_SHA256`, and a local Docker engine |
 
 The supported native Codex, Claude, and OMP paths use explicit API keys in
-isolated evaluation homes. They do not reuse a saved personal login. Saved-login
-reuse, refresh ownership, and personal-home integration remain deferred. OMP does
+isolated evaluation homes. They do not reuse a saved personal login. That
+existing API-key CLI does not meet a separately requested HarnessAgent or Codex
+saved-login policy. Saved-login reuse, refresh ownership, and personal-home
+integration remain deferred. OMP does
 not read `~/.omp` or inherit `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` /
 `OPENROUTER_API_KEY`. Native OMP also never exports those names into the
 isolated child. The child receives only `OMP_EVAL_PROVIDER_API_KEY` for
@@ -138,7 +183,10 @@ bun run eval:openrouter -- \
   --repetitions 3 \
   --account-class eval \
   --timeout-ms 120000 \
-  --max-steps 8
+  --max-steps 8 \
+  --openrouter-endpoint openai \
+  --expected-provider OpenAI \
+  --max-cost-usd 25
 
 bun run eval:claude -- \
   --suite packages/evals/src/fixtures/ask-gina-routing-smoke.yaml \
@@ -164,9 +212,20 @@ bun run eval:omp -- \
 ```
 
 Repeat `--case <case-id>` to run a strict subset. `--timeout-ms` is required for
-the per-trial budget. `--max-steps` is optional only for OpenRouter, and
-`--max-turns` is optional only for Claude. Both default to `8` and accept `1` to
-`32`. `--provider` is required only for OMP. The other runners reject those
+the per-trial budget. OpenRouter requires `--openrouter-endpoint`,
+`--expected-provider`, and `--max-cost-usd`, with no defaults. The expected
+provider is an exact case-sensitive OpenRouter provider label, not an endpoint
+slug or region. `--max-cost-usd` must be a positive finite amount. Before each
+dispatch the CLI checks that the provider key has a non-resetting lifetime
+limit, including BYOK, that fits that amount. The check is not a hard spend
+cap. In-flight usage, delayed settlement, a mutable provider limit, external
+auth, and overshoot remain unproven. Optional `--server-url` is OpenRouter-only
+and accepts only the exact Gina-read URLs `https://askgina.ai/ai/gina/mcp`
+(production, the default) and `https://alpha.askgina.ai/ai/gina/mcp`. Trailing
+slashes and any other URL, including venue MCP endpoints, are rejected.
+`--max-steps` is optional only for OpenRouter, and `--max-turns` is optional
+only for Claude. Both default to `8` and accept `1` to `32`. `--provider` is
+required only for OMP. Other runners reject those OpenRouter, Claude, and OMP
 flags. OMP rejects `--max-steps` and `--max-turns`. ACP does not expose a
 portable native model-step boundary, so OMP does not claim an equal step budget
 with OpenRouter or Claude. Secrets have no command-line flags.
@@ -176,9 +235,12 @@ switch runners or auth methods. Add
 report-bound attempt summaries are required. The capture rules in the previous
 section still apply.
 
-OpenRouter executes Gina tools through the local AI SDK MCP client. Responses
-uses OpenAI-hosted MCP. Neither proves native plugin activation, and these two
-execution paths retain separate runner identities. Codex and Claude load the
+OpenRouter executes Gina tools through the local AI SDK MCP client. Its offline
+real-SDK intercepted-transport proof establishes only requested serialization,
+not the provider-selected endpoint, gateway translation, or native HarnessAgent
+behavior. Responses uses OpenAI-hosted MCP. Neither proves native plugin
+activation, and these two execution paths retain separate runner identities.
+Codex and Claude load the
 repository plugin through their native CLIs. OMP talks to `omp acp` through
 HarnessAgent in Docker and keeps the `omp_harness` target distinct. Task
 conformance and observed plugin activation are scored separately. The Claude
@@ -258,9 +320,72 @@ eight seconds for cleanup without replacing the original failure. Synthetic mode
 the real OMP process and protocol; they do not prove real model behavior, production
 Gina connectivity, or measured native-plugin activation.
 
-Each live run writes exactly one mode-`0600` aggregate below the ignored
-`.plugin-eval-runs/` directory. Raw prompts, final answers, tool arguments,
-provider payloads, HTTP bodies, child output, and credential material are never
-persisted. A nonzero exit means the run failed or at least one rubric case did
-not pass. Exporting a measured result still requires the recorded manual approval
-described above. Running or capturing attempts does not approve publication.
+Each live run writes a v1 aggregate below the ignored `.plugin-eval-runs/`
+directory and a sibling `.journal-v1.jsonl`, both mode `0600`. OpenRouter
+writes four siblings: the v1 aggregate `.json`, `.requested-routing-v1.json`,
+`.configuration-v2.json`, and `.journal-v1.jsonl`. Keep all four. Other live
+runners write only the aggregate and journal. `--attempts-output` remains an
+optional grader companion and does not replace those siblings.
+
+The journal writes its run header, fsynced, before credentials load. The
+header captures suite, catalog, reasoning, account class, selected cases,
+and repetitions. Trials outside that plan are rejected. OpenRouter trials
+require valid provider-limit evidence; other runners reject that evidence.
+Each trial fsyncs a `started` record before dispatch. OpenRouter also fsyncs each
+`generation` record before tool execution. A failed generation callback
+fails closed. Already-fsynced `started` and `generation` records remain if
+failure, timeout, or interruption leaves a trial or run incomplete, even
+without `finished` or `report-bound`. When a trial does finish, the record
+stores settled status (`completed`, `failed`, `blocked`, `interruption`,
+`timeout`), not a grader verdict. The exact report SHA is written only in a
+final `report-bound` record after complete matching v1 report bytes are finalized,
+before any report files are published. The record binds bytes, not proof that
+publication succeeded. Binding checks the report identity and the evaluator's
+returned case selection against the header. The legacy v1 report alone has no
+case IDs and cannot prove that selection. Journal writes use one scoped file descriptor and reject
+path replacement, unlinking or external size changes. An ambiguous write or sync
+failure disables later appends and dispatches.
+
+The routing and configuration files bind to the exact UTF-8 report bytes by
+`sourceReportSha256`. Configuration identity also records
+`configurationSha256` of the canonical configuration digest. That digest is
+independent of run ID, report bytes, and JSON key order. OpenRouter CLI
+runs emit `configuration-v2`, which binds requested `serverUrl` /
+`mcpResource` (`prod` or `alpha`), `expectedProvider`, and `maxCostUsd` in
+addition to requested OpenRouter routing, settings, runtime, generation-step
+and deadline budgets, and auth class, plus actual installed runtime,
+package, lock, and source facts, credential-free. Existing
+`configuration-v1` files are not rewritten. `--max-steps` is recorded as
+`generationSteps`. The OpenRouter CLI independently limits each trial to
+eight task-tool executions, including parallel calls, and records that limit
+as `taskToolCalls`. Exhausted calls are rejected before MCP dispatch.
+Library evidence without an enforced task-call limit records null.
+
+Returned `responseModel` and `provider` strings are observations.
+The requested model slug is not compared to `responseModel`. Dated or
+normalized aliases are valid. Observed mismatch compares only an explicit
+`--expected-provider` label to a non-null provider, exact and
+case-sensitive. If that label is set, as the OpenRouter CLI requires, a
+null observed provider is persisted then fails `evidence-missing` before
+tool dispatch. That is not observed-mismatch and not a verified route.
+Null stays unknown only when `expectedProvider` is omitted, which the
+library still allows. The provider label is not endpoint or region
+evidence. Effective provider
+observations that are not known stay explicit unknowns. Accepted omissions
+are temperature, top_p, output-token-limit, and service-tier. The
+configuration file is requested evidence, not observed gateway routing,
+admission, comparability, or publication approval. Raw prompts, final
+answers, tool arguments, provider payloads, HTTP bodies, child output, and
+credential material are never persisted.
+
+OpenRouter preflights the four sibling paths before credentials or trials.
+Existing report, requested-routing, configuration, or journal files fail
+closed. After a successful run it binds the journal first, then writes requested-routing
+and configuration evidence, followed by the v1 report (`wx`, mode `0600`). A
+journal-binding failure publishes none of these files. If
+the report write fails after evaluator-owned routing or configuration
+companions exist, those companions are deleted. The journal is retained,
+including incomplete records. A nonzero exit means the run failed or at
+least one rubric case did not pass. Exporting a measured result still
+requires the recorded manual approval described above. Running or capturing
+attempts does not approve publication.

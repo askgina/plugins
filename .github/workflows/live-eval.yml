@@ -90,11 +90,14 @@ jobs:
           --repetitions "$EVAL_REPETITIONS"
           --account-class "$EVAL_ACCOUNT_CLASS"
           --timeout-ms "$EVAL_TIMEOUT_MS"
-      - name: Upload sanitized aggregate
+      - name: Upload sanitized run evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: live-eval-responses-${{ github.run_id }}
-          path: .plugin-eval-runs/*.json
+          path: |
+            .plugin-eval-runs/*.json
+            .plugin-eval-runs/*.jsonl
+          include-hidden-files: true
           if-no-files-found: warn
           retention-days: 7

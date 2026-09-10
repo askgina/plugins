@@ -1,3 +1,10 @@
+export { HarnessAgent } from "@ai-sdk/harness/agent";
+export {
+  createCodex,
+  type CodexHarnessSettings,
+  type CodexNativeAuthLease,
+  type CodexNativeAuthStore,
+} from "@ai-sdk/harness-codex";
 export {
   decodePluginEvalObservationSet,
   loadPluginEvalObservationSet,
@@ -33,6 +40,49 @@ export {
   type LiveEvalTrialInput,
 } from "./live";
 export {
+  LiveEvalConfigurationCaptureError,
+  LiveEvalConfigurationEvidenceSchema,
+  LiveEvalConfigurationEvidenceV1Schema,
+  LiveEvalConfigurationEvidenceV2Schema,
+  captureOpenRouterConfiguration,
+  liveEvalConfigurationEvidenceOutputPath,
+  makeLiveEvalConfigurationEvidence,
+  writeLiveEvalConfigurationEvidence,
+  type LiveEvalConfigurationCaptureType,
+  type LiveEvalConfigurationEvidence,
+} from "./configuration";
+export {
+  LiveEvalRequestedRoutingEvidenceError,
+  LiveEvalRequestedRoutingEvidenceSchema,
+  LiveEvalRequestedRoutingSchema,
+  liveEvalRequestedRoutingEvidenceOutputPath,
+  makeLiveEvalRequestedRoutingEvidence,
+  sha256Hex,
+  writeLiveEvalRequestedRoutingEvidence,
+  type LiveEvalRequestedRouting,
+  type LiveEvalRequestedRoutingEvidence,
+} from "./profile-identity";
+export {
+  captureOpenRouterGenerationEvidence,
+  type OpenRouterGenerationEvidence,
+} from "./provider-evidence";
+export {
+  admitOpenRouterBudgetEvidence,
+  OpenRouterBudgetEvidenceSchema,
+  OpenRouterBudgetError,
+  preflightOpenRouterBudget,
+  validateOpenRouterBudgetEvidence,
+  type OpenRouterBudgetEvidence,
+} from "./openrouter-budget";
+export {
+  createLiveEvalJournal,
+  withJournaledTrial,
+  LiveEvalJournalError,
+  type LiveEvalJournal,
+  type LiveEvalJournalOptions,
+  type LiveEvalJournalRecord,
+} from "./trial-journal";
+export {
   PluginEvalResponsesDecodeError,
   PluginEvalResponsesHttpError,
   PluginEvalResponsesRequestError,
@@ -42,6 +92,7 @@ export {
   type ResponsesApiTrialOptions,
 } from "./responses-api";
 export {
+  DEFAULT_OPENROUTER_MAX_TOOL_CALLS,
   PluginEvalOpenRouterGenerationError,
   PluginEvalOpenRouterMcpError,
   PluginEvalOpenRouterRequestError,
