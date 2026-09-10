@@ -177,6 +177,14 @@ export const GINA_READ_TOOL_CATALOG = [
     mcpAppBound: false,
   },
   {
+    name: "perps.previewHyperliquidOrderCost",
+    family: "perps",
+    readOnlyHint: true,
+    destructiveHint: false,
+    openWorldHint: true,
+    mcpAppBound: false,
+  },
+  {
     name: "perps.createHyperliquidTable",
     family: "perps",
     readOnlyHint: true,
@@ -325,7 +333,7 @@ export const GinaReadToolCatalogEntrySchema = Schema.Struct({
 });
 
 export const GinaReadToolCatalogSchema = Schema.Array(GinaReadToolCatalogEntrySchema).check(
-  Schema.isLengthBetween(30, 30),
+  Schema.isLengthBetween(31, 31),
 );
 
 export const GinaReadToolCatalogJsonSchema = Schema.fromJsonString(GinaReadToolCatalogSchema);
@@ -408,6 +416,6 @@ export const ASK_GINA_SKILL_DEFINITIONS = [
   },
 ] as const satisfies readonly AskGinaSkillDefinition[];
 
-export const SOURCE_COMMIT = "908af9015f1e87cf1ba4893226d149905e74df4a";
+export const SOURCE_COMMIT = "51d99dde59e17080255fdb4ae8e59a63355a8b5e";
 export const RELEASE_VERSION = "0.1.0";
-export const catalogSha = "92fb5788ef462b85710f03c4fa6b8b67b8beaf3e20a478e6128daf839fb1bbee";
+export const catalogSha = "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e";
