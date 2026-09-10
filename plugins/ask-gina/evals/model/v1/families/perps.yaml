@@ -2,10 +2,10 @@ version: 1
 suite:
   id: ask-gina-model-perps-v1
   plugin: ask-gina
-  catalog_version: 30-read-tools@2026-09-01
+  catalog_version: 31-read-tools@2026-09-10
   description: >-
-    Full-catalog routing cases for the fourteen Hyperliquid account, market,
-    HIP-3, data-fetching, and SQL tools exposed by the Ask Gina listed plugin.
+    Full-catalog routing cases for the Hyperliquid account, market,
+    HIP-3, data-fetching, SQL, and order-cost tools exposed by the Ask Gina listed plugin.
 cases:
   - id: perps-account
     category: confusion_pair
@@ -316,6 +316,32 @@ cases:
         tool: perps.fetchHyperliquidOrderBook
       safety:
         forbidden_tools: [perps.fetchHyperliquidTrades, perps.fetchHyperliquidCandles]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-preview-order-cost
+    category: confusion_pair
+    tags: [perps, data, orderbook, cost]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Estimate the current Hyperliquid BTC market-buy cost for 0.5 BTC from the live order book, including VWAP and slippage versus mid. Also note whether the same estimate supports HIP-3 builder dexes such as xyz via its dex parameter. Do not place an order, fetch raw book rows, or claim a fill is guaranteed.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.previewHyperliquidOrderCost
+      arguments:
+        required:
+          coin: BTC
+          side: buy
+          size: 0.5
+        allow_additional: true
+      safety:
+        forbidden_tools: [perps.fetchHyperliquidOrderBook]
         forbidden_scopes: ["tools:execute"]
       performance:
         max_latency_ms: 30000
