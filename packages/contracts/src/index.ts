@@ -274,11 +274,26 @@ export type GinaDynamicWidgetTool = typeof GINA_DYNAMIC_WIDGET_TOOL;
 export const isGinaDynamicWidgetTool = (name: unknown): name is GinaDynamicWidgetTool =>
   name === GINA_DYNAMIC_WIDGET_TOOL;
 
-export const GINA_RENDER_TOOL_NAMES = [GINA_DYNAMIC_WIDGET_TOOL] as const;
+export const GINA_PREDICTION_DISCOVERY_COMPATIBILITY_TOOL_NAMES = [
+  "predictions.getExpiringMarkets",
+  "predictions.getSeriesMarket",
+  "predictions.getPredictionMarketDetails",
+] as const satisfies readonly GinaReadToolName[];
+
+export const GINA_PREDICTION_RENDER_TOOL_NAMES = [
+  "predictions.renderPredictionPodium",
+  "predictions.renderPredictionBinaryMarket",
+  "predictions.renderPredictionCollection",
+] as const;
+
+export const GINA_RENDER_TOOL_NAMES = [
+  GINA_DYNAMIC_WIDGET_TOOL,
+  ...GINA_PREDICTION_RENDER_TOOL_NAMES,
+] as const;
 export type GinaRenderToolName = (typeof GINA_RENDER_TOOL_NAMES)[number];
 
 export const isGinaRenderToolName = (name: unknown): name is GinaRenderToolName =>
-  name === GINA_DYNAMIC_WIDGET_TOOL;
+  typeof name === "string" && (GINA_RENDER_TOOL_NAMES as readonly string[]).includes(name);
 
 export type AskGinaSkillToolName = GinaReadToolName | GinaRenderToolName;
 
@@ -353,6 +368,14 @@ const sharedReadTools = GINA_READ_TOOL_CATALOG.filter((tool) => tool.family === 
 const familyTools = (family: Exclude<GinaMcpAppFamily, "portfolio">): readonly GinaReadToolName[] =>
   GINA_READ_TOOL_CATALOG.filter((tool) => tool.family === family).map((tool) => tool.name);
 
+const predictionSkillTools: readonly AskGinaSkillToolName[] = [
+  ...familyTools("predictions").filter(
+    (tool) =>
+      !(GINA_PREDICTION_DISCOVERY_COMPATIBILITY_TOOL_NAMES as readonly string[]).includes(tool),
+  ),
+  ...GINA_PREDICTION_RENDER_TOOL_NAMES,
+];
+
 export const SKILL_NAMES = [
   "review-gina-account",
   "research-spot-tokens",
@@ -381,7 +404,7 @@ export const ASK_GINA_SKILL_DEFINITIONS = [
   },
   {
     name: "research-prediction-markets",
-    tools: familyTools("predictions"),
+    tools: predictionSkillTools,
   },
 ] as const satisfies readonly AskGinaSkillDefinition[];
 
