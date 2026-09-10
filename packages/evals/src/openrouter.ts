@@ -1,7 +1,7 @@
 import { createMCPClient, type ListToolsResult, type MCPClient } from "@ai-sdk/mcp";
-import { listCatalogToolNames, PRODUCTION_MCP_URL } from "@askgina/contracts";
+import { listCatalogToolNames } from "@askgina/contracts";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { generateText, isStepCount, type StepResult, type ToolSet } from "ai";
+import { generateText, isStepCount, wrapLanguageModel, type StepResult, type ToolSet } from "ai";
 import { Clock, Data, DateTime, Duration, Effect, Exit, Function } from "effect";
 
 import type {
@@ -11,8 +11,14 @@ import type {
   PluginEvalToolCall,
 } from "./contracts";
 import { isExactOpenRouterEndpointSlug } from "./profile-identity";
+import {
+  captureOpenRouterGenerationEvidence,
+  type OpenRouterGenerationEvidence,
+} from "./provider-evidence";
+import { isAllowedGinaReadServerUrl } from "./server-url";
 
 export { isExactOpenRouterEndpointSlug } from "./profile-identity";
+export type { OpenRouterGenerationEvidence } from "./provider-evidence";
 
 const DEFAULT_TIMEOUT_MS = 120_000;
 const DEFAULT_MAX_STEPS = 8;
@@ -49,6 +55,8 @@ export interface OpenRouterTrialOptions {
   readonly timeoutMs?: number;
   readonly maxSteps?: number;
   readonly maxToolCalls?: number;
+  readonly expectedProvider?: string;
+  readonly onGenerationEvidence?: (record: OpenRouterGenerationEvidence) => Promise<void>;
 }
 
 interface ValidatedOpenRouterTrialOptions {
@@ -64,6 +72,8 @@ interface ValidatedOpenRouterTrialOptions {
   readonly timeoutMs: number;
   readonly maxSteps: number;
   readonly maxToolCalls: number;
+  readonly expectedProvider?: string;
+  readonly onGenerationEvidence?: (record: OpenRouterGenerationEvidence) => Promise<void>;
 }
 
 export class PluginEvalOpenRouterRequestError extends Data.TaggedError(
@@ -82,7 +92,12 @@ export class PluginEvalOpenRouterGenerationError extends Data.TaggedError(
   "PluginEvalOpenRouterGenerationError",
 )<{
   readonly caseId: string;
-  readonly reason: "generation-failed" | "tool-budget-exhausted";
+  readonly reason:
+    | "generation-failed"
+    | "tool-budget-exhausted"
+    | "evidence-write-failed"
+    | "evidence-missing"
+    | "observed-mismatch";
 }> {}
 
 export class PluginEvalOpenRouterTimeoutError extends Data.TaggedError(
@@ -115,7 +130,7 @@ const validateOptions = (
   const maxSteps = options.maxSteps ?? DEFAULT_MAX_STEPS;
   const maxToolCalls = options.maxToolCalls ?? DEFAULT_OPENROUTER_MAX_TOOL_CALLS;
   const commonOptionsAreValid =
-    options.serverUrl === PRODUCTION_MCP_URL &&
+    isAllowedGinaReadServerUrl(options.serverUrl) &&
     options.apiKey.trim().length > 0 &&
     options.mcpAuthorization.trim().length > 0 &&
     options.model.trim().length > 0 &&
@@ -131,7 +146,11 @@ const validateOptions = (
     Number.isSafeInteger(maxToolCalls) &&
     maxToolCalls > 0 &&
     maxToolCalls <= MAX_MAX_STEPS &&
-    catalogsMatch(options.allowedTools, CANONICAL_ALLOWED_TOOLS);
+    catalogsMatch(options.allowedTools, CANONICAL_ALLOWED_TOOLS) &&
+    (options.expectedProvider === undefined ||
+      (options.expectedProvider.length > 0 &&
+        options.expectedProvider.length <= 128 &&
+        options.expectedProvider === options.expectedProvider.trim()));
 
   if (!commonOptionsAreValid) {
     return Effect.fail(
@@ -163,6 +182,12 @@ const validateOptions = (
     timeoutMs,
     maxSteps,
     maxToolCalls,
+    ...(options.expectedProvider === undefined
+      ? {}
+      : { expectedProvider: options.expectedProvider }),
+    ...(options.onGenerationEvidence === undefined
+      ? {}
+      : { onGenerationEvidence: options.onGenerationEvidence }),
   });
 };
 
@@ -500,7 +525,13 @@ export const runOpenRouterPluginEvalTrial = Function.dual<
               const wireToolOrder: string[] = [];
               const wireToCanonical = new Map<string, string>();
               let admittedToolCalls = 0;
+              let generationStep = 0;
               let toolCallBudgetError: PluginEvalOpenRouterGenerationError | undefined;
+              let latchedGenerationError: PluginEvalOpenRouterGenerationError | undefined;
+              const latchGenerationError = (error: PluginEvalOpenRouterGenerationError): never => {
+                latchedGenerationError ??= error;
+                throw new Error("OpenRouter generation evidence rejected");
+              };
               for (const canonicalName of discoveredTools) {
                 const wireName = canonicalName.replaceAll(".", "_");
                 const tool = tools[canonicalName];
@@ -548,9 +579,59 @@ export const runOpenRouterPluginEvalTrial = Function.dual<
                     require_parameters: true,
                   };
                   return generateText({
-                    model: openrouter(validated.model, {
-                      usage: { include: true },
-                      provider: routing,
+                    model: wrapLanguageModel({
+                      model: openrouter(validated.model, {
+                        usage: { include: true },
+                        provider: routing,
+                      }),
+                      middleware: {
+                        specificationVersion: "v4",
+                        wrapGenerate: ({ doGenerate }) =>
+                          Promise.resolve(doGenerate()).then((generated) => {
+                            generationStep += 1;
+                            const evidence = captureOpenRouterGenerationEvidence(
+                              generated,
+                              generationStep,
+                            );
+                            const persistEvidence = validated.onGenerationEvidence;
+                            const persisted =
+                              persistEvidence === undefined
+                                ? Promise.resolve()
+                                : Promise.resolve()
+                                    .then(() => persistEvidence(evidence))
+                                    .then(
+                                      () => undefined,
+                                      () =>
+                                        latchGenerationError(
+                                          new PluginEvalOpenRouterGenerationError({
+                                            caseId: evalCase.id,
+                                            reason: "evidence-write-failed",
+                                          }),
+                                        ),
+                                    );
+                            return persisted.then(() => {
+                              if (validated.expectedProvider !== undefined) {
+                                if (evidence.provider === null) {
+                                  latchGenerationError(
+                                    new PluginEvalOpenRouterGenerationError({
+                                      caseId: evalCase.id,
+                                      reason: "evidence-missing",
+                                    }),
+                                  );
+                                }
+                                if (evidence.provider !== validated.expectedProvider) {
+                                  latchGenerationError(
+                                    new PluginEvalOpenRouterGenerationError({
+                                      caseId: evalCase.id,
+                                      reason: "observed-mismatch",
+                                    }),
+                                  );
+                                }
+                              }
+                              return generated;
+                            });
+                          }),
+                      },
                     }),
                     messages: evalCase.turns.map(({ role, content }) => ({ role, content })),
                     allowSystemInMessages: true,
@@ -576,10 +657,13 @@ export const runOpenRouterPluginEvalTrial = Function.dual<
               ).pipe(
                 Effect.matchEffect({
                   onSuccess: (value) =>
-                    toolCallBudgetError === undefined
-                      ? Effect.succeed(value)
-                      : Effect.fail(toolCallBudgetError),
-                  onFailure: (error) => Effect.fail(toolCallBudgetError ?? error),
+                    latchedGenerationError !== undefined
+                      ? Effect.fail(latchedGenerationError)
+                      : toolCallBudgetError === undefined
+                        ? Effect.succeed(value)
+                        : Effect.fail(toolCallBudgetError),
+                  onFailure: (error) =>
+                    Effect.fail(latchedGenerationError ?? toolCallBudgetError ?? error),
                 }),
               );
               yield* ensureBeforeDeadline(evalCase.id, validated.timeoutMs, deadlineMillis);

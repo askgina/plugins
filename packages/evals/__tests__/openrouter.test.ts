@@ -15,9 +15,11 @@ import {
   PluginEvalOpenRouterMcpError,
   PluginEvalOpenRouterRequestError,
   PluginEvalOpenRouterTimeoutError,
+  type OpenRouterGenerationEvidence,
   type OpenRouterTrialOptions,
   runOpenRouterPluginEvalTrial,
 } from "../src/openrouter";
+import { ALPHA_GINA_READ_SERVER_URL } from "../src/server-url";
 
 vi.mock("@ai-sdk/mcp", () => ({
   createMCPClient: vi.fn(),
@@ -30,6 +32,41 @@ vi.mock("@openrouter/ai-sdk-provider", () => ({
 vi.mock("ai", () => ({
   generateText: vi.fn(),
   isStepCount: vi.fn((count: number) => count),
+  wrapLanguageModel: ({
+    model,
+    middleware,
+  }: {
+    model: {
+      readonly provider?: string;
+      readonly modelId?: string;
+      readonly supportedUrls?: unknown;
+      doGenerate: (params: unknown) => PromiseLike<unknown>;
+      doStream: (params: unknown) => PromiseLike<unknown>;
+    };
+    middleware: {
+      wrapGenerate?: (options: {
+        doGenerate: () => PromiseLike<unknown>;
+        doStream: () => PromiseLike<unknown>;
+        params: unknown;
+        model: unknown;
+      }) => PromiseLike<unknown>;
+    };
+  }) => ({
+    specificationVersion: "v4",
+    provider: model.provider,
+    modelId: model.modelId,
+    supportedUrls: model.supportedUrls,
+    doGenerate: (params: unknown) =>
+      middleware.wrapGenerate === undefined
+        ? model.doGenerate(params)
+        : middleware.wrapGenerate({
+            doGenerate: () => model.doGenerate(params),
+            doStream: () => model.doStream(params),
+            params,
+            model,
+          }),
+    doStream: (params: unknown) => model.doStream(params),
+  }),
 }));
 
 const evalCase: PluginEvalCase = {
@@ -1033,5 +1070,436 @@ describe("OpenRouter trial adapter", () => {
         assert.strictEqual(result.failure.reason, "tool-budget-exhausted");
       }
     }),
+  );
+
+  it.effect("accepts the allowlisted alpha Gina read URL", () =>
+    Effect.gen(function* () {
+      const client = mockClient();
+      createMCPClientMock.mockResolvedValue(client as never);
+      generateTextMock.mockResolvedValue(completedGeneration as never);
+
+      const observation = yield* runOpenRouterPluginEvalTrial(evalCase, {
+        ...options,
+        serverUrl: ALPHA_GINA_READ_SERVER_URL,
+      });
+      const mcpConfig = createMCPClientMock.mock.calls[0]?.[0] as {
+        transport?: { url?: string };
+      };
+
+      assert.strictEqual(observation.status, "completed");
+      assert.strictEqual(mcpConfig.transport?.url, ALPHA_GINA_READ_SERVER_URL);
+    }),
+  );
+
+  const toolCallCompletion = {
+    id: "gen-eval-1",
+    object: "chat.completion",
+    created: 0,
+    model: "openai/gpt-4o",
+    provider: "OpenAI",
+    choices: [
+      {
+        index: 0,
+        message: {
+          role: "assistant",
+          content: null,
+          tool_calls: [
+            {
+              id: "call_1",
+              type: "function",
+              function: {
+                name: "spot_getSimplePrice",
+                arguments: '{"ids":"ethereum"}',
+              },
+            },
+          ],
+        },
+        finish_reason: "tool_calls",
+      },
+    ],
+    usage: { prompt_tokens: 3, completion_tokens: 2, total_tokens: 5, cost: 0.001 },
+  };
+
+  const finalCompletion = {
+    id: "gen-eval-2",
+    object: "chat.completion",
+    created: 0,
+    model: "openai/gpt-4o",
+    provider: "OpenAI",
+    choices: [
+      {
+        index: 0,
+        message: { role: "assistant", content: "ETH is $3,200." },
+        finish_reason: "stop",
+      },
+    ],
+    usage: { prompt_tokens: 4, completion_tokens: 3, total_tokens: 7, cost: 0.002 },
+  };
+
+  it.effect("captures each generation before MCP tool execute on the adapter path", () =>
+    Effect.gen(function* () {
+      const actualAi = (yield* Effect.promise(() => vi.importActual("ai"))) as typeof AiModule;
+      const actualOpenRouter = (yield* Effect.promise(() =>
+        vi.importActual("@openrouter/ai-sdk-provider"),
+      )) as typeof OpenRouterModule;
+      const events: string[] = [];
+      const records: OpenRouterGenerationEvidence[] = [];
+      const completions = [toolCallCompletion, finalCompletion];
+      let completionIndex = 0;
+      generateTextMock.mockImplementation(actualAi.generateText);
+      isStepCountMock.mockImplementation(actualAi.isStepCount);
+      createOpenRouterMock.mockImplementation((settings) =>
+        actualOpenRouter.createOpenRouter({
+          ...settings,
+          fetch: ((_input) => {
+            const completion = completions[completionIndex] ?? finalCompletion;
+            completionIndex += 1;
+            return Promise.resolve(
+              new Response(JSON.stringify(completion), {
+                status: 200,
+                headers: { "content-type": "application/json" },
+              }),
+            );
+          }) as typeof fetch,
+        }),
+      );
+      const client = mockClient();
+      client.toolsFromDefinitions.mockImplementation(((definitions: {
+        tools: readonly { name: string }[];
+      }) =>
+        Object.fromEntries(
+          definitions.tools.map(({ name }) => [
+            name,
+            actualAi.tool({
+              inputSchema: actualAi.jsonSchema({
+                type: "object",
+                additionalProperties: true,
+              }),
+              execute: () => {
+                events.push(`tool:${name}`);
+                return Promise.resolve({ ok: true });
+              },
+            }),
+          ]),
+        )) as unknown as typeof client.toolsFromDefinitions);
+      createMCPClientMock.mockResolvedValue(client as never);
+
+      const observation = yield* runOpenRouterPluginEvalTrial(evalCase, {
+        ...options,
+        maxSteps: 2,
+        onGenerationEvidence: (record) => {
+          events.push(`evidence:${record.step}`);
+          records.push(record);
+          return Promise.resolve();
+        },
+      });
+
+      assert.strictEqual(observation.status, "completed");
+      assert.deepStrictEqual(events, ["evidence:1", "tool:spot.getSimplePrice", "evidence:2"]);
+      assert.deepStrictEqual(records, [
+        {
+          generationId: "gen-eval-1",
+          responseModel: "openai/gpt-4o",
+          provider: "OpenAI",
+          step: 1,
+          inputTokens: 3,
+          outputTokens: 2,
+          totalTokens: 5,
+          cost: 0.001,
+        },
+        {
+          generationId: "gen-eval-2",
+          responseModel: "openai/gpt-4o",
+          provider: "OpenAI",
+          step: 2,
+          inputTokens: 4,
+          outputTokens: 3,
+          totalTokens: 7,
+          cost: 0.002,
+        },
+      ]);
+      assert.notInclude(serialized(records), options.apiKey);
+      assert.notInclude(serialized(records), options.mcpAuthorization);
+      assert.notInclude(serialized(records), "reasoning");
+      assert.notInclude(serialized(observation), options.apiKey);
+    }),
+  );
+
+  it.effect("records unavailable generation metadata as null", () =>
+    Effect.gen(function* () {
+      const actualAi = (yield* Effect.promise(() => vi.importActual("ai"))) as typeof AiModule;
+      const actualOpenRouter = (yield* Effect.promise(() =>
+        vi.importActual("@openrouter/ai-sdk-provider"),
+      )) as typeof OpenRouterModule;
+      const records: OpenRouterGenerationEvidence[] = [];
+      generateTextMock.mockImplementation(actualAi.generateText);
+      isStepCountMock.mockImplementation(actualAi.isStepCount);
+      createOpenRouterMock.mockImplementation((settings) =>
+        actualOpenRouter.createOpenRouter({
+          ...settings,
+          fetch: ((_input) =>
+            Promise.resolve(
+              new Response(
+                JSON.stringify({
+                  object: "chat.completion",
+                  created: 0,
+                  choices: [
+                    {
+                      index: 0,
+                      message: { role: "assistant", content: "ETH is $3,200." },
+                      finish_reason: "stop",
+                    },
+                  ],
+                }),
+                { status: 200, headers: { "content-type": "application/json" } },
+              ),
+            )) as typeof fetch,
+        }),
+      );
+      const client = mockClient();
+      client.toolsFromDefinitions.mockImplementation(((definitions: {
+        tools: readonly { name: string }[];
+      }) =>
+        Object.fromEntries(
+          definitions.tools.map(({ name }) => [
+            name,
+            actualAi.tool({
+              inputSchema: actualAi.jsonSchema({
+                type: "object",
+                additionalProperties: true,
+              }),
+              execute: () => Promise.resolve({}),
+            }),
+          ]),
+        )) as unknown as typeof client.toolsFromDefinitions);
+      createMCPClientMock.mockResolvedValue(client as never);
+
+      const observation = yield* runOpenRouterPluginEvalTrial(evalCase, {
+        ...options,
+        onGenerationEvidence: (record) => {
+          records.push(record);
+          return Promise.resolve();
+        },
+      });
+
+      assert.strictEqual(observation.status, "completed");
+      assert.strictEqual(records.length, 1);
+      assert.deepStrictEqual(records[0], {
+        generationId: null,
+        responseModel: null,
+        provider: null,
+        step: 1,
+        inputTokens: null,
+        outputTokens: null,
+        totalTokens: null,
+        cost: null,
+      });
+    }),
+  );
+
+  it.effect("rejects a sink failure before MCP tool dispatch and cannot succeed", () =>
+    Effect.gen(function* () {
+      const actualAi = (yield* Effect.promise(() => vi.importActual("ai"))) as typeof AiModule;
+      const actualOpenRouter = (yield* Effect.promise(() =>
+        vi.importActual("@openrouter/ai-sdk-provider"),
+      )) as typeof OpenRouterModule;
+      const dispatched: string[] = [];
+      generateTextMock.mockImplementation(actualAi.generateText);
+      isStepCountMock.mockImplementation(actualAi.isStepCount);
+      createOpenRouterMock.mockImplementation((settings) =>
+        actualOpenRouter.createOpenRouter({
+          ...settings,
+          fetch: ((_input) =>
+            Promise.resolve(
+              new Response(JSON.stringify(toolCallCompletion), {
+                status: 200,
+                headers: { "content-type": "application/json" },
+              }),
+            )) as typeof fetch,
+        }),
+      );
+      const client = mockClient();
+      client.toolsFromDefinitions.mockImplementation(((definitions: {
+        tools: readonly { name: string }[];
+      }) =>
+        Object.fromEntries(
+          definitions.tools.map(({ name }) => [
+            name,
+            actualAi.tool({
+              inputSchema: actualAi.jsonSchema({
+                type: "object",
+                additionalProperties: true,
+              }),
+              execute: () => {
+                dispatched.push(name);
+                return Promise.resolve({ ok: true });
+              },
+            }),
+          ]),
+        )) as unknown as typeof client.toolsFromDefinitions);
+      createMCPClientMock.mockResolvedValue(client as never);
+
+      const result = yield* Effect.result(
+        runOpenRouterPluginEvalTrial(evalCase, {
+          ...options,
+          onGenerationEvidence: () => Promise.reject(new Error("journal-write-must-not-leak")),
+        }),
+      );
+
+      assert.strictEqual(dispatched.length, 0);
+      assert.strictEqual(result._tag, "Failure");
+      if (result._tag === "Failure") {
+        assert.instanceOf(result.failure, PluginEvalOpenRouterGenerationError);
+        assert.strictEqual(result.failure.reason, "evidence-write-failed");
+        assert.notInclude(serialized(result.failure), "journal-write-must-not-leak");
+        assert.notInclude(serialized(result.failure), options.apiKey);
+      }
+      assert.strictEqual(client.close.mock.calls.length, 1);
+
+      dispatched.length = 0;
+      const syncClient = mockClient();
+      syncClient.toolsFromDefinitions.mockImplementation(((definitions: {
+        tools: readonly { name: string }[];
+      }) =>
+        Object.fromEntries(
+          definitions.tools.map(({ name }) => [
+            name,
+            actualAi.tool({
+              inputSchema: actualAi.jsonSchema({
+                type: "object",
+                additionalProperties: true,
+              }),
+              execute: () => {
+                dispatched.push(name);
+                return Promise.resolve({ ok: true });
+              },
+            }),
+          ]),
+        )) as unknown as typeof syncClient.toolsFromDefinitions);
+      createMCPClientMock.mockResolvedValue(syncClient as never);
+
+      const syncResult = yield* Effect.result(
+        runOpenRouterPluginEvalTrial(evalCase, {
+          ...options,
+          onGenerationEvidence: () => {
+            throw new Error("journal-write-must-not-leak");
+          },
+        }),
+      );
+
+      assert.strictEqual(dispatched.length, 0);
+      assert.strictEqual(syncResult._tag, "Failure");
+      if (syncResult._tag === "Failure") {
+        assert.instanceOf(syncResult.failure, PluginEvalOpenRouterGenerationError);
+        assert.strictEqual(syncResult.failure.reason, "evidence-write-failed");
+        assert.notInclude(serialized(syncResult.failure), "journal-write-must-not-leak");
+        assert.notInclude(serialized(syncResult.failure), options.apiKey);
+      }
+      assert.strictEqual(syncClient.close.mock.calls.length, 1);
+    }),
+  );
+
+  it.effect(
+    "rejects missing or mismatched providers before tools without treating aliases as verified",
+    () =>
+      Effect.gen(function* () {
+        const actualAi = (yield* Effect.promise(() => vi.importActual("ai"))) as typeof AiModule;
+        const actualOpenRouter = (yield* Effect.promise(() =>
+          vi.importActual("@openrouter/ai-sdk-provider"),
+        )) as typeof OpenRouterModule;
+        const dispatched: string[] = [];
+        generateTextMock.mockImplementation(actualAi.generateText);
+        isStepCountMock.mockImplementation(actualAi.isStepCount);
+
+        const respondWith = (body: unknown) => {
+          createOpenRouterMock.mockImplementation((settings) =>
+            actualOpenRouter.createOpenRouter({
+              ...settings,
+              fetch: ((_input) =>
+                Promise.resolve(
+                  new Response(JSON.stringify(body), {
+                    status: 200,
+                    headers: { "content-type": "application/json" },
+                  }),
+                )) as typeof fetch,
+            }),
+          );
+        };
+        const installTools = () => {
+          const nextClient = mockClient();
+          nextClient.toolsFromDefinitions.mockImplementation(((definitions: {
+            tools: readonly { name: string }[];
+          }) =>
+            Object.fromEntries(
+              definitions.tools.map(({ name }) => [
+                name,
+                actualAi.tool({
+                  inputSchema: actualAi.jsonSchema({
+                    type: "object",
+                    additionalProperties: true,
+                  }),
+                  execute: () => {
+                    dispatched.push(name);
+                    return Promise.resolve({ ok: true });
+                  },
+                }),
+              ]),
+            )) as unknown as typeof nextClient.toolsFromDefinitions);
+          createMCPClientMock.mockResolvedValue(nextClient as never);
+        };
+
+        installTools();
+        respondWith({ ...finalCompletion, model: "openai/gpt-4o-2024-08-06" });
+        const aliasRecords: OpenRouterGenerationEvidence[] = [];
+        const aliased = yield* runOpenRouterPluginEvalTrial(evalCase, {
+          ...options,
+          expectedProvider: "OpenAI",
+          onGenerationEvidence: (record) => {
+            aliasRecords.push(record);
+            return Promise.resolve();
+          },
+        });
+        assert.strictEqual(aliased.status, "completed");
+        assert.strictEqual(aliasRecords[0]?.responseModel, "openai/gpt-4o-2024-08-06");
+        assert.strictEqual(aliasRecords[0]?.provider, "OpenAI");
+        assert.strictEqual(dispatched.length, 0);
+
+        installTools();
+        respondWith({ ...toolCallCompletion, provider: undefined });
+        const missingRecords: OpenRouterGenerationEvidence[] = [];
+        const missingProvider = yield* Effect.result(
+          runOpenRouterPluginEvalTrial(evalCase, {
+            ...options,
+            expectedProvider: "OpenAI",
+            onGenerationEvidence: (record) => {
+              missingRecords.push(record);
+              return Promise.resolve();
+            },
+          }),
+        );
+        assert.strictEqual(dispatched.length, 0);
+        assert.strictEqual(missingRecords[0]?.provider, null);
+        assert.strictEqual(missingProvider._tag, "Failure");
+        if (missingProvider._tag === "Failure") {
+          assert.instanceOf(missingProvider.failure, PluginEvalOpenRouterGenerationError);
+          assert.strictEqual(missingProvider.failure.reason, "evidence-missing");
+        }
+
+        installTools();
+        respondWith({ ...toolCallCompletion, provider: "Anthropic" });
+        const mismatch = yield* Effect.result(
+          runOpenRouterPluginEvalTrial(evalCase, {
+            ...options,
+            expectedProvider: "OpenAI",
+            onGenerationEvidence: () => Promise.resolve(),
+          }),
+        );
+        assert.strictEqual(dispatched.length, 0);
+        assert.strictEqual(mismatch._tag, "Failure");
+        if (mismatch._tag === "Failure") {
+          assert.instanceOf(mismatch.failure, PluginEvalOpenRouterGenerationError);
+          assert.strictEqual(mismatch.failure.reason, "observed-mismatch");
+        }
+      }),
   );
 });

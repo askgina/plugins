@@ -35,6 +35,8 @@ export {
 export {
   LiveEvalConfigurationCaptureError,
   LiveEvalConfigurationEvidenceSchema,
+  LiveEvalConfigurationEvidenceV1Schema,
+  LiveEvalConfigurationEvidenceV2Schema,
   captureOpenRouterConfiguration,
   liveEvalConfigurationEvidenceOutputPath,
   makeLiveEvalConfigurationEvidence,
@@ -53,6 +55,26 @@ export {
   type LiveEvalRequestedRouting,
   type LiveEvalRequestedRoutingEvidence,
 } from "./profile-identity";
+export {
+  captureOpenRouterGenerationEvidence,
+  type OpenRouterGenerationEvidence,
+} from "./provider-evidence";
+export {
+  admitOpenRouterBudgetEvidence,
+  OpenRouterBudgetEvidenceSchema,
+  OpenRouterBudgetError,
+  preflightOpenRouterBudget,
+  validateOpenRouterBudgetEvidence,
+  type OpenRouterBudgetEvidence,
+} from "./openrouter-budget";
+export {
+  createLiveEvalJournal,
+  withJournaledTrial,
+  LiveEvalJournalError,
+  type LiveEvalJournal,
+  type LiveEvalJournalOptions,
+  type LiveEvalJournalRecord,
+} from "./trial-journal";
 export {
   PluginEvalResponsesDecodeError,
   PluginEvalResponsesHttpError,

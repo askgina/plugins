@@ -99,10 +99,10 @@ const PACKAGES = [
       /^replay-[A-Za-z0-9_-]+\.js\.map$/u,
       /^report-[A-Za-z0-9_-]+\.js$/u,
       /^report-[A-Za-z0-9_-]+\.js\.map$/u,
-      /^responses-api-[A-Za-z0-9_-]+\.js$/u,
-      /^responses-api-[A-Za-z0-9_-]+\.js\.map$/u,
       /^runner-[A-Za-z0-9_-]+\.js$/u,
       /^runner-[A-Za-z0-9_-]+\.js\.map$/u,
+      /^trial-journal-[A-Za-z0-9_-]+\.js$/u,
+      /^trial-journal-[A-Za-z0-9_-]+\.js\.map$/u,
     ],
   },
 ];

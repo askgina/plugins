@@ -3,6 +3,8 @@ import * as BunPath from "@effect/platform-bun/BunPath";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Schema } from "effect";
 
+import { PRODUCTION_MCP_URL } from "@askgina/contracts";
+
 import {
   LiveEvalConfigurationCaptureError,
   LiveEvalConfigurationEvidenceSchema,
@@ -12,6 +14,7 @@ import {
   type LiveEvalConfigurationCaptureType,
 } from "../src/configuration";
 import { sha256Hex, type LiveEvalRequestedRouting } from "../src/profile-identity";
+import { ALPHA_GINA_READ_SERVER_URL } from "../src/server-url";
 import type { SanitizedEvalRunReport } from "../src/report";
 import aggregateFixture from "../src/fixtures/sanitized-aggregate.json";
 import { SanitizedEvalAggregateSchema } from "../src/sanitize";
@@ -93,6 +96,9 @@ const evidenceFor = (
     readonly timeoutMs?: number;
     readonly maxToolCalls?: number;
     readonly capture?: LiveEvalConfigurationCaptureType;
+    readonly serverUrl?: string;
+    readonly maxCostUsd?: number;
+    readonly expectedProvider?: string;
   } = {},
 ) =>
   makeLiveEvalConfigurationEvidence({
@@ -103,6 +109,11 @@ const evidenceFor = (
     timeoutMs: overrides.timeoutMs ?? 120_000,
     capture: overrides.capture ?? capture,
     ...(overrides.maxToolCalls === undefined ? {} : { maxToolCalls: overrides.maxToolCalls }),
+    ...(overrides.serverUrl === undefined ? {} : { serverUrl: overrides.serverUrl }),
+    ...(overrides.maxCostUsd === undefined ? {} : { maxCostUsd: overrides.maxCostUsd }),
+    ...(overrides.expectedProvider === undefined
+      ? {}
+      : { expectedProvider: overrides.expectedProvider }),
   });
 
 describe("configuration-v1 evidence", () => {
@@ -134,6 +145,7 @@ describe("configuration-v1 evidence", () => {
       });
       assert.strictEqual(first.runtime.packages[0].sourceScope, "entrypoint");
       assert.strictEqual(first.schemaVersion, "configuration-v1");
+      assert.notProperty(first.requested, "mcpResource");
       assert.strictEqual(
         evidenceFor({
           report: report({ runId: "run-a", startedAt: "2026-09-09T12:00:00.000Z" }),
@@ -215,6 +227,52 @@ describe("configuration-v1 evidence", () => {
         }),
       );
       assert.strictEqual(invalid._tag, "Failure");
+    }),
+  );
+
+  it.effect("binds resource and spend controls in v2 without relabeling legacy evidence", () =>
+    Effect.gen(function* () {
+      const legacy = evidenceFor();
+      const controls = { maxCostUsd: 25, expectedProvider: "OpenAI" };
+      const production = evidenceFor({ ...controls, serverUrl: PRODUCTION_MCP_URL });
+      const alpha = evidenceFor({ ...controls, serverUrl: ALPHA_GINA_READ_SERVER_URL });
+      const decodedLegacy = yield* decodeUnknownEvidence(legacy);
+      const decodedAlpha = yield* decodeUnknownEvidence(alpha);
+      assert.strictEqual(decodedLegacy.schemaVersion, "configuration-v1");
+      assert.notProperty(decodedLegacy.requested, "mcpResource");
+      assert.strictEqual(decodedAlpha.schemaVersion, "configuration-v2");
+      if (decodedAlpha.schemaVersion === "configuration-v2") {
+        assert.strictEqual(decodedAlpha.requested.mcpResource, "alpha");
+        assert.strictEqual(decodedAlpha.requested.serverUrl, ALPHA_GINA_READ_SERVER_URL);
+      }
+      assert.notStrictEqual(alpha.configurationSha256, production.configurationSha256);
+      assert.notStrictEqual(
+        alpha.configurationSha256,
+        evidenceFor({
+          ...controls,
+          serverUrl: ALPHA_GINA_READ_SERVER_URL,
+          maxCostUsd: 10,
+        }).configurationSha256,
+      );
+      assert.notStrictEqual(
+        alpha.configurationSha256,
+        evidenceFor({
+          ...controls,
+          serverUrl: ALPHA_GINA_READ_SERVER_URL,
+          expectedProvider: "Other Provider",
+        }).configurationSha256,
+      );
+      const relabeled = yield* Effect.result(
+        decodeUnknownEvidence({
+          ...alpha,
+          schemaVersion: "configuration-v1",
+        }),
+      );
+      assert.strictEqual(relabeled._tag, "Failure");
+      assert.throws(
+        () => evidenceFor({ serverUrl: ALPHA_GINA_READ_SERVER_URL }),
+        LiveEvalConfigurationCaptureError,
+      );
     }),
   );
 

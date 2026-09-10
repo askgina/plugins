@@ -35,6 +35,7 @@ import {
 export interface LiveEvalResult {
   readonly report: SanitizedEvalRunReport;
   readonly attempts: readonly PublicEvalAttemptSummary[] | null;
+  readonly selectedCaseIds: readonly string[];
   readonly requestedRouting?: LiveEvalRequestedRouting;
 }
 export const MINIMUM_LIVE_REPETITIONS = 3;
@@ -102,10 +103,15 @@ export const preflightLiveEvalSuite = (
     : Effect.void;
 };
 
-const selectCases = (
-  suite: PluginEvalSuite,
-  requestedIds: readonly string[] | undefined,
-): Effect.Effect<readonly PluginEvalCase[], LiveEvalSelectionError> => {
+export const selectCases = Function.dual<
+  (
+    requestedIds: readonly string[] | undefined,
+  ) => (suite: PluginEvalSuite) => Effect.Effect<readonly PluginEvalCase[], LiveEvalSelectionError>,
+  (
+    suite: PluginEvalSuite,
+    requestedIds: readonly string[] | undefined,
+  ) => Effect.Effect<readonly PluginEvalCase[], LiveEvalSelectionError>
+>(2, (suite, requestedIds) => {
   if (requestedIds === undefined) return Effect.succeed(suite.cases);
   if (requestedIds.length === 0) {
     return Effect.fail(new LiveEvalSelectionError({ reason: "empty-selection" }));
@@ -118,7 +124,7 @@ const selectCases = (
     return Effect.fail(new LiveEvalSelectionError({ reason: "unknown-case" }));
   }
   return Effect.succeed(suite.cases.filter((evalCase) => requested.has(evalCase.id)));
-};
+});
 
 type LiveEvalSuiteError<TrialError> =
   | TrialError
@@ -287,6 +293,7 @@ export const runLiveEvalSuite = Function.dual<
       return {
         report: sanitizedReport,
         attempts,
+        selectedCaseIds: cases.map((evalCase) => evalCase.id),
         ...(requestedRouting === undefined ? {} : { requestedRouting }),
       };
     }),

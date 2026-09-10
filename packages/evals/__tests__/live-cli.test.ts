@@ -4,6 +4,8 @@ import { assert, describe, it } from "@effect/vitest";
 import { Config, ConfigProvider, Effect, FileSystem, Path, PlatformError, Schema } from "effect";
 import { ChildProcess } from "effect/unstable/process";
 
+import { PRODUCTION_MCP_URL } from "@askgina/contracts";
+
 import { collectBoundedUtf8Output } from "../src/bounded-output";
 
 import {
@@ -17,6 +19,7 @@ import {
   writeLiveEvalReportWithRequestedRoutingEvidence,
 } from "../src/bin/live";
 import { makeLiveEvalConfigurationEvidence } from "../src/configuration";
+import { ALPHA_GINA_READ_SERVER_URL } from "../src/server-url";
 import type { LiveEvalConfigurationCaptureType } from "../src/configuration";
 import { DEFAULT_OPENROUTER_MAX_TOOL_CALLS } from "../src/openrouter";
 import type { SanitizedEvalRunReport } from "../src/report";
@@ -110,7 +113,9 @@ const requiredFlags = (runner: string, extra: readonly string[] = []): readonly 
   "local",
   "--timeout-ms",
   "120000",
-  ...(runner === "openrouter" ? ["--openrouter-endpoint", "openai"] : []),
+  ...(runner === "openrouter"
+    ? ["--openrouter-endpoint", "openai", "--expected-provider", "OpenAI", "--max-cost-usd", "25"]
+    : []),
   ...extra,
 ];
 
@@ -140,6 +145,7 @@ describe("live eval CLI parser", () => {
       if (openrouter.mode === "run" && openrouter.options.runner === "openrouter") {
         assert.strictEqual(openrouter.options.maxSteps, DEFAULT_OPENROUTER_MAX_STEPS);
         assert.strictEqual(openrouter.options.endpoint, "openai");
+        assert.strictEqual(openrouter.options.serverUrl, PRODUCTION_MCP_URL);
       }
 
       const claude = yield* parseLiveEvalCliOptions(requiredFlags("claude"));
@@ -178,6 +184,31 @@ describe("live eval CLI parser", () => {
         parseLiveEvalCliOptions(requiredFlags("omp", ["--provider", "google"])),
       );
       assert.strictEqual(unknownProvider._tag, "Failure");
+    }),
+  );
+
+  it.effect("requires explicit OpenRouter spend and provider controls", () =>
+    Effect.gen(function* () {
+      const flags = requiredFlags("openrouter");
+      for (const required of ["--max-cost-usd", "--expected-provider"]) {
+        const position = flags.indexOf(required);
+        const result = yield* Effect.result(
+          parseLiveEvalCliOptions(
+            flags.filter((_, index) => index !== position && index !== position + 1),
+          ),
+        );
+        assert.strictEqual(result._tag, "Failure");
+      }
+      const unbounded = yield* Effect.result(
+        parseLiveEvalCliOptions(
+          flags.map((value, index) => (flags[index - 1] === "--max-cost-usd" ? "Infinity" : value)),
+        ),
+      );
+      assert.strictEqual(unbounded._tag, "Failure");
+      const wrongRunner = yield* Effect.result(
+        parseLiveEvalCliOptions(requiredFlags("responses", ["--max-cost-usd", "25"])),
+      );
+      assert.strictEqual(wrongRunner._tag, "Failure");
     }),
   );
 
@@ -236,7 +267,80 @@ describe("live eval CLI parser", () => {
         parseLiveEvalCliOptions(requiredFlags("responses", ["--openrouter-endpoint", "openai"])),
       );
       assert.strictEqual(responsesEndpoint._tag, "Failure");
+      const responsesServerUrl = yield* Effect.result(
+        parseLiveEvalCliOptions(requiredFlags("responses", ["--server-url", PRODUCTION_MCP_URL])),
+      );
+      assert.strictEqual(responsesServerUrl._tag, "Failure");
+      const codexServerUrl = yield* Effect.result(
+        parseLiveEvalCliOptions(
+          requiredFlags("codex", ["--server-url", ALPHA_GINA_READ_SERVER_URL]),
+        ),
+      );
+      assert.strictEqual(codexServerUrl._tag, "Failure");
     }),
+  );
+
+  it.effect(
+    "selects allowed OpenRouter server URLs and rejects invalid ones before credentials",
+    () =>
+      Effect.gen(function* () {
+        const production = yield* parseLiveEvalCliOptions(
+          requiredFlags("openrouter", ["--server-url", PRODUCTION_MCP_URL]),
+        );
+        assert.strictEqual(production.mode, "run");
+        if (production.mode === "run" && production.options.runner === "openrouter") {
+          assert.strictEqual(production.options.serverUrl, PRODUCTION_MCP_URL);
+        }
+
+        const alpha = yield* parseLiveEvalCliOptions(
+          requiredFlags("openrouter", ["--server-url", ALPHA_GINA_READ_SERVER_URL]),
+        );
+        assert.strictEqual(alpha.mode, "run");
+        if (alpha.mode === "run" && alpha.options.runner === "openrouter") {
+          assert.strictEqual(alpha.options.serverUrl, ALPHA_GINA_READ_SERVER_URL);
+        }
+
+        const invalid = yield* Effect.result(
+          parseLiveEvalCliOptions(
+            requiredFlags("openrouter", ["--server-url", "https://example.invalid/mcp"]),
+          ),
+        );
+        assert.strictEqual(invalid._tag, "Failure");
+        if (invalid._tag === "Failure") {
+          assert.strictEqual(invalid.failure.reason, "invalid-arguments");
+          const message = formatLiveEvalCliFailure(invalid.failure);
+          assert.notInclude(message, "example.invalid");
+        }
+
+        const trailingSlash = yield* Effect.result(
+          parseLiveEvalCliOptions(
+            requiredFlags("openrouter", ["--server-url", `${PRODUCTION_MCP_URL}/`]),
+          ),
+        );
+        assert.strictEqual(trailingSlash._tag, "Failure");
+
+        if (alpha.mode === "run" && alpha.options.runner === "openrouter") {
+          const evidence = configurationEvidence(configurationReportContent);
+          const withAlpha = makeLiveEvalConfigurationEvidence({
+            report: configurationReport,
+            reportContent: configurationReportContent,
+            requestedRouting: openRouterRequestedRouting,
+            maxSteps: DEFAULT_OPENROUTER_MAX_STEPS,
+            maxToolCalls: DEFAULT_OPENROUTER_MAX_TOOL_CALLS,
+            timeoutMs: 120_000,
+            capture: configurationCapture,
+            serverUrl: alpha.options.serverUrl,
+            maxCostUsd: alpha.options.maxCostUsd,
+            expectedProvider: alpha.options.expectedProvider,
+          });
+          assert.notProperty(evidence.requested, "mcpResource");
+          assert.strictEqual(withAlpha.schemaVersion, "configuration-v2");
+          if (withAlpha.schemaVersion === "configuration-v2") {
+            assert.strictEqual(withAlpha.requested.mcpResource, "alpha");
+          }
+          assert.notStrictEqual(withAlpha.configurationSha256, evidence.configurationSha256);
+        }
+      }),
   );
 
   it.effect("requires an exact OpenRouter endpoint before credentials", () =>
@@ -245,6 +349,10 @@ describe("live eval CLI parser", () => {
         parseLiveEvalCliOptions([
           "--runner",
           "openrouter",
+          "--expected-provider",
+          "OpenAI",
+          "--max-cost-usd",
+          "25",
           "--suite",
           "suite.yaml",
           "--run-id",
@@ -273,6 +381,10 @@ describe("live eval CLI parser", () => {
         parseLiveEvalCliOptions([
           "--runner",
           "openrouter",
+          "--expected-provider",
+          "OpenAI",
+          "--max-cost-usd",
+          "25",
           "--suite",
           "suite.yaml",
           "--run-id",
@@ -299,6 +411,10 @@ describe("live eval CLI parser", () => {
         parseLiveEvalCliOptions([
           "--runner",
           "openrouter",
+          "--expected-provider",
+          "OpenAI",
+          "--max-cost-usd",
+          "25",
           "--suite",
           "suite.yaml",
           "--run-id",
@@ -329,6 +445,10 @@ describe("live eval CLI parser", () => {
         parseLiveEvalCliOptions([
           "--runner",
           "openrouter",
+          "--expected-provider",
+          "OpenAI",
+          "--max-cost-usd",
+          "25",
           "--suite",
           "suite.yaml",
           "--run-id",
@@ -552,9 +672,50 @@ describe("live eval CLI subprocess", () => {
           assert.include(stdout.text, "eval:");
           assert.include(stdout.text, "ASK_GINA_ACCESS_TOKEN");
           assert.include(stdout.text, "OMP_EVAL_API_KEY");
+          assert.include(stdout.text, "--server-url");
+          assert.include(stdout.text, PRODUCTION_MCP_URL);
+          assert.include(stdout.text, ALPHA_GINA_READ_SERVER_URL);
           assert.notInclude(stdout.text, "sk-");
           assert.notInclude(stderr.text, "OPENAI_API_KEY=");
           assert.notInclude(stderr.text, "OMP_EVAL_API_KEY=");
+        }),
+      ),
+    );
+
+    it.effect("rejects an unsupported OpenRouter server URL before credentials", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const pathValue = yield* Config.string("PATH");
+          const child = yield* ChildProcess.make(
+            "bun",
+            [
+              "packages/evals/src/bin/live.ts",
+              ...requiredFlags("openrouter", ["--server-url", "https://example.invalid/mcp"]),
+            ],
+            {
+              cwd: process.cwd(),
+              env: { PATH: pathValue },
+              extendEnv: false,
+              stdin: "ignore",
+              stdout: "pipe",
+              stderr: "pipe",
+            },
+          );
+          const [stdout, stderr, exitCode] = yield* Effect.all(
+            [
+              collectBoundedUtf8Output(child.stdout, 65_536),
+              collectBoundedUtf8Output(child.stderr, 65_536),
+              child.exitCode,
+            ],
+            { concurrency: "unbounded" },
+          );
+          const output = `${stdout.text}\n${stderr.text}`;
+          assert.notStrictEqual(exitCode, 0);
+          assert.include(output, "Usage:");
+          assert.include(output, "--server-url");
+          assert.notInclude(output, "example.invalid");
+          assert.notInclude(output, "missing ASK_GINA_ACCESS_TOKEN");
+          assert.notInclude(output, "missing OPENROUTER_API_KEY");
         }),
       ),
     );
@@ -601,6 +762,10 @@ describe("live eval CLI subprocess", () => {
               "120000",
               "--openrouter-endpoint",
               "openai",
+              "--expected-provider",
+              "OpenAI",
+              "--max-cost-usd",
+              "25",
             ],
             {
               cwd,

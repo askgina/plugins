@@ -1,12 +1,19 @@
 import { fileURLToPath } from "node:url";
 
-import { ASK_GINA_SKILL_DEFINITIONS } from "@askgina/contracts";
+import { ASK_GINA_SKILL_DEFINITIONS, PRODUCTION_MCP_URL } from "@askgina/contracts";
 import { Data, Effect, FileSystem, Function, Path, Schema } from "effect";
 
 import { canonicalJsonSha256, sha256Hex } from "./canonical-json";
 import type { LiveEvalRequestedRouting } from "./profile-identity";
 import { LiveEvalRequestedRoutingSchema } from "./profile-identity";
 import { SanitizedEvalRunReportSchema, type SanitizedEvalRunReport } from "./report";
+import { ALPHA_GINA_READ_SERVER_URL, isAllowedGinaReadServerUrl } from "./server-url";
+import { isSafePublicEvalText } from "./sanitize";
+
+const AllowedGinaReadServerUrlSchema = Schema.Union([
+  Schema.Literal(PRODUCTION_MCP_URL),
+  Schema.Literal(ALPHA_GINA_READ_SERVER_URL),
+]);
 
 const SHA256 = /^[a-f0-9]{64}$/u;
 const MAX_STRING_LENGTH = 128;
@@ -20,7 +27,9 @@ const BoundedString = Schema.NonEmptyString.check(Schema.isMaxLength(MAX_STRING_
 const BoundedVersion = Schema.NonEmptyString.check(Schema.isMaxLength(MAX_VERSION_LENGTH));
 const Sha256 = Schema.String.check(Schema.isPattern(SHA256));
 const PositiveInt = Schema.Int.check(Schema.isGreaterThan(0));
+const PositiveUsd = Schema.Finite.check(Schema.isGreaterThan(0));
 const UnknownObservationSchema = Schema.Struct({ availability: Schema.Literal("unknown") });
+const McpResourceSchema = Schema.Literals(["prod", "alpha"]);
 const RuntimePackageSchema = Schema.Struct({
   name: Schema.Literals(["ai", "@openrouter/ai-sdk-provider", "@ai-sdk/mcp"]),
   version: BoundedVersion,
@@ -43,8 +52,7 @@ type PackageInventory = {
   readonly files: readonly InventoryFile[];
 };
 
-export const LiveEvalConfigurationEvidenceSchema = Schema.Struct({
-  schemaVersion: Schema.Literal("configuration-v1"),
+const configurationEvidenceFields = {
   configurationSha256: Sha256,
   sourceReportSha256: Sha256,
   candidate: BoundedString,
@@ -66,21 +74,6 @@ export const LiveEvalConfigurationEvidenceSchema = Schema.Struct({
     toolchainSha256: Sha256,
     runSettingsSha256: Sha256,
   }),
-  requested: Schema.Struct({
-    routing: LiveEvalRequestedRoutingSchema,
-    reasoning: Schema.NullOr(Schema.Struct({ effort: BoundedString })),
-    generationSteps: PositiveInt,
-    injections: Schema.Struct({
-      usageInclude: Schema.Literal(true),
-      maxRetries: Schema.Literal(0),
-    }),
-    omissions: Schema.Struct({
-      temperature: Schema.Literal("omitted"),
-      top_p: Schema.Literal("omitted"),
-      outputTokenLimit: Schema.Literal("omitted"),
-      serviceTier: Schema.Literal("omitted"),
-    }),
-  }),
   runtime: Schema.Struct({
     bun: Schema.Struct({ version: BoundedVersion, executableSha256: Sha256 }),
     lockSha256: Sha256,
@@ -99,7 +92,46 @@ export const LiveEvalConfigurationEvidenceSchema = Schema.Struct({
     reasoning: UnknownObservationSchema,
     effectiveSettings: UnknownObservationSchema,
   }),
+};
+
+const requestedBaseFields = {
+  routing: LiveEvalRequestedRoutingSchema,
+  reasoning: Schema.NullOr(Schema.Struct({ effort: BoundedString })),
+  generationSteps: PositiveInt,
+  injections: Schema.Struct({
+    usageInclude: Schema.Literal(true),
+    maxRetries: Schema.Literal(0),
+  }),
+  omissions: Schema.Struct({
+    temperature: Schema.Literal("omitted"),
+    top_p: Schema.Literal("omitted"),
+    outputTokenLimit: Schema.Literal("omitted"),
+    serviceTier: Schema.Literal("omitted"),
+  }),
+};
+
+export const LiveEvalConfigurationEvidenceV1Schema = Schema.Struct({
+  ...configurationEvidenceFields,
+  schemaVersion: Schema.Literal("configuration-v1"),
+  requested: Schema.Struct(requestedBaseFields),
 });
+
+export const LiveEvalConfigurationEvidenceV2Schema = Schema.Struct({
+  ...configurationEvidenceFields,
+  schemaVersion: Schema.Literal("configuration-v2"),
+  requested: Schema.Struct({
+    ...requestedBaseFields,
+    serverUrl: AllowedGinaReadServerUrlSchema,
+    mcpResource: McpResourceSchema,
+    maxCostUsd: PositiveUsd,
+    expectedProvider: BoundedString.check(Schema.isPattern(/^[^\p{Cc}]+$/u)),
+  }),
+});
+
+export const LiveEvalConfigurationEvidenceSchema = Schema.Union([
+  LiveEvalConfigurationEvidenceV1Schema,
+  LiveEvalConfigurationEvidenceV2Schema,
+]);
 
 export type LiveEvalConfigurationEvidence = typeof LiveEvalConfigurationEvidenceSchema.Type;
 type RuntimePackage = typeof RuntimePackageSchema.Type;
@@ -465,9 +497,46 @@ export const makeLiveEvalConfigurationEvidence = (options: {
   readonly maxToolCalls?: number;
   readonly timeoutMs: number;
   readonly capture: LiveEvalConfigurationCaptureType;
+  readonly serverUrl?: string;
+  readonly maxCostUsd?: number;
+  readonly expectedProvider?: string;
 }): LiveEvalConfigurationEvidence => {
+  const { serverUrl, maxCostUsd, expectedProvider } = options;
+  const emitV2 =
+    serverUrl !== undefined || maxCostUsd !== undefined || expectedProvider !== undefined;
+  if (
+    emitV2 &&
+    (serverUrl === undefined ||
+      !isAllowedGinaReadServerUrl(serverUrl) ||
+      maxCostUsd === undefined ||
+      !Number.isFinite(maxCostUsd) ||
+      maxCostUsd <= 0 ||
+      expectedProvider === undefined ||
+      expectedProvider.length === 0 ||
+      expectedProvider.length > MAX_STRING_LENGTH ||
+      expectedProvider !== expectedProvider.trim() ||
+      /\p{Cc}/u.test(expectedProvider) ||
+      !isSafePublicEvalText(expectedProvider))
+  ) {
+    throw new LiveEvalConfigurationCaptureError({ reason: "invalid-input" });
+  }
   const reasoning = options.report.reasoning ?? null;
-  const runSettings = {
+  const requestedBase = {
+    routing: options.requestedRouting,
+    reasoning: reasoning === null ? null : { effort: reasoning },
+    generationSteps: options.maxSteps,
+    injections: {
+      usageInclude: true as const,
+      maxRetries: 0 as const,
+    },
+    omissions: {
+      temperature: "omitted" as const,
+      top_p: "omitted" as const,
+      outputTokenLimit: "omitted" as const,
+      serviceTier: "omitted" as const,
+    },
+  };
+  const sharedRunSettings = {
     candidate: options.report.candidate,
     model: options.report.model,
     target: options.report.target,
@@ -481,21 +550,6 @@ export const makeLiveEvalConfigurationEvidence = (options: {
       accountClass: options.report.accountClass,
       repetitions: options.report.repetitions,
     },
-    requested: {
-      routing: options.requestedRouting,
-      reasoning: reasoning === null ? null : { effort: reasoning },
-      generationSteps: options.maxSteps,
-      injections: {
-        usageInclude: true as const,
-        maxRetries: 0 as const,
-      },
-      omissions: {
-        temperature: "omitted" as const,
-        top_p: "omitted" as const,
-        outputTokenLimit: "omitted" as const,
-        serviceTier: "omitted" as const,
-      },
-    },
     budgets: {
       generationSteps: options.maxSteps,
       taskDeadlineMs: options.timeoutMs,
@@ -503,6 +557,51 @@ export const makeLiveEvalConfigurationEvidence = (options: {
       taskToolCalls: options.maxToolCalls ?? null,
     },
     authentication: { class: "openrouter-api-key" as const },
+  };
+  const observed = {
+    model: { availability: "unknown" as const },
+    endpoint: { availability: "unknown" as const },
+    reasoning: { availability: "unknown" as const },
+    effectiveSettings: { availability: "unknown" as const },
+  };
+  if (
+    serverUrl !== undefined &&
+    isAllowedGinaReadServerUrl(serverUrl) &&
+    maxCostUsd !== undefined &&
+    expectedProvider !== undefined
+  ) {
+    const runSettings = {
+      ...sharedRunSettings,
+      requested: {
+        ...requestedBase,
+        serverUrl:
+          serverUrl === PRODUCTION_MCP_URL ? PRODUCTION_MCP_URL : ALPHA_GINA_READ_SERVER_URL,
+        mcpResource: serverUrl === PRODUCTION_MCP_URL ? ("prod" as const) : ("alpha" as const),
+        maxCostUsd,
+        expectedProvider,
+      } satisfies (typeof LiveEvalConfigurationEvidenceV2Schema.Type)["requested"],
+    };
+    const body = {
+      schemaVersion: "configuration-v2" as const,
+      ...runSettings,
+      identity: {
+        evaluatorSha256: options.capture.evaluatorSha256,
+        skillsSha256: options.capture.skillsSha256,
+        toolchainSha256: options.capture.toolchainSha256,
+        runSettingsSha256: canonicalJsonSha256(runSettings),
+      },
+      runtime: options.capture.runtime,
+      observed,
+    };
+    return {
+      ...body,
+      configurationSha256: canonicalJsonSha256(body),
+      sourceReportSha256: sha256Hex(options.reportContent),
+    };
+  }
+  const runSettings = {
+    ...sharedRunSettings,
+    requested: requestedBase,
   };
   const body = {
     schemaVersion: "configuration-v1" as const,
@@ -514,12 +613,7 @@ export const makeLiveEvalConfigurationEvidence = (options: {
       runSettingsSha256: canonicalJsonSha256(runSettings),
     },
     runtime: options.capture.runtime,
-    observed: {
-      model: { availability: "unknown" as const },
-      endpoint: { availability: "unknown" as const },
-      reasoning: { availability: "unknown" as const },
-      effectiveSettings: { availability: "unknown" as const },
-    },
+    observed,
   };
   return {
     ...body,
@@ -529,13 +623,23 @@ export const makeLiveEvalConfigurationEvidence = (options: {
 };
 
 export const liveEvalConfigurationEvidenceOutputPath = Function.dual<
-  (reportPath: string) => (path: Path.Path) => string,
-  (path: Path.Path, reportPath: string) => string
->(2, (path, reportPath) => {
-  const extension = path.extname(reportPath);
-  const base = extension.length === 0 ? reportPath : reportPath.slice(0, -extension.length);
-  return `${base}.configuration-v1.json`;
-});
+  (
+    reportPath: string,
+    version?: LiveEvalConfigurationEvidence["schemaVersion"],
+  ) => (path: Path.Path) => string,
+  (
+    path: Path.Path,
+    reportPath: string,
+    version?: LiveEvalConfigurationEvidence["schemaVersion"],
+  ) => string
+>(
+  (args) => typeof args[0] !== "string",
+  (path, reportPath, version = "configuration-v1") => {
+    const extension = path.extname(reportPath);
+    const base = extension.length === 0 ? reportPath : reportPath.slice(0, -extension.length);
+    return `${base}.${version}.json`;
+  },
+);
 
 const encodeEvidence = Schema.encodeEffect(
   Schema.fromJsonString(LiveEvalConfigurationEvidenceSchema, { space: 2 }),
@@ -558,6 +662,15 @@ export const writeLiveEvalConfigurationEvidence = (options: {
     })(options.evidence).pipe(
       Effect.mapError(() => new LiveEvalConfigurationCaptureError({ reason: "invalid-input" })),
     );
+    if (
+      evidence.schemaVersion === "configuration-v2" &&
+      (evidence.requested.mcpResource !==
+        (evidence.requested.serverUrl === PRODUCTION_MCP_URL ? "prod" : "alpha") ||
+        evidence.requested.expectedProvider !== evidence.requested.expectedProvider.trim() ||
+        !isSafePublicEvalText(evidence.requested.expectedProvider))
+    ) {
+      return yield* new LiveEvalConfigurationCaptureError({ reason: "invalid-input" });
+    }
     const decodedReport = yield* decodeReportContent(options.reportContent).pipe(
       Effect.mapError(() => new LiveEvalConfigurationCaptureError({ reason: "invalid-input" })),
     );
