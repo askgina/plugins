@@ -49,6 +49,11 @@ namespaces and extra MCP servers are rejected. Exec cannot support per-call
 builtin approval/filter callbacks; requesting them remains an error. These
 restrictions do not turn this export into an enabled native CLI runner.
 
+The bundled `@ai-sdk/harness` 1.0.102 and `@ai-sdk/harness-codex` 1.0.104
+are Copyright 2023 Vercel, Inc., licensed under Apache-2.0. This distribution
+modifies their isolation and lifecycle handling. The repository's `patches/`
+directory contains those changes; this package includes the Apache-2.0 license.
+
 ## Hermetic replay
 
 ```sh

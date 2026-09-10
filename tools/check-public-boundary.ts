@@ -220,8 +220,18 @@ const findPublicBoundaryTextRules = (
   }
   if (/\bREDIS_[A-Z0-9_]+\b|rediss?:\/\//u.test(text)) add("private-cache");
   for (const violation of reportablePublicTextViolations(text, receipt)) add(violation.kind);
-  for (const match of text.matchAll(/https?:\/\/([^\s/"'<>]+)/giu)) {
-    const hostname = (match[1] ?? "").toLowerCase().replace(/:\d+$/u, "");
+  for (const match of text.matchAll(/https?:\/\/([^\s/"'<>\\`]+)[^\s"'<>\\`]*/giu)) {
+    // Public library code uses a URL-parser base and an unbound relay template.
+    // Neither identifies a deployed endpoint. Config, docs, and receipts stay strict.
+    if (
+      !receipt &&
+      /\.(?:[cm]?[jt]sx?|patch|map)$/iu.test(label) &&
+      (match[0] === "http://localhost" || match[0] === "http://127.0.0.1:${relayPort}") &&
+      (text[match.index + match[0].length] !== "\\" ||
+        (/\.(?:patch|map)$/iu.test(label) && text[match.index + match[0].length + 1] === '"'))
+    )
+      continue;
+    const hostname = (match[1] ?? "").toLowerCase().replace(/:.*$/u, "");
     if (
       hostname === "localhost" ||
       hostname.endsWith(".local") ||

@@ -192,8 +192,128 @@ const compiledContractFixture = Effect.gen(function* () {
   return { root, packageRoot, dist, source, writeMap };
 });
 
+const EVALS_JS_FILES = [
+  "bin/check-codex-marketplace.js",
+  "bin/export-public-results.js",
+  "bin/live.js",
+  "bin/replay.js",
+  "canonical-json-x.js",
+  "codex-cli-x.js",
+  "index.js",
+  "publication-x.js",
+  "replay-x.js",
+  "report-x.js",
+  "runner-x.js",
+  "trial-journal-x.js",
+] as const;
+
+const compiledEvalsFixture = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "compiled-evals-test-" });
+  const packageRoot = path.join(root, "packages/evals");
+  const dist = path.join(packageRoot, "dist");
+  const source = "export const value = 1;\n";
+  const harnessSource = "export const harness = 1;\n";
+  const codexSource = "export const codex = 1;\n";
+  yield* fs.makeDirectory(path.join(packageRoot, "src"), { recursive: true });
+  yield* fs.makeDirectory(path.join(dist, "bin"), { recursive: true });
+  yield* fs.makeDirectory(path.join(dist, "bridge"), { recursive: true });
+  yield* fs.makeDirectory(path.join(packageRoot, "node_modules/@ai-sdk/harness/src"), {
+    recursive: true,
+  });
+  yield* fs.makeDirectory(path.join(packageRoot, "node_modules/@ai-sdk/harness-codex/src"), {
+    recursive: true,
+  });
+  yield* fs.writeFileString(
+    path.join(packageRoot, "package.json"),
+    json({
+      name: "@askgina/evals",
+      version: "0.1.0",
+      files: ["dist", "LICENSE", "README.md"],
+      dependencies: { "@ai-sdk/harness": "1.0.102" },
+      devDependencies: { "@ai-sdk/harness-codex": "1.0.104" },
+    }),
+  );
+  yield* fs.writeFileString(path.join(packageRoot, "LICENSE"), "fixture license\n");
+  yield* fs.writeFileString(path.join(packageRoot, "README.md"), "fixture readme\n");
+  yield* fs.writeFileString(path.join(packageRoot, "src/index.ts"), source);
+  yield* fs.writeFileString(
+    path.join(packageRoot, "node_modules/@ai-sdk/harness/package.json"),
+    json({ name: "@ai-sdk/harness", version: "1.0.102" }),
+  );
+  yield* fs.writeFileString(
+    path.join(packageRoot, "node_modules/@ai-sdk/harness/src/index.ts"),
+    harnessSource,
+  );
+  yield* fs.writeFileString(
+    path.join(packageRoot, "node_modules/@ai-sdk/harness-codex/package.json"),
+    json({ name: "@ai-sdk/harness-codex", version: "1.0.104" }),
+  );
+  yield* fs.writeFileString(
+    path.join(packageRoot, "node_modules/@ai-sdk/harness-codex/src/index.ts"),
+    codexSource,
+  );
+  yield* fs.writeFileString(path.join(dist, "bin/check-codex-marketplace.d.ts"), "export {};\n");
+  yield* fs.writeFileString(path.join(dist, "bin/export-public-results.d.ts"), "export {};\n");
+  yield* fs.writeFileString(path.join(dist, "bin/live.d.ts"), "export {};\n");
+  yield* fs.writeFileString(path.join(dist, "bin/replay.d.ts"), "export {};\n");
+  yield* fs.writeFileString(path.join(dist, "index.d.ts"), "export {};\n");
+  yield* fs.writeFileString(path.join(dist, "omp-harness-x.d.ts"), "export {};\n");
+  yield* fs.writeFileString(path.join(dist, "bridge/package.json"), "{}\n");
+  yield* fs.writeFileString(path.join(dist, "bridge/pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
+  yield* fs.writeFileString(path.join(dist, "bridge/index.mjs"), "export {};\n");
+  yield* fs.writeFileString(path.join(dist, "bridge/codex-sdk-0.153.4.patch"), "diff\n");
+  const admittedMap = {
+    version: 3,
+    sources: [
+      "../src/index.ts",
+      "../node_modules/@ai-sdk/harness/src/index.ts",
+      "../node_modules/@ai-sdk/harness-codex/src/index.ts",
+    ],
+    sourcesContent: [source, harnessSource, codexSource],
+    names: [],
+    mappings: "",
+  };
+  const writeIndexMap = (value: unknown) =>
+    fs.writeFileString(path.join(dist, "index.js.map"), json(value));
+  yield* Effect.forEach(EVALS_JS_FILES, (file) =>
+    Effect.gen(function* () {
+      yield* fs.writeFileString(
+        path.join(dist, file),
+        `export {};\n//# sourceMappingURL=${path.basename(file)}.map\n`,
+      );
+      if (file === "index.js") {
+        yield* writeIndexMap(admittedMap);
+        return;
+      }
+      yield* fs.writeFileString(
+        path.join(dist, `${file}.map`),
+        json({
+          version: 3,
+          sources: [file.startsWith("bin/") ? "../../src/index.ts" : "../src/index.ts"],
+          sourcesContent: [source],
+          names: [],
+          mappings: "",
+        }),
+      );
+    }),
+  );
+  return {
+    root,
+    packageRoot,
+    dist,
+    source,
+    harnessSource,
+    writeIndexMap,
+  };
+});
+
 const rejectCompiledContract = (root: string) =>
   verifyCompiledPackageOutput(root, root, "@askgina/contracts").pipe(Effect.flip);
+
+const rejectCompiledEvals = (root: string) =>
+  verifyCompiledPackageOutput(root, root, "@askgina/evals").pipe(Effect.flip);
 
 const assertRejectedBeforeImpact = (root: string, dist: string, impact: string) =>
   Effect.gen(function* () {
@@ -226,6 +346,91 @@ describe("pack artifact source snapshot", () => {
             "0.1.0",
           );
           assert.isTrue(staged.some((proof) => proof.path === "package/dist/index.js"));
+        }),
+      ),
+    );
+
+    it.effect("binds bundled dependency source maps to the independent snapshot", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fixture = yield* compiledEvalsFixture;
+          const snapshot = yield* fs.makeTempDirectoryScoped({ prefix: "evals-snapshot-test-" });
+          const snapshotPackage = path.join(snapshot, "packages/evals");
+          yield* fs.makeDirectory(path.dirname(snapshotPackage), { recursive: true });
+          yield* fs.copy(fixture.packageRoot, snapshotPackage);
+          const stage = path.join(fixture.root, "stage");
+          yield* stagePackage(fixture.root, snapshot, "@askgina/evals", stage, "0.1.0");
+          assert.strictEqual(
+            yield* fs.readFileString(path.join(stage, "package/dist/index.js.map")),
+            yield* fs.readFileString(path.join(snapshotPackage, "dist/index.js.map")),
+          );
+          yield* fs.writeFileString(
+            path.join(snapshotPackage, "node_modules/@ai-sdk/harness/src/index.ts"),
+            "export const differentSnapshotSource = 1;\n",
+          );
+          const error = yield* verifyCompiledPackageOutput(
+            fixture.root,
+            snapshot,
+            "@askgina/evals",
+          ).pipe(Effect.flip);
+          assert.include(error.message, "content is stale");
+        }),
+      ),
+    );
+
+    it.effect("rejects tampered, unrelated, and escaped evals dependency map sources", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fixture = yield* compiledEvalsFixture;
+          yield* fixture.writeIndexMap({
+            version: 3,
+            sources: ["../node_modules/@ai-sdk/harness/src/index.ts"],
+            sourcesContent: ["export const tampered = 1;\n"],
+            names: [],
+            mappings: "",
+          });
+          const tampered = yield* rejectCompiledEvals(fixture.root);
+          assert.include(tampered.message, "content is stale");
+
+          yield* fs.makeDirectory(
+            path.join(fixture.packageRoot, "node_modules/unrelated-dep/src"),
+            { recursive: true },
+          );
+          yield* fs.writeFileString(
+            path.join(fixture.packageRoot, "node_modules/unrelated-dep/src/index.ts"),
+            "export const unrelated = 1;\n",
+          );
+          yield* fixture.writeIndexMap({
+            version: 3,
+            sources: ["../node_modules/unrelated-dep/src/index.ts"],
+            sourcesContent: ["export const unrelated = 1;\n"],
+            names: [],
+            mappings: "",
+          });
+          const unrelated = yield* rejectCompiledEvals(fixture.root);
+          assert.include(unrelated.message, "escapes its package");
+
+          const harnessSource = path.join(
+            fixture.packageRoot,
+            "node_modules/@ai-sdk/harness/src/index.ts",
+          );
+          const outside = path.join(fixture.root, "outside.ts");
+          yield* fs.writeFileString(outside, "export const leaked = 1;\n");
+          yield* fs.remove(harnessSource);
+          yield* fs.symlink(outside, harnessSource);
+          yield* fixture.writeIndexMap({
+            version: 3,
+            sources: ["../node_modules/@ai-sdk/harness/src/index.ts"],
+            sourcesContent: ["export const leaked = 1;\n"],
+            names: [],
+            mappings: "",
+          });
+          const escaped = yield* rejectCompiledEvals(fixture.root);
+          assert.include(escaped.message, "escapes its package");
         }),
       ),
     );
