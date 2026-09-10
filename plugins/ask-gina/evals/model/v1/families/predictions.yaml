@@ -2,7 +2,7 @@ version: 1
 suite:
   id: ask-gina-model-predictions-v1
   plugin: ask-gina
-  catalog_version: 30-read-tools@2026-09-01
+  catalog_version: 31-read-tools@2026-09-10
   description: >-
     Routing cases for public Polymarket discovery, order-book, dataset, position,
     and history reads. Search owns topic, URL/slug, sports play windows, expiry

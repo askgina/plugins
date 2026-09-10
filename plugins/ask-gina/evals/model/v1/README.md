@@ -1,6 +1,6 @@
 # Ask Gina listed-plugin evaluation v1
 
-This package evaluates the 30-tool, read-only Ask Gina plugin without making
+This package evaluates the 31-tool, read-only Ask Gina plugin without making
 the ChatGPT trial the scaling bottleneck. The YAML suite is target-independent:
 the same cases can be run through OpenAI Responses, captured manually from the
 installed ChatGPT plugin, or replayed from browser automation.
@@ -47,7 +47,7 @@ catalog. Prediction search owns expiry and series discovery.
 | `perps.yaml`       |    17 |                    14 |
 | `predictions.yaml` |    13 |                     6 |
 
-Each family case runs against the checked-in 30-tool MCP catalog by default.
+Each family case runs against the checked-in 31-tool MCP catalog by default.
 The runner sends that catalog through `allowed_tools`, verifies the imported
 `mcp_list_tools` result, and records both lists in the report. This means a
 family run measures selection and cross-family confusion under the production
