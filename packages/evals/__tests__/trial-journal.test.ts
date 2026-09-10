@@ -807,6 +807,51 @@ describe("live eval trial journal", () => {
       }),
     );
 
+    it.effect("rejects report binding while a started trial remains unfinished", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectoryScoped({
+          prefix: "trial-journal-unfinished-",
+        });
+        const outputPath = path.join(directory, "run.jsonl");
+        const journal = yield* createLiveEvalJournal(
+          journalOptions(outputPath, { repetitions: 2 }),
+        );
+        const first = yield* journal.startTrial({
+          caseId: "simple-spot-price",
+          repetition: 1,
+          budgetEvidence: budgetEvidence(),
+        });
+        const second = yield* journal.startTrial({
+          caseId: "simple-spot-price",
+          repetition: 2,
+          budgetEvidence: budgetEvidence(),
+        });
+        yield* journal.finishTrial(first, "completed");
+        const reportContent = `${encodeUnknownJson(
+          v1Report({
+            repetitions: 2,
+            aggregate: { ...aggregateFixture, overall: { passed: 2, total: 2 } },
+          }),
+        )}\n`;
+        const before = yield* fs.readFileString(outputPath);
+        assert.strictEqual(
+          reasonOf(yield* Effect.result(journal.bindReport(reportContent, selectedCaseIds))),
+          "invalid-record",
+        );
+        assert.strictEqual(yield* fs.readFileString(outputPath), before);
+        yield* journal.finishTrial(second, "completed");
+        yield* journal.bindReport(reportContent, selectedCaseIds);
+        const bound = parseRecords(yield* fs.readFileString(outputPath)).at(-1);
+        assert.strictEqual(bound?.kind, "report-bound");
+        assert.strictEqual(
+          bound?.sourceReportSha256,
+          createHash("sha256").update(reportContent, "utf8").digest("hex"),
+        );
+      }),
+    );
+
     it.effect("acquires the journal lock before the descriptor finalizer marks closed", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
