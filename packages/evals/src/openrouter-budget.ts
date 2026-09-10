@@ -100,12 +100,16 @@ const fail = (reason: OpenRouterBudgetErrorReason): Effect.Effect<never, OpenRou
 
 const usageRemainingFitsLimit = (usage: number, remaining: number, limit: number): boolean => {
   const sum = usage + remaining;
-  // Allow only addition roundoff, never slack on direct cap comparisons.
+  // Allow only addition roundoff; provider consistency bounds remain exact.
   return (
     Number.isFinite(sum) &&
     (sum <= limit || sum - limit <= Number.EPSILON * Math.max(usage, remaining, limit))
   );
 };
+
+// Maxima are positive and finite. No fixed dollar allowance is introduced.
+const exceeds = (value: number, maximum: number): boolean =>
+  value > maximum && (value - maximum) / maximum > Number.EPSILON;
 
 const hasInconsistentLimit = (limit: number, usage: number, remaining: number): boolean =>
   remaining > limit || usage > limit || !usageRemainingFitsLimit(usage, remaining, limit);
@@ -200,8 +204,8 @@ export const validateOpenRouterBudgetEvidence = (
         return fail("inconsistent-limit");
       }
       if (
-        evidence.providerLimitUsd > evidence.requestedMaximumUsd ||
-        evidence.providerRemainingUsd > evidence.requestedMaximumUsd
+        exceeds(evidence.providerLimitUsd, evidence.requestedMaximumUsd) ||
+        exceeds(evidence.providerRemainingUsd, evidence.requestedMaximumUsd)
       ) {
         return fail("limit-exceeds-maximum");
       }

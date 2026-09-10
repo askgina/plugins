@@ -281,6 +281,43 @@ describe("admitOpenRouterBudgetEvidence", () => {
     }),
   );
 
+  it.effect(
+    "admits a binary-sum cap equal to the requested maximum and rejects a two-ulp overshoot",
+    () =>
+      Effect.gen(function* () {
+        const cap = 0.1 + 0.2;
+        const evidence = yield* admitOpenRouterBudgetEvidence({
+          maximumUsd: 0.3,
+          payload: {
+            data: {
+              ...admittedPayload.data,
+              limit: cap,
+              usage: 0,
+              limit_remaining: cap,
+            },
+          },
+        });
+        assert.strictEqual(evidence.providerLimitUsd, cap);
+        assert.strictEqual(evidence.providerRemainingUsd, cap);
+        assert.strictEqual(evidence.providerUsageUsd, 0);
+        assert.strictEqual(evidence.requestedMaximumUsd, 0.3);
+        assertReason(
+          yield* admit(
+            {
+              data: {
+                ...admittedPayload.data,
+                limit: 0.3000000000000001,
+                usage: 0,
+                limit_remaining: 0.3000000000000001,
+              },
+            },
+            0.3,
+          ),
+          "limit-exceeds-maximum",
+        );
+      }),
+  );
+
   it.effect("rejects a truly inconsistent decimal remaining-plus-usage sum", () =>
     Effect.gen(function* () {
       assertReason(
@@ -315,6 +352,35 @@ describe("validateOpenRouterBudgetEvidence", () => {
       assert.strictEqual(evidence.providerUsageUsd, 0.1);
       assert.strictEqual(evidence.providerRemainingUsd, 0.2);
     }),
+  );
+
+  it.effect(
+    "admits a binary-sum cap equal to the requested maximum and rejects a two-ulp overshoot",
+    () =>
+      Effect.gen(function* () {
+        const cap = 0.1 + 0.2;
+        const evidence = yield* validateOpenRouterBudgetEvidence({
+          ...admittedEvidence,
+          requestedMaximumUsd: 0.3,
+          providerLimitUsd: cap,
+          providerUsageUsd: 0,
+          providerRemainingUsd: cap,
+        });
+        assert.strictEqual(evidence.providerLimitUsd, cap);
+        assert.strictEqual(evidence.providerRemainingUsd, cap);
+        assert.strictEqual(evidence.providerUsageUsd, 0);
+        assert.strictEqual(evidence.requestedMaximumUsd, 0.3);
+        assertReason(
+          yield* validate({
+            ...admittedEvidence,
+            requestedMaximumUsd: 0.3,
+            providerLimitUsd: 0.3000000000000001,
+            providerUsageUsd: 0,
+            providerRemainingUsd: 0.3000000000000001,
+          }),
+          "limit-exceeds-maximum",
+        );
+      }),
   );
 
   it.effect("rejects inconsistent tiny amounts and overflowing sums without decimal rounding", () =>
