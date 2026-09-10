@@ -64,13 +64,19 @@ Live eval runners are `bun run eval:responses`, `eval:codex`, `eval:openrouter`,
 `eval:claude`, and `eval:omp`. Hermetic replay is `eval:replay`. Every live runner
 requires `ASK_GINA_ACCESS_TOKEN`. Responses and Codex also need `OPENAI_API_KEY`;
 Codex adds `CODEX_EVAL_EXECUTABLE` and `CODEX_EVAL_EXECUTABLE_SHA256`; OpenRouter
-needs `OPENROUTER_API_KEY`; Claude needs `ANTHROPIC_API_KEY` and
+needs `OPENROUTER_API_KEY` plus required `--openrouter-endpoint`,
+`--expected-provider`, and `--max-cost-usd`; Claude needs `ANTHROPIC_API_KEY` and
 `CLAUDE_EVAL_EXECUTABLE`; OMP needs `OMP_EVAL_API_KEY`,
 `OMP_EVAL_EXECUTABLE`, `OMP_EVAL_EXECUTABLE_SHA256`, a local Docker engine, and
 `--provider openai|anthropic|openrouter`. Optional `--max-steps` applies only to
 OpenRouter and `--max-turns` only to Claude. Both default to 8 and accept 1 to 32.
-OMP has no step or turn flag. Native Codex, Claude, and OMP paths use explicit API
-keys, not a saved personal login. OpenRouter uses local AI SDK MCP; Responses uses
+OpenRouter also accepts optional `--server-url` with the exact Gina-read URLs
+`https://askgina.ai/ai/gina/mcp` (production default) or
+`https://alpha.askgina.ai/ai/gina/mcp`. Other runners reject those OpenRouter-only
+flags. OMP has no step or turn flag. Native Codex, Claude, and OMP paths use
+explicit API keys, not a saved personal login. That existing API-key CLI does
+not meet a separately requested HarnessAgent or Codex saved-login policy.
+OpenRouter uses local AI SDK MCP; Responses uses
 OpenAI-hosted MCP. Neither proves native plugin activation. Codex and Claude
 adapters distinguish native skill events from task conformance. Claude's live
 plugin activation remains unverified; offline fixtures and OMP Docker/runtime
