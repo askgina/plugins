@@ -3,6 +3,7 @@ import { ModelProfilePage } from "./model-profile";
 import {
   aggregateOnlyCatalog,
   incompleteCoverageCatalog,
+  syntheticFieldCatalog,
   verifiedSyntheticCatalog,
 } from "../stories/public-comparison-fixtures";
 
@@ -18,7 +19,14 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const CurrentPublication: Story = {
+export const SyntheticFieldProfile: Story = {
+  args: {
+    modelId: "synthetic-candidate-c",
+    catalog: syntheticFieldCatalog,
+  },
+};
+
+export const SingleCurrentPublication: Story = {
   args: {
     modelId: "synthetic-candidate-a",
     catalog: verifiedSyntheticCatalog,
@@ -48,8 +56,8 @@ export const CandidateNotFound: Story = {
 
 export const Mobile: Story = {
   args: {
-    modelId: "synthetic-candidate-a",
-    catalog: verifiedSyntheticCatalog,
+    modelId: "synthetic-candidate-c",
+    catalog: syntheticFieldCatalog,
   },
   globals: { viewport: { value: "mobile", isRotated: false } },
 };

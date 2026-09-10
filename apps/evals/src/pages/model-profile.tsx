@@ -5,6 +5,10 @@ import {
   MetricValue,
   ResultState,
 } from "../components/public-comparison-ui";
+import {
+  DimensionOutcomeChart,
+  LatencyEnvelopeChart,
+} from "../components/public-comparison-charts";
 import { PageShell, Panel } from "../components/eval-ui";
 import {
   PUBLIC_DIMENSION_DEFINITIONS,
@@ -124,6 +128,26 @@ export function ModelProfilePage({ modelId, catalog }: ModelProfilePageProps) {
               <p>{definition.description}</p>
             </article>
           ))}
+        </section>
+
+        <section
+          className="eval-two-column model-profile-chart-grid"
+          aria-label={`${row.candidate} visual analysis`}
+        >
+          <Panel
+            className="model-profile-chart-panel"
+            title="Dimension outcomes"
+            description="Passed, failed, and not-applicable checks by conformance dimension."
+          >
+            <DimensionOutcomeChart row={row} />
+          </Panel>
+          <Panel
+            className="model-profile-chart-panel"
+            title="Latency envelope"
+            description="Reported p50, p95, and maximum duration over observed attempts."
+          >
+            <LatencyEnvelopeChart row={row} />
+          </Panel>
         </section>
 
         <Panel

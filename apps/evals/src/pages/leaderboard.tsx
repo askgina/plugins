@@ -6,6 +6,7 @@ import {
   MetricValue,
   ResultState,
 } from "../components/public-comparison-ui";
+import { ComparisonScatterPlot } from "../components/public-comparison-charts";
 import { PageShell, Panel } from "../components/eval-ui";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -157,6 +158,31 @@ export function LeaderboardPage({ catalog, initialSearch = "" }: LeaderboardPage
                   )}
                 </label>
               </div>
+
+              {rows.length > 1 ? (
+                <section className="eval-two-column lb-charts" aria-label="Candidate trade-offs">
+                  <Panel
+                    title="Quality and latency"
+                    description="Pass rate plotted against median response time."
+                  >
+                    <ComparisonScatterPlot
+                      rows={rows}
+                      metric="latencyP50"
+                      title="Quality and latency"
+                    />
+                  </Panel>
+                  <Panel
+                    title="Quality and token use"
+                    description="Pass rate plotted against retained token usage."
+                  >
+                    <ComparisonScatterPlot
+                      rows={rows}
+                      metric="tokenUsage"
+                      title="Quality and token use"
+                    />
+                  </Panel>
+                </section>
+              ) : null}
 
               {rows.length > 0 ? (
                 <ol className="lb-result-list" aria-label="Unranked public conformance results">

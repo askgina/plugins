@@ -9,7 +9,11 @@
 }
 
 .model-profile-page .eval-title {
-  margin: 0;
+  max-width: 100%;
+  margin: 0 0 20px;
+  font-size: clamp(2.75rem, 5vw, 5rem);
+  line-height: 1;
+  overflow-wrap: anywhere;
 }
 
 .model-profile-hero {
@@ -63,6 +67,7 @@
 .model-profile-provider {
   margin: 0 0 14px;
   font-size: 13px;
+  line-height: 1.5;
   color: #6d6d6d;
 }
 

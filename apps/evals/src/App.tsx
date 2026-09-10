@@ -5,6 +5,7 @@ import { LeaderboardPage } from "./pages/leaderboard";
 import { ModelProfilePage } from "./pages/model-profile";
 import { TaskExplorerPage } from "./pages/task-explorer";
 import { HandoffPage } from "./pages/handoff";
+import type { PublicComparisonCatalog } from "./lib/public-comparison";
 
 export function MethodologyPage() {
   return (
@@ -92,7 +93,7 @@ export function MethodologyPage() {
   );
 }
 
-export default function App() {
+export default function App({ catalog }: { catalog?: PublicComparisonCatalog }) {
   const [route, setRoute] = useState(() => window.location.hash.slice(1) || "/leaderboard");
   useEffect(() => {
     const handleRoute = () => {
@@ -117,11 +118,11 @@ export default function App() {
     document.title = `${section} · Ask Gina`;
   }, [route]);
   if (route === "/models" || route.startsWith("/models/"))
-    return <ModelProfilePage key={route} modelId={route.split("/")[2]} />;
+    return <ModelProfilePage key={route} modelId={route.split("/")[2]} catalog={catalog} />;
   if (route === "/tasks") return <TaskExplorerPage />;
   if (route === "/methodology") return <MethodologyPage />;
   if (route === "/handoff") return <HandoffPage />;
-  if (route === "/leaderboard" || route === "/") return <LeaderboardPage />;
+  if (route === "/leaderboard" || route === "/") return <LeaderboardPage catalog={catalog} />;
   return (
     <PageShell active="leaderboard">
       <div className="eval-container eval-hero">

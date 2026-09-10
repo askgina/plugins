@@ -3,6 +3,7 @@ import { LeaderboardPage } from "./leaderboard";
 import {
   emptyPublicCatalog,
   incompleteCoverageCatalog,
+  syntheticFieldCatalog,
   verifiedSyntheticCatalog,
 } from "../stories/public-comparison-fixtures";
 import "../styles/evals.css";
@@ -20,7 +21,11 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const VerifiedSyntheticPublication: Story = {
+export const SyntheticField: Story = {
+  args: { catalog: syntheticFieldCatalog },
+};
+
+export const SingleVerifiedPublication: Story = {
   args: { catalog: verifiedSyntheticCatalog },
 };
 
@@ -39,6 +44,6 @@ export const EmptySearch: Story = {
 };
 
 export const Mobile: Story = {
-  args: { catalog: verifiedSyntheticCatalog },
+  args: { catalog: syntheticFieldCatalog },
   globals: { viewport: { value: "mobile", isRotated: false } },
 };
