@@ -71,7 +71,7 @@ The sanitized 2026-08-19 production baseline is checked in at
 scores, distributions, tool names, and run metadata. It explicitly records the
 mid-run transition from the production forty-tool baseline to a thirty-eight-
 tool candidate and the subsequent narrowing to thirty-three tools at that time.
-The current candidate contains 30 tools. The historical baseline is not a clean
+The current candidate contains 31 tools. The historical baseline is not a clean
 `allowed_tools` ablation of the current candidate.
 
 ## Installed-skill activation corpus

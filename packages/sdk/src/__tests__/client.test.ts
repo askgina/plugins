@@ -128,7 +128,7 @@ describe("Ask Gina SDK", () => {
   );
 
   it.effect(
-    "rejects a 30-tool catalog containing the dynamic widget renderer while missing a required read tool",
+    "rejects a catalog containing the dynamic widget renderer while missing a required read tool",
     () =>
       Effect.gen(function* () {
         mcpMocks.listTools.mockResolvedValue({
