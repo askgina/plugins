@@ -284,7 +284,6 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
     "plugin.json",
     "mcp.json",
     "gemini-extension.json",
-    "assets",
     "rules",
     "commands",
   ],
@@ -523,6 +522,15 @@ export const checkGeneratedTargetConformance: {
         addCheck(
           "openai.assets.icon_exists",
           "OpenAI icon asset exists",
+          yield* withFileSystemError(iconPath, "cannot be inspected", fs.exists(iconPath)),
+        );
+      }
+
+      if (target === "devin") {
+        const iconPath = paths.join(generatedTargetRoot, "assets", "icon.svg");
+        addCheck(
+          "devin.assets.icon_exists",
+          "Devin manifest logo asset exists",
           yield* withFileSystemError(iconPath, "cannot be inspected", fs.exists(iconPath)),
         );
       }
