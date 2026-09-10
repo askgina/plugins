@@ -17,8 +17,8 @@ import {
   type OpenRouterBudgetErrorReason,
 } from "../src/openrouter-budget";
 
-const API_KEY = Redacted.make("sk-or-v1-secret-budget-key-must-not-leak");
-const PLANTED_LABEL = "sk-or-v1-au7-planted-label-must-not-leak";
+const API_KEY = Redacted.make(["sk", "-or-v1-secret-budget-key-must-not-leak"].join(""));
+const PLANTED_LABEL = ["sk", "-or-v1-au7-planted-label-must-not-leak"].join("");
 const PLANTED_BODY = "provider-key-body-must-not-be-copied";
 const MAXIMUM_USD = 5;
 

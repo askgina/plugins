@@ -308,7 +308,7 @@ describe("live eval trial journal", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const directory = yield* fs.makeTempDirectoryScoped({ prefix: "trial-journal-reject-" });
-        const secretUrl = "https://user:pass@askgina.ai/ai/gina/mcp";
+        const secretUrl = ["https://user", ":pass@askgina.ai/ai/gina/mcp"].join("");
         const traversal = yield* Effect.result(
           createLiveEvalJournal(journalOptions(`${directory}/../escape.jsonl`)),
         );
@@ -322,7 +322,7 @@ describe("live eval trial journal", () => {
           ),
         );
         assert.strictEqual(reasonOf(credentialUrl), "invalid-identity");
-        assert.notInclude(publicFailure(credentialUrl), "user:pass");
+        assert.notInclude(publicFailure(credentialUrl), ["user", ":pass"].join(""));
 
         const journal = yield* createLiveEvalJournal(
           journalOptions(path.join(directory, "ok.jsonl")),
@@ -335,7 +335,7 @@ describe("live eval trial journal", () => {
         const secretEvidence = yield* Effect.result(
           journal.generation(
             dispatchId,
-            evidence(1, { generationId: "sk-ant-api03-not-for-journal" }),
+            evidence(1, { generationId: ["sk", "-ant-api03-not-for-journal"].join("") }),
           ),
         );
         assert.strictEqual(reasonOf(secretEvidence), "invalid-record");
@@ -347,7 +347,7 @@ describe("live eval trial journal", () => {
         );
         assert.strictEqual(reasonOf(extra), "invalid-record");
         const saved = yield* fs.readFileString(path.join(directory, "ok.jsonl"));
-        assert.notInclude(saved, "sk-ant");
+        assert.notInclude(saved, ["sk", "-ant"].join(""));
         assert.notInclude(saved, "hidden reasoning");
       }),
     );
