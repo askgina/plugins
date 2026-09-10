@@ -190,6 +190,79 @@ body,
   color: #757575;
   font-size: 12px;
 }
+.eval-metric-value,
+.eval-metric-unavailable,
+.eval-dimension-value,
+.eval-result-state {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.eval-metric-value strong,
+.eval-dimension-value strong {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.eval-metric-value small,
+.eval-metric-unavailable small,
+.eval-dimension-value small,
+.eval-dimension-value > span,
+.eval-result-state small {
+  color: var(--eval-muted);
+  font-size: 10px;
+  font-weight: 400;
+  white-space: normal;
+}
+.eval-metric-unavailable {
+  color: #6f6f72;
+  font-size: 12px;
+}
+.eval-state-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 23px;
+  padding: 3px 8px;
+  border: 1px solid #9e684733;
+  border-radius: 999px;
+  background: #9e68470d;
+  color: #754b34;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.eval-comparison-conditions,
+.model-profile-record {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 10px 20px 18px;
+}
+.eval-comparison-conditions > div,
+.model-profile-record > div {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1.3fr);
+  gap: 18px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--eval-line);
+}
+.eval-comparison-conditions > div:last-child,
+.model-profile-record > div:last-child {
+  border-bottom: 0;
+}
+.eval-comparison-conditions dt,
+.model-profile-record dt {
+  color: var(--eval-muted);
+  font-size: 11px;
+}
+.eval-comparison-conditions dd,
+.model-profile-record dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
 .eval-panel {
   min-width: 0;
   border: 1px solid rgb(0 0 0 / 5.5%);
@@ -534,6 +607,14 @@ body,
     font-size: 18px;
   }
 }
+@media (max-width: 520px) {
+  .eval-comparison-conditions > div,
+  .model-profile-record > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .eval-app *,
   .eval-modal * {

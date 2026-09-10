@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
-import { dataset } from "./data";
 import { PageShell, Panel } from "./components/eval-ui";
 import { LeaderboardPage } from "./pages/leaderboard";
 import { ModelProfilePage } from "./pages/model-profile";
@@ -26,21 +25,21 @@ export function MethodologyPage() {
           <Panel title="First, a note on the data">
             <div className="eval-method-body">
               <p>
-                Every model score, timing, price, tool trace, and distribution on these pages is a
-                synthetic design fixture. Model names identify the intended comparison layout, not
-                an evaluation that has taken place.
+                The comparison and model pages consume a verified synthetic publication through the
+                public v1 result contract. The task explorer remains an invented design fixture.
               </p>
               <p>
-                The dataset and run labels are illustrative too. These results should not inform
-                model selection or financial decisions.
+                Synthetic values demonstrate the consumer boundary. They should not inform model
+                selection or financial decisions.
               </p>
             </div>
           </Panel>
           <Panel title="What a task measures">
             <div className="eval-method-body">
               <p>
-                Tasks cover portfolio analysis, spot markets, perpetuals, and prediction markets.
-                Each asks the agent to answer a financial question using read-only tools.
+                The public result measures conformance across routing, arguments, safety,
+                completion, and skill activation. Each dimension retains passed, failed, and
+                not-applicable counts.
               </p>
               <ul>
                 <li>Choose the right tools for the question.</li>
@@ -53,27 +52,25 @@ export function MethodologyPage() {
           <Panel title="Reading the scores">
             <div className="eval-method-body">
               <p>
-                Pass rate is the proportion of tasks that meet the rubric. Tool selection accuracy
-                measures whether the agent chose the expected tools. Task scores summarize the
-                individual rubric checks.
+                Pass rate is the proportion of observed attempts that pass with complete coverage.
+                Attempt counts, unique cases, retained evidence, and coverage remain separate.
               </p>
               <p>
-                The preview uses {dataset.tasks.toLocaleString("en-US")} tasks split equally across
-                four families. Displayed uncertainty ranges and histogram counts demonstrate the
-                proposed visual treatment. They are not computed confidence intervals.
+                Answer accuracy, USD cost, uncertainty, task-family groupings, score distributions,
+                and ordinal rankings are unavailable until a separately versioned method declares
+                them.
               </p>
             </div>
           </Panel>
           <Panel title="Latency, cost, and reproducibility">
             <div className="eval-method-body">
               <p>
-                Median latency is elapsed time per task. Cost is the estimated model cost per task
-                in USD. A published benchmark would need pinned model versions, tool definitions,
-                dataset, repetitions, and pricing assumptions.
+                Latency uses exported p50, p95, and maximum attempt durations. Token totals report
+                only retained observations. Missing samples never mean a free or zero-cost run.
               </p>
               <p>
-                The open-source runner is separate from this preview. The task explorer contains
-                sanitized synthetic examples, not exported production conversations.
+                Comparisons require matching suite, fixture, catalog, target, account class,
+                clean-chat setting, and repetitions. Model labels alone are not sufficient.
               </p>
               <a
                 className="eval-text-link"
@@ -120,7 +117,7 @@ export default function App() {
     document.title = `${section} · Ask Gina`;
   }, [route]);
   if (route === "/models" || route.startsWith("/models/"))
-    return <ModelProfilePage key={route} modelId={route.split("/")[2] || "kimi-k3"} />;
+    return <ModelProfilePage key={route} modelId={route.split("/")[2]} />;
   if (route === "/tasks") return <TaskExplorerPage />;
   if (route === "/methodology") return <MethodologyPage />;
   if (route === "/handoff") return <HandoffPage />;

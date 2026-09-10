@@ -9,7 +9,7 @@ type ShellPageId = PageId | "handoff";
 
 const navigation: readonly { id: ShellPageId; label: string; href: string }[] = [
   { id: "leaderboard", label: "Leaderboard", href: "#/leaderboard" },
-  { id: "models", label: "Models", href: "#/models/kimi-k3" },
+  { id: "models", label: "Models", href: "#/models" },
   { id: "tasks", label: "Tasks", href: "#/tasks" },
   { id: "methodology", label: "Methodology", href: "#/methodology" },
   { id: "handoff", label: "Public results", href: "#/handoff" },
@@ -50,6 +50,8 @@ export function PageShell({ active, children }: { active: ShellPageId; children:
         <span>
           {active === "handoff" ? (
             "Public exports measure conformance, not answer accuracy or financial outcomes. Other pages use illustrative fixtures."
+          ) : active === "leaderboard" || active === "models" ? (
+            "Verified synthetic publication. Public v1 results are unranked and measure conformance only."
           ) : (
             <>
               {dataset.disclaimer} <a href="#/methodology">See methodology.</a>

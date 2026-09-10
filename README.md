@@ -21,9 +21,10 @@ The contracts and SDK packages have no CommonJS, browser, edge, or subpath entry
 ## Public evals app
 
 `apps/evals` is a private React/Vite app with the Ask Gina landing-page typography,
-watercolor artwork, UI components, and Storybook. It has a leaderboard, model
-profiles, task evidence explorer, and methodology page. All scores and traces are
-illustrative fixtures, not measured benchmarks. It makes no live tool or wallet calls.
+watercolor artwork, UI components, and Storybook. Its unranked comparison and model
+pages consume a canonical synthetic publication through the verified public-results
+boundary; the task evidence explorer remains an illustrative fixture. Synthetic data
+is not a measured benchmark. The app makes no live tool or wallet calls.
 
 ```sh
 bun run evals:dev       # App on port 5173
