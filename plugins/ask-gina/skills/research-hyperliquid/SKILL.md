@@ -30,6 +30,8 @@ Omit provider context for canonical reads. For an enabled HIP-3 venue, pass its 
 
 For aggregate analysis, first materialize the required dataset. Then pass the exact `tableName` from the successful create result both as the query tool's table name and as the bounded SQL relation; never reuse, sanitize, or reconstruct the requested name. Ask one focused question when a coin or venue remains ambiguous.
 
+For structure, confirmation, breakout/rejection, EMA, VPVR, or other completed-candle analysis, request `closedOnly: true` on the candles read. Use forming candles only when explicitly discussing intrabar or live structure. `closeTimestamp` is the provider interval close; `observedAt` is one server observation time for the whole response. `timestamp` remains legacy open time (`openTimestamp`) only. Do not drop the last row as a substitute for `closedOnly`.
+
 ## What HIP-3 exposes
 
 HIP-3 is Hyperliquid's builder-deployed perpetual DEX layer. Canonical Hyperliquid lists crypto perps; HIP-3 venues list additional perpetuals that a builder chooses, which today means equities, indices, FX, and commodities alongside some crypto. One venue is enabled: TradeXYZ, provider `hip3:xyz`, USDC collateral. Its markets use the plain ticker as the coin with the venue passed as provider context, for example coin `TSLA` with `{ "providerId": "hip3:xyz" }`.
