@@ -814,7 +814,7 @@ describe("live eval CLI subprocess", () => {
             [
               reportRelative,
               `${reportStem}.requested-routing-v1.json`,
-              `${reportStem}.configuration-v1.json`,
+              `${reportStem}.configuration-v2.json`,
             ] as const,
             (attemptsOutput) =>
               Effect.scoped(
@@ -856,7 +856,7 @@ describe("live eval CLI subprocess", () => {
                     yield* fs.exists(path.join(cwd, `${reportStem}.requested-routing-v1.json`)),
                   );
                   assert.isFalse(
-                    yield* fs.exists(path.join(cwd, `${reportStem}.configuration-v1.json`)),
+                    yield* fs.exists(path.join(cwd, `${reportStem}.configuration-v2.json`)),
                   );
                 }),
               ),
