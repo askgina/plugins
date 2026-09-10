@@ -92,6 +92,7 @@ const PACKAGES = [
       /^codex-cli-[A-Za-z0-9_-]+\.js\.map$/u,
       /^index\.d\.ts$/u,
       /^index\.js$/u,
+      /^index\.js\.map$/u,
       /^omp-harness-[A-Za-z0-9_-]+\.d\.ts$/u,
       /^publication-[A-Za-z0-9_-]+\.js$/u,
       /^publication-[A-Za-z0-9_-]+\.js\.map$/u,
@@ -103,6 +104,10 @@ const PACKAGES = [
       /^runner-[A-Za-z0-9_-]+\.js\.map$/u,
       /^trial-journal-[A-Za-z0-9_-]+\.js$/u,
       /^trial-journal-[A-Za-z0-9_-]+\.js\.map$/u,
+      /^bridge\/package\.json$/u,
+      /^bridge\/pnpm-lock\.yaml$/u,
+      /^bridge\/index\.mjs$/u,
+      /^bridge\/codex-sdk-0\.153\.4\.patch$/u,
     ],
   },
 ];

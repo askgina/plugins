@@ -71,6 +71,8 @@
   "packageManager": "bun@1.4.0",
   "patchedDependencies": {
     "@storybook/react@10.3.6": "patches/@storybook%2Freact@10.3.6.patch",
-    "react-docgen-typescript@2.4.0": "patches/react-docgen-typescript@2.4.0.patch"
+    "react-docgen-typescript@2.4.0": "patches/react-docgen-typescript@2.4.0.patch",
+    "@ai-sdk/harness-codex@1.0.104": "patches/@ai-sdk%2Fharness-codex@1.0.104.patch",
+    "@ai-sdk/harness@1.0.102": "patches/@ai-sdk%2Fharness@1.0.102.patch"
   }
 }

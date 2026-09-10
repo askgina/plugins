@@ -15,6 +15,40 @@ Artifact verification clean-installs the built tarball and exercises its compile
 import and replay entrypoint. The package supports only its root ESM import; Node.js,
 CommonJS, browser and edge runtimes, and subpath imports are unsupported.
 
+`createCodex`, `CodexHarnessSettings`, `CodexNativeAuthStore`, and
+`CodexNativeAuthLease` are the patched official `@ai-sdk/harness-codex` factory
+and settings, bundled into this package so installed consumers do not resolve
+the stock npm adapter. Import both `HarnessAgent` and `createCodex` from
+`@askgina/evals`. The bundled HarnessAgent checks lifecycle support before
+detach or suspend can discard the session handle. Native startup with a stock
+HarnessAgent lacking that check is rejected before acquiring the auth store.
+`CodexHarnessSettings.restricted` may supply `readablePaths` and a host
+`nativeAuthStore`. The host must implement `acquire` and `onCleanupFailure`;
+each acquired lease supplies `codexHome` and `release`. The failure callback
+receives only `sandbox-settlement` or `lease-release`, never private diagnostics.
+It must record unresolved cleanup even when HarnessAgent's best-effort cleanup
+returns or an aborted acquisition settles later.
+
+The lease remains held until the sandbox owner finishes stopping or destroying
+its sandbox. Unsupported native resume, continue, detach, and suspend do not
+authorize the adapter to stop a caller-owned sandbox. A rejected detach or
+suspend leaves the session usable for explicit cleanup. Hosts must settle
+borrowed resources in their own finalizer. A failed stop does not release the lease.
+The host must present an auth-store view that excludes personal skills, plugins,
+memories, and hooks while preserving native refresh custody. The SDK's
+`exec --ignore-user-config --ignore-rules --ephemeral` flags do not exclude
+those other files. This package supplies neither that view nor an all-process
+lock. Native credential-bearing evaluation remains disabled until the host
+provides and independently proves both, plus native sandbox enforcement.
+
+Restricted caller configuration accepts only exact `model_reasoning_summary`
+and `model_verbosity` keys with their supported values. The adapter forces detailed
+reasoning summaries and installs its own read-only filesystem, denied auth-home,
+network-disabled, web-search-disabled policy. Dotted or quoted configuration
+namespaces and extra MCP servers are rejected. Exec cannot support per-call
+builtin approval/filter callbacks; requesting them remains an error. These
+restrictions do not turn this export into an enabled native CLI runner.
+
 ## Hermetic replay
 
 ```sh

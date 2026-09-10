@@ -1,7 +1,19 @@
 import { recommended as effectTsgoRecommended } from "@effect/tsgo/oxlint-presets";
-import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { defineConfig } from "vite-plus";
 import type { PackUserConfig } from "vite-plus/pack";
+
+const evalsRequire = createRequire(new URL("packages/evals/package.json", import.meta.url));
+const codexPackageDirectory = new URL(
+  ".",
+  pathToFileURL(evalsRequire.resolve("@ai-sdk/harness-codex/package.json")),
+);
+const evalsCodexBridgeFile = (relativeName: string): string =>
+  fileURLToPath(new URL(relativeName, codexPackageDirectory));
+const harnessPackageUrl = pathToFileURL(evalsRequire.resolve("@ai-sdk/harness/package.json"));
+const evalsHarnessFile = (relativeName: string): string =>
+  fileURLToPath(new URL(relativeName, harnessPackageUrl));
 
 const packDefaults = {
   deps: { neverBundle: true },
@@ -57,6 +69,35 @@ export default defineConfig({
         index: "src/index.ts",
       },
       name: "evals",
+      deps: {
+        neverBundle: true,
+        alwaysBundle: ["@ai-sdk/harness-codex", /^@ai-sdk\/harness(?:\/|$)/u],
+      },
+      alias: {
+        "@ai-sdk/harness-codex": evalsCodexBridgeFile("src/index.ts"),
+        "@ai-sdk/harness/agent": evalsHarnessFile("agent/index.ts"),
+        "@ai-sdk/harness/utils": evalsHarnessFile("utils/index.ts"),
+        "@ai-sdk/harness/bridge": evalsHarnessFile("bridge/index.ts"),
+        "@ai-sdk/harness": evalsHarnessFile("src/index.ts"),
+      },
+      copy: [
+        {
+          from: evalsCodexBridgeFile("dist/bridge/package.json"),
+          to: "dist/bridge",
+        },
+        {
+          from: evalsCodexBridgeFile("dist/bridge/pnpm-lock.yaml"),
+          to: "dist/bridge",
+        },
+        {
+          from: evalsCodexBridgeFile("dist/bridge/index.mjs"),
+          to: "dist/bridge",
+        },
+        {
+          from: evalsCodexBridgeFile("dist/bridge/codex-sdk-0.153.4.patch"),
+          to: "dist/bridge",
+        },
+      ],
     },
     {
       ...packDefaults,
