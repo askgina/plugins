@@ -62,7 +62,8 @@ Every remaining host combines its `targets/<host>/` overlay with the same
 canonical skills. Generated host trees are output, never authoring source.
 The Cursor generated host also includes `README.md`, `rules/`, and `commands/`.
 Those extras are Cursor-only. The generated Devin archive stays lean
-(`.devin-plugin`, `.mcp.json`, `skills/`) even though a `git-subdir` clone of
+(`.devin-plugin`, `.mcp.json`, `assets/icon.svg` because the manifest `logo`
+points at it, and `skills/`) even though a `git-subdir` clone of
 `plugins/ask-gina/` contains the rest of the package. Grok Bot still loads
 skills and MCP.
 

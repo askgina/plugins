@@ -19,7 +19,7 @@ const CURSOR_SOURCE_ENTRIES = [
   "rules",
   "commands",
 ] as const;
-const DEVIN_SOURCE_ENTRIES = [".devin-plugin", ".mcp.json"] as const;
+const DEVIN_SOURCE_ENTRIES = [".devin-plugin", ".mcp.json", "assets/icon.svg"] as const;
 const here = fileURLToPath(new URL(".", import.meta.url));
 
 type SyncEnvironment = FileSystem.FileSystem | Path.Path;

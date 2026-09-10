@@ -43,8 +43,13 @@ describe("sync-plugin-skills", () => {
           assert.deepStrictEqual((yield* fs.readDirectory(generatedTargets.targets.devin)).sort(), [
             ".devin-plugin",
             ".mcp.json",
+            "assets",
             "skills",
           ]);
+          assert.deepStrictEqual(
+            yield* fs.readDirectory(paths.join(generatedTargets.targets.devin, "assets")),
+            ["icon.svg"],
+          );
 
           for (const relative of [
             [".codex-plugin", "plugin.json"],
@@ -74,7 +79,11 @@ describe("sync-plugin-skills", () => {
             );
           }
 
-          for (const relative of [[".devin-plugin", "plugin.json"], [".mcp.json"]] as const) {
+          for (const relative of [
+            [".devin-plugin", "plugin.json"],
+            [".mcp.json"],
+            ["assets", "icon.svg"],
+          ] as const) {
             assert.strictEqual(
               yield* fs.readFileString(paths.join(generatedTargets.targets.devin, ...relative)),
               yield* fs.readFileString(paths.join(packageRoot, ...relative)),

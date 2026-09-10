@@ -917,6 +917,13 @@ export const stagePluginTarget: {
         path.join(plugin, ".mcp.json"),
         path.join(stage, ".mcp.json"),
       ).pipe(Effect.mapError((cause) => fail("cannot stage devin .mcp.json", cause)));
+      yield* fs
+        .makeDirectory(path.join(stage, "assets"), { recursive: true })
+        .pipe(Effect.mapError((cause) => fail("cannot create devin assets", cause)));
+      yield* copyCheckedRegularFile(
+        path.join(plugin, "assets", "icon.svg"),
+        path.join(stage, "assets", "icon.svg"),
+      ).pipe(Effect.mapError((cause) => fail("cannot stage devin icon", cause)));
     } else {
       const sourceOverlay = path.join(plugin, "targets", host);
       yield* filesBelow(sourceOverlay);
