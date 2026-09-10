@@ -117,7 +117,7 @@ export default function App() {
           : route === "/handoff"
             ? "Public results"
             : "Leaderboard";
-    document.title = `${section} · Ask Gina Evals`;
+    document.title = `${section} · Ask Gina`;
   }, [route]);
   if (route === "/models" || route.startsWith("/models/"))
     return <ModelProfilePage key={route} modelId={route.split("/")[2] || "kimi-k3"} />;

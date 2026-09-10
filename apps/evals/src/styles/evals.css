@@ -44,32 +44,26 @@ body,
   opacity: 0.5;
 }
 .eval-header {
-  max-width: 1440px;
+  max-width: 1544px;
   margin: auto;
   min-height: 86px;
   padding: 20px 52px;
   display: flex;
   align-items: center;
   gap: 32px;
+  box-shadow: 0 1px 0 var(--eval-line);
 }
 .eval-wordmark {
   display: flex;
-  align-items: baseline;
-  gap: 3px;
+  align-items: center;
   flex-shrink: 0;
+  min-width: 148px;
+  min-height: 40px;
 }
-.eval-wordmark strong {
-  font-size: 23px;
-  font-weight: 600;
-  letter-spacing: -1.3px;
-}
-.eval-wordmark > span {
-  color: #737373;
-  font-size: 13px;
-}
-.eval-brand-dot {
-  color: var(--eval-red);
-  padding: 0 3px 0 4px;
+.eval-wordmark img {
+  display: block;
+  width: 148px;
+  height: auto;
 }
 .eval-nav {
   display: flex;
@@ -100,28 +94,30 @@ body,
 .eval-header-actions {
   display: flex;
   align-items: center;
-  gap: 18px;
 }
-.eval-demo-label {
-  font-size: 10px;
-  line-height: 1.4;
-  color: #686a64;
-  background: #f7f6f3;
-  border-radius: 7px;
-  padding: 6px 10px;
-  white-space: nowrap;
+.eval-home-link {
+  min-height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border-radius: 12px;
+  background: #f7f5f2;
+  color: #2b2927;
+  font-size: 13px;
+  font-weight: 500;
+  transition-property: background-color, transform;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
-.eval-run-button {
-  height: 38px;
-  border-radius: 10px;
-  background: #0b0b0d;
-  color: white;
-  font-size: 11px;
-  gap: 15px;
-  box-shadow: 0 5px 14px #0b0b0d12;
+.eval-home-link svg {
+  color: #b18462;
 }
-.eval-run-button:hover {
-  background: #2b2b2d;
+.eval-home-link:hover {
+  background: #f0ece7;
+}
+.eval-home-link:active {
+  transform: scale(0.96);
 }
 .eval-main {
   outline: none;
@@ -460,9 +456,6 @@ body,
     padding: 18px 32px;
     gap: 22px;
   }
-  .eval-demo-label {
-    display: none;
-  }
   .eval-nav {
     gap: 22px;
   }
@@ -479,14 +472,10 @@ body,
   .eval-header-actions {
     margin-left: auto;
   }
-  .eval-wordmark strong {
-    font-size: 22px;
-  }
-  .eval-run-button {
-    height: 34px;
-    font-size: 10px;
-    padding: 0 10px;
-    gap: 8px;
+  .eval-wordmark,
+  .eval-wordmark img {
+    width: 140px;
+    min-width: 140px;
   }
   .eval-nav {
     order: 3;
