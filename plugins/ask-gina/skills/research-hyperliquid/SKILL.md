@@ -30,7 +30,7 @@ Omit provider context for canonical reads. For an enabled HIP-3 venue, pass its 
 
 For aggregate analysis, first materialize the required dataset. Then pass the exact `tableName` from the successful create result both as the query tool's table name and as the bounded SQL relation; never reuse, sanitize, or reconstruct the requested name. Ask one focused question when a coin or venue remains ambiguous.
 
-For structure, confirmation, breakout/rejection, EMA, VPVR, or other completed-candle analysis, request `closedOnly: true` on both the candles read and candle table materialization. Use forming candles only when explicitly discussing intrabar or live structure. `closeTimestamp` is the provider interval close; `observedAt` is one server observation time for the whole response. `timestamp` remains legacy open time (`openTimestamp`) only. Do not drop the last row as a substitute for `closedOnly`.
+For structure, confirmation, breakout/rejection, EMA, VPVR, or other completed-candle analysis, request `closedOnly: true` on both the candles read and candle table materialization. Use forming candles only when explicitly discussing intrabar or live structure. `closeTimestamp` is the provider's inclusive interval end; the server marks a candle closed only after that time. `observedAt` is one server observation time for the whole response. `timestamp` remains legacy open time (`openTimestamp`) only. Do not drop the last row as a substitute for `closedOnly`.
 
 ## What HIP-3 exposes
 
