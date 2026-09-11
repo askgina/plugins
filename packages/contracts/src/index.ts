@@ -416,6 +416,6 @@ export const ASK_GINA_SKILL_DEFINITIONS = [
   },
 ] as const satisfies readonly AskGinaSkillDefinition[];
 
-export const SOURCE_COMMIT = "51d99dde59e17080255fdb4ae8e59a63355a8b5e";
+export const SOURCE_COMMIT = "ea8c56a0b065ea44cde89d05567999f976c61071";
 export const RELEASE_VERSION = "0.1.0";
 export const catalogSha = "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e";

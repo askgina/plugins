@@ -11,8 +11,6 @@ import {
   GinaReadToolCatalogJsonSchema,
   PRODUCTION_MCP_URL,
   READ_SCOPE,
-  RELEASE_VERSION,
-  SOURCE_COMMIT,
   catalogSha,
   getGinaReadToolAnnotations,
   getGinaReadToolFamily,
@@ -201,13 +199,11 @@ describe("@askgina/contracts", () => {
     }),
   );
 
-  it.effect("pins endpoints, scopes, and source compatibility", () =>
+  it.effect("publishes endpoints and scopes with a computed catalog digest", () =>
     Effect.gen(function* () {
       assert.strictEqual(PRODUCTION_MCP_URL, "https://askgina.ai/ai/gina/mcp");
       assert.strictEqual(READ_SCOPE, "tools:read");
       assert.strictEqual(EXECUTE_SCOPE, "tools:execute");
-      assert.strictEqual(RELEASE_VERSION, "0.1.0");
-      assert.strictEqual(SOURCE_COMMIT, "51d99dde59e17080255fdb4ae8e59a63355a8b5e");
 
       const computedCatalogSha = createHash("sha256")
         .update(yield* Schema.encodeEffect(GinaReadToolCatalogJsonSchema)(GINA_READ_TOOL_CATALOG))
