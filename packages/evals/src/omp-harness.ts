@@ -78,11 +78,16 @@ const CANONICAL_TOOL_NAMES: Record<string, true> = Object.fromEntries(
   CANONICAL_ALLOWED_TOOLS.map((name) => [name, true as const]),
 );
 
-export type OmpProvider = keyof typeof PROVIDER_PROFILE;
+export type OmpApiKeyProvider = keyof typeof PROVIDER_PROFILE;
 export type OmpReasoning = keyof typeof OMP_REASONING;
 
-export const isOmpProvider = (value: string): value is OmpProvider =>
+export const isOmpApiKeyProvider = (value: string): value is OmpApiKeyProvider =>
   Object.hasOwn(PROVIDER_PROFILE, value);
+
+const OMP_PROVIDER_IDENTIFIER = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u;
+
+export const isOmpProviderIdentifier = (value: string): boolean =>
+  OMP_PROVIDER_IDENTIFIER.test(value);
 
 const isOmpReasoning = (value: string): value is OmpReasoning =>
   Object.hasOwn(OMP_REASONING, value);
@@ -97,36 +102,58 @@ export interface PreparedOmpHarnessRuntime {
   readonly runtimeDirectory: string;
 }
 
+export type OmpAuth =
+  | {
+      readonly mode: "api-key";
+      readonly provider: OmpApiKeyProvider;
+      readonly apiKey: Redacted.Redacted<string>;
+      readonly providerBaseUrl?: string;
+    }
+  | {
+      readonly mode: "native";
+      readonly provider: string;
+      readonly agentDirectory: string;
+    };
+
 export interface OmpHarnessTrialOptions {
   readonly runId: string;
   readonly repetition: number;
   readonly availableTools: readonly string[];
   readonly runtimeDirectory: string;
-  readonly provider: OmpProvider;
+  readonly auth: OmpAuth;
   readonly model: string;
   readonly reasoning: string;
-  readonly apiKey: Redacted.Redacted<string>;
   readonly mcpAuthorization: Redacted.Redacted<string>;
   readonly timeoutMs: number;
   readonly serverUrl?: string;
-  readonly providerBaseUrl?: string;
   readonly sandbox?: HarnessV1SandboxProvider;
 }
+
+type ValidatedOmpAuth =
+  | {
+      readonly mode: "api-key";
+      readonly provider: OmpApiKeyProvider;
+      readonly apiKey: string;
+      readonly providerBaseUrl?: string;
+    }
+  | {
+      readonly mode: "native";
+      readonly provider: string;
+      readonly agentDirectory: string;
+    };
 
 interface ValidatedOmpHarnessTrialOptions {
   readonly runId: string;
   readonly repetition: number;
   readonly availableTools: readonly string[];
   readonly runtimeDirectory: string;
-  readonly provider: OmpProvider;
+  readonly auth: ValidatedOmpAuth;
   readonly model: string;
   readonly modelIdentity: string;
   readonly reasoning: OmpReasoning;
-  readonly apiKey: string;
   readonly mcpAuthorization: string;
   readonly timeoutMs: number;
   readonly serverUrl: string;
-  readonly providerBaseUrl?: string;
   readonly sandbox?: HarnessV1SandboxProvider;
 }
 
@@ -509,9 +536,9 @@ const nestedEvalConfig = [
   "  enableCodexUser: false",
   "  enableClaudeUser: false",
   "  enableClaudeProject: false",
-  "  enablePiUser: true",
+  "  enablePiUser: false",
   "  enablePiProject: false",
-  "  enableAgentsUser: false",
+  "  enableAgentsUser: true",
   "  enableAgentsProject: false",
   "  includeSkills:",
   ...SKILL_NAMES.map((name) => `    - ${name}`),
@@ -519,7 +546,7 @@ const nestedEvalConfig = [
 ].join("\n");
 
 const modelsYaml = (
-  provider: OmpProvider,
+  provider: OmpApiKeyProvider,
   model: string,
   providerBaseUrl: string | undefined,
 ): string => {
@@ -553,22 +580,27 @@ const modelsYaml = (
 };
 
 const installCommand = (
-  provider: OmpProvider,
-  model: string,
-  providerBaseUrl: string | undefined,
   runtimeDirectory: string,
+  auth: ValidatedOmpAuth,
+  model: string,
 ): string => {
-  const models = modelsYaml(provider, model, providerBaseUrl);
-  return [
-    'mkdir -p "$HOME/.local/bin" "$HOME/.omp/agent"',
+  const lines = [
+    'mkdir -p "$HOME/.local/bin"',
     `ln -sfn ${shellQuote(`${runtimeDirectory}/omp`)} "$HOME/.local/bin/omp"`,
-    `cp ${shellQuote(`${runtimeDirectory}/config.yml`)} "$HOME/.omp/agent/config.yml"`,
-    "cat > \"$HOME/.omp/agent/models.yml\" <<'OMP_EVAL_MODELS_YML'",
-    models.trimEnd(),
-    "OMP_EVAL_MODELS_YML",
+  ];
+  if (auth.mode === "api-key") {
+    lines.push(
+      'mkdir -p "$HOME/.omp/agent"',
+      "cat > \"$HOME/.omp/agent/models.yml\" <<'OMP_EVAL_MODELS_YML'",
+      modelsYaml(auth.provider, model, auth.providerBaseUrl).trimEnd(),
+      "OMP_EVAL_MODELS_YML",
+    );
+  }
+  lines.push(
     'version="$("$HOME/.local/bin/omp" --version)"',
     'case "$version" in omp/*) ;; *) exit 1 ;; esac',
-  ].join("\n");
+  );
+  return lines.join("\n");
 };
 
 const snapshotExecutable = (
@@ -832,69 +864,108 @@ export const prepareOmpHarnessRuntime = (
     return { runtimeDirectory };
   });
 
+const invalidOptions = (caseId: string): PluginEvalOmpHarnessRequestError =>
+  new PluginEvalOmpHarnessRequestError({ caseId, reason: "invalid-options" });
+
 const validateOptions = (
   evalCase: PluginEvalCase,
   options: OmpHarnessTrialOptions,
-): Effect.Effect<ValidatedOmpHarnessTrialOptions, PluginEvalOmpHarnessRequestError> => {
-  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const apiKey = Redacted.value(options.apiKey);
-  const mcpAuthorization = Redacted.value(options.mcpAuthorization);
-  const model = options.model.trim();
-  const runId = options.runId.trim();
-  const providerBaseUrl =
-    options.providerBaseUrl === undefined
-      ? undefined
-      : parseProviderBaseUrl(options.providerBaseUrl);
-  const modelIdentity = `${options.provider}/${model}`;
-  const serverUrl = options.serverUrl ?? PRODUCTION_MCP_URL;
-  if (options.providerBaseUrl !== undefined && providerBaseUrl === undefined) {
-    return Effect.fail(
-      new PluginEvalOmpHarnessRequestError({ caseId: evalCase.id, reason: "invalid-endpoint" }),
-    );
-  }
-  if (
-    !isOmpProvider(options.provider) ||
-    !catalogsMatch(options.availableTools, CANONICAL_ALLOWED_TOOLS) ||
-    runId.length === 0 ||
-    model.length === 0 ||
-    apiKey.trim().length === 0 ||
-    mcpAuthorization.trim().length === 0 ||
-    !options.runtimeDirectory.startsWith("/") ||
-    !Number.isSafeInteger(options.repetition) ||
-    options.repetition <= 0 ||
-    !Number.isSafeInteger(timeoutMs) ||
-    timeoutMs <= 0 ||
-    (options.serverUrl !== undefined && options.serverUrl.trim().length === 0)
-  ) {
-    return Effect.fail(
-      new PluginEvalOmpHarnessRequestError({ caseId: evalCase.id, reason: "invalid-options" }),
-    );
-  }
-  if (!isOmpReasoning(options.reasoning)) {
-    return Effect.fail(
-      new PluginEvalOmpHarnessRequestError({
+): Effect.Effect<
+  ValidatedOmpHarnessTrialOptions,
+  PluginEvalOmpHarnessRequestError,
+  FileSystem.FileSystem | Path.Path
+> =>
+  Effect.gen(function* () {
+    const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    const mcpAuthorization = Redacted.value(options.mcpAuthorization);
+    const model = options.model.trim();
+    const runId = options.runId.trim();
+    const serverUrl = options.serverUrl ?? PRODUCTION_MCP_URL;
+    const authOption = options.auth;
+    if (
+      authOption === undefined ||
+      typeof authOption !== "object" ||
+      authOption === null ||
+      (authOption.mode !== "api-key" && authOption.mode !== "native") ||
+      !catalogsMatch(options.availableTools, CANONICAL_ALLOWED_TOOLS) ||
+      runId.length === 0 ||
+      model.length === 0 ||
+      mcpAuthorization.trim().length === 0 ||
+      !options.runtimeDirectory.startsWith("/") ||
+      !Number.isSafeInteger(options.repetition) ||
+      options.repetition <= 0 ||
+      !Number.isSafeInteger(timeoutMs) ||
+      timeoutMs <= 0 ||
+      (options.serverUrl !== undefined && options.serverUrl.trim().length === 0)
+    ) {
+      return yield* invalidOptions(evalCase.id);
+    }
+    if (!isOmpReasoning(options.reasoning)) {
+      return yield* new PluginEvalOmpHarnessRequestError({
         caseId: evalCase.id,
         reason: "unsupported-reasoning",
-      }),
-    );
-  }
-  return Effect.succeed({
-    runId,
-    repetition: options.repetition,
-    availableTools: [...CANONICAL_ALLOWED_TOOLS],
-    runtimeDirectory: options.runtimeDirectory,
-    provider: options.provider,
-    model,
-    modelIdentity,
-    reasoning: options.reasoning,
-    apiKey,
-    mcpAuthorization,
-    timeoutMs,
-    serverUrl,
-    ...(providerBaseUrl === undefined ? {} : { providerBaseUrl }),
-    ...(options.sandbox === undefined ? {} : { sandbox: options.sandbox }),
+      });
+    }
+
+    let auth: ValidatedOmpAuth;
+    if (authOption.mode === "api-key") {
+      const providerBaseUrl =
+        authOption.providerBaseUrl === undefined
+          ? undefined
+          : parseProviderBaseUrl(authOption.providerBaseUrl);
+      if (authOption.providerBaseUrl !== undefined && providerBaseUrl === undefined) {
+        return yield* new PluginEvalOmpHarnessRequestError({
+          caseId: evalCase.id,
+          reason: "invalid-endpoint",
+        });
+      }
+      const apiKey = Redacted.value(authOption.apiKey);
+      if (!isOmpApiKeyProvider(authOption.provider) || apiKey.trim().length === 0) {
+        return yield* invalidOptions(evalCase.id);
+      }
+      auth = {
+        mode: "api-key",
+        provider: authOption.provider,
+        apiKey,
+        ...(providerBaseUrl === undefined ? {} : { providerBaseUrl }),
+      };
+    } else {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      if (
+        !isOmpProviderIdentifier(authOption.provider) ||
+        !path.isAbsolute(authOption.agentDirectory)
+      ) {
+        return yield* invalidOptions(evalCase.id);
+      }
+      const info = yield* fs
+        .stat(authOption.agentDirectory)
+        .pipe(Effect.mapError(() => invalidOptions(evalCase.id)));
+      if (info.type !== "Directory") {
+        return yield* invalidOptions(evalCase.id);
+      }
+      auth = {
+        mode: "native",
+        provider: authOption.provider,
+        agentDirectory: authOption.agentDirectory,
+      };
+    }
+
+    return {
+      runId,
+      repetition: options.repetition,
+      availableTools: [...CANONICAL_ALLOWED_TOOLS],
+      runtimeDirectory: options.runtimeDirectory,
+      auth,
+      model,
+      modelIdentity: `${auth.provider}/${model}`,
+      reasoning: options.reasoning,
+      mcpAuthorization,
+      timeoutMs,
+      serverUrl,
+      ...(options.sandbox === undefined ? {} : { sandbox: options.sandbox }),
+    };
   });
-};
 
 const listAllMcpTools = (
   client: MCPClient,
@@ -1438,24 +1509,22 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                         },
                       ),
                   };
+                  const { auth } = validated;
                   const harness = createACP({
                     harnessId: "omp-acp",
                     builtinTools: OMP_BUILTIN_TOOLS,
                     source: {
                       type: "install-command",
-                      command: installCommand(
-                        validated.provider,
-                        validated.model,
-                        validated.providerBaseUrl,
-                        validated.runtimeDirectory,
-                      ),
+                      command: installCommand(validated.runtimeDirectory, auth, validated.model),
                     },
                     executable: "omp",
                     args: [
                       "acp",
                       "--no-extensions",
+                      "--config",
+                      `${validated.runtimeDirectory}/config.yml`,
                       "--provider",
-                      OMP_EVAL_PROVIDER_ALIAS,
+                      auth.mode === "api-key" ? OMP_EVAL_PROVIDER_ALIAS : auth.provider,
                       "--model",
                       validated.model,
                       "--thinking",
@@ -1464,14 +1533,20 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                       "yolo",
                       "--no-session",
                     ],
-                    skillsDirectory: ".omp/agent/skills",
+                    skillsDirectory: ".agents/skills",
                     modelMapping: { type: "session-config-option", path: "model" },
                     mcpServers: {},
                     hostToolMcpTransport: "http",
-                    env: {
-                      NO_COLOR: "1",
-                      [OMP_EVAL_PROVIDER_API_KEY_ENV]: validated.apiKey,
-                    },
+                    env:
+                      auth.mode === "api-key"
+                        ? {
+                            NO_COLOR: "1",
+                            [OMP_EVAL_PROVIDER_API_KEY_ENV]: auth.apiKey,
+                          }
+                        : {
+                            NO_COLOR: "1",
+                            PI_CODING_AGENT_DIR: auth.agentDirectory,
+                          },
                   });
                   let sessionSkillsDirectory: string | undefined;
                   const agent = new HarnessAgent({
@@ -1483,7 +1558,7 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                     sandboxConfig: {
                       onSession: ({ session, abortSignal }) =>
                         resolveSandboxHomeDir({ sandbox: session, abortSignal }).then((home) => {
-                          sessionSkillsDirectory = `${home}/.omp/agent/skills`;
+                          sessionSkillsDirectory = `${home}/.agents/skills`;
                         }),
                     },
                   });

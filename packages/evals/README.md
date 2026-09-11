@@ -21,6 +21,12 @@ CommonJS, browser and edge runtimes, and subpath imports are unsupported.
 consumers resolve the same adapter versions as the evaluators. There is no
 patched adapter, auth-store lease, or restricted-settings surface.
 
+`OmpHarnessTrialOptions` requires a nested `auth: OmpAuth` value. API-key
+callers pass `{ mode: "api-key", provider, apiKey }`, optionally with
+`providerBaseUrl`; native callers pass `{ mode: "native", provider, agentDirectory }`. The former
+top-level `provider`, `apiKey`, and `providerBaseUrl` fields are removed.
+The API-key provider type is `OmpApiKeyProvider`.
+
 `createLocalHarnessSandbox` is a synchronous local-process sandbox provider for
 stock `HarnessAgent`/`createACP` on POSIX hosts. Sessions run commands as
 ordinary host child processes in their own process group under a disposable
@@ -108,24 +114,32 @@ credentials differ:
 | OpenRouter    | `OPENROUTER_API_KEY`                                                                                                   |
 | Codex CLI     | `OPENAI_API_KEY`, absolute `CODEX_EVAL_EXECUTABLE`, and its lowercase SHA-256 digest in `CODEX_EVAL_EXECUTABLE_SHA256` |
 | Claude CLI    | `ANTHROPIC_API_KEY` and absolute `CLAUDE_EVAL_EXECUTABLE`                                                              |
-| OMP harness   | `OMP_EVAL_API_KEY`, absolute `OMP_EVAL_EXECUTABLE`, and its lowercase SHA-256 digest in `OMP_EVAL_EXECUTABLE_SHA256`   |
+| OMP API key   | `OMP_EVAL_API_KEY`, absolute `OMP_EVAL_EXECUTABLE`, and its lowercase SHA-256 digest in `OMP_EVAL_EXECUTABLE_SHA256`   |
+| OMP native    | Absolute `OMP_EVAL_EXECUTABLE` and its lowercase SHA-256 digest in `OMP_EVAL_EXECUTABLE_SHA256`                        |
 
-The supported native Codex, Claude, and OMP paths use explicit API keys in
-disposable evaluation homes. They do not reuse a saved personal login. That
-existing API-key CLI does not meet a separately requested HarnessAgent or Codex
-saved-login policy. Saved-login reuse, refresh ownership, native OAuth
-subscriptions, and personal-home integration remain deferred. OMP does
-not read `~/.omp` or inherit `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` /
-`OPENROUTER_API_KEY`. Native OMP also never exports those names into the
-child. The child receives only `OMP_EVAL_PROVIDER_API_KEY` for
-the private `omp-eval` provider.
+Codex and Claude use explicit API keys in disposable evaluation homes, not a
+saved personal login. OMP defaults to `--omp-auth api-key`, which passes the
+model key as `OMP_EVAL_PROVIDER_API_KEY` for a private `omp-eval` provider.
+
+OMP also supports `--omp-auth native --omp-agent-dir <absolute-directory>`.
+The directory must already exist. OMP uses it directly through
+`PI_CODING_AGENT_DIR`; the evaluator does not copy credentials, generate native
+provider settings, or require `OMP_EVAL_API_KEY`. OMP may refresh credentials,
+update its databases, or migrate profile settings there. This is not a
+read-only profile mount. Choose the directory deliberately.
+
+Both OMP modes retain a minimal child environment and disable extensions.
+They do not inherit `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or
+`OPENROUTER_API_KEY`. Native mode relies on the selected profile's credential
+configuration, not arbitrary credential variables in the parent shell.
 
 Responses and Codex accept model IDs understood by their OpenAI backends, such as
 `gpt-5.1`. OpenRouter uses its `provider/model` namespace, such as
 `openai/gpt-5.1`. Claude uses a Claude CLI model ID or alias without the
-`anthropic/` prefix, such as `claude-sonnet-4-5-20250929`. OMP requires `--provider`
-to select `openai`, `anthropic`, or `openrouter`; `--model` uses that provider's
-backend ID. For example, `--provider openai --model gpt-5.1` records
+`anthropic/` prefix, such as `claude-sonnet-4-5-20250929`. OMP API-key mode requires
+`--provider openai|anthropic|openrouter`; native mode accepts a native OMP provider
+identifier, such as `openai-codex`. `--model` must be available through the
+selected provider. For example, `--provider openai --model gpt-5.1` records
 `openai/gpt-5.1`, while `--provider openrouter --model openai/gpt-5.1` records
 `openrouter/openai/gpt-5.1`. The report, attempt input, and observation keep that
 same identity. There is no separate displayed model. These examples show the
@@ -189,6 +203,19 @@ bun run eval:omp -- \
   --repetitions 3 \
   --account-class eval \
   --timeout-ms 120000
+
+bun run eval:omp -- \
+  --suite packages/evals/src/fixtures/ask-gina-routing-smoke.yaml \
+  --run-id local-omp-native-example \
+  --candidate main \
+  --omp-auth native \
+  --omp-agent-dir /absolute/path/to/existing/omp-agent \
+  --provider openai-codex \
+  --model gpt-5.6-luna \
+  --reasoning medium \
+  --repetitions 3 \
+  --account-class eval \
+  --timeout-ms 120000
 ```
 
 Repeat `--case <case-id>` to run a strict subset. `--timeout-ms` is required for
@@ -205,8 +232,10 @@ and accepts only the exact Gina-read URLs `https://askgina.ai/ai/gina/mcp`
 slashes and any other URL, including venue MCP endpoints, are rejected.
 `--max-steps` is optional only for OpenRouter, and `--max-turns` is optional
 only for Claude. Both default to `8` and accept `1` to `32`. `--provider` is
-required only for OMP. Other runners reject those OpenRouter, Claude, and OMP
-flags. OMP rejects `--max-steps` and `--max-turns`. ACP does not expose a
+required only for OMP. `--omp-auth` and `--omp-agent-dir` are also OMP-only.
+The directory flag is required for native mode and rejected in API-key mode.
+Other runners reject those OpenRouter, Claude, and OMP flags. OMP rejects
+`--max-steps` and `--max-turns`. ACP does not expose a
 portable native model-step boundary, so OMP does not claim an equal step budget
 with OpenRouter or Claude. Secrets have no command-line flags.
 A missing required flag or backend credential fails closed. The CLI does not
@@ -255,24 +284,32 @@ platforms fail closed.
 
 OMP requires the tested `18.1.17` executable. The CLI verifies its SHA-256 and
 snapshots it once, then starts a fresh local `omp acp` session per trial under
-`createLocalHarnessSandbox`. Bootstrap links that snapshot and writes a
-session-only `config.yml` and `models.yml` into a disposable home. There is no
-Docker engine, container image, or host-socket requirement.
+`createLocalHarnessSandbox`. Bootstrap links that snapshot. Both authentication
+modes load the isolated evaluation settings through an explicit `--config`
+overlay. There is no Docker engine, container image, or host-socket requirement.
 
-Each trial writes a static `models.yml` with one private `omp-eval` provider
-and one selected-model entry. Public `--provider` / `--model` identity stays
-on the report, attempt, and observation. Native ACP uses `--provider omp-eval`
-and the original backend model id, including OpenRouter nested slugs. The
+Each API-key trial writes a static `models.yml` in its disposable home with one
+private `omp-eval` provider and one selected-model entry. Public `--provider` /
+`--model` identity stays on the report, attempt, and observation. In API-key mode,
+the ACP child is launched with `--provider omp-eval` and the original backend
+model id, including OpenRouter nested slugs. The
 child receives the explicit model key as `OMP_EVAL_PROVIDER_API_KEY` through
 the stock adapter's environment option. Standard provider credential variables
 are not inherited. There is no credential broker or request transformation.
 
-OpenAI and OpenRouter use Chat Completions, not the Responses transport that
-OMP can select for built-in providers. Anthropic uses its Messages API. The
-CLI's `--reasoning` value selects native `--thinking`, with explicit effort
+In API-key mode, OpenAI and OpenRouter use Chat Completions, not the Responses
+transport that OMP can select for built-in providers. Anthropic uses its
+Messages API. The CLI's `--reasoning` value selects native `--thinking`, with explicit effort
 settings for OpenAI/OpenRouter and thinking budgets for Anthropic. The model
 entry leaves capacities, cost, and input modalities to OMP 18.1.17's bundled
 same-id metadata or defaults for unknown model ids.
+
+Native mode passes the requested provider unchanged and uses the selected
+profile's models and credentials. It writes no replacement `models.yml` and
+passes no evaluator model key. Its agent-directory check reads filesystem
+metadata only and rejects missing directories before MCP or model dispatch.
+Canonical skills are staged under the disposable `HOME/.agents/skills` in both
+modes, so selecting another agent directory does not redirect skill discovery.
 
 The Gina bearer stays on the host. Canonical MCP reads execute in the evaluator
 process and are exposed as wrapped HarnessAgent host tools. The child does not
@@ -303,10 +340,20 @@ sessions. The stock Codex adapter also passed a cold local host-tool smoke.
 
 Native provider HTTP 500 errors arrive as ACP text plus `end_turn` with no typed
 metadata, so OMP cannot yet replace every evaluator for reliable provider-failure
-classification. Native OAuth subscriptions remain unproven. These synthetic
-model/MCP fixtures exercise the real native processes and protocols; they do
-not prove real model behavior, production Gina connectivity, or measured
-native-plugin activation.
+classification. This is tracked in
+[OMP #11644](https://github.com/can1357/oh-my-pi/issues/11644).
+
+Native mode passed a cold synthetic smoke with an inert API key stored through
+OMP's stock credential API in a disposable `agent.db`, with no evaluator key
+environment variable. The proof covered canonical skill reads, successful and
+failed MCP calls, rejection before dispatch for a missing profile, API-key mode
+compatibility, and one physical destroy per session. The receipt's
+`profile.before` and `profile.after` hashes matched for `models.yml` and
+`config.yml`, but `agent.db` changed during native execution. The selected
+profile remained in place. This is not a read-only profile mount and proves
+stored API-key delegation only, not real OAuth refresh or subscription access.
+These fixtures do not prove real model behavior, production Gina connectivity,
+or measured native-plugin activation.
 
 Each live run writes a v1 aggregate below the ignored `.plugin-eval-runs/`
 directory and a sibling `.journal-v1.jsonl`, both mode `0600`. OpenRouter

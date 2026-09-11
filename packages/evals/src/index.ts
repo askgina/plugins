@@ -132,7 +132,8 @@ export {
   type PrepareOmpHarnessRuntimeOptions,
   type PreparedOmpHarnessRuntime,
   type OmpHarnessTrialOptions,
-  type OmpProvider,
+  type OmpApiKeyProvider,
+  type OmpAuth,
   type PluginEvalOmpHarnessError,
 } from "./omp-harness";
 export {

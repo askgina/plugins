@@ -56,10 +56,11 @@ import {
   selectCases,
 } from "../live";
 import {
-  isOmpProvider,
+  isOmpApiKeyProvider,
+  isOmpProviderIdentifier,
   prepareOmpHarnessRuntime,
   runOmpHarnessPluginEvalTrial,
-  type OmpProvider,
+  type OmpApiKeyProvider,
   type PluginEvalOmpHarnessError,
 } from "../omp-harness";
 import {
@@ -142,7 +143,7 @@ export const liveEvalTrialDispatch = (options: LiveEvalCliOptions): LiveEvalTria
     return { target, maxTurns: options.maxTurns };
   }
   if (options.runner === "omp") {
-    return { target, model: `${options.provider}/${options.model}` };
+    return { target, model: `${options.auth.provider}/${options.model}` };
   }
   return { target, displayedModel: options.model };
 };
@@ -185,7 +186,12 @@ export type LiveEvalCliOptions =
       readonly expectedProvider: string;
     })
   | (LiveEvalCliSharedOptions & { readonly runner: "claude"; readonly maxTurns: number })
-  | (LiveEvalCliSharedOptions & { readonly runner: "omp"; readonly provider: OmpProvider });
+  | (LiveEvalCliSharedOptions & {
+      readonly runner: "omp";
+      readonly auth:
+        | { readonly mode: "api-key"; readonly provider: OmpApiKeyProvider }
+        | { readonly mode: "native"; readonly provider: string; readonly agentDirectory: string };
+    });
 
 export type LiveEvalCliParseResult =
   | { readonly mode: "help"; readonly usage: string }
@@ -239,14 +245,14 @@ export const formatLiveEvalCliUsage = (runner?: LiveEvalRunner): string => {
   }
   if (runner === "omp") {
     return [
-      `Usage: bun run eval:omp -- ${REQUIRED_LIVE_EVAL_FLAGS} --provider <openai|anthropic|openrouter>`,
-      `Environment: ${ASK_GINA_ACCESS_TOKEN}, ${OMP_EVAL_API_KEY}, ${OMP_EVAL_EXECUTABLE}, ${OMP_EVAL_EXECUTABLE_SHA256}`,
+      `Usage: bun run eval:omp -- ${REQUIRED_LIVE_EVAL_FLAGS} --provider <id> [--omp-auth api-key|native] [--omp-agent-dir <dir>]`,
+      `--omp-auth default api-key. --provider for api-key: openai|anthropic|openrouter. --omp-agent-dir is required for native and forbidden for api-key. Environment: ${ASK_GINA_ACCESS_TOKEN}, ${OMP_EVAL_EXECUTABLE}, ${OMP_EVAL_EXECUTABLE_SHA256}; ${OMP_EVAL_API_KEY} (api-key).`,
     ].join("\n");
   }
   return [
     `Usage: bun run eval:<responses|codex|openrouter|claude|omp> -- ${REQUIRED_LIVE_EVAL_FLAGS}`,
-    `OpenRouter-only: --openrouter-endpoint <slug> --expected-provider <label> --max-cost-usd <amount> [--max-steps <1..${MAXIMUM_LIVE_EVAL_TOOL_BUDGET}>] (default ${DEFAULT_OPENROUTER_MAX_STEPS}) [--server-url <${PRODUCTION_MCP_URL}|${ALPHA_GINA_READ_SERVER_URL}>] (default ${PRODUCTION_MCP_URL}). Claude-only: [--max-turns <1..${MAXIMUM_LIVE_EVAL_TOOL_BUDGET}>] (default ${DEFAULT_CLAUDE_MAX_TURNS}). OMP-only: --provider <openai|anthropic|openrouter>.`,
-    `Environment: ${ASK_GINA_ACCESS_TOKEN} always; ${OPENAI_API_KEY} (responses, codex); ${OPENROUTER_API_KEY} (openrouter); ${ANTHROPIC_API_KEY} and ${CLAUDE_EVAL_EXECUTABLE} (claude); ${CODEX_EVAL_EXECUTABLE} and ${CODEX_EVAL_EXECUTABLE_SHA256} (codex); ${OMP_EVAL_API_KEY}, ${OMP_EVAL_EXECUTABLE}, and ${OMP_EVAL_EXECUTABLE_SHA256} (omp).`,
+    `OpenRouter-only: --openrouter-endpoint <slug> --expected-provider <label> --max-cost-usd <amount> [--max-steps <1..${MAXIMUM_LIVE_EVAL_TOOL_BUDGET}>] (default ${DEFAULT_OPENROUTER_MAX_STEPS}) [--server-url <${PRODUCTION_MCP_URL}|${ALPHA_GINA_READ_SERVER_URL}>] (default ${PRODUCTION_MCP_URL}). Claude-only: [--max-turns <1..${MAXIMUM_LIVE_EVAL_TOOL_BUDGET}>] (default ${DEFAULT_CLAUDE_MAX_TURNS}). OMP-only: --provider <id> [--omp-auth api-key|native] [--omp-agent-dir <dir>].`,
+    `Environment: ${ASK_GINA_ACCESS_TOKEN} always; ${OPENAI_API_KEY} (responses, codex); ${OPENROUTER_API_KEY} (openrouter); ${ANTHROPIC_API_KEY} and ${CLAUDE_EVAL_EXECUTABLE} (claude); ${CODEX_EVAL_EXECUTABLE} and ${CODEX_EVAL_EXECUTABLE_SHA256} (codex); ${OMP_EVAL_EXECUTABLE} and ${OMP_EVAL_EXECUTABLE_SHA256} (omp); ${OMP_EVAL_API_KEY} (omp api-key).`,
   ].join("\n");
 };
 
@@ -286,7 +292,9 @@ export const parseLiveEvalCliOptions = (
     let attemptsOutputPath: string | undefined;
     let maxSteps: number | undefined;
     let maxTurns: number | undefined;
-    let provider: OmpProvider | undefined;
+    let provider: string | undefined;
+    let ompAuth: "api-key" | "native" | undefined;
+    let ompAgentDir: string | undefined;
     let endpoint: string | undefined;
     let serverUrl: string | undefined;
     let maxCostUsd: number | undefined;
@@ -365,11 +373,17 @@ export const parseLiveEvalCliOptions = (
           }
           break;
         case "--provider":
-          if (isOmpProvider(value)) {
-            provider = value;
-            break;
+          provider = value;
+          break;
+        case "--omp-auth":
+          if (value !== "api-key" && value !== "native") {
+            return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
           }
-          return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
+          ompAuth = value;
+          break;
+        case "--omp-agent-dir":
+          ompAgentDir = value;
+          break;
         case "--openrouter-endpoint":
           endpoint = value;
           break;
@@ -423,7 +437,10 @@ export const parseLiveEvalCliOptions = (
     if (runner !== "claude" && seenFlags.has("--max-turns")) {
       return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
     }
-    if (runner !== "omp" && seenFlags.has("--provider")) {
+    if (
+      runner !== "omp" &&
+      ["--provider", "--omp-auth", "--omp-agent-dir"].some((flag) => seenFlags.has(flag))
+    ) {
       return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
     }
     if (runner !== "openrouter" && seenFlags.has("--openrouter-endpoint")) {
@@ -482,12 +499,29 @@ export const parseLiveEvalCliOptions = (
       };
     }
     if (runner === "omp") {
+      const authMode = ompAuth ?? "api-key";
       if (provider === undefined) {
+        return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
+      }
+      if (authMode === "native") {
+        if (ompAgentDir === undefined || !isOmpProviderIdentifier(provider)) {
+          return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
+        }
+        return {
+          mode: "run",
+          options: {
+            ...shared,
+            runner,
+            auth: { mode: "native", provider, agentDirectory: ompAgentDir },
+          },
+        };
+      }
+      if (ompAgentDir !== undefined || !isOmpApiKeyProvider(provider)) {
         return yield* new LiveEvalCliError({ reason: "invalid-arguments" });
       }
       return {
         mode: "run",
-        options: { ...shared, runner, provider },
+        options: { ...shared, runner, auth: { mode: "api-key", provider } },
       };
     }
     return { mode: "run", options: { ...shared, runner } };
@@ -597,16 +631,41 @@ export type LiveEvalCredentials =
   | {
       readonly runner: "omp";
       readonly accessToken: Redacted.Redacted<string>;
-      readonly apiKey: Redacted.Redacted<string>;
       readonly executablePath: string;
       readonly expectedSha256: string;
+      readonly auth:
+        | { readonly mode: "api-key"; readonly apiKey: Redacted.Redacted<string> }
+        | { readonly mode: "native" };
     };
 
+export type LiveEvalCredentialRequest =
+  | Exclude<LiveEvalRunner, "omp">
+  | { readonly runner: "omp"; readonly authMode: "api-key" | "native" };
+
 export const loadLiveEvalCredentials = (
-  runner: LiveEvalRunner,
+  request: LiveEvalCredentialRequest,
 ): Effect.Effect<LiveEvalCredentials, LiveEvalCliError, Path.Path> =>
   Effect.gen(function* () {
     const accessToken = yield* loadRedactedEnv(ASK_GINA_ACCESS_TOKEN);
+    if (typeof request !== "string") {
+      const path = yield* Path.Path;
+      const apiKey =
+        request.authMode === "native" ? undefined : yield* loadRedactedEnv(OMP_EVAL_API_KEY);
+      const executablePath = yield* loadNonEmptyEnv(OMP_EVAL_EXECUTABLE);
+      const expectedSha256 = (yield* loadNonEmptyEnv(OMP_EVAL_EXECUTABLE_SHA256)).toLowerCase();
+      if (!path.isAbsolute(executablePath)) {
+        return yield* missingCredentials([OMP_EVAL_EXECUTABLE]);
+      }
+      return {
+        runner: "omp",
+        accessToken,
+        executablePath,
+        expectedSha256,
+        auth:
+          apiKey === undefined ? { mode: "native" as const } : { mode: "api-key" as const, apiKey },
+      };
+    }
+    const runner = request;
     if (runner === "responses") {
       const openAiApiKey = yield* loadRedactedEnv(OPENAI_API_KEY);
       return { runner, accessToken, openAiApiKey };
@@ -623,16 +682,6 @@ export const loadLiveEvalCredentials = (
         return yield* missingCredentials([CLAUDE_EVAL_EXECUTABLE]);
       }
       return { runner, accessToken, apiKey, executablePath };
-    }
-    if (runner === "omp") {
-      const path = yield* Path.Path;
-      const apiKey = yield* loadRedactedEnv(OMP_EVAL_API_KEY);
-      const executablePath = yield* loadNonEmptyEnv(OMP_EVAL_EXECUTABLE);
-      const expectedSha256 = (yield* loadNonEmptyEnv(OMP_EVAL_EXECUTABLE_SHA256)).toLowerCase();
-      if (!path.isAbsolute(executablePath)) {
-        return yield* missingCredentials([OMP_EVAL_EXECUTABLE]);
-      }
-      return { runner, accessToken, apiKey, executablePath, expectedSha256 };
     }
     const openAiApiKey = yield* loadRedactedEnv(OPENAI_API_KEY);
     const executablePath = yield* loadNonEmptyEnv(CODEX_EVAL_EXECUTABLE);
@@ -1242,7 +1291,9 @@ const run = (options: LiveEvalCliOptions) =>
         caseIds: plannedCaseIds,
         repetitions: options.repetitions,
       });
-      const credentials = yield* loadLiveEvalCredentials(options.runner);
+      const credentials = yield* loadLiveEvalCredentials(
+        options.runner === "omp" ? { runner: "omp", authMode: options.auth.mode } : options.runner,
+      );
       const isolatedEnvironment = yield* loadCodexEnvironment();
       yield* requireCleanSource(root, isolatedEnvironment);
       let codexRuntime: CodexEvalRuntime | undefined;
@@ -1268,6 +1319,18 @@ const run = (options: LiveEvalCliOptions) =>
       if (options.runner === "omp") {
         if (credentials.runner !== "omp") {
           return yield* new LiveEvalCliError({ reason: "omp-preflight-failed" });
+        }
+        if (options.auth.mode === "native") {
+          if (!path.isAbsolute(options.auth.agentDirectory)) {
+            return yield* new LiveEvalCliError({ reason: "omp-preflight-failed" });
+          }
+          const fs = yield* FileSystem.FileSystem;
+          const profile = yield* fs
+            .stat(options.auth.agentDirectory)
+            .pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "omp-preflight-failed" })));
+          if (profile.type !== "Directory") {
+            return yield* new LiveEvalCliError({ reason: "omp-preflight-failed" });
+          }
         }
         const prepared = yield* prepareOmpHarnessRuntime({
           root,
@@ -1421,8 +1484,25 @@ const run = (options: LiveEvalCliOptions) =>
                       availableTools,
                       timeoutMs: options.timeoutMs,
                     });
-                  case "omp":
+                  case "omp": {
                     if (credentials.runner !== "omp" || ompRuntimeDirectory === undefined) {
+                      return Effect.fail(new LiveEvalCliError({ reason: "omp-preflight-failed" }));
+                    }
+                    const auth =
+                      options.auth.mode === "native"
+                        ? {
+                            mode: "native" as const,
+                            provider: options.auth.provider,
+                            agentDirectory: options.auth.agentDirectory,
+                          }
+                        : credentials.auth.mode === "api-key"
+                          ? {
+                              mode: "api-key" as const,
+                              provider: options.auth.provider,
+                              apiKey: credentials.auth.apiKey,
+                            }
+                          : undefined;
+                    if (auth === undefined) {
                       return Effect.fail(new LiveEvalCliError({ reason: "omp-preflight-failed" }));
                     }
                     return runOmpHarnessPluginEvalTrial(input.evalCase, {
@@ -1430,10 +1510,9 @@ const run = (options: LiveEvalCliOptions) =>
                       repetition: input.repetition,
                       availableTools,
                       runtimeDirectory: ompRuntimeDirectory,
-                      provider: options.provider,
+                      auth,
                       model: options.model,
                       reasoning: options.reasoning,
-                      apiKey: credentials.apiKey,
                       mcpAuthorization: credentials.accessToken,
                       timeoutMs: options.timeoutMs,
                     }).pipe(
@@ -1442,6 +1521,7 @@ const run = (options: LiveEvalCliOptions) =>
                         () => new LiveEvalCliError({ reason: "trial-failed" }),
                       ),
                     );
+                  }
                 }
               },
             ).pipe(
