@@ -7,6 +7,7 @@ import { createACP } from "@ai-sdk/harness-acp";
 import { resolveSandboxHomeDir } from "@ai-sdk/harness/utils";
 import type { HarnessV1SandboxProvider } from "@ai-sdk/harness";
 import {
+  GINA_CONNECTED_TOOL_NAMES,
   listCatalogToolNames,
   PRODUCTION_MCP_URL,
   SKILL_NAMES,
@@ -231,6 +232,9 @@ const catalogsMatch = (left: readonly string[], right: readonly string[]): boole
   const uniqueLeft = new Set(left);
   return uniqueLeft.size === left.length && right.every((tool) => uniqueLeft.has(tool));
 };
+
+const isSupportedOmpCatalog = (names: readonly string[]): boolean =>
+  catalogsMatch(names, CANONICAL_ALLOWED_TOOLS) || catalogsMatch(names, GINA_CONNECTED_TOOL_NAMES);
 
 const isWithin = (path: Path.Path, parent: string, child: string): boolean => {
   const relative = path.relative(parent, child);
@@ -887,7 +891,7 @@ const validateOptions = (
       typeof authOption !== "object" ||
       authOption === null ||
       (authOption.mode !== "api-key" && authOption.mode !== "native") ||
-      !catalogsMatch(options.availableTools, CANONICAL_ALLOWED_TOOLS) ||
+      !isSupportedOmpCatalog(options.availableTools) ||
       runId.length === 0 ||
       model.length === 0 ||
       mcpAuthorization.trim().length === 0 ||
@@ -1139,6 +1143,7 @@ const createInputSchemaCompiler = (): ((schema: unknown) => ValidateFunction | u
   const ajv = addFormats(
     new Ajv({
       allErrors: false,
+      allowUnionTypes: true,
       coerceTypes: false,
       useDefaults: false,
       removeAdditional: false,
@@ -1460,7 +1465,7 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                   const definitions = yield* listAllMcpTools(client, evalCase.id);
                   yield* ensureBeforeDeadline(evalCase.id, validated.timeoutMs, deadlineMillis);
                   const discoveredTools = definitions.tools.map(({ name }) => name);
-                  if (!catalogsMatch(discoveredTools, validated.availableTools)) {
+                  if (!isSupportedOmpCatalog(discoveredTools)) {
                     return yield* new PluginEvalOmpHarnessMcpError({
                       caseId: evalCase.id,
                       reason: "catalog-mismatch",
@@ -1483,7 +1488,7 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                   const hostTools = yield* wrapHostTools(
                     tools,
                     definitions,
-                    discoveredTools,
+                    validated.availableTools,
                     captures,
                     evalCase.id,
                   );

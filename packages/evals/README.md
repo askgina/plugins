@@ -311,6 +311,11 @@ metadata only and rejects missing directories before MCP or model dispatch.
 Canonical skills are staged under the disposable `HOME/.agents/skills` in both
 modes, so selecting another agent directory does not redirect skill discovery.
 
+OMP accepts exactly the 31-tool research catalog or the supported 32-tool
+connected catalog. The dashboard renderer is not exposed to OMP or included in
+research eval evidence. Host-side validation supports standard JSON Schema union
+types while remaining strict and does not coerce arguments.
+
 The Gina bearer stays on the host. Canonical MCP reads execute in the evaluator
 process and are exposed as wrapped HarnessAgent host tools. The child does not
 receive that token. Native OMP builtins still run with ordinary host access;
