@@ -1320,6 +1320,18 @@ const run = (options: LiveEvalCliOptions) =>
         if (credentials.runner !== "omp") {
           return yield* new LiveEvalCliError({ reason: "omp-preflight-failed" });
         }
+        if (options.auth.mode === "native") {
+          if (!path.isAbsolute(options.auth.agentDirectory)) {
+            return yield* new LiveEvalCliError({ reason: "omp-preflight-failed" });
+          }
+          const fs = yield* FileSystem.FileSystem;
+          const profile = yield* fs
+            .stat(options.auth.agentDirectory)
+            .pipe(Effect.mapError(() => new LiveEvalCliError({ reason: "omp-preflight-failed" })));
+          if (profile.type !== "Directory") {
+            return yield* new LiveEvalCliError({ reason: "omp-preflight-failed" });
+          }
+        }
         const prepared = yield* prepareOmpHarnessRuntime({
           root,
           executablePath: credentials.executablePath,

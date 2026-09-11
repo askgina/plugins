@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import * as BunPath from "@effect/platform-bun/BunPath";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { assert, describe, it } from "@effect/vitest";
@@ -841,6 +843,133 @@ describe("live eval CLI subprocess", () => {
           assert.notInclude(stdout.text, "sk-");
           assert.notInclude(stderr.text, "OPENAI_API_KEY=");
           assert.notInclude(stderr.text, "OMP_EVAL_API_KEY=");
+        }),
+      ),
+    );
+
+    it.effect("rejects a missing native profile before authenticated MCP dispatch", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const pathValue = yield* Config.string("PATH");
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "live-cli-native-profile-" });
+          const cwd = path.join(root, "source");
+          const profile = path.join(root, "profile");
+          const preload = path.join(root, "block-fetch.mjs");
+          const callsPath = path.join(root, "fetch-calls");
+          const liveCli = path.join(process.cwd(), "packages/evals/src/bin/live.ts");
+          const executablePath = yield* fs.realPath("/bin/echo");
+          const executableBytes = yield* fs.readFile(executablePath);
+          const environment = { PATH: pathValue, HOME: root, GIT_CONFIG_NOSYSTEM: "1" };
+          yield* fs.makeDirectory(cwd);
+          yield* fs.makeDirectory(profile);
+          yield* fs.makeDirectory(path.join(cwd, "plugins/ask-gina"), { recursive: true });
+          yield* fs.copy(
+            path.join(process.cwd(), "plugins/ask-gina/skills"),
+            path.join(cwd, "plugins/ask-gina/skills"),
+          );
+          yield* fs.copyFile(
+            path.join(process.cwd(), "packages/evals/src/fixtures/ask-gina-routing-smoke.yaml"),
+            path.join(cwd, "suite.yaml"),
+          );
+          yield* fs.writeFileString(path.join(cwd, ".gitignore"), ".plugin-eval-runs/\n");
+          yield* fs.writeFileString(
+            preload,
+            `import { appendFileSync } from "node:fs";
+const callsPath = new URL("./fetch-calls", import.meta.url);
+globalThis.fetch = async () => {
+  appendFileSync(callsPath, "x");
+  throw new Error("native profile fixture blocked fetch");
+};
+`,
+          );
+          // The real entrypoint requires a clean source tree before preparing the OMP runtime.
+          for (const args of [
+            ["init", "--quiet"],
+            ["add", "."],
+            [
+              "-c",
+              "user.name=Native profile fixture",
+              "-c",
+              "user.email=native-profile@example.invalid",
+              "-c",
+              "core.hooksPath=/dev/null",
+              "commit",
+              "--quiet",
+              "--no-gpg-sign",
+              "-m",
+              "fixture",
+            ],
+          ]) {
+            const git = yield* ChildProcess.make("git", args, {
+              cwd,
+              env: environment,
+              extendEnv: false,
+              stdin: "ignore",
+              stdout: "ignore",
+              stderr: "pipe",
+            });
+            const [stderr, exitCode] = yield* Effect.all(
+              [collectBoundedUtf8Output(git.stderr, 65_536), git.exitCode],
+              { concurrency: "unbounded" },
+            );
+            assert.strictEqual(exitCode, 0, stderr.text);
+          }
+          // Run the control first so an unrelated preflight failure cannot fake zero requests.
+          for (const [runId, agentDirectory, reachesMcp] of [
+            ["run-control", profile, true],
+            ["run-missing", path.join(root, "missing-profile"), false],
+          ] as const) {
+            yield* fs.writeFileString(callsPath, "");
+            const child = yield* ChildProcess.make(
+              "bun",
+              [
+                "--preload",
+                preload,
+                liveCli,
+                ...requiredFlags("omp", [
+                  "--omp-auth",
+                  "native",
+                  "--provider",
+                  "openai-codex",
+                  "--omp-agent-dir",
+                  agentDirectory,
+                ]).map((value) => (value === "run-1" ? runId : value)),
+              ],
+              {
+                cwd,
+                env: {
+                  ...environment,
+                  ASK_GINA_ACCESS_TOKEN: "synthetic-native-profile-token",
+                  OMP_EVAL_EXECUTABLE: executablePath,
+                  OMP_EVAL_EXECUTABLE_SHA256: createHash("sha256")
+                    .update(executableBytes)
+                    .digest("hex"),
+                },
+                extendEnv: false,
+                stdin: "ignore",
+                stdout: "pipe",
+                stderr: "pipe",
+              },
+            );
+            const [stdout, stderr, exitCode] = yield* Effect.all(
+              [
+                collectBoundedUtf8Output(child.stdout, 65_536),
+                collectBoundedUtf8Output(child.stderr, 65_536),
+                child.exitCode,
+              ],
+              { concurrency: "unbounded" },
+            );
+            const output = `${stdout.text}\n${stderr.text}`;
+            const fetchCalls = (yield* fs.readFileString(callsPath)).length;
+            assert.notStrictEqual(exitCode, 0, output);
+            if (reachesMcp) {
+              assert.isAbove(fetchCalls, 0, output);
+            } else {
+              assert.strictEqual(fetchCalls, 0, output);
+            }
+          }
         }),
       ),
     );
