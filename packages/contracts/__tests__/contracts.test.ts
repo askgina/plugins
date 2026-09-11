@@ -44,8 +44,6 @@ const EXPECTED_TOOL_NAMES = [
   "perps.fetchHyperliquidCandles",
   "perps.fetchHyperliquidOrderBook",
   "perps.previewHyperliquidOrderCost",
-  "perps.fetchHyperliquidMarketRadar",
-  "perps.getHyperliquidAccountHealth",
   "perps.createHyperliquidTable",
   "perps.executeSqlQuery",
   "predictions.searchPredictionMarkets",
@@ -89,13 +87,13 @@ const familyFromName = (name: (typeof EXPECTED_TOOL_NAMES)[number]) =>
   name.startsWith("gina.") ? "portfolio" : name.split(".", 1)[0];
 
 describe("@askgina/contracts", () => {
-  it.effect("publishes the exact 33-name catalog projection", () =>
+  it.effect("publishes the exact 31-name catalog projection", () =>
     Effect.sync(() => {
-      assert.strictEqual(GINA_READ_TOOL_CATALOG.length, 33);
+      assert.strictEqual(GINA_READ_TOOL_CATALOG.length, 31);
       assert.deepStrictEqual(listCatalogToolNames(), EXPECTED_TOOL_NAMES);
       assert.deepStrictEqual(
         GINA_READ_TOOL_CATALOG.map((tool) => Object.keys(tool)),
-        Array.from({ length: 33 }, () => [
+        Array.from({ length: 31 }, () => [
           "name",
           "family",
           "readOnlyHint",
@@ -155,7 +153,7 @@ describe("@askgina/contracts", () => {
       assert.isFalse(isGinaRenderToolName("predictions.searchPredictionMarkets"));
       assert.isFalse(isGinaRenderToolName(undefined));
 
-      assert.strictEqual(GINA_CONNECTED_TOOL_NAMES.length, 34);
+      assert.strictEqual(GINA_CONNECTED_TOOL_NAMES.length, 32);
       assert.deepStrictEqual(listConnectedToolNames(), GINA_CONNECTED_TOOL_NAMES);
       assert.isTrue(
         GINA_CONNECTED_TOOL_NAMES.every((name: string) => isGinaConnectedToolName(name)),

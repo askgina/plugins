@@ -35,8 +35,6 @@ Existing execute-scoped Gina credentials cannot be used on Gina Read. Reconnect 
 
 These are the canonical catalog names. Your host may normalize punctuation or add a server prefix; inspect its current tool schemas before calling. No tool in this catalog grants execution.
 
-The market-radar read is a retained-sample activity and exposure screen, not a liquidity, depth, or fill claim. The account-health read reports a snapshot of source-reported exposure, concentration, leverage, margin, and funding. Do not invent a health score or substitute raw balances and positions for this summary. Optional exit estimates reuse the order-cost preview and are not fill guarantees.
-
 | Tool                                     | Family      |
 | ---------------------------------------- | ----------- |
 | `gina.getCrosschainPortfolio`            | portfolio   |
@@ -59,8 +57,6 @@ The market-radar read is a retained-sample activity and exposure screen, not a l
 | `perps.fetchHyperliquidCandles`          | perps       |
 | `perps.fetchHyperliquidOrderBook`        | perps       |
 | `perps.previewHyperliquidOrderCost`      | perps       |
-| `perps.fetchHyperliquidMarketRadar`      | perps       |
-| `perps.getHyperliquidAccountHealth`      | perps       |
 | `perps.createHyperliquidTable`           | perps       |
 | `perps.executeSqlQuery`                  | perps       |
 | `predictions.searchPredictionMarkets`    | predictions |

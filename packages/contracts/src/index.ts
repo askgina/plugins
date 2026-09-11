@@ -185,22 +185,6 @@ export const GINA_READ_TOOL_CATALOG = [
     mcpAppBound: false,
   },
   {
-    name: "perps.fetchHyperliquidMarketRadar",
-    family: "perps",
-    readOnlyHint: true,
-    destructiveHint: false,
-    openWorldHint: true,
-    mcpAppBound: false,
-  },
-  {
-    name: "perps.getHyperliquidAccountHealth",
-    family: "perps",
-    readOnlyHint: true,
-    destructiveHint: false,
-    openWorldHint: true,
-    mcpAppBound: false,
-  },
-  {
     name: "perps.createHyperliquidTable",
     family: "perps",
     readOnlyHint: true,
@@ -349,7 +333,7 @@ export const GinaReadToolCatalogEntrySchema = Schema.Struct({
 });
 
 export const GinaReadToolCatalogSchema = Schema.Array(GinaReadToolCatalogEntrySchema).check(
-  Schema.isLengthBetween(33, 33),
+  Schema.isLengthBetween(31, 31),
 );
 
 export const GinaReadToolCatalogJsonSchema = Schema.fromJsonString(GinaReadToolCatalogSchema);
@@ -434,4 +418,4 @@ export const ASK_GINA_SKILL_DEFINITIONS = [
 
 export const SOURCE_COMMIT = "ea8c56a0b065ea44cde89d05567999f976c61071";
 export const RELEASE_VERSION = "0.1.0";
-export const catalogSha = "55bea20c54012549c7d620c3000856c7298a7037228b7d9de4c29d8753e71648";
+export const catalogSha = "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e";

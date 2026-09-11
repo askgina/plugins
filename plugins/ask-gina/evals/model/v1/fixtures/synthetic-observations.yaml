@@ -4,8 +4,8 @@ manifest:
   run_id: synthetic-smoke-2026-08-17
   suite_id: ask-gina-model-smoke-v1
   suite_version: 1
-  catalog_version: 33-read-tools@2026-09-11
-  candidate: current-33-tools-synthetic
+  catalog_version: 31-read-tools@2026-09-10
+  candidate: current-31-tools-synthetic
   target: fixture
   model: fixture-model
   displayed_model: Fixture model

@@ -131,7 +131,7 @@ describe("Responses API trial adapter", () => {
       assert.strictEqual(request.url, "https://api.openai.com/v1/responses");
       assert.strictEqual(request.headers.authorization, "Bearer synthetic-fixture");
       assert.strictEqual(request.headers.accept, "application/json");
-      assert.strictEqual(allowedTools.length, 33);
+      assert.strictEqual(allowedTools.length, 31);
 
       const body = readRequestBody(request);
       assert.strictEqual(body.model, "chat-latest");

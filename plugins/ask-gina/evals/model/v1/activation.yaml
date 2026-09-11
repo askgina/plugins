@@ -2,7 +2,7 @@ version: 1
 suite:
   id: ask-gina-skill-activation-v1
   plugin: ask-gina
-  catalog_version: 33-read-tools@2026-09-11
+  catalog_version: 31-read-tools@2026-09-10
   description: >-
     Fresh-chat product cases for the four goal-led Ask Gina skills, including
     indirect live-data competition, cross-skill boundaries, ambiguity,
