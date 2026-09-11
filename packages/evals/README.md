@@ -326,6 +326,13 @@ the local sandbox is placement, not confinement. Stock OMP defaults
 functions; the session `config.yml` sets `tools.xdev: false` and the stock ACP
 adapter uses HTTP for its host-tool MCP transport. Only the staged `read`
 builtin is declared to the harness, mapped to `skill://` skill reads.
+Native read identification uses the required `path` input, not only `skill://`
+titles, so ordinary resource- or intent-titled reads contribute activation/failure
+evidence rather than research-tool routes.
+MCP native mirrors are correlated one-to-one with captured host executions using
+trusted completion identity, structurally equal arguments, and matching outcomes.
+Canonical host executions remain evidence; unknown or uncorroborated native calls
+remain routing evidence.
 Native intent tracing is disabled. Native `retry.enabled` and
 `retry.modelFallback` are false,
 disabling agent-level TurnRecovery retries and configured model fallback. OMP

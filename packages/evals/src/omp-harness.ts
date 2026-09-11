@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 import { createMCPClient, type ListToolsResult, type MCPClient } from "@ai-sdk/mcp";
 import Ajv, { type ValidateFunction } from "ajv";
 import addFormats from "ajv-formats";
@@ -172,6 +173,7 @@ interface ObservedNativeCall {
   readonly name: string;
   readonly arguments: PluginEvalToolCall["arguments"];
   outcome?: "result" | "error";
+  result?: unknown;
 }
 
 interface ObservedOmpToolCalls {
@@ -252,9 +254,12 @@ const OMP_BUILTIN_TOOLS: ToolSet = Object.fromEntries([
     "read",
     {
       nativeName: "read",
-      title: "skill://",
       toolUseKind: "readonly",
-      inputSchema: jsonSchema<Record<string, unknown>>({ type: "object" }),
+      inputSchema: jsonSchema<Record<string, unknown>>({
+        type: "object",
+        properties: { path: { type: "string" } },
+        required: ["path"],
+      }),
     },
   ],
 ]);
@@ -1254,6 +1259,32 @@ const wrapHostTools = (
     return hostTools;
   });
 
+const nativeMcpToolName = (output: unknown): string | undefined => {
+  if (typeof output !== "object" || output === null || !("details" in output)) return undefined;
+  const { details } = output;
+  if (
+    typeof details !== "object" ||
+    details === null ||
+    !("serverName" in details) ||
+    details.serverName !== "ai-sdk-harness-tools" ||
+    !("mcpToolName" in details) ||
+    typeof details.mcpToolName !== "string" ||
+    CANONICAL_TOOL_NAMES[details.mcpToolName] !== true ||
+    !("mcpMeta" in details)
+  )
+    return undefined;
+  const { mcpMeta } = details;
+  if (
+    typeof mcpMeta !== "object" ||
+    mcpMeta === null ||
+    !("ai-sdk-harness-acp-correlation" in mcpMeta) ||
+    typeof mcpMeta["ai-sdk-harness-acp-correlation"] !== "string" ||
+    !SHA256_HEX.test(mcpMeta["ai-sdk-harness-acp-correlation"])
+  )
+    return undefined;
+  return details.mcpToolName;
+};
+
 const observedToolCalls = (
   steps: readonly StepResult<ToolSet>[],
   captures: readonly CapturedHostToolCall[],
@@ -1293,6 +1324,7 @@ const observedToolCalls = (
         part.type === "tool-error" || ("isError" in part && part.isError === true)
           ? "error"
           : "result";
+      nativeCall.result = part.type === "tool-result" ? part.output : part.error;
     }
   }
   for (const nativeCall of nativeById.values()) {
@@ -1302,6 +1334,7 @@ const observedToolCalls = (
   const toolCalls: PluginEvalToolCall[] = [];
   const activatedSkills = new Set<SkillName>();
   const seenHostCallIds = new Set<string>();
+  const matchedMirrorHostIds = new Set<string>();
   let failedNativeRead = false;
   for (const step of steps) {
     for (const part of step.content) {
@@ -1324,6 +1357,20 @@ const observedToolCalls = (
             }
           }
           continue;
+        }
+        const canonicalName = nativeMcpToolName(nativeCall.result);
+        if (canonicalName !== undefined) {
+          const matchedCapture = captures.find(
+            (capture) =>
+              capture.name === canonicalName &&
+              !matchedMirrorHostIds.has(capture.toolCallId) &&
+              (capture.error === undefined) === (nativeCall.outcome === "result") &&
+              isDeepStrictEqual(capture.arguments, nativeCall.arguments),
+          );
+          if (matchedCapture !== undefined) {
+            matchedMirrorHostIds.add(matchedCapture.toolCallId);
+            continue;
+          }
         }
         toolCalls.push({
           sequence: toolCalls.length,

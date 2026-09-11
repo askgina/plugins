@@ -22,7 +22,13 @@ import { gradePluginEvalObservation } from "../src/grading";
 import { loadPluginEvalSuite } from "../src/load-suite";
 import { runOmpHarnessPluginEvalTrial } from "../src/omp-harness";
 
-const fixture = vi.hoisted(() => ({ failedRead: false, extraNativeCall: false }));
+const fixture = vi.hoisted(() => ({
+  failedRead: false,
+  extraNativeCall: false,
+  priceCallCount: 1,
+  extraPriceMirror: false,
+  mismatchedMirrorArguments: false,
+}));
 const PRICE_TOOL = "spot.getSimplePrice";
 const PRICE_ARGUMENTS = { ids: "ethereum", vs_currencies: "usd" };
 const PRICE_RESULT = {
@@ -182,51 +188,89 @@ vi.mock("@ai-sdk/harness/agent", () => ({
       const readOutcome: StepResult<ToolSet>["content"][number] = fixture.failedRead
         ? { ...readCall, type: "tool-error", error: new Error("Fixture skill read failed") }
         : { ...readCall, type: "tool-result", output: SKILL_CONTENT };
-      const priceCall = {
-        type: "tool-call",
-        toolCallId: "host-price-call",
-        toolName: PRICE_TOOL,
-        input: PRICE_ARGUMENTS,
-        providerExecuted: false,
-      } satisfies StepResult<ToolSet>["toolCalls"][number];
       const price = this.tools[PRICE_TOOL];
       if (price?.execute === undefined) throw new Error("Missing executable price host tool");
-      return Promise.resolve(
-        price.execute(PRICE_ARGUMENTS, {
-          toolCallId: priceCall.toolCallId,
-          messages: [],
-          context: {},
+      const executePrice = price.execute;
+      return Effect.runPromise(
+        Effect.gen(function* () {
+          const steps = [sdkStep(0, [readCall, readOutcome])];
+          const mirrorCount = fixture.priceCallCount + (fixture.extraPriceMirror ? 1 : 0);
+          for (let index = 0; index < mirrorCount; index += 1) {
+            if (index < fixture.priceCallCount) {
+              const priceCall = {
+                type: "tool-call",
+                toolCallId: `host-price-call-${index}`,
+                toolName: PRICE_TOOL,
+                input: PRICE_ARGUMENTS,
+                providerExecuted: false,
+              } satisfies StepResult<ToolSet>["toolCalls"][number];
+              const output = yield* Effect.promise(() =>
+                Promise.resolve(
+                  executePrice(PRICE_ARGUMENTS, {
+                    toolCallId: priceCall.toolCallId,
+                    messages: [],
+                    context: {},
+                  }),
+                ),
+              );
+              steps.push(
+                sdkStep(steps.length, [priceCall, { ...priceCall, type: "tool-result", output }]),
+              );
+            }
+            const nativeCallId = `native-price-call-${index}`;
+            const mirrorCall = {
+              type: "tool-call",
+              toolCallId: nativeCallId,
+              toolName: `acp_tool_call_${nativeCallId}`,
+              input: fixture.mismatchedMirrorArguments
+                ? { ...PRICE_ARGUMENTS, vs_currencies: "eur" }
+                : PRICE_ARGUMENTS,
+              providerExecuted: true,
+            } satisfies StepResult<ToolSet>["toolCalls"][number];
+            steps.push(
+              sdkStep(steps.length, [
+                mirrorCall,
+                {
+                  ...mirrorCall,
+                  type: "tool-result",
+                  output: {
+                    content: [{ type: "text", text: "public fixture" }],
+                    details: {
+                      serverName: "ai-sdk-harness-tools",
+                      mcpToolName: PRICE_TOOL,
+                      mcpMeta: { "ai-sdk-harness-acp-correlation": "a".repeat(64) },
+                    },
+                  },
+                },
+              ]),
+            );
+          }
+          if (fixture.extraNativeCall) {
+            const nativeCall = {
+              ...readCall,
+              toolCallId: "native-todo-call",
+              toolName: "acp_tool_call_fixture",
+              input: { todos: [{ content: "Look up Ethereum price", status: "completed" }] },
+            } satisfies StepResult<ToolSet>["toolCalls"][number];
+            steps.push(
+              sdkStep(steps.length, [
+                nativeCall,
+                { ...nativeCall, type: "tool-result", output: "Todo updated." },
+              ]),
+            );
+          }
+          const finalStep = sdkStep(steps.length, [
+            { type: "text", text: "Ethereum is $3,200 USD." },
+          ]);
+          steps.push(finalStep);
+          return {
+            text: finalStep.text,
+            finishReason: finalStep.finishReason,
+            usage: finalStep.usage,
+            steps,
+          };
         }),
-      ).then((output) => {
-        const steps = [
-          sdkStep(0, [readCall, readOutcome]),
-          sdkStep(1, [priceCall, { ...priceCall, type: "tool-result", output }]),
-        ];
-        if (fixture.extraNativeCall) {
-          const nativeCall = {
-            ...readCall,
-            toolCallId: "native-todo-call",
-            toolName: "acp_tool_call_fixture",
-            input: { todos: [{ content: "Look up Ethereum price", status: "completed" }] },
-          } satisfies StepResult<ToolSet>["toolCalls"][number];
-          steps.push(
-            sdkStep(steps.length, [
-              nativeCall,
-              { ...nativeCall, type: "tool-result", output: "Todo updated." },
-            ]),
-          );
-        }
-        const finalStep = sdkStep(steps.length, [
-          { type: "text", text: "Ethereum is $3,200 USD." },
-        ]);
-        steps.push(finalStep);
-        return {
-          text: finalStep.text,
-          finishReason: finalStep.finishReason,
-          usage: finalStep.usage,
-          steps,
-        };
-      });
+      );
     }
   },
 }));
@@ -271,19 +315,28 @@ describe("OMP harness native read evidence", () => {
   beforeEach(() => {
     fixture.failedRead = false;
     fixture.extraNativeCall = false;
+    fixture.priceCallCount = 1;
+    fixture.extraPriceMirror = false;
+    fixture.mismatchedMirrorArguments = false;
   });
 
   it.layer(TestPlatformLayer)((it) => {
-    it.effect("grades a native skill read followed by Gina price as one canonical tool call", () =>
-      Effect.gen(function* () {
-        const { observation, score } = yield* runPriceTrial;
+    it.effect(
+      "grades a native skill read and Gina price with its ACP mirror as one canonical call",
+      () =>
+        Effect.gen(function* () {
+          const { observation, score } = yield* runPriceTrial;
 
-        assert.strictEqual(score.routing.score, 1);
-        assert.strictEqual(score.arguments.score, 1);
-        assert.isTrue(score.overall_pass);
-        assert.strictEqual(observation.status, "completed");
-        assert.deepStrictEqual(observation.activated_skills, ["research-spot-tokens"]);
-      }),
+          assert.strictEqual(score.routing.score, 1);
+          assert.strictEqual(score.arguments.score, 1);
+          assert.isTrue(score.overall_pass);
+          assert.strictEqual(observation.status, "completed");
+          assert.deepStrictEqual(observation.activated_skills, ["research-spot-tokens"]);
+          assert.deepStrictEqual(
+            observation.tool_calls.map(({ name }) => name),
+            [PRICE_TOOL],
+          );
+        }),
     );
 
     it.effect(
@@ -312,6 +365,50 @@ describe("OMP harness native read evidence", () => {
         assert.deepStrictEqual(
           observation.tool_calls.map(({ name }) => name),
           [PRICE_TOOL, "acp_tool_call_fixture"],
+        );
+        assert.strictEqual(score.routing.score, 0);
+        assert.isFalse(score.overall_pass);
+      }),
+    );
+
+    it.effect(
+      "retains repeated real Gina executions even when both have matching ACP mirrors",
+      () =>
+        Effect.gen(function* () {
+          fixture.priceCallCount = 2;
+          const { observation, score } = yield* runPriceTrial;
+
+          assert.deepStrictEqual(
+            observation.tool_calls.map(({ name }) => name),
+            [PRICE_TOOL, PRICE_TOOL],
+          );
+          assert.strictEqual(score.routing.score, 0);
+          assert.isFalse(score.overall_pass);
+        }),
+    );
+
+    it.effect("does not reuse one captured host execution to hide a second ACP mirror", () =>
+      Effect.gen(function* () {
+        fixture.extraPriceMirror = true;
+        const { observation, score } = yield* runPriceTrial;
+
+        assert.deepStrictEqual(
+          observation.tool_calls.map(({ name }) => name),
+          [PRICE_TOOL, "acp_tool_call_native-price-call-1"],
+        );
+        assert.strictEqual(score.routing.score, 0);
+        assert.isFalse(score.overall_pass);
+      }),
+    );
+
+    it.effect("keeps an ACP mirror with mismatched arguments in exact routing evidence", () =>
+      Effect.gen(function* () {
+        fixture.mismatchedMirrorArguments = true;
+        const { observation, score } = yield* runPriceTrial;
+
+        assert.deepStrictEqual(
+          observation.tool_calls.map(({ name }) => name),
+          [PRICE_TOOL, "acp_tool_call_native-price-call-0"],
         );
         assert.strictEqual(score.routing.score, 0);
         assert.isFalse(score.overall_pass);
