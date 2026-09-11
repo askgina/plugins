@@ -172,10 +172,11 @@ describe("live eval CLI parser", () => {
       const omp = yield* parseLiveEvalCliOptions(requiredFlags("omp", ["--provider", "anthropic"]));
       assert.strictEqual(omp.mode, "run");
       if (omp.mode === "run" && omp.options.runner === "omp") {
-        assert.strictEqual(omp.options.provider, "anthropic");
+        assert.deepStrictEqual(omp.options.auth, { mode: "api-key", provider: "anthropic" });
         assert.strictEqual(omp.options.model, "test-model");
         assert.notProperty(omp.options, "maxSteps");
         assert.notProperty(omp.options, "maxTurns");
+        assert.notProperty(omp.options, "provider");
       }
 
       const missingProvider = yield* Effect.result(parseLiveEvalCliOptions(requiredFlags("omp")));
@@ -184,6 +185,105 @@ describe("live eval CLI parser", () => {
         parseLiveEvalCliOptions(requiredFlags("omp", ["--provider", "google"])),
       );
       assert.strictEqual(unknownProvider._tag, "Failure");
+    }),
+  );
+
+  it.effect("accepts native OMP auth and rejects mode, path, and runner conflicts", () =>
+    Effect.gen(function* () {
+      const native = yield* parseLiveEvalCliOptions(
+        requiredFlags("omp", [
+          "--omp-auth",
+          "native",
+          "--provider",
+          "openai-codex",
+          "--omp-agent-dir",
+          "/tmp/omp-agent",
+        ]),
+      );
+      assert.strictEqual(native.mode, "run");
+      if (native.mode === "run" && native.options.runner === "omp") {
+        assert.deepStrictEqual(native.options.auth, {
+          mode: "native",
+          provider: "openai-codex",
+          agentDirectory: "/tmp/omp-agent",
+        });
+        assert.notProperty(native.options, "provider");
+      }
+
+      const nativeGoogle = yield* parseLiveEvalCliOptions(
+        requiredFlags("omp", [
+          "--omp-auth",
+          "native",
+          "--provider",
+          "google",
+          "--omp-agent-dir",
+          "/tmp/omp-agent",
+        ]),
+      );
+      assert.strictEqual(nativeGoogle.mode, "run");
+      if (nativeGoogle.mode === "run" && nativeGoogle.options.runner === "omp") {
+        assert.strictEqual(nativeGoogle.options.auth.mode, "native");
+        assert.strictEqual(nativeGoogle.options.auth.provider, "google");
+      }
+
+      const apiKeyGoogle = yield* Effect.result(
+        parseLiveEvalCliOptions(requiredFlags("omp", ["--provider", "google"])),
+      );
+      assert.strictEqual(apiKeyGoogle._tag, "Failure");
+
+      const missingAgentDir = yield* Effect.result(
+        parseLiveEvalCliOptions(
+          requiredFlags("omp", ["--omp-auth", "native", "--provider", "openai-codex"]),
+        ),
+      );
+      assert.strictEqual(missingAgentDir._tag, "Failure");
+
+      const agentDirOnApiKey = yield* Effect.result(
+        parseLiveEvalCliOptions(
+          requiredFlags("omp", ["--provider", "anthropic", "--omp-agent-dir", "/tmp/omp-agent"]),
+        ),
+      );
+      assert.strictEqual(agentDirOnApiKey._tag, "Failure");
+
+      const authOnResponses = yield* Effect.result(
+        parseLiveEvalCliOptions(requiredFlags("responses", ["--omp-auth", "native"])),
+      );
+      assert.strictEqual(authOnResponses._tag, "Failure");
+
+      const agentDirOnCodex = yield* Effect.result(
+        parseLiveEvalCliOptions(requiredFlags("codex", ["--omp-agent-dir", "/tmp/omp-agent"])),
+      );
+      assert.strictEqual(agentDirOnCodex._tag, "Failure");
+
+      const nativeEndpoint = yield* Effect.result(
+        parseLiveEvalCliOptions(
+          requiredFlags("omp", [
+            "--omp-auth",
+            "native",
+            "--provider",
+            "openai-codex",
+            "--omp-agent-dir",
+            "/tmp/omp-agent",
+            "--server-url",
+            PRODUCTION_MCP_URL,
+          ]),
+        ),
+      );
+      assert.strictEqual(nativeEndpoint._tag, "Failure");
+
+      const invalidNativeId = yield* Effect.result(
+        parseLiveEvalCliOptions(
+          requiredFlags("omp", [
+            "--omp-auth",
+            "native",
+            "--provider",
+            "bad/id",
+            "--omp-agent-dir",
+            "/tmp/omp-agent",
+          ]),
+        ),
+      );
+      assert.strictEqual(invalidNativeId._tag, "Failure");
     }),
   );
 
@@ -586,7 +686,10 @@ describe("live eval CLI credentials", () => {
 
     it.effect("loads OMP pins without OpenAI keys and hides executable paths", () =>
       Effect.gen(function* () {
-        const missingKey = yield* loadLiveEvalCredentials("omp").pipe(
+        const missingKey = yield* loadLiveEvalCredentials({
+          runner: "omp",
+          authMode: "api-key",
+        }).pipe(
           withEnv({
             ASK_GINA_ACCESS_TOKEN: "synthetic-gina-token",
             OPENAI_API_KEY: "must-not-be-required",
@@ -599,7 +702,10 @@ describe("live eval CLI credentials", () => {
           assert.notInclude(formatLiveEvalCliFailure(missingKey.failure), "must-not-be-required");
         }
 
-        const relative = yield* loadLiveEvalCredentials("omp").pipe(
+        const relative = yield* loadLiveEvalCredentials({
+          runner: "omp",
+          authMode: "api-key",
+        }).pipe(
           withEnv({
             ASK_GINA_ACCESS_TOKEN: "synthetic-gina-token",
             OMP_EVAL_API_KEY: "synthetic-omp-key",
@@ -614,7 +720,7 @@ describe("live eval CLI credentials", () => {
           assert.notInclude(formatLiveEvalCliFailure(relative.failure), "relative/omp");
         }
 
-        const loaded = yield* loadLiveEvalCredentials("omp").pipe(
+        const loaded = yield* loadLiveEvalCredentials({ runner: "omp", authMode: "api-key" }).pipe(
           withEnv({
             ASK_GINA_ACCESS_TOKEN: "synthetic-gina-token",
             OMP_EVAL_API_KEY: "synthetic-omp-key",
@@ -627,6 +733,8 @@ describe("live eval CLI credentials", () => {
         if (loaded.runner === "omp") {
           assert.strictEqual(loaded.executablePath, "/usr/bin/omp");
           assert.strictEqual(loaded.expectedSha256, "abcdef");
+          assert.strictEqual(loaded.auth.mode, "api-key");
+          assert.notProperty(loaded, "apiKey");
         }
 
         const responses = yield* loadLiveEvalCredentials("responses").pipe(
@@ -637,6 +745,61 @@ describe("live eval CLI credentials", () => {
           }),
         );
         assert.strictEqual(responses.runner, "responses");
+      }),
+    );
+
+    it.effect("loads native OMP credentials without an API key and still requires Gina", () =>
+      Effect.gen(function* () {
+        const missingGina = yield* loadLiveEvalCredentials({
+          runner: "omp",
+          authMode: "native",
+        }).pipe(
+          withEnv({
+            OMP_EVAL_EXECUTABLE: "/usr/bin/omp",
+            OMP_EVAL_EXECUTABLE_SHA256: "abcdef",
+          }),
+          Effect.result,
+        );
+        assert.strictEqual(missingGina._tag, "Failure");
+        if (missingGina._tag === "Failure") {
+          assert.strictEqual(missingGina.failure.reason, "invalid-credentials");
+          assert.deepStrictEqual(missingGina.failure.missing, ["ASK_GINA_ACCESS_TOKEN"]);
+        }
+
+        const loaded = yield* loadLiveEvalCredentials({
+          runner: "omp",
+          authMode: "native",
+        }).pipe(
+          withEnv({
+            ASK_GINA_ACCESS_TOKEN: "synthetic-gina-token",
+            OMP_EVAL_EXECUTABLE: "/usr/bin/omp",
+            OMP_EVAL_EXECUTABLE_SHA256: "AbCDEF",
+            OPENAI_API_KEY: "must-not-be-required",
+          }),
+        );
+        assert.strictEqual(loaded.runner, "omp");
+        if (loaded.runner === "omp") {
+          assert.strictEqual(loaded.executablePath, "/usr/bin/omp");
+          assert.strictEqual(loaded.expectedSha256, "abcdef");
+          assert.deepStrictEqual(loaded.auth, { mode: "native" });
+          assert.notProperty(loaded, "apiKey");
+        }
+
+        const ambientKey = yield* loadLiveEvalCredentials({
+          runner: "omp",
+          authMode: "native",
+        }).pipe(
+          withEnv({
+            ASK_GINA_ACCESS_TOKEN: "synthetic-gina-token",
+            OMP_EVAL_API_KEY: "must-not-be-required",
+            OMP_EVAL_EXECUTABLE: "/usr/bin/omp",
+            OMP_EVAL_EXECUTABLE_SHA256: "abcdef",
+          }),
+        );
+        assert.strictEqual(ambientKey.runner, "omp");
+        if (ambientKey.runner === "omp") {
+          assert.deepStrictEqual(ambientKey.auth, { mode: "native" });
+        }
       }),
     );
   });
