@@ -12,7 +12,9 @@ Start with `host-tools --brief` and `host-tools schema <toolName>` before using 
 | Feature               | What It Does                                                | Example Prompts                                             | Direct Command                                                                                                    |
 | --------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | **Account State**     | View account, margin, positions, open orders, and portfolio | `"show my perps positions"` `"what open orders do I have?"` | `host-tools getHyperliquidPositions`                                                                              |
+| **Account Health**    | Snapshot authenticated account exposure and margin          | `"check my perps account health"`                           | `host-tools perps.accountHealth includeExitEstimates=true`                                                        |
 | **Markets**           | List canonical Hyperliquid markets and asset metadata       | `"show Hyperliquid markets"` `"what is BTC funding?"`       | `host-tools getHyperliquidMarkets`                                                                                |
+| **Market Radar**      | Rank markets by activity and compare retained samples       | `"radar for active perp markets"`                           | `host-tools perps.marketRadar limit=10`                                                                           |
 | **Prices**            | Fetch one or many live perps prices                         | `"BTC perps price"` `"price BTC ETH SOL"`                   | `host-tools getHyperliquidPrice '{\"asset\":\"BTC\"}'`                                                            |
 | **HIP-3 Discovery**   | Search HIP-3 markets and list builder-deployed DEXes        | `"search HIP-3 markets for CL"` `"list HIP-3 DEXes"`        | `host-tools perps.hip3.search query=CL`                                                                           |
 | **HIP-3 Prices**      | Read venue-scoped HIP-3 prices                              | `"price CL on xyz"`                                         | `host-tools perps.hip3.price '{\"dex\":\"xyz\",\"coin\":\"CL\"}'`                                                 |
@@ -24,6 +26,28 @@ Start with `host-tools --brief` and `host-tools schema <toolName>` before using 
 | **HIP-3 Funds**       | Move collateral into or out of a selected HIP-3 DEX         | `"fund xyz HIP-3 with 100 USDC"`                            | `host-tools perps.hip3.fund '{\"providerContext\":{\"providerId\":\"hip3:xyz\"},\"amount\":\"100\"}'`             |
 | **Data Fetching**     | Fetch trades, candles, and order books into sandbox tables  | `"fetch BTC candles into SQL"`                              | `host-tools fetchHyperliquidCandles '{\"coin\":\"BTC\",\"interval\":\"1h\"}'`                                     |
 | **SQL Analysis**      | Query fetched perps data with DuckDB/SQLite-style workflows | `"query large BTC trades"`                                  | `sql query "SELECT * FROM <table> LIMIT 10"`                                                                      |
+
+<Note>
+  Account health and market radar require a separately authorized [Perps MCP
+  connection](/perps-mcp/client-setup) with `tools:execute`. They are not read tools in the Ask Gina
+  listed plugin.
+</Note>
+
+## Account health
+
+`perps.accountHealth` requires an authenticated account. It defaults to canonical Hyperliquid. Pass `providerContext` with `{"providerId":"hip3:xyz"}` for an enabled HIP-3 venue.
+
+The response includes at most 64 positions. Set `includeExitEstimates=true` for indicative exit estimates on at most eight positions, not fill guarantees. The tool does not assign a health score or calculate historical performance.
+
+## Market radar
+
+`perps.marketRadar` accepts `limit` from 1 to 50, defaulting to 10, and an optional `dex`, such as `dex=xyz`. Omit `dex` for canonical Hyperliquid.
+
+Eligible markets rank by descending 24-hour traded volume, then open interest, then absolute 24-hour price change, with coin name breaking ties. This measures activity and exposure, not liquidity, depth, or executable size. Excluded-market details are capped at 100.
+
+Rank, volume, open-interest, and mark-price deltas compare with a shared sample for that venue, not the caller's previous request. Samples rotate no more often than every five minutes and expire after seven days. Rows without a prior entry are marked `firstSeen`.
+
+Radar returns the complete JSON response inline or in an artifact. It does not automatically extract the rows into SQL tables.
 
 ## Discovery Flow
 
