@@ -325,7 +325,7 @@ the local sandbox is placement, not confinement. Stock OMP defaults
 `tools.xdev` to true and mounts MCP tools under `xd://` instead of provider
 functions; the session `config.yml` sets `tools.xdev: false` and the stock ACP
 adapter uses HTTP for its host-tool MCP transport. Only the staged `read`
-builtin is declared to the harness, mapped to `skill://` skill reads.
+builtin is declared to the harness, mapped to native reads.
 Native read identification uses the required `path` input, not only `skill://`
 titles, so ordinary resource- or intent-titled reads contribute activation/failure
 evidence rather than research-tool routes.
