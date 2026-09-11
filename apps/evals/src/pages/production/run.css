@@ -1,0 +1,618 @@
+.production-evals .prod-run-page {
+  min-width: 0;
+  padding-bottom: 38px;
+}
+
+.production-evals .prod-run-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 270px);
+  gap: 30px 48px;
+  align-items: start;
+}
+
+.production-evals .prod-run-intro,
+.production-evals .prod-run-actions {
+  min-width: 0;
+}
+
+.production-evals .prod-run-breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+  color: var(--prod-muted);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.production-evals .prod-run-breadcrumbs a:hover {
+  color: var(--eval-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.production-evals .prod-run-breadcrumbs [aria-current="page"] {
+  color: #4f4942;
+}
+
+.production-evals .prod-run-hero .eval-title {
+  max-width: 100%;
+  margin-bottom: 16px;
+  font-size: clamp(2.7rem, 4.8vw, 4.8rem);
+  line-height: 1.03;
+  overflow-wrap: anywhere;
+}
+
+.production-evals .prod-run-candidate {
+  margin: 0 0 13px;
+  color: #6d655e;
+  font-size: 12px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.production-evals .prod-run-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 20px;
+}
+
+.production-evals .prod-run-dates {
+  margin: 12px 0 0;
+  color: var(--prod-muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.production-evals .prod-run-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 42px;
+}
+
+.production-evals .prod-run-actions .prod-button,
+.production-evals .prod-run-download {
+  width: 100%;
+  justify-content: center;
+  min-height: 40px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.production-evals .prod-run-download {
+  border: 1px solid var(--prod-line);
+  background: #fff;
+  color: #28231e;
+  box-shadow: none;
+}
+
+.production-evals .prod-run-download:hover {
+  background: var(--prod-soft);
+}
+
+.production-evals .prod-run-actions .prod-inline-link {
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.production-evals .prod-run-action-note {
+  margin: 0 0 3px;
+  font-size: 10px;
+}
+
+.production-evals .prod-run-notices {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 20px;
+}
+
+.production-evals .prod-run-notices .prod-notice {
+  padding: 16px 20px;
+}
+
+.production-evals .prod-run-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0 0 22px;
+}
+
+.production-evals .prod-run-metric {
+  min-width: 0;
+  padding: 17px 18px 15px;
+  border: 1px solid var(--prod-line);
+  border-radius: 14px;
+  background: #ffffffdb;
+}
+
+.production-evals .prod-run-metric h2 {
+  margin: 0 0 12px;
+  color: #6f6861;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.production-evals .prod-run-metric .eval-metric-value strong {
+  margin-bottom: 4px;
+  font-family: var(--font-heading), Georgia, serif;
+  font-size: clamp(30px, 3vw, 39px);
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.production-evals .prod-run-metric .eval-metric-unavailable {
+  min-height: 48px;
+  justify-content: center;
+}
+
+.production-evals .prod-run-metric p {
+  margin: 9px 0 0;
+  color: var(--prod-muted);
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.production-evals .prod-run-metric .prod-run-sample {
+  color: #4f4942;
+}
+
+.production-evals .prod-run-metric .prod-run-missing-usage {
+  color: var(--prod-amber);
+}
+
+.production-evals .prod-run-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.production-evals .prod-run-chart,
+.production-evals .prod-run-record-panel {
+  min-width: 0;
+}
+
+.production-evals .prod-run-chart .eval-panel-heading {
+  padding-bottom: 14px;
+}
+
+.production-evals .prod-run-panel-note {
+  margin: 0;
+  padding: 4px 20px 18px;
+  color: var(--prod-muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.production-evals .prod-run-latency-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 14px 20px 18px;
+}
+
+.production-evals .prod-run-latency-summary > div {
+  min-width: 0;
+}
+
+.production-evals .prod-run-latency-summary dt {
+  margin-bottom: 7px;
+  color: var(--prod-muted);
+  font-size: 10px;
+}
+
+.production-evals .prod-run-latency-summary dd {
+  margin: 0;
+  font-size: 17px;
+}
+
+.production-evals .prod-run-disclosure {
+  margin: 0 20px 18px;
+  border-top: 1px solid var(--prod-line);
+  padding-top: 12px;
+}
+
+.production-evals .prod-run-disclosure summary,
+.production-evals .prod-run-provenance summary {
+  width: fit-content;
+  cursor: pointer;
+  color: #624531;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.production-evals .prod-run-disclosure[open] summary {
+  margin-bottom: 12px;
+}
+
+.production-evals .prod-run-dimension-table {
+  min-width: 385px;
+  font-variant-numeric: tabular-nums;
+}
+
+.production-evals .prod-run-unavailable {
+  margin: 26px 0;
+  padding: 24px;
+  border: 1px solid var(--prod-line);
+  border-radius: 16px;
+  background: var(--prod-soft);
+}
+
+.production-evals .prod-run-unavailable .prod-section-heading {
+  margin-bottom: 18px;
+}
+
+.production-evals .prod-run-unavailable .prod-kicker {
+  margin: 0 0 8px;
+  font-size: 10px;
+}
+
+.production-evals .prod-run-unavailable .prod-section-heading h2 {
+  font-size: 27px;
+}
+
+.production-evals .prod-run-unavailable-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.production-evals .prod-run-unavailable-metric {
+  min-width: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--prod-line);
+}
+
+.production-evals .prod-run-unavailable-metric h3 {
+  margin: 0 0 9px;
+  color: #4f4942;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.production-evals .prod-run-record-panel > .prod-record-list {
+  padding: 6px 20px 14px;
+}
+
+.production-evals .prod-run-conditions {
+  padding: 0 4px;
+}
+
+.production-evals .prod-run-ranking {
+  padding: 0 20px 16px;
+}
+
+.production-evals .prod-run-ranking p {
+  margin: 10px 0 0;
+}
+
+.production-evals .prod-run-panel-link {
+  margin: 0 20px 20px;
+}
+
+.production-evals .prod-run-inset-notice {
+  padding: 10px 20px 0;
+}
+
+.production-evals .prod-run-inset-notice .prod-notice {
+  padding: 14px;
+  border-radius: 10px;
+}
+
+.production-evals .prod-run-inset-notice .prod-notice h2 {
+  font-size: 12px;
+}
+
+.production-evals .prod-run-inset-notice .prod-notice p {
+  font-size: 11px;
+}
+
+.production-evals .prod-run-correction {
+  margin: 0 20px 20px;
+  padding: 14px 16px;
+  border: 1px solid #e7dfd4;
+  border-radius: 10px;
+  background: #faf7f1;
+}
+
+.production-evals .prod-run-correction h3 {
+  margin: 0 0 7px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.production-evals .prod-run-correction p {
+  margin: 0 0 6px;
+  font-size: 11px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.production-evals .prod-run-correction p:last-child {
+  margin-bottom: 0;
+}
+
+.production-evals .prod-run-provenance {
+  padding: 20px;
+  border: 1px solid var(--prod-line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.production-evals .prod-run-provenance summary {
+  color: #40372e;
+}
+
+.production-evals .prod-run-provenance summary span {
+  margin-left: 12px;
+  color: var(--prod-muted);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.production-evals .prod-run-provenance > p {
+  margin: 14px 0 0;
+}
+
+.production-evals .prod-run-provenance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 30px;
+  margin-top: 6px;
+}
+
+.production-evals .prod-run-withdrawn {
+  margin: 18px 0 0;
+  color: var(--prod-muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.prod-dialog .prod-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.prod-dialog .prod-compare-card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--prod-line);
+  border-radius: 14px;
+  background: #fbfaf7;
+}
+
+.prod-dialog .prod-compare-card .prod-candidate-copy > a,
+.prod-dialog .prod-compare-card .prod-candidate-copy > strong {
+  font-family: Georgia, "EB Garamond", serif;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.prod-dialog .prod-compare-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.prod-dialog .prod-compare-card p {
+  margin: 12px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.prod-dialog .prod-compare-scroll {
+  border: 1px solid var(--prod-line);
+  border-radius: 12px;
+}
+
+.prod-dialog .prod-compare-table {
+  min-width: 620px;
+  table-layout: fixed;
+  font-variant-numeric: tabular-nums;
+}
+
+.prod-dialog .prod-compare-table th,
+.prod-dialog .prod-compare-table td {
+  padding: 12px 15px;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.prod-dialog .prod-compare-table th:first-child {
+  width: 25%;
+}
+
+.prod-dialog .prod-compare-table tbody > tr:not(.prod-compare-section) > th {
+  background: #fff;
+  color: #6c635b;
+  font-weight: 400;
+}
+
+.prod-dialog .prod-compare-table small {
+  display: block;
+  margin-top: 4px;
+  color: var(--prod-muted);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.prod-dialog .prod-compare-section th {
+  padding: 10px 15px;
+  border-top: 1px solid var(--prod-line);
+  background: #f5f2ed;
+  color: #5c5146;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.035em;
+}
+
+.prod-dialog .prod-compare-table .eval-metric-value strong {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.prod-dialog .prod-compare-dimension,
+.prod-dialog .prod-compare-plain {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.prod-dialog .prod-compare-dimension strong {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.prod-dialog .prod-compare-sample {
+  display: block;
+  margin-top: 5px;
+  color: var(--prod-muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.prod-dialog .prod-compare-conditions {
+  margin-top: 20px;
+  padding: 18px;
+  border: 1px solid var(--prod-line);
+  border-radius: 12px;
+  background: #fbfaf7;
+}
+
+.prod-dialog .prod-compare-conditions h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.prod-dialog .prod-compare-conditions .eval-comparison-conditions {
+  padding: 0;
+}
+
+.prod-dialog .prod-compare-note {
+  margin: 18px 0 0;
+  color: var(--prod-muted);
+  font-size: 11px;
+  line-height: 1.75;
+}
+
+.prod-dialog .prod-compare .prod-notice {
+  padding: 20px;
+  border: 1px solid #eadfcc;
+  border-radius: 12px;
+  background: #fffcf6;
+}
+
+.prod-dialog .prod-compare .prod-notice h2 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.prod-dialog .prod-compare .prod-notice p {
+  margin: 0;
+  color: var(--prod-muted);
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.prod-dialog .prod-compare-conditions p {
+  overflow-wrap: anywhere;
+}
+
+.prod-dialog .prod-compare-plain summary {
+  cursor: pointer;
+}
+
+@media (max-width: 1080px) {
+  .production-evals .prod-run-hero {
+    gap: 24px;
+    grid-template-columns: minmax(0, 1fr) minmax(210px, 250px);
+  }
+
+  .production-evals .prod-run-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .production-evals .prod-run-hero,
+  .production-evals .prod-run-grid,
+  .production-evals .prod-run-provenance-grid,
+  .prod-dialog .prod-compare-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .production-evals .prod-run-hero {
+    padding-top: 30px;
+    padding-bottom: 26px;
+  }
+
+  .production-evals .prod-run-actions {
+    padding-top: 0;
+  }
+
+  .production-evals .prod-run-metric {
+    padding: 15px;
+  }
+
+  .production-evals .prod-run-unavailable {
+    padding: 20px;
+  }
+
+  .production-evals .prod-run-unavailable-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .production-evals .prod-run-unavailable-metric {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .production-evals .prod-run-provenance summary span {
+    display: block;
+    margin: 7px 0 0;
+  }
+
+  .production-evals .prod-run-provenance-grid {
+    gap: 0;
+  }
+
+  .prod-dialog .prod-compare-card {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 420px) {
+  .production-evals .prod-run-metrics {
+    gap: 10px;
+  }
+
+  .production-evals .prod-run-metric .eval-metric-value strong {
+    font-size: 30px;
+  }
+
+  .production-evals .prod-run-latency-summary {
+    gap: 10px;
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .production-evals .prod-run-provenance {
+    padding: 16px;
+  }
+}

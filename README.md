@@ -44,6 +44,14 @@ modal, and routed preview under `Evals/Illustrative UI`. These stories live in
 replace the current app routes or public-results stories. Their restored styles are
 scoped to the illustrative pages.
 
+`Evals/Production UI` combines that editorial layout with public v1 data: comparable
+run tables, run profiles, comparison dialogs, retained-attempt exploration, and
+methodology. Reusable pages live in `apps/evals/src/pages/production`; their coherent
+synthetic fixtures live in `apps/evals/src/stories/production-fixtures.ts`. This batch
+has its own routed experience and leaves the existing app entry point and both older
+story collections available. Public JSON downloads project supported v1 fields for
+inspection; they are not the original indexed snapshot bytes.
+
 ## Commands
 
 ```sh

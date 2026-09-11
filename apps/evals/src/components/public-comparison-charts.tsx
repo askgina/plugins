@@ -69,7 +69,7 @@ export function ComparisonScatterPlot({
         className="comparison-scatter"
         viewBox={`0 0 ${width} ${height}`}
         role="img"
-        aria-label={`${title}. ${points.length} synthetic candidates plotted by pass rate and ${xLabel}.`}
+        aria-label={`${title}. ${points.length} results plotted by pass rate and ${xLabel}.`}
       >
         <g className="comparison-chart-grid" aria-hidden="true">
           {yTicks.map((value) => {
@@ -196,7 +196,7 @@ export function LatencyEnvelopeChart({ row }: { row: PublicComparisonRow }) {
   if (p50 === null || p95 === null || maximum === null || latencyP50.availability !== "available") {
     return <p className="comparison-chart-empty">Latency was not retained for this result.</p>;
   }
-  const domainMaximum = Math.max(maximum, p95, p50) * 1.08;
+  const domainMaximum = Math.max(1, maximum, p95, p50) * 1.08;
   const position = (value: number) => `${(value / domainMaximum) * 100}%`;
   return (
     <div

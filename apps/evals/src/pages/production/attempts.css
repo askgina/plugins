@@ -1,0 +1,716 @@
+/* Attempt explorer layout. Shared tokens, badges, toolbar, search, select and segmented controls
+   come from ./shared.css; this file only adds page-specific structure under .prod-attempts-*. */
+
+.production-evals .prod-attempts-context,
+.production-evals .prod-attempts-summary,
+.production-evals .prod-attempts-layout {
+  margin-bottom: 24px;
+}
+
+.production-evals .prod-attempts-context,
+.production-evals .prod-attempts-summary,
+.production-evals .prod-attempts-toolbar,
+.production-evals .prod-attempts-detail,
+.production-evals .prod-attempts-empty {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+/* Run picker in the hero */
+
+.production-evals .prod-attempts-toolbar--run {
+  justify-content: flex-start;
+  margin: 24px 0 0;
+}
+
+.production-evals .prod-attempts-field {
+  min-width: 0;
+}
+
+.production-evals .prod-attempts-field--run {
+  width: min(100%, 520px);
+}
+
+.production-evals .prod-attempts-field select {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Identity hashes and case ids */
+
+.production-evals .prod-attempts-mono {
+  display: inline;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #f3f0ea;
+  color: #35312e;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+/* Run context */
+
+.production-evals .prod-attempts-context {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+  padding: 22px 24px;
+  border: 1px solid var(--prod-line);
+  border-radius: 16px;
+  background: var(--prod-soft);
+}
+
+.production-evals .prod-attempts-context-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px 24px;
+  margin: 0;
+  min-width: 0;
+}
+
+.production-evals .prod-attempts-context-facts > div {
+  min-width: 0;
+}
+
+.production-evals .prod-attempts-context-facts dt {
+  margin: 0 0 4px;
+  color: var(--prod-muted);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.production-evals .prod-attempts-context-facts dd {
+  min-width: 0;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.production-evals .prod-attempts-context-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+
+/* Run summary strip */
+
+.production-evals .prod-attempts-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0;
+  margin: 0;
+  min-width: 0;
+  border-top: 1px solid var(--prod-line);
+  border-bottom: 1px solid var(--prod-line);
+}
+
+.production-evals .prod-attempts-summary > div {
+  min-width: 0;
+  padding: 16px 18px 16px 0;
+  border-right: 1px solid var(--prod-line);
+}
+
+.production-evals .prod-attempts-summary > div + div {
+  padding-left: 18px;
+}
+
+.production-evals .prod-attempts-summary > div:last-child {
+  border-right: 0;
+}
+
+.production-evals .prod-attempts-summary dt {
+  margin: 0 0 6px;
+  color: var(--prod-muted);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.production-evals .prod-attempts-summary dd {
+  min-width: 0;
+  margin: 0;
+  font-size: 13px;
+}
+
+.production-evals .prod-attempts-summary .prod-attempts-verdict--pass {
+  color: var(--prod-green);
+}
+
+.production-evals .prod-attempts-summary .prod-attempts-verdict--fail {
+  color: var(--prod-red);
+}
+
+.production-evals .prod-attempts-verdict.prod-attempts-verdict--fail {
+  border-color: #ead0d5;
+  background: #fbf0f2;
+  color: var(--prod-red);
+}
+
+/* Table + detail layout. The panel always renders; the aside is either the selected attempt
+   or the empty hint, so the grid never collapses to one child. */
+
+.production-evals .prod-attempts-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  align-items: start;
+  gap: 24px;
+  min-width: 0;
+}
+
+.production-evals .prod-attempts-layout--detail {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+}
+
+.production-evals .prod-attempts-panel {
+  min-width: 0;
+  max-width: 100%;
+  border-color: var(--prod-line);
+  border-radius: 16px;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.production-evals .prod-attempts-panel .prod-attempts-toolbar {
+  margin: 12px 20px 16px;
+}
+
+.production-evals .prod-attempts-search {
+  position: relative;
+  flex: 1 1 220px;
+}
+
+.production-evals .prod-attempts-search > svg {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: var(--prod-muted);
+  pointer-events: none;
+}
+
+.production-evals .prod-attempts-search input {
+  padding-left: 36px;
+}
+
+.production-evals .prod-attempts-panel .prod-attempts-field {
+  flex: 0 1 200px;
+}
+
+.production-evals .prod-attempts-segmented {
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Table */
+
+.production-evals .prod-attempts-table-scroll {
+  min-width: 0;
+  border-top: 1px solid var(--prod-line);
+}
+
+.production-evals .prod-attempts-table {
+  min-width: 760px;
+  table-layout: fixed;
+}
+
+.production-evals .prod-attempts-table th:nth-child(1) {
+  width: 16%;
+}
+
+.production-evals .prod-attempts-table th:nth-child(2) {
+  width: 11%;
+}
+
+.production-evals .prod-attempts-table th:nth-child(3) {
+  width: 10%;
+}
+
+.production-evals .prod-attempts-table th:nth-child(4) {
+  width: 11%;
+}
+
+.production-evals .prod-attempts-table th:nth-child(5) {
+  width: 15%;
+}
+
+.production-evals .prod-attempts-table th:nth-child(6) {
+  width: 21%;
+}
+
+.production-evals .prod-attempts-table th:nth-child(7) {
+  width: 16%;
+}
+
+.production-evals .prod-attempts-table td {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.production-evals .prod-attempts-table tbody tr {
+  transition: background-color 120ms ease;
+}
+
+.production-evals .prod-attempts-table tbody tr:hover {
+  background: #fcfbf8;
+}
+
+.production-evals .prod-attempts-table tbody tr.is-selected {
+  background: #fbf7f1;
+  box-shadow: inset 3px 0 0 var(--prod-red);
+}
+
+.production-evals .prod-attempts-number {
+  font-variant-numeric: tabular-nums;
+}
+
+.production-evals .prod-attempts-row-action {
+  text-align: right;
+}
+
+.production-evals .prod-attempts-row-action button {
+  min-width: 84px;
+  font-size: 11px;
+}
+
+.production-evals .prod-attempts-row-action button[aria-expanded="true"] {
+  border-color: #111;
+  background: #111;
+  color: #fff;
+}
+
+.production-evals .prod-attempts-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.production-evals .prod-attempts-categories .prod-badge {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Empty filter result inside the panel */
+
+.production-evals .prod-attempts-empty {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  margin: 0 20px 22px;
+  padding: 24px;
+  border: 1px dashed var(--prod-line);
+  border-radius: 12px;
+  background: var(--prod-soft);
+}
+
+.production-evals .prod-attempts-empty strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.production-evals .prod-attempts-empty p {
+  max-width: 60ch;
+  margin: 0;
+  color: var(--prod-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.production-evals .prod-attempts-empty .prod-button {
+  margin-top: 6px;
+}
+
+/* Selected attempt detail. No fixed height: the aside grows with its content and the page scrolls. */
+
+.production-evals .prod-attempts-detail {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+  padding: 22px 24px 24px;
+  border: 1px solid var(--prod-line);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.production-evals .prod-attempts-detail--empty {
+  gap: 6px;
+  justify-items: start;
+  background: var(--prod-soft);
+}
+
+.production-evals .prod-attempts-detail--empty .prod-kicker {
+  margin-bottom: 4px;
+}
+
+.production-evals .prod-attempts-detail--empty .prod-muted {
+  max-width: 44ch;
+  font-size: 12px;
+}
+
+.production-evals .prod-attempts-detail--empty button {
+  margin-top: 10px;
+}
+
+.production-evals .prod-attempts-detail-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.production-evals .prod-attempts-detail-heading > div {
+  min-width: 0;
+}
+
+.production-evals .prod-attempts-detail-heading .prod-kicker {
+  margin-bottom: 6px;
+}
+
+.production-evals .prod-attempts-detail-heading h2 {
+  margin: 0;
+  font-family: Georgia, "EB Garamond", serif;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.production-evals .prod-attempts-detail-heading button {
+  flex: 0 0 auto;
+  color: var(--prod-muted);
+}
+
+.production-evals .prod-attempts-detail-verdict {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.production-evals .prod-attempts-detail-section {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--prod-line);
+}
+
+.production-evals .prod-attempts-detail-section h3 {
+  margin: 0;
+  color: var(--prod-muted);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Five check verdicts */
+
+.production-evals .prod-attempts-checks {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.production-evals .prod-attempts-check {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #eae6e0;
+  font-size: 12px;
+}
+
+.production-evals .prod-attempts-check:last-child {
+  border-bottom: 0;
+}
+
+.production-evals .prod-attempts-check strong {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.production-evals .prod-attempts-check--pass strong {
+  color: var(--prod-green);
+}
+
+.production-evals .prod-attempts-check--fail strong {
+  color: var(--prod-red);
+}
+
+.production-evals .prod-attempts-check--not_applicable {
+  color: var(--prod-muted);
+}
+
+.production-evals .prod-attempts-check--not_applicable strong {
+  color: var(--prod-muted);
+  font-weight: 500;
+}
+
+/* Measurement and identity facts */
+
+.production-evals .prod-attempts-facts {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.production-evals .prod-attempts-facts > div {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.6fr) minmax(0, 1.4fr);
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #eae6e0;
+}
+
+.production-evals .prod-attempts-facts > div:last-child {
+  border-bottom: 0;
+}
+
+.production-evals .prod-attempts-facts dt {
+  color: var(--prod-muted);
+  font-size: 11px;
+}
+
+.production-evals .prod-attempts-facts dd {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.production-evals .prod-attempts-facts dd small {
+  display: block;
+}
+
+.production-evals .prod-attempts-detail-note {
+  max-width: 60ch;
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--prod-line);
+  color: var(--prod-muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+/* Keyboard focus. Tailwind Buttons hide their outline in favour of a ring; the page-level outline
+   restores a consistent indicator for every interactive element here, including the focused h2. */
+
+.production-evals .prod-attempts-toolbar :focus-visible,
+.production-evals .prod-attempts-panel :focus-visible,
+.production-evals .prod-attempts-detail :focus-visible,
+.production-evals .prod-attempts-context :focus-visible {
+  outline: 2px solid #111;
+  outline-offset: 2px;
+}
+
+.production-evals .prod-attempts-detail-heading h2[tabindex]:focus {
+  outline: 2px solid #111;
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+.production-evals .prod-attempts-context .prod-candidate-copy > *,
+.production-evals .prod-attempts-context .prod-badge,
+.production-evals .prod-attempts-summary dd,
+.production-evals .prod-attempts-mono {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.production-evals .prod-attempts-summary {
+  margin-bottom: 24px;
+}
+
+.production-evals .prod-attempts-summary dd > small {
+  display: block;
+  margin-top: 4px;
+}
+
+.production-evals .prod-attempts-privacy {
+  min-width: 0;
+  margin: 24px 0 40px;
+  padding: 20px;
+  border: 1px solid var(--prod-line);
+  border-radius: 16px;
+  background: var(--prod-soft);
+  overflow-wrap: anywhere;
+}
+
+.production-evals .prod-attempts-privacy > p {
+  max-width: 85ch;
+  margin: 0;
+}
+
+.production-evals .prod-attempts-privacy dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 20px;
+  min-width: 0;
+  margin: 20px 0 0;
+}
+
+.production-evals .prod-attempts-privacy dl > div {
+  min-width: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--prod-line);
+}
+
+.production-evals .prod-attempts-privacy dt {
+  margin-bottom: 6px;
+  color: #35312e;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.production-evals .prod-attempts-privacy dd {
+  min-width: 0;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.production-evals .prod-attempts-privacy dd small {
+  display: block;
+  margin-top: 4px;
+}
+
+/* Narrow layouts */
+
+@media (max-width: 1020px) {
+  .production-evals .prod-attempts-layout,
+  .production-evals .prod-attempts-layout--detail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .production-evals .prod-attempts-context,
+  .production-evals .prod-attempts-summary,
+  .production-evals .prod-attempts-layout {
+    margin-bottom: 20px;
+  }
+
+  .production-evals .prod-attempts-field--run {
+    width: 100%;
+  }
+
+  .production-evals .prod-attempts-context {
+    padding: 18px;
+  }
+
+  .production-evals .prod-attempts-context-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .production-evals .prod-attempts-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .production-evals .prod-attempts-summary > div {
+    padding: 14px 12px 14px 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--prod-line);
+  }
+
+  .production-evals .prod-attempts-summary > div + div {
+    padding-left: 0;
+  }
+
+  .production-evals .prod-attempts-summary > div:nth-child(odd) {
+    padding-right: 12px;
+    border-right: 1px solid var(--prod-line);
+  }
+
+  .production-evals .prod-attempts-summary > div:nth-child(even) {
+    padding-left: 12px;
+  }
+
+  .production-evals .prod-attempts-summary > div:nth-last-child(-n + 2):nth-child(odd),
+  .production-evals .prod-attempts-summary > div:last-child {
+    border-bottom: 0;
+  }
+
+  .production-evals .prod-attempts-panel .prod-attempts-toolbar {
+    margin: 10px 16px 14px;
+  }
+
+  .production-evals .prod-attempts-panel .prod-attempts-field,
+  .production-evals .prod-attempts-search {
+    flex-basis: auto;
+    width: 100%;
+  }
+
+  .production-evals .prod-attempts-segmented {
+    display: flex;
+  }
+
+  .production-evals .prod-attempts-segmented button {
+    flex: 1 1 0;
+    min-height: 44px;
+  }
+
+  .production-evals .prod-attempts-field select,
+  .production-evals .prod-attempts-search input {
+    min-height: 44px;
+  }
+
+  .production-evals .prod-attempts-table th,
+  .production-evals .prod-attempts-table td {
+    padding: 12px 14px;
+  }
+
+  .production-evals .prod-attempts-row-action button {
+    min-height: 44px;
+  }
+
+  .production-evals .prod-attempts-empty {
+    margin: 0 16px 18px;
+    padding: 20px 18px;
+  }
+
+  .production-evals .prod-attempts-empty .prod-button,
+  .production-evals .prod-attempts-detail--empty button {
+    min-height: 44px;
+  }
+
+  .production-evals .prod-attempts-detail {
+    padding: 18px;
+  }
+
+  .production-evals .prod-attempts-detail-heading button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .production-evals .prod-attempts-detail-heading h2 {
+    font-size: 20px;
+  }
+
+  .production-evals .prod-attempts-facts > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3px;
+  }
+}

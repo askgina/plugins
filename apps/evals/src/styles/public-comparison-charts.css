@@ -154,9 +154,12 @@
 .comparison-latency-marker {
   position: absolute;
   top: -7px;
-  display: grid;
-  gap: 2px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
   min-width: 48px;
+  white-space: nowrap;
   padding-top: 14px;
   transform: translateX(-50%);
   color: #5b5550;
@@ -177,6 +180,22 @@
 
 .comparison-latency-marker[data-kind="p50"] {
   color: #7a3f3a;
+}
+
+.comparison-latency-marker[data-kind="p95"] {
+  padding-top: 32px;
+}
+
+.comparison-latency-marker[data-kind="p95"]::before {
+  height: 28px;
+}
+
+.comparison-latency-marker[data-kind="max"] {
+  padding-top: 50px;
+}
+
+.comparison-latency-marker[data-kind="max"]::before {
+  height: 46px;
 }
 
 .comparison-latency-marker small {
