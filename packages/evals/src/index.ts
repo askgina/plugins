@@ -1,10 +1,6 @@
 export { HarnessAgent } from "@ai-sdk/harness/agent";
-export {
-  createCodex,
-  type CodexHarnessSettings,
-  type CodexNativeAuthLease,
-  type CodexNativeAuthStore,
-} from "@ai-sdk/harness-codex";
+export { createCodex, type CodexHarnessSettings } from "@ai-sdk/harness-codex";
+export { createLocalHarnessSandbox } from "./local-harness-sandbox";
 export {
   decodePluginEvalObservationSet,
   loadPluginEvalObservationSet,

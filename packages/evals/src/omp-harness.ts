@@ -4,7 +4,7 @@ import Ajv, { type ValidateFunction } from "ajv";
 import addFormats from "ajv-formats";
 import { HarnessAgent, type HarnessAgentSession } from "@ai-sdk/harness/agent";
 import { createACP } from "@ai-sdk/harness-acp";
-import { createCredentialRequestTransformation } from "@ai-sdk/harness/utils";
+import { resolveSandboxHomeDir } from "@ai-sdk/harness/utils";
 import type { HarnessV1SandboxProvider } from "@ai-sdk/harness";
 import {
   listCatalogToolNames,
@@ -29,28 +29,14 @@ import {
 } from "effect";
 
 import type { PluginEvalCase, PluginEvalObservation, PluginEvalToolCall } from "./contracts";
-import { createOmpDockerSandbox } from "./omp-docker-sandbox";
-import {
-  decodeOmpGuardEvidence,
-  makeOmpGuardExtensionSource,
-  makeOmpGuardedAcpLauncherSource,
-  type OmpGuardEvidence,
-} from "./omp-guard";
+import { createLocalHarnessSandbox } from "./local-harness-sandbox";
 
 const DEFAULT_TIMEOUT_MS = 120_000;
 const MAX_MCP_TOOL_PAGES = 32;
 const MAX_MCP_CLOSE_WAIT_MS = 1_000;
 const MAX_SESSION_DESTROY_WAIT_MS = 8_000;
-const OMP_REQUIRED_VERSION = "18.1.14";
 const OMP_INCOMPLETE_GENERATION_ERROR = "OMP generation did not complete with a final answer";
-const OMP_POLICY_ERROR = "OMP used an action outside approved skill reads or canonical Gina reads";
 const OMP_TOOL_EXECUTION_ERROR = "OMP tool execution failed";
-const HOST_TOOL_MCP_SERVER_NAME = "ai-sdk-harness-tools";
-const CONTAINER_OMP_PATH = "/opt/omp-eval/omp";
-const CONTAINER_GUARD_PATH = "/opt/omp-eval/omp-eval-guard.mjs";
-const CONTAINER_ACP_LAUNCHER_PATH = "/opt/omp-eval/omp-eval-acp.mjs";
-const CONTAINER_CONFIG_PATH = "/opt/omp-eval/config.yml";
-const CONTAINER_EVIDENCE_PATH = "/eval/omp-eval-evidence.json";
 const OMP_EVAL_PROVIDER_ALIAS = "omp-eval";
 const OMP_EVAL_PROVIDER_API_KEY_ENV = "OMP_EVAL_PROVIDER_API_KEY";
 const CANONICAL_ALLOWED_TOOLS = listCatalogToolNames();
@@ -86,10 +72,8 @@ const OMP_REASONING = {
   max: true,
   auto: true,
 } as const;
-const NATIVE_TOOL_NAME = /^[A-Za-z0-9_-]{1,64}$/u;
 const SKILL_FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
-const MAX_MCP_TOOL_NAME_LENGTH = 64;
-const MCP_TOOL_NAME_HASH_LENGTH = 8;
+const SKILL_URI_NAME = /^skill:\/\/([a-z0-9-]+)$/u;
 const CANONICAL_TOOL_NAMES: Record<string, true> = Object.fromEntries(
   CANONICAL_ALLOWED_TOOLS.map((name) => [name, true as const]),
 );
@@ -126,8 +110,6 @@ export interface OmpHarnessTrialOptions {
   readonly timeoutMs: number;
   readonly serverUrl?: string;
   readonly providerBaseUrl?: string;
-  readonly dockerImage?: string;
-  readonly dockerNetwork?: string;
   readonly sandbox?: HarnessV1SandboxProvider;
 }
 
@@ -145,8 +127,6 @@ interface ValidatedOmpHarnessTrialOptions {
   readonly timeoutMs: number;
   readonly serverUrl: string;
   readonly providerBaseUrl?: string;
-  readonly dockerImage?: string;
-  readonly dockerNetwork?: string;
   readonly sandbox?: HarnessV1SandboxProvider;
 }
 
@@ -159,22 +139,17 @@ interface CapturedHostToolCall {
   readonly error?: PluginEvalToolCall["error"];
 }
 
-interface NativeSdkToolCall {
-  readonly input: unknown;
+interface ObservedNativeCall {
+  readonly toolCallId: string;
+  readonly name: string;
+  readonly arguments: PluginEvalToolCall["arguments"];
   outcome?: "result" | "error";
 }
 
 interface ObservedOmpToolCalls {
   readonly toolCalls: readonly PluginEvalToolCall[];
+  readonly activatedSkills: readonly SkillName[];
   readonly failedNativeRead: boolean;
-}
-
-interface EvidenceSandbox {
-  readonly readTextFile: (options: { readonly path: string }) => PromiseLike<string | null>;
-  readonly run: (options: {
-    readonly command: string;
-    readonly abortSignal?: AbortSignal;
-  }) => PromiseLike<{ readonly exitCode: number; readonly stdout: string }>;
 }
 
 export class PluginEvalOmpHarnessExecutableError extends Data.TaggedError(
@@ -194,7 +169,7 @@ export class PluginEvalOmpHarnessSpawnError extends Data.TaggedError(
   "PluginEvalOmpHarnessSpawnError",
 )<{
   readonly caseId: string;
-  readonly reason: "could_not_start" | "preflight-failed" | "unsupported-version";
+  readonly reason: "could_not_start";
 }> {}
 
 export class PluginEvalOmpHarnessMcpError extends Data.TaggedError("PluginEvalOmpHarnessMcpError")<{
@@ -206,7 +181,7 @@ export class PluginEvalOmpHarnessProcessError extends Data.TaggedError(
   "PluginEvalOmpHarnessProcessError",
 )<{
   readonly caseId: string;
-  readonly reason: "generation-failed" | "incomplete-evidence" | "inventory-mismatch";
+  readonly reason: "generation-failed" | "incomplete-evidence";
 }> {}
 
 export class PluginEvalOmpHarnessTimeoutError extends Data.TaggedError(
@@ -241,57 +216,17 @@ const isNativeExecutableHeader = (bytes: readonly number[]): boolean =>
   (bytes[0] === 0xcf && bytes[1] === 0xfa && bytes[2] === 0xed && bytes[3] === 0xfe) ||
   (bytes[0] === 0xfe && bytes[1] === 0xed && bytes[2] === 0xfa && bytes[3] === 0xcf);
 
-const sanitizeMcpToolNamePart = (value: string, fallback: string): string => {
-  const sanitized = value
-    .toLowerCase()
-    .replace(/[^a-z_]+/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^_+|_+$/g, "");
-  return sanitized.length > 0 ? sanitized : fallback;
-};
-
-const capMcpToolNameLength = (name: string): string => {
-  if (name.length <= MAX_MCP_TOOL_NAME_LENGTH) return name;
-  const hash = Bun.hash(name).toString(36).slice(0, MCP_TOOL_NAME_HASH_LENGTH);
-  const keep = MAX_MCP_TOOL_NAME_LENGTH - hash.length - 1;
-  return `${name.slice(0, keep)}_${hash}`;
-};
-
-const createOmpNativeToolName = (canonicalName: string): string => {
-  const sanitizedServerName = sanitizeMcpToolNamePart(HOST_TOOL_MCP_SERVER_NAME, "server");
-  const sanitizedToolName = sanitizeMcpToolNamePart(canonicalName, "tool");
-  const prefixWithUnderscore = `${sanitizedServerName}_`;
-  const normalizedToolName = sanitizedToolName.startsWith(prefixWithUnderscore)
-    ? sanitizedToolName.slice(prefixWithUnderscore.length)
-    : sanitizedToolName;
-  return capMcpToolNameLength(`mcp__${sanitizedServerName}_${normalizedToolName}`);
-};
-
-const CANONICAL_TOOL_BY_NATIVE_NAME: Readonly<Record<string, string>> = Object.fromEntries(
-  CANONICAL_ALLOWED_TOOLS.map((canonicalName) => [
-    createOmpNativeToolName(canonicalName),
-    canonicalName,
-  ]),
-);
-
-export const OMP_HARNESS_EXPECTED_NATIVE_TOOLS: readonly string[] = [
-  "read",
-  ...CANONICAL_ALLOWED_TOOLS.map(createOmpNativeToolName),
-];
-const OMP_NATIVE_BUILTIN_INPUT_SCHEMA = jsonSchema<Record<string, unknown>>({
-  type: "object",
-});
-const OMP_NATIVE_TOOL_METADATA: ToolSet = Object.fromEntries(
-  OMP_HARNESS_EXPECTED_NATIVE_TOOLS.map((name) => [
-    name,
+const OMP_BUILTIN_TOOLS: ToolSet = Object.fromEntries([
+  [
+    "read",
     {
-      nativeName: name,
-      title: name === "read" ? "skill://" : name,
-      inputSchema: OMP_NATIVE_BUILTIN_INPUT_SCHEMA,
+      nativeName: "read",
+      title: "skill://",
+      toolUseKind: "readonly",
+      inputSchema: jsonSchema<Record<string, unknown>>({ type: "object" }),
     },
-  ]),
-);
-const ALLOWED_SKILL_URIS: readonly string[] = SKILL_NAMES.map((name) => `skill://${name}`);
+  ],
+]);
 
 const isJsonValue = (value: unknown): boolean => {
   if (
@@ -303,7 +238,7 @@ const isJsonValue = (value: unknown): boolean => {
     return true;
   }
   if (Array.isArray(value)) return value.every(isJsonValue);
-  if (typeof value !== "object") return false;
+  if (typeof value !== "object" || value === null) return false;
   return Object.values(value).every(isJsonValue);
 };
 
@@ -312,6 +247,17 @@ const jsonObject = (value: unknown): PluginEvalToolCall["arguments"] | undefined
     return undefined;
   }
   return value as PluginEvalToolCall["arguments"];
+};
+
+const jsonInput = (value: unknown): PluginEvalToolCall["arguments"] | undefined => {
+  if (typeof value === "string") {
+    try {
+      return jsonObject(JSON.parse(value));
+    } catch {
+      return undefined;
+    }
+  }
+  return jsonObject(value);
 };
 
 const resultByteLength = (value: unknown): number | undefined => {
@@ -323,12 +269,22 @@ const resultByteLength = (value: unknown): number | undefined => {
   }
 };
 
-const inventoryAdmitted = (evidence: OmpGuardEvidence | undefined): boolean =>
-  evidence !== undefined &&
-  evidence.inventoryExact === true &&
-  evidence.phase !== "loaded" &&
-  catalogsMatch(evidence.expectedTools, OMP_HARNESS_EXPECTED_NATIVE_TOOLS) &&
-  catalogsMatch(evidence.activeTools, OMP_HARNESS_EXPECTED_NATIVE_TOOLS);
+const skillNameForReadTarget = (
+  target: string,
+  runtimeDirectory: string,
+  sessionSkillsDirectory: string | undefined,
+): SkillName | undefined => {
+  const uriMatch = SKILL_URI_NAME.exec(target);
+  if (uriMatch !== null) {
+    return SKILL_NAMES.find((name) => name === uriMatch[1]);
+  }
+  return SKILL_NAMES.find(
+    (name) =>
+      target === `${runtimeDirectory}/skills/${name}/SKILL.md` ||
+      (sessionSkillsDirectory !== undefined &&
+        target === `${sessionSkillsDirectory}/${name}/SKILL.md`),
+  );
+};
 
 const timeoutError = (caseId: string, timeoutMs: number): PluginEvalOmpHarnessTimeoutError =>
   new PluginEvalOmpHarnessTimeoutError({ caseId, timeoutMs });
@@ -417,6 +373,12 @@ const harnessSessionDestroys = new WeakMap<
   Promise<HarnessSessionDestroyOutcome>
 >();
 
+// Publish the shared promise before invoking provider code, including sync throws.
+const shareSandboxDestroy = (destroy: RawSandboxDestroy): RawSandboxDestroy => {
+  let shared: Promise<void> | undefined;
+  return () => (shared ??= Promise.resolve().then(destroy));
+};
+
 const settleHarnessDestroy = (
   destroy: RawSandboxDestroy,
 ): Promise<HarnessSessionDestroyOutcome> => {
@@ -430,20 +392,44 @@ const settleHarnessDestroy = (
   }
 };
 
+const requestRawSandboxDestroy = (
+  rawSandboxDestroy: RawSandboxDestroyRef,
+): Promise<HarnessSessionDestroyOutcome> => {
+  const destroy = rawSandboxDestroy.current;
+  return destroy === undefined
+    ? Promise.resolve<HarnessSessionDestroyOutcome>("failed")
+    : settleHarnessDestroy(destroy);
+};
+
 const destroyHarnessSessionOnce = (
   session: HarnessAgentSession,
   rawSandboxDestroy: RawSandboxDestroyRef,
 ): Promise<HarnessSessionDestroyOutcome> => {
   const activeDestroy = harnessSessionDestroys.get(session);
   if (activeDestroy !== undefined) return activeDestroy;
-  const sessionDestroy = settleHarnessDestroy(() => session.destroy());
-  const rawDestroy =
-    rawSandboxDestroy.current === undefined
-      ? Promise.resolve<HarnessSessionDestroyOutcome>("failed")
-      : settleHarnessDestroy(rawSandboxDestroy.current);
-  const outcome = Promise.all([sessionDestroy, rawDestroy]).then(
-    (results): HarnessSessionDestroyOutcome =>
-      results.every((result) => result === "destroyed") ? "destroyed" : "failed",
+  // Stock session.destroy() awaits adapter doDestroy then sandbox destroy.
+  // Observe the shared sandbox destroy after that so a swallowed rejection
+  // stays visible. Race the existing MAX_SESSION_DESTROY_WAIT_MS budget so a
+  // hung adapter still requests bounded physical cleanup.
+  const outcome = Effect.runPromise(
+    Effect.gen(function* () {
+      const sessionOutcome = yield* Effect.promise(() =>
+        settleHarnessDestroy(() => session.destroy()),
+      );
+      const sandboxOutcome = yield* Effect.promise(() =>
+        requestRawSandboxDestroy(rawSandboxDestroy),
+      );
+      return sessionOutcome === "destroyed" && sandboxOutcome === "destroyed"
+        ? "destroyed"
+        : "failed";
+    }).pipe(
+      Effect.raceFirst(
+        Effect.sleep(Duration.millis(MAX_SESSION_DESTROY_WAIT_MS)).pipe(
+          Effect.flatMap(() => Effect.promise(() => requestRawSandboxDestroy(rawSandboxDestroy))),
+          Effect.as("failed" as const),
+        ),
+      ),
+    ),
   );
   harnessSessionDestroys.set(session, outcome);
   return outcome;
@@ -480,6 +466,8 @@ const parseProviderBaseUrl = (value: string): string | undefined => {
 const yamlQuote = (value: string): string =>
   /[:#|>*&!%@`'"]/u.test(value) || value !== value.trim() ? JSON.stringify(value) : value;
 
+const shellQuote = (value: string): string => `'${value.replaceAll("'", "'\\''")}'`;
+
 const nestedEvalConfig = [
   "startup:",
   "  checkUpdate: false",
@@ -501,6 +489,7 @@ const nestedEvalConfig = [
   "  autoqa: false",
   "tools:",
   "  intentTracing: false",
+  "  xdev: false",
   "retry:",
   "  enabled: false",
   "  modelFallback: false",
@@ -567,17 +556,18 @@ const installCommand = (
   provider: OmpProvider,
   model: string,
   providerBaseUrl: string | undefined,
+  runtimeDirectory: string,
 ): string => {
   const models = modelsYaml(provider, model, providerBaseUrl);
   return [
-    'mkdir -p "$HOME/.local/bin" "$HOME/.omp/agent/skills"',
-    `ln -sfn ${CONTAINER_ACP_LAUNCHER_PATH} "$HOME/.local/bin/omp"`,
-    `cp ${CONTAINER_CONFIG_PATH} "$HOME/.omp/agent/config.yml"`,
+    'mkdir -p "$HOME/.local/bin" "$HOME/.omp/agent"',
+    `ln -sfn ${shellQuote(`${runtimeDirectory}/omp`)} "$HOME/.local/bin/omp"`,
+    `cp ${shellQuote(`${runtimeDirectory}/config.yml`)} "$HOME/.omp/agent/config.yml"`,
     "cat > \"$HOME/.omp/agent/models.yml\" <<'OMP_EVAL_MODELS_YML'",
     models.trimEnd(),
     "OMP_EVAL_MODELS_YML",
-    `version="$(${CONTAINER_OMP_PATH} --version)"`,
-    `[ "$version" = "omp/${OMP_REQUIRED_VERSION}" ] || exit 1`,
+    'version="$("$HOME/.local/bin/omp" --version)"',
+    'case "$version" in omp/*) ;; *) exit 1 ;; esac',
   ].join("\n");
 };
 
@@ -839,47 +829,6 @@ export const prepareOmpHarnessRuntime = (
       .pipe(
         Effect.mapError(() => new PluginEvalOmpHarnessExecutableError({ reason: "invalid-file" })),
       );
-    const guardSource = yield* Effect.try({
-      try: () =>
-        makeOmpGuardExtensionSource({
-          expectedTools: OMP_HARNESS_EXPECTED_NATIVE_TOOLS,
-          allowedSkillUris: ALLOWED_SKILL_URIS,
-          evidencePath: CONTAINER_EVIDENCE_PATH,
-        }),
-      catch: () => new PluginEvalOmpHarnessExecutableError({ reason: "invalid-file" }),
-    });
-    const guardPath = path.join(runtimeDirectory, "omp-eval-guard.mjs");
-    yield* fs
-      .writeFileString(guardPath, guardSource, {
-        flag: "wx",
-        mode: 0o444,
-      })
-      .pipe(
-        Effect.mapError(() => new PluginEvalOmpHarnessExecutableError({ reason: "invalid-file" })),
-      );
-    yield* fs
-      .chmod(guardPath, 0o444)
-      .pipe(
-        Effect.mapError(() => new PluginEvalOmpHarnessExecutableError({ reason: "invalid-file" })),
-      );
-    const launcherSource = yield* Effect.try({
-      try: () => makeOmpGuardedAcpLauncherSource(OMP_HARNESS_EXPECTED_NATIVE_TOOLS),
-      catch: () => new PluginEvalOmpHarnessExecutableError({ reason: "invalid-file" }),
-    });
-    const launcherPath = path.join(runtimeDirectory, "omp-eval-acp.mjs");
-    yield* fs
-      .writeFileString(launcherPath, launcherSource, {
-        flag: "wx",
-        mode: 0o555,
-      })
-      .pipe(
-        Effect.mapError(() => new PluginEvalOmpHarnessExecutableError({ reason: "invalid-file" })),
-      );
-    yield* fs
-      .chmod(launcherPath, 0o555)
-      .pipe(
-        Effect.mapError(() => new PluginEvalOmpHarnessExecutableError({ reason: "invalid-file" })),
-      );
     return { runtimeDirectory };
   });
 
@@ -943,8 +892,6 @@ const validateOptions = (
     timeoutMs,
     serverUrl,
     ...(providerBaseUrl === undefined ? {} : { providerBaseUrl }),
-    ...(options.dockerImage === undefined ? {} : { dockerImage: options.dockerImage }),
-    ...(options.dockerNetwork === undefined ? {} : { dockerNetwork: options.dockerNetwork }),
     ...(options.sandbox === undefined ? {} : { sandbox: options.sandbox }),
   });
 };
@@ -1050,12 +997,19 @@ const releaseHarnessSession = (
   if (Exit.isFailure(exit)) {
     return Effect.raceFirst(
       Effect.promise(() => destroyHarnessSessionOnce(session, rawSandboxDestroy)),
-      Effect.sleep(Duration.millis(MAX_SESSION_DESTROY_WAIT_MS)),
+      Effect.sleep(Duration.millis(MAX_SESSION_DESTROY_WAIT_MS)).pipe(
+        Effect.tap(() =>
+          Effect.sync(() => {
+            void requestRawSandboxDestroy(rawSandboxDestroy);
+          }),
+        ),
+      ),
     ).pipe(Effect.asVoid);
   }
   return Effect.gen(function* () {
     const beforeDestroy = yield* Clock.currentTimeMillis;
     if (beforeDestroy >= deadlineMillis) {
+      void requestRawSandboxDestroy(rawSandboxDestroy);
       void destroyHarnessSessionOnce(session, rawSandboxDestroy);
       return yield* timeoutError(caseId, timeoutMs);
     }
@@ -1068,6 +1022,9 @@ const releaseHarnessSession = (
       Effect.sleep(Duration.millis(remainingMs)).pipe(Effect.as("timed-out" as const)),
     );
     const afterDestroy = yield* Clock.currentTimeMillis;
+    if (afterDestroy >= deadlineMillis || outcome === "timed-out") {
+      void requestRawSandboxDestroy(rawSandboxDestroy);
+    }
     if (afterDestroy >= deadlineMillis) return yield* timeoutError(caseId, timeoutMs);
     if (outcome !== "destroyed") {
       return yield* new PluginEvalOmpHarnessProcessError({
@@ -1129,17 +1086,6 @@ const createInputSchemaCompiler = (): ((schema: unknown) => ValidateFunction | u
   };
 };
 
-const decodeEvidenceText = (
-  evidenceText: string | null | undefined,
-): OmpGuardEvidence | undefined => {
-  if (evidenceText === null || evidenceText === undefined) return undefined;
-  try {
-    return decodeOmpGuardEvidence(JSON.parse(evidenceText) as unknown);
-  } catch {
-    return undefined;
-  }
-};
-
 const executeCanonicalHostTool = (
   run: () => PromiseLike<unknown>,
   validator: ValidateFunction,
@@ -1147,7 +1093,6 @@ const executeCanonicalHostTool = (
   executeOptions: { readonly toolCallId: string; readonly abortSignal?: AbortSignal },
   canonicalName: string,
   captures: CapturedHostToolCall[],
-  trustedSession: { current: EvidenceSandbox | undefined },
 ): Promise<unknown> =>
   Effect.runPromise(
     Effect.gen(function* () {
@@ -1164,22 +1109,6 @@ const executeCanonicalHostTool = (
         pushCapture({
           error: { code: "invalid_arguments", message: "Invalid tool arguments" },
         });
-        return { isError: true };
-      }
-      const sandbox = trustedSession.current;
-      if (sandbox === undefined) {
-        pushCapture({ error: { message: "OMP harness inventory was not admitted" } });
-        return { isError: true };
-      }
-      const evidenceText = yield* Effect.promise(() =>
-        Promise.resolve(sandbox.readTextFile({ path: CONTAINER_EVIDENCE_PATH })).then(
-          (text) => text,
-          () => null,
-        ),
-      );
-      const evidence = decodeEvidenceText(evidenceText);
-      if (!inventoryAdmitted(evidence)) {
-        pushCapture({ error: { message: "OMP harness inventory was not admitted" } });
         return { isError: true };
       }
       const output = yield* Effect.promise(() =>
@@ -1211,49 +1140,11 @@ const executeCanonicalHostTool = (
     executeOptions.abortSignal === undefined ? undefined : { signal: executeOptions.abortSignal },
   );
 
-const preflightOmpHarnessSession = (
-  session: EvidenceSandbox,
-  trustedSession: { current: EvidenceSandbox | undefined },
-  caseId: string,
-  abortSignal: AbortSignal | undefined,
-): Promise<void> =>
-  Effect.runPromise(
-    Effect.gen(function* () {
-      trustedSession.current = session;
-      const version = yield* Effect.tryPromise({
-        try: (signal) =>
-          session.run({
-            command: `${CONTAINER_OMP_PATH} --version`,
-            abortSignal: abortSignal ?? signal,
-          }),
-        catch: () =>
-          new PluginEvalOmpHarnessSpawnError({
-            caseId,
-            reason: "preflight-failed",
-          }),
-      });
-      if (version.exitCode !== 0) {
-        return yield* new PluginEvalOmpHarnessSpawnError({
-          caseId,
-          reason: "preflight-failed",
-        });
-      }
-      if (version.stdout.trim() !== `omp/${OMP_REQUIRED_VERSION}`) {
-        return yield* new PluginEvalOmpHarnessSpawnError({
-          caseId,
-          reason: "unsupported-version",
-        });
-      }
-    }),
-    abortSignal === undefined ? undefined : { signal: abortSignal },
-  );
-
 const wrapHostTools = (
   tools: ToolSet,
   definitions: ListToolsResult,
   discoveredTools: readonly string[],
   captures: CapturedHostToolCall[],
-  trustedSession: { current: EvidenceSandbox | undefined },
   caseId: string,
 ): Effect.Effect<ToolSet, PluginEvalOmpHarnessMcpError> =>
   Effect.gen(function* () {
@@ -1264,12 +1155,7 @@ const wrapHostTools = (
       const tool = tools[canonicalName];
       const definition = definitionsByName.get(canonicalName);
       const execute = tool?.execute;
-      if (
-        tool === undefined ||
-        execute === undefined ||
-        definition === undefined ||
-        !NATIVE_TOOL_NAME.test(canonicalName.replaceAll(".", "_"))
-      ) {
+      if (tool === undefined || execute === undefined || definition === undefined) {
         return yield* new PluginEvalOmpHarnessMcpError({ caseId, reason: "catalog-mismatch" });
       }
       const validator = compileInputSchema(definition.inputSchema);
@@ -1286,7 +1172,6 @@ const wrapHostTools = (
             executeOptions,
             canonicalName,
             captures,
-            trustedSession,
           ),
       };
     }
@@ -1296,120 +1181,121 @@ const wrapHostTools = (
 const observedToolCalls = (
   steps: readonly StepResult<ToolSet>[],
   captures: readonly CapturedHostToolCall[],
-  nativeCalls: OmpGuardEvidence["nativeCalls"],
+  runtimeDirectory: string,
+  sessionSkillsDirectory: string | undefined,
 ): ObservedOmpToolCalls | undefined => {
   const capturesById = new Map(captures.map((capture) => [capture.toolCallId, capture] as const));
   if (capturesById.size !== captures.length) return undefined;
 
-  const hostCallsByName = new Map<string, PluginEvalToolCall[]>();
-  const seenHostCallIds = new Set<string>();
+  const hostCallsById = new Map<string, StepResult<ToolSet>["toolCalls"][number]>();
+  const nativeById = new Map<string, ObservedNativeCall>();
   for (const step of steps) {
     for (const toolCall of step.toolCalls) {
-      if (CANONICAL_TOOL_NAMES[toolCall.toolName] !== true) continue;
-      if (toolCall.providerExecuted !== false || seenHostCallIds.has(toolCall.toolCallId)) {
+      if (toolCall.providerExecuted === true) continue;
+      if (hostCallsById.has(toolCall.toolCallId)) return undefined;
+      hostCallsById.set(toolCall.toolCallId, toolCall);
+    }
+    for (const part of step.content) {
+      if (part.type !== "tool-call" || part.providerExecuted !== true) continue;
+      if (nativeById.has(part.toolCallId)) return undefined;
+      nativeById.set(part.toolCallId, {
+        toolCallId: part.toolCallId,
+        name: part.toolName,
+        arguments: jsonInput(part.input) ?? {},
+      });
+    }
+  }
+  for (const step of steps) {
+    for (const part of step.content) {
+      if (part.type !== "tool-result" && part.type !== "tool-error") continue;
+      const nativeCall = nativeById.get(part.toolCallId);
+      if (nativeCall === undefined || nativeCall.outcome !== undefined) {
+        if (nativeCall === undefined) continue;
         return undefined;
       }
-      seenHostCallIds.add(toolCall.toolCallId);
-      const captured = capturesById.get(toolCall.toolCallId);
-      const argumentsValue = jsonObject(toolCall.input) ?? captured?.arguments ?? {};
-      let observed: PluginEvalToolCall;
-      if (toolCall.invalid === true && captured === undefined) {
-        observed = {
-          sequence: 0,
-          name: toolCall.toolName,
-          arguments: argumentsValue,
-          error: { code: "invalid_arguments", message: "Invalid tool arguments" },
-        };
-      } else {
-        if (captured === undefined || captured.name !== toolCall.toolName) return undefined;
-        observed = {
-          sequence: 0,
-          name: captured.name,
-          arguments: captured.arguments,
-          ...(captured.durationMs === undefined ? {} : { duration_ms: captured.durationMs }),
-          ...(captured.resultBytes === undefined ? {} : { result_bytes: captured.resultBytes }),
-          ...(captured.error === undefined ? {} : { error: captured.error }),
-        };
+      nativeCall.outcome =
+        part.type === "tool-error" || ("isError" in part && part.isError === true)
+          ? "error"
+          : "result";
+    }
+  }
+  for (const nativeCall of nativeById.values()) {
+    if (nativeCall.outcome === undefined) return undefined;
+  }
+
+  const toolCalls: PluginEvalToolCall[] = [];
+  const activatedSkills = new Set<SkillName>();
+  const seenHostCallIds = new Set<string>();
+  let failedNativeRead = false;
+  for (const step of steps) {
+    for (const part of step.content) {
+      if (part.type !== "tool-call") continue;
+      if (part.providerExecuted === true) {
+        const nativeCall = nativeById.get(part.toolCallId);
+        if (nativeCall === undefined) return undefined;
+        if (nativeCall.name === "read") {
+          if (nativeCall.outcome === "error") {
+            failedNativeRead = true;
+          } else if (nativeCall.outcome === "result") {
+            const target = nativeCall.arguments["path"] ?? nativeCall.arguments["file_path"];
+            if (typeof target === "string") {
+              const skill = skillNameForReadTarget(
+                target,
+                runtimeDirectory,
+                sessionSkillsDirectory,
+              );
+              if (skill !== undefined) activatedSkills.add(skill);
+            }
+          }
+        }
+        toolCalls.push({
+          sequence: toolCalls.length,
+          name: nativeCall.name,
+          arguments: nativeCall.arguments,
+          ...(nativeCall.outcome === "error"
+            ? { error: { message: "Native tool call failed" } }
+            : {}),
+        });
+        continue;
       }
-      const namedCalls = hostCallsByName.get(observed.name);
-      if (namedCalls === undefined) hostCallsByName.set(observed.name, [observed]);
-      else namedCalls.push(observed);
+      if (seenHostCallIds.has(part.toolCallId)) return undefined;
+      seenHostCallIds.add(part.toolCallId);
+      const hostCall = hostCallsById.get(part.toolCallId);
+      const captured = capturesById.get(part.toolCallId);
+      if (captured !== undefined && captured.name !== part.toolName) return undefined;
+      const argumentsValue = jsonInput(part.input) ?? captured?.arguments ?? {};
+      if (captured === undefined) {
+        if (hostCall?.invalid === true) {
+          toolCalls.push({
+            sequence: toolCalls.length,
+            name: part.toolName,
+            arguments: argumentsValue,
+            error: { code: "invalid_arguments", message: "Invalid tool arguments" },
+          });
+          continue;
+        }
+        if (CANONICAL_TOOL_NAMES[part.toolName] === true) return undefined;
+        toolCalls.push({
+          sequence: toolCalls.length,
+          name: part.toolName,
+          arguments: argumentsValue,
+        });
+        continue;
+      }
+      toolCalls.push({
+        sequence: toolCalls.length,
+        name: captured.name,
+        arguments: captured.arguments,
+        ...(captured.durationMs === undefined ? {} : { duration_ms: captured.durationMs }),
+        ...(captured.resultBytes === undefined ? {} : { result_bytes: captured.resultBytes }),
+        ...(captured.error === undefined ? {} : { error: captured.error }),
+      });
     }
   }
   for (const capture of captures) {
     if (!seenHostCallIds.has(capture.toolCallId)) return undefined;
   }
-
-  const nativeCallById = new Map(nativeCalls.map((call) => [call.id, call] as const));
-  if (nativeCallById.size !== nativeCalls.length) return undefined;
-  const sdkNativeCalls = new Map<string, NativeSdkToolCall>();
-  for (const step of steps) {
-    for (const part of step.content) {
-      if (part.type === "tool-call") {
-        if (CANONICAL_TOOL_NAMES[part.toolName] === true) continue;
-        if (
-          part.providerExecuted !== true ||
-          !nativeCallById.has(part.toolCallId) ||
-          sdkNativeCalls.has(part.toolCallId)
-        ) {
-          return undefined;
-        }
-        sdkNativeCalls.set(part.toolCallId, { input: part.input });
-        continue;
-      }
-      if (part.type !== "tool-result" && part.type !== "tool-error") continue;
-      if (CANONICAL_TOOL_NAMES[part.toolName] === true) continue;
-      const sdkCall = sdkNativeCalls.get(part.toolCallId);
-      if (
-        !nativeCallById.has(part.toolCallId) ||
-        sdkCall === undefined ||
-        sdkCall.outcome !== undefined
-      ) {
-        return undefined;
-      }
-      sdkCall.outcome = part.type === "tool-error" ? "error" : "result";
-    }
-  }
-
-  const toolCalls: PluginEvalToolCall[] = [];
-  let failedNativeRead = false;
-  for (const nativeCall of nativeCalls) {
-    const sdkCall = sdkNativeCalls.get(nativeCall.id);
-    if (nativeCall.name === "read") {
-      if (sdkCall?.outcome === undefined) return undefined;
-      if (sdkCall.outcome === "error") failedNativeRead = true;
-      continue;
-    }
-
-    const canonicalName = Object.hasOwn(CANONICAL_TOOL_BY_NATIVE_NAME, nativeCall.name)
-      ? CANONICAL_TOOL_BY_NATIVE_NAME[nativeCall.name]
-      : undefined;
-    if (canonicalName === undefined) {
-      if (sdkCall?.outcome !== "error") return undefined;
-      continue;
-    }
-    if (sdkCall !== undefined) {
-      if (sdkCall.outcome !== "error") return undefined;
-      const argumentsValue = jsonObject(sdkCall.input);
-      if (argumentsValue === undefined) return undefined;
-      toolCalls.push({
-        sequence: toolCalls.length,
-        name: canonicalName,
-        arguments: argumentsValue,
-        error: { message: "MCP tool call failed" },
-      });
-      continue;
-    }
-
-    const hostCalls = hostCallsByName.get(canonicalName);
-    const hostCall = hostCalls?.shift();
-    if (hostCall === undefined) return undefined;
-    toolCalls.push({ ...hostCall, sequence: toolCalls.length });
-  }
-  for (const hostCalls of hostCallsByName.values()) {
-    if (hostCalls.length > 0) return undefined;
-  }
-  return { toolCalls, failedNativeRead };
+  return { toolCalls, activatedSkills: [...activatedSkills], failedNativeRead };
 };
 
 const promptText = (evalCase: PluginEvalCase): string =>
@@ -1523,28 +1409,18 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                       }),
                   });
                   const captures: CapturedHostToolCall[] = [];
-                  const trustedSession: { current: EvidenceSandbox | undefined } = {
-                    current: undefined,
-                  };
                   const hostTools = yield* wrapHostTools(
                     tools,
                     definitions,
                     discoveredTools,
                     captures,
-                    trustedSession,
                     evalCase.id,
                   );
                   yield* ensureBeforeDeadline(evalCase.id, validated.timeoutMs, deadlineMillis);
                   const selectedSandbox =
                     validated.sandbox ??
-                    createOmpDockerSandbox({
-                      runtimeDirectory: validated.runtimeDirectory,
-                      ...(validated.dockerImage === undefined
-                        ? {}
-                        : { image: validated.dockerImage }),
-                      ...(validated.dockerNetwork === undefined
-                        ? {}
-                        : { network: validated.dockerNetwork }),
+                    createLocalHarnessSandbox({
+                      rootDirectory: validated.runtimeDirectory,
                     });
                   const rawSandboxDestroy: RawSandboxDestroyRef = { current: undefined };
                   const sandbox: HarnessV1SandboxProvider = {
@@ -1555,27 +1431,28 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                           if (typeof session.destroy !== "function") {
                             throw new Error("OMP sandbox session cleanup unavailable");
                           }
-                          rawSandboxDestroy.current = () => session.destroy();
+                          const sharedDestroy = shareSandboxDestroy(session.destroy.bind(session));
+                          rawSandboxDestroy.current = sharedDestroy;
+                          Object.assign(session, { destroy: sharedDestroy });
                           return session;
                         },
                       ),
                   };
                   const harness = createACP({
                     harnessId: "omp-acp",
-                    builtinTools: OMP_NATIVE_TOOL_METADATA,
+                    builtinTools: OMP_BUILTIN_TOOLS,
                     source: {
                       type: "install-command",
                       command: installCommand(
                         validated.provider,
                         validated.model,
                         validated.providerBaseUrl,
+                        validated.runtimeDirectory,
                       ),
                     },
                     executable: "omp",
                     args: [
                       "acp",
-                      "--trusted-extension",
-                      CONTAINER_GUARD_PATH,
                       "--no-extensions",
                       "--provider",
                       OMP_EVAL_PROVIDER_ALIAS,
@@ -1590,31 +1467,13 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                     skillsDirectory: ".omp/agent/skills",
                     modelMapping: { type: "session-config-option", path: "model" },
                     mcpServers: {},
-                    credentialEnv: [OMP_EVAL_PROVIDER_API_KEY_ENV],
-                    credentialBrokering: ({ env, sandboxEnv }) => {
-                      const key = env[OMP_EVAL_PROVIDER_API_KEY_ENV];
-                      const placeholder = sandboxEnv?.[OMP_EVAL_PROVIDER_API_KEY_ENV];
-                      if (key === undefined || placeholder === undefined) {
-                        throw new Error("OMP provider credentials unavailable");
-                      }
-                      const matchUrl =
-                        validated.providerBaseUrl ?? PROVIDER_PROFILE[validated.provider].baseUrl;
-                      const officialAnthropic =
-                        validated.provider === "anthropic" &&
-                        new URL(matchUrl).origin === PROVIDER_PROFILE.anthropic.baseUrl;
-                      const header = officialAnthropic ? "x-api-key" : "authorization";
-                      const prefix = officialAnthropic ? "" : "Bearer ";
-                      return [
-                        createCredentialRequestTransformation({
-                          matchUrl,
-                          matchHeaders: { [header]: `${prefix}${placeholder}` },
-                          transformHeaders: { [header]: `${prefix}${key}` },
-                        }),
-                      ];
+                    hostToolMcpTransport: "http",
+                    env: {
+                      NO_COLOR: "1",
+                      [OMP_EVAL_PROVIDER_API_KEY_ENV]: validated.apiKey,
                     },
-                    auth: { [OMP_EVAL_PROVIDER_API_KEY_ENV]: validated.apiKey },
-                    env: { NO_COLOR: "1" },
                   });
+                  let sessionSkillsDirectory: string | undefined;
                   const agent = new HarnessAgent({
                     harness,
                     sandbox,
@@ -1623,12 +1482,9 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                     permissionMode: "allow-all",
                     sandboxConfig: {
                       onSession: ({ session, abortSignal }) =>
-                        preflightOmpHarnessSession(
-                          session,
-                          trustedSession,
-                          evalCase.id,
-                          abortSignal,
-                        ),
+                        resolveSandboxHomeDir({ sandbox: session, abortSignal }).then((home) => {
+                          sessionSkillsDirectory = `${home}/.omp/agent/skills`;
+                        }),
                     },
                   });
                   return yield* withRunDeadline(
@@ -1663,31 +1519,7 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                                 validated.timeoutMs,
                                 deadlineMillis,
                               );
-                              const evidenceSandbox = trustedSession.current;
-                              if (evidenceSandbox === undefined) {
-                                return yield* new PluginEvalOmpHarnessProcessError({
-                                  caseId: evalCase.id,
-                                  reason: "incomplete-evidence",
-                                });
-                              }
-                              const evidenceText = yield* Effect.promise(() =>
-                                Promise.resolve(
-                                  evidenceSandbox.readTextFile({
-                                    path: CONTAINER_EVIDENCE_PATH,
-                                  }),
-                                ).then(
-                                  (text) => text,
-                                  () => null,
-                                ),
-                              );
-                              const evidence = decodeEvidenceText(evidenceText);
-                              if (evidence === undefined) {
-                                return yield* new PluginEvalOmpHarnessProcessError({
-                                  caseId: evalCase.id,
-                                  reason: "incomplete-evidence",
-                                });
-                              }
-                              return { generatedText, evidence, captures };
+                              return { generatedText, captures, sessionSkillsDirectory };
                             }),
                           ).pipe(
                             Effect.onExit((exit) =>
@@ -1721,61 +1553,43 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
         );
 
         yield* ensureBeforeDeadline(evalCase.id, validated.timeoutMs, deadlineMillis);
-        const { generatedText, evidence, captures } = trialResult;
-        if (evidence.phase !== "terminal" || evidence.terminal === undefined) {
-          return yield* new PluginEvalOmpHarnessProcessError({
-            caseId: evalCase.id,
-            reason: "incomplete-evidence",
-          });
-        }
-        if (!inventoryAdmitted(evidence)) {
-          return yield* new PluginEvalOmpHarnessProcessError({
-            caseId: evalCase.id,
-            reason: "inventory-mismatch",
-          });
-        }
-        const observed = observedToolCalls(generatedText.steps, captures, evidence.nativeCalls);
+        const { generatedText, captures, sessionSkillsDirectory } = trialResult;
+        const observed = observedToolCalls(
+          generatedText.steps,
+          captures,
+          validated.runtimeDirectory,
+          sessionSkillsDirectory,
+        );
         if (observed === undefined) {
           return yield* new PluginEvalOmpHarnessProcessError({
             caseId: evalCase.id,
             reason: "incomplete-evidence",
           });
         }
-        const { toolCalls, failedNativeRead } = observed;
-        const terminal = evidence.terminal;
+        const { toolCalls, activatedSkills, failedNativeRead } = observed;
+        const usage = generatedText.usage;
         const tokenUsage =
-          terminal.usage === undefined
-            ? undefined
-            : {
-                input_tokens: terminal.usage.inputTokens,
-                output_tokens: terminal.usage.outputTokens,
-                total_tokens: terminal.usage.totalTokens,
-              };
-        const incompleteStop =
-          terminal.stopReason === "length" ||
-          terminal.stopReason === "toolUse" ||
-          terminal.stopReason === "error" ||
-          terminal.stopReason === "aborted" ||
-          terminal.isError;
-        const blocked = evidence.blockedActions > 0;
+          usage !== undefined &&
+          typeof usage.inputTokens === "number" &&
+          typeof usage.outputTokens === "number" &&
+          typeof usage.totalTokens === "number"
+            ? {
+                input_tokens: usage.inputTokens,
+                output_tokens: usage.outputTokens,
+                total_tokens: usage.totalTokens,
+              }
+            : undefined;
         const failedTool = toolCalls.some((call) => call.error !== undefined);
-        const completed =
-          terminal.stopReason === "stop" &&
-          !incompleteStop &&
-          !blocked &&
-          !failedTool &&
-          !failedNativeRead;
+        const completed = generatedText.finishReason === "stop" && !failedTool && !failedNativeRead;
         const finishedMillis = yield* Clock.currentTimeMillis;
         if (finishedMillis >= deadlineMillis) {
           return yield* timeoutError(evalCase.id, validated.timeoutMs);
         }
         const error = completed
           ? undefined
-          : blocked
-            ? OMP_POLICY_ERROR
-            : failedTool || failedNativeRead
-              ? OMP_TOOL_EXECUTION_ERROR
-              : OMP_INCOMPLETE_GENERATION_ERROR;
+          : failedTool || failedNativeRead
+            ? OMP_TOOL_EXECUTION_ERROR
+            : OMP_INCOMPLETE_GENERATION_ERROR;
         return {
           version: 1,
           run_id: validated.runId,
@@ -1786,7 +1600,7 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
           started_at: startedAt,
           status: error === undefined ? "completed" : "failed",
           duration_ms: Math.max(0, finishedMillis - startedMillis),
-          activated_skills: [...evidence.activatedSkills],
+          activated_skills: [...activatedSkills],
           tool_calls: [...toolCalls],
           available_tools: [...validated.availableTools],
           ...(tokenUsage === undefined ? {} : { token_usage: tokenUsage }),
