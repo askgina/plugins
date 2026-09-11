@@ -1323,6 +1323,7 @@ const observedToolCalls = (
               if (skill !== undefined) activatedSkills.add(skill);
             }
           }
+          continue;
         }
         toolCalls.push({
           sequence: toolCalls.length,

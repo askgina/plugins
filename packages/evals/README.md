@@ -287,6 +287,8 @@ snapshots it once, then starts a fresh local `omp acp` session per trial under
 `createLocalHarnessSandbox`. Bootstrap links that snapshot. Both authentication
 modes load the isolated evaluation settings through an explicit `--config`
 overlay. There is no Docker engine, container image, or host-socket requirement.
+Local HarnessAgent bootstrap also requires Node.js and pnpm on the evaluator's
+`PATH` (verified with Node.js 24.21.0 and pnpm 10.34.5).
 
 Each API-key trial writes a static `models.yml` in its disposable home with one
 private `omp-eval` provider and one selected-model entry. Public `--provider` /
@@ -335,7 +337,8 @@ execution. OMP may coerce the model's raw arguments before this check. ACP does
 not provide a portable model-step limit.
 
 Skill activation requires a successful native read, not loaded metadata or an ACP
-intent title. Token usage comes from the harness generation result and remains
+intent title. Native skill reads contribute skill activation and failure evidence,
+not research-tool routing calls. Token usage comes from the harness generation result and remains
 absent when unavailable. A successful result also requires completed native
 generation and sandbox cleanup. Failed or cancelled trials allow up to eight
 seconds for session destroy without replacing the original failure. A cold local
