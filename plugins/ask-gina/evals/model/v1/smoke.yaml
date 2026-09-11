@@ -2,7 +2,7 @@ version: 1
 suite:
   id: ask-gina-model-smoke-v1
   plugin: ask-gina
-  catalog_version: 32-read-tools@2026-09-11
+  catalog_version: 31-read-tools@2026-09-10
   description: >-
     Credential-free contract seed for routing, overlap, follow-up, safety, and
     read-only-refusal evaluation. This is not the full benchmark corpus.
