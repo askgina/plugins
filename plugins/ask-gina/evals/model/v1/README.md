@@ -1,6 +1,6 @@
 # Ask Gina listed-plugin evaluation v1
 
-This package evaluates the 31-tool, read-only Ask Gina plugin without making
+This package evaluates the 32-tool, read-only Ask Gina plugin without making
 the ChatGPT trial the scaling bottleneck. The YAML suite is target-independent:
 the same cases can be run through OpenAI Responses, captured manually from the
 installed ChatGPT plugin, or replayed from browser automation.
@@ -36,7 +36,7 @@ Gina or model benchmark.
 
 ## Full family corpus
 
-The `families/` directory contains 37 cases that collectively expect the
+The `families/` directory contains 39 cases that collectively expect the
 public account, spot, Hyperliquid, and prediction reads in the checked-in
 catalog. Prediction search owns expiry and series discovery.
 
@@ -44,10 +44,10 @@ catalog. Prediction search owns expiry and series discovery.
 | ------------------ | ----: | --------------------: |
 | `portfolio.yaml`   |     3 |                     3 |
 | `spot.yaml`        |     4 |                     4 |
-| `perps.yaml`       |    17 |                    14 |
+| `perps.yaml`       |    19 |                    16 |
 | `predictions.yaml` |    13 |                     6 |
 
-Each family case runs against the checked-in 31-tool MCP catalog by default.
+Each family case runs against the checked-in 32-tool MCP catalog by default.
 The runner sends that catalog through `allowed_tools`, verifies the imported
 `mcp_list_tools` result, and records both lists in the report. This means a
 family run measures selection and cross-family confusion under the production
@@ -71,7 +71,7 @@ The sanitized 2026-08-19 production baseline is checked in at
 scores, distributions, tool names, and run metadata. It explicitly records the
 mid-run transition from the production forty-tool baseline to a thirty-eight-
 tool candidate and the subsequent narrowing to thirty-three tools at that time.
-The current candidate contains 31 tools. The historical baseline is not a clean
+The current candidate contains 32 tools. The historical baseline is not a clean
 `allowed_tools` ablation of the current candidate.
 
 ## Installed-skill activation corpus

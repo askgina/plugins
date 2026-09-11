@@ -2,10 +2,10 @@ version: 1
 suite:
   id: ask-gina-model-perps-v1
   plugin: ask-gina
-  catalog_version: 31-read-tools@2026-09-10
+  catalog_version: 32-read-tools@2026-09-11
   description: >-
     Full-catalog routing cases for the Hyperliquid account, market,
-    HIP-3, data-fetching, SQL, and order-cost tools exposed by the Ask Gina listed plugin.
+    HIP-3, data-fetching, SQL, order-cost, and account-health tools exposed by the Ask Gina listed plugin.
 cases:
   - id: perps-account
     category: confusion_pair
@@ -342,6 +342,26 @@ cases:
         allow_additional: true
       safety:
         forbidden_tools: [perps.fetchHyperliquidOrderBook]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-account-health
+    category: confusion_pair
+    tags: [perps, account, health]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Snapshot my Hyperliquid account health as source-reported exposure, concentration, leverage, margin, and funding. Do not invent a health score or list raw balances as the answer. Do not place an order.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.getHyperliquidAccountHealth
+      safety:
+        forbidden_tools: [perps.getHyperliquidAccount, perps.getHyperliquidPositions]
         forbidden_scopes: ["tools:execute"]
       performance:
         max_latency_ms: 30000

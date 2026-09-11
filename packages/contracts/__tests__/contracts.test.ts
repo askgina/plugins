@@ -46,6 +46,7 @@ const EXPECTED_TOOL_NAMES = [
   "perps.fetchHyperliquidCandles",
   "perps.fetchHyperliquidOrderBook",
   "perps.previewHyperliquidOrderCost",
+  "perps.getHyperliquidAccountHealth",
   "perps.createHyperliquidTable",
   "perps.executeSqlQuery",
   "predictions.searchPredictionMarkets",
@@ -89,13 +90,13 @@ const familyFromName = (name: (typeof EXPECTED_TOOL_NAMES)[number]) =>
   name.startsWith("gina.") ? "portfolio" : name.split(".", 1)[0];
 
 describe("@askgina/contracts", () => {
-  it.effect("publishes the exact 31-name catalog projection", () =>
+  it.effect("publishes the exact 32-name catalog projection", () =>
     Effect.sync(() => {
-      assert.strictEqual(GINA_READ_TOOL_CATALOG.length, 31);
+      assert.strictEqual(GINA_READ_TOOL_CATALOG.length, 32);
       assert.deepStrictEqual(listCatalogToolNames(), EXPECTED_TOOL_NAMES);
       assert.deepStrictEqual(
         GINA_READ_TOOL_CATALOG.map((tool) => Object.keys(tool)),
-        Array.from({ length: 31 }, () => [
+        Array.from({ length: 32 }, () => [
           "name",
           "family",
           "readOnlyHint",
@@ -155,7 +156,7 @@ describe("@askgina/contracts", () => {
       assert.isFalse(isGinaRenderToolName("predictions.searchPredictionMarkets"));
       assert.isFalse(isGinaRenderToolName(undefined));
 
-      assert.strictEqual(GINA_CONNECTED_TOOL_NAMES.length, 32);
+      assert.strictEqual(GINA_CONNECTED_TOOL_NAMES.length, 33);
       assert.deepStrictEqual(listConnectedToolNames(), GINA_CONNECTED_TOOL_NAMES);
       assert.isTrue(
         GINA_CONNECTED_TOOL_NAMES.every((name: string) => isGinaConnectedToolName(name)),
@@ -207,7 +208,7 @@ describe("@askgina/contracts", () => {
       assert.strictEqual(READ_SCOPE, "tools:read");
       assert.strictEqual(EXECUTE_SCOPE, "tools:execute");
       assert.strictEqual(RELEASE_VERSION, "0.1.0");
-      assert.strictEqual(SOURCE_COMMIT, "51d99dde59e17080255fdb4ae8e59a63355a8b5e");
+      assert.strictEqual(SOURCE_COMMIT, "6628bc4d78ef63417dd24cce6aa5c68d4b3d38e6");
 
       const computedCatalogSha = createHash("sha256")
         .update(yield* Schema.encodeEffect(GinaReadToolCatalogJsonSchema)(GINA_READ_TOOL_CATALOG))
