@@ -15,12 +15,31 @@ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { assert, describe, it } from "@effect/vitest";
 import { jsonSchema, type GenerateTextResult, type StepResult, type ToolSet } from "ai";
-import { DateTime, Effect, FileSystem, Layer, Path, Redacted } from "effect";
+import {
+  Cause,
+  DateTime,
+  Deferred,
+  Duration,
+  Effect,
+  Exit,
+  Fiber,
+  FileSystem,
+  Layer,
+  Path,
+  Redacted,
+} from "effect";
+import { TestClock } from "effect/testing";
 import { beforeEach, vi } from "vitest";
 
 import { gradePluginEvalObservation } from "../src/grading";
 import { loadPluginEvalSuite } from "../src/load-suite";
-import { runOmpHarnessPluginEvalTrial } from "../src/omp-harness";
+import {
+  PluginEvalOmpHarnessProcessError,
+  PluginEvalOmpHarnessTranscriptError,
+  runOmpHarnessPluginEvalTrial,
+  type OmpHarnessTrialOptions,
+} from "../src/omp-harness";
+import type { OmpTrialTranscript } from "../src/omp-transcript";
 
 const fixture = vi.hoisted(() => ({
   failedRead: false,
@@ -28,6 +47,14 @@ const fixture = vi.hoisted(() => ({
   priceCallCount: 1,
   extraPriceMirror: false,
   mismatchedMirrorArguments: false,
+  generateCalls: 0,
+  streamCalls: 0,
+  destroyCalls: 0,
+  destroyFails: false,
+  streamMode: "success" as "success" | "terminal-error" | "hang",
+  streamSecretText: false,
+  lastPrompt: undefined as string | undefined,
+  onStreamWait: undefined as (() => void) | undefined,
 }));
 const PRICE_TOOL = "spot.getSimplePrice";
 const PRICE_ARGUMENTS = { ids: "ethereum", vs_currencies: "usd" };
@@ -172,12 +199,18 @@ vi.mock("@ai-sdk/harness/agent", () => ({
       return Promise.resolve(sandbox.createSession(options)).then(
         (session) =>
           ({
-            destroy: () => Promise.resolve(session.destroy()),
+            destroy: () => {
+              fixture.destroyCalls += 1;
+              return fixture.destroyFails
+                ? Promise.reject(new Error("Fixture session cleanup failed"))
+                : Promise.resolve(session.destroy());
+            },
           }) satisfies Pick<HarnessAgentSession, "destroy">,
       );
     }
 
     generate(): Promise<GenerationEvidence> {
+      fixture.generateCalls += 1;
       const readCall = {
         type: "tool-call",
         toolCallId: "native-skill-read",
@@ -272,12 +305,87 @@ vi.mock("@ai-sdk/harness/agent", () => ({
         }),
       );
     }
+
+    stream(options: { readonly prompt: string; readonly abortSignal?: AbortSignal }) {
+      fixture.streamCalls += 1;
+      fixture.lastPrompt = options.prompt;
+      return this.generate().then((evidence) => {
+        const parts: Array<Record<string, unknown>> = [
+          { type: "text-delta", id: "answer", text: "Checking " },
+          { type: "reasoning-delta", id: "reasoning", text: "private chain" },
+          { type: "text-delta", id: "answer", text: "Ethereum." },
+          {
+            type: "tool-call",
+            toolCallId: "stream-price-call",
+            toolName: PRICE_TOOL,
+            input: PRICE_ARGUMENTS,
+            providerExecuted: false,
+          },
+          { type: "raw", rawValue: { private: "provider frame" } },
+          {
+            type: "tool-result",
+            toolCallId: "stream-price-call",
+            toolName: PRICE_TOOL,
+            input: PRICE_ARGUMENTS,
+            output: PRICE_RESULT,
+            providerExecuted: false,
+          },
+          {
+            type: "text-delta",
+            id: "answer",
+            text: fixture.streamSecretText
+              ? "Bearer synthetic-mcp-authorization"
+              : "Ethereum is $3,200 USD.",
+          },
+        ];
+        let index = 0;
+        let pending: PromiseWithResolvers<{ done: true; value: undefined }> | undefined;
+        const stream = {
+          [Symbol.asyncIterator]: () => ({
+            next: () => {
+              const hangAfter = 3;
+              if (fixture.streamMode !== "hang" || index < hangAfter) {
+                if (index < parts.length) {
+                  const value = parts[index];
+                  index += 1;
+                  return Promise.resolve({ done: false as const, value });
+                }
+                return Promise.resolve({ done: true as const, value: undefined });
+              }
+              fixture.onStreamWait?.();
+              if (pending === undefined) {
+                pending = Promise.withResolvers<{ done: true; value: undefined }>();
+                options.abortSignal?.addEventListener(
+                  "abort",
+                  () => pending?.resolve({ done: true, value: undefined }),
+                  { once: true },
+                );
+              }
+              return pending.promise;
+            },
+            return: () =>
+              pending?.promise ?? Promise.resolve({ done: true as const, value: undefined }),
+          }),
+        };
+        return {
+          stream,
+          get text() {
+            return fixture.streamMode === "terminal-error"
+              ? Promise.reject(new Error("Fixture terminal accessor failed"))
+              : Promise.resolve(evidence.text);
+          },
+          finishReason: Promise.resolve(evidence.finishReason),
+          usage: Promise.resolve(evidence.usage),
+          steps: Promise.resolve(evidence.steps),
+        };
+      });
+    }
   },
 }));
 
 const TestPlatformLayer = Layer.merge(BunFileSystem.layer, BunPath.layer);
 
-const runPriceTrial = Effect.gen(function* () {
+const preparePriceTrial = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const runtimeDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-read-evidence-" });
@@ -296,17 +404,23 @@ const runPriceTrial = Effect.gen(function* () {
   );
   const evalCase = suite.cases.find((candidate) => candidate.id === "spot-simple-price");
   if (evalCase === undefined) return yield* Effect.die("Missing spot-simple-price suite case");
-  const observation = yield* runOmpHarnessPluginEvalTrial(evalCase, {
+  const options = {
     runId: "omp-read-evidence",
     repetition: 1,
     availableTools: GINA_CONNECTED_TOOL_NAMES,
     runtimeDirectory,
-    auth: { mode: "native", provider: "fixture", agentDirectory },
+    auth: { mode: "native" as const, provider: "fixture", agentDirectory },
     model: "fixture-model",
     reasoning: "off",
     mcpAuthorization: Redacted.make("synthetic-mcp-authorization"),
     timeoutMs: 30_000,
-  });
+  } satisfies OmpHarnessTrialOptions;
+  return { evalCase, options };
+});
+
+const runPriceTrial = Effect.gen(function* () {
+  const { evalCase, options } = yield* preparePriceTrial;
+  const observation = yield* runOmpHarnessPluginEvalTrial(evalCase, options);
   const score = yield* gradePluginEvalObservation(evalCase, observation);
   return { observation, score };
 });
@@ -318,6 +432,14 @@ describe("OMP harness native read evidence", () => {
     fixture.priceCallCount = 1;
     fixture.extraPriceMirror = false;
     fixture.mismatchedMirrorArguments = false;
+    fixture.generateCalls = 0;
+    fixture.streamCalls = 0;
+    fixture.destroyCalls = 0;
+    fixture.destroyFails = false;
+    fixture.streamMode = "success";
+    fixture.streamSecretText = false;
+    fixture.lastPrompt = undefined;
+    fixture.onStreamWait = undefined;
   });
 
   it.layer(TestPlatformLayer)((it) => {
@@ -336,7 +458,281 @@ describe("OMP harness native read evidence", () => {
             observation.tool_calls.map(({ name }) => name),
             [PRICE_TOOL],
           );
+          assert.strictEqual(fixture.generateCalls, 1);
+          assert.strictEqual(fixture.streamCalls, 0);
         }),
+    );
+
+    it.effect("captures ordered stream chat without changing terminal grading evidence", () =>
+      Effect.gen(function* () {
+        const { evalCase, options } = yield* preparePriceTrial;
+        const transcripts: OmpTrialTranscript[] = [];
+        const observation = yield* runOmpHarnessPluginEvalTrial(evalCase, {
+          ...options,
+          onTranscript: (transcript) => {
+            transcripts.push(transcript);
+            return Promise.resolve();
+          },
+        });
+        const score = yield* gradePluginEvalObservation(evalCase, observation);
+        const expectedPrompt = evalCase.turns
+          .filter((turn) => turn.role === "user")
+          .map((turn) => turn.content)
+          .join("\n\n");
+
+        assert.strictEqual(fixture.streamCalls, 1);
+        assert.strictEqual(fixture.lastPrompt, expectedPrompt);
+        assert.strictEqual(observation.final_answer, "Ethereum is $3,200 USD.");
+        assert.strictEqual(score.routing.score, 1);
+        assert.strictEqual(score.arguments.score, 1);
+        assert.isTrue(score.overall_pass);
+        assert.lengthOf(transcripts, 1);
+        const [transcript] = transcripts;
+        if (transcript === undefined) return;
+        assert.strictEqual(transcript.status, "completed");
+        assert.isFalse(transcript.truncated);
+        assert.deepStrictEqual(transcript.messages, [
+          { role: "user", type: "text", text: expectedPrompt },
+          { role: "assistant", type: "text", text: "Checking Ethereum." },
+          {
+            role: "assistant",
+            type: "tool-call",
+            toolCallId: "stream-price-call",
+            toolName: PRICE_TOOL,
+            input: PRICE_ARGUMENTS,
+          },
+          {
+            role: "tool",
+            type: "tool-result",
+            toolCallId: "stream-price-call",
+            toolName: PRICE_TOOL,
+            output: PRICE_RESULT,
+            isError: false,
+          },
+          {
+            role: "assistant",
+            type: "text",
+            text: "Ethereum is $3,200 USD.",
+          },
+        ]);
+      }),
+    );
+
+    it.effect("retains partial stream when terminal accessors reject", () =>
+      Effect.gen(function* () {
+        fixture.streamMode = "terminal-error";
+        const callbackSecret = "terminal-callback-secret-must-not-win";
+        const { evalCase, options } = yield* preparePriceTrial;
+        const transcripts: OmpTrialTranscript[] = [];
+        const result = yield* Effect.result(
+          runOmpHarnessPluginEvalTrial(evalCase, {
+            ...options,
+            onTranscript: (transcript) => {
+              transcripts.push(transcript);
+              return Promise.reject(new Error(callbackSecret));
+            },
+          }),
+        );
+
+        assert.strictEqual(result._tag, "Failure");
+        if (result._tag === "Failure") {
+          assert.instanceOf(result.failure, PluginEvalOmpHarnessProcessError);
+          assert.notInclude(String(result.failure), callbackSecret);
+        }
+        assert.lengthOf(transcripts, 1);
+        const [transcript] = transcripts;
+        if (transcript === undefined) return;
+        assert.strictEqual(transcript.status, "failed");
+        assert.deepInclude(transcript.messages, {
+          role: "assistant",
+          type: "text",
+          text: "Ethereum is $3,200 USD.",
+        });
+        assert.strictEqual(fixture.destroyCalls, 1);
+      }),
+    );
+
+    it.effect("retains partial stream and reports timeout after cleanup", () =>
+      Effect.gen(function* () {
+        fixture.streamMode = "hang";
+        const ready = yield* Deferred.make<void>();
+        fixture.onStreamWait = () => {
+          void Deferred.doneUnsafe(ready, Effect.void);
+        };
+        const { evalCase, options } = yield* preparePriceTrial;
+        const transcripts: OmpTrialTranscript[] = [];
+        const fiber = yield* Effect.forkChild(
+          runOmpHarnessPluginEvalTrial(evalCase, {
+            ...options,
+            timeoutMs: 1_000,
+            onTranscript: (transcript, signal) => {
+              assert.isFalse(signal.aborted);
+              transcripts.push(transcript);
+              return Promise.resolve();
+            },
+          }),
+        );
+        yield* Deferred.await(ready);
+        yield* TestClock.adjust(Duration.millis(1_000));
+        const exit = yield* Fiber.await(fiber);
+
+        assert.isTrue(Exit.isFailure(exit));
+        assert.lengthOf(transcripts, 1);
+        const [transcript] = transcripts;
+        if (transcript === undefined) return;
+        assert.strictEqual(transcript.status, "timeout");
+        assert.deepInclude(transcript.messages, {
+          role: "assistant",
+          type: "text",
+          text: "Checking Ethereum.",
+        });
+        assert.strictEqual(fixture.destroyCalls, 1);
+      }),
+    );
+
+    it.effect("retains partial stream without swallowing parent interruption", () =>
+      Effect.gen(function* () {
+        fixture.streamMode = "hang";
+        const ready = yield* Deferred.make<void>();
+        fixture.onStreamWait = () => {
+          void Deferred.doneUnsafe(ready, Effect.void);
+        };
+        const callbackSecret = "interrupt-callback-secret-must-not-win";
+        const { evalCase, options } = yield* preparePriceTrial;
+        const transcripts: OmpTrialTranscript[] = [];
+        const fiber = yield* Effect.forkChild(
+          runOmpHarnessPluginEvalTrial(evalCase, {
+            ...options,
+            onTranscript: (transcript, signal) => {
+              assert.isFalse(signal.aborted);
+              transcripts.push(transcript);
+              return Promise.reject(new Error(callbackSecret));
+            },
+          }),
+        );
+        yield* Deferred.await(ready);
+        yield* Fiber.interrupt(fiber);
+        const exit = yield* Fiber.await(fiber);
+
+        assert.isTrue(Exit.isFailure(exit));
+        if (Exit.isFailure(exit)) {
+          assert.isTrue(Cause.hasInterrupts(exit.cause));
+          assert.notInclude(String(exit.cause), callbackSecret);
+        }
+        assert.lengthOf(transcripts, 1);
+        const [transcript] = transcripts;
+        if (transcript === undefined) return;
+        assert.strictEqual(transcript.status, "interruption");
+        assert.deepInclude(transcript.messages, {
+          role: "assistant",
+          type: "text",
+          text: "Checking Ethereum.",
+        });
+      }),
+    );
+
+    it.effect("fails a successful trial with a value-free callback rejection after cleanup", () =>
+      Effect.gen(function* () {
+        fixture.streamSecretText = true;
+        const callbackSecret = "callback-secret-must-not-leak";
+        const { evalCase, options } = yield* preparePriceTrial;
+        const transcripts: OmpTrialTranscript[] = [];
+        let cleanupCountAtCallback = 0;
+        const result = yield* Effect.result(
+          runOmpHarnessPluginEvalTrial(evalCase, {
+            ...options,
+            onTranscript: (transcript) => {
+              cleanupCountAtCallback = fixture.destroyCalls;
+              transcripts.push(transcript);
+              return Promise.reject(new Error(callbackSecret));
+            },
+          }),
+        );
+
+        assert.strictEqual(result._tag, "Failure");
+        if (result._tag === "Failure") {
+          assert.instanceOf(result.failure, PluginEvalOmpHarnessTranscriptError);
+          if (result.failure instanceof PluginEvalOmpHarnessTranscriptError) {
+            assert.strictEqual(result.failure.reason, "write-failed");
+          }
+          const failureText = String(result.failure);
+          assert.notInclude(failureText, callbackSecret);
+          assert.notInclude(failureText, "synthetic-mcp-authorization");
+        }
+        assert.strictEqual(cleanupCountAtCallback, 1);
+        assert.lengthOf(transcripts, 1);
+        const [transcript] = transcripts;
+        if (transcript === undefined) return;
+        assert.strictEqual(transcript.status, "completed");
+        const finalMessage = transcript.messages.at(-1);
+        assert.strictEqual(finalMessage?.type, "text");
+        if (finalMessage?.type === "text") {
+          assert.notInclude(finalMessage.text, "synthetic-mcp-authorization");
+          assert.include(finalMessage.text, "[redacted]");
+        }
+      }),
+    );
+
+    it.effect("stops a successful trial when transcript persistence never settles", () =>
+      Effect.gen(function* () {
+        const ready = yield* Deferred.make<void>();
+        const pending = Promise.withResolvers<void>();
+        let callbackCancelled = false;
+        const { evalCase, options } = yield* preparePriceTrial;
+        const fiber = yield* Effect.forkChild(
+          runOmpHarnessPluginEvalTrial(evalCase, {
+            ...options,
+            onTranscript: (_transcript, signal) => {
+              signal.addEventListener(
+                "abort",
+                () => {
+                  callbackCancelled = true;
+                  pending.resolve();
+                },
+                { once: true },
+              );
+              void Deferred.doneUnsafe(ready, Effect.void);
+              return pending.promise;
+            },
+          }),
+        );
+        yield* Deferred.await(ready);
+        yield* TestClock.adjust(Duration.millis(5_000));
+        const result = yield* Fiber.join(fiber).pipe(Effect.result);
+
+        assert.isTrue(callbackCancelled);
+        assert.strictEqual(result._tag, "Failure");
+        if (result._tag === "Failure") {
+          assert.instanceOf(result.failure, PluginEvalOmpHarnessTranscriptError);
+          if (result.failure instanceof PluginEvalOmpHarnessTranscriptError) {
+            assert.strictEqual(result.failure.reason, "write-timeout");
+          }
+        }
+      }),
+    );
+
+    it.effect("reports failed transcript status when settled cleanup fails", () =>
+      Effect.gen(function* () {
+        fixture.destroyFails = true;
+        const { evalCase, options } = yield* preparePriceTrial;
+        const transcripts: OmpTrialTranscript[] = [];
+        let cleanupCountAtCallback = 0;
+        const result = yield* Effect.result(
+          runOmpHarnessPluginEvalTrial(evalCase, {
+            ...options,
+            onTranscript: (transcript) => {
+              cleanupCountAtCallback = fixture.destroyCalls;
+              transcripts.push(transcript);
+              return Promise.resolve();
+            },
+          }),
+        );
+
+        assert.strictEqual(result._tag, "Failure");
+        assert.strictEqual(cleanupCountAtCallback, 1);
+        assert.lengthOf(transcripts, 1);
+        assert.strictEqual(transcripts[0]?.status, "failed");
+      }),
     );
 
     it.effect(
