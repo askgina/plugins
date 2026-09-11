@@ -22,7 +22,7 @@ import { gradePluginEvalObservation } from "../src/grading";
 import { loadPluginEvalSuite } from "../src/load-suite";
 import { runOmpHarnessPluginEvalTrial } from "../src/omp-harness";
 
-const fixture = vi.hoisted(() => ({ failedRead: false }));
+const fixture = vi.hoisted(() => ({ failedRead: false, extraNativeCall: false }));
 const PRICE_TOOL = "spot.getSimplePrice";
 const PRICE_ARGUMENTS = { ids: "ethereum", vs_currencies: "usd" };
 const PRICE_RESULT = {
@@ -201,10 +201,25 @@ vi.mock("@ai-sdk/harness/agent", () => ({
         const steps = [
           sdkStep(0, [readCall, readOutcome]),
           sdkStep(1, [priceCall, { ...priceCall, type: "tool-result", output }]),
-          sdkStep(2, [{ type: "text", text: "Ethereum is $3,200 USD." }]),
         ];
-        const finalStep = steps[2];
-        if (finalStep === undefined) throw new Error("Missing final SDK step");
+        if (fixture.extraNativeCall) {
+          const nativeCall = {
+            ...readCall,
+            toolCallId: "native-todo-call",
+            toolName: "acp_tool_call_fixture",
+            input: { todos: [{ content: "Look up Ethereum price", status: "completed" }] },
+          } satisfies StepResult<ToolSet>["toolCalls"][number];
+          steps.push(
+            sdkStep(steps.length, [
+              nativeCall,
+              { ...nativeCall, type: "tool-result", output: "Todo updated." },
+            ]),
+          );
+        }
+        const finalStep = sdkStep(steps.length, [
+          { type: "text", text: "Ethereum is $3,200 USD." },
+        ]);
+        steps.push(finalStep);
         return {
           text: finalStep.text,
           finishReason: finalStep.finishReason,
@@ -255,6 +270,7 @@ const runPriceTrial = Effect.gen(function* () {
 describe("OMP harness native read evidence", () => {
   beforeEach(() => {
     fixture.failedRead = false;
+    fixture.extraNativeCall = false;
   });
 
   it.layer(TestPlatformLayer)((it) => {
@@ -284,6 +300,22 @@ describe("OMP harness native read evidence", () => {
           assert.strictEqual(score.routing.score, 1);
           assert.strictEqual(score.arguments.score, 1);
         }),
+    );
+
+    it.effect("keeps generated native calls in evidence and fails exact Gina routing", () =>
+      Effect.gen(function* () {
+        fixture.extraNativeCall = true;
+        const { observation, score } = yield* runPriceTrial;
+
+        assert.strictEqual(observation.status, "completed");
+        assert.deepStrictEqual(observation.activated_skills, ["research-spot-tokens"]);
+        assert.deepStrictEqual(
+          observation.tool_calls.map(({ name }) => name),
+          [PRICE_TOOL, "acp_tool_call_fixture"],
+        );
+        assert.strictEqual(score.routing.score, 0);
+        assert.isFalse(score.overall_pass);
+      }),
     );
   });
 });

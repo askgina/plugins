@@ -320,7 +320,7 @@ types while remaining strict and does not coerce arguments.
 
 The Gina bearer stays on the host. Canonical MCP reads execute in the evaluator
 process and are exposed as wrapped HarnessAgent host tools. The child does not
-receive that token. Native OMP builtins still run with ordinary host access;
+receive that token. Native OMP builtins are restricted to `read` via `--tools read`, while all 31 research MCP tools remain available; `read` still has ordinary host access;
 the local sandbox is placement, not confinement. Stock OMP defaults
 `tools.xdev` to true and mounts MCP tools under `xd://` instead of provider
 functions; the session `config.yml` sets `tools.xdev: false` and the stock ACP

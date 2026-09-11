@@ -1527,6 +1527,8 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                     args: [
                       "acp",
                       "--no-extensions",
+                      "--tools",
+                      "read",
                       "--config",
                       `${validated.runtimeDirectory}/config.yml`,
                       "--provider",
