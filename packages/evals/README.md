@@ -290,9 +290,9 @@ overlay. There is no Docker engine, container image, or host-socket requirement.
 
 Each API-key trial writes a static `models.yml` in its disposable home with one
 private `omp-eval` provider and one selected-model entry. Public `--provider` /
-`--model` identity stays on the report, attempt, and observation. In this mode,
-ACP uses `--provider omp-eval`
-and the original backend model id, including OpenRouter nested slugs. The
+`--model` identity stays on the report, attempt, and observation. In API-key mode,
+the ACP child is launched with `--provider omp-eval` and the original backend
+model id, including OpenRouter nested slugs. The
 child receives the explicit model key as `OMP_EVAL_PROVIDER_API_KEY` through
 the stock adapter's environment option. Standard provider credential variables
 are not inherited. There is no credential broker or request transformation.
@@ -347,9 +347,11 @@ Native mode passed a cold synthetic smoke with an inert API key stored through
 OMP's stock credential API in a disposable `agent.db`, with no evaluator key
 environment variable. The proof covered canonical skill reads, successful and
 failed MCP calls, rejection before dispatch for a missing profile, API-key mode
-compatibility, and one physical destroy per session. It left the selected
-profile in place; its database changed during native execution. This proves
-stored-credential delegation, not real OAuth refresh or subscription access.
+compatibility, and one physical destroy per session. The receipt's
+`profile.before` and `profile.after` hashes matched for `models.yml` and
+`config.yml`, but `agent.db` changed during native execution. The selected
+profile remained in place. This is not a read-only profile mount and proves
+stored API-key delegation only, not real OAuth refresh or subscription access.
 These fixtures do not prove real model behavior, production Gina connectivity,
 or measured native-plugin activation.
 
