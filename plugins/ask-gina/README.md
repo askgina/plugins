@@ -61,7 +61,7 @@ Scope: `tools:read` only. This plugin does not include transaction execution or 
 
 1. Install **Ask Gina** from the Cursor / Grok Bot plugin marketplace, or load this folder as a local Cursor plugin (`~/.cursor/plugins/local/ask-gina` as a real directory, not an external symlink).
 2. Open the Gina connector and choose **Connect**. Complete Ask Gina OAuth in the browser.
-3. Confirm the connector shows the read tools (30 catalog tools). Skills below should appear as well. In Cursor, the four slash commands and the always-on read-only rule should appear too.
+3. Confirm the connector shows the read tools (32 catalog tools). Skills below should appear as well. In Cursor, the four slash commands and the always-on read-only rule should appear too.
 
 Grok Bot loads plugins only from the Cursor marketplace. A local `~/.cursor/plugins/local` install proves the Cursor IDE loader, not Grok Bot.
 
