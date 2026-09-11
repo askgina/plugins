@@ -373,9 +373,39 @@ or measured native-plugin activation.
 Each live run writes a v1 aggregate below the ignored `.plugin-eval-runs/`
 directory and a sibling `.journal-v1.jsonl`, both mode `0600`. OpenRouter
 writes four siblings: the v1 aggregate `.json`, `.requested-routing-v1.json`,
-`.configuration-v2.json`, and `.journal-v1.jsonl`. Keep all four. Other live
-runners write only the aggregate and journal. `--attempts-output` remains an
-optional grader companion and does not replace those siblings.
+`.configuration-v2.json`, and `.journal-v1.jsonl`. Keep all four. OMP also writes
+`<report-stem>.transcripts-v1.jsonl` automatically, in both authentication modes.
+Other live runners write only the aggregate and journal. `--attempts-output`
+remains an optional grader companion and does not replace those siblings.
+
+The OMP transcript is a private, mode-`0600` JSONL file. It contains a run header,
+one transcript per trial, and a final `report-bound` record with the exact
+aggregate report SHA-256. Each transcript records the user prompt, ordered
+assistant text, tool calls and results, trial identity, and settled status.
+Reasoning and raw provider frames are excluded. Capture does not change grading
+or the v1 aggregate and public attempt schemas.
+
+Supplied credentials and recognizable credential text are redacted before
+persistence. Other private text, tool data, and local paths can remain: do not
+publish this file or import it into the public leaderboard. Each trial is capped
+at 512 messages and 1 MiB, with 64 KiB field limits. Omitted or shortened content
+sets `truncated: true`.
+
+The transcript header is fsynced before credentials load. Completed and partial
+trial transcripts are written after session cleanup, including on timeout or
+interruption; this is not a per-token crash-recovery log. A killed process can
+leave only earlier trial records. Persistence has a five-second callback budget.
+A capture failure stops the run before the next dispatch, even if the completed
+observation has a failed grading status. An existing execution error or
+interruption remains authoritative. The final report binding requires the
+complete planned trial set.
+
+Library callers opt in with `OmpHarnessTrialOptions.onTranscript`. The package
+exports `OmpTrialTranscript`, its schemas, and `createOmpTranscriptWriter` for
+private storage. The callback receives a separate `AbortSignal` for its
+persistence window. Pass that signal to asynchronous storage so a timed-out
+callback does not leave a pending writer. Without that callback, library trials
+retain the existing non-streaming generation path.
 
 The journal writes its run header, fsynced, before credentials load. The
 header captures suite, catalog, reasoning, account class, selected cases,

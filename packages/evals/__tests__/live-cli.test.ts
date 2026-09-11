@@ -24,6 +24,7 @@ import { makeLiveEvalConfigurationEvidence } from "../src/configuration";
 import { ALPHA_GINA_READ_SERVER_URL } from "../src/server-url";
 import type { LiveEvalConfigurationCaptureType } from "../src/configuration";
 import { DEFAULT_OPENROUTER_MAX_TOOL_CALLS } from "../src/openrouter";
+import { OMP_TRANSCRIPT_SCHEMA_VERSION } from "../src/omp-transcript";
 import type { SanitizedEvalRunReport } from "../src/report";
 import aggregateFixture from "../src/fixtures/sanitized-aggregate.json";
 import { SanitizedEvalAggregateSchema } from "../src/sanitize";
@@ -843,6 +844,174 @@ describe("live eval CLI subprocess", () => {
           assert.notInclude(stdout.text, "sk-");
           assert.notInclude(stderr.text, "OPENAI_API_KEY=");
           assert.notInclude(stderr.text, "OMP_EVAL_API_KEY=");
+        }),
+      ),
+    );
+
+    it.effect("rejects preexisting and attempts-colliding OMP transcripts before credentials", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const pathValue = yield* Config.string("PATH");
+          const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "live-cli-omp-transcript-" });
+          const liveCli = path.join(process.cwd(), "packages/evals/src/bin/live.ts");
+          const outputDirectory = path.join(cwd, ".plugin-eval-runs");
+          yield* fs.makeDirectory(outputDirectory);
+
+          const preexistingRunId = "run-preexisting";
+          const preexistingTranscript = path.join(
+            outputDirectory,
+            `omp_harness-cand-1-${preexistingRunId}.transcripts-v1.jsonl`,
+          );
+          yield* fs.writeFileString(preexistingTranscript, "foreign bytes\n", {
+            flag: "wx",
+            mode: 0o600,
+          });
+          const preexistingChild = yield* ChildProcess.make(
+            "bun",
+            [
+              liveCli,
+              ...requiredFlags("omp", ["--provider", "openai"]).map((value) =>
+                value === "run-1" ? preexistingRunId : value,
+              ),
+            ],
+            {
+              cwd,
+              env: { PATH: pathValue },
+              extendEnv: false,
+              stdin: "ignore",
+              stdout: "pipe",
+              stderr: "pipe",
+            },
+          );
+          const [preexistingStdout, preexistingStderr, preexistingExitCode] = yield* Effect.all(
+            [
+              collectBoundedUtf8Output(preexistingChild.stdout, 65_536),
+              collectBoundedUtf8Output(preexistingChild.stderr, 65_536),
+              preexistingChild.exitCode,
+            ],
+            { concurrency: "unbounded" },
+          );
+          const preexistingOutput = `${preexistingStdout.text}\n${preexistingStderr.text}`;
+          assert.notStrictEqual(preexistingExitCode, 0, preexistingOutput);
+          assert.include(preexistingOutput, "PublicEvalAttemptWriteError");
+          assert.notInclude(preexistingOutput, "ASK_GINA_ACCESS_TOKEN");
+          assert.notInclude(preexistingOutput, "OMP_EVAL_API_KEY");
+          assert.strictEqual(yield* fs.readFileString(preexistingTranscript), "foreign bytes\n");
+          assert.isFalse(
+            yield* fs.exists(
+              path.join(outputDirectory, `omp_harness-cand-1-${preexistingRunId}.journal-v1.jsonl`),
+            ),
+          );
+
+          const collisionRunId = "run-collision";
+          const collisionTranscript = path.join(
+            outputDirectory,
+            `omp_harness-cand-1-${collisionRunId}.transcripts-v1.jsonl`,
+          );
+          const collisionChild = yield* ChildProcess.make(
+            "bun",
+            [
+              liveCli,
+              ...requiredFlags("omp", [
+                "--provider",
+                "openai",
+                "--attempts-output",
+                collisionTranscript,
+              ]).map((value) => (value === "run-1" ? collisionRunId : value)),
+            ],
+            {
+              cwd,
+              env: { PATH: pathValue },
+              extendEnv: false,
+              stdin: "ignore",
+              stdout: "pipe",
+              stderr: "pipe",
+            },
+          );
+          const [collisionStdout, collisionStderr, collisionExitCode] = yield* Effect.all(
+            [
+              collectBoundedUtf8Output(collisionChild.stdout, 65_536),
+              collectBoundedUtf8Output(collisionChild.stderr, 65_536),
+              collisionChild.exitCode,
+            ],
+            { concurrency: "unbounded" },
+          );
+          const collisionOutput = `${collisionStdout.text}\n${collisionStderr.text}`;
+          assert.notStrictEqual(collisionExitCode, 0, collisionOutput);
+          assert.include(collisionOutput, "PublicEvalAttemptWriteError");
+          assert.notInclude(collisionOutput, "ASK_GINA_ACCESS_TOKEN");
+          assert.isFalse(yield* fs.exists(collisionTranscript));
+          assert.isFalse(
+            yield* fs.exists(
+              path.join(outputDirectory, `omp_harness-cand-1-${collisionRunId}.journal-v1.jsonl`),
+            ),
+          );
+        }),
+      ),
+    );
+
+    it.effect("reserves a transcript companion only for OMP before credential loading", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const pathValue = yield* Config.string("PATH");
+          const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "live-cli-omp-only-" });
+          const liveCli = path.join(process.cwd(), "packages/evals/src/bin/live.ts");
+          yield* fs.copyFile(
+            path.join(process.cwd(), "packages/evals/src/fixtures/ask-gina-routing-smoke.yaml"),
+            path.join(cwd, "suite.yaml"),
+          );
+
+          for (const [runner, runId, extra] of [
+            ["omp", "run-omp-companion", ["--provider", "openai"]],
+            ["responses", "run-responses-no-companion", []],
+          ] as const) {
+            const child = yield* ChildProcess.make(
+              "bun",
+              [
+                liveCli,
+                ...requiredFlags(runner, extra).map((value) => (value === "run-1" ? runId : value)),
+              ],
+              {
+                cwd,
+                env: { PATH: pathValue },
+                extendEnv: false,
+                stdin: "ignore",
+                stdout: "pipe",
+                stderr: "pipe",
+              },
+            );
+            const [stdout, stderr, exitCode] = yield* Effect.all(
+              [
+                collectBoundedUtf8Output(child.stdout, 65_536),
+                collectBoundedUtf8Output(child.stderr, 65_536),
+                child.exitCode,
+              ],
+              { concurrency: "unbounded" },
+            );
+            const output = `${stdout.text}\n${stderr.text}`;
+            assert.notStrictEqual(exitCode, 0, output);
+            assert.include(output, "ASK_GINA_ACCESS_TOKEN");
+          }
+
+          const outputDirectory = path.join(cwd, ".plugin-eval-runs");
+          const ompTranscriptPath = path.join(
+            outputDirectory,
+            "omp_harness-cand-1-run-omp-companion.transcripts-v1.jsonl",
+          );
+          const responsesTranscriptPath = path.join(
+            outputDirectory,
+            "responses_api-cand-1-run-responses-no-companion.transcripts-v1.jsonl",
+          );
+          assert.isTrue(yield* fs.exists(ompTranscriptPath));
+          assert.include(
+            yield* fs.readFileString(ompTranscriptPath),
+            `"schemaVersion":"${OMP_TRANSCRIPT_SCHEMA_VERSION}"`,
+          );
+          assert.isFalse(yield* fs.exists(responsesTranscriptPath));
         }),
       ),
     );
