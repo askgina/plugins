@@ -28,19 +28,25 @@ const meta = {
     layout: "fullscreen",
     docs: {
       description: {
-        component: `Public results table for current, publicly verified publications: cohort switcher, search, coverage filter, display-order sorting, unavailable reserved metrics with reasons, withdrawn count without identities, and a two-way comparison dialog scoped to one cohort. ${SYNTHETIC_NOTE}`,
+        component: `Task-family navigation above a model-first results table. Each model expands into configuration variants and their runs; comparing two runs in one cohort is a secondary action. Unavailable family breakdowns are explicit. ${SYNTHETIC_NOTE}`,
       },
     },
   },
   args: {
     state: productionReadyState,
+    initialFamily: "All tasks",
     initialCohortId: undefined,
     initialSearch: "",
     initialCompareIds: [],
   },
   render: (args) => (
     <ResultsPage
-      key={JSON.stringify([args.initialCohortId, args.initialSearch, args.initialCompareIds])}
+      key={JSON.stringify([
+        args.initialFamily,
+        args.initialCohortId,
+        args.initialSearch,
+        args.initialCompareIds,
+      ])}
       {...args}
     />
   ),
@@ -56,7 +62,14 @@ function describe(text: string): Story["parameters"] {
 
 export const Ready: Story = {
   parameters: describe(
-    "Default ready cohort of five synthetic publications, including a failing run, a null token sample and not-applicable checks.",
+    "Default All tasks view: five synthetic models, each with a newest run summary and an expandable run list, including a failing run, a null token sample and not-applicable checks.",
+  ),
+};
+
+export const Portfolio: Story = {
+  args: { initialFamily: "Portfolio" },
+  parameters: describe(
+    "Portfolio selected. No family breakdown is published yet, so overall scores are not presented as Portfolio results.",
   ),
 };
 
@@ -91,7 +104,7 @@ export const MissingMetrics: Story = {
 export const MultipleCohorts: Story = {
   args: { state: productionMultipleCohortsState },
   parameters: describe(
-    "Several benchmark cohorts, one of which repeats a candidate under a distinct publication id. Switching cohorts resets the selection.",
+    "Two models have runs in two benchmark cohorts. Each run appears under its own exact-pin variant within the same model, and comparison stays scoped to the selected cohort.",
   ),
 };
 
