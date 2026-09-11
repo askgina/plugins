@@ -15,44 +15,24 @@ Artifact verification clean-installs the built tarball and exercises its compile
 import and replay entrypoint. The package supports only its root ESM import; Node.js,
 CommonJS, browser and edge runtimes, and subpath imports are unsupported.
 
-`createCodex`, `CodexHarnessSettings`, `CodexNativeAuthStore`, and
-`CodexNativeAuthLease` are the patched official `@ai-sdk/harness-codex` factory
-and settings, bundled into this package so installed consumers do not resolve
-the stock npm adapter. Import both `HarnessAgent` and `createCodex` from
-`@askgina/evals`. The bundled HarnessAgent checks lifecycle support before
-detach or suspend can discard the session handle. Native startup with a stock
-HarnessAgent lacking that check is rejected before acquiring the auth store.
-`CodexHarnessSettings.restricted` may supply `readablePaths` and a host
-`nativeAuthStore`. The host must implement `acquire` and `onCleanupFailure`;
-each acquired lease supplies `codexHome` and `release`. The failure callback
-receives only `sandbox-settlement` or `lease-release`, never private diagnostics.
-It must record unresolved cleanup even when HarnessAgent's best-effort cleanup
-returns or an aborted acquisition settles later.
+`HarnessAgent` is re-exported from the stock `@ai-sdk/harness` 1.0.102, and
+`createCodex` with `CodexHarnessSettings` from the stock
+`@ai-sdk/harness-codex` 1.0.104. Import them from `@askgina/evals` so installed
+consumers resolve the same adapter versions as the evaluators. There is no
+patched adapter, auth-store lease, or restricted-settings surface.
 
-The lease remains held until the sandbox owner finishes stopping or destroying
-its sandbox. Unsupported native resume, continue, detach, and suspend do not
-authorize the adapter to stop a caller-owned sandbox. A rejected detach or
-suspend leaves the session usable for explicit cleanup. Hosts must settle
-borrowed resources in their own finalizer. A failed stop does not release the lease.
-The host must present an auth-store view that excludes personal skills, plugins,
-memories, and hooks while preserving native refresh custody. The SDK's
-`exec --ignore-user-config --ignore-rules --ephemeral` flags do not exclude
-those other files. This package supplies neither that view nor an all-process
-lock. Native credential-bearing evaluation remains disabled until the host
-provides and independently proves both, plus native sandbox enforcement.
+`createLocalHarnessSandbox` is a synchronous local-process sandbox provider for
+stock `HarnessAgent`/`createACP` on POSIX hosts. Sessions run commands as
+ordinary host child processes in their own process group under a disposable
+home, working, and temporary directory, with group-signalled cleanup on stop or
+destroy. This is runtime placement, not a security boundary: it enforces no
+filesystem, network, or process isolation. It omits optional network-policy
+changes, dynamic port configuration, request transformations, and session
+resume. It throws on Windows.
 
-Restricted caller configuration accepts only exact `model_reasoning_summary`
-and `model_verbosity` keys with their supported values. The adapter forces detailed
-reasoning summaries and installs its own read-only filesystem, denied auth-home,
-network-disabled, web-search-disabled policy. Dotted or quoted configuration
-namespaces and extra MCP servers are rejected. Exec cannot support per-call
-builtin approval/filter callbacks; requesting them remains an error. These
-restrictions do not turn this export into an enabled native CLI runner.
-
-The bundled `@ai-sdk/harness` 1.0.102 and `@ai-sdk/harness-codex` 1.0.104
-are Copyright 2023 Vercel, Inc., licensed under Apache-2.0. This distribution
-modifies their isolation and lifecycle handling. The repository's `patches/`
-directory contains those changes; this package includes the Apache-2.0 license.
+The dependencies `@ai-sdk/harness` 1.0.102, `@ai-sdk/harness-acp` 1.0.40, and
+`@ai-sdk/harness-codex` 1.0.104 are Copyright 2023 Vercel, Inc., licensed under
+Apache-2.0; this package includes the Apache-2.0 license.
 
 ## Hermetic replay
 
@@ -122,22 +102,22 @@ The default live benchmark suite is `ask-gina-routing-smoke.yaml`.
 Every live runner requires `ASK_GINA_ACCESS_TOKEN`. The provider and native CLI
 credentials differ:
 
-| Runner        | Additional environment                                                                                                                      |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Responses API | `OPENAI_API_KEY`                                                                                                                            |
-| OpenRouter    | `OPENROUTER_API_KEY`                                                                                                                        |
-| Codex CLI     | `OPENAI_API_KEY`, absolute `CODEX_EVAL_EXECUTABLE`, and its lowercase SHA-256 digest in `CODEX_EVAL_EXECUTABLE_SHA256`                      |
-| Claude CLI    | `ANTHROPIC_API_KEY` and absolute `CLAUDE_EVAL_EXECUTABLE`                                                                                   |
-| OMP harness   | `OMP_EVAL_API_KEY`, absolute `OMP_EVAL_EXECUTABLE`, its lowercase SHA-256 digest in `OMP_EVAL_EXECUTABLE_SHA256`, and a local Docker engine |
+| Runner        | Additional environment                                                                                                 |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Responses API | `OPENAI_API_KEY`                                                                                                       |
+| OpenRouter    | `OPENROUTER_API_KEY`                                                                                                   |
+| Codex CLI     | `OPENAI_API_KEY`, absolute `CODEX_EVAL_EXECUTABLE`, and its lowercase SHA-256 digest in `CODEX_EVAL_EXECUTABLE_SHA256` |
+| Claude CLI    | `ANTHROPIC_API_KEY` and absolute `CLAUDE_EVAL_EXECUTABLE`                                                              |
+| OMP harness   | `OMP_EVAL_API_KEY`, absolute `OMP_EVAL_EXECUTABLE`, and its lowercase SHA-256 digest in `OMP_EVAL_EXECUTABLE_SHA256`   |
 
 The supported native Codex, Claude, and OMP paths use explicit API keys in
-isolated evaluation homes. They do not reuse a saved personal login. That
+disposable evaluation homes. They do not reuse a saved personal login. That
 existing API-key CLI does not meet a separately requested HarnessAgent or Codex
-saved-login policy. Saved-login reuse, refresh ownership, and personal-home
-integration remain deferred. OMP does
+saved-login policy. Saved-login reuse, refresh ownership, native OAuth
+subscriptions, and personal-home integration remain deferred. OMP does
 not read `~/.omp` or inherit `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` /
 `OPENROUTER_API_KEY`. Native OMP also never exports those names into the
-isolated child. The child receives only `OMP_EVAL_PROVIDER_API_KEY` for
+child. The child receives only `OMP_EVAL_PROVIDER_API_KEY` for
 the private `omp-eval` provider.
 
 Responses and Codex accept model IDs understood by their OpenAI backends, such as
@@ -242,10 +222,11 @@ behavior. Responses uses OpenAI-hosted MCP. Neither proves native plugin
 activation, and these two execution paths retain separate runner identities.
 Codex and Claude load the
 repository plugin through their native CLIs. OMP talks to `omp acp` through
-HarnessAgent in Docker and keeps the `omp_harness` target distinct. Task
+stock HarnessAgent and `createACP` on a local process and keeps the
+`omp_harness` target distinct. Task
 conformance and observed plugin activation are scored separately. The Claude
 adapter has offline verification only. Synthetic events, loopback model
-fixtures, and OMP Docker/runtime proof do not establish measured native-plugin
+fixtures, and OMP local-runtime proof do not establish measured native-plugin
 activation; Claude's live activation remains unverified.
 
 Claude requires a CLI supporting `--restricted` and `--permission-prompts none`;
@@ -272,53 +253,60 @@ only the observed Gina MCP tools. Trials also use no approvals, ignored
 user/project rules, bounded output, and a minimal child environment. Unsupported
 platforms fail closed.
 
-OMP requires the tested `18.1.14` executable and a local Docker engine at
-`/var/run/docker.sock`. The CLI verifies its SHA-256 and snapshots it once, then
-starts a fresh Docker session per trial. The default Node image is digest-pinned.
-Containers run as a non-root user, with a read-only root filesystem and runtime
-mount, writable temporary filesystems, and no host Docker socket or personal OMP
-configuration mounted inside. Bootstrap installs the pinned ACP bridge dependencies.
+OMP requires the tested `18.1.17` executable. The CLI verifies its SHA-256 and
+snapshots it once, then starts a fresh local `omp acp` session per trial under
+`createLocalHarnessSandbox`. Bootstrap links that snapshot and writes a
+session-only `config.yml` and `models.yml` into a disposable home. There is no
+Docker engine, container image, or host-socket requirement.
 
 Each trial writes a static `models.yml` with one private `omp-eval` provider
 and one selected-model entry. Public `--provider` / `--model` identity stays
 on the report, attempt, and observation. Native ACP uses `--provider omp-eval`
 and the original backend model id, including OpenRouter nested slugs. The
-child credential env is only `OMP_EVAL_PROVIDER_API_KEY`; the credential
-transformation hook matches that same name. Standard provider env names are
-not exported, so built-in discovery managers do not start.
+child receives the explicit model key as `OMP_EVAL_PROVIDER_API_KEY` through
+the stock adapter's environment option. Standard provider credential variables
+are not inherited. There is no credential broker or request transformation.
 
 OpenAI and OpenRouter use Chat Completions, not the Responses transport that
 OMP can select for built-in providers. Anthropic uses its Messages API. The
 CLI's `--reasoning` value selects native `--thinking`, with explicit effort
 settings for OpenAI/OpenRouter and thinking budgets for Anthropic. The model
-entry leaves capacities, cost, and input modalities to OMP 18.1.14's bundled
+entry leaves capacities, cost, and input modalities to OMP 18.1.17's bundled
 same-id metadata or defaults for unknown model ids.
 
-This local Docker provider does not broker credentials outside the container.
-The Gina bearer stays on the host, where canonical MCP reads execute. The native
-guard permits only the canonical MCP inventory and exact staged skill reads;
-URL reads, other files, shell tools, and unregistered tool attempts fail the trial.
-Native intent tracing is disabled. ACP mappings use OMP's wire names, with a
-`skill://` classifier for reads; the guard still checks the exact allowed URI.
-The ACP launcher requires loaded guard evidence before forwarding the first prompt.
-The guard waits up to five seconds for native MCP registration, within the trial
-deadline, then requires the exact tool inventory before any model request. This
-startup wait does not retry model or MCP calls. Native `retry.enabled` and
-`retry.modelFallback` are false, disabling agent-level TurnRecovery retries and
-configured model fallback. OMP 18.1.14's provider clients still retry some HTTP
-errors independently of those settings. Native stream/stop recovery can also
-reissue requests. There is no one-request guarantee; the absolute trial deadline
-still applies. Host-side JSON Schema validation rejects invalid
-arguments as forwarded by OMP before MCP execution. OMP may coerce the model's
-raw arguments before this check. ACP does not provide a portable model-step limit.
+The Gina bearer stays on the host. Canonical MCP reads execute in the evaluator
+process and are exposed as wrapped HarnessAgent host tools. The child does not
+receive that token. Native OMP builtins still run with ordinary host access;
+the local sandbox is placement, not confinement. Stock OMP defaults
+`tools.xdev` to true and mounts MCP tools under `xd://` instead of provider
+functions; the session `config.yml` sets `tools.xdev: false` and the stock ACP
+adapter uses HTTP for its host-tool MCP transport. Only the staged `read`
+builtin is declared to the harness, mapped to `skill://` skill reads.
+Native intent tracing is disabled. Native `retry.enabled` and
+`retry.modelFallback` are false,
+disabling agent-level TurnRecovery retries and configured model fallback. OMP
+18.1.17's provider clients still retry some HTTP errors independently of those
+settings. Native stream/stop recovery can also reissue requests. There is no
+one-request guarantee; the absolute trial deadline still applies. Host-side JSON
+Schema validation rejects invalid arguments as forwarded by OMP before MCP
+execution. OMP may coerce the model's raw arguments before this check. ACP does
+not provide a portable model-step limit.
 
 Skill activation requires a successful native read, not loaded metadata or an ACP
-intent title. Token usage comes only from native guard evidence and remains absent
-when unavailable. A successful result also requires completed native generation
-and removal of the owned Docker resources. Failed or cancelled trials allow up to
-eight seconds for cleanup without replacing the original failure. Synthetic model/MCP fixtures exercise
-the real OMP process and protocol; they do not prove real model behavior, production
-Gina connectivity, or measured native-plugin activation.
+intent title. Token usage comes from the harness generation result and remains
+absent when unavailable. A successful result also requires completed native
+generation and sandbox cleanup. Failed or cancelled trials allow up to eight
+seconds for session destroy without replacing the original failure. A cold local
+synthetic smoke through stock OMP 18.1.17 proved a successful canonical host-tool
+call, an MCP `isError` response recorded as a failed trial, and cleanup for both
+sessions. The stock Codex adapter also passed a cold local host-tool smoke.
+
+Native provider HTTP 500 errors arrive as ACP text plus `end_turn` with no typed
+metadata, so OMP cannot yet replace every evaluator for reliable provider-failure
+classification. Native OAuth subscriptions remain unproven. These synthetic
+model/MCP fixtures exercise the real native processes and protocols; they do
+not prove real model behavior, production Gina connectivity, or measured
+native-plugin activation.
 
 Each live run writes a v1 aggregate below the ignored `.plugin-eval-runs/`
 directory and a sibling `.journal-v1.jsonl`, both mode `0600`. OpenRouter
