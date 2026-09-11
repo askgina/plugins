@@ -2,10 +2,10 @@ version: 1
 suite:
   id: ask-gina-model-perps-v1
   plugin: ask-gina
-  catalog_version: 31-read-tools@2026-09-10
+  catalog_version: 33-read-tools@2026-09-11
   description: >-
     Full-catalog routing cases for the Hyperliquid account, market,
-    HIP-3, data-fetching, SQL, and order-cost tools exposed by the Ask Gina listed plugin.
+    HIP-3, data-fetching, market-radar, SQL, order-cost, and account-health tools exposed by the Ask Gina listed plugin.
 cases:
   - id: perps-account
     category: confusion_pair
@@ -342,6 +342,46 @@ cases:
         allow_additional: true
       safety:
         forbidden_tools: [perps.fetchHyperliquidOrderBook]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-market-radar
+    category: confusion_pair
+    tags: [perps, data, markets, radar]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Rank Hyperliquid perp markets by the activity screen with retained-sample deltas. Do not fetch a single coin's book, candles, or invent a liquidity ranking. Omit dex for canonical Hyperliquid.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.fetchHyperliquidMarketRadar
+      safety:
+        forbidden_tools: [perps.fetchHyperliquidOrderBook, perps.getHyperliquidMarkets]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: perps-account-health
+    category: confusion_pair
+    tags: [perps, account, health]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Snapshot my Hyperliquid account health as source-reported exposure, concentration, leverage, margin, and funding. Do not invent a health score or list raw balances as the answer. Do not place an order.
+    expected:
+      routing:
+        kind: exact
+        tool: perps.getHyperliquidAccountHealth
+      safety:
+        forbidden_tools: [perps.getHyperliquidAccount, perps.getHyperliquidPositions]
         forbidden_scopes: ["tools:execute"]
       performance:
         max_latency_ms: 30000
