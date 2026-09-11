@@ -38,6 +38,12 @@ package artifacts. Storybook uses the existing TypeScript 7 toolchain plus a
 TypeScript 5 compiler-API alias and the two docgen compatibility patches under
 `patches/`. Local fonts and artwork are pinned in `tools/public-source-assets.ts`.
 
+Storybook also preserves the original ranked leaderboard, model profiles, comparison
+modal, and routed preview under `Evals/Illustrative UI`. These stories live in
+`apps/evals/src/stories/illustrative`, use synthetic design fixtures, and do not
+replace the current app routes or public-results stories. Their restored styles are
+scoped to the illustrative pages.
+
 ## Commands
 
 ```sh

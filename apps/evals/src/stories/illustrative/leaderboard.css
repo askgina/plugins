@@ -1,0 +1,62 @@
+/* Restored origin/main leaderboard declarations, scoped to the illustrative UI. */
+.illustrative-evals .lb-quote {
+  margin: 22px 0 0;
+  max-width: 28rem;
+}
+
+.illustrative-evals .lb-benefits {
+  margin: 32px 0 0;
+  max-width: 640px;
+}
+
+.illustrative-evals .lb-results {
+  margin-top: 8px;
+}
+
+.illustrative-evals .lb-table-panel {
+  overflow: hidden;
+}
+
+.illustrative-evals .lb-table-scroll {
+  position: relative;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.illustrative-evals .lb-table {
+  min-width: 760px;
+}
+
+.illustrative-evals .lb-table th,
+.illustrative-evals .lb-table td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.illustrative-evals .lb-table tbody th {
+  font-weight: 500;
+}
+
+.illustrative-evals .lb-table tbody tr:hover {
+  background: #fafaf8;
+}
+
+.illustrative-evals .lb-charts {
+  margin: 18px 0 0;
+}
+
+@media (max-width: 900px) {
+  .illustrative-evals .lb-benefits {
+    max-width: 360px;
+  }
+}
+
+@media (max-width: 375px) {
+  .illustrative-evals .lb-benefits {
+    margin-top: 24px;
+  }
+
+  .illustrative-evals .lb-quote {
+    font-size: 15px;
+  }
+}

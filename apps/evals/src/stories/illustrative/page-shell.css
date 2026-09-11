@@ -1,0 +1,80 @@
+/* Restore the original shell only inside the illustrative stories. */
+.illustrative-evals .eval-header {
+  max-width: 1440px;
+  box-shadow: none;
+}
+
+.illustrative-evals .eval-wordmark {
+  align-items: baseline;
+  gap: 3px;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.illustrative-evals .eval-wordmark strong {
+  font-size: 23px;
+  font-weight: 600;
+  letter-spacing: -1.3px;
+}
+
+.illustrative-evals .eval-wordmark > span {
+  color: #737373;
+  font-size: 13px;
+}
+
+.illustrative-evals .eval-brand-dot {
+  color: var(--eval-red);
+  padding: 0 3px 0 4px;
+}
+
+.illustrative-evals .eval-header-actions {
+  gap: 18px;
+}
+
+.illustrative-evals .eval-demo-label {
+  font-size: 10px;
+  line-height: 1.4;
+  color: #686a64;
+  background: #f7f6f3;
+  border-radius: 7px;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+
+.illustrative-evals .eval-run-button {
+  height: 38px;
+  border-radius: 10px;
+  background: #0b0b0d;
+  color: white;
+  font-size: 11px;
+  gap: 15px;
+  box-shadow: 0 5px 14px #0b0b0d12;
+}
+
+.illustrative-evals .eval-run-button:hover {
+  background: #2b2b2d;
+}
+
+@media (max-width: 1150px) {
+  .illustrative-evals .eval-demo-label {
+    display: none;
+  }
+
+  .illustrative-evals .eval-header-actions {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 760px) {
+  .illustrative-evals .eval-wordmark strong {
+    font-size: 22px;
+  }
+
+  .illustrative-evals .eval-run-button {
+    height: 34px;
+    font-size: 10px;
+    padding: 0 10px;
+    gap: 8px;
+  }
+}
