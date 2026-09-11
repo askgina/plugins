@@ -287,6 +287,8 @@ snapshots it once, then starts a fresh local `omp acp` session per trial under
 `createLocalHarnessSandbox`. Bootstrap links that snapshot. Both authentication
 modes load the isolated evaluation settings through an explicit `--config`
 overlay. There is no Docker engine, container image, or host-socket requirement.
+Local HarnessAgent bootstrap also requires Node.js and pnpm on the evaluator's
+`PATH` (verified with Node.js 24.21.0 and pnpm 10.34.5).
 
 Each API-key trial writes a static `models.yml` in its disposable home with one
 private `omp-eval` provider and one selected-model entry. Public `--provider` /
@@ -311,14 +313,26 @@ metadata only and rejects missing directories before MCP or model dispatch.
 Canonical skills are staged under the disposable `HOME/.agents/skills` in both
 modes, so selecting another agent directory does not redirect skill discovery.
 
+OMP accepts exactly the 31-tool research catalog or the supported 32-tool
+connected catalog. The dashboard renderer is not exposed to OMP or included in
+research eval evidence. Host-side validation supports standard JSON Schema union
+types while remaining strict and does not coerce arguments.
+
 The Gina bearer stays on the host. Canonical MCP reads execute in the evaluator
 process and are exposed as wrapped HarnessAgent host tools. The child does not
-receive that token. Native OMP builtins still run with ordinary host access;
+receive that token. Native OMP builtins are restricted to `read` via `--tools read`, while all 31 research MCP tools remain available; `read` still has ordinary host access;
 the local sandbox is placement, not confinement. Stock OMP defaults
 `tools.xdev` to true and mounts MCP tools under `xd://` instead of provider
 functions; the session `config.yml` sets `tools.xdev: false` and the stock ACP
 adapter uses HTTP for its host-tool MCP transport. Only the staged `read`
-builtin is declared to the harness, mapped to `skill://` skill reads.
+builtin is declared to the harness, mapped to native reads.
+Native read identification uses the required `path` input, not only `skill://`
+titles, so ordinary resource- or intent-titled reads contribute activation/failure
+evidence rather than research-tool routes.
+MCP native mirrors are correlated one-to-one with captured host executions using
+trusted completion identity, structurally equal arguments, and matching outcomes.
+Canonical host executions remain evidence; unknown or uncorroborated native calls
+remain routing evidence.
 Native intent tracing is disabled. Native `retry.enabled` and
 `retry.modelFallback` are false,
 disabling agent-level TurnRecovery retries and configured model fallback. OMP
@@ -330,7 +344,8 @@ execution. OMP may coerce the model's raw arguments before this check. ACP does
 not provide a portable model-step limit.
 
 Skill activation requires a successful native read, not loaded metadata or an ACP
-intent title. Token usage comes from the harness generation result and remains
+intent title. Native skill reads contribute skill activation and failure evidence,
+not research-tool routing calls. Token usage comes from the harness generation result and remains
 absent when unavailable. A successful result also requires completed native
 generation and sandbox cleanup. Failed or cancelled trials allow up to eight
 seconds for session destroy without replacing the original failure. A cold local

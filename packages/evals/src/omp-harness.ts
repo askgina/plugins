@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 import { createMCPClient, type ListToolsResult, type MCPClient } from "@ai-sdk/mcp";
 import Ajv, { type ValidateFunction } from "ajv";
 import addFormats from "ajv-formats";
@@ -7,6 +8,7 @@ import { createACP } from "@ai-sdk/harness-acp";
 import { resolveSandboxHomeDir } from "@ai-sdk/harness/utils";
 import type { HarnessV1SandboxProvider } from "@ai-sdk/harness";
 import {
+  GINA_CONNECTED_TOOL_NAMES,
   listCatalogToolNames,
   PRODUCTION_MCP_URL,
   SKILL_NAMES,
@@ -171,6 +173,7 @@ interface ObservedNativeCall {
   readonly name: string;
   readonly arguments: PluginEvalToolCall["arguments"];
   outcome?: "result" | "error";
+  result?: unknown;
 }
 
 interface ObservedOmpToolCalls {
@@ -232,6 +235,9 @@ const catalogsMatch = (left: readonly string[], right: readonly string[]): boole
   return uniqueLeft.size === left.length && right.every((tool) => uniqueLeft.has(tool));
 };
 
+const isSupportedOmpCatalog = (names: readonly string[]): boolean =>
+  catalogsMatch(names, CANONICAL_ALLOWED_TOOLS) || catalogsMatch(names, GINA_CONNECTED_TOOL_NAMES);
+
 const isWithin = (path: Path.Path, parent: string, child: string): boolean => {
   const relative = path.relative(parent, child);
   return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
@@ -248,9 +254,12 @@ const OMP_BUILTIN_TOOLS: ToolSet = Object.fromEntries([
     "read",
     {
       nativeName: "read",
-      title: "skill://",
       toolUseKind: "readonly",
-      inputSchema: jsonSchema<Record<string, unknown>>({ type: "object" }),
+      inputSchema: jsonSchema<Record<string, unknown>>({
+        type: "object",
+        properties: { path: { type: "string" } },
+        required: ["path"],
+      }),
     },
   ],
 ]);
@@ -887,7 +896,7 @@ const validateOptions = (
       typeof authOption !== "object" ||
       authOption === null ||
       (authOption.mode !== "api-key" && authOption.mode !== "native") ||
-      !catalogsMatch(options.availableTools, CANONICAL_ALLOWED_TOOLS) ||
+      !isSupportedOmpCatalog(options.availableTools) ||
       runId.length === 0 ||
       model.length === 0 ||
       mcpAuthorization.trim().length === 0 ||
@@ -1139,6 +1148,7 @@ const createInputSchemaCompiler = (): ((schema: unknown) => ValidateFunction | u
   const ajv = addFormats(
     new Ajv({
       allErrors: false,
+      allowUnionTypes: true,
       coerceTypes: false,
       useDefaults: false,
       removeAdditional: false,
@@ -1249,6 +1259,32 @@ const wrapHostTools = (
     return hostTools;
   });
 
+const nativeMcpToolName = (output: unknown): string | undefined => {
+  if (typeof output !== "object" || output === null || !("details" in output)) return undefined;
+  const { details } = output;
+  if (
+    typeof details !== "object" ||
+    details === null ||
+    !("serverName" in details) ||
+    details.serverName !== "ai-sdk-harness-tools" ||
+    !("mcpToolName" in details) ||
+    typeof details.mcpToolName !== "string" ||
+    CANONICAL_TOOL_NAMES[details.mcpToolName] !== true ||
+    !("mcpMeta" in details)
+  )
+    return undefined;
+  const { mcpMeta } = details;
+  if (
+    typeof mcpMeta !== "object" ||
+    mcpMeta === null ||
+    !("ai-sdk-harness-acp-correlation" in mcpMeta) ||
+    typeof mcpMeta["ai-sdk-harness-acp-correlation"] !== "string" ||
+    !SHA256_HEX.test(mcpMeta["ai-sdk-harness-acp-correlation"])
+  )
+    return undefined;
+  return details.mcpToolName;
+};
+
 const observedToolCalls = (
   steps: readonly StepResult<ToolSet>[],
   captures: readonly CapturedHostToolCall[],
@@ -1288,6 +1324,7 @@ const observedToolCalls = (
         part.type === "tool-error" || ("isError" in part && part.isError === true)
           ? "error"
           : "result";
+      nativeCall.result = part.type === "tool-result" ? part.output : part.error;
     }
   }
   for (const nativeCall of nativeById.values()) {
@@ -1297,6 +1334,7 @@ const observedToolCalls = (
   const toolCalls: PluginEvalToolCall[] = [];
   const activatedSkills = new Set<SkillName>();
   const seenHostCallIds = new Set<string>();
+  const matchedMirrorHostIds = new Set<string>();
   let failedNativeRead = false;
   for (const step of steps) {
     for (const part of step.content) {
@@ -1317,6 +1355,21 @@ const observedToolCalls = (
               );
               if (skill !== undefined) activatedSkills.add(skill);
             }
+          }
+          continue;
+        }
+        const canonicalName = nativeMcpToolName(nativeCall.result);
+        if (canonicalName !== undefined) {
+          const matchedCapture = captures.find(
+            (capture) =>
+              capture.name === canonicalName &&
+              !matchedMirrorHostIds.has(capture.toolCallId) &&
+              (capture.error === undefined) === (nativeCall.outcome === "result") &&
+              isDeepStrictEqual(capture.arguments, nativeCall.arguments),
+          );
+          if (matchedCapture !== undefined) {
+            matchedMirrorHostIds.add(matchedCapture.toolCallId);
+            continue;
           }
         }
         toolCalls.push({
@@ -1460,7 +1513,7 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                   const definitions = yield* listAllMcpTools(client, evalCase.id);
                   yield* ensureBeforeDeadline(evalCase.id, validated.timeoutMs, deadlineMillis);
                   const discoveredTools = definitions.tools.map(({ name }) => name);
-                  if (!catalogsMatch(discoveredTools, validated.availableTools)) {
+                  if (!isSupportedOmpCatalog(discoveredTools)) {
                     return yield* new PluginEvalOmpHarnessMcpError({
                       caseId: evalCase.id,
                       reason: "catalog-mismatch",
@@ -1483,7 +1536,7 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                   const hostTools = yield* wrapHostTools(
                     tools,
                     definitions,
-                    discoveredTools,
+                    validated.availableTools,
                     captures,
                     evalCase.id,
                   );
@@ -1521,6 +1574,8 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                     args: [
                       "acp",
                       "--no-extensions",
+                      "--tools",
+                      "read",
                       "--config",
                       `${validated.runtimeDirectory}/config.yml`,
                       "--provider",
