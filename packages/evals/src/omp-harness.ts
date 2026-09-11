@@ -14,8 +14,15 @@ import {
   SKILL_NAMES,
   type SkillName,
 } from "@askgina/contracts";
-import { jsonSchema, type StepResult, type ToolSet } from "ai";
 import {
+  jsonSchema,
+  type GenerateTextResult,
+  type StepResult,
+  type StreamTextResult,
+  type ToolSet,
+} from "ai";
+import {
+  Cause,
   Clock,
   Data,
   DateTime,
@@ -23,20 +30,30 @@ import {
   Effect,
   Exit,
   FileSystem,
+  Fiber,
   Function,
   Option,
   Path,
   Redacted,
   Scope,
+  Stream,
 } from "effect";
 
 import type { PluginEvalCase, PluginEvalObservation, PluginEvalToolCall } from "./contracts";
 import { createLocalHarnessSandbox } from "./local-harness-sandbox";
+import {
+  createOmpTranscriptCollector,
+  type OmpTranscriptCollector,
+  type OmpTrialTranscript,
+} from "./omp-transcript";
 
 const DEFAULT_TIMEOUT_MS = 120_000;
 const MAX_MCP_TOOL_PAGES = 32;
 const MAX_MCP_CLOSE_WAIT_MS = 1_000;
 const MAX_SESSION_DESTROY_WAIT_MS = 8_000;
+const MAX_TRANSCRIPT_CALLBACK_WAIT_MS = 5_000;
+const OMP_TRANSCRIPT_TOOL_EXECUTION_FAILED = "[tool execution failed]";
+const OMP_TRANSCRIPT_TOOL_OUTPUT_DENIED = "[tool output denied]";
 const OMP_INCOMPLETE_GENERATION_ERROR = "OMP generation did not complete with a final answer";
 const OMP_TOOL_EXECUTION_ERROR = "OMP tool execution failed";
 const OMP_EVAL_PROVIDER_ALIAS = "omp-eval";
@@ -129,6 +146,10 @@ export interface OmpHarnessTrialOptions {
   readonly timeoutMs: number;
   readonly serverUrl?: string;
   readonly sandbox?: HarnessV1SandboxProvider;
+  readonly onTranscript?: (
+    transcript: OmpTrialTranscript,
+    signal: AbortSignal,
+  ) => PromiseLike<void>;
 }
 
 type ValidatedOmpAuth =
@@ -182,6 +203,11 @@ interface ObservedOmpToolCalls {
   readonly failedNativeRead: boolean;
 }
 
+type OmpGenerationEvidence = Pick<
+  GenerateTextResult<ToolSet, Record<string, unknown>, never>,
+  "text" | "finishReason" | "usage" | "steps"
+>;
+
 export class PluginEvalOmpHarnessExecutableError extends Data.TaggedError(
   "PluginEvalOmpHarnessExecutableError",
 )<{
@@ -221,13 +247,22 @@ export class PluginEvalOmpHarnessTimeoutError extends Data.TaggedError(
   readonly timeoutMs: number;
 }> {}
 
+/** Capture failure fails a successful trial without replacing an existing trial failure. */
+export class PluginEvalOmpHarnessTranscriptError extends Data.TaggedError(
+  "PluginEvalOmpHarnessTranscriptError",
+)<{
+  readonly caseId: string;
+  readonly reason: "write-failed" | "write-timeout";
+}> {}
+
 export type PluginEvalOmpHarnessError =
   | PluginEvalOmpHarnessExecutableError
   | PluginEvalOmpHarnessRequestError
   | PluginEvalOmpHarnessSpawnError
   | PluginEvalOmpHarnessMcpError
   | PluginEvalOmpHarnessProcessError
-  | PluginEvalOmpHarnessTimeoutError;
+  | PluginEvalOmpHarnessTimeoutError
+  | PluginEvalOmpHarnessTranscriptError;
 
 const catalogsMatch = (left: readonly string[], right: readonly string[]): boolean => {
   if (left.length !== right.length) return false;
@@ -477,7 +512,138 @@ const isKnownHarnessError = (error: unknown): error is PluginEvalOmpHarnessError
   error instanceof PluginEvalOmpHarnessSpawnError ||
   error instanceof PluginEvalOmpHarnessMcpError ||
   error instanceof PluginEvalOmpHarnessProcessError ||
-  error instanceof PluginEvalOmpHarnessTimeoutError;
+  error instanceof PluginEvalOmpHarnessTimeoutError ||
+  error instanceof PluginEvalOmpHarnessTranscriptError;
+
+const generationError = (caseId: string, error: unknown): PluginEvalOmpHarnessError =>
+  isKnownHarnessError(error)
+    ? error
+    : new PluginEvalOmpHarnessProcessError({ caseId, reason: "generation-failed" });
+
+const consumeTranscriptStream = (
+  streamed: StreamTextResult<ToolSet, Record<string, unknown>, never>,
+  collector: OmpTranscriptCollector,
+  caseId: string,
+  signal: AbortSignal,
+): Promise<OmpGenerationEvidence> =>
+  Effect.runPromise(
+    Stream.fromAsyncIterable(streamed.stream, (error) => generationError(caseId, error)).pipe(
+      Stream.runForEach((part) =>
+        Effect.sync(() => {
+          switch (part.type) {
+            case "text-delta":
+              collector.assistant(part.text);
+              break;
+            case "tool-call":
+              collector.toolCall(part.toolCallId, part.toolName, part.input);
+              break;
+            case "tool-result":
+              collector.toolResult(part.toolCallId, part.toolName, part.output, false);
+              break;
+            case "tool-error":
+              collector.toolResult(
+                part.toolCallId,
+                part.toolName,
+                OMP_TRANSCRIPT_TOOL_EXECUTION_FAILED,
+                true,
+              );
+              break;
+            case "tool-output-denied":
+              collector.toolResult(
+                part.toolCallId,
+                part.toolName,
+                OMP_TRANSCRIPT_TOOL_OUTPUT_DENIED,
+                true,
+              );
+              break;
+          }
+        }),
+      ),
+      Effect.flatMap(() =>
+        Effect.tryPromise({
+          try: () =>
+            Promise.all([
+              streamed.text,
+              streamed.finishReason,
+              streamed.usage,
+              streamed.steps,
+            ]).then(([text, finishReason, usage, steps]) => ({ text, finishReason, usage, steps })),
+          catch: (error) => generationError(caseId, error),
+        }),
+      ),
+    ),
+    { signal },
+  );
+
+const isTypedTimeoutError = (error: unknown): boolean =>
+  Cause.isTimeoutError(error) ||
+  (typeof error === "object" &&
+    error !== null &&
+    "_tag" in error &&
+    typeof error._tag === "string" &&
+    error._tag.endsWith("TimeoutError"));
+
+const transcriptStatus = (
+  exit: Exit.Exit<PluginEvalObservation, PluginEvalOmpHarnessError>,
+): OmpTrialTranscript["status"] => {
+  if (Exit.isSuccess(exit)) return exit.value.status;
+  if (Cause.hasInterrupts(exit.cause)) return "interruption";
+  return isTypedTimeoutError(Option.getOrUndefined(Cause.findErrorOption(exit.cause)))
+    ? "timeout"
+    : "failed";
+};
+
+const invokeTranscriptCallback = (
+  callback: (transcript: OmpTrialTranscript, signal: AbortSignal) => PromiseLike<void>,
+  transcript: OmpTrialTranscript,
+  caseId: string,
+): Effect.Effect<void, PluginEvalOmpHarnessTranscriptError> =>
+  Effect.gen(function* () {
+    const fiber = yield* Effect.tryPromise({
+      try: (signal) => callback(transcript, signal),
+      catch: () => new PluginEvalOmpHarnessTranscriptError({ caseId, reason: "write-failed" }),
+    }).pipe(Effect.forkChild({ startImmediately: true, uninterruptible: false }));
+    const outcome = yield* Effect.raceFirst(
+      Fiber.await(fiber).pipe(Effect.map((exit) => ({ type: "settled" as const, exit }))),
+      Effect.sleep(Duration.millis(MAX_TRANSCRIPT_CALLBACK_WAIT_MS)).pipe(
+        Effect.as({ type: "timed-out" as const }),
+      ),
+    );
+    if (outcome.type === "timed-out") {
+      yield* Fiber.interrupt(fiber);
+      return yield* new PluginEvalOmpHarnessTranscriptError({
+        caseId,
+        reason: "write-timeout",
+      });
+    }
+    return yield* outcome.exit;
+  });
+
+const finalizeTranscript = (
+  collector: OmpTranscriptCollector,
+  callback: (transcript: OmpTrialTranscript, signal: AbortSignal) => PromiseLike<void>,
+  metadata: Omit<OmpTrialTranscript, "messages" | "status" | "truncated">,
+  exit: Exit.Exit<PluginEvalObservation, PluginEvalOmpHarnessError>,
+): Effect.Effect<void, PluginEvalOmpHarnessTranscriptError> =>
+  Effect.gen(function* () {
+    const collected = yield* Effect.try({
+      try: () => collector.finish(),
+      catch: () =>
+        new PluginEvalOmpHarnessTranscriptError({
+          caseId: metadata.caseId,
+          reason: "write-failed",
+        }),
+    });
+    const transcript = {
+      ...metadata,
+      status: transcriptStatus(exit),
+      messages: collected.messages,
+      truncated: collected.truncated,
+    } satisfies OmpTrialTranscript;
+    yield* invokeTranscriptCallback(callback, transcript, metadata.caseId);
+  }).pipe(
+    Exit.isSuccess(exit) ? Function.identity : Effect.catch((error) => Effect.logWarning(error)),
+  );
 
 const parseProviderBaseUrl = (value: string): string | undefined => {
   if (value.includes("@") || value.includes("\n") || value.includes("\0") || value.includes("\\")) {
@@ -1496,8 +1662,17 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
       const startedMillis = yield* Clock.currentTimeMillis;
       const startedAt = DateTime.formatIso(DateTime.makeUnsafe(startedMillis));
       const deadlineMillis = startedMillis + validated.timeoutMs;
+      const prompt = promptText(evalCase);
+      const transcriptCallback = options.onTranscript;
+      const transcriptCollector =
+        transcriptCallback === undefined
+          ? undefined
+          : createOmpTranscriptCollector([
+              validated.mcpAuthorization,
+              ...(validated.auth.mode === "api-key" ? [validated.auth.apiKey] : []),
+            ]);
 
-      return yield* Effect.gen(function* () {
+      const trial = Effect.gen(function* () {
         const skills = yield* withRunDeadline(
           loadStagedSkills(validated.runtimeDirectory, evalCase.id),
           evalCase.id,
@@ -1629,21 +1804,30 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                                 validated.timeoutMs,
                                 deadlineMillis,
                               );
-                              const generatedText = yield* Effect.tryPromise({
-                                try: (signal) =>
-                                  agent.generate({
-                                    session,
-                                    prompt: promptText(evalCase),
-                                    abortSignal: signal,
-                                  }),
-                                catch: (error) =>
-                                  isKnownHarnessError(error)
-                                    ? error
-                                    : new PluginEvalOmpHarnessProcessError({
-                                        caseId: evalCase.id,
-                                        reason: "generation-failed",
-                                      }),
-                              });
+                              let generatedText: OmpGenerationEvidence;
+                              if (transcriptCollector === undefined) {
+                                generatedText = yield* Effect.tryPromise({
+                                  try: (signal) =>
+                                    agent.generate({ session, prompt, abortSignal: signal }),
+                                  catch: (error) => generationError(evalCase.id, error),
+                                });
+                              } else {
+                                transcriptCollector.user(prompt);
+                                generatedText = yield* Effect.tryPromise({
+                                  try: (signal) =>
+                                    agent
+                                      .stream({ session, prompt, abortSignal: signal })
+                                      .then((streamed) =>
+                                        consumeTranscriptStream(
+                                          streamed,
+                                          transcriptCollector,
+                                          evalCase.id,
+                                          signal,
+                                        ),
+                                      ),
+                                  catch: (error) => generationError(evalCase.id, error),
+                                });
+                              }
                               yield* ensureBeforeDeadline(
                                 evalCase.id,
                                 validated.timeoutMs,
@@ -1742,6 +1926,25 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
           duration: Duration.millis(validated.timeoutMs),
           orElse: () => Effect.fail(timeoutError(evalCase.id, validated.timeoutMs)),
         }),
+      );
+      if (transcriptCollector === undefined || transcriptCallback === undefined) {
+        return yield* trial;
+      }
+      return yield* trial.pipe(
+        Effect.onExit((exit) =>
+          finalizeTranscript(
+            transcriptCollector,
+            transcriptCallback,
+            {
+              runId: validated.runId,
+              caseId: evalCase.id,
+              repetition: validated.repetition,
+              model: validated.modelIdentity,
+              startedAt,
+            },
+            exit,
+          ),
+        ),
       );
     }).pipe(
       Effect.withSpan("plugin_evals.omp_harness_trial", {

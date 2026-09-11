@@ -7,6 +7,7 @@ import {
   Cause,
   Data,
   Deferred,
+  Duration,
   Effect,
   Exit,
   Fiber,
@@ -15,6 +16,7 @@ import {
   Path,
   PlatformError,
   Schema,
+  Scope,
 } from "effect";
 
 import type { PluginEvalObservation } from "../src/contracts";
@@ -25,16 +27,21 @@ import {
   type OpenRouterBudgetEvidence,
 } from "../src/openrouter-budget";
 import type { OpenRouterGenerationEvidence } from "../src/provider-evidence";
+import type { OmpTrialTranscript } from "../src/omp-transcript";
+import { OMP_TRANSCRIPT_SCHEMA_VERSION } from "../src/omp-transcript";
 import { ALPHA_GINA_READ_SERVER_URL } from "../src/server-url";
 import {
   createLiveEvalJournal,
+  createOmpTranscriptWriter,
   liveEvalJournalDispatchId,
   LiveEvalJournalError,
   LIVE_EVAL_JOURNAL_MAX_CASES,
   LIVE_EVAL_JOURNAL_SCHEMA_VERSION,
+  OMP_TRANSCRIPT_MAX_RECORD_BYTES,
   withJournaledTrial,
   type LiveEvalJournal,
   type LiveEvalJournalOptions,
+  type OmpTranscriptWriterOptions,
 } from "../src/trial-journal";
 
 const TestPlatformLayer = Layer.merge(BunFileSystem.layer, BunPath.layer);
@@ -95,6 +102,46 @@ const journalOptions = (
 });
 
 const selectedCaseIds = ["simple-spot-price"] as const;
+
+const transcriptWriterOptions = (
+  outputDir: string,
+  fileName: string,
+  overrides: Partial<OmpTranscriptWriterOptions> = {},
+): OmpTranscriptWriterOptions => ({
+  outputDir,
+  fileName,
+  runId: "am-spot-routing-20260910",
+  candidate: "sol-medium-diagnostic",
+  model: "openai/gpt-5.6-sol",
+  serverUrl: PRODUCTION_MCP_URL,
+  suiteId: "synthetic-model-smoke-v1",
+  suiteVersion: 1,
+  fixtureVersion: 1,
+  catalogSha,
+  reasoning: "medium",
+  accountClass: "local",
+  caseIds: selectedCaseIds,
+  repetitions: 3,
+  ...overrides,
+});
+
+const ompTranscript = (
+  repetition: number,
+  overrides: Partial<OmpTrialTranscript> = {},
+): OmpTrialTranscript => ({
+  runId: "am-spot-routing-20260910",
+  caseId: "simple-spot-price",
+  repetition,
+  model: "openai/gpt-5.6-sol",
+  startedAt: `2026-09-10T00:00:0${repetition}.000Z`,
+  status: "completed",
+  messages: [
+    { role: "user", type: "text", text: `price check ${repetition}` },
+    { role: "assistant", type: "text", text: `answer ${repetition}` },
+  ],
+  truncated: false,
+  ...overrides,
+});
 
 const v1Report = (overrides: Record<string, unknown> = {}) => ({
   schemaVersion: "v1",
@@ -921,6 +968,263 @@ describe("live eval trial journal", () => {
           ).length,
           1,
         );
+      }),
+    );
+  });
+});
+
+describe("OMP transcript writer", () => {
+  it.layer(TestPlatformLayer, { excludeTestServices: true })((it) => {
+    it.effect("cancels a stalled callback write and closes its scope before sync resumes", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-transcript-cancel-" });
+        const outputPath = path.join(directory, "run.jsonl");
+        const enteredSync = yield* Deferred.make<void>();
+        const resumeSync = yield* Deferred.make<void>();
+        const writerScope = yield* Scope.make();
+        let syncCount = 0;
+        const gated: FileSystem.FileSystem = {
+          ...fs,
+          open: (name, options) =>
+            fs.open(name, options).pipe(
+              Effect.map((file) => ({
+                ...file,
+                stat: file.stat,
+                writeAll: (bytes: Uint8Array) => file.writeAll(bytes),
+                sync: Effect.suspend(() => {
+                  syncCount += 1;
+                  return syncCount === 2
+                    ? Deferred.succeed(enteredSync, undefined).pipe(
+                        Effect.andThen(Deferred.await(resumeSync)),
+                        Effect.andThen(file.sync),
+                      )
+                    : file.sync;
+                }),
+              })),
+            ),
+        };
+        yield* Effect.gen(function* () {
+          const writer = yield* createOmpTranscriptWriter(
+            transcriptWriterOptions(directory, "run.jsonl"),
+          ).pipe(Effect.provideService(FileSystem.FileSystem, gated), Scope.provide(writerScope));
+          const runWriter = Effect.runPromiseWith(
+            yield* Effect.context<FileSystem.FileSystem | Path.Path>(),
+          );
+          const callback = yield* Effect.forkChild(
+            Effect.tryPromise({
+              try: (signal) => runWriter(writer.writeTrial(ompTranscript(1)), { signal }),
+              catch: () => new LiveEvalJournalError({ reason: "write-failed" }),
+            }),
+          );
+          yield* Deferred.await(enteredSync);
+          yield* Fiber.interrupt(callback);
+          const cancelled = yield* Fiber.await(callback);
+          assert.isTrue(Exit.isFailure(cancelled));
+          if (Exit.isFailure(cancelled)) assert.isTrue(Cause.hasInterrupts(cancelled.cause));
+
+          const shutdown = yield* Effect.gen(function* () {
+            const retry = yield* Effect.result(writer.writeTrial(ompTranscript(1)));
+            assert.strictEqual(reasonOf(retry), "write-failed");
+            const binding = yield* Effect.result(
+              writer.bindReport(
+                `${encodeUnknownJson(v1Report({ target: "omp_harness" }))}\n`,
+                selectedCaseIds,
+              ),
+            );
+            assert.strictEqual(binding._tag, "Failure");
+            yield* Scope.close(writerScope, Exit.void);
+          }).pipe(Effect.timeout(Duration.seconds(2)), Effect.result);
+          assert.strictEqual(shutdown._tag, "Success");
+          assert.isFalse(
+            parseRecords(yield* fs.readFileString(outputPath)).some(
+              (record) => record.kind === "report-bound",
+            ),
+          );
+        }).pipe(
+          Effect.ensuring(Deferred.succeed(resumeSync, undefined)),
+          Effect.ensuring(Scope.close(writerScope, Exit.void)),
+        );
+      }),
+    );
+  });
+
+  it.layer(TestPlatformLayer)((it) => {
+    it.effect("writes ordered private trials and binds the exact report bytes", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-transcript-write-" });
+        const fileName = "run.transcripts-v1.jsonl";
+        const outputPath = path.join(directory, fileName);
+        const writer = yield* createOmpTranscriptWriter(
+          transcriptWriterOptions(directory, fileName),
+        );
+        assert.strictEqual((yield* fs.stat(outputPath)).mode & 0o777, 0o600);
+
+        for (const repetition of [1, 2, 3]) {
+          yield* writer.writeTrial(ompTranscript(repetition));
+        }
+        const reportContent = `${encodeUnknownJson(v1Report({ target: "omp_harness" }))}\n`;
+        yield* writer.bindReport(reportContent, selectedCaseIds);
+
+        const records = parseRecords(yield* fs.readFileString(outputPath));
+        assert.deepStrictEqual(
+          records.map((record) => record.kind),
+          ["run", "trial", "trial", "trial", "report-bound"],
+        );
+        assert.deepStrictEqual(records[0], {
+          kind: "run",
+          schemaVersion: OMP_TRANSCRIPT_SCHEMA_VERSION,
+          runId: "am-spot-routing-20260910",
+          candidate: "sol-medium-diagnostic",
+          target: "omp_harness",
+          model: "openai/gpt-5.6-sol",
+          serverUrl: PRODUCTION_MCP_URL,
+          suiteId: "synthetic-model-smoke-v1",
+          suiteVersion: 1,
+          fixtureVersion: 1,
+          catalogSha,
+          reasoning: "medium",
+          accountClass: "local",
+          caseIds: selectedCaseIds,
+          repetitions: 3,
+        });
+        for (const [index, repetition] of [1, 2, 3].entries()) {
+          assert.strictEqual(
+            records[index + 1]?.dispatchId,
+            liveEvalJournalDispatchId("am-spot-routing-20260910", "simple-spot-price", repetition),
+          );
+          assert.deepStrictEqual(records[index + 1]?.transcript, ompTranscript(repetition));
+        }
+        assert.deepStrictEqual(records.at(-1), {
+          kind: "report-bound",
+          sourceReportSha256: createHash("sha256").update(reportContent, "utf8").digest("hex"),
+        });
+      }),
+    );
+
+    it.effect(
+      "rejects escaped, preexisting, duplicate, unplanned, model-mismatched and incomplete records",
+      () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-transcript-plan-" });
+          const escapedPath = path.join(path.dirname(directory), "escaped-transcript.jsonl");
+          const escaped = yield* Effect.result(
+            createOmpTranscriptWriter(
+              transcriptWriterOptions(directory, "../escaped-transcript.jsonl"),
+            ),
+          );
+          assert.strictEqual(reasonOf(escaped), "invalid-path");
+          assert.isFalse(yield* fs.exists(escapedPath));
+
+          const preexistingPath = path.join(directory, "preexisting.jsonl");
+          yield* fs.writeFileString(preexistingPath, "foreign bytes\n", {
+            flag: "wx",
+            mode: 0o600,
+          });
+          const preexisting = yield* Effect.result(
+            createOmpTranscriptWriter(transcriptWriterOptions(directory, "preexisting.jsonl")),
+          );
+          assert.strictEqual(reasonOf(preexisting), "output-exists");
+          assert.strictEqual(yield* fs.readFileString(preexistingPath), "foreign bytes\n");
+
+          const outputPath = path.join(directory, "planned.jsonl");
+          const writer = yield* createOmpTranscriptWriter(
+            transcriptWriterOptions(directory, path.basename(outputPath)),
+          );
+          yield* writer.writeTrial(ompTranscript(1));
+          const durablePrefix = yield* fs.readFileString(outputPath);
+          assert.strictEqual(
+            reasonOf(yield* Effect.result(writer.writeTrial(ompTranscript(1)))),
+            "already-started",
+          );
+          assert.strictEqual(
+            reasonOf(
+              yield* Effect.result(writer.writeTrial(ompTranscript(2, { caseId: "unplanned" }))),
+            ),
+            "invalid-record",
+          );
+          assert.strictEqual(
+            reasonOf(
+              yield* Effect.result(
+                writer.writeTrial(ompTranscript(2, { model: "anthropic/other-model" })),
+              ),
+            ),
+            "invalid-record",
+          );
+          assert.strictEqual(
+            reasonOf(yield* Effect.result(writer.writeTrial(ompTranscript(3)))),
+            "invalid-record",
+          );
+          const reportContent = `${encodeUnknownJson(v1Report({ target: "omp_harness" }))}\n`;
+          assert.strictEqual(
+            reasonOf(yield* Effect.result(writer.bindReport(reportContent, selectedCaseIds))),
+            "invalid-record",
+          );
+          assert.strictEqual(yield* fs.readFileString(outputPath), durablePrefix);
+          yield* writer.writeTrial(ompTranscript(2));
+          yield* writer.writeTrial(ompTranscript(3));
+          yield* writer.bindReport(reportContent, selectedCaseIds);
+        }),
+    );
+
+    it.effect("rejects a schema-valid trial whose encoded UTF-8 record exceeds the cap", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-transcript-cap-" });
+        const fileName = "oversized.jsonl";
+        const outputPath = path.join(directory, fileName);
+        const writer = yield* createOmpTranscriptWriter(
+          transcriptWriterOptions(directory, fileName, { repetitions: 1 }),
+        );
+        const text = "😀".repeat(16_384);
+        const messages: OmpTrialTranscript["messages"] = Array.from({ length: 17 }, () => ({
+          role: "assistant" as const,
+          type: "text" as const,
+          text,
+        }));
+        const transcript = ompTranscript(1, { messages });
+        assert.isAbove(
+          new TextEncoder().encode(encodeUnknownJson(transcript)).byteLength,
+          OMP_TRANSCRIPT_MAX_RECORD_BYTES,
+        );
+        assert.strictEqual(
+          reasonOf(yield* Effect.result(writer.writeTrial(transcript))),
+          "invalid-record",
+        );
+        assert.deepStrictEqual(
+          parseRecords(yield* fs.readFileString(outputPath)).map((record) => record.kind),
+          ["run"],
+        );
+      }),
+    );
+
+    it.effect("rejects a malicious file replacement without appending raw chat", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-transcript-replaced-" });
+        const fileName = "run.jsonl";
+        const outputPath = path.join(directory, fileName);
+        const movedPath = path.join(directory, "owned.jsonl");
+        const writer = yield* createOmpTranscriptWriter(
+          transcriptWriterOptions(directory, fileName, { repetitions: 1 }),
+        );
+        const ownedPrefix = yield* fs.readFileString(outputPath);
+        yield* fs.rename(outputPath, movedPath);
+        yield* fs.writeFileString(outputPath, "foreign bytes\n", { flag: "wx", mode: 0o600 });
+
+        assert.strictEqual(
+          reasonOf(yield* Effect.result(writer.writeTrial(ompTranscript(1)))),
+          "output-conflict",
+        );
+        assert.strictEqual(yield* fs.readFileString(outputPath), "foreign bytes\n");
+        assert.strictEqual(yield* fs.readFileString(movedPath), ownedPrefix);
       }),
     );
   });

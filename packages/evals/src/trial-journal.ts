@@ -15,6 +15,12 @@ import {
 } from "effect";
 
 import { sha256Hex } from "./canonical-json";
+import {
+  OMP_TRANSCRIPT_MAX_BYTES,
+  OMP_TRANSCRIPT_SCHEMA_VERSION,
+  OmpTrialTranscriptSchema,
+  type OmpTrialTranscript,
+} from "./omp-transcript";
 import { SanitizedEvalRunReportSchema } from "./report";
 import {
   PluginEvalTargetSchema,
@@ -36,6 +42,7 @@ export const LIVE_EVAL_JOURNAL_MAX_REPETITIONS = 5;
 export const LIVE_EVAL_JOURNAL_MAX_STEPS = 32;
 export const LIVE_EVAL_JOURNAL_MAX_TRIALS =
   LIVE_EVAL_JOURNAL_MAX_CASES * LIVE_EVAL_JOURNAL_MAX_REPETITIONS;
+export const OMP_TRANSCRIPT_MAX_RECORD_BYTES = OMP_TRANSCRIPT_MAX_BYTES + 16_384;
 
 const MAX_LABEL_LENGTH = 128;
 const MAX_MODEL_LENGTH = 128;
@@ -152,6 +159,40 @@ const BoundRecordSchema = Schema.Struct({
   sourceReportSha256: Sha256,
 });
 
+const OmpTranscriptRunRecordSchema = Schema.Struct({
+  kind: Schema.Literal("run"),
+  schemaVersion: Schema.Literal(OMP_TRANSCRIPT_SCHEMA_VERSION),
+  runId: BoundedLabel,
+  candidate: BoundedLabel,
+  target: Schema.Literal("omp_harness"),
+  model: BoundedModel,
+  serverUrl: Schema.NonEmptyString.check(Schema.isPattern(SINGLE_LINE)),
+  suiteId: BoundedLabel,
+  suiteVersion: PositiveVersion,
+  fixtureVersion: PositiveVersion,
+  catalogSha: Sha256,
+  reasoning: Schema.optionalKey(BoundedLabel),
+  accountClass: BoundedLabel,
+  caseIds: PlannedCaseIds,
+  repetitions: Repetition,
+});
+const OmpTranscriptTrialRecordSchema = Schema.Struct({
+  kind: Schema.Literal("trial"),
+  dispatchId: DispatchId,
+  transcript: OmpTrialTranscriptSchema,
+});
+const OmpTranscriptBoundRecordSchema = Schema.Struct({
+  kind: Schema.Literal("report-bound"),
+  sourceReportSha256: Sha256,
+});
+
+export const OmpTranscriptJournalRecordSchema = Schema.Union([
+  OmpTranscriptRunRecordSchema,
+  OmpTranscriptTrialRecordSchema,
+  OmpTranscriptBoundRecordSchema,
+]);
+export type OmpTranscriptJournalRecord = typeof OmpTranscriptJournalRecordSchema.Type;
+
 export type LiveEvalJournalRecord =
   | typeof RunRecordSchema.Type
   | typeof StartedRecordSchema.Type
@@ -189,6 +230,24 @@ export interface LiveEvalJournalOptions {
   readonly accountClass: string;
   readonly caseIds: readonly string[];
   readonly repetitions: number;
+}
+
+export interface OmpTranscriptWriterOptions extends Omit<
+  LiveEvalJournalOptions,
+  "outputPath" | "target"
+> {
+  readonly outputDir: string;
+  readonly fileName: string;
+}
+
+export interface OmpTranscriptWriter {
+  readonly writeTrial: (
+    transcript: OmpTrialTranscript,
+  ) => Effect.Effect<void, LiveEvalJournalError, FileSystem.FileSystem>;
+  readonly bindReport: (
+    reportContent: string,
+    selectedCaseIds: readonly string[],
+  ) => Effect.Effect<void, LiveEvalJournalError, FileSystem.FileSystem>;
 }
 
 export interface LiveEvalJournal {
@@ -229,6 +288,16 @@ const encodeStarted = Schema.encodeEffect(Schema.fromJsonString(StartedRecordSch
 const encodeGeneration = Schema.encodeEffect(Schema.fromJsonString(GenerationRecordSchema));
 const encodeFinished = Schema.encodeEffect(Schema.fromJsonString(FinishedRecordSchema));
 const encodeBound = Schema.encodeEffect(Schema.fromJsonString(BoundRecordSchema));
+const decodeOmpTranscript = Schema.decodeUnknownEffect(OmpTrialTranscriptSchema, DECODE_OPTIONS);
+const encodeOmpTranscriptRun = Schema.encodeEffect(
+  Schema.fromJsonString(OmpTranscriptRunRecordSchema),
+);
+const encodeOmpTranscriptTrial = Schema.encodeEffect(
+  Schema.fromJsonString(OmpTranscriptTrialRecordSchema),
+);
+const encodeOmpTranscriptBound = Schema.encodeEffect(
+  Schema.fromJsonString(OmpTranscriptBoundRecordSchema),
+);
 
 const admitLabel = (value: string): Effect.Effect<string, LiveEvalJournalError> =>
   decodeLabel(value).pipe(
@@ -247,6 +316,129 @@ const isUnsafePath = (outputPath: string): boolean =>
   outputPath !== outputPath.trim() ||
   outputPath.includes("\0") ||
   outputPath.split(/[\\/]/u).includes("..");
+
+const isUnsafeFileName = (fileName: string): boolean =>
+  fileName.trim().length === 0 ||
+  fileName !== fileName.trim() ||
+  fileName.includes("\0") ||
+  fileName.includes("/") ||
+  fileName.includes("\\") ||
+  fileName === "." ||
+  fileName === "..";
+
+interface ExclusiveJournalSink {
+  readonly append: (record: string, maxBytes?: number) => Effect.Effect<void, LiveEvalJournalError>;
+  readonly exclusive: <A, E, R>(
+    effect: Effect.Effect<A, E, R>,
+  ) => Effect.Effect<A, E | LiveEvalJournalError, R>;
+}
+
+/**
+ * Interruption policy for sink critical sections.
+ * - "defer": writes run uninterruptibly; interruption is deferred until the section completes.
+ * - "interrupt": writes may be interrupted; an interrupted or failed append poisons the sink.
+ */
+type JournalSinkInterruption = "defer" | "interrupt";
+
+/** Opens a private append-only JSONL sink with exclusive creation, ownership checks and fsync. */
+const openExclusiveJournalSink = (
+  output: string,
+  interruption: JournalSinkInterruption,
+): Effect.Effect<
+  ExclusiveJournalSink,
+  LiveEvalJournalError,
+  FileSystem.FileSystem | Path.Path | Scope.Scope
+> =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    if (yield* fs.exists(output).pipe(Effect.mapError(() => fail("write-failed")))) {
+      return yield* fail("output-exists");
+    }
+    let ancestor = path.dirname(output);
+    while (!(yield* fs.exists(ancestor).pipe(Effect.mapError(() => fail("invalid-path"))))) {
+      const parent = path.dirname(ancestor);
+      if (parent === ancestor) return yield* fail("invalid-path");
+      ancestor = parent;
+    }
+    if (
+      (yield* fs.realPath(ancestor).pipe(Effect.mapError(() => fail("invalid-path")))) !== ancestor
+    ) {
+      return yield* fail("invalid-path");
+    }
+    yield* fs
+      .makeDirectory(path.dirname(output), { recursive: true })
+      .pipe(Effect.mapError(() => fail("write-failed")));
+    const file = yield* fs
+      .open(output, { flag: "wx", mode: 0o600 })
+      .pipe(
+        Effect.mapError((error) =>
+          fail(error.reason._tag === "AlreadyExists" ? "output-exists" : "write-failed"),
+        ),
+      );
+    const identity = yield* file.stat.pipe(Effect.mapError(() => fail("write-failed")));
+    const inode = Option.getOrUndefined(identity.ino);
+    let expectedSize = 0n;
+    let poisoned = false;
+    let closed = false;
+    const lock = Semaphore.makeUnsafe(1);
+    yield* Effect.addFinalizer(() =>
+      Effect.uninterruptible(
+        lock.withPermit(
+          Effect.sync(() => {
+            closed = true;
+          }),
+        ),
+      ),
+    );
+    const verifyOwnership = Effect.gen(function* () {
+      if (poisoned || closed) return yield* fail("write-failed");
+      const canonical = yield* fs
+        .realPath(output)
+        .pipe(Effect.mapError(() => fail("output-conflict")));
+      const current = yield* fs.stat(output).pipe(Effect.mapError(() => fail("output-conflict")));
+      const held = yield* file.stat.pipe(Effect.mapError(() => fail("write-failed")));
+      for (const info of [current, held]) {
+        if (
+          canonical !== output ||
+          inode === undefined ||
+          info.type !== "File" ||
+          info.dev !== identity.dev ||
+          Option.getOrUndefined(info.ino) !== inode ||
+          Option.getOrUndefined(info.nlink) !== 1 ||
+          info.size !== expectedSize ||
+          (info.mode & 0o777) !== 0o600
+        ) {
+          return yield* fail("output-conflict");
+        }
+      }
+    });
+    const append = (record: string, maxBytes?: number) => {
+      const bytes = UTF8.encode(`${record}\n`);
+      if (maxBytes !== undefined && bytes.byteLength > maxBytes) {
+        return Effect.fail(fail("invalid-record"));
+      }
+      const operation = Effect.gen(function* () {
+        yield* verifyOwnership;
+        yield* file.writeAll(bytes).pipe(Effect.mapError(() => fail("write-failed")));
+        yield* file.sync.pipe(Effect.mapError(() => fail("write-failed")));
+        expectedSize += BigInt(bytes.byteLength);
+        yield* verifyOwnership;
+      }).pipe(
+        Effect.onError(() =>
+          Effect.sync(() => {
+            poisoned = true;
+          }),
+        ),
+      );
+      return interruption === "defer" ? Effect.uninterruptible(operation) : operation;
+    };
+    const exclusive = <A, E, R>(effect: Effect.Effect<A, E, R>) => {
+      const operation = interruption === "defer" ? Effect.uninterruptible(effect) : effect;
+      return lock.withPermit(operation);
+    };
+    return { append, exclusive };
+  });
 
 interface TrialState {
   readonly caseId: string;
@@ -272,7 +464,6 @@ export const createLiveEvalJournal = (
   FileSystem.FileSystem | Path.Path | Scope.Scope
 > =>
   Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     if (isUnsafePath(options.outputPath)) return yield* fail("invalid-path");
     const output = path.resolve(options.outputPath);
@@ -345,91 +536,11 @@ export const createLiveEvalJournal = (
       caseIds: plannedCaseIds,
       repetitions: plannedRepetitions,
     }).pipe(Effect.mapError(() => fail("invalid-identity")));
-    if (yield* fs.exists(output).pipe(Effect.mapError(() => fail("write-failed")))) {
-      return yield* fail("output-exists");
-    }
-    let ancestor = path.dirname(output);
-    while (!(yield* fs.exists(ancestor).pipe(Effect.mapError(() => fail("invalid-path"))))) {
-      const parent = path.dirname(ancestor);
-      if (parent === ancestor) return yield* fail("invalid-path");
-      ancestor = parent;
-    }
-    if (
-      (yield* fs.realPath(ancestor).pipe(Effect.mapError(() => fail("invalid-path")))) !== ancestor
-    ) {
-      return yield* fail("invalid-path");
-    }
-    yield* fs
-      .makeDirectory(path.dirname(output), { recursive: true })
-      .pipe(Effect.mapError(() => fail("write-failed")));
-    const file = yield* fs
-      .open(output, { flag: "wx", mode: 0o600 })
-      .pipe(
-        Effect.mapError((error) =>
-          fail(error.reason._tag === "AlreadyExists" ? "output-exists" : "write-failed"),
-        ),
-      );
-    const identity = yield* file.stat.pipe(Effect.mapError(() => fail("write-failed")));
-    const inode = Option.getOrUndefined(identity.ino);
-    let expectedSize = 0n;
-    let poisoned = false;
-    let closed = false;
-    const lock = Semaphore.makeUnsafe(1);
-    yield* Effect.addFinalizer(() =>
-      Effect.uninterruptible(
-        lock.withPermit(
-          Effect.sync(() => {
-            closed = true;
-          }),
-        ),
-      ),
-    );
-    const verifyOwnership = Effect.gen(function* () {
-      if (poisoned || closed) return yield* fail("write-failed");
-      const canonical = yield* fs
-        .realPath(output)
-        .pipe(Effect.mapError(() => fail("output-conflict")));
-      const current = yield* fs.stat(output).pipe(Effect.mapError(() => fail("output-conflict")));
-      const held = yield* file.stat.pipe(Effect.mapError(() => fail("write-failed")));
-      for (const info of [current, held]) {
-        if (
-          canonical !== output ||
-          inode === undefined ||
-          info.type !== "File" ||
-          info.dev !== identity.dev ||
-          Option.getOrUndefined(info.ino) !== inode ||
-          Option.getOrUndefined(info.nlink) !== 1 ||
-          info.size !== expectedSize ||
-          (info.mode & 0o777) !== 0o600
-        ) {
-          return yield* fail("output-conflict");
-        }
-      }
-    });
-    const append = (record: string) =>
-      Effect.uninterruptible(
-        Effect.gen(function* () {
-          yield* verifyOwnership;
-          const bytes = UTF8.encode(`${record}\n`);
-          yield* file.writeAll(bytes).pipe(Effect.mapError(() => fail("write-failed")));
-          yield* file.sync.pipe(Effect.mapError(() => fail("write-failed")));
-          expectedSize += BigInt(bytes.byteLength);
-          yield* verifyOwnership;
-        }).pipe(
-          Effect.tapError(() =>
-            Effect.sync(() => {
-              poisoned = true;
-            }),
-          ),
-        ),
-      );
+    const { append, exclusive } = yield* openExclusiveJournalSink(output, "defer");
     yield* append(encoded);
 
     const trials = new Map<string, TrialState>();
     let bound = false;
-
-    const exclusive = <A>(effect: Effect.Effect<A, LiveEvalJournalError, FileSystem.FileSystem>) =>
-      lock.withPermit(Effect.uninterruptible(effect));
 
     const requireOpen = (): Effect.Effect<void, LiveEvalJournalError> =>
       bound ? Effect.fail(fail("already-bound")) : Effect.void;
@@ -602,6 +713,193 @@ export const createLiveEvalJournal = (
       });
 
     return { startTrial, generation, finishTrial, bindReport };
+  });
+
+export const createOmpTranscriptWriter = (
+  options: OmpTranscriptWriterOptions,
+): Effect.Effect<
+  OmpTranscriptWriter,
+  LiveEvalJournalError,
+  FileSystem.FileSystem | Path.Path | Scope.Scope
+> =>
+  Effect.gen(function* () {
+    const path = yield* Path.Path;
+    if (isUnsafePath(options.outputDir) || isUnsafeFileName(options.fileName)) {
+      return yield* fail("invalid-path");
+    }
+    const outputDir = path.resolve(options.outputDir);
+    const output = path.resolve(outputDir, options.fileName);
+    if (
+      outputDir !== path.normalize(outputDir) ||
+      path.isAbsolute(options.fileName) ||
+      path.basename(options.fileName) !== options.fileName ||
+      path.dirname(output) !== outputDir
+    ) {
+      return yield* fail("invalid-path");
+    }
+
+    const runId = yield* admitLabel(options.runId);
+    const candidate = yield* admitLabel(options.candidate);
+    const model = yield* decodeModel(options.model).pipe(
+      Effect.mapError(() => fail("invalid-identity")),
+      Effect.filterOrFail(isSafePublicEvalText, () => fail("invalid-identity")),
+    );
+    if (
+      !isAllowedGinaReadServerUrl(options.serverUrl) ||
+      !isSafePublicEvalText(options.serverUrl)
+    ) {
+      return yield* fail("invalid-identity");
+    }
+    const suiteId = yield* admitLabel(options.suiteId);
+    const suiteVersion = yield* decodePositiveVersion(options.suiteVersion).pipe(
+      Effect.mapError(() => fail("invalid-identity")),
+    );
+    const fixtureVersion = yield* decodePositiveVersion(options.fixtureVersion).pipe(
+      Effect.mapError(() => fail("invalid-identity")),
+    );
+    const catalogSha = yield* decodeSha256(options.catalogSha).pipe(
+      Effect.mapError(() => fail("invalid-identity")),
+    );
+    const reasoning =
+      options.reasoning === undefined ? undefined : yield* admitLabel(options.reasoning);
+    const accountClass = yield* admitLabel(options.accountClass);
+    if (
+      !Array.isArray(options.caseIds) ||
+      options.caseIds.length < 1 ||
+      options.caseIds.length > LIVE_EVAL_JOURNAL_MAX_CASES
+    ) {
+      return yield* fail("invalid-identity");
+    }
+    const plannedCaseIds: string[] = [];
+    const plannedCaseIdSet = new Set<string>();
+    for (const value of options.caseIds) {
+      const caseId = yield* admitLabel(value);
+      if (plannedCaseIdSet.has(caseId)) return yield* fail("invalid-identity");
+      plannedCaseIdSet.add(caseId);
+      plannedCaseIds.push(caseId);
+    }
+    if (
+      !Number.isSafeInteger(options.repetitions) ||
+      options.repetitions < 1 ||
+      options.repetitions > LIVE_EVAL_JOURNAL_MAX_REPETITIONS
+    ) {
+      return yield* fail("invalid-identity");
+    }
+    const plannedRepetitions = options.repetitions;
+    const expectedDispatchIds: string[] = [];
+    for (let repetition = 1; repetition <= plannedRepetitions; repetition += 1) {
+      for (const caseId of plannedCaseIds) {
+        expectedDispatchIds.push(liveEvalJournalDispatchId(runId, caseId, repetition));
+      }
+    }
+    const encodedRun = yield* encodeOmpTranscriptRun({
+      kind: "run",
+      schemaVersion: OMP_TRANSCRIPT_SCHEMA_VERSION,
+      runId,
+      candidate,
+      target: "omp_harness",
+      model,
+      serverUrl: options.serverUrl,
+      suiteId,
+      suiteVersion,
+      fixtureVersion,
+      catalogSha,
+      ...(reasoning === undefined ? {} : { reasoning }),
+      accountClass,
+      caseIds: plannedCaseIds,
+      repetitions: plannedRepetitions,
+    }).pipe(Effect.mapError(() => fail("invalid-identity")));
+    const { append, exclusive } = yield* openExclusiveJournalSink(output, "interrupt");
+    yield* append(encodedRun);
+
+    const trials = new Set<string>();
+    let bound = false;
+
+    const writeTrial: OmpTranscriptWriter["writeTrial"] = (transcript) =>
+      Effect.gen(function* () {
+        const admitted = yield* decodeOmpTranscript(transcript).pipe(
+          Effect.mapError(() => fail("invalid-record")),
+        );
+        const caseId = yield* admitCaseId(admitted.caseId);
+        if (
+          admitted.runId !== runId ||
+          admitted.model !== model ||
+          !Number.isSafeInteger(admitted.repetition) ||
+          admitted.repetition > plannedRepetitions ||
+          !plannedCaseIdSet.has(caseId)
+        ) {
+          return yield* fail("invalid-record");
+        }
+        const dispatchId = liveEvalJournalDispatchId(runId, caseId, admitted.repetition);
+        const encodedTrial = yield* encodeOmpTranscriptTrial({
+          kind: "trial",
+          dispatchId,
+          transcript: admitted,
+        }).pipe(Effect.mapError(() => fail("invalid-record")));
+        yield* exclusive(
+          Effect.gen(function* () {
+            if (bound) return yield* fail("already-bound");
+            if (trials.has(dispatchId)) return yield* fail("already-started");
+            if (trials.size >= LIVE_EVAL_JOURNAL_MAX_TRIALS) {
+              return yield* fail("capacity-exceeded");
+            }
+            if (expectedDispatchIds[trials.size] !== dispatchId) {
+              return yield* fail("invalid-record");
+            }
+            yield* append(encodedTrial, OMP_TRANSCRIPT_MAX_RECORD_BYTES);
+            trials.add(dispatchId);
+          }),
+        );
+      });
+
+    const bindReport: OmpTranscriptWriter["bindReport"] = (reportContent, selectedCaseIds) =>
+      Effect.gen(function* () {
+        if (
+          typeof reportContent !== "string" ||
+          UTF8.encode(reportContent).byteLength > 1_048_576 ||
+          !Array.isArray(selectedCaseIds) ||
+          selectedCaseIds.length !== plannedCaseIds.length ||
+          selectedCaseIds.some((caseId, index) => caseId !== plannedCaseIds[index])
+        ) {
+          return yield* fail("invalid-record");
+        }
+        const report = yield* Schema.decodeEffect(
+          Schema.fromJsonString(SanitizedEvalRunReportSchema),
+          DECODE_OPTIONS,
+        )(reportContent).pipe(Effect.mapError(() => fail("invalid-record")));
+        if (
+          report.runId !== runId ||
+          report.candidate !== candidate ||
+          report.target !== "omp_harness" ||
+          report.model !== model ||
+          report.accountClass !== accountClass ||
+          report.repetitions !== plannedRepetitions ||
+          (report.reasoning ?? undefined) !== (reasoning ?? undefined) ||
+          report.aggregate.suiteId !== suiteId ||
+          report.aggregate.suiteVersion !== suiteVersion ||
+          report.aggregate.fixtureVersion !== fixtureVersion ||
+          report.aggregate.catalogSha !== catalogSha ||
+          report.aggregate.overall.total !== expectedDispatchIds.length
+        ) {
+          return yield* fail("invalid-record");
+        }
+        const encodedBound = yield* encodeOmpTranscriptBound({
+          kind: "report-bound",
+          sourceReportSha256: sha256Hex(reportContent),
+        }).pipe(Effect.mapError(() => fail("invalid-record")));
+        yield* exclusive(
+          Effect.gen(function* () {
+            if (bound) return yield* fail("already-bound");
+            if (trials.size !== expectedDispatchIds.length) {
+              return yield* fail("invalid-record");
+            }
+            yield* append(encodedBound);
+            bound = true;
+          }),
+        );
+      });
+
+    return { writeTrial, bindReport };
   });
 
 const isTypedTimeoutError = (error: unknown): boolean =>

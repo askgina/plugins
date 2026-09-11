@@ -55,6 +55,7 @@ import {
   runLiveEvalSuite,
   selectCases,
 } from "../live";
+import type { OmpTrialTranscript } from "../omp-transcript";
 import {
   isOmpApiKeyProvider,
   isOmpProviderIdentifier,
@@ -86,7 +87,12 @@ import { runResponsesApiPluginEvalTrial, type PluginEvalResponsesError } from ".
 import { isSafePublicEvalText } from "../sanitize";
 import type { PluginEvalObservation } from "../contracts";
 import { OpenRouterBudgetError, preflightOpenRouterBudget } from "../openrouter-budget";
-import { createLiveEvalJournal, LiveEvalJournalError, withJournaledTrial } from "../trial-journal";
+import {
+  createLiveEvalJournal,
+  createOmpTranscriptWriter,
+  LiveEvalJournalError,
+  withJournaledTrial,
+} from "../trial-journal";
 
 const GIT_STATUS_LIMIT_BYTES = 65_536;
 const CODEX_PREFLIGHT_LIMIT_BYTES = 1_048_576;
@@ -1227,7 +1233,7 @@ const run = (options: LiveEvalCliOptions) =>
     Effect.gen(function* () {
       const root = process.cwd();
       const path = yield* Path.Path;
-      const runGenerationEvidence = Effect.runPromiseWith(
+      const runFileSystemEffect = Effect.runPromiseWith(
         yield* Effect.context<FileSystem.FileSystem>(),
       );
       const dispatch = liveEvalTrialDispatch(options);
@@ -1246,11 +1252,22 @@ const run = (options: LiveEvalCliOptions) =>
           ? liveEvalConfigurationEvidenceOutputPath(path, outputPath, "configuration-v2")
           : undefined;
       const journalPath = outputPath.replace(/\.json$/u, ".journal-v1.jsonl");
+      const transcriptPath =
+        options.runner === "omp"
+          ? outputPath.replace(/\.json$/u, ".transcripts-v1.jsonl")
+          : undefined;
       yield* assertLiveEvalDurableOutputs(outputPath, identityPath, configurationPath);
       yield* assertPublicEvalAttemptOutputPath(journalPath, outputPath);
+      if (transcriptPath !== undefined) {
+        yield* assertPublicEvalAttemptOutputPath(transcriptPath, outputPath);
+        yield* assertPublicEvalAttemptOutputPath(transcriptPath, journalPath);
+      }
       if (options.attemptsOutputPath !== undefined) {
         yield* assertPublicEvalAttemptOutputPath(options.attemptsOutputPath, outputPath);
         yield* assertPublicEvalAttemptOutputPath(options.attemptsOutputPath, journalPath);
+        if (transcriptPath !== undefined) {
+          yield* assertPublicEvalAttemptOutputPath(options.attemptsOutputPath, transcriptPath);
+        }
         if (identityPath !== undefined) {
           yield* assertPublicEvalAttemptOutputPath(options.attemptsOutputPath, identityPath);
         }
@@ -1291,6 +1308,25 @@ const run = (options: LiveEvalCliOptions) =>
         caseIds: plannedCaseIds,
         repetitions: options.repetitions,
       });
+      const transcriptWriter =
+        transcriptPath === undefined
+          ? undefined
+          : yield* createOmpTranscriptWriter({
+              outputDir: path.dirname(transcriptPath),
+              fileName: path.basename(transcriptPath),
+              runId: options.runId,
+              candidate: options.candidate,
+              model,
+              serverUrl: PRODUCTION_MCP_URL,
+              suiteId: suite.suite.id,
+              suiteVersion: suite.version,
+              fixtureVersion: 1,
+              catalogSha,
+              reasoning: options.reasoning,
+              accountClass: options.accountClass,
+              caseIds: plannedCaseIds,
+              repetitions: options.repetitions,
+            });
       const credentials = yield* loadLiveEvalCredentials(
         options.runner === "omp" ? { runner: "omp", authMode: options.auth.mode } : options.runner,
       );
@@ -1431,7 +1467,7 @@ const run = (options: LiveEvalCliOptions) =>
                       endpoint: options.endpoint,
                       expectedProvider: options.expectedProvider,
                       onGenerationEvidence: (evidence) =>
-                        runGenerationEvidence(journal.generation(dispatchId, evidence)),
+                        runFileSystemEffect(journal.generation(dispatchId, evidence)),
                       reasoning: options.reasoning,
                       runId: input.runId,
                       repetition: input.repetition,
@@ -1485,7 +1521,11 @@ const run = (options: LiveEvalCliOptions) =>
                       timeoutMs: options.timeoutMs,
                     });
                   case "omp": {
-                    if (credentials.runner !== "omp" || ompRuntimeDirectory === undefined) {
+                    if (
+                      credentials.runner !== "omp" ||
+                      ompRuntimeDirectory === undefined ||
+                      transcriptWriter === undefined
+                    ) {
                       return Effect.fail(new LiveEvalCliError({ reason: "omp-preflight-failed" }));
                     }
                     const auth =
@@ -1515,6 +1555,8 @@ const run = (options: LiveEvalCliOptions) =>
                       reasoning: options.reasoning,
                       mcpAuthorization: credentials.accessToken,
                       timeoutMs: options.timeoutMs,
+                      onTranscript: (transcript: OmpTrialTranscript, signal: AbortSignal) =>
+                        runFileSystemEffect(transcriptWriter.writeTrial(transcript), { signal }),
                     }).pipe(
                       Effect.filterOrFail(
                         (observation) => observation.model === input.model,
@@ -1549,6 +1591,9 @@ const run = (options: LiveEvalCliOptions) =>
         });
       }
       yield* journal.bindReport(encoded, selectedCaseIds);
+      if (transcriptWriter !== undefined) {
+        yield* transcriptWriter.bindReport(encoded, selectedCaseIds);
+      }
       if (
         requestedRouting !== undefined &&
         identityPath !== undefined &&
