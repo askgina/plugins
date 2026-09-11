@@ -67,7 +67,7 @@ Codex adds `CODEX_EVAL_EXECUTABLE` and `CODEX_EVAL_EXECUTABLE_SHA256`; OpenRoute
 needs `OPENROUTER_API_KEY` plus required `--openrouter-endpoint`,
 `--expected-provider`, and `--max-cost-usd`; Claude needs `ANTHROPIC_API_KEY` and
 `CLAUDE_EVAL_EXECUTABLE`; OMP needs `OMP_EVAL_API_KEY`,
-`OMP_EVAL_EXECUTABLE`, `OMP_EVAL_EXECUTABLE_SHA256`, a local Docker engine, and
+`OMP_EVAL_EXECUTABLE`, `OMP_EVAL_EXECUTABLE_SHA256`, and
 `--provider openai|anthropic|openrouter`. Optional `--max-steps` applies only to
 OpenRouter and `--max-turns` only to Claude. Both default to 8 and accept 1 to 32.
 OpenRouter also accepts optional `--server-url` with the exact Gina-read URLs
@@ -79,6 +79,8 @@ not meet a separately requested HarnessAgent or Codex saved-login policy.
 OpenRouter uses local AI SDK MCP; Responses uses
 OpenAI-hosted MCP. Neither proves native plugin activation. Codex and Claude
 adapters distinguish native skill events from task conformance. Claude's live
-plugin activation remains unverified; offline fixtures and OMP Docker/runtime
-proof are not measured native-agent evidence. Flags, capture, and publication
-rules are in `packages/evals/README.md`.
+plugin activation remains unverified; offline fixtures and OMP local-runtime
+proof are not measured native-agent evidence. Stock OMP host-tool success and
+MCP-error handling passed a cold local synthetic smoke. Native ACP still does
+not classify provider HTTP failures. Flags, capture, and publication rules are
+in `packages/evals/README.md`.

@@ -1,7 +1,5 @@
 #!/usr/bin/env bun
 
-import { createRequire } from "node:module";
-
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { ChildProcess } from "effect/unstable/process";
@@ -105,7 +103,6 @@ const PACKAGES = [
       /^codex-cli-[A-Za-z0-9_-]+\.js\.map$/u,
       /^index\.d\.ts$/u,
       /^index\.js$/u,
-      /^index\.js\.map$/u,
       /^omp-harness-[A-Za-z0-9_-]+\.d\.ts$/u,
       /^publication-[A-Za-z0-9_-]+\.js$/u,
       /^publication-[A-Za-z0-9_-]+\.js\.map$/u,
@@ -117,14 +114,9 @@ const PACKAGES = [
       /^runner-[A-Za-z0-9_-]+\.js\.map$/u,
       /^trial-journal-[A-Za-z0-9_-]+\.js$/u,
       /^trial-journal-[A-Za-z0-9_-]+\.js\.map$/u,
-      /^bridge\/package\.json$/u,
-      /^bridge\/pnpm-lock\.yaml$/u,
-      /^bridge\/index\.mjs$/u,
-      /^bridge\/codex-sdk-0\.153\.4\.patch$/u,
     ],
   },
 ];
-const EVALS_BUNDLED_DEPENDENCIES = ["@ai-sdk/harness", "@ai-sdk/harness-codex"] as const;
 const TARGET_MANIFESTS: Readonly<Record<Host, string>> = {
   openai: ".codex-plugin/plugin.json",
   cursor: ".cursor-plugin/plugin.json",
@@ -364,116 +356,12 @@ const packageDefinition = (name: string) => {
     : Effect.succeed(definition);
 };
 
-type AdmittedDependencyRoot = {
-  readonly name: string;
-  readonly liveRoot: string;
-  readonly snapshotRoot: string;
-};
-
-const confinedRelative = (path: Path.Path, root: string, file: string): string | undefined => {
-  const relative = path.relative(root, file);
-  if (
-    relative === ".." ||
-    relative.startsWith("../") ||
-    relative.startsWith("..\\") ||
-    path.isAbsolute(relative) ||
-    relative
-      .split("/")
-      .some((segment) => segment.length === 0 || segment === "." || segment === "..")
-  ) {
-    return undefined;
-  }
-  return relative;
-};
-
-const declaredPackageDependencyVersion = (
-  metadata: Record<string, unknown>,
-  name: string,
-): string | undefined => {
-  if (
-    isObject(metadata.dependencies) &&
-    typeof metadata.dependencies[name] === "string" &&
-    metadata.dependencies[name].length > 0
-  ) {
-    return metadata.dependencies[name];
-  }
-  if (
-    isObject(metadata.devDependencies) &&
-    typeof metadata.devDependencies[name] === "string" &&
-    metadata.devDependencies[name].length > 0
-  ) {
-    return metadata.devDependencies[name];
-  }
-};
-
-const resolveInstalledPackageRoot = (packageRoot: string, name: string) =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const manifest = path.join(packageRoot, "package.json");
-    const resolved = yield* Effect.try({
-      try: () => createRequire(manifest).resolve(`${name}/package.json`),
-      catch: (cause) => fail(`cannot resolve bundled dependency ${name}`, cause),
-    });
-    const realManifest = yield* fs
-      .realPath(resolved)
-      .pipe(
-        Effect.mapError((cause) => fail(`cannot canonicalize bundled dependency ${name}`, cause)),
-      );
-    const installed = yield* readJson(realManifest);
-    if (!isObject(installed)) {
-      return yield* fail(`bundled dependency ${name} package.json must be an object`);
-    }
-    if (installed.name !== name) {
-      return yield* fail(`bundled dependency ${name} identity is invalid`);
-    }
-    const version = yield* requiredString(installed.version, `${name} version`);
-    const root = yield* fs
-      .realPath(path.dirname(realManifest))
-      .pipe(
-        Effect.mapError((cause) => fail(`cannot canonicalize bundled dependency ${name}`, cause)),
-      );
-    return { name, version, root };
-  });
-
-const evalsBundledDependencyRoots = (livePackageRoot: string, sourcePackageRoot: string) =>
-  Effect.gen(function* () {
-    const path = yield* Path.Path;
-    const liveMetadata = yield* readJson(path.join(livePackageRoot, "package.json"));
-    const sourceMetadata = yield* readJson(path.join(sourcePackageRoot, "package.json"));
-    if (!isObject(liveMetadata) || !isObject(sourceMetadata)) {
-      return yield* fail("@askgina/evals package.json must be an object");
-    }
-    return yield* Effect.forEach(EVALS_BUNDLED_DEPENDENCIES, (name) =>
-      Effect.gen(function* () {
-        const liveDeclared = declaredPackageDependencyVersion(liveMetadata, name);
-        const sourceDeclared = declaredPackageDependencyVersion(sourceMetadata, name);
-        if (liveDeclared === undefined || sourceDeclared === undefined) {
-          return yield* fail(`@askgina/evals does not declare bundled dependency ${name}`);
-        }
-        if (liveDeclared !== sourceDeclared) {
-          return yield* fail(`bundled dependency ${name} versions are inconsistent`);
-        }
-        const live = yield* resolveInstalledPackageRoot(livePackageRoot, name);
-        const snapshot = yield* resolveInstalledPackageRoot(sourcePackageRoot, name);
-        if (live.version !== liveDeclared || snapshot.version !== sourceDeclared) {
-          return yield* fail(
-            `bundled dependency ${name} version does not match the package manifest`,
-          );
-        }
-        return { name, liveRoot: live.root, snapshotRoot: snapshot.root };
-      }),
-    );
-  });
-
 const verifyEmbeddedSourceMap = (
   livePackageRoot: string,
   sourcePackageRoot: string,
   mapFile: string,
-  admittedRoots: readonly AdmittedDependencyRoot[] = [],
 ) =>
   Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const value = yield* readJson(mapFile);
     if (!isObject(value) || value.version !== 3) {
@@ -537,36 +425,7 @@ const verifyEmbeddedSourceMap = (
         }
         continue;
       }
-      const liveReal = yield* fs
-        .realPath(liveSource)
-        .pipe(
-          Effect.mapError((cause) =>
-            fail(`compiled source map escapes its package: ${sourceValue}`, cause),
-          ),
-        );
-      const admitted = admittedRoots.find(
-        (root) => confinedRelative(path, root.liveRoot, liveReal) !== undefined,
-      );
-      const member =
-        admitted === undefined ? undefined : confinedRelative(path, admitted.liveRoot, liveReal);
-      if (admitted === undefined || member === undefined || !member.endsWith(".ts")) {
-        return yield* fail(`compiled source map escapes its package: ${sourceValue}`);
-      }
-      const snapshotFile = path.join(admitted.snapshotRoot, member);
-      const snapshotReal = yield* fs
-        .realPath(snapshotFile)
-        .pipe(
-          Effect.mapError((cause) =>
-            fail(`compiled source map escapes its package: ${sourceValue}`, cause),
-          ),
-        );
-      if (confinedRelative(path, admitted.snapshotRoot, snapshotReal) !== member) {
-        return yield* fail(`compiled source map escapes its package: ${sourceValue}`);
-      }
-      const expected = yield* readText(snapshotReal);
-      if (content !== expected) {
-        return yield* fail(`compiled source map content is stale: ${sourceValue}`);
-      }
+      return yield* fail(`compiled source map escapes its package: ${sourceValue}`);
     }
   });
 
@@ -659,17 +518,8 @@ const verifyCompiledPackageOutputImpl = (
     );
     const maps = files.filter((file) => file.endsWith(".map"));
     if (maps.length === 0) return yield* fail(`${definition.name} has no compiled source maps`);
-    const admittedRoots =
-      definition.name === "@askgina/evals"
-        ? yield* evalsBundledDependencyRoots(livePackageRoot, sourcePackageRoot)
-        : [];
     yield* Effect.forEach(maps, (file) =>
-      verifyEmbeddedSourceMap(
-        livePackageRoot,
-        sourcePackageRoot,
-        path.join(dist, file),
-        admittedRoots,
-      ),
+      verifyEmbeddedSourceMap(livePackageRoot, sourcePackageRoot, path.join(dist, file)),
     );
     return { allowlist, files };
   });
