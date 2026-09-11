@@ -45,9 +45,10 @@ replace the current app routes or public-results stories. Their restored styles 
 scoped to the illustrative pages.
 
 `Evals/Production UI` combines that editorial layout with public v1 data. Its results
-page uses task-family tabs above a model table; each model expands into exact
-configuration pins and their runs, with run comparison as a secondary action inside
-one benchmark cohort. It also has run profiles, retained-attempt exploration, and
+page uses task-family tabs above a model table; each model expands into its
+configuration records (exact pins when published, labels-only runs kept separate) and
+their runs, with run comparison as a secondary action inside one benchmark cohort. It
+also has run profiles, retained-attempt exploration, and
 methodology. Reusable pages live in `apps/evals/src/pages/production`; their coherent
 synthetic fixtures live in `apps/evals/src/stories/production-fixtures.ts`. This batch
 has its own routed experience and leaves the existing app entry point and both older
