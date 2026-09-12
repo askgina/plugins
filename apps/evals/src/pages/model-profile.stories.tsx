@@ -1,5 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ModelProfilePage } from "./model-profile";
+import {
+  aggregateOnlyCatalog,
+  incompleteCoverageCatalog,
+  syntheticFieldCatalog,
+  verifiedSyntheticCatalog,
+} from "../stories/public-comparison-fixtures";
 
 const meta = {
   title: "Evals/Model profile",
@@ -13,28 +19,45 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Kimi: Story = {
+export const SyntheticFieldProfile: Story = {
   args: {
-    modelId: "kimi-k3",
+    modelId: "synthetic-candidate-c",
+    catalog: syntheticFieldCatalog,
   },
 };
 
-export const Claude: Story = {
+export const SingleCurrentPublication: Story = {
   args: {
-    modelId: "claude-4",
+    modelId: "synthetic-candidate-a",
+    catalog: verifiedSyntheticCatalog,
   },
 };
 
-export const ComparisonOpen: Story = {
+export const AggregateOnly: Story = {
   args: {
-    modelId: "kimi-k3",
-    initialCompareId: "gpt-5",
+    modelId: "synthetic-candidate-a",
+    catalog: aggregateOnlyCatalog,
+  },
+};
+
+export const IncompleteCoverage: Story = {
+  args: {
+    modelId: "synthetic-candidate-a",
+    catalog: incompleteCoverageCatalog,
+  },
+};
+
+export const CandidateNotFound: Story = {
+  args: {
+    modelId: "missing-candidate",
+    catalog: verifiedSyntheticCatalog,
   },
 };
 
 export const Mobile: Story = {
   args: {
-    modelId: "kimi-k3",
+    modelId: "synthetic-candidate-c",
+    catalog: syntheticFieldCatalog,
   },
   globals: { viewport: { value: "mobile", isRotated: false } },
 };

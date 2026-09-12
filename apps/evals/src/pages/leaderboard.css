@@ -8,18 +8,13 @@
   width: 100%;
 }
 
-.lb-quote {
-  margin: 22px 0 0;
-  max-width: 28rem;
-}
-
 .lb-benefits {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
   list-style: none;
-  margin: 32px 0 0;
-  max-width: 640px;
+  margin: 30px 0 0;
+  max-width: 780px;
   padding: 0;
 }
 
@@ -58,7 +53,7 @@
 }
 
 .lb-results {
-  margin-top: 8px;
+  margin-top: 18px;
 }
 
 .lb-section-heading {
@@ -147,32 +142,115 @@
   color: #7a7671;
 }
 
-.lb-table-panel {
+.lb-result-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lb-result {
   overflow: hidden;
+  border: 1px solid var(--eval-line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 34px rgba(44, 35, 27, 0.035);
+  transition:
+    border-color 180ms ease-out,
+    box-shadow 180ms ease-out;
 }
 
-.lb-table-scroll {
-  position: relative;
-  overflow-x: auto;
-  max-width: 100%;
+.lb-result:hover {
+  border-color: rgba(98, 69, 49, 0.2);
+  box-shadow: 0 16px 42px rgba(44, 35, 27, 0.06);
 }
 
-.lb-table {
-  min-width: 760px;
+.lb-result-main {
+  display: grid;
+  grid-template-columns: minmax(230px, 1.35fr) minmax(460px, 2.4fr) minmax(120px, 0.65fr);
+  align-items: center;
+  gap: 24px;
+  min-height: 116px;
+  padding: 22px 24px;
 }
 
-.lb-table th,
-.lb-table td {
-  white-space: nowrap;
-  vertical-align: middle;
+.lb-result-identity {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
 }
 
-.lb-table tbody th {
-  font-weight: 500;
+.lb-unranked-mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #f4f0eb;
+  color: #b9473e;
+  font-size: 22px;
+  line-height: 1;
 }
 
-.lb-table tbody tr:hover {
-  background: #fafaf8;
+.lb-primary-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+}
+
+.lb-primary-metrics > div {
+  min-width: 0;
+  padding: 2px 18px;
+  border-left: 1px solid var(--eval-line);
+}
+
+.lb-primary-metrics dt,
+.lb-dimension-strip dt {
+  margin-bottom: 5px;
+  color: var(--eval-muted);
+  font-size: 10px;
+}
+
+.lb-primary-metrics dd,
+.lb-dimension-strip dd {
+  margin: 0;
+}
+
+.lb-primary-metrics strong {
+  font-size: 17px;
+}
+
+.lb-result-action {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+
+.lb-result-action > a {
+  color: #744f3c;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.lb-result-action > a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.lb-dimension-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0;
+  padding: 13px 24px 15px 71px;
+  border-top: 1px solid var(--eval-line);
+  background: #faf9f7;
+}
+
+.lb-dimension-strip > div {
+  min-width: 0;
 }
 
 .lb-rank-column,
@@ -210,6 +288,122 @@
 
 .lb-model-column {
   min-width: 220px;
+}
+
+.lb-cohort-label {
+  min-width: 0;
+  margin: 0;
+  color: var(--eval-muted);
+  font-size: 11px;
+}
+
+.lb-load-state {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 24px;
+  border: 1px solid var(--eval-line);
+  border-radius: 16px;
+  background: #fbfaf8;
+}
+
+.lb-load-state span {
+  color: var(--eval-muted);
+  font-size: 12px;
+}
+
+.lb-load-state-error {
+  border-color: #d92d2d24;
+  background: #d92d2d08;
+}
+
+.lb-attempt-count {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lb-attempt-count small {
+  color: var(--eval-muted);
+  font-size: 10px;
+}
+
+.lb-contract-grid {
+  margin-top: 16px;
+  gap: 0;
+  border-top: 1px solid var(--eval-line);
+}
+
+.lb-contract-grid > section {
+  min-width: 0;
+  padding: 22px;
+}
+
+.lb-contract-grid > section + section {
+  border-left: 1px solid var(--eval-line);
+}
+
+.lb-contract-grid h3 {
+  margin: 0;
+  font-size: 13px;
+}
+
+.lb-contract-grid section > p {
+  margin: 3px 0 0;
+  color: var(--eval-muted);
+  font-size: 11px;
+}
+
+.lb-method-details {
+  margin-top: 16px;
+  border: 1px solid var(--eval-line);
+  border-radius: 14px;
+  background: #fbfaf8;
+}
+
+.lb-method-details > summary {
+  padding: 15px 18px;
+  color: #4e4945;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.lb-publication-state {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  padding: 12px 0 8px;
+}
+
+.lb-publication-state > div {
+  padding: 10px 14px;
+  border-right: 1px solid var(--eval-line);
+}
+
+.lb-publication-state > div:last-child {
+  border-right: 0;
+}
+
+.lb-publication-state dt {
+  min-height: 32px;
+  color: var(--eval-muted);
+  font-size: 10px;
+}
+
+.lb-publication-state dd {
+  margin: 3px 0 0;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.lb-contract-note {
+  max-width: 65ch;
+  margin: 4px 0 0 !important;
+  color: var(--eval-muted);
+  font-size: 11px;
+  line-height: 1.6;
 }
 
 .lb-model-cell {
@@ -313,7 +507,7 @@
 }
 
 .lb-charts {
-  margin-top: 18px;
+  margin: 0 0 18px;
 }
 
 .lb-chart-panel {
@@ -398,6 +592,78 @@
   .lb-dataset-indicator {
     white-space: normal;
   }
+
+  .lb-result-main {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 20px;
+  }
+
+  .lb-result-identity {
+    grid-column: 1 / -1;
+  }
+
+  .lb-primary-metrics {
+    margin-left: 47px;
+  }
+
+  .lb-dimension-strip {
+    padding-left: 71px;
+  }
+
+  .lb-contract-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lb-contract-grid > section + section {
+    border-top: 1px solid var(--eval-line);
+    border-left: 0;
+  }
+
+  .lb-publication-state {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lb-publication-state > div {
+    border-right: 0;
+    border-bottom: 1px solid var(--eval-line);
+  }
+
+  .lb-publication-state > div:last-child {
+    border-bottom: 0;
+  }
+
+  .lb-publication-state dt {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .lb-result-main {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 20px;
+  }
+
+  .lb-result-identity,
+  .lb-result-action {
+    grid-column: auto;
+  }
+
+  .lb-primary-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 0;
+    margin-left: 0;
+  }
+
+  .lb-primary-metrics > div:nth-child(odd) {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .lb-dimension-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    padding: 16px 20px;
+  }
 }
 
 @media (max-width: 375px) {
@@ -408,9 +674,5 @@
   .lb-benefits {
     gap: 12px;
     margin-top: 24px;
-  }
-
-  .lb-quote {
-    font-size: 15px;
   }
 }

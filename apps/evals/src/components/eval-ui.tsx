@@ -1,5 +1,6 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
-import { ArrowUpRight, FlaskConical, X } from "lucide-react";
+import { type CSSProperties, type ReactNode } from "react";
+import { House, X } from "lucide-react";
+import askGinaLogoUrl from "../../../../docs/logo/light.svg";
 import { dataset, families, type EvalModel, type FamilyFilter, type PageId } from "../data";
 import { Button } from "./ui/button";
 import { DialogRoot, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
@@ -8,25 +9,21 @@ type ShellPageId = PageId | "handoff";
 
 const navigation: readonly { id: ShellPageId; label: string; href: string }[] = [
   { id: "leaderboard", label: "Leaderboard", href: "#/leaderboard" },
-  { id: "models", label: "Models", href: "#/models/kimi-k3" },
+  { id: "models", label: "Models", href: "#/models" },
   { id: "tasks", label: "Tasks", href: "#/tasks" },
   { id: "methodology", label: "Methodology", href: "#/methodology" },
   { id: "handoff", label: "Public results", href: "#/handoff" },
 ];
 
 export function PageShell({ active, children }: { active: ShellPageId; children: ReactNode }) {
-  const [runOpen, setRunOpen] = useState(false);
   return (
     <div className="eval-app">
       <a className="eval-skip-link" href="#eval-main">
         Skip to content
       </a>
       <header className="eval-header">
-        <a className="eval-wordmark" href="#/leaderboard" aria-label="Ask Gina Evals home">
-          <strong>
-            Ask Gina<span className="eval-brand-dot">·</span>
-          </strong>
-          <span>Evals</span>
+        <a className="eval-wordmark" href="https://www.askgina.ai" aria-label="Ask Gina home">
+          <img src={askGinaLogoUrl} alt="Ask Gina" />
         </a>
         <nav className="eval-nav" aria-label="Main navigation">
           {navigation.map((item) => (
@@ -40,14 +37,10 @@ export function PageShell({ active, children }: { active: ShellPageId; children:
           ))}
         </nav>
         <div className="eval-header-actions">
-          <span className="eval-demo-label">
-            {active === "handoff" ? "Public JSON handoff" : "Design concept · Illustrative data"}
-          </span>
-          {active !== "handoff" && (
-            <Button className="eval-run-button" onClick={() => setRunOpen(true)}>
-              Run an evaluation <ArrowUpRight size={14} aria-hidden="true" />
-            </Button>
-          )}
+          <a className="eval-home-link" href="https://www.askgina.ai">
+            <House size={17} fill="currentColor" aria-hidden="true" />
+            <span>Home</span>
+          </a>
         </div>
       </header>
       <main id="eval-main" className="eval-main" tabIndex={-1}>
@@ -57,6 +50,8 @@ export function PageShell({ active, children }: { active: ShellPageId; children:
         <span>
           {active === "handoff" ? (
             "Public exports measure conformance, not answer accuracy or financial outcomes. Other pages use illustrative fixtures."
+          ) : active === "leaderboard" || active === "models" ? (
+            "Verified synthetic publication. Public v1 results are unranked and measure conformance only."
           ) : (
             <>
               {dataset.disclaimer} <a href="#/methodology">See methodology.</a>
@@ -65,34 +60,6 @@ export function PageShell({ active, children }: { active: ShellPageId; children:
         </span>
         <span>Open tools. Transparent results.</span>
       </footer>
-      <Modal title="Run an evaluation" open={runOpen} onClose={() => setRunOpen(false)}>
-        <div className="eval-run-intro">
-          <FlaskConical size={25} aria-hidden="true" />
-          <p>
-            This page is a design preview. It does not start live evaluations or connect to a
-            wallet.
-          </p>
-        </div>
-        <p>
-          The open-source eval runner lives in this repository. Replay its fixtures locally, or
-          follow the runner instructions to configure a live evaluation.
-        </p>
-        <pre className="eval-code" role="region" aria-label="Run instructions" tabIndex={0}>
-          <code>bun install --frozen-lockfile{"\n"}bun run eval:replay</code>
-        </pre>
-        <p className="eval-muted">
-          The replay command checks the repository's own fixtures. It does not produce the
-          illustrative model scores shown here.
-        </p>
-        <a
-          className="eval-text-link"
-          href="https://github.com/askgina/plugins/tree/main/packages/evals"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Read eval runner instructions <ArrowUpRight size={14} aria-hidden="true" />
-        </a>
-      </Modal>
     </div>
   );
 }

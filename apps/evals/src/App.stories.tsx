@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import App, { MethodologyPage } from "./App";
+import { syntheticFieldCatalog } from "./stories/public-comparison-fixtures";
 
 const meta = {
   title: "Evals/Public pages",
@@ -12,7 +13,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const RoutedApp: Story = {
-  render: () => <App />,
+  render: () => <App catalog={syntheticFieldCatalog} />,
 };
 
 export const Methodology: Story = {

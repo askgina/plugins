@@ -1,0 +1,210 @@
+.comparison-scatter-wrap {
+  padding: 4px 12px 16px;
+}
+
+.comparison-scatter {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.comparison-chart-grid line {
+  stroke: #ece9e5;
+  stroke-width: 1;
+}
+
+.comparison-chart-grid text,
+.comparison-chart-axis-label,
+.comparison-chart-point text {
+  fill: #6b6762;
+  font-family: var(--font-sans);
+  font-size: 10px;
+}
+
+.comparison-chart-point text {
+  fill: #373431;
+  font-size: 10.5px;
+  font-weight: 500;
+}
+
+.comparison-chart-point-halo {
+  fill: #fffdfa;
+}
+
+.comparison-chart-point-dot {
+  fill: #9d443e;
+}
+
+.comparison-chart-point[data-color="1"] .comparison-chart-point-dot {
+  fill: #667e70;
+}
+
+.comparison-chart-point[data-color="2"] .comparison-chart-point-dot {
+  fill: #9a7459;
+}
+
+.comparison-chart-point[data-color="3"] .comparison-chart-point-dot {
+  fill: #6f7184;
+}
+
+.comparison-chart-point[data-color="4"] .comparison-chart-point-dot {
+  fill: #9b6c75;
+}
+
+.comparison-dimension-chart {
+  display: grid;
+  gap: 15px;
+  padding: 8px 20px 22px;
+}
+
+.comparison-outcome-legend {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  color: var(--eval-muted);
+  font-size: 10px;
+}
+
+.comparison-outcome-legend span::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: #78927f;
+}
+
+.comparison-outcome-legend [data-kind="fail"]::before {
+  background: #c77e7a;
+}
+
+.comparison-outcome-legend [data-kind="na"]::before {
+  background: #dedad4;
+}
+
+.comparison-dimension-row {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr) 38px;
+  align-items: center;
+  gap: 12px;
+  color: #55514d;
+  font-size: 11px;
+}
+
+.comparison-dimension-row strong {
+  color: #4a4642;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.comparison-outcome-track {
+  display: flex;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #ece9e5;
+}
+
+.comparison-outcome-track > span {
+  display: block;
+  min-width: 0;
+}
+
+.comparison-outcome-pass {
+  background: #78927f;
+}
+
+.comparison-outcome-fail {
+  background: #c77e7a;
+}
+
+.comparison-outcome-na {
+  background: #dedad4;
+}
+
+.comparison-latency-chart {
+  padding: 28px 28px 22px;
+}
+
+.comparison-latency-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  color: var(--eval-muted);
+  font-size: 10px;
+}
+
+.comparison-latency-track {
+  position: relative;
+  height: 76px;
+  border-top: 1px solid #d9d5cf;
+}
+
+.comparison-latency-range {
+  position: absolute;
+  top: -4px;
+  left: 0;
+  height: 7px;
+  border-radius: 999px;
+  background: #e3d3c7;
+}
+
+.comparison-latency-marker {
+  position: absolute;
+  top: -7px;
+  display: grid;
+  gap: 2px;
+  min-width: 48px;
+  padding-top: 14px;
+  transform: translateX(-50%);
+  color: #5b5550;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.comparison-latency-marker::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 10px;
+  background: #8c6451;
+}
+
+.comparison-latency-marker[data-kind="p50"] {
+  color: #7a3f3a;
+}
+
+.comparison-latency-marker small {
+  color: var(--eval-muted);
+}
+
+.comparison-latency-chart > p,
+.comparison-chart-empty {
+  margin: 0;
+  color: var(--eval-muted);
+  font-size: 10px;
+}
+
+.comparison-chart-empty {
+  padding: 24px 20px;
+}
+
+@media (max-width: 640px) {
+  .comparison-scatter-wrap {
+    overflow-x: auto;
+  }
+
+  .comparison-scatter {
+    min-width: 520px;
+  }
+
+  .comparison-dimension-row {
+    grid-template-columns: 88px minmax(0, 1fr) 34px;
+    gap: 8px;
+  }
+}

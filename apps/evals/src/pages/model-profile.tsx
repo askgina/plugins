@@ -1,205 +1,88 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { ArrowUpRight, Download, GitCompare } from "lucide-react";
-import { dataset, families, featuredModel, getModel, models, type EvalModel } from "../data";
-import { Modal, ModelAvatar, PageShell, Panel } from "../components/eval-ui";
-import { Button } from "../components/ui/button";
+import { ArrowUpRight, ShieldCheck } from "lucide-react";
+import {
+  ComparisonConditions,
+  DimensionValue,
+  MetricValue,
+  ResultState,
+} from "../components/public-comparison-ui";
+import {
+  DimensionOutcomeChart,
+  LatencyEnvelopeChart,
+} from "../components/public-comparison-charts";
+import { PageShell, Panel } from "../components/eval-ui";
+import {
+  PUBLIC_DIMENSION_DEFINITIONS,
+  PUBLIC_METRIC_DEFINITIONS,
+  findComparisonRow,
+  type PublicComparisonCatalog,
+} from "../lib/public-comparison";
+import { usePublicComparisonCatalog } from "../lib/use-public-comparison";
 import "./model-profile.css";
+
+const INTEGER = new Intl.NumberFormat("en-US");
 
 export interface ModelProfilePageProps {
   modelId?: string;
-  initialCompareId?: string;
+  catalog?: PublicComparisonCatalog;
 }
 
-const numberFormatter = new Intl.NumberFormat("en-US");
-
-const metricDefinitions = [
-  {
-    id: "pass-rate",
-    label: "Overall pass",
-    description: "Tasks completed within the fixture contract",
-    value: (model: EvalModel) => `${model.passRate}%`,
-  },
-  {
-    id: "tool-accuracy",
-    label: "Tool selection accuracy",
-    description: "Calls routed to the expected Gina tool",
-    value: (model: EvalModel) => `${model.accuracy}%`,
-  },
-  {
-    id: "latency",
-    label: "Median latency",
-    description: "Illustrative end-to-end task duration",
-    value: (model: EvalModel) => `${model.latency.toFixed(1)}s`,
-  },
-  {
-    id: "cost",
-    label: "Cost per task",
-    description: "Illustrative model cost at fixture rates",
-    value: (model: EvalModel) => `$${model.cost.toFixed(3)}`,
-  },
-] as const;
-
-const histogramBuckets = [
-  { label: "0-49", midpoint: 35 },
-  { label: "50-59", midpoint: 55 },
-  { label: "60-69", midpoint: 65 },
-  { label: "70-79", midpoint: 75 },
-  { label: "80-89", midpoint: 85 },
-  { label: "90-100", midpoint: 95 },
-] as const;
-
-type HistogramBucket = (typeof histogramBuckets)[number] & { count: number };
-
-function getPreferredComparison(model: EvalModel, requestedId?: string): EvalModel {
-  const requested = requestedId ? getModel(requestedId) : undefined;
-  if (requested && requested.id !== model.id) return requested;
-  return models.find((candidate) => candidate.id !== model.id) ?? model;
-}
-
-function hasValidInitialComparison(model: EvalModel | undefined, requestedId?: string): boolean {
-  if (!model || !requestedId) return false;
-  const requested = getModel(requestedId);
-  return Boolean(requested && requested.id !== model.id);
-}
-
-function buildIllustrativeDistribution(model: EvalModel): HistogramBucket[] {
-  const spread = 10 + model.uncertainty;
-  const weights = histogramBuckets.map((bucket) =>
-    Math.exp(-((bucket.midpoint - model.passRate) ** 2) / (2 * spread ** 2)),
-  );
-  const totalWeight = weights.reduce((sum, value) => sum + value, 0);
-  const counts = weights.map((weight) => Math.round((weight / totalWeight) * dataset.tasks));
-  const remainder = dataset.tasks - counts.reduce((sum, count) => sum + count, 0);
-  const largestBucket = counts.reduce(
-    (largestIndex, count, index) => (count > counts[largestIndex]! ? index : largestIndex),
-    0,
-  );
-  counts[largestBucket] = counts[largestBucket]! + remainder;
-
-  return histogramBuckets.map((bucket, index) => ({
-    ...bucket,
-    count: counts[index]!,
-  }));
-}
-
-function MetricCards({ model }: { model: EvalModel }) {
+function ProfileState({ title, message }: { title: string; message: string }) {
   return (
-    <section className="model-profile-metrics" aria-label={`${model.name} summary metrics`}>
-      {metricDefinitions.map((metric) => (
-        <article className="model-profile-metric" key={metric.id}>
-          <span className="model-profile-metric-label">{metric.label}</span>
-          <strong>{metric.value(model)}</strong>
-          <p>{metric.description}</p>
-        </article>
-      ))}
-    </section>
+    <PageShell active="models">
+      <div className="eval-container model-profile-page">
+        <section
+          className="eval-hero model-profile-not-found"
+          aria-labelledby="model-profile-title"
+        >
+          <img className="eval-hero-art" src="/images/hero-watercolor-landscape.webp" alt="" />
+          <p className="eval-eyebrow">Public conformance result</p>
+          <h1 className="eval-title" id="model-profile-title">
+            {title}
+            <span>.</span>
+          </h1>
+          <p className="eval-description">{message}</p>
+          <a className="eval-text-link" href="#/leaderboard">
+            Return to comparisons <ArrowUpRight size={14} aria-hidden="true" />
+          </a>
+        </section>
+      </div>
+    </PageShell>
   );
 }
 
-function ComparisonCard({ model, featured }: { model: EvalModel; featured: boolean }) {
-  return (
-    <article className="model-profile-comparison-card">
-      <header>
-        <ModelAvatar model={model} size="lg" />
-        <div>
-          <span>{featured ? "Profile model" : "Comparison model"}</span>
-          <h3>{model.name}</h3>
-          <p>{model.provider}</p>
-        </div>
-      </header>
-      <dl>
-        {metricDefinitions.map((metric) => (
-          <div key={metric.id}>
-            <dt>{metric.label}</dt>
-            <dd>{metric.value(model)}</dd>
-          </div>
-        ))}
-      </dl>
-    </article>
-  );
-}
-
-export function ModelProfilePage({ modelId, initialCompareId }: ModelProfilePageProps) {
-  const requestedModelId = modelId ?? featuredModel.id;
-  const model = getModel(requestedModelId);
-  const [selectedCompareId, setSelectedCompareId] = useState(() =>
-    model ? getPreferredComparison(model, initialCompareId).id : "",
-  );
-  const [compareOpen, setCompareOpen] = useState(() =>
-    hasValidInitialComparison(model, initialCompareId),
-  );
-
-  useEffect(() => {
-    if (!model) {
-      setSelectedCompareId("");
-      setCompareOpen(false);
-      return;
-    }
-
-    setSelectedCompareId(getPreferredComparison(model, initialCompareId).id);
-    setCompareOpen(hasValidInitialComparison(model, initialCompareId));
-  }, [initialCompareId, model]);
-
-  const comparisonModel = model ? getPreferredComparison(model, selectedCompareId) : undefined;
-  const comparisonOptions = model ? models.filter((candidate) => candidate.id !== model.id) : [];
-  const distribution = useMemo(() => (model ? buildIllustrativeDistribution(model) : []), [model]);
-  const largestDistributionBucket = distribution.reduce(
-    (largest, bucket) => Math.max(largest, bucket.count),
-    0,
-  );
-
-  if (!model) {
+export function ModelProfilePage({ modelId, catalog }: ModelProfilePageProps) {
+  const state = usePublicComparisonCatalog(catalog);
+  if (state.status === "loading") {
     return (
-      <PageShell active="models">
-        <div className="eval-container model-profile-page">
-          <section
-            className="eval-hero model-profile-not-found"
-            aria-labelledby="model-profile-title"
-          >
-            <img className="eval-hero-art" src="/images/hero-watercolor-landscape.webp" alt="" />
-            <nav className="model-profile-breadcrumbs" aria-label="Breadcrumb">
-              <a href="#/leaderboard">Leaderboard</a>
-              <span aria-hidden="true">/</span>
-              <a href="#/models/kimi-k3">Models</a>
-              <span aria-hidden="true">/</span>
-              <span aria-current="page">Not found</span>
-            </nav>
-            <p className="eval-eyebrow">Model profile · Gina financial-task harness</p>
-            <h1 className="eval-title" id="model-profile-title">
-              Model not found<span>.</span>
-            </h1>
-            <p className="eval-description">
-              The illustrative fixture does not include a model with the ID{" "}
-              <code>{requestedModelId}</code>.
-            </p>
-            <a className="eval-text-link" href="#/leaderboard">
-              Return to the leaderboard <ArrowUpRight size={14} aria-hidden="true" />
-            </a>
-          </section>
-        </div>
-      </PageShell>
+      <ProfileState
+        title="Verifying result"
+        message="Checking the publication against its index."
+      />
     );
   }
+  if (state.status === "error") {
+    return <ProfileState title="Result unavailable" message={state.message} />;
+  }
 
-  const downloadResults = () => {
-    const payload = {
-      illustrative: true,
-      disclaimer: dataset.disclaimer,
-      kind: "gina-evals-model-profile",
-      dataset,
-      model,
-    };
-    const url = URL.createObjectURL(
-      new Blob([`${JSON.stringify(payload, null, 2)}\n`], { type: "application/json" }),
+  const row = findComparisonRow(state.catalog, modelId);
+  if (row === undefined) {
+    return (
+      <ProfileState
+        title="Candidate not found"
+        message={
+          modelId === undefined
+            ? "The verified index contains no current result publications."
+            : `No current publication exists for ${modelId}.`
+        }
+      />
     );
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `${model.id}-${dataset.version}-illustrative-results.json`;
-    document.body.append(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(url);
-  };
+  }
+  const cohort = state.catalog.cohorts.find((item) => item.rows.includes(row));
+  if (cohort === undefined) {
+    return (
+      <ProfileState title="Cohort unavailable" message="The result has no comparable cohort." />
+    );
+  }
 
   return (
     <PageShell active="models">
@@ -208,248 +91,231 @@ export function ModelProfilePage({ modelId, initialCompareId }: ModelProfilePage
           <img className="eval-hero-art" src="/images/hero-watercolor-landscape.webp" alt="" />
           <div className="model-profile-intro">
             <nav className="model-profile-breadcrumbs" aria-label="Breadcrumb">
-              <a href="#/leaderboard">Leaderboard</a>
+              <a href="#/leaderboard">Comparisons</a>
               <span aria-hidden="true">/</span>
-              <a href="#/models/kimi-k3">Models</a>
-              <span aria-hidden="true">/</span>
-              <span aria-current="page">{model.name}</span>
+              <span aria-current="page">{row.candidate}</span>
             </nav>
-            <p className="eval-eyebrow">Model profile · Gina financial-task harness</p>
-            <div className="model-profile-title-row">
-              <ModelAvatar model={model} size="lg" />
-              <h1 className="eval-title" id="model-profile-title">
-                {model.name}
-                <span>.</span>
-              </h1>
-            </div>
-            <p className="model-profile-provider">{model.provider}</p>
+            <p className="eval-eyebrow">Contract-backed candidate result</p>
+            <h1 className="eval-title" id="model-profile-title">
+              {row.candidate}
+              <span>.</span>
+            </h1>
+            <p className="model-profile-provider">
+              <code>{row.model}</code>
+              {row.reasoning === null ? "" : ` · ${row.reasoning}`}
+            </p>
             <p className="eval-description">
-              A compact look at {model.name} across portfolio, spot, perps, and prediction-market
-              tasks in the illustrative {dataset.version} fixture.
+              Conformance under one declared benchmark cohort. This pilot is unranked and does not
+              measure financial outcomes.
             </p>
           </div>
-
-          <div className="model-profile-actions">
-            <label className="model-profile-compare-field">
-              <span>Compare with</span>
-              <select
-                value={comparisonModel?.id ?? ""}
-                onChange={(event) => setSelectedCompareId(event.target.value)}
-                aria-label="Choose a model to compare"
-                disabled={comparisonOptions.length === 0}
-              >
-                {comparisonOptions.map((candidate) => (
-                  <option key={candidate.id} value={candidate.id}>
-                    {candidate.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <Button
-              className="model-profile-compare-button"
-              type="button"
-              onClick={() => setCompareOpen(true)}
-              disabled={!comparisonModel || comparisonModel.id === model.id}
-            >
-              <GitCompare size={16} aria-hidden="true" /> Compare models
-            </Button>
-            <Button
-              className="model-profile-download-button"
-              type="button"
-              variant="secondary"
-              onClick={downloadResults}
-            >
-              <Download size={15} aria-hidden="true" /> Download results
-            </Button>
-            <a className="eval-text-link" href="#/methodology">
-              View methodology <ArrowUpRight size={14} aria-hidden="true" />
+          <div className="model-profile-state-block">
+            <ResultState row={row} />
+            <span className="model-profile-origin">
+              {row.dataOrigin === "synthetic" ? "Synthetic preview data" : "Measured publication"}
+            </span>
+            <a className="eval-text-link" href="#/handoff">
+              Inspect publication record <ArrowUpRight size={14} aria-hidden="true" />
             </a>
           </div>
         </section>
 
-        <MetricCards model={model} />
+        <section className="model-profile-metrics" aria-label={`${row.candidate} public metrics`}>
+          {PUBLIC_METRIC_DEFINITIONS.map((definition) => (
+            <article className="model-profile-metric" key={definition.id}>
+              <span className="model-profile-metric-label">{definition.label}</span>
+              <MetricValue metric={row.metrics[definition.id]} />
+              <p>{definition.description}</p>
+            </article>
+          ))}
+        </section>
 
-        <section className="eval-two-column model-profile-chart-grid" aria-label="Profile charts">
+        <section
+          className="eval-two-column model-profile-chart-grid"
+          aria-label={`${row.candidate} visual analysis`}
+        >
           <Panel
             className="model-profile-chart-panel"
-            title="Performance by task family"
-            description={`Pass rate with an illustrative ±${model.uncertainty} percentage-point interval.`}
+            title="Dimension outcomes"
+            description="Passed, failed, and not-applicable checks by conformance dimension."
           >
-            <ul className="model-profile-family-bars">
-              {families.map((family) => {
-                const familyResult = model.families[family];
-                const intervalStart = Math.max(0, familyResult.passRate - model.uncertainty);
-                const intervalEnd = Math.min(100, familyResult.passRate + model.uncertainty);
-                return (
-                  <li key={family}>
-                    <div className="model-profile-family-label">
-                      <span>{family}</span>
-                      <strong>
-                        {familyResult.passRate}% <small>±{model.uncertainty} pp</small>
-                      </strong>
-                    </div>
-                    <div
-                      className="model-profile-family-track"
-                      role="img"
-                      aria-label={`${family}: ${familyResult.passRate} percent pass rate, plus or minus ${model.uncertainty} illustrative percentage points`}
-                    >
-                      <span
-                        className="model-profile-family-fill"
-                        style={{ width: `${familyResult.passRate}%` }}
-                      />
-                      <span
-                        className="model-profile-family-interval"
-                        style={{
-                          left: `${intervalStart}%`,
-                          width: `${intervalEnd - intervalStart}%`,
-                        }}
-                      />
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-            <p className="eval-muted model-profile-chart-note">
-              Intervals are visual fixture annotations, not confidence intervals from measured runs.
-            </p>
+            <DimensionOutcomeChart row={row} />
           </Panel>
-
           <Panel
             className="model-profile-chart-panel"
-            title="Task score distribution"
-            description={`${numberFormatter.format(dataset.tasks)} illustrative task scores grouped by score band.`}
+            title="Latency envelope"
+            description="Reported p50, p95, and maximum duration over observed attempts."
           >
-            <p className="model-profile-sr-only">
-              Illustrative distribution for {model.name}:{" "}
-              {distribution
-                .map((bucket) => `${bucket.label}, ${numberFormatter.format(bucket.count)} tasks`)
-                .join("; ")}
-              .
-            </p>
-            <div className="model-profile-histogram" aria-hidden="true">
-              {distribution.map((bucket) => {
-                const height =
-                  largestDistributionBucket === 0
-                    ? 0
-                    : (bucket.count / largestDistributionBucket) * 100;
-                return (
-                  <div className="model-profile-histogram-column" key={bucket.label}>
-                    <span className="model-profile-histogram-count">
-                      {numberFormatter.format(bucket.count)}
-                    </span>
-                    <span className="model-profile-histogram-track">
-                      <span
-                        className="model-profile-histogram-bar"
-                        style={{ "--histogram-height": `${height}%` } as CSSProperties}
-                      />
-                    </span>
-                    <span className="model-profile-histogram-label">{bucket.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="eval-muted model-profile-chart-note">
-              Illustrative distribution derived from the profile fixture. It is not observed
-              task-level data.
-            </p>
+            <LatencyEnvelopeChart row={row} />
           </Panel>
         </section>
 
-        <section className="eval-two-column model-profile-lower-grid">
-          <Panel
-            className="model-profile-breakdown-panel"
-            title="Task family breakdown"
-            description={`${numberFormatter.format(dataset.tasksPerFamily)} tasks per family in the illustrative fixture.`}
-          >
-            <div
-              className="model-profile-table-scroll"
-              role="region"
-              aria-label={`Illustrative results for ${model.name} by task family`}
-              tabIndex={0}
+        <Panel
+          className="model-profile-dimensions"
+          title="Conformance dimensions"
+          description="Verdict counts over observed attempts. These are not answer-accuracy percentages."
+        >
+          <div className="eval-handoff-table-scroll">
+            <table
+              className="eval-table"
+              aria-label={`Conformance dimensions for ${row.candidate}`}
             >
-              <table className="eval-table model-profile-table">
-                <caption className="model-profile-sr-only">
-                  Illustrative results for {model.name} by task family
-                </caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Task family</th>
-                    <th scope="col">Pass rate</th>
-                    <th scope="col">Tool accuracy</th>
-                    <th scope="col">Unsuccessful tasks</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {families.map((family) => {
-                    const familyResult = model.families[family];
-                    return (
-                      <tr key={family}>
-                        <th scope="row">{family}</th>
-                        <td>{familyResult.passRate}%</td>
-                        <td>{familyResult.accuracy}%</td>
-                        <td>{numberFormatter.format(familyResult.failures)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </Panel>
+              <thead>
+                <tr>
+                  <th scope="col">Check</th>
+                  <th scope="col">Passed</th>
+                  <th scope="col">Failed</th>
+                  <th scope="col">Not applicable</th>
+                </tr>
+              </thead>
+              <tbody>
+                {PUBLIC_DIMENSION_DEFINITIONS.map((definition) => {
+                  const value = row.dimensions[definition.id];
+                  return (
+                    <tr key={definition.id}>
+                      <th scope="row">{definition.label}</th>
+                      <td>{INTEGER.format(value.passed)}</td>
+                      <td>{INTEGER.format(value.failed)}</td>
+                      <td>{INTEGER.format(value.notApplicable)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
 
+        <div className="eval-two-column model-profile-contract-grid">
           <Panel
-            className="model-profile-run-panel"
-            title="Run details"
-            description="Fixture provenance for every number on this page."
+            title="Coverage and evidence"
+            description="Observed counts remain distinct from planned coverage and retained detail."
           >
-            <dl className="model-profile-run-details">
+            <dl className="model-profile-record">
               <div>
-                <dt>Status</dt>
-                <dd>Illustrative fixture</dd>
+                <dt>Coverage</dt>
+                <dd>{row.coverage.status}</dd>
               </div>
               <div>
-                <dt>Dataset</dt>
-                <dd>{dataset.label}</dd>
+                <dt>Planned cases / attempts</dt>
+                <dd>
+                  {INTEGER.format(row.coverage.plannedCases)} /{" "}
+                  {INTEGER.format(row.coverage.plannedAttempts)}
+                </dd>
               </div>
               <div>
-                <dt>Harness</dt>
-                <dd>{dataset.harness}</dd>
+                <dt>Observed attempts</dt>
+                <dd>{INTEGER.format(row.counts.attempts.total)}</dd>
               </div>
               <div>
-                <dt>Run date</dt>
-                <dd>{dataset.runDate}</dd>
+                <dt>Cases passing every attempt</dt>
+                <dd>
+                  {row.counts.cases.passedEveryAttempt === null
+                    ? "Not available"
+                    : INTEGER.format(row.counts.cases.passedEveryAttempt)}
+                </dd>
               </div>
               <div>
-                <dt>Total tasks</dt>
-                <dd>{numberFormatter.format(dataset.tasks)}</dd>
-              </div>
-              <div>
-                <dt>Repetitions</dt>
-                <dd>{dataset.repetitions}</dd>
+                <dt>Attempt evidence</dt>
+                <dd>{row.evidence.replaceAll("_", " ")}</dd>
               </div>
             </dl>
-            <a className="eval-text-link model-profile-run-link" href="#/methodology">
-              Read the evaluation methodology <ArrowUpRight size={14} aria-hidden="true" />
-            </a>
           </Panel>
-        </section>
-      </div>
+          <Panel
+            title="Comparison conditions"
+            description="Only publications matching all these values share this cohort."
+          >
+            <ComparisonConditions conditions={cohort.conditions} />
+          </Panel>
+        </div>
 
-      {comparisonModel && comparisonModel.id !== model.id && (
-        <Modal
-          title={`Compare ${model.name} and ${comparisonModel.name}`}
-          open={compareOpen}
-          onClose={() => setCompareOpen(false)}
-        >
-          <div className="model-profile-comparison-grid">
-            <ComparisonCard model={model} featured />
-            <ComparisonCard model={comparisonModel} featured={false} />
-          </div>
-          <p className="eval-muted model-profile-comparison-note">
-            Values come from the same {dataset.label.toLowerCase()} fixture. No measured advantage
-            is implied.
-          </p>
-        </Modal>
-      )}
+        <div className="eval-two-column model-profile-contract-grid">
+          <Panel
+            title="Configuration provenance"
+            description="Model labels and pinned bytes are reported separately."
+          >
+            <dl className="model-profile-record">
+              <div>
+                <dt>Availability</dt>
+                <dd>{row.configuration.availability === "pinned" ? "Pinned" : "Labels only"}</dd>
+              </div>
+              <div>
+                <dt>Candidate</dt>
+                <dd>
+                  <code>{row.candidate}</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Model</dt>
+                <dd>
+                  <code>{row.model}</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Pinned SHA-256</dt>
+                <dd>
+                  {row.configuration.pinnedSha256 === null ? (
+                    "Not supplied"
+                  ) : (
+                    <code title={row.configuration.pinnedSha256}>
+                      {row.configuration.pinnedSha256.slice(0, 12)}…
+                    </code>
+                  )}
+                </dd>
+              </div>
+            </dl>
+          </Panel>
+          <Panel
+            title="Publication record"
+            description="The result remains tied to one immutable revision."
+          >
+            <div className="model-profile-publication">
+              <ShieldCheck aria-hidden="true" />
+              <dl className="model-profile-record">
+                <div>
+                  <dt>Publication</dt>
+                  <dd>
+                    <code>{row.publicationId}</code>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Revision</dt>
+                  <dd>
+                    <code>{row.revisionId}</code>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Published</dt>
+                  <dd>
+                    <time dateTime={row.publishedAt}>{row.publishedAt}</time>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Unranked because</dt>
+                  <dd>{row.unrankedReasons.join(", ")}</dd>
+                </div>
+              </dl>
+            </div>
+          </Panel>
+        </div>
+
+        {cohort.rows.length > 1 && (
+          <Panel
+            title="Other candidates in this cohort"
+            description="Links preserve the same benchmark conditions without assigning rank."
+          >
+            <ul className="model-profile-peer-list">
+              {cohort.rows
+                .filter((candidate) => candidate.id !== row.id)
+                .map((candidate) => (
+                  <li key={candidate.revisionId}>
+                    <a href={`#/models/${candidate.id}`}>{candidate.candidate}</a>
+                    <DimensionValue row={candidate} dimension="completion" compact />
+                  </li>
+                ))}
+            </ul>
+          </Panel>
+        )}
+      </div>
     </PageShell>
   );
 }

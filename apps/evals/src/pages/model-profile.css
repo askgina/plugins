@@ -9,7 +9,11 @@
 }
 
 .model-profile-page .eval-title {
-  margin: 0;
+  max-width: 100%;
+  margin: 0 0 20px;
+  font-size: clamp(2.75rem, 5vw, 5rem);
+  line-height: 1;
+  overflow-wrap: anywhere;
 }
 
 .model-profile-hero {
@@ -63,7 +67,23 @@
 .model-profile-provider {
   margin: 0 0 14px;
   font-size: 13px;
+  line-height: 1.5;
   color: #6d6d6d;
+}
+
+.model-profile-state-block {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding-top: 42px;
+}
+
+.model-profile-origin {
+  color: var(--eval-muted);
+  font-size: 11px;
 }
 
 .model-profile-actions {
@@ -156,6 +176,68 @@
   color: #686a64;
   font-size: 11px;
   line-height: 1.45;
+}
+
+.model-profile-metric .eval-metric-unavailable {
+  min-height: 44px;
+  margin: 8px 0 6px;
+  justify-content: center;
+}
+
+.model-profile-metric .eval-metric-unavailable small,
+.model-profile-metric .eval-metric-value small {
+  font-family: var(--font-sans);
+  letter-spacing: normal;
+}
+
+.model-profile-dimensions {
+  margin-bottom: 18px;
+}
+
+.model-profile-contract-grid {
+  margin-bottom: 18px;
+}
+
+.model-profile-publication {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 4px;
+  align-items: start;
+  padding: 10px 16px 0;
+}
+
+.model-profile-publication > svg {
+  margin-top: 8px;
+  color: #397558;
+}
+
+.model-profile-publication .model-profile-record {
+  width: 100%;
+  padding-top: 0;
+}
+
+.model-profile-peer-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 8px 20px 18px;
+  list-style: none;
+}
+
+.model-profile-peer-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--eval-line);
+}
+
+.model-profile-peer-list li:last-child {
+  border-bottom: 0;
+}
+
+.model-profile-peer-list a {
+  font-weight: 600;
 }
 
 .model-profile-chart-grid,
@@ -444,7 +526,8 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .model-profile-actions {
+  .model-profile-actions,
+  .model-profile-state-block {
     padding-top: 8px;
   }
 
