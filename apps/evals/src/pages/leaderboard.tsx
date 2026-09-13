@@ -535,24 +535,36 @@ export function LeaderboardPage({
                   </thead>
                   <tbody>
                     {rows.map((row) => {
-                      const passRate = (candidate: LeaderboardRow) =>
-                        candidate.kind === "measured"
-                          ? candidate.result.passRateSortKey
-                          : candidate.passRate;
-                      const rank = rows.reduce(
-                        (position, candidate) =>
-                          position + Number(passRate(candidate) > passRate(row)),
-                        1,
+                      const illustrativeRows = rows.filter(
+                        (candidate): candidate is IllustrativeRow =>
+                          candidate.kind === "illustrative",
                       );
+                      const rank =
+                        row.kind === "illustrative"
+                          ? illustrativeRows.reduce(
+                              (position, candidate) =>
+                                position + Number(candidate.passRate > row.passRate),
+                              1,
+                            )
+                          : undefined;
                       return (
                         <tr key={row.model.id}>
                           <td className="lb-rank-cell">
-                            <span
-                              className="lb-rank-medal"
-                              data-rank={rank <= 3 ? rank : undefined}
-                            >
-                              {rank}
-                            </span>
+                            {rank === undefined ? (
+                              <span
+                                className="lb-rank-unranked"
+                                aria-label="Unranked measured sample"
+                              >
+                                —
+                              </span>
+                            ) : (
+                              <span
+                                className="lb-rank-medal"
+                                data-rank={rank <= 3 ? rank : undefined}
+                              >
+                                {rank}
+                              </span>
+                            )}
                           </td>
                           <th scope="row">
                             <div className="lb-model-cell">

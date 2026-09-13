@@ -208,6 +208,11 @@
   font-weight: 600;
 }
 
+.lb-rank-unranked {
+  color: #96928b;
+  font-size: 14px;
+}
+
 .lb-rank-medal[data-rank="1"] {
   background: #ece4c8;
   color: #6d5b24;
