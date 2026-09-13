@@ -1,0 +1,136 @@
+{
+  "schemaVersion": "ask-gina-extended-evals.v1",
+  "model": "openai-codex/gpt-5.6-sol",
+  "reasoning": "medium",
+  "repetitions": 3,
+  "hardTrialTimeoutMs": 120000,
+  "sourceCommit": "780dc809e9956a329d9e60c72503de449477699b",
+  "executableSourceCommit": "5f98d54cf0f6514c90116a4c7c1d889cdd7dc485",
+  "pullRequest": "https://github.com/askgina/plugins/pull/85",
+  "researchToolCount": 31,
+  "connectedCatalogSize": 32,
+  "ompVersion": "18.1.17",
+  "ompSha256": "040c254ddeb30f6d592be67d1469dc67fcac14e933fa04dbf690f42820ffd820",
+  "harnessAcpVersion": "1.0.40",
+  "authentication": {
+    "openAi": "native OAuth",
+    "ginaScope": [
+      "tools:read"
+    ],
+    "apiKeyUsed": false,
+    "isolatedProfiles": true
+  },
+  "families": {
+    "perps": {
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "candidate": "omp-oauth-sol-medium-perps",
+      "suiteId": "ask-gina-model-perps-v1",
+      "cases": 18,
+      "plannedTrials": 54,
+      "distinctExpectedTools": 15,
+      "routingCases": {
+        "exact": 17,
+        "sequence": 1
+      },
+      "constrainedArgumentCases": 5,
+      "constrainedArgumentTrials": 15,
+      "automaticArgumentTrials": 39,
+      "expectedSkillAssertions": 0,
+      "intendedSkill": "research-hyperliquid",
+      "notes": [
+        "Include the manual_priority:candidate create-table case; do not narrow to required only.",
+        "Two cases materialize provider analytics tables; they do not request trading execution.",
+        "Sequence checks tool order, not exact returned tableName binding, SQL aggregates or answer content.",
+        "The suite README count17/14 is stale; authoritative YAML has18cases/15tools."
+      ]
+    },
+    "predictions": {
+      "runId": "predictions-openai-oauth-sol-20260911T152450Z",
+      "candidate": "omp-oauth-sol-medium-predictions",
+      "suiteId": "ask-gina-model-predictions-v1",
+      "cases": 13,
+      "plannedTrials": 39,
+      "distinctExpectedTools": 6,
+      "routingCases": {
+        "exact": 13
+      },
+      "constrainedArgumentCases": 8,
+      "constrainedArgumentTrials": 24,
+      "automaticArgumentTrials": 15,
+      "expectedSkillAssertions": 0,
+      "intendedSkill": "research-prediction-markets",
+      "notes": [
+        "Eight discovery cases assert exact preservation of the user prompt in query, with additional arguments allowed.",
+        "Pinned order-book token identity, bounded dataset arguments and personal-account identifiers are not case-asserted.",
+        "Cases named no-render do not themselves assert a blanket renderer prohibition. The evaluator does not expose the dashboard renderer.",
+        "Three cases request authenticated personal history/positions/order data; empty or unavailable account data must not be mistaken for semantic success."
+      ]
+    }
+  },
+  "sharedGradingNotes": [
+    "Performance thresholds (30000ms and100000bytes) and grounded answers are declared but not pass-rate gates.",
+    "Completion is status/no-recorded-tool-error, not semantic answer quality.",
+    "Safety and skill can be ungraded; report actual availability, never call N/A a pass.",
+    "Native reads are permitted and excluded from research routing; no filesystem confinement or skill-only read boundary is claimed.",
+    "Runs use live data and the full research catalog, not a family-only tool subset.",
+    "Normalized tool-name/error-flag/activation traces are retained, not full answers or raw arguments/results.",
+    "No suite, prompt, model setting, grader or executable change was made for these runs."
+  ],
+  "backendTableIsolation": {
+    "status": "unproven",
+    "freshGinaMcpClientPerTrial": true,
+    "sameGinaBearerAcrossTrials": true,
+    "fixedNames": [
+      "eval_btc_candles",
+      "eval_btc_candle_stats"
+    ],
+    "repositoryGuaranteesIdempotency": false,
+    "repositoryGuaranteesReplacement": false,
+    "repositoryGuaranteesUniqueNames": false,
+    "note": "Fresh model/MCP sessions do not establish isolated backend tables. Do not attribute later table failures to the model without collision/ownership evidence; raw results are not retained."
+  },
+  "predictionsInitialRun": {
+    "status": "aborted",
+    "runId": "predictions-openai-oauth-sol-20260911T152450Z",
+    "plannedTrials": 39,
+    "dispatched": 18,
+    "observedTrialRows": 17,
+    "timeoutCase": "predictions-sparse-history-no-render",
+    "timeoutRepetition": 2,
+    "timeoutMs": 120000,
+    "finalReportExists": false,
+    "finalAttemptsExists": false,
+    "recovery": "User explicitly authorized a separately identified fresh39-trial campaign; original18 dispatched trials remain separately preserved and unscored."
+  },
+  "predictionsFreshRun": {
+    "runId": "predictions-openai-oauth-sol-durable-20260911T161134Z",
+    "plannedTrials": 39,
+    "entrypoint": "one-off durable driver using unchanged existing trial/grader/journal APIs",
+    "timeoutPolicy": "Continue only a sole typed OMP timeout after journal settlement; no retries, no fake observations, no weakened journal integrity",
+    "perTrialRetention": "fsynced real public attempt checks/metrics plus tool-name/error/skill trace before next dispatch",
+    "canonicalReportPolicy": "Only if all39 genuine observations exist; otherwise diagnostic graded subset plus explicit unscored timeout records",
+    "concurrencyNote": "Fresh predictions started after perps completed; original families overlapped. No claim about other account-wide traffic.",
+    "completedAt": "2026-09-11T16:44:14.123Z",
+    "dispatchedTrials": 39,
+    "gradedTrials": 38,
+    "passed": 12,
+    "failed": 26,
+    "unscoredTimeouts": 1,
+    "timeoutSlot": {
+      "caseId": "predictions-multi-series-no-render",
+      "repetition": 2
+    },
+    "canonicalReportWritten": false,
+    "connectionNote": "Local SSH exit255 after7 logged observations; remote durable campaign completed39. Remote OS exit status unavailable."
+  },
+  "credentialCleanup": {
+    "removedProfiles": [
+      "/home/ubuntu/.config/askgina-evals/openai-sol-perps-6u98xl9g",
+      "/home/ubuntu/.config/askgina-evals/openai-sol-predictions-2vfs5jsv",
+      "/home/ubuntu/.config/askgina-evals/openai-sol-predictions-8e_3qwx1"
+    ],
+    "diagnosticWrapperRemoved": true,
+    "personalCredentialStoreModified": false,
+    "localGinaTokenStagingRemoved": true
+  }
+}

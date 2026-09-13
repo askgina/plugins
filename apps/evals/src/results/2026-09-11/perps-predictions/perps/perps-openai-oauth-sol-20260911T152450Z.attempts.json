@@ -1,0 +1,1330 @@
+{
+  "schemaVersion": "eval-attempts.v1",
+  "runId": "perps-openai-oauth-sol-20260911T152450Z",
+  "sourceReportSha256": "b1edfdbcc981ce4028886d0065fa02de63907039487cd4b9ed68b36706288091",
+  "attempts": [
+    {
+      "id": "attempt-9e90fcd8572d7e1387d5de1d392997007ff66f63371da00a404ad82e9132015c",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-account",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 32496,
+      "tokenUsage": {
+        "inputTokens": 4300,
+        "outputTokens": 651,
+        "totalTokens": 4951
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-a5cd99e270948bac1624cc18b2a13fb8247444c0604e411972b5cf92ff8d3bd6",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-positions",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 17578,
+      "tokenUsage": {
+        "inputTokens": 17496,
+        "outputTokens": 77,
+        "totalTokens": 17573
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-54ee7beaabc7fb4d66b20489e04bca43974ec156e95a52b53bc901c89bba57fe",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-open-orders",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 21306,
+      "tokenUsage": {
+        "inputTokens": 17455,
+        "outputTokens": 142,
+        "totalTokens": 17597
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-9f8735b6f4f7784051744a492f837574f13a7b451f3ebddbf04da961f6d98e50",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-portfolio",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 34114,
+      "tokenUsage": {
+        "inputTokens": 7090,
+        "outputTokens": 606,
+        "totalTokens": 7696
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-74bb09d7734d00627921bed6c588873cabba3afad3040832b6bb892931bd1e51",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-markets",
+      "repetition": 1,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "fail",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch",
+        "trial_or_tool_failure"
+      ],
+      "durationMs": 105160,
+      "tokenUsage": {
+        "inputTokens": 100960,
+        "outputTokens": 3589,
+        "totalTokens": 104549
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-599127cf81a68ff0b3c8efc7162d1e38cc713ff3860ba79f8ad185a24c503e0e",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-single-price",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 24816,
+      "tokenUsage": {
+        "inputTokens": 17469,
+        "outputTokens": 86,
+        "totalTokens": 17555
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-e63defba88d59b23718c4bd2f5d3021e1e4f7a9dc76dc17d4f783fe38ab9aa85",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-multiple-prices",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 23379,
+      "tokenUsage": {
+        "inputTokens": 31982,
+        "outputTokens": 121,
+        "totalTokens": 32103
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-3b0aecb89bc96e749f8ac74db54104aa7bea69643534af3920acd4eab2f47194",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-asset-data",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 24628,
+      "tokenUsage": {
+        "inputTokens": 17602,
+        "outputTokens": 262,
+        "totalTokens": 17864
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-d0c6cd809d5318bec9ec1210cb7085b833f2901f55bd1fc6dc09d5c64c710238",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-search-hip3-markets",
+      "repetition": 1,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch"
+      ],
+      "durationMs": 107526,
+      "tokenUsage": {
+        "inputTokens": 38204,
+        "outputTokens": 3020,
+        "totalTokens": 41224
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-19f2b181428db15ef107181f78fd7da9a3fd7f0a80eec8670281fd4487706cff",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-hip3-dexes",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 19592,
+      "tokenUsage": {
+        "inputTokens": 3078,
+        "outputTokens": 177,
+        "totalTokens": 3255
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-2d3dfbeff7e6cc0873aa16aba068549f7ad754df898cf119f2a602ca79f4499d",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-hip3-markets",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 51318,
+      "tokenUsage": {
+        "inputTokens": 55924,
+        "outputTokens": 1351,
+        "totalTokens": 57275
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-33becf666916e66c20c24aec27d9852cc98084a6a52482563c0de783950dfcef",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-hip3-price",
+      "repetition": 1,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "fail",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch",
+        "argument_mismatch"
+      ],
+      "durationMs": 28340,
+      "tokenUsage": {
+        "inputTokens": 4759,
+        "outputTokens": 239,
+        "totalTokens": 4998
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-e9ab8cf76efc4a96f9b989ca4a4ba348425ea6a7140499f8d0f83b7aba04741b",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-fetch-trades",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 29033,
+      "tokenUsage": {
+        "inputTokens": 17775,
+        "outputTokens": 515,
+        "totalTokens": 18290
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-e4e0531b96224b1acc616df8c9f8312d647e5de276b60b18f70602600c8fc4a8",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-fetch-candles",
+      "repetition": 1,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch"
+      ],
+      "durationMs": 26371,
+      "tokenUsage": {
+        "inputTokens": 3462,
+        "outputTokens": 225,
+        "totalTokens": 3687
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-bd193321e00500e8f15e577680cbf507acbed4904e292b2de4bcfeb7ef9725e6",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-fetch-order-book",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 30090,
+      "tokenUsage": {
+        "inputTokens": 8023,
+        "outputTokens": 338,
+        "totalTokens": 8361
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-ca6a120d5f023a54513b50f90fcac0ae5d1ae7f62187ad11f45d7da614f9289a",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-preview-order-cost",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 30086,
+      "tokenUsage": {
+        "inputTokens": 3087,
+        "outputTokens": 383,
+        "totalTokens": 3470
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-a454c9424ec78ce033b61e5217e500a0da245142150d81f68343d61c36f03102",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-create-table",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 24392,
+      "tokenUsage": {
+        "inputTokens": 3538,
+        "outputTokens": 226,
+        "totalTokens": 3764
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-0c63edc998211231e1662163e505a5766068b0cc77ab875db72d486b860696bd",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-create-and-query-table",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 42889,
+      "tokenUsage": {
+        "inputTokens": 4068,
+        "outputTokens": 401,
+        "totalTokens": 4469
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-a973082ca1b82ae30975c49117fe9904245776309956906a40f444628129304e",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-account",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 35567,
+      "tokenUsage": {
+        "inputTokens": 4031,
+        "outputTokens": 590,
+        "totalTokens": 4621
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-e80f1bacf3fb0a9ea3a1c33a99bd50297b492df24e4f2a2eb065f515d14fda80",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-positions",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 18751,
+      "tokenUsage": {
+        "inputTokens": 2908,
+        "outputTokens": 75,
+        "totalTokens": 2983
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-f92fb7d0004b26e20b11193034d716fef664047b7f753ddf333402be869bfa7b",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-open-orders",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 19536,
+      "tokenUsage": {
+        "inputTokens": 17429,
+        "outputTokens": 116,
+        "totalTokens": 17545
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-81f4d0d170463f25e236cf4ba602021c50d06ee312d23ad33b9c9cfe477a831e",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-portfolio",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 30458,
+      "tokenUsage": {
+        "inputTokens": 7105,
+        "outputTokens": 719,
+        "totalTokens": 7824
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-72925d74c9e9ab6716834fa8cefde3d4aa32d5039f904e61a13b991cf05ffdac",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-markets",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 64447,
+      "tokenUsage": {
+        "inputTokens": 67595,
+        "outputTokens": 2298,
+        "totalTokens": 69893
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-eadbd558343fe4549b5e6c0d62288100dcc8294ba12a4da5cd9996c6db26377f",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-single-price",
+      "repetition": 2,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch"
+      ],
+      "durationMs": 22751,
+      "tokenUsage": {
+        "inputTokens": 17641,
+        "outputTokens": 156,
+        "totalTokens": 17797
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-7cf6f888f295eb8ab845061d3dc89d6db7c2a2d382ab15d6bd00fe9736a5051a",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-multiple-prices",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 20418,
+      "tokenUsage": {
+        "inputTokens": 3037,
+        "outputTokens": 114,
+        "totalTokens": 3151
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-aace6254ee136d07c0d1973a2bfd82c4451fb20b62d221c95685cf41ef769693",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-asset-data",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 24055,
+      "tokenUsage": {
+        "inputTokens": 3007,
+        "outputTokens": 215,
+        "totalTokens": 3222
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-0b0397cab55d45a88484c04eb58023634fb4b8d115c490befb6cc0a9c4895464",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-search-hip3-markets",
+      "repetition": 2,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch"
+      ],
+      "durationMs": 99673,
+      "tokenUsage": {
+        "inputTokens": 39037,
+        "outputTokens": 3036,
+        "totalTokens": 42073
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-0a344a09c28346078d9935fde9fb250603f3d700e9d35e0139f8aa99528d21fc",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-hip3-dexes",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 20449,
+      "tokenUsage": {
+        "inputTokens": 17430,
+        "outputTokens": 187,
+        "totalTokens": 17617
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-8dab31eea38a35ef479cdee78b935c2cd4209f8984a8119484c7edf9e8c01297",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-hip3-markets",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 62131,
+      "tokenUsage": {
+        "inputTokens": 73019,
+        "outputTokens": 2145,
+        "totalTokens": 75164
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-14c2706ce1f74bf4fa06e623efabc405613918504a9ee4fab48e098d7ab9b3d4",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-hip3-price",
+      "repetition": 2,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "fail",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch",
+        "argument_mismatch"
+      ],
+      "durationMs": 31443,
+      "tokenUsage": {
+        "inputTokens": 4787,
+        "outputTokens": 249,
+        "totalTokens": 5036
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-1f560e9a09b64bd17718b41650f9bc36678c337d5c2cbabaab030789076dbdba",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-fetch-trades",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 28624,
+      "tokenUsage": {
+        "inputTokens": 3180,
+        "outputTokens": 591,
+        "totalTokens": 3771
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-ff1ed3e84e47eb30346eebe8a70b66790531052576019e9cf578379c079babde",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-fetch-candles",
+      "repetition": 2,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch"
+      ],
+      "durationMs": 24600,
+      "tokenUsage": {
+        "inputTokens": 3702,
+        "outputTokens": 224,
+        "totalTokens": 3926
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-116d460fe78be1eb3b9f9c8d645012fbfcc2f3c96ab3815d03824ac2037d6dd6",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-fetch-order-book",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 25249,
+      "tokenUsage": {
+        "inputTokens": 8014,
+        "outputTokens": 363,
+        "totalTokens": 8377
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-2608e513ac37a10106e98706eb96695aab3b25eb8a4590411b5b6a457b54c541",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-preview-order-cost",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 30430,
+      "tokenUsage": {
+        "inputTokens": 3113,
+        "outputTokens": 521,
+        "totalTokens": 3634
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-189f4ef8d9e78ece9b18f427814c89e5cb39edfef5502b3cf93a409ccd93df8d",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-create-table",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 24241,
+      "tokenUsage": {
+        "inputTokens": 3519,
+        "outputTokens": 303,
+        "totalTokens": 3822
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-47e9a2f4a98ea9bcfa49fc9c749717779da862436046379f432339c7348a4d41",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-create-and-query-table",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 34156,
+      "tokenUsage": {
+        "inputTokens": 3918,
+        "outputTokens": 418,
+        "totalTokens": 4336
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-5e213f8fff32db9ec7459b4d04f0b169f7b127e5bd96ff092ae63f1341f0b156",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-account",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 29938,
+      "tokenUsage": {
+        "inputTokens": 3992,
+        "outputTokens": 432,
+        "totalTokens": 4424
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-fdcb8146645a3e39b8adcdf6706d723068e485b8d6ad856e6efd460a65fd9bc5",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-positions",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 22095,
+      "tokenUsage": {
+        "inputTokens": 2898,
+        "outputTokens": 76,
+        "totalTokens": 2974
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-925d3d7ae1bd9e372e7200fc029ce43fc601af30bf3cc6be522d6c41746620d3",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-open-orders",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 19955,
+      "tokenUsage": {
+        "inputTokens": 2848,
+        "outputTokens": 116,
+        "totalTokens": 2964
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-682683862b2d7acab76cff5778b0aa28536e3660cf846b686bb7bc376d211588",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-portfolio",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 41450,
+      "tokenUsage": {
+        "inputTokens": 21788,
+        "outputTokens": 759,
+        "totalTokens": 22547
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-8258fae5b6ff65b6e531f259e2e21e91479d1e6f77f03b92e3637e1a74e8e82f",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-markets",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 67950,
+      "tokenUsage": {
+        "inputTokens": 67566,
+        "outputTokens": 2440,
+        "totalTokens": 70006
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-d17f893266cc4ecf1773b20f8a121e2122ffc0ced58f5122212956b3b97ce162",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-single-price",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 26784,
+      "tokenUsage": {
+        "inputTokens": 4926,
+        "outputTokens": 87,
+        "totalTokens": 5013
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-1d1bb83d7fa1a9d03642894e57e87a7df68a42e8600cf3ff704661120d6d051e",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-multiple-prices",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 19021,
+      "tokenUsage": {
+        "inputTokens": 5339,
+        "outputTokens": 113,
+        "totalTokens": 5452
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-6c9e1e9f847e52c3826777918d82320228c206b2d64cf21cec6249ec1ea1e213",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-asset-data",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 25962,
+      "tokenUsage": {
+        "inputTokens": 3007,
+        "outputTokens": 350,
+        "totalTokens": 3357
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-4fd52436d52b83ef3305e92f70a519029446627c31d9e91b8ba7ec3ef5b0bd85",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-search-hip3-markets",
+      "repetition": 3,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "fail",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch",
+        "argument_mismatch"
+      ],
+      "durationMs": 101844,
+      "tokenUsage": {
+        "inputTokens": 32404,
+        "outputTokens": 2810,
+        "totalTokens": 35214
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-0953758845c43add253119aea702dadc7ad8ad48ded4d573c9f6ee885fe28adf",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-hip3-dexes",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 24442,
+      "tokenUsage": {
+        "inputTokens": 2826,
+        "outputTokens": 186,
+        "totalTokens": 3012
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-97a50a304fdde27d1c5982550aa1046c670d05d4b78ebfe340be0b5b1611b2f6",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-hip3-markets",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 49476,
+      "tokenUsage": {
+        "inputTokens": 55870,
+        "outputTokens": 1546,
+        "totalTokens": 57416
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-d4400250d82dcd2344c2778fb29630bebe434496ac6c565701f234b80635c72c",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-hip3-price",
+      "repetition": 3,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "fail",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch",
+        "argument_mismatch"
+      ],
+      "durationMs": 28368,
+      "tokenUsage": {
+        "inputTokens": 4774,
+        "outputTokens": 186,
+        "totalTokens": 4960
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-748f5119f3e2e447f763c7dde627ea3bade41632c3c814a8d9d4ace94fd94b69",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-fetch-trades",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 25072,
+      "tokenUsage": {
+        "inputTokens": 3167,
+        "outputTokens": 404,
+        "totalTokens": 3571
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-112e73986b3f8a95146416ecabfaa5528f5936d79ba6c6be1563e6905a0d1668",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-fetch-candles",
+      "repetition": 3,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch"
+      ],
+      "durationMs": 40682,
+      "tokenUsage": {
+        "inputTokens": 3483,
+        "outputTokens": 253,
+        "totalTokens": 3736
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-6aee0dfc4f4445eebff374fcbf61729bb36147193917f03b2e49d62c0bda33ea",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-fetch-order-book",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 24992,
+      "tokenUsage": {
+        "inputTokens": 7602,
+        "outputTokens": 362,
+        "totalTokens": 7964
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-018e249ebf52a614b20b8bb80dde1082b51b84c74b6cac2ffe8537e65f2cc90d",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-preview-order-cost",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 29922,
+      "tokenUsage": {
+        "inputTokens": 3121,
+        "outputTokens": 577,
+        "totalTokens": 3698
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-000bd7411a2cffe3c0fa1a88cc74e30b07565ab7383189d3387518391dfedb53",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-create-table",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 25468,
+      "tokenUsage": {
+        "inputTokens": 3655,
+        "outputTokens": 319,
+        "totalTokens": 3974
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-423d8a0741c30c98dcb00d0bef5443aa78e715af34e525c02f60e10ecfeb77f1",
+      "runId": "perps-openai-oauth-sol-20260911T152450Z",
+      "caseId": "perps-create-and-query-table",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 31113,
+      "tokenUsage": {
+        "inputTokens": 3998,
+        "outputTokens": 437,
+        "totalTokens": 4435
+      },
+      "replacementOf": null
+    }
+  ]
+}

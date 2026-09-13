@@ -4,7 +4,7 @@ import { dataset, families, type EvalModel, type FamilyFilter, type PageId } fro
 import { Button } from "./ui/button";
 import { DialogRoot, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 
-type ShellPageId = PageId | "handoff";
+type ShellPageId = PageId | "handoff" | "results";
 
 const navigation: readonly { id: ShellPageId; label: string; href: string }[] = [
   { id: "leaderboard", label: "Leaderboard", href: "#/leaderboard" },
@@ -12,6 +12,7 @@ const navigation: readonly { id: ShellPageId; label: string; href: string }[] = 
   { id: "tasks", label: "Tasks", href: "#/tasks" },
   { id: "methodology", label: "Methodology", href: "#/methodology" },
   { id: "handoff", label: "Public results", href: "#/handoff" },
+  { id: "results", label: "Measured results", href: "#/results" },
 ];
 
 export function PageShell({ active, children }: { active: ShellPageId; children: ReactNode }) {
@@ -41,9 +42,13 @@ export function PageShell({ active, children }: { active: ShellPageId; children:
         </nav>
         <div className="eval-header-actions">
           <span className="eval-demo-label">
-            {active === "handoff" ? "Public JSON handoff" : "Design concept · Illustrative data"}
+            {active === "handoff"
+              ? "Public JSON handoff"
+              : active === "results"
+                ? "Measured · 2026-09-11"
+                : "Design concept · Illustrative data"}
           </span>
-          {active !== "handoff" && (
+          {active !== "handoff" && active !== "results" && (
             <Button className="eval-run-button" onClick={() => setRunOpen(true)}>
               Run an evaluation <ArrowUpRight size={14} aria-hidden="true" />
             </Button>
@@ -57,6 +62,8 @@ export function PageShell({ active, children }: { active: ShellPageId; children:
         <span>
           {active === "handoff" ? (
             "Public exports measure conformance, not answer accuracy or financial outcomes. Other pages use illustrative fixtures."
+          ) : active === "results" ? (
+            "Measured conformance runs from 2026-09-11. Unranked; not answer accuracy or financial outcomes."
           ) : (
             <>
               {dataset.disclaimer} <a href="#/methodology">See methodology.</a>

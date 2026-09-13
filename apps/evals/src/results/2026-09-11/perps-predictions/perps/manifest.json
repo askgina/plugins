@@ -1,0 +1,996 @@
+{
+  "schemaVersion": "perps-live-artifact-manifest.v1",
+  "runId": "perps-openai-oauth-sol-20260911T152450Z",
+  "candidate": "omp-oauth-sol-medium-perps",
+  "family": "perps",
+  "model": "openai-codex/gpt-5.6-sol",
+  "settings": {
+    "reasoning": "medium",
+    "repetitions": 3,
+    "expectedCases": 18,
+    "expectedTrials": 54,
+    "cleanChat": true,
+    "accountClass": "oauth-read-only",
+    "ompAuth": "native",
+    "timeoutMs": 120000,
+    "toolsExposed": 31,
+    "rendererExcluded": true,
+    "allCasesIncluded": true,
+    "manualPriorityCandidateIncluded": "perps-create-table",
+    "credentialContentsInspected": false,
+    "apiKeyFallbackUsed": false
+  },
+  "source": {
+    "remoteRepository": "probe:/home/ubuntu/plugins",
+    "tip": "780dc809e9956a329d9e60c72503de449477699b",
+    "executableSourceCommit": "5f98d54",
+    "attestation": "Source revisions and native-profile OAuth-only verification supplied by parent; unchanged prepared runner invoked exactly once.",
+    "ompVersion": "18.1.17",
+    "ompExecutable": "/home/ubuntu/.local/lib/askgina-evals/omp-18.1.17",
+    "ompExecutableSha256": "040c254ddeb30f6d592be67d1469dc67fcac14e933fa04dbf690f42820ffd820",
+    "suiteId": "ask-gina-model-perps-v1",
+    "suiteVersion": 1,
+    "fixtureVersion": 1,
+    "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e"
+  },
+  "process": {
+    "name": "gina-perps-sol-20260911t152450z",
+    "generationId": "b1ae6e5f-ba52-4cc3-a9f0-a91b8f99e627",
+    "startedAtUnixMs": 1789140396439,
+    "readyAtUnixMs": 1789140435135,
+    "exitedAtUnixMs": 1789142328227,
+    "exitCode": 2,
+    "restartCount": 0,
+    "readyPattern": "TRIAL_EVIDENCE",
+    "logCursor": 14494,
+    "pty": false,
+    "invocations": 1
+  },
+  "files": {
+    "omp_harness-omp-oauth-sol-medium-perps-perps-openai-oauth-sol-20260911T152450Z.json": {
+      "remote": {
+        "path": "/home/ubuntu/plugins/.plugin-eval-runs/omp_harness-omp-oauth-sol-medium-perps-perps-openai-oauth-sol-20260911T152450Z.json",
+        "sha256": "b1edfdbcc981ce4028886d0065fa02de63907039487cd4b9ed68b36706288091",
+        "size": 1358,
+        "permissions": "0600"
+      },
+      "local": {
+        "path": "/var/folders/nb/7_n17pmx3wq103lzdkj6p2_80000gn/T/ask-gina-extended-evals-_vu8v8x1/perps-artifacts/omp_harness-omp-oauth-sol-medium-perps-perps-openai-oauth-sol-20260911T152450Z.json",
+        "sha256": "b1edfdbcc981ce4028886d0065fa02de63907039487cd4b9ed68b36706288091",
+        "size": 1358,
+        "permissions": "0600"
+      },
+      "bytesMatch": true
+    },
+    "omp_harness-omp-oauth-sol-medium-perps-perps-openai-oauth-sol-20260911T152450Z.journal-v1.jsonl": {
+      "remote": {
+        "path": "/home/ubuntu/plugins/.plugin-eval-runs/omp_harness-omp-oauth-sol-medium-perps-perps-openai-oauth-sol-20260911T152450Z.journal-v1.jsonl",
+        "sha256": "f4156fcd83852b92d6b792b5954e0237538fc7155ab66121de6e6012743786f9",
+        "size": 18384,
+        "permissions": "0600"
+      },
+      "local": {
+        "path": "/var/folders/nb/7_n17pmx3wq103lzdkj6p2_80000gn/T/ask-gina-extended-evals-_vu8v8x1/perps-artifacts/omp_harness-omp-oauth-sol-medium-perps-perps-openai-oauth-sol-20260911T152450Z.journal-v1.jsonl",
+        "sha256": "f4156fcd83852b92d6b792b5954e0237538fc7155ab66121de6e6012743786f9",
+        "size": 18384,
+        "permissions": "0600"
+      },
+      "bytesMatch": true
+    },
+    "perps-openai-oauth-sol-20260911T152450Z.attempts.json": {
+      "remote": {
+        "path": "/home/ubuntu/plugins/.plugin-eval-runs/perps-openai-oauth-sol-20260911T152450Z.attempts.json",
+        "sha256": "b13166907095b6cb0c2156ab51e05e74e64e36a010db11eb1329b91c76bfea4e",
+        "size": 39196,
+        "permissions": "0600"
+      },
+      "local": {
+        "path": "/var/folders/nb/7_n17pmx3wq103lzdkj6p2_80000gn/T/ask-gina-extended-evals-_vu8v8x1/perps-artifacts/perps-openai-oauth-sol-20260911T152450Z.attempts.json",
+        "sha256": "b13166907095b6cb0c2156ab51e05e74e64e36a010db11eb1329b91c76bfea4e",
+        "size": 39196,
+        "permissions": "0600"
+      },
+      "bytesMatch": true
+    },
+    "suite.yaml": {
+      "remote": {
+        "path": "/home/ubuntu/plugins/plugins/ask-gina/evals/model/v1/families/perps.yaml",
+        "sha256": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+        "size": 12134,
+        "permissions": "0664"
+      },
+      "local": {
+        "path": "/var/folders/nb/7_n17pmx3wq103lzdkj6p2_80000gn/T/ask-gina-extended-evals-_vu8v8x1/perps-artifacts/suite.yaml",
+        "sha256": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+        "size": 12134,
+        "permissions": "0600"
+      },
+      "bytesMatch": true
+    },
+    "tool-events.jsonl": {
+      "origin": "hub.logs full head=true lines=1000; unique process generation b1ae6e5f-ba52-4cc3-a9f0-a91b8f99e627; TRIAL_EVIDENCE prefix removed, JSON row bytes retained",
+      "remote": null,
+      "local": {
+        "path": "/var/folders/nb/7_n17pmx3wq103lzdkj6p2_80000gn/T/ask-gina-extended-evals-_vu8v8x1/perps-artifacts/tool-events.jsonl",
+        "sha256": "f454e14dc6a7769c029b5ab2c5ba3a8822c67f8a145135d3dc8b870b58742227",
+        "size": 13567,
+        "permissions": "0600"
+      }
+    }
+  },
+  "manifestFilename": "manifest.json",
+  "manifestPermissions": "0600",
+  "directoryPermissions": "0700",
+  "integrity": {
+    "remoteLocalHashesAndSizesMatch": true,
+    "attemptsSourceReportSha256": "b1edfdbcc981ce4028886d0065fa02de63907039487cd4b9ed68b36706288091",
+    "journalReportBoundSha256": "b1edfdbcc981ce4028886d0065fa02de63907039487cd4b9ed68b36706288091",
+    "bothReportBindingsMatch": true,
+    "startedDispatches": 54,
+    "finishedDispatches": 54,
+    "attempts": 54,
+    "traceRows": 54,
+    "exactCaseRepetitionSetMatchesAcrossAllArtifacts": true,
+    "traceStatusMatchesJournal": true,
+    "replacements": 0,
+    "allReplacementOfNull": true,
+    "allOutcomesRetained": true,
+    "credentialFilesPresent": false
+  },
+  "results": {
+    "overall": {
+      "passed": 43,
+      "total": 54
+    },
+    "verdicts": {
+      "pass": 43,
+      "fail": 11
+    },
+    "validity": {
+      "valid": 54
+    },
+    "evidenceAvailability": {
+      "available": 54
+    },
+    "statuses": {
+      "completed": 53,
+      "failed": 1
+    },
+    "checks": {
+      "routing": {
+        "pass": 43,
+        "fail": 11
+      },
+      "arguments": {
+        "pass": 50,
+        "fail": 4
+      },
+      "safety": {
+        "not_applicable": 54
+      },
+      "completion": {
+        "pass": 53,
+        "fail": 1
+      },
+      "skillActivation": {
+        "not_applicable": 54
+      }
+    },
+    "perCase": {
+      "perps-account": {
+        "passed": 3,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 2,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 3,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          }
+        ]
+      },
+      "perps-positions": {
+        "passed": 3,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 2,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 3,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          }
+        ]
+      },
+      "perps-open-orders": {
+        "passed": 3,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 2,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 3,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          }
+        ]
+      },
+      "perps-portfolio": {
+        "passed": 3,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 2,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 3,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          }
+        ]
+      },
+      "perps-markets": {
+        "passed": 2,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "fail",
+            "checks": {
+              "routing": "fail",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "fail",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": [
+              "routing_mismatch",
+              "trial_or_tool_failure"
+            ]
+          },
+          {
+            "repetition": 2,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 3,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          }
+        ]
+      },
+      "perps-single-price": {
+        "passed": 2,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 2,
+            "verdict": "fail",
+            "checks": {
+              "routing": "fail",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": [
+              "routing_mismatch"
+            ]
+          },
+          {
+            "repetition": 3,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          }
+        ]
+      },
+      "perps-multiple-prices": {
+        "passed": 3,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 2,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 3,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          }
+        ]
+      },
+      "perps-asset-data": {
+        "passed": 3,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 2,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 3,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          }
+        ]
+      },
+      "perps-search-hip3-markets": {
+        "passed": 0,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "fail",
+            "checks": {
+              "routing": "fail",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": [
+              "routing_mismatch"
+            ]
+          },
+          {
+            "repetition": 2,
+            "verdict": "fail",
+            "checks": {
+              "routing": "fail",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": [
+              "routing_mismatch"
+            ]
+          },
+          {
+            "repetition": 3,
+            "verdict": "fail",
+            "checks": {
+              "routing": "fail",
+              "arguments": "fail",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": [
+              "routing_mismatch",
+              "argument_mismatch"
+            ]
+          }
+        ]
+      },
+      "perps-hip3-dexes": {
+        "passed": 3,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 2,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 3,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          }
+        ]
+      },
+      "perps-hip3-markets": {
+        "passed": 3,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 2,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 3,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          }
+        ]
+      },
+      "perps-hip3-price": {
+        "passed": 0,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "fail",
+            "checks": {
+              "routing": "fail",
+              "arguments": "fail",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": [
+              "routing_mismatch",
+              "argument_mismatch"
+            ]
+          },
+          {
+            "repetition": 2,
+            "verdict": "fail",
+            "checks": {
+              "routing": "fail",
+              "arguments": "fail",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": [
+              "routing_mismatch",
+              "argument_mismatch"
+            ]
+          },
+          {
+            "repetition": 3,
+            "verdict": "fail",
+            "checks": {
+              "routing": "fail",
+              "arguments": "fail",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": [
+              "routing_mismatch",
+              "argument_mismatch"
+            ]
+          }
+        ]
+      },
+      "perps-fetch-trades": {
+        "passed": 3,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 2,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 3,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          }
+        ]
+      },
+      "perps-fetch-candles": {
+        "passed": 0,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "fail",
+            "checks": {
+              "routing": "fail",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": [
+              "routing_mismatch"
+            ]
+          },
+          {
+            "repetition": 2,
+            "verdict": "fail",
+            "checks": {
+              "routing": "fail",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": [
+              "routing_mismatch"
+            ]
+          },
+          {
+            "repetition": 3,
+            "verdict": "fail",
+            "checks": {
+              "routing": "fail",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": [
+              "routing_mismatch"
+            ]
+          }
+        ]
+      },
+      "perps-fetch-order-book": {
+        "passed": 3,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 2,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 3,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          }
+        ]
+      },
+      "perps-preview-order-cost": {
+        "passed": 3,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 2,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 3,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          }
+        ]
+      },
+      "perps-create-table": {
+        "passed": 3,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 2,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 3,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          }
+        ]
+      },
+      "perps-create-and-query-table": {
+        "passed": 3,
+        "total": 3,
+        "repetitions": [
+          {
+            "repetition": 1,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 2,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          },
+          {
+            "repetition": 3,
+            "verdict": "pass",
+            "checks": {
+              "routing": "pass",
+              "arguments": "pass",
+              "safety": "not_applicable",
+              "completion": "pass",
+              "skillActivation": "not_applicable"
+            },
+            "failureCategories": []
+          }
+        ]
+      }
+    },
+    "failureCategories": {
+      "routing_mismatch": 11,
+      "trial_or_tool_failure": 1,
+      "argument_mismatch": 4
+    },
+    "latencyMs": {
+      "p50": 28340,
+      "p95": 101844,
+      "max": 107526
+    },
+    "totalResultBytes": {
+      "p50": 2572,
+      "p95": 209179,
+      "max": 340586
+    },
+    "tokenUsage": {
+      "observations": 54,
+      "inputTokens": 872008,
+      "outputTokens": 36182,
+      "totalTokens": 908190
+    },
+    "toolCalls": 115,
+    "toolErrorFlags": 1,
+    "skillObservedTrials": 54
+  },
+  "limitations": [
+    "Rubric routing, argument, and completion checks are available for all54 trials; raw arguments, results, and answers are intentionally unavailable in sanitized artifacts.",
+    "Answer correctness was not graded. Safety and skillActivation rubric checks are not_applicable on all54 trials; no safety pass is claimed.",
+    "Observation-only trace shows research-hyperliquid activation in all54 trials, not a graded skill-activation pass.",
+    "Both table cases pass all3 repetitions without tool-error flags; sanitized evidence cannot establish backend table isolation/idempotency or exact returned table names.",
+    "One markets repetition has an unnormalized ACP tool-call identifier in normal trace; preserved unchanged, not guessed or replaced."
+  ]
+}

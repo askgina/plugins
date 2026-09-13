@@ -1,0 +1,630 @@
+{
+  "family": "perps",
+  "runId": "perps-openai-oauth-sol-20260911T152450Z",
+  "planned": 54,
+  "dispatched": 54,
+  "graded": 54,
+  "passed": 43,
+  "failed": 11,
+  "unscoredTimeouts": 0,
+  "dimensions": {
+    "routing": {
+      "passed": 43,
+      "failed": 11
+    },
+    "arguments": {
+      "passed": 50,
+      "failed": 4
+    },
+    "completion": {
+      "passed": 53,
+      "failed": 1
+    },
+    "safety": {
+      "passed": 0,
+      "failed": 0
+    }
+  },
+  "latencyMs": {
+    "p50": 28340,
+    "p95": 101844,
+    "max": 107526
+  },
+  "resultBytes": {
+    "p50": 2572,
+    "p95": 209179,
+    "max": 340586
+  },
+  "tokenUsage": {
+    "observations": 54,
+    "input": 872008,
+    "output": 36182,
+    "total": 908190
+  },
+  "within30s": 32,
+  "argumentConstrainedTrials": 15,
+  "skillObservedCount": 54,
+  "cases": [
+    {
+      "id": "perps-account",
+      "results": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "passed": 3,
+      "graded": 3,
+      "notes": ""
+    },
+    {
+      "id": "perps-positions",
+      "results": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "passed": 3,
+      "graded": 3,
+      "notes": ""
+    },
+    {
+      "id": "perps-open-orders",
+      "results": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "passed": 3,
+      "graded": 3,
+      "notes": ""
+    },
+    {
+      "id": "perps-portfolio",
+      "results": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "passed": 3,
+      "graded": 3,
+      "notes": ""
+    },
+    {
+      "id": "perps-markets",
+      "results": [
+        "fail",
+        "pass",
+        "pass"
+      ],
+      "passed": 2,
+      "graded": 3,
+      "notes": "R1: routing_mismatch, trial_or_tool_failure"
+    },
+    {
+      "id": "perps-single-price",
+      "results": [
+        "pass",
+        "fail",
+        "pass"
+      ],
+      "passed": 2,
+      "graded": 3,
+      "notes": "R2: routing_mismatch"
+    },
+    {
+      "id": "perps-multiple-prices",
+      "results": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "passed": 3,
+      "graded": 3,
+      "notes": ""
+    },
+    {
+      "id": "perps-asset-data",
+      "results": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "passed": 3,
+      "graded": 3,
+      "notes": ""
+    },
+    {
+      "id": "perps-search-hip3-markets",
+      "results": [
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "passed": 0,
+      "graded": 3,
+      "notes": "R1: routing_mismatch; R2: routing_mismatch; R3: routing_mismatch, argument_mismatch"
+    },
+    {
+      "id": "perps-hip3-dexes",
+      "results": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "passed": 3,
+      "graded": 3,
+      "notes": ""
+    },
+    {
+      "id": "perps-hip3-markets",
+      "results": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "passed": 3,
+      "graded": 3,
+      "notes": ""
+    },
+    {
+      "id": "perps-hip3-price",
+      "results": [
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "passed": 0,
+      "graded": 3,
+      "notes": "R1: routing_mismatch, argument_mismatch; R2: routing_mismatch, argument_mismatch; R3: routing_mismatch, argument_mismatch"
+    },
+    {
+      "id": "perps-fetch-trades",
+      "results": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "passed": 3,
+      "graded": 3,
+      "notes": ""
+    },
+    {
+      "id": "perps-fetch-candles",
+      "results": [
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "passed": 0,
+      "graded": 3,
+      "notes": "R1: routing_mismatch; R2: routing_mismatch; R3: routing_mismatch"
+    },
+    {
+      "id": "perps-fetch-order-book",
+      "results": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "passed": 3,
+      "graded": 3,
+      "notes": ""
+    },
+    {
+      "id": "perps-preview-order-cost",
+      "results": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "passed": 3,
+      "graded": 3,
+      "notes": ""
+    },
+    {
+      "id": "perps-create-table",
+      "results": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "passed": 3,
+      "graded": 3,
+      "notes": "manual_priority candidate included"
+    },
+    {
+      "id": "perps-create-and-query-table",
+      "results": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "passed": 3,
+      "graded": 3,
+      "notes": ""
+    }
+  ],
+  "failures": [
+    {
+      "caseId": "perps-markets",
+      "repetition": 1,
+      "categories": [
+        "routing_mismatch",
+        "trial_or_tool_failure"
+      ],
+      "tools": [
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidPrices",
+          "error": true
+        },
+        {
+          "name": "acp_tool_call_akEaYvD0NDn4wLXEijEUdfKH_fc_055126d8a4bbbaa2016aa41e3af39c87d2b209bd6cc959f6a0",
+          "error": false
+        }
+      ]
+    },
+    {
+      "caseId": "perps-search-hip3-markets",
+      "repetition": 1,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        }
+      ]
+    },
+    {
+      "caseId": "perps-hip3-price",
+      "repetition": 1,
+      "categories": [
+        "routing_mismatch",
+        "argument_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidPrice",
+          "error": false
+        }
+      ]
+    },
+    {
+      "caseId": "perps-fetch-candles",
+      "repetition": 1,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "perps.createHyperliquidTable",
+          "error": false
+        }
+      ]
+    },
+    {
+      "caseId": "perps-single-price",
+      "repetition": 2,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        }
+      ]
+    },
+    {
+      "caseId": "perps-search-hip3-markets",
+      "repetition": 2,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        }
+      ]
+    },
+    {
+      "caseId": "perps-hip3-price",
+      "repetition": 2,
+      "categories": [
+        "routing_mismatch",
+        "argument_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidPrice",
+          "error": false
+        }
+      ]
+    },
+    {
+      "caseId": "perps-fetch-candles",
+      "repetition": 2,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "perps.createHyperliquidTable",
+          "error": false
+        }
+      ]
+    },
+    {
+      "caseId": "perps-search-hip3-markets",
+      "repetition": 3,
+      "categories": [
+        "routing_mismatch",
+        "argument_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        }
+      ]
+    },
+    {
+      "caseId": "perps-hip3-price",
+      "repetition": 3,
+      "categories": [
+        "routing_mismatch",
+        "argument_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "perps.getHyperliquidMarkets",
+          "error": false
+        },
+        {
+          "name": "perps.getHyperliquidPrice",
+          "error": false
+        }
+      ]
+    },
+    {
+      "caseId": "perps-fetch-candles",
+      "repetition": 3,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "perps.createHyperliquidTable",
+          "error": false
+        }
+      ]
+    }
+  ],
+  "sourceReportSha256": "b1edfdbcc981ce4028886d0065fa02de63907039487cd4b9ed68b36706288091"
+}

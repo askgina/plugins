@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "ask-gina-comparison-artifacts.v1",
+  "createdAt": "2026-09-11T15:03:41.479258+00:00",
+  "repository": "askgina/plugins",
+  "branch": "fix/omp-connected-catalog",
+  "sourceTip": "780dc809e9956a329d9e60c72503de449477699b",
+  "runs": [
+    {
+      "runId": "spot-openai-oauth-20260911T135127Z",
+      "model": "openai-codex/gpt-5.5",
+      "reportSha256": "d12167198c14054d5b0599c9fd7fc3758a2d9c1aaa784009ae7352fb91fdfb0f",
+      "sourceCommit": "5f98d54cf0f6514c90116a4c7c1d889cdd7dc485"
+    },
+    {
+      "runId": "spot-openai-oauth-sol-20260911T142646Z",
+      "model": "openai-codex/gpt-5.6-sol",
+      "reportSha256": "4f4d0f5a544905aa200abebdfec431bc93daba21ce95d3710f2d3a82d6a64a71",
+      "sourceCommit": "780dc809e9956a329d9e60c72503de449477699b"
+    }
+  ],
+  "integrity": "Original reports, attempts and journals are byte-identical copies. Source manifests contain remote/local integrity evidence. Normalized tool-event traces are exported from completed supervised-run stdout. Full model transcripts and raw argument/result bodies were not retained. All 24 reported attempts are included; no replacements.",
+  "credentialCleanup": "Temporary OpenAI eval profiles and local Gina access-token files removed. No account-wide revocation of personal OpenAI credentials. No credentials or auth databases included.",
+  "files": {
+    "comparison-report.pdf": {
+      "bytes": 8805,
+      "sha256": "c4e0d9d4fdeb8523d10edcee9a40ca4ef13ebb174393ac5c7a5cdd28f5980092"
+    },
+    "comparison.json": {
+      "bytes": 39672,
+      "sha256": "0dd60c53dca29701a9bdcf3ad256d08d55b50dffbc5c948f49094146cecd9d80"
+    },
+    "common/spot.yaml": {
+      "bytes": 2690,
+      "sha256": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
+    },
+    "common/grading.ts": {
+      "bytes": 9804,
+      "sha256": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5"
+    },
+    "common/source-manifest.json": {
+      "bytes": 1841,
+      "sha256": "381e45aaddd38458dda1b9227fbb4e9ee2dd1351dbcf7acd487901a589bfbb03"
+    },
+    "common/runner-fixes.patch": {
+      "bytes": 26315,
+      "sha256": "3229a6d875479a8cb169387edb6c0bacb79c2392249de47c5161661709f44a15"
+    },
+    "common/scoring-audit.json": {
+      "bytes": 2619,
+      "sha256": "e353a205ca11270937287ae74b0213af38030fad05af8669a7c8c791b0d5a46e"
+    },
+    "gpt-5.5/omp_harness-omp-oauth-corrected-spot-openai-oauth-20260911T135127Z.json": {
+      "bytes": 1335,
+      "sha256": "d12167198c14054d5b0599c9fd7fc3758a2d9c1aaa784009ae7352fb91fdfb0f"
+    },
+    "gpt-5.5/omp_harness-omp-oauth-corrected-spot-openai-oauth-20260911T135127Z.journal-v1.jsonl": {
+      "bytes": 4532,
+      "sha256": "ea349f97b88a1beaa70a120db9c4926317948bbec81df1d74d0528c8bea0a5a5"
+    },
+    "gpt-5.5/spot-openai-oauth-20260911T135127Z.attempts.json": {
+      "bytes": 8731,
+      "sha256": "79ad0a9eef86a68130947866f53026901dca4ee019f3b2379c1dc720db91537a"
+    },
+    "gpt-5.5/manifest.json": {
+      "bytes": 3396,
+      "sha256": "d533edda2390ce2867e60e66ba98016536f04c2c3e936c3f004f4fd20c5204df"
+    },
+    "gpt-5.5/tool-events.jsonl": {
+      "bytes": 2237,
+      "sha256": "93dee1a9e2bf78aa92f2b8a074d3f3f49c7c0b464b1c3f56aaf4b65234512058"
+    },
+    "gpt-5.6-sol/omp_harness-omp-oauth-sol-medium-spot-openai-oauth-sol-20260911T142646Z.json": {
+      "bytes": 1345,
+      "sha256": "4f4d0f5a544905aa200abebdfec431bc93daba21ce95d3710f2d3a82d6a64a71"
+    },
+    "gpt-5.6-sol/omp_harness-omp-oauth-sol-medium-spot-openai-oauth-sol-20260911T142646Z.journal-v1.jsonl": {
+      "bytes": 4541,
+      "sha256": "d9fb895f6659a06bdde6d59f618d5f8d5cfe67240a4f4f5b7caaa33362901622"
+    },
+    "gpt-5.6-sol/spot-openai-oauth-sol-20260911T142646Z.attempts.json": {
+      "bytes": 8794,
+      "sha256": "19daaf8662ac4b2cb2980a99e57cdbe9c99038c9dd4263080e5ec676458ebff0"
+    },
+    "gpt-5.6-sol/manifest.json": {
+      "bytes": 4019,
+      "sha256": "3696df037300836543abf2ea92a8ec2689e4a6cbe1569a23bfa4951739baf6bb"
+    },
+    "gpt-5.6-sol/tool-events.jsonl": {
+      "bytes": 2237,
+      "sha256": "0bcc19df29082713a51cd379e04c62ef3a978c35d8e15ba9862205dc5cfac338"
+    }
+  }
+}

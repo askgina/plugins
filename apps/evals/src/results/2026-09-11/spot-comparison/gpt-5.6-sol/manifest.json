@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "ask-gina-eval-artifact-manifest.v1",
+  "runId": "spot-openai-oauth-sol-20260911T142646Z",
+  "model": "openai-codex/gpt-5.6-sol",
+  "reasoning": "medium",
+  "candidate": "omp-oauth-sol-medium",
+  "source": {
+    "host": "probe",
+    "repository": "askgina/plugins",
+    "repositoryPath": "/home/ubuntu/plugins",
+    "branch": "fix/omp-connected-catalog",
+    "sourceCommit": "780dc809e9956a329d9e60c72503de449477699b",
+    "baselineSourceCommit": "5f98d54cf0f6514c90116a4c7c1d889cdd7dc485"
+  },
+  "files": [
+    {
+      "file": "omp_harness-omp-oauth-sol-medium-spot-openai-oauth-sol-20260911T142646Z.json",
+      "sourcePath": "/home/ubuntu/plugins/.plugin-eval-runs/omp_harness-omp-oauth-sol-medium-spot-openai-oauth-sol-20260911T142646Z.json",
+      "sha256": "4f4d0f5a544905aa200abebdfec431bc93daba21ce95d3710f2d3a82d6a64a71",
+      "sizeBytes": 1345,
+      "sourcePermissions": "0600",
+      "permissions": "0600",
+      "copyMethod": "scp",
+      "byteForByteVerified": true
+    },
+    {
+      "file": "omp_harness-omp-oauth-sol-medium-spot-openai-oauth-sol-20260911T142646Z.journal-v1.jsonl",
+      "sourcePath": "/home/ubuntu/plugins/.plugin-eval-runs/omp_harness-omp-oauth-sol-medium-spot-openai-oauth-sol-20260911T142646Z.journal-v1.jsonl",
+      "sha256": "d9fb895f6659a06bdde6d59f618d5f8d5cfe67240a4f4f5b7caaa33362901622",
+      "sizeBytes": 4541,
+      "sourcePermissions": "0600",
+      "permissions": "0600",
+      "copyMethod": "scp",
+      "byteForByteVerified": true
+    },
+    {
+      "file": "spot-openai-oauth-sol-20260911T142646Z.attempts.json",
+      "sourcePath": "/home/ubuntu/plugins/.plugin-eval-runs/spot-openai-oauth-sol-20260911T142646Z.attempts.json",
+      "sha256": "19daaf8662ac4b2cb2980a99e57cdbe9c99038c9dd4263080e5ec676458ebff0",
+      "sizeBytes": 8794,
+      "sourcePermissions": "0600",
+      "permissions": "0600",
+      "copyMethod": "scp",
+      "byteForByteVerified": true
+    }
+  ],
+  "bindings": {
+    "reportFile": "omp_harness-omp-oauth-sol-medium-spot-openai-oauth-sol-20260911T142646Z.json",
+    "reportSha256": "4f4d0f5a544905aa200abebdfec431bc93daba21ce95d3710f2d3a82d6a64a71",
+    "attemptsFile": "spot-openai-oauth-sol-20260911T142646Z.attempts.json",
+    "attemptsBindingField": "sourceReportSha256",
+    "attemptsSourceReportSha256": "4f4d0f5a544905aa200abebdfec431bc93daba21ce95d3710f2d3a82d6a64a71",
+    "attemptsBindingMatchesExactReportBytes": true,
+    "journalFile": "omp_harness-omp-oauth-sol-medium-spot-openai-oauth-sol-20260911T142646Z.journal-v1.jsonl",
+    "journalFinalKind": "report-bound",
+    "journalSourceReportSha256": "4f4d0f5a544905aa200abebdfec431bc93daba21ce95d3710f2d3a82d6a64a71",
+    "journalBindingMatchesExactReportBytes": true
+  },
+  "verification": {
+    "remoteFilePermissions0600": true,
+    "localFilePermissions0600": true,
+    "directoryPermissions0700": true,
+    "remoteAndLocalHashesMatch": true,
+    "remoteAndLocalSizesMatch": true,
+    "matchesAuthoritativeComparison": true,
+    "attemptCount": 12,
+    "uniqueAttemptIds": 12,
+    "uniqueCaseRepetitionPairs": 12,
+    "validAttempts": 12,
+    "evidenceAvailableAttempts": 12,
+    "passed": 11,
+    "failed": 1,
+    "replacementCount": 0,
+    "replacementOfValues": "All twelve are null.",
+    "caseRepetitions": {
+      "spot-token-metadata": [
+        1,
+        2,
+        3
+      ],
+      "spot-token-chart": [
+        1,
+        2,
+        3
+      ],
+      "spot-simple-price": [
+        1,
+        2,
+        3
+      ],
+      "spot-fetch-swap-history": [
+        1,
+        2,
+        3
+      ]
+    },
+    "retainedFailure": {
+      "attemptId": "attempt-d0c0f92252299209ae89fb73f7eef47fb2bdc258300d20ef5c650bc482d75cac",
+      "caseId": "spot-token-metadata",
+      "repetition": 1,
+      "verdict": "fail",
+      "failureCategories": [
+        "routing_mismatch"
+      ]
+    },
+    "journalEntries": 26,
+    "journalKinds": {
+      "run": 1,
+      "started": 12,
+      "finished": 12,
+      "report-bound": 1
+    },
+    "mismatches": []
+  }
+}

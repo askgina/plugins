@@ -1,0 +1,309 @@
+version: 1
+suite:
+  id: ask-gina-model-predictions-v1
+  plugin: ask-gina
+  catalog_version: 31-read-tools@2026-09-10
+  description: >-
+    Routing cases for public Polymarket discovery, order-book, dataset, position,
+    and history reads. Search owns topic, URL/slug, sports play windows, expiry
+    windows, and recurring series. Renderers are optional post-discovery tools.
+cases:
+  - id: predictions-focused-fact-search-only
+    category: confusion_pair
+    tags: [predictions, focused, search-only]
+    manual_priority: required
+    turns:
+      - role: user
+        content: What are the current odds in the 2027 NBA champion market?
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.searchPredictionMarkets
+      arguments:
+        tool: predictions.searchPredictionMarkets
+        required:
+          query: What are the current odds in the 2027 NBA champion market?
+        allow_additional: true
+      safety:
+        forbidden_tools: [predictions.getPredictionMarketDetails]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-broad-nba-search-only
+    category: confusion_pair
+    tags: [predictions, nba, search-only]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Search Polymarket for active NBA prediction markets.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.searchPredictionMarkets
+      arguments:
+        tool: predictions.searchPredictionMarkets
+        required:
+          query: Search Polymarket for active NBA prediction markets.
+        allow_additional: true
+      safety:
+        forbidden_tools: [predictions.getPredictionMarketDetails]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-broad-football-search-only
+    category: indirect
+    tags: [predictions, football, search-only]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Find active football prediction markets.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.searchPredictionMarkets
+      arguments:
+        tool: predictions.searchPredictionMarkets
+        required:
+          query: Find active football prediction markets.
+        allow_additional: true
+      safety:
+        forbidden_tools: [predictions.getPredictionMarketDetails]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-non-exact-no-render
+    category: boundary
+    tags: [predictions, ambiguous, search-only]
+    manual_priority: required
+    turns:
+      - role: user
+        content: What markets are there about the next US election?
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.searchPredictionMarkets
+      arguments:
+        tool: predictions.searchPredictionMarkets
+        required:
+          query: What markets are there about the next US election?
+        allow_additional: true
+      safety:
+        forbidden_tools: [predictions.getPredictionMarketDetails]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-sparse-history-no-render
+    category: boundary
+    tags: [predictions, sparse-history, search-only]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Find the thinly traded market about a lunar landing before 2030 and summarize what data is available.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.searchPredictionMarkets
+      arguments:
+        tool: predictions.searchPredictionMarkets
+        required:
+          query: Find the thinly traded market about a lunar landing before 2030 and summarize what data is available.
+        allow_additional: true
+      safety:
+        forbidden_tools: [predictions.getPredictionMarketDetails]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-multi-series-no-render
+    category: confusion_pair
+    tags: [predictions, recurring, multi-series, search-only]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Find current recurring BTC up-or-down prediction markets across the available timeframes.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.searchPredictionMarkets
+      arguments:
+        tool: predictions.searchPredictionMarkets
+        required:
+          query: Find current recurring BTC up-or-down prediction markets across the available timeframes.
+        allow_additional: true
+      safety:
+        forbidden_tools: [predictions.getPredictionMarketDetails]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-expiring-markets
+    category: confusion_pair
+    tags: [predictions, expiry, time-window]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Which prediction markets expire in the next 24 hours? Use the expiry window rather than a keyword search.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.searchPredictionMarkets
+      arguments:
+        tool: predictions.searchPredictionMarkets
+        required:
+          query: Which prediction markets expire in the next 24 hours? Use the expiry window rather than a keyword search.
+        allow_additional: true
+      safety:
+        forbidden_tools: [predictions.getPredictionMarketDetails]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-series-market
+    category: confusion_pair
+    tags: [predictions, series, crypto, recurring]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Find the current recurring BTC 15-minute up-or-down prediction market series. This is a recurring timeframe, not a date-specific market search.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.searchPredictionMarkets
+      arguments:
+        tool: predictions.searchPredictionMarkets
+        required:
+          query: Find the current recurring BTC 15-minute up-or-down prediction market series. This is a recurring timeframe, not a date-specific market search.
+        allow_additional: true
+      safety:
+        forbidden_tools: [predictions.getPredictionMarketDetails]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-orderbook
+    category: direct
+    tags: [predictions, orderbook, token-id]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Show the current Polymarket order-book depth for token ID 21742663632909097184470312195971109685171719148340555694710748231631446428820. Use that identifier directly; do not search for another market.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.getPredictionOrderbook
+      safety:
+        forbidden_tools: [predictions.searchPredictionMarkets]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-fetch-market-data
+    category: direct
+    tags: [predictions, data, markets]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Fetch bounded active Polymarket market rows for later analysis. I need public rows, not my personal history, and no queryable table should be claimed.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.fetchPolymarketData
+      safety:
+        forbidden_tools: [predictions.fetchPolymarketHistory]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-fetch-history-data
+    category: confusion_pair
+    tags: [predictions, data, history]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Fetch bounded rows for my Polymarket trades and closed positions. Do not return only the concise order-history summary or claim SQLite tables were created.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.fetchPolymarketHistory
+      safety:
+        forbidden_tools: [predictions.getPolymarketOrderHistory]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-open-positions
+    category: confusion_pair
+    tags: [predictions, account, positions]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Show my currently open Polymarket positions and holdings. Do not show order history.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.getPolymarketPositions
+      safety:
+        forbidden_tools: [predictions.getPolymarketOrderHistory, predictions.fetchPolymarketHistory]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded
+
+  - id: predictions-order-history
+    category: confusion_pair
+    tags: [predictions, account, orders, history]
+    manual_priority: required
+    turns:
+      - role: user
+        content: Show my Polymarket order history and PnL summary. Do not list only my currently open positions and do not build a dataset.
+    expected:
+      routing:
+        kind: exact
+        tool: predictions.getPolymarketOrderHistory
+      safety:
+        forbidden_tools: [predictions.getPolymarketPositions, predictions.fetchPolymarketHistory]
+        forbidden_scopes: ["tools:execute"]
+      performance:
+        max_latency_ms: 30000
+        max_total_result_bytes: 100000
+      answer:
+        kind: grounded

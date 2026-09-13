@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "ask-gina-extended-common-artifacts.v1",
+  "files": {
+    "grading.ts": {
+      "sha256": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+      "size": 9804
+    },
+    "contracts.ts": {
+      "sha256": "d04019b070f567e14259bca549f8a16a833742d1dc5ee8a623bae996a0b89962",
+      "size": 9565
+    },
+    "perps-source-audit.json": {
+      "sha256": "304431dee88e02bde53c630c91a53b900cd0e2a36af9cd6b215d0774fbecc262",
+      "size": 11496
+    },
+    "predictions-source-audit.json": {
+      "sha256": "5f33a8ce53713e16e92363ed0cbcb811518ac463dcedded52dcff4662041d4fa",
+      "size": 9151
+    },
+    "table-isolation-audit.json": {
+      "sha256": "e55be925116920e36be01d884b3751a5070c273d1dcf9ea0a0a3ea47be785a6d",
+      "size": 5275
+    },
+    "native-partial-evidence-audit.txt": {
+      "sha256": "11c22e79a09d5490d275138ee3a8539f563572a352eabe19bc128b26935c6cbb",
+      "size": 9563
+    },
+    "timeout-recovery-audit.txt": {
+      "sha256": "021e9f2adcf253d14b7c2796b4782a39f50832b32cb907c8c2b4ce083cdbff89",
+      "size": 19310
+    },
+    "journal-boundary-verification.json": {
+      "sha256": "1b4e3054a51c73111b94cf8eb66a3b461e59b2cb4c5a75bce239c01e8264324e",
+      "size": 399
+    },
+    "credential-cleanup.json": {
+      "sha256": "d7a6f70928036c28dcdef4c1b1a1a115e637330bed4d187fc109cd05a35ce50d",
+      "size": 366
+    },
+    "runner-fixes.patch": {
+      "sha256": "3229a6d875479a8cb169387edb6c0bacb79c2392249de47c5161661709f44a15",
+      "size": 26315
+    }
+  }
+}

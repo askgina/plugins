@@ -64,6 +64,18 @@
   vertical-align: top;
 }
 
+.eval-handoff-table-scroll small {
+  display: block;
+  margin-top: 4px;
+  color: #757575;
+  font-size: 11px;
+}
+
+.eval-handoff h3 {
+  margin: 22px 0 8px;
+  font-size: 13px;
+}
+
 .eval-handoff details > summary {
   cursor: pointer;
   font-weight: 600;

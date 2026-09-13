@@ -6,6 +6,7 @@ import { LeaderboardPage } from "./pages/leaderboard";
 import { ModelProfilePage } from "./pages/model-profile";
 import { TaskExplorerPage } from "./pages/task-explorer";
 import { HandoffPage } from "./pages/handoff";
+import { MeasuredResultsPage } from "./pages/measured-results";
 
 export function MethodologyPage() {
   return (
@@ -116,7 +117,9 @@ export default function App() {
           ? "Methodology"
           : route === "/handoff"
             ? "Public results"
-            : "Leaderboard";
+            : route === "/results"
+              ? "Measured results"
+              : "Leaderboard";
     document.title = `${section} · Ask Gina Evals`;
   }, [route]);
   if (route === "/models" || route.startsWith("/models/"))
@@ -124,6 +127,7 @@ export default function App() {
   if (route === "/tasks") return <TaskExplorerPage />;
   if (route === "/methodology") return <MethodologyPage />;
   if (route === "/handoff") return <HandoffPage />;
+  if (route === "/results") return <MeasuredResultsPage />;
   if (route === "/leaderboard" || route === "/") return <LeaderboardPage />;
   return (
     <PageShell active="leaderboard">

@@ -1,0 +1,205 @@
+{
+  "schemaVersion": "ask-gina-extended-artifact-manifest.v1",
+  "generatedAt": "2026-09-12T17:00:51.968483+00:00",
+  "evaluationDate": "2026-09-11",
+  "model": "openai-codex/gpt-5.6-sol",
+  "reasoning": "medium",
+  "authentication": "native OpenAI OAuth; Gina tools:read; no API-key fallback",
+  "runs": {
+    "perps": {
+      "planned": 54,
+      "dispatched": 54,
+      "graded": 54,
+      "passed": 43,
+      "failed": 11,
+      "sourceReportSha256": "b1edfdbcc981ce4028886d0065fa02de63907039487cd4b9ed68b36706288091"
+    },
+    "predictionsOriginalAborted": {
+      "planned": 39,
+      "dispatched": 18,
+      "observedWithoutGrades": 17,
+      "graded": 0,
+      "statusCompleted": 14,
+      "statusFailed": 3,
+      "timeout": 1
+    },
+    "predictionsFresh": {
+      "planned": 39,
+      "dispatched": 39,
+      "graded": 38,
+      "passed": 12,
+      "failed": 26,
+      "unscoredTimeouts": 1,
+      "canonicalReportWritten": false
+    }
+  },
+  "integrity": {
+    "knownStagedCredentialScan": "passed",
+    "credentialFilesIncluded": false,
+    "filesMode": "0600",
+    "originalAbortPreserved": true,
+    "noRetriesOrReplacements": true
+  },
+  "files": {
+    "common/contracts.ts": {
+      "sha256": "d04019b070f567e14259bca549f8a16a833742d1dc5ee8a623bae996a0b89962",
+      "size": 9565
+    },
+    "common/credential-cleanup.json": {
+      "sha256": "d7a6f70928036c28dcdef4c1b1a1a115e637330bed4d187fc109cd05a35ce50d",
+      "size": 366
+    },
+    "common/grading.ts": {
+      "sha256": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+      "size": 9804
+    },
+    "common/journal-boundary-verification.json": {
+      "sha256": "1b4e3054a51c73111b94cf8eb66a3b461e59b2cb4c5a75bce239c01e8264324e",
+      "size": 399
+    },
+    "common/manifest.json": {
+      "sha256": "792eb52461c6f0a45340971db219e43f112f03a517d50cfae0419f5ef8455283",
+      "size": 1515
+    },
+    "common/native-partial-evidence-audit.txt": {
+      "sha256": "11c22e79a09d5490d275138ee3a8539f563572a352eabe19bc128b26935c6cbb",
+      "size": 9563
+    },
+    "common/perps-source-audit.json": {
+      "sha256": "304431dee88e02bde53c630c91a53b900cd0e2a36af9cd6b215d0774fbecc262",
+      "size": 11496
+    },
+    "common/predictions-source-audit.json": {
+      "sha256": "5f33a8ce53713e16e92363ed0cbcb811518ac463dcedded52dcff4662041d4fa",
+      "size": 9151
+    },
+    "common/runner-fixes.patch": {
+      "sha256": "3229a6d875479a8cb169387edb6c0bacb79c2392249de47c5161661709f44a15",
+      "size": 26315
+    },
+    "common/table-isolation-audit.json": {
+      "sha256": "e55be925116920e36be01d884b3751a5070c273d1dcf9ea0a0a3ea47be785a6d",
+      "size": 5275
+    },
+    "common/timeout-recovery-audit.txt": {
+      "sha256": "021e9f2adcf253d14b7c2796b4782a39f50832b32cb907c8c2b4ce083cdbff89",
+      "size": 19310
+    },
+    "perps/manifest.json": {
+      "sha256": "da44534cf6e6cf43d44022bde6369d9e058a71dc733085b993383297107bd843",
+      "size": 29920
+    },
+    "perps/omp_harness-omp-oauth-sol-medium-perps-perps-openai-oauth-sol-20260911T152450Z.journal-v1.jsonl": {
+      "sha256": "f4156fcd83852b92d6b792b5954e0237538fc7155ab66121de6e6012743786f9",
+      "size": 18384
+    },
+    "perps/omp_harness-omp-oauth-sol-medium-perps-perps-openai-oauth-sol-20260911T152450Z.json": {
+      "sha256": "b1edfdbcc981ce4028886d0065fa02de63907039487cd4b9ed68b36706288091",
+      "size": 1358
+    },
+    "perps/perps-openai-oauth-sol-20260911T152450Z.attempts.json": {
+      "sha256": "b13166907095b6cb0c2156ab51e05e74e64e36a010db11eb1329b91c76bfea4e",
+      "size": 39196
+    },
+    "perps/suite.yaml": {
+      "sha256": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+      "size": 12134
+    },
+    "perps/tool-events.jsonl": {
+      "sha256": "f454e14dc6a7769c029b5ab2c5ba3a8822c67f8a145135d3dc8b870b58742227",
+      "size": 13567
+    },
+    "predictions-fresh/campaign-result.json": {
+      "sha256": "6f4c7d78223bae0befb1082d6cc235e152453545e289e888be5bac47161b7170",
+      "size": 1431
+    },
+    "predictions-fresh/durable-trials.jsonl": {
+      "sha256": "fefd53ef78033d219382d7d85705d1021a6ad03db71c12ab2262ce9b8674cc4c",
+      "size": 43508
+    },
+    "predictions-fresh/fresh-predictions-config.json": {
+      "sha256": "988f65318e12e70890a5095ed6c29f3eff73fe4c4df6ba1c527a066378c0287e",
+      "size": 567
+    },
+    "predictions-fresh/fresh-predictions-driver.mjs": {
+      "sha256": "70d9718e14f51bda2408b471eeb47da4fa545af4865bda533d004cef447c1c8a",
+      "size": 12277
+    },
+    "predictions-fresh/manifest.json": {
+      "sha256": "ea02e4adb1b1bb980b3956b6ecac59aa1bf0a58b0e1cec320cf4c6ee650128c9",
+      "size": 12700
+    },
+    "predictions-fresh/omp_harness-omp-oauth-sol-medium-predictions-predictions-openai-oauth-sol-durable-20260911T161134Z.journal-v1.jsonl": {
+      "sha256": "48d70caebe872e8ebdbfb5934f17dad45db6a00f91d9e111d1760c3dc90792d3",
+      "size": 13943
+    },
+    "predictions-fresh/process.json": {
+      "sha256": "1c60b6d98859f67248ad11f83391afcec4a750aff69d6a9afafbb49393ca40e8",
+      "size": 1684
+    },
+    "predictions-fresh/process.log": {
+      "sha256": "77a9cf40a441e0b914f6adb403d620b31b8bbaeb838ffe10654a6d642bbe9b81",
+      "size": 3001
+    },
+    "predictions-fresh/run-plan.json": {
+      "sha256": "2ff402d1f919c872db60cb8d9fb6aa682d07462c73b6b1ee645e8aad95755ca1",
+      "size": 1772
+    },
+    "predictions-fresh/suite.yaml": {
+      "sha256": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+      "size": 10510
+    },
+    "predictions-fresh/tool-events.jsonl": {
+      "sha256": "7430c404cc1a79d949d9fe6cf26ca60c650a825f3f31ddd2368c3553ecb137ef",
+      "size": 11651
+    },
+    "predictions-original-aborted/manifest.json": {
+      "sha256": "0779ca36369fdb6ebf45a9fd7e7d5670264601c83fd7dd74f03191ca96ba9aa6",
+      "size": 11746
+    },
+    "predictions-original-aborted/omp_harness-omp-oauth-sol-medium-predictions-predictions-openai-oauth-sol-20260911T152450Z.journal-v1.jsonl": {
+      "sha256": "58caadd8624a34ebd6b059a9491c486d70e2358a67dcdc5eeabd12d7229ed5eb",
+      "size": 6953
+    },
+    "predictions-original-aborted/process.json": {
+      "sha256": "a92e9b52bf4a0c424a8e367c08b5ea7b179e61719839c948019b1d30952227d6",
+      "size": 799
+    },
+    "predictions-original-aborted/process.log": {
+      "sha256": "df55b08628e6ff7f625a1fd4b1696d5aa3189803096dda9f17753b4b5278fde9",
+      "size": 5859
+    },
+    "predictions-original-aborted/suite.yaml": {
+      "sha256": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+      "size": 10510
+    },
+    "predictions-original-aborted/tool-events.jsonl": {
+      "sha256": "e6535e12d3c5ad33ee875087dd708cf10d68c3277677fe45222b9e8b1a820a88",
+      "size": 5424
+    },
+    "provenance.json": {
+      "sha256": "5957e3a25a4e3f39585c12f979829780a872ff224c244120c5638eefb74e52bb",
+      "size": 6298
+    },
+    "report/ask-gina-perps-predictions-evals-2026-09-11.json": {
+      "sha256": "1e696f2f8fb81707624dafc4e83c0c680d75067101ecbe621b63b77d3baeedbf",
+      "size": 48262
+    },
+    "report/ask-gina-perps-predictions-evals-2026-09-11.pdf": {
+      "sha256": "6238cc6ba5f26e22e51b7c257dac6f9d4312332e2d9070375ebd4062f7221d4b",
+      "size": 12190
+    },
+    "report/fresh-predictions-summary.json": {
+      "sha256": "a89e4e693e00205bab4b0c98214efdbf92518c83e92f344a4809dadf0b99b19f",
+      "size": 26913
+    },
+    "report/generate-extended-report.py": {
+      "sha256": "4672809dc87d3134ad57603f121a0aa82c90028cef80978df45390a0f4161da1",
+      "size": 17522
+    },
+    "report/perps-summary.json": {
+      "sha256": "8f8ea647cb4f22f44c47fea296990991286ab0bafff3a357c6a8e5a3cd160a13",
+      "size": 13007
+    }
+  }
+}
