@@ -194,7 +194,10 @@ function SpotAttemptMatrix() {
 function SpotDetails() {
   return (
     <>
-      <Panel title="Spot comparison — GPT-5.5 vs GPT-5.6-sol">
+      <Panel
+        title="Aggregate comparison"
+        description="Exported aggregates for each run, shown side by side."
+      >
         <SpotComparisonTable />
       </Panel>
       <Panel
@@ -286,7 +289,7 @@ function PerpsRunPanel({ run }: { run: (typeof perpsPredictionsReport.runs)[numb
                   <th scope="row">
                     <code>{entry.id}</code>
                   </th>
-                  <td>{entry.results.join(" · ")}</td>
+                  <td style={{ whiteSpace: "nowrap" }}>{entry.results.join(" · ")}</td>
                   <td>
                     {number(entry.passed)} / {number(entry.graded)}
                   </td>
