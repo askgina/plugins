@@ -6,7 +6,7 @@ import { LeaderboardPage } from "./pages/leaderboard";
 import { ModelProfilePage } from "./pages/model-profile";
 import { TaskExplorerPage } from "./pages/task-explorer";
 import { HandoffPage } from "./pages/handoff";
-import { MeasuredResultsPage } from "./pages/measured-results";
+import { measuredRun } from "./measured";
 
 export function MethodologyPage() {
   return (
@@ -35,6 +35,36 @@ export function MethodologyPage() {
                 The dataset and run labels are illustrative too. These results should not inform
                 model selection or financial decisions.
               </p>
+              <p>
+                Rows and panels marked Measured are the exception: they come from conformance runs
+                of the OMP harness on 2026-09-11 and are shown as exported.
+              </p>
+            </div>
+          </Panel>
+          <Panel title="Measured runs · 2026-09-11">
+            <div className="eval-method-body">
+              <p>
+                {measuredRun.harness}, {measuredRun.repetitions} repetitions per case,{" "}
+                {measuredRun.timeoutMs / 1000}s timeout. These are unranked, small live samples of
+                tool-use conformance, not answer accuracy or financial outcomes.
+              </p>
+              <p>
+                Source <code>{measuredRun.sourceCommit}</code> · executable source{" "}
+                <code>{measuredRun.executableSourceCommit}</code>
+              </p>
+              <a
+                className="eval-text-link"
+                href={measuredRun.prUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Open GitHub PR #85 <ArrowUpRight size={14} aria-hidden="true" />
+              </a>
+              <ul>
+                {measuredRun.limitations.map((limitation) => (
+                  <li key={limitation}>{limitation}</li>
+                ))}
+              </ul>
             </div>
           </Panel>
           <Panel title="What a task measures">
@@ -117,9 +147,7 @@ export default function App() {
           ? "Methodology"
           : route === "/handoff"
             ? "Public results"
-            : route === "/results"
-              ? "Measured results"
-              : "Leaderboard";
+            : "Leaderboard";
     document.title = `${section} · Ask Gina Evals`;
   }, [route]);
   if (route === "/models" || route.startsWith("/models/"))
@@ -127,7 +155,6 @@ export default function App() {
   if (route === "/tasks") return <TaskExplorerPage />;
   if (route === "/methodology") return <MethodologyPage />;
   if (route === "/handoff") return <HandoffPage />;
-  if (route === "/results") return <MeasuredResultsPage />;
   if (route === "/leaderboard" || route === "/") return <LeaderboardPage />;
   return (
     <PageShell active="leaderboard">
