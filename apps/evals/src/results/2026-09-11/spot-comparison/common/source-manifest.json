@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "ask-gina-eval-reproducibility-manifest.v1",
+  "source": {
+    "host": "probe",
+    "repository": "askgina/plugins",
+    "repositoryPath": "/home/ubuntu/plugins",
+    "branch": "fix/omp-connected-catalog",
+    "sourceCommit": "780dc809e9956a329d9e60c72503de449477699b",
+    "baselineSourceCommit": "5f98d54cf0f6514c90116a4c7c1d889cdd7dc485"
+  },
+  "files": [
+    {
+      "file": "spot.yaml",
+      "repositoryPath": "plugins/ask-gina/evals/model/v1/families/spot.yaml",
+      "sourcePath": "/home/ubuntu/plugins/plugins/ask-gina/evals/model/v1/families/spot.yaml",
+      "sha256": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e",
+      "sizeBytes": 2690,
+      "sourcePermissions": "0664",
+      "permissions": "0600",
+      "copyMethod": "scp",
+      "byteForByteVerified": true,
+      "matchesBaselineCommitBlob": true,
+      "matchesCurrentCommitBlob": true
+    },
+    {
+      "file": "grading.ts",
+      "repositoryPath": "packages/evals/src/grading.ts",
+      "sourcePath": "/home/ubuntu/plugins/packages/evals/src/grading.ts",
+      "sha256": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+      "sizeBytes": 9804,
+      "sourcePermissions": "0664",
+      "permissions": "0600",
+      "copyMethod": "scp",
+      "byteForByteVerified": true,
+      "matchesBaselineCommitBlob": true,
+      "matchesCurrentCommitBlob": true
+    }
+  ],
+  "verification": {
+    "unchangedBetweenBothRuns": true,
+    "sourceCommitComparisonChangedPaths": [
+      "packages/evals/README.md"
+    ],
+    "sourceCommitDifference": "README-only later commit; exact suite and grading snapshots match both source commits.",
+    "remoteAndLocalHashesMatch": true,
+    "remoteAndLocalSizesMatch": true,
+    "localFilePermissions0600": true,
+    "directoryPermissions0700": true,
+    "mismatches": []
+  }
+}

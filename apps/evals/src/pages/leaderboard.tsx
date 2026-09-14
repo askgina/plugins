@@ -1,6 +1,12 @@
 import { useMemo, useState } from "react";
 import { BookOpen, BriefcaseBusiness, Search, ShieldCheck, X } from "lucide-react";
 import { dataset, familyMetrics, models, type EvalModel, type FamilyFilter } from "../data";
+import {
+  measuredModels,
+  measuredRun,
+  type MeasuredFamilyResult,
+  type MeasuredModel,
+} from "../measured";
 import { FamilyTabs, ModelAvatar, PageShell, Panel, ScoreBadge } from "../components/eval-ui";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -10,11 +16,20 @@ type SortMetric = "passRate" | "accuracy" | "latency" | "cost";
 type SortDirection = "asc" | "desc";
 type ScatterMetric = "latency" | "cost";
 
-type LeaderboardRow = {
+type IllustrativeRow = {
+  kind: "illustrative";
   model: EvalModel;
   passRate: number;
   accuracy: number;
 };
+
+type MeasuredRow = {
+  kind: "measured";
+  model: MeasuredModel;
+  result: MeasuredFamilyResult;
+};
+
+type LeaderboardRow = IllustrativeRow | MeasuredRow;
 
 const numberFormatter = new Intl.NumberFormat("en-US");
 const costFormatter = new Intl.NumberFormat("en-US", {
@@ -72,11 +87,16 @@ function ScatterPlot({
   const margin = { top: 24, right: 94, bottom: 46, left: 50 };
   const plotWidth = width - margin.left - margin.right;
   const plotHeight = height - margin.top - margin.bottom;
-  const xValues = rows.map((row) => row.model[metric]);
-  const yValues = rows.map((row) => row.passRate);
+  const chartRows = metric === "cost" ? rows.filter((row) => row.kind === "illustrative") : rows;
+  const xValues = chartRows.map((row) =>
+    row.kind === "measured" ? row.result.latencyMs.p50 / 1000 : row.model[metric],
+  );
+  const yValues = chartRows.map((row) =>
+    row.kind === "measured" ? row.result.passRateSortKey : row.passRate,
+  );
   const fallbackX: readonly [number, number] = metric === "latency" ? [3, 8] : [0.006, 0.02];
-  const rawXDomain = rows.length > 0 ? paddedDomain(xValues, 0.12) : fallbackX;
-  const rawYDomain = rows.length > 0 ? paddedDomain(yValues, 0.12) : ([0, 100] as const);
+  const rawXDomain = chartRows.length > 0 ? paddedDomain(xValues, 0.12) : fallbackX;
+  const rawYDomain = chartRows.length > 0 ? paddedDomain(yValues, 0.12) : ([0, 100] as const);
   const xDomain: readonly [number, number] =
     metric === "cost" ? [Math.max(0, rawXDomain[0]), rawXDomain[1]] : rawXDomain;
   const yDomain: readonly [number, number] = [
@@ -104,8 +124,8 @@ function ScatterPlot({
       >
         <title id={`${chartId}-title`}>Pass rate compared with {xLabel}</title>
         <desc id={`${chartId}-description`}>
-          {rows.length > 0
-            ? `${rows.length} visible models for ${family}. Higher on the chart means a higher pass rate.`
+          {chartRows.length > 0
+            ? `${chartRows.length} visible models for ${family}. Higher on the chart means a higher pass rate.`
             : `No models match the current ${family} filter and search.`}
         </desc>
         <g className="lb-chart-grid" aria-hidden="true">
@@ -163,7 +183,7 @@ function ScatterPlot({
         >
           Pass rate
         </text>
-        {rows.length === 0 && (
+        {chartRows.length === 0 && (
           <text
             className="lb-chart-empty"
             x={margin.left + plotWidth / 2}
@@ -173,14 +193,17 @@ function ScatterPlot({
             No matching models to plot
           </text>
         )}
-        {rows.map((row, index) => {
-          const x = xPosition(row.model[metric]);
-          const y = yPosition(row.passRate);
+        {chartRows.map((row, index) => {
+          const xValue =
+            row.kind === "measured" ? row.result.latencyMs.p50 / 1000 : row.model[metric];
+          const yValue = row.kind === "measured" ? row.result.passRateSortKey : row.passRate;
+          const x = xPosition(xValue);
+          const y = yPosition(yValue);
           const labelOnLeft = x > width - margin.right - 108;
           return (
             <g className="lb-chart-model" key={row.model.id}>
               <title>
-                {row.model.name}: {row.passRate}% pass rate, {formatX(row.model[metric])}{" "}
+                {row.model.name}: {yValue.toFixed(1)}% pass rate, {formatX(xValue)}{" "}
                 {xLabel.toLowerCase()}
               </title>
               <circle className="lb-chart-point-halo" cx={x} cy={y} r="7" />
@@ -247,7 +270,7 @@ export function LeaderboardPage({
 
   const rows = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
-    const visible = models
+    const illustrativeRows: LeaderboardRow[] = models
       .filter(
         (model) =>
           query.length === 0 ||
@@ -255,18 +278,57 @@ export function LeaderboardPage({
       )
       .map((model): LeaderboardRow => {
         const metrics = familyMetrics(model, family);
-        return { model, passRate: metrics.passRate, accuracy: metrics.accuracy };
+        return {
+          kind: "illustrative",
+          model,
+          passRate: metrics.passRate,
+          accuracy: metrics.accuracy,
+        };
       });
+    const measuredRows: LeaderboardRow[] =
+      family === "All tasks"
+        ? []
+        : measuredModels
+            .filter(
+              (model) =>
+                model.families[family] !== undefined &&
+                (query.length === 0 ||
+                  `${model.name} ${model.provider}`.toLocaleLowerCase().includes(query)),
+            )
+            .map((model) => ({
+              kind: "measured",
+              model,
+              result: model.families[family]!,
+            }));
+    const visible = [...illustrativeRows, ...measuredRows];
 
     return visible.sort((left, right) => {
+      if ((sortMetric === "accuracy" || sortMetric === "cost") && left.kind !== right.kind) {
+        return left.kind === "illustrative" ? -1 : 1;
+      }
       const leftValue =
-        sortMetric === "passRate" || sortMetric === "accuracy"
-          ? left[sortMetric]
-          : left.model[sortMetric];
+        left.kind === "measured"
+          ? sortMetric === "passRate"
+            ? left.result.passRateSortKey
+            : sortMetric === "latency"
+              ? left.result.latencyMs.p50 / 1000
+              : undefined
+          : sortMetric === "passRate" || sortMetric === "accuracy"
+            ? left[sortMetric]
+            : left.model[sortMetric];
       const rightValue =
-        sortMetric === "passRate" || sortMetric === "accuracy"
-          ? right[sortMetric]
-          : right.model[sortMetric];
+        right.kind === "measured"
+          ? sortMetric === "passRate"
+            ? right.result.passRateSortKey
+            : sortMetric === "latency"
+              ? right.result.latencyMs.p50 / 1000
+              : undefined
+          : sortMetric === "passRate" || sortMetric === "accuracy"
+            ? right[sortMetric]
+            : right.model[sortMetric];
+      if (leftValue === undefined || rightValue === undefined) {
+        return left.model.name.localeCompare(right.model.name);
+      }
       const difference = leftValue - rightValue;
       if (difference === 0) return left.model.name.localeCompare(right.model.name);
       return sortDirection === "asc" ? difference : -difference;
@@ -291,6 +353,11 @@ export function LeaderboardPage({
     family === "All tasks"
       ? `Model results across all ${numberFormatter.format(dataset.tasks)} illustrative tasks.`
       : `Model results for the ${family} family, one of four ${numberFormatter.format(dataset.tasksPerFamily)}-task families.`;
+  const displayedUniverse =
+    models.length +
+    (family === "All tasks"
+      ? 0
+      : measuredModels.filter((model) => model.families[family] !== undefined).length);
 
   return (
     <PageShell active="leaderboard">
@@ -334,8 +401,16 @@ export function LeaderboardPage({
               </p>
             </div>
             <span className="lb-dataset-indicator">
-              {dataset.label} · {numberFormatter.format(dataset.tasks)} tasks ·{" "}
-              {dataset.repetitions} runs each
+              <span>
+                {dataset.label} · {numberFormatter.format(dataset.tasks)} tasks ·{" "}
+                {dataset.repetitions} runs each
+              </span>
+              <span className="lb-measured-indicator">
+                Measured {measuredRun.date} · {measuredRun.repetitions} reps ·{" "}
+                <a href={measuredRun.prUrl} target="_blank" rel="noreferrer">
+                  PR #85
+                </a>
+              </span>
             </span>
           </div>
 
@@ -369,7 +444,7 @@ export function LeaderboardPage({
           <Panel
             className="lb-table-panel"
             title="Ranked results"
-            description={`${rows.length} of ${models.length} models shown · ranked by ${metricLabels[sortMetric]}`}
+            description={`${rows.length} of ${displayedUniverse} models shown · ranked by ${metricLabels[sortMetric]} · measured rows are small unranked conformance samples`}
           >
             {rows.length > 0 ? (
               <div className="lb-table-scroll">
@@ -460,21 +535,33 @@ export function LeaderboardPage({
                   </thead>
                   <tbody>
                     {rows.map((row) => {
-                      const rank = models.reduce(
-                        (position, candidate) =>
-                          position +
-                          Number(familyMetrics(candidate, family).passRate > row.passRate),
-                        1,
-                      );
+                      const rank =
+                        row.kind === "illustrative"
+                          ? models.reduce(
+                              (position, candidate) =>
+                                position +
+                                Number(familyMetrics(candidate, family).passRate > row.passRate),
+                              1,
+                            )
+                          : undefined;
                       return (
                         <tr key={row.model.id}>
                           <td className="lb-rank-cell">
-                            <span
-                              className="lb-rank-medal"
-                              data-rank={rank <= 3 ? rank : undefined}
-                            >
-                              {rank}
-                            </span>
+                            {rank === undefined ? (
+                              <span
+                                className="lb-rank-unranked"
+                                aria-label="Unranked measured sample"
+                              >
+                                —
+                              </span>
+                            ) : (
+                              <span
+                                className="lb-rank-medal"
+                                data-rank={rank <= 3 ? rank : undefined}
+                              >
+                                {rank}
+                              </span>
+                            )}
                           </td>
                           <th scope="row">
                             <div className="lb-model-cell">
@@ -484,20 +571,45 @@ export function LeaderboardPage({
                                 <small>
                                   <span>{row.model.provider}</span>
                                   <span aria-hidden="true"> · </span>
-                                  <code>{dataset.harness}</code>
+                                  <code>
+                                    {row.kind === "measured" ? "OMP harness" : dataset.harness}
+                                  </code>
+                                  {row.kind === "measured" && (
+                                    <span className="lb-measured-pill">Measured</span>
+                                  )}
                                 </small>
                               </span>
                             </div>
                           </th>
                           <td>
-                            <ScoreBadge value={row.passRate} uncertainty={row.model.uncertainty} />
+                            {row.kind === "measured" ? (
+                              <span className="lb-count">
+                                {numberFormatter.format(row.result.passed)} /{" "}
+                                {numberFormatter.format(row.result.total)}
+                              </span>
+                            ) : (
+                              <ScoreBadge
+                                value={row.passRate}
+                                uncertainty={row.model.uncertainty}
+                              />
+                            )}
                           </td>
-                          <td>{row.accuracy}%</td>
-                          <td>{row.model.latency.toFixed(1)}s</td>
-                          <td>{costFormatter.format(row.model.cost)}</td>
+                          <td>{row.kind === "measured" ? "—" : `${row.accuracy}%`}</td>
+                          <td>
+                            {row.kind === "measured"
+                              ? `${(row.result.latencyMs.p50 / 1000).toFixed(1)}s`
+                              : `${row.model.latency.toFixed(1)}s`}
+                          </td>
+                          <td>
+                            {row.kind === "measured" ? "—" : costFormatter.format(row.model.cost)}
+                          </td>
                           <td>
                             {numberFormatter.format(
-                              family === "All tasks" ? dataset.tasks : dataset.tasksPerFamily,
+                              row.kind === "measured"
+                                ? row.result.total
+                                : family === "All tasks"
+                                  ? dataset.tasks
+                                  : dataset.tasksPerFamily,
                             )}
                           </td>
                         </tr>

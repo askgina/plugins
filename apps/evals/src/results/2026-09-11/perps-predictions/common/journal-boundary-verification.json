@@ -1,0 +1,12 @@
+{
+  "verification": "isolated synthetic journal/API boundary smoke, not a model evaluation",
+  "modelCalls": 0,
+  "timeoutRemainsTyped": true,
+  "nextDispatchAfterSettledTimeout": true,
+  "nonTimeoutNotRecovered": true,
+  "journalFailureNotRecovered": true,
+  "interruptionNotRecovered": true,
+  "defectNotRecovered": true,
+  "noFabricatedObservations": true,
+  "productionEvidenceTouched": false
+}

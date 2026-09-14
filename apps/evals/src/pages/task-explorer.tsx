@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import { BookOpen, Clock, ListTree, Search, Shield } from "lucide-react";
 import { getModel, type FamilyFilter, type TaskFamily } from "../data";
+import { measuredModels, measuredRun, type MeasuredCase } from "../measured";
 import { FamilyTabs, Modal, ModelAvatar, PageShell } from "../components/eval-ui";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -25,6 +26,118 @@ import {
   type TraceId,
 } from "./task-fixtures";
 import "./task-explorer.css";
+
+function MeasuredCasesPanel({ family }: { family: TaskFamily }) {
+  if (family === "Portfolio") return null;
+  const measured = measuredModels
+    .map((model) => ({ model, result: model.families[family] }))
+    .filter((entry): entry is typeof entry & { result: NonNullable<typeof entry.result> } =>
+      Boolean(entry.result),
+    );
+  if (measured.length === 0) return null;
+  const primary = measured[0]!;
+  return (
+    <Card className="task-measured-panel">
+      <div className="task-measured-header">
+        <div>
+          <p className="task-section-kicker">Measured · {measuredRun.date}</p>
+          <h3>Measured cases · {measuredRun.date}</h3>
+          <p>Conformance verdicts from the 2026-09-11 runs. Unranked; not answer accuracy.</p>
+        </div>
+      </div>
+      <div className="task-measured-content">
+        {family === "Spot" ? (
+          primary.result.cases.map((measuredCase) => (
+            <MeasuredSpotCase key={measuredCase.id} measuredCase={measuredCase} models={measured} />
+          ))
+        ) : (
+          <div className="task-table-scroll">
+            <table className="eval-table">
+              <thead>
+                <tr>
+                  <th scope="col">Case id</th>
+                  <th scope="col">Results</th>
+                  <th scope="col">Passed / graded</th>
+                  <th scope="col">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {primary.result.cases.map((measuredCase) => (
+                  <tr key={measuredCase.id}>
+                    <th scope="row">
+                      <code>{measuredCase.id}</code>
+                    </th>
+                    <td style={{ whiteSpace: "nowrap" }}>{measuredCase.results.join(" · ")}</td>
+                    <td>
+                      {measuredCase.passed} / {measuredCase.graded}
+                    </td>
+                    <td>{measuredCase.notes || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+function MeasuredSpotCase({
+  measuredCase,
+  models,
+}: {
+  measuredCase: MeasuredCase;
+  models: readonly {
+    model: (typeof measuredModels)[number];
+    result: NonNullable<(typeof measuredModels)[number]["families"]["Spot"]>;
+  }[];
+}) {
+  return (
+    <article className="task-measured-case">
+      <div className="task-measured-case-heading">
+        <code>{measuredCase.id}</code>
+        <p>{measuredCase.prompt}</p>
+      </div>
+      <div className="task-table-scroll">
+        <table className="eval-table">
+          <thead>
+            <tr>
+              <th scope="col">Model</th>
+              <th scope="col">Repetition 1</th>
+              <th scope="col">Repetition 2</th>
+              <th scope="col">Repetition 3</th>
+            </tr>
+          </thead>
+          <tbody>
+            {models.map(({ model, result }) => {
+              const attempts =
+                result.cases.find((candidate) => candidate.id === measuredCase.id)?.attempts ?? [];
+              return (
+                <tr key={model.id}>
+                  <th scope="row">{model.name}</th>
+                  {[1, 2, 3].map((repetition) => {
+                    const attempt = attempts.find(
+                      (candidate) => candidate.repetition === repetition,
+                    );
+                    return (
+                      <td key={repetition}>
+                        {attempt?.verdict ?? "—"}
+                        {attempt?.failureCategories.length ? (
+                          <small>{attempt.failureCategories.join(", ")}</small>
+                        ) : null}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </article>
+  );
+}
 
 export function TaskExplorerPage({
   initialFamily = "Portfolio",
@@ -115,6 +228,7 @@ export function TaskExplorerPage({
               onInspect={() => setOpenTrace("gpt")}
             />
           </div>
+          <MeasuredCasesPanel family={family} />
           <Button
             type="button"
             variant="secondary"

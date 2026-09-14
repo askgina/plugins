@@ -1,0 +1,1116 @@
+{
+  "family": "predictions",
+  "runId": "predictions-openai-oauth-sol-durable-20260911T161134Z",
+  "planned": 39,
+  "dispatched": 39,
+  "graded": 38,
+  "passed": 12,
+  "failed": 26,
+  "unscoredTimeouts": 1,
+  "dimensions": {
+    "routing": {
+      "passed": 12,
+      "failed": 26
+    },
+    "arguments": {
+      "passed": 37,
+      "failed": 1
+    },
+    "completion": {
+      "passed": 31,
+      "failed": 7
+    },
+    "safety": {
+      "passed": 0,
+      "failed": 2
+    }
+  },
+  "latencyMs": {
+    "p50": 33782,
+    "p95": 62651,
+    "max": 113558
+  },
+  "resultBytes": {
+    "p50": 66766,
+    "p95": 858254,
+    "max": 913188
+  },
+  "tokenUsage": {
+    "observations": 38,
+    "input": 890674,
+    "output": 22966,
+    "total": 913640
+  },
+  "within30s": 14,
+  "argumentConstrainedTrials": 24,
+  "skillObservedCount": 38,
+  "cases": [
+    {
+      "id": "predictions-focused-fact-search-only",
+      "results": [
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "passed": 0,
+      "graded": 3,
+      "notes": "rep 1: routing_mismatch; rep 2: routing_mismatch; rep 3: routing_mismatch"
+    },
+    {
+      "id": "predictions-broad-nba-search-only",
+      "results": [
+        "pass",
+        "fail",
+        "fail"
+      ],
+      "passed": 1,
+      "graded": 3,
+      "notes": "rep 2: routing_mismatch; rep 3: routing_mismatch"
+    },
+    {
+      "id": "predictions-broad-football-search-only",
+      "results": [
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "passed": 0,
+      "graded": 3,
+      "notes": "rep 1: routing_mismatch; rep 2: routing_mismatch, trial_or_tool_failure; rep 3: routing_mismatch"
+    },
+    {
+      "id": "predictions-non-exact-no-render",
+      "results": [
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "passed": 0,
+      "graded": 3,
+      "notes": "rep 1: routing_mismatch; rep 2: routing_mismatch; rep 3: routing_mismatch"
+    },
+    {
+      "id": "predictions-sparse-history-no-render",
+      "results": [
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "passed": 0,
+      "graded": 3,
+      "notes": "rep 1: routing_mismatch; rep 2: routing_mismatch; rep 3: routing_mismatch"
+    },
+    {
+      "id": "predictions-multi-series-no-render",
+      "results": [
+        "fail",
+        "timeout",
+        "fail"
+      ],
+      "passed": 0,
+      "graded": 2,
+      "notes": "rep 1: routing_mismatch; rep 2: unscored typed OMP timeout; evidence unavailable; rep 3: routing_mismatch"
+    },
+    {
+      "id": "predictions-expiring-markets",
+      "results": [
+        "fail",
+        "pass",
+        "pass"
+      ],
+      "passed": 2,
+      "graded": 3,
+      "notes": "rep 1: routing_mismatch, argument_mismatch"
+    },
+    {
+      "id": "predictions-series-market",
+      "results": [
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "passed": 0,
+      "graded": 3,
+      "notes": "rep 1: routing_mismatch; rep 2: routing_mismatch; rep 3: routing_mismatch"
+    },
+    {
+      "id": "predictions-orderbook",
+      "results": [
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "passed": 0,
+      "graded": 3,
+      "notes": "rep 1: routing_mismatch, trial_or_tool_failure; rep 2: routing_mismatch, trial_or_tool_failure; rep 3: routing_mismatch, trial_or_tool_failure"
+    },
+    {
+      "id": "predictions-fetch-market-data",
+      "results": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "passed": 3,
+      "graded": 3,
+      "notes": ""
+    },
+    {
+      "id": "predictions-fetch-history-data",
+      "results": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "passed": 3,
+      "graded": 3,
+      "notes": ""
+    },
+    {
+      "id": "predictions-open-positions",
+      "results": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "passed": 3,
+      "graded": 3,
+      "notes": ""
+    },
+    {
+      "id": "predictions-order-history",
+      "results": [
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "passed": 0,
+      "graded": 3,
+      "notes": "rep 1: routing_mismatch, safety_violation, trial_or_tool_failure; rep 2: routing_mismatch, safety_violation, trial_or_tool_failure; rep 3: routing_mismatch, trial_or_tool_failure"
+    }
+  ],
+  "failures": [
+    {
+      "caseId": "predictions-focused-fact-search-only",
+      "repetition": 1,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-broad-football-search-only",
+      "repetition": 1,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-non-exact-no-render",
+      "repetition": 1,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-sparse-history-no-render",
+      "repetition": 1,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.fetchPolymarketData",
+          "error": false
+        },
+        {
+          "name": "predictions.fetchPolymarketData",
+          "error": false
+        },
+        {
+          "name": "predictions.fetchPolymarketData",
+          "error": false
+        },
+        {
+          "name": "predictions.fetchPolymarketData",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-multi-series-no-render",
+      "repetition": 1,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-expiring-markets",
+      "repetition": 1,
+      "categories": [
+        "routing_mismatch",
+        "argument_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.getExpiringMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "fail",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing",
+        "arguments"
+      ]
+    },
+    {
+      "caseId": "predictions-series-market",
+      "repetition": 1,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-orderbook",
+      "repetition": 1,
+      "categories": [
+        "routing_mismatch",
+        "trial_or_tool_failure"
+      ],
+      "tools": [
+        {
+          "name": "predictions.getPredictionOrderbook",
+          "error": true
+        },
+        {
+          "name": "acp_tool_call_zldVseaijyJLdNOYIxx6M4O6_fc_063b3f2929686a0a016aa42b62bd0487d2bec96fd43b2afd9b",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "fail",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing",
+        "completion"
+      ]
+    },
+    {
+      "caseId": "predictions-order-history",
+      "repetition": 1,
+      "categories": [
+        "routing_mismatch",
+        "safety_violation",
+        "trial_or_tool_failure"
+      ],
+      "tools": [
+        {
+          "name": "predictions.getPolymarketOrderHistory",
+          "error": true
+        },
+        {
+          "name": "acp_tool_call_imPzZLrstxSoKeefj75UHk1j_fc_0e0d4b689ff5949d016aa42bc450b887d2acf420421a498362",
+          "error": false
+        },
+        {
+          "name": "predictions.fetchPolymarketHistory",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "fail",
+        "completion": "fail",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing",
+        "safety",
+        "completion"
+      ]
+    },
+    {
+      "caseId": "predictions-focused-fact-search-only",
+      "repetition": 2,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-broad-nba-search-only",
+      "repetition": 2,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-broad-football-search-only",
+      "repetition": 2,
+      "categories": [
+        "routing_mismatch",
+        "trial_or_tool_failure"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": true
+        },
+        {
+          "name": "acp_tool_call_EUhCOyDopGg64A2PzHc1NeZw_fc_05301c1ef10a5517016aa42c4cb18087d2bc5516e670a7a8bc",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "fail",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing",
+        "completion"
+      ]
+    },
+    {
+      "caseId": "predictions-non-exact-no-render",
+      "repetition": 2,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-sparse-history-no-render",
+      "repetition": 2,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-series-market",
+      "repetition": 2,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-orderbook",
+      "repetition": 2,
+      "categories": [
+        "routing_mismatch",
+        "trial_or_tool_failure"
+      ],
+      "tools": [
+        {
+          "name": "predictions.getPredictionOrderbook",
+          "error": true
+        },
+        {
+          "name": "acp_tool_call_EIAknYBLhkLyk9nCw3rSBqgy_fc_03f3121b616d5b84016aa42d9002b487d2b63c9c82b7d65a75",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "fail",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing",
+        "completion"
+      ]
+    },
+    {
+      "caseId": "predictions-order-history",
+      "repetition": 2,
+      "categories": [
+        "routing_mismatch",
+        "safety_violation",
+        "trial_or_tool_failure"
+      ],
+      "tools": [
+        {
+          "name": "predictions.getPolymarketOrderHistory",
+          "error": true
+        },
+        {
+          "name": "acp_tool_call_4XKKxnMxBwmPDllxrZi7J9CR_fc_09ded8ec255fd567016aa42df21ff887d2907ff24b037b1037",
+          "error": false
+        },
+        {
+          "name": "predictions.getPolymarketOrderHistory",
+          "error": true
+        },
+        {
+          "name": "acp_tool_call_Dne77Ye2Kq7JXK0aOEVYXCJV_fc_09ded8ec255fd567016aa42df8a52087d287558ccbdbe0d7f8",
+          "error": false
+        },
+        {
+          "name": "predictions.fetchPolymarketHistory",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "fail",
+        "completion": "fail",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing",
+        "safety",
+        "completion"
+      ]
+    },
+    {
+      "caseId": "predictions-focused-fact-search-only",
+      "repetition": 3,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-broad-nba-search-only",
+      "repetition": 3,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-broad-football-search-only",
+      "repetition": 3,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-non-exact-no-render",
+      "repetition": 3,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-sparse-history-no-render",
+      "repetition": 3,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-multi-series-no-render",
+      "repetition": 3,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-series-market",
+      "repetition": 3,
+      "categories": [
+        "routing_mismatch"
+      ],
+      "tools": [
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        },
+        {
+          "name": "predictions.searchPredictionMarkets",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing"
+      ]
+    },
+    {
+      "caseId": "predictions-orderbook",
+      "repetition": 3,
+      "categories": [
+        "routing_mismatch",
+        "trial_or_tool_failure"
+      ],
+      "tools": [
+        {
+          "name": "predictions.getPredictionOrderbook",
+          "error": true
+        },
+        {
+          "name": "acp_tool_call_GAczH7aF2UEfSke2WnEJaQwt_fc_08a2045146ebe00a016aa42f74784c87d28e3220dff4c2f035",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "fail",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing",
+        "completion"
+      ]
+    },
+    {
+      "caseId": "predictions-order-history",
+      "repetition": 3,
+      "categories": [
+        "routing_mismatch",
+        "trial_or_tool_failure"
+      ],
+      "tools": [
+        {
+          "name": "predictions.getPolymarketOrderHistory",
+          "error": true
+        },
+        {
+          "name": "acp_tool_call_LFTHETVcCLQ3BVfH1WzagjxZ_fc_037d347e2d9af3a5016aa42fd65f3087d2851cedfdf990013d",
+          "error": false
+        }
+      ],
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "fail",
+        "skillActivation": "not_applicable"
+      },
+      "failedChecks": [
+        "routing",
+        "completion"
+      ]
+    }
+  ],
+  "sourceReportSha256": null,
+  "canonicalReportWritten": false,
+  "scoreDenominator": 38,
+  "status": "completed_with_unscored_timeout",
+  "startedAt": "2026-09-11T16:18:14.749Z",
+  "finishedAt": "2026-09-11T16:44:14.123Z",
+  "skillActivation": {
+    "passed": 0,
+    "failed": 0,
+    "availability": "not_applicable"
+  },
+  "safetyNotApplicable": 36,
+  "within100000ResultBytes": 24,
+  "over100000ResultBytes": 14,
+  "failureCategoryCounts": {
+    "routing_mismatch": 26,
+    "argument_mismatch": 1,
+    "trial_or_tool_failure": 7,
+    "safety_violation": 2
+  },
+  "toolErrorEvents": 8,
+  "unknownAcpEvents": [
+    {
+      "caseId": "predictions-orderbook",
+      "repetition": 1,
+      "toolIndex": 1,
+      "name": "acp_tool_call_zldVseaijyJLdNOYIxx6M4O6_fc_063b3f2929686a0a016aa42b62bd0487d2bec96fd43b2afd9b",
+      "error": false
+    },
+    {
+      "caseId": "predictions-order-history",
+      "repetition": 1,
+      "toolIndex": 1,
+      "name": "acp_tool_call_imPzZLrstxSoKeefj75UHk1j_fc_0e0d4b689ff5949d016aa42bc450b887d2acf420421a498362",
+      "error": false
+    },
+    {
+      "caseId": "predictions-broad-football-search-only",
+      "repetition": 2,
+      "toolIndex": 3,
+      "name": "acp_tool_call_EUhCOyDopGg64A2PzHc1NeZw_fc_05301c1ef10a5517016aa42c4cb18087d2bc5516e670a7a8bc",
+      "error": false
+    },
+    {
+      "caseId": "predictions-orderbook",
+      "repetition": 2,
+      "toolIndex": 1,
+      "name": "acp_tool_call_EIAknYBLhkLyk9nCw3rSBqgy_fc_03f3121b616d5b84016aa42d9002b487d2b63c9c82b7d65a75",
+      "error": false
+    },
+    {
+      "caseId": "predictions-order-history",
+      "repetition": 2,
+      "toolIndex": 1,
+      "name": "acp_tool_call_4XKKxnMxBwmPDllxrZi7J9CR_fc_09ded8ec255fd567016aa42df21ff887d2907ff24b037b1037",
+      "error": false
+    },
+    {
+      "caseId": "predictions-order-history",
+      "repetition": 2,
+      "toolIndex": 3,
+      "name": "acp_tool_call_Dne77Ye2Kq7JXK0aOEVYXCJV_fc_09ded8ec255fd567016aa42df8a52087d287558ccbdbe0d7f8",
+      "error": false
+    },
+    {
+      "caseId": "predictions-orderbook",
+      "repetition": 3,
+      "toolIndex": 1,
+      "name": "acp_tool_call_GAczH7aF2UEfSke2WnEJaQwt_fc_08a2045146ebe00a016aa42f74784c87d28e3220dff4c2f035",
+      "error": false
+    },
+    {
+      "caseId": "predictions-order-history",
+      "repetition": 3,
+      "toolIndex": 1,
+      "name": "acp_tool_call_LFTHETVcCLQ3BVfH1WzagjxZ_fc_037d347e2d9af3a5016aa42fd65f3087d2851cedfdf990013d",
+      "error": false
+    }
+  ],
+  "skillDistribution": [
+    {
+      "skills": [
+        "research-prediction-markets"
+      ],
+      "observations": 38
+    }
+  ],
+  "timeouts": [
+    {
+      "caseId": "predictions-multi-series-no-render",
+      "repetition": 2,
+      "reason": "PluginEvalOmpHarnessTimeoutError",
+      "timeoutMs": 120000,
+      "evidenceAvailability": "unavailable"
+    }
+  ],
+  "process": {
+    "supervisorState": "failed",
+    "supervisorExitCode": 255,
+    "restartCount": 0,
+    "remoteCampaignExitCode": null,
+    "remoteCampaignExitCodeAvailability": "Not captured after SSH disconnect; campaign-result proves all 39 slots settled, not the remote OS exit code."
+  },
+  "toolEventCount": 88
+}

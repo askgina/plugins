@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "evaluation-artifact-manifest.v1",
+  "runId": "spot-openai-oauth-20260911T135127Z",
+  "description": "Sanitized baseline spot evaluation reports and audit companions for one completed GPT-5.5 run, plus a scoped runner-fix source diff. No OAuth credential/profile files, unrelated runs, runtime folders, binaries, or caches are included.",
+  "source": {
+    "host": "probe",
+    "repository": "askgina/plugins",
+    "repositoryPath": "/home/ubuntu/plugins",
+    "artifactDirectory": "/home/ubuntu/plugins/.plugin-eval-runs"
+  },
+  "sourceRefs": {
+    "patchBase": "9b203a7bbcba21bef31353e5dd8d06da2755ad68",
+    "patchTip": "780dc809e9956a329d9e60c72503de449477699b",
+    "sourceCommitUnderTest": "5f98d54cf0f6514c90116a4c7c1d889cdd7dc485"
+  },
+  "patchPaths": [
+    "packages/evals/src/omp-harness.ts",
+    "packages/evals/__tests__/omp-harness.test.ts",
+    "packages/evals/README.md"
+  ],
+  "artifacts": [
+    {
+      "filename": "omp_harness-omp-oauth-corrected-spot-openai-oauth-20260911T135127Z.json",
+      "sourcePath": "/home/ubuntu/plugins/.plugin-eval-runs/omp_harness-omp-oauth-corrected-spot-openai-oauth-20260911T135127Z.json",
+      "bytes": 1335,
+      "sha256": "d12167198c14054d5b0599c9fd7fc3758a2d9c1aaa784009ae7352fb91fdfb0f",
+      "sourceSchemaType": "v1 (OMP harness aggregate evaluation report)",
+      "description": "Sanitized GPT-5.5 medium spot evaluation aggregate: 12 trials, 11 overall passes.",
+      "copiedVerbatim": true
+    },
+    {
+      "filename": "omp_harness-omp-oauth-corrected-spot-openai-oauth-20260911T135127Z.journal-v1.jsonl",
+      "sourcePath": "/home/ubuntu/plugins/.plugin-eval-runs/omp_harness-omp-oauth-corrected-spot-openai-oauth-20260911T135127Z.journal-v1.jsonl",
+      "bytes": 4532,
+      "sha256": "ea349f97b88a1beaa70a120db9c4926317948bbec81df1d74d0528c8bea0a5a5",
+      "sourceSchemaType": "eval-journal.v1 (evaluation lifecycle audit journal)",
+      "description": "Sanitized run lifecycle journal containing run metadata, dispatch starts/finishes, and report binding; no runtime directory export.",
+      "copiedVerbatim": true
+    },
+    {
+      "filename": "spot-openai-oauth-20260911T135127Z.attempts.json",
+      "sourcePath": "/home/ubuntu/plugins/.plugin-eval-runs/spot-openai-oauth-20260911T135127Z.attempts.json",
+      "bytes": 8731,
+      "sha256": "79ad0a9eef86a68130947866f53026901dca4ee019f3b2379c1dc720db91537a",
+      "sourceSchemaType": "eval-attempts.v1 (evaluation attempt audit report)",
+      "description": "Sanitized per-attempt verdicts and grader checks for the same 12-trial spot evaluation.",
+      "copiedVerbatim": true
+    },
+    {
+      "filename": "runner-fixes.patch",
+      "bytes": 26315,
+      "sha256": "3229a6d875479a8cb169387edb6c0bacb79c2392249de47c5161661709f44a15",
+      "sourceSchemaType": "git unified diff",
+      "description": "Read-only source patch restricted to the harness implementation, harness tests, and evaluation README.",
+      "copiedVerbatim": false
+    }
+  ],
+  "verification": {
+    "copiedArtifactsMatchRemoteSha256": true,
+    "sourceReportBindingMatches": true,
+    "jsonSchemasInspected": true,
+    "credentialShapedJsonKeysFound": false
+  },
+  "excluded": "Other run IDs and diagnostic runs, runtime/auth/profile directories, binaries and caches. tool-events.jsonl is reserved for the parent and is not written or described by this manifest."
+}

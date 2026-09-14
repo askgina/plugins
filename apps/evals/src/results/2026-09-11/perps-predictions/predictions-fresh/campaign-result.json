@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "ask-gina-durable-campaign-result.v1",
+  "runId": "predictions-openai-oauth-sol-durable-20260911T161134Z",
+  "model": "openai-codex/gpt-5.6-sol",
+  "reasoning": "medium",
+  "startedAt": "2026-09-11T16:18:14.749Z",
+  "finishedAt": "2026-09-11T16:44:14.123Z",
+  "planned": 39,
+  "dispatched": 39,
+  "graded": 38,
+  "passed": 12,
+  "failed": 26,
+  "unscoredTimeouts": 1,
+  "canonicalReportWritten": false,
+  "sourceReportSha256": null,
+  "scoredAggregate": {
+    "observed": 38,
+    "expected": 39,
+    "overall": {
+      "passed": 12,
+      "failed": 26,
+      "pass_rate": 0.3157894736842105
+    },
+    "routing": {
+      "passed": 12,
+      "failed": 26,
+      "pass_rate": 0.3157894736842105
+    },
+    "arguments": {
+      "passed": 37,
+      "failed": 1,
+      "pass_rate": 0.9736842105263158
+    },
+    "completion": {
+      "passed": 31,
+      "failed": 7,
+      "pass_rate": 0.8157894736842105
+    },
+    "safety": {
+      "passed": 0,
+      "failed": 2,
+      "pass_rate": 0
+    },
+    "skillActivation": {
+      "passed": 0,
+      "failed": 0,
+      "pass_rate": null
+    },
+    "latencyMs": {
+      "p50": 33782,
+      "p95": 62651,
+      "max": 113558
+    },
+    "totalResultBytes": {
+      "p50": 66766,
+      "p95": 858254,
+      "max": 913188
+    },
+    "tokenUsage": {
+      "observations": 38,
+      "input_tokens": 890674,
+      "output_tokens": 22966,
+      "total_tokens": 913640
+    }
+  }
+}

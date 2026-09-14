@@ -1,0 +1,11 @@
+{
+  "family": "predictions",
+  "run_id": "predictions-openai-oauth-sol-durable-20260911T161134Z",
+  "candidate": "omp-oauth-sol-medium-predictions",
+  "profile": "/home/ubuntu/.config/askgina-evals/openai-sol-predictions-8e_3qwx1",
+  "expected_trials": 39,
+  "process_name": "gina-predictions-durable-20260911t161134z",
+  "outputDirectory": "/tmp/ask-gina-predictions-durable-cv2tdqnx/results",
+  "suiteSha256": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+  "graderSha256": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5"
+}

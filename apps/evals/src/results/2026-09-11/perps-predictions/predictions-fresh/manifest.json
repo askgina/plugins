@@ -1,0 +1,254 @@
+{
+  "schemaVersion": "fresh-predictions-evidence.v1",
+  "family": "predictions",
+  "runId": "predictions-openai-oauth-sol-durable-20260911T161134Z",
+  "status": "complete_39_terminal_slots_partial_grading",
+  "completeTerminalCoverage": true,
+  "canonicalReportWritten": false,
+  "sourceReportSha256": null,
+  "source": {
+    "host": "probe",
+    "repository": "/home/ubuntu/plugins",
+    "sourceCommit": "780dc809e9956a329d9e60c72503de449477699b",
+    "executableSourceCommit": "5f98d54cf0f6514c90116a4c7c1d889cdd7dc485",
+    "sourceCommitAttestation": "Previously verified by parent; collector does not alter repository or rerun git validation.",
+    "nativeExecutableSha256": "040c254ddeb30f6d592be67d1469dc67fcac14e933fa04dbf690f42820ffd820",
+    "suiteSha256": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+    "graderSha256": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+    "driverSha256": "70d9718e14f51bda2408b471eeb47da4fa545af4865bda533d004cef447c1c8a",
+    "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e"
+  },
+  "settings": {
+    "model": "openai-codex/gpt-5.6-sol",
+    "reasoning": "medium",
+    "repetitions": 3,
+    "timeoutMs": 120000,
+    "authentication": "native OpenAI OAuth; Gina tools:read; no API-key fallback",
+    "researchToolsAvailable": 31,
+    "argumentConstrainedTrials": 24
+  },
+  "originalAbort": {
+    "runId": "predictions-openai-oauth-sol-20260911T152450Z",
+    "relativePath": "../predictions-artifacts/manifest.json",
+    "sha256": "0779ca36369fdb6ebf45a9fd7e7d5670264601c83fd7dd74f03191ca96ba9aa6",
+    "status": "Original 18/39 abort retained unchanged; fresh run is separate, no repaired or substituted original outcomes."
+  },
+  "counts": {
+    "planned": 39,
+    "dispatched": 39,
+    "terminalRecords": 39,
+    "journalStarted": 39,
+    "journalFinished": 39,
+    "graded": 38,
+    "passed": 12,
+    "failed": 26,
+    "unscoredTimeouts": 1,
+    "traceRows": 38,
+    "toolEvents": 88,
+    "unknownAcpEvents": 8,
+    "toolErrorEvents": 8,
+    "missingTerminalSlots": 0,
+    "canonicalReports": 0,
+    "reportBoundAttempts": 0,
+    "journalReportBindings": 0
+  },
+  "verification": {
+    "remoteLocalFileSizesAndSha256": "All7 SCP-copied files matched independent remote Python stat/SHA256 and local byte-length/SHA256.",
+    "suitePlanBinding": true,
+    "driverPlanBinding": true,
+    "graderPlanBinding": "Plan grader SHA256 equals previously collected common-artifacts/grading.ts.",
+    "orderedUniqueCaseRepetitionMatrix": "39/39 equals run-plan rep-major order;13 YAML cases x3reps; no duplicate or missing slot.",
+    "journalDispatchFinishPairing": "39 unique starts and39 unique matching finishes; each durable status equals journal finish; observed attempt IDs match dispatch suffixes.",
+    "existingReplayAggregate": "Passed/failed counts, four graded dimensions, usage totals and nearest-rank latency/result-byte p50/p95/max independently recomputed and matched campaign-result.json.",
+    "nativeReportBoundAttemptEquality": "Not applicable: no canonical report/attempt capture exists.",
+    "exactSourceReportSha256Bindings": "No binding exists: campaign sourceReportSha256=null and journal contains only run/started/finished records.",
+    "timeoutEvidence": "attempt=null; evidenceAvailability=unavailable; usage/duration/resultBytes null.",
+    "unknownToolEvents": "All original names and boolean error flags retained unchanged.",
+    "manifestSelfHash": "Excluded to avoid self-reference; parent ZIP/provenance may hash manifest externally.",
+    "yamlRunPlanCaseOrder": true,
+    "yamlArgumentConstrainedTrials": 24
+  },
+  "methods": {
+    "copy": "SCP complete remote results directory plus exact one-off driver/config and exact repository YAML; results flattened locally without content edits.",
+    "toolEvents": "One exact JSON trace object per observed durable row, in durable trial order, including every tool event and skill ID; timeout contributes no invented trace.",
+    "summary": "Actual durable public attempts and totalResultBytes; checked against existing replay aggregate; no rerun of models or benchmark.",
+    "percentiles": "Nearest rank: sortedValues[ceil(n*p)-1], cross-checked against existing replay aggregate.",
+    "process": "hub describe and hub logs(head=true,lines=1000), after local supervisor exited; environment excluded."
+  },
+  "permissions": {
+    "directory": "0700",
+    "files": "0600",
+    "summary": "0600"
+  },
+  "process": {
+    "name": "gina-predictions-durable-20260911t161134z",
+    "daemon": {
+      "name": "gina-predictions-durable-20260911t161134z",
+      "id": "21f264c3-be38-44af-965b-0262278c093c",
+      "state": "failed",
+      "createdAt": 1789143488985,
+      "startedAt": 1789143488987,
+      "readyAt": 1789143494733,
+      "exitedAt": 1789144366249,
+      "exitCode": 255,
+      "restartCount": 0,
+      "outputBytes": 2938,
+      "owner": "01a09081-f96a-7659-89e1-a03005587dbd",
+      "readyMatch": "DURABLE_RUN_READY",
+      "persist": false,
+      "detached": false
+    },
+    "description": "gina-predictions-durable-20260911t161134z: failed exit=255 uptime=14m37s restarts=0\nCommand: /usr/bin/python3 /var/folders/nb/7_n17pmx3wq103lzdkj6p2_80000gn/T/ask-gina-extended-evals-_vu8v8x1/run-fresh-predictions.py\nCwd: ~/Documents/DevProjects\nPTY: false; restart=no; persist=false; detached=false",
+    "logsCapture": {
+      "op": "logs",
+      "cursor": 2938,
+      "timedOut": false,
+      "state": "failed"
+    },
+    "logsFormat": "Hub-rendered complete available supervisor log, including tool footer; text normalization may change raw output bytes.",
+    "remoteCampaignFinishedAt": "2026-09-11T16:44:14.123Z",
+    "remoteCampaignCompletionEvidence": "campaign-result.json and 39 matched durable/journal terminal slots",
+    "remoteExitCode": null,
+    "remoteExitCodeAvailability": "Unavailable: local SSH exited 255 before remote campaign settled.",
+    "fatalDiagnosticFilePresent": false,
+    "monitoringLimitation": "The hub log-follow request failed with Daemon logs request timed out; local SSH later disconnected. Real-time notices at 13/26 and the timeout were unavailable; final remote evidence was collected after SSH recovered."
+  },
+  "failureCategoryCounts": {
+    "routing_mismatch": 26,
+    "argument_mismatch": 1,
+    "trial_or_tool_failure": 7,
+    "safety_violation": 2
+  },
+  "metrics": {
+    "latencyMs": {
+      "p50": 33782,
+      "p95": 62651,
+      "max": 113558
+    },
+    "resultBytes": {
+      "p50": 66766,
+      "p95": 858254,
+      "max": 913188
+    },
+    "tokenUsage": {
+      "observations": 38,
+      "input": 890674,
+      "output": 22966,
+      "total": 913640
+    },
+    "within30s": 14,
+    "within100000ResultBytes": 24,
+    "skillObservedCount": 38
+  },
+  "files": [
+    {
+      "path": "campaign-result.json",
+      "remotePath": "/tmp/ask-gina-predictions-durable-cv2tdqnx/results/campaign-result.json",
+      "bytes": 1431,
+      "sha256": "6f4c7d78223bae0befb1082d6cc235e152453545e289e888be5bac47161b7170",
+      "remoteBytes": 1431,
+      "remoteSha256": "6f4c7d78223bae0befb1082d6cc235e152453545e289e888be5bac47161b7170",
+      "match": true,
+      "mode": "0600"
+    },
+    {
+      "path": "durable-trials.jsonl",
+      "remotePath": "/tmp/ask-gina-predictions-durable-cv2tdqnx/results/durable-trials.jsonl",
+      "bytes": 43508,
+      "sha256": "fefd53ef78033d219382d7d85705d1021a6ad03db71c12ab2262ce9b8674cc4c",
+      "remoteBytes": 43508,
+      "remoteSha256": "fefd53ef78033d219382d7d85705d1021a6ad03db71c12ab2262ce9b8674cc4c",
+      "match": true,
+      "mode": "0600"
+    },
+    {
+      "path": "omp_harness-omp-oauth-sol-medium-predictions-predictions-openai-oauth-sol-durable-20260911T161134Z.journal-v1.jsonl",
+      "remotePath": "/tmp/ask-gina-predictions-durable-cv2tdqnx/results/omp_harness-omp-oauth-sol-medium-predictions-predictions-openai-oauth-sol-durable-20260911T161134Z.journal-v1.jsonl",
+      "bytes": 13943,
+      "sha256": "48d70caebe872e8ebdbfb5934f17dad45db6a00f91d9e111d1760c3dc90792d3",
+      "remoteBytes": 13943,
+      "remoteSha256": "48d70caebe872e8ebdbfb5934f17dad45db6a00f91d9e111d1760c3dc90792d3",
+      "match": true,
+      "mode": "0600"
+    },
+    {
+      "path": "run-plan.json",
+      "remotePath": "/tmp/ask-gina-predictions-durable-cv2tdqnx/results/run-plan.json",
+      "bytes": 1772,
+      "sha256": "2ff402d1f919c872db60cb8d9fb6aa682d07462c73b6b1ee645e8aad95755ca1",
+      "remoteBytes": 1772,
+      "remoteSha256": "2ff402d1f919c872db60cb8d9fb6aa682d07462c73b6b1ee645e8aad95755ca1",
+      "match": true,
+      "mode": "0600"
+    },
+    {
+      "path": "fresh-predictions-driver.mjs",
+      "remotePath": "/tmp/ask-gina-predictions-durable-cv2tdqnx/fresh-predictions-driver.mjs",
+      "bytes": 12277,
+      "sha256": "70d9718e14f51bda2408b471eeb47da4fa545af4865bda533d004cef447c1c8a",
+      "remoteBytes": 12277,
+      "remoteSha256": "70d9718e14f51bda2408b471eeb47da4fa545af4865bda533d004cef447c1c8a",
+      "match": true,
+      "mode": "0600"
+    },
+    {
+      "path": "fresh-predictions-config.json",
+      "remotePath": "/tmp/ask-gina-predictions-durable-cv2tdqnx/fresh-predictions-config.json",
+      "bytes": 567,
+      "sha256": "988f65318e12e70890a5095ed6c29f3eff73fe4c4df6ba1c527a066378c0287e",
+      "remoteBytes": 567,
+      "remoteSha256": "988f65318e12e70890a5095ed6c29f3eff73fe4c4df6ba1c527a066378c0287e",
+      "match": true,
+      "mode": "0600"
+    },
+    {
+      "path": "suite.yaml",
+      "remotePath": "/home/ubuntu/plugins/plugins/ask-gina/evals/model/v1/families/predictions.yaml",
+      "bytes": 10510,
+      "sha256": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+      "remoteBytes": 10510,
+      "remoteSha256": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+      "match": true,
+      "mode": "0600"
+    },
+    {
+      "path": "tool-events.jsonl",
+      "bytes": 11651,
+      "sha256": "7430c404cc1a79d949d9fe6cf26ca60c650a825f3f31ddd2368c3553ecb137ef",
+      "source": "derived from durable trace",
+      "mode": "0600"
+    },
+    {
+      "path": "process.json",
+      "bytes": 1684,
+      "sha256": "1c60b6d98859f67248ad11f83391afcec4a750aff69d6a9afafbb49393ca40e8",
+      "source": "hub process metadata/log capture",
+      "mode": "0600"
+    },
+    {
+      "path": "process.log",
+      "bytes": 3001,
+      "sha256": "77a9cf40a441e0b914f6adb403d620b31b8bbaeb838ffe10654a6d642bbe9b81",
+      "source": "hub process metadata/log capture",
+      "mode": "0600"
+    },
+    {
+      "path": "../fresh-predictions-summary.json",
+      "bytes": 26913,
+      "sha256": "a89e4e693e00205bab4b0c98214efdbf92518c83e92f344a4809dadf0b99b19f",
+      "source": "independently recomputed durable observations, checked against campaign replay aggregate",
+      "mode": "0600"
+    }
+  ],
+  "limitations": [
+    "One typed OMP timeout returned no observation; its grade, usage, latency, result bytes, tool sequence and skills are unavailable, not zero. The other 38 observations have real rubric grades.",
+    "No canonical 39-trial score, sanitized report, report-bound attempt capture, or journal report binding exists. sourceReportSha256 is null; equality of durable attempts to report-bound attempts is not applicable.",
+    "38-observation metrics and grades equal the existing replay aggregate in campaign-result.json; safety contains 2 actual failures and 36 not_applicable checks. Skill activation is not_applicable despite the expected skill being observed in all 38 traces.",
+    "Raw model answers, tool arguments and results were intentionally never retained. Public numeric/check attempt projections and exact tool names/error flags are retained; answer correctness is ungraded.",
+    "Eight unknown acp_tool_call events are preserved verbatim and not treated as mirrors or deduplicated.",
+    "Local supervisor failed with SSH exit255 after7 logged observations; remote campaign continued and published campaign-result.json for39 terminal slots. The remote OS exit code is not captured; no fatal.json exists.",
+    "Hub log-follow failed and SSH disconnected, preventing timely13/26/timeout notices. The final39 coverage and timeout were reported after recovery. process.log is complete available hub-rendered output, not a byte-identical remote process stdout transcript.",
+    "Configuration contains a credential profile directory path only, not credential content; environment, authentication material, raw session data and OAuth tokens were not copied.",
+    "No retries, restarts, replacements, deadline/model/settings changes, extra model/API calls, or repository edits were performed by this evidence collector."
+  ]
+}

@@ -14,7 +14,15 @@ const navigation: readonly { id: ShellPageId; label: string; href: string }[] = 
   { id: "handoff", label: "Public results", href: "#/handoff" },
 ];
 
-export function PageShell({ active, children }: { active: ShellPageId; children: ReactNode }) {
+export function PageShell({
+  active,
+  children,
+  footerNote,
+}: {
+  active: ShellPageId;
+  children: ReactNode;
+  footerNote?: string;
+}) {
   const [runOpen, setRunOpen] = useState(false);
   return (
     <div className="eval-app">
@@ -59,7 +67,7 @@ export function PageShell({ active, children }: { active: ShellPageId; children:
             "Public exports measure conformance, not answer accuracy or financial outcomes. Other pages use illustrative fixtures."
           ) : (
             <>
-              {dataset.disclaimer} <a href="#/methodology">See methodology.</a>
+              {footerNote ?? dataset.disclaimer} <a href="#/methodology">See methodology.</a>
             </>
           )}
         </span>
@@ -97,10 +105,16 @@ export function PageShell({ active, children }: { active: ShellPageId; children:
   );
 }
 
-export function ModelAvatar({ model, size = "sm" }: { model: EvalModel; size?: "sm" | "lg" }) {
+export function ModelAvatar({
+  model,
+  size = "sm",
+}: {
+  model: Pick<EvalModel, "name" | "mark" | "color"> & { id?: string };
+  size?: "sm" | "lg";
+}) {
   return (
     <span
-      className={`eval-avatar eval-avatar-${size} eval-avatar-${model.id}`}
+      className={`eval-avatar eval-avatar-${size} ${model.id ? `eval-avatar-${model.id}` : ""}`}
       style={{ "--model-color": model.color } as CSSProperties}
       aria-hidden="true"
     >

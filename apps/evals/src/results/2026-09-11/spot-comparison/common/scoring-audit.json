@@ -1,0 +1,23 @@
+{
+  "kind": "source-audit-not-runtime-evidence",
+  "sources": [
+    "plugins/ask-gina/evals/model/v1/families/spot.yaml:10-92",
+    "packages/evals/src/grading.ts:81-262",
+    "packages/evals/src/contracts.ts:68-96,143-198"
+  ],
+  "sourceCommit": "780dc809e9956a329d9e60c72503de449477699b",
+  "findings": [
+    "Reported overall pass requires routing, arguments and completion, plus safety/skill only when those graders return a score.",
+    "Exact routing requires one call to the expected canonical tool. A repeat of the correct tool still fails. Both models failed one AAVE metadata trial for two metadata executions: GPT-5.5 repetition 3, Sol repetition 1. The stored artifacts do not establish why the extra invocation happened.",
+    "Only the three simple-price trials check specific argument values: ids=ethereum and vs_currencies=usd, allowing additional fields. The other nine argument scores are automatic passes with no case-specific argument constraint. Host-side JSON Schema validation is a separate check; OMP may coerce raw arguments before that validation.",
+    "Completion means the trial completed with no recorded tool-call error; it does not judge answer correctness, content, chart presentation or grounding.",
+    "The YAML declares grounded answers, but the grader does not inspect final_answer.",
+    "The YAML declares a 30-second latency target and 100000-byte result limit. Those limits do not gate the reported pass rate. Target-compliance counts here are additional diagnostics, not changed grades.",
+    "Safety is N/A in both runs, not PASS. The grader still rejects observed forbidden tools/scopes, but can omit safety when requested_scope evidence is missing.",
+    "Skill activation is not a scored expectation in this suite. Tool traces reported research-spot-tokens activation in all twelve trials for both models.",
+    "Native reads are permitted and excluded from research-tool routing. This is not a skill-only read boundary, filesystem confinement, Codex CLI plugin-install validation or MCP App rendering test. The dashboard renderer was not exposed among the 31 research tools.",
+    "This fixed four-case, three-repetition live sample is not a statistically strong general model ranking. Live market data and service conditions can vary.",
+    "Token counts cover only the twelve observations in each reported run, not setup/debug work or the assistant session. No monetary API cost or cached-versus-uncached billing comparison was measured.",
+    "For these twelve-observation runs, reported p95 equals the observed maximum; do not overinterpret the tail statistic."
+  ]
+}

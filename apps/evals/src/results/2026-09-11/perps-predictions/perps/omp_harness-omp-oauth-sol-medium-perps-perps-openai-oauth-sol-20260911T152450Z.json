@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "v1",
+  "runId": "perps-openai-oauth-sol-20260911T152450Z",
+  "candidate": "omp-oauth-sol-medium-perps",
+  "target": "omp_harness",
+  "model": "openai-codex/gpt-5.6-sol",
+  "reasoning": "medium",
+  "repetitions": 3,
+  "startedAt": "2026-09-11T15:26:42.652Z",
+  "cleanChat": true,
+  "accountClass": "oauth-read-only",
+  "aggregate": {
+    "schemaVersion": "v1",
+    "suiteId": "ask-gina-model-perps-v1",
+    "suiteVersion": 1,
+    "fixtureVersion": 1,
+    "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
+    "overall": {
+      "passed": 43,
+      "total": 54
+    },
+    "dimensions": {
+      "routing": {
+        "passed": 43,
+        "failed": 11
+      },
+      "arguments": {
+        "passed": 50,
+        "failed": 4
+      },
+      "safety": {
+        "passed": 0,
+        "failed": 0
+      },
+      "completion": {
+        "passed": 53,
+        "failed": 1
+      }
+    },
+    "skillActivation": {
+      "passed": 0,
+      "failed": 0
+    },
+    "latencyMs": {
+      "p50": 28340,
+      "p95": 101844,
+      "max": 107526
+    },
+    "totalResultBytes": {
+      "p50": 2572,
+      "p95": 209179,
+      "max": 340586
+    },
+    "tokenUsage": {
+      "observations": 54,
+      "inputTokens": 872008,
+      "outputTokens": 36182,
+      "totalTokens": 908190
+    },
+    "artifactPolicy": "sanitized"
+  }
+}

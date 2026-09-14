@@ -1,0 +1,297 @@
+{
+  "schemaVersion": "eval-attempts.v1",
+  "runId": "spot-openai-oauth-sol-20260911T142646Z",
+  "sourceReportSha256": "4f4d0f5a544905aa200abebdfec431bc93daba21ce95d3710f2d3a82d6a64a71",
+  "attempts": [
+    {
+      "id": "attempt-d0c0f92252299209ae89fb73f7eef47fb2bdc258300d20ef5c650bc482d75cac",
+      "runId": "spot-openai-oauth-sol-20260911T142646Z",
+      "caseId": "spot-token-metadata",
+      "repetition": 1,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch"
+      ],
+      "durationMs": 55121,
+      "tokenUsage": {
+        "inputTokens": 45306,
+        "outputTokens": 1162,
+        "totalTokens": 46468
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-4e85da86f75905ef612bb120328db40ecb14c993665c6289be169de9172f9b45",
+      "runId": "spot-openai-oauth-sol-20260911T142646Z",
+      "caseId": "spot-token-chart",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 27949,
+      "tokenUsage": {
+        "inputTokens": 31292,
+        "outputTokens": 259,
+        "totalTokens": 31551
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-b51c082a428aad70fd981aea5684cdaf63f152de97f1e7a60b10a3e76389a23e",
+      "runId": "spot-openai-oauth-sol-20260911T142646Z",
+      "caseId": "spot-simple-price",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 21007,
+      "tokenUsage": {
+        "inputTokens": 16215,
+        "outputTokens": 102,
+        "totalTokens": 16317
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-b5ab29a9fec53738438bcfd44bc8d07000af42152a8ceebc575d475da1ccaa96",
+      "runId": "spot-openai-oauth-sol-20260911T142646Z",
+      "caseId": "spot-fetch-swap-history",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 35020,
+      "tokenUsage": {
+        "inputTokens": 21494,
+        "outputTokens": 820,
+        "totalTokens": 22314
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-7ea8b71900967db9790eedf8fa27a4f0e9fc9f8dd128638f6f49f995d8a320d9",
+      "runId": "spot-openai-oauth-sol-20260911T142646Z",
+      "caseId": "spot-token-metadata",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 48537,
+      "tokenUsage": {
+        "inputTokens": 54952,
+        "outputTokens": 1221,
+        "totalTokens": 56173
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-58eba719302b7e6e89dbeaa63d8fa9e2ccc7ca9e23cd80d094c6a3aa8b02a92f",
+      "runId": "spot-openai-oauth-sol-20260911T142646Z",
+      "caseId": "spot-token-chart",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 25833,
+      "tokenUsage": {
+        "inputTokens": 31291,
+        "outputTokens": 261,
+        "totalTokens": 31552
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-16ea3867180d0a444fe117132f7a1742b2d36a893b421a422e1285499f930101",
+      "runId": "spot-openai-oauth-sol-20260911T142646Z",
+      "caseId": "spot-simple-price",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 20936,
+      "tokenUsage": {
+        "inputTokens": 1639,
+        "outputTokens": 103,
+        "totalTokens": 1742
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-10c6556aba439cda69eddcf8bcf9a6b16993d636485a24c0fa8fb75ff0f18d13",
+      "runId": "spot-openai-oauth-sol-20260911T142646Z",
+      "caseId": "spot-fetch-swap-history",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 44732,
+      "tokenUsage": {
+        "inputTokens": 21477,
+        "outputTokens": 492,
+        "totalTokens": 21969
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-38f112d7922304a0bb4e46175f828d14ed93e25cf5a064a240f8041430b0937a",
+      "runId": "spot-openai-oauth-sol-20260911T142646Z",
+      "caseId": "spot-token-metadata",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 42681,
+      "tokenUsage": {
+        "inputTokens": 35813,
+        "outputTokens": 901,
+        "totalTokens": 36714
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-457ece9cda892ebaaca064f09c1b1d897439ca018b92fc7f28e32a16c65c805b",
+      "runId": "spot-openai-oauth-sol-20260911T142646Z",
+      "caseId": "spot-token-chart",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 22652,
+      "tokenUsage": {
+        "inputTokens": 31285,
+        "outputTokens": 261,
+        "totalTokens": 31546
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-dcdde89cdda3350a9fa2c0d7e00b4d202ba09d70734f0cd2951c634377a17379",
+      "runId": "spot-openai-oauth-sol-20260911T142646Z",
+      "caseId": "spot-simple-price",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 18685,
+      "tokenUsage": {
+        "inputTokens": 16254,
+        "outputTokens": 103,
+        "totalTokens": 16357
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-e16c6245e30f82cb63e0e23daabbe627830a2651bbb694dab80402ab5c51f1c3",
+      "runId": "spot-openai-oauth-sol-20260911T142646Z",
+      "caseId": "spot-fetch-swap-history",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "not_applicable",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 37170,
+      "tokenUsage": {
+        "inputTokens": 21506,
+        "outputTokens": 821,
+        "totalTokens": 22327
+      },
+      "replacementOf": null
+    }
+  ]
+}

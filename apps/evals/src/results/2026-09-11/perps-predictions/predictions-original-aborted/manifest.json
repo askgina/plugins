@@ -1,0 +1,369 @@
+{
+  "schemaVersion": 1,
+  "runId": "predictions-openai-oauth-sol-20260911T152450Z",
+  "candidate": "omp-oauth-sol-medium-predictions",
+  "family": "predictions",
+  "status": "incomplete_runtime_failure",
+  "complete": false,
+  "source": {
+    "host": "probe",
+    "repository": "/home/ubuntu/plugins",
+    "tipCommit": "780dc809e9956a329d9e60c72503de449477699b",
+    "executableSourceCommitPrefix": "5f98d54",
+    "sourceAttestation": "provided by parent; tip README-only after executable source",
+    "ompVersion": "18.1.17",
+    "ompExecutableSha256": "040c254ddeb30f6d592be67d1469dc67fcac14e933fa04dbf690f42820ffd820",
+    "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e"
+  },
+  "settings": {
+    "runner": "omp",
+    "auth": "native OpenAI OAuth",
+    "ginaAuth": "OAuth tools:read",
+    "apiKeyFallback": false,
+    "provider": "openai-codex",
+    "model": "gpt-5.6-sol",
+    "reasoning": "medium",
+    "repetitions": 3,
+    "timeoutMs": 120000,
+    "accountClass": "oauth-read-only",
+    "researchToolsExposed": 31,
+    "rendererExcluded": true,
+    "expectedCases": 13,
+    "expectedTrials": 39
+  },
+  "process": {
+    "name": "gina-predictions-sol-20260911t152450z",
+    "generationId": "114e446b-fd73-4da8-bb05-32c8e74b8aa7",
+    "exitCode": 1,
+    "restartCount": 0,
+    "startedAtMs": 1789140396805,
+    "exitedAtMs": 1789141185558,
+    "durationSeconds": 788.753,
+    "outputBytes": 5799,
+    "terminalError": "live eval failed (LiveEvalCliError)"
+  },
+  "counts": {
+    "expectedTrials": 39,
+    "dispatched": 18,
+    "journalFinished": 18,
+    "traceRows": 17,
+    "completedStatus": 14,
+    "failedStatus": 3,
+    "timeoutStatus": 1,
+    "notDispatched": 21
+  },
+  "verdicts": {
+    "rubricPass": null,
+    "rubricFail": null,
+    "availability": "unavailable: report not emitted; completion statuses are not rubric verdicts",
+    "answerCorrectness": "ungraded/unavailable",
+    "safety": "ungraded/unavailable"
+  },
+  "caseOutcomes": [
+    {
+      "caseId": "predictions-focused-fact-search-only",
+      "expectedTrials": 3,
+      "observedTrials": 2,
+      "outcomes": [
+        {
+          "repetition": 1,
+          "status": "completed"
+        },
+        {
+          "repetition": 2,
+          "status": "completed"
+        }
+      ],
+      "score": null,
+      "scoreAvailability": "unavailable: final report absent"
+    },
+    {
+      "caseId": "predictions-broad-nba-search-only",
+      "expectedTrials": 3,
+      "observedTrials": 2,
+      "outcomes": [
+        {
+          "repetition": 1,
+          "status": "completed"
+        },
+        {
+          "repetition": 2,
+          "status": "completed"
+        }
+      ],
+      "score": null,
+      "scoreAvailability": "unavailable: final report absent"
+    },
+    {
+      "caseId": "predictions-broad-football-search-only",
+      "expectedTrials": 3,
+      "observedTrials": 2,
+      "outcomes": [
+        {
+          "repetition": 1,
+          "status": "completed"
+        },
+        {
+          "repetition": 2,
+          "status": "failed"
+        }
+      ],
+      "score": null,
+      "scoreAvailability": "unavailable: final report absent"
+    },
+    {
+      "caseId": "predictions-non-exact-no-render",
+      "expectedTrials": 3,
+      "observedTrials": 2,
+      "outcomes": [
+        {
+          "repetition": 1,
+          "status": "completed"
+        },
+        {
+          "repetition": 2,
+          "status": "completed"
+        }
+      ],
+      "score": null,
+      "scoreAvailability": "unavailable: final report absent"
+    },
+    {
+      "caseId": "predictions-sparse-history-no-render",
+      "expectedTrials": 3,
+      "observedTrials": 2,
+      "outcomes": [
+        {
+          "repetition": 1,
+          "status": "completed"
+        },
+        {
+          "repetition": 2,
+          "status": "timeout"
+        }
+      ],
+      "score": null,
+      "scoreAvailability": "unavailable: final report absent"
+    },
+    {
+      "caseId": "predictions-multi-series-no-render",
+      "expectedTrials": 3,
+      "observedTrials": 1,
+      "outcomes": [
+        {
+          "repetition": 1,
+          "status": "completed"
+        }
+      ],
+      "score": null,
+      "scoreAvailability": "unavailable: final report absent"
+    },
+    {
+      "caseId": "predictions-expiring-markets",
+      "expectedTrials": 3,
+      "observedTrials": 1,
+      "outcomes": [
+        {
+          "repetition": 1,
+          "status": "completed"
+        }
+      ],
+      "score": null,
+      "scoreAvailability": "unavailable: final report absent"
+    },
+    {
+      "caseId": "predictions-series-market",
+      "expectedTrials": 3,
+      "observedTrials": 1,
+      "outcomes": [
+        {
+          "repetition": 1,
+          "status": "completed"
+        }
+      ],
+      "score": null,
+      "scoreAvailability": "unavailable: final report absent"
+    },
+    {
+      "caseId": "predictions-orderbook",
+      "expectedTrials": 3,
+      "observedTrials": 1,
+      "outcomes": [
+        {
+          "repetition": 1,
+          "status": "failed"
+        }
+      ],
+      "score": null,
+      "scoreAvailability": "unavailable: final report absent"
+    },
+    {
+      "caseId": "predictions-fetch-market-data",
+      "expectedTrials": 3,
+      "observedTrials": 1,
+      "outcomes": [
+        {
+          "repetition": 1,
+          "status": "completed"
+        }
+      ],
+      "score": null,
+      "scoreAvailability": "unavailable: final report absent"
+    },
+    {
+      "caseId": "predictions-fetch-history-data",
+      "expectedTrials": 3,
+      "observedTrials": 1,
+      "outcomes": [
+        {
+          "repetition": 1,
+          "status": "completed"
+        }
+      ],
+      "score": null,
+      "scoreAvailability": "unavailable: final report absent"
+    },
+    {
+      "caseId": "predictions-open-positions",
+      "expectedTrials": 3,
+      "observedTrials": 1,
+      "outcomes": [
+        {
+          "repetition": 1,
+          "status": "completed"
+        }
+      ],
+      "score": null,
+      "scoreAvailability": "unavailable: final report absent"
+    },
+    {
+      "caseId": "predictions-order-history",
+      "expectedTrials": 3,
+      "observedTrials": 1,
+      "outcomes": [
+        {
+          "repetition": 1,
+          "status": "failed"
+        }
+      ],
+      "score": null,
+      "scoreAvailability": "unavailable: final report absent"
+    }
+  ],
+  "observability": {
+    "routing": "17 trace rows retain tool names, error flags, tool count and skills; four names are unresolved acp_tool_call IDs; no routing grades available",
+    "arguments": "unavailable; observer intentionally excludes raw arguments",
+    "completion": "14 completed statuses, 3 failed, 1 timeout; raw answers unavailable",
+    "skills": {
+      "research-prediction-markets": 17
+    },
+    "latency": "per-trial metrics unavailable; process duration recorded separately",
+    "tokens": "unavailable",
+    "resultBytes": "unavailable"
+  },
+  "traceMetrics": {
+    "toolEventCount": 42,
+    "knownNameEventCount": 38,
+    "unresolvedAcpEventCount": 4,
+    "errorFlagEventCount": 4,
+    "toolNameCounts": {
+      "predictions.searchPredictionMarkets": 31,
+      "predictions.getExpiringMarkets": 1,
+      "predictions.getPredictionOrderbook": 1,
+      "acp_tool_call_NdxRFzSQSKyMS13ewWV8nHaD_fc_04c65b18c00c07b8016aa41f2647ec87d2890b82e841e158fa": 1,
+      "predictions.fetchPolymarketData": 1,
+      "predictions.fetchPolymarketHistory": 1,
+      "predictions.getPolymarketPositions": 1,
+      "predictions.getPolymarketOrderHistory": 2,
+      "acp_tool_call_mQkPFf3m3QRGe1WQLH9Atb2C_fc_0310db5c0cd2d4ea016aa41f93715487d2a04fae47e5b0f542": 1,
+      "acp_tool_call_zNghXDpZ2ljnzopHjs8SsLBt_fc_0310db5c0cd2d4ea016aa41f99216887d2887ed99ad4ef240e": 1,
+      "acp_tool_call_KKmWOFh9t4XsWveqVkDrk6pm_fc_032f8ebd7203fb92016aa4201078e887d2b5a3434290d4673b": 1
+    },
+    "errorFlagNameCounts": {
+      "predictions.getPredictionOrderbook": 1,
+      "predictions.getPolymarketOrderHistory": 2,
+      "predictions.searchPredictionMarkets": 1
+    }
+  },
+  "integrity": {
+    "remoteFiles": {
+      "omp_harness-omp-oauth-sol-medium-predictions-predictions-openai-oauth-sol-20260911T152450Z.json": {
+        "path": "/home/ubuntu/plugins/.plugin-eval-runs/omp_harness-omp-oauth-sol-medium-predictions-predictions-openai-oauth-sol-20260911T152450Z.json",
+        "exists": false
+      },
+      "omp_harness-omp-oauth-sol-medium-predictions-predictions-openai-oauth-sol-20260911T152450Z.journal-v1.jsonl": {
+        "path": "/home/ubuntu/plugins/.plugin-eval-runs/omp_harness-omp-oauth-sol-medium-predictions-predictions-openai-oauth-sol-20260911T152450Z.journal-v1.jsonl",
+        "exists": true,
+        "size": 6953,
+        "sha256": "58caadd8624a34ebd6b059a9491c486d70e2358a67dcdc5eeabd12d7229ed5eb",
+        "permissions": "0o600"
+      },
+      "predictions-openai-oauth-sol-20260911T152450Z.attempts.json": {
+        "path": "/home/ubuntu/plugins/.plugin-eval-runs/predictions-openai-oauth-sol-20260911T152450Z.attempts.json",
+        "exists": false
+      },
+      "suite.yaml": {
+        "path": "/home/ubuntu/plugins/plugins/ask-gina/evals/model/v1/families/predictions.yaml",
+        "exists": true,
+        "size": 10510,
+        "sha256": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+        "permissions": "0o664"
+      }
+    },
+    "localFiles": {
+      "omp_harness-omp-oauth-sol-medium-predictions-predictions-openai-oauth-sol-20260911T152450Z.journal-v1.jsonl": {
+        "size": 6953,
+        "sha256": "58caadd8624a34ebd6b059a9491c486d70e2358a67dcdc5eeabd12d7229ed5eb",
+        "permissions": "0o600"
+      },
+      "process.json": {
+        "size": 799,
+        "sha256": "a92e9b52bf4a0c424a8e367c08b5ea7b179e61719839c948019b1d30952227d6",
+        "permissions": "0o600"
+      },
+      "process.log": {
+        "size": 5859,
+        "sha256": "df55b08628e6ff7f625a1fd4b1696d5aa3189803096dda9f17753b4b5278fde9",
+        "permissions": "0o600"
+      },
+      "suite.yaml": {
+        "size": 10510,
+        "sha256": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+        "permissions": "0o600"
+      },
+      "tool-events.jsonl": {
+        "size": 5424,
+        "sha256": "e6535e12d3c5ad33ee875087dd708cf10d68c3277677fe45222b9e8b1a820a88",
+        "permissions": "0o600"
+      }
+    },
+    "copiedOriginalsMethod": "scp full bytes; no edits to copied contents; local chmod only",
+    "originalSha256AndSizeMatched": true,
+    "journalUniqueDispatches": 18,
+    "uniqueCaseRepetitionPairs": 18,
+    "traceMatchesJournal": true,
+    "replacementAttempts": 0,
+    "replacementsAssertion": "Single process generation, zero restarts, unique dispatch/case-repetition pairs; no reruns or replacement artifacts created",
+    "attemptsSourceReportSha256": null,
+    "attemptsBindingCheck": "unavailable: attempts and report files do not exist",
+    "journalReportBound": false,
+    "journalReportBoundCheck": "no report-bound row present and final report absent",
+    "directoryPermissions": "0o700",
+    "credentialFilesIncluded": false,
+    "manifestSelfHash": "not included to avoid recursive hash"
+  },
+  "blocker": {
+    "lastTrial": {
+      "caseId": "predictions-sparse-history-no-render",
+      "repetition": 2,
+      "status": "timeout",
+      "startedAt": "2026-09-11T15:37:45.210Z"
+    },
+    "runtimeError": "LiveEvalCliError",
+    "missingArtifacts": [
+      "omp_harness-omp-oauth-sol-medium-predictions-predictions-openai-oauth-sol-20260911T152450Z.json",
+      "predictions-openai-oauth-sol-20260911T152450Z.attempts.json"
+    ],
+    "traceCoverageNote": "18th dispatch timed out without TRIAL_EVIDENCE; final report, attempts, grades and detailed metrics were not produced"
+  }
+}

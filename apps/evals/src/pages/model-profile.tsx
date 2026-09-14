@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { ArrowUpRight, Download, GitCompare } from "lucide-react";
 import { dataset, families, featuredModel, getModel, models, type EvalModel } from "../data";
+import {
+  getMeasuredModel,
+  measuredRun,
+  type MeasuredFamilyResult,
+  type MeasuredModel,
+} from "../measured";
 import { Modal, ModelAvatar, PageShell, Panel } from "../components/eval-ui";
 import { Button } from "../components/ui/button";
 import "./model-profile.css";
@@ -8,6 +14,339 @@ import "./model-profile.css";
 export interface ModelProfilePageProps {
   modelId?: string;
   initialCompareId?: string;
+}
+
+function MeasuredMetricCards({ model }: { model: MeasuredModel }) {
+  const results = families.flatMap((family) => {
+    const result = model.families[family];
+    return result ? [{ family, result }] : [];
+  });
+  return (
+    <section
+      className="model-profile-metrics"
+      aria-label={`${model.name} measured summary metrics`}
+    >
+      {results.map(({ family, result }) => (
+        <article className="model-profile-metric" key={family}>
+          <span className="model-profile-metric-label">{family}</span>
+          <strong>
+            {numberFormatter.format(result.passed)} / {numberFormatter.format(result.total)}
+          </strong>
+          <p>
+            p50 {(result.latencyMs.p50 / 1000).toFixed(1)}s · p95{" "}
+            {(result.latencyMs.p95 / 1000).toFixed(1)}s ·{" "}
+            {numberFormatter.format(result.tokenUsage.total)} tokens · {result.unscoredTimeouts}{" "}
+            unscored timeouts
+          </p>
+        </article>
+      ))}
+    </section>
+  );
+}
+
+function MeasuredCases({ family, result }: { family: string; result: MeasuredFamilyResult }) {
+  return (
+    <Panel title={`Cases · ${family}`} description="Exported case-level conformance verdicts.">
+      <div
+        className="model-profile-table-scroll"
+        role="region"
+        aria-label={`${family} measured cases`}
+        tabIndex={0}
+      >
+        <table className="eval-table model-profile-table">
+          <thead>
+            <tr>
+              <th scope="col">Case id</th>
+              <th scope="col">Results</th>
+              <th scope="col">Passed / graded</th>
+              <th scope="col">Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {result.cases.map((measuredCase) => {
+              const failureCategories =
+                family === "Spot"
+                  ? measuredCase.attempts
+                      ?.flatMap((attempt) => attempt.failureCategories)
+                      .filter(
+                        (category, index, categories) => categories.indexOf(category) === index,
+                      )
+                      .join(", ")
+                  : "";
+              return (
+                <tr key={measuredCase.id}>
+                  <th scope="row">
+                    <code>{measuredCase.id}</code>
+                    {measuredCase.prompt && <small>{measuredCase.prompt}</small>}
+                  </th>
+                  <td style={{ whiteSpace: "nowrap" }}>{measuredCase.results.join(" · ")}</td>
+                  <td>
+                    {measuredCase.passed} / {measuredCase.graded}
+                  </td>
+                  <td>
+                    {[measuredCase.notes, failureCategories].filter(Boolean).join(" · ") || "—"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </Panel>
+  );
+}
+
+function MeasuredModelProfile({ model }: { model: MeasuredModel }) {
+  const available = families.flatMap((family) => {
+    const result = model.families[family];
+    return result ? [{ family, result }] : [];
+  });
+  const downloadResults = () => {
+    const url = URL.createObjectURL(
+      new Blob([`${JSON.stringify({ measured: true, run: measuredRun, model }, null, 2)}\n`], {
+        type: "application/json",
+      }),
+    );
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${model.id}-measured-2026-09-11.json`;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  };
+  return (
+    <PageShell
+      active="models"
+      footerNote="Measured 2026-09-11 conformance sample. Unranked; not a benchmark."
+    >
+      <div className="eval-container model-profile-page">
+        <section className="eval-hero model-profile-hero" aria-labelledby="model-profile-title">
+          <img className="eval-hero-art" src="/images/hero-watercolor-landscape.webp" alt="" />
+          <div className="model-profile-intro">
+            <nav className="model-profile-breadcrumbs" aria-label="Breadcrumb">
+              <a href="#/leaderboard">Leaderboard</a>
+              <span aria-hidden="true">/</span>
+              <a href="#/models/kimi-k3">Models</a>
+              <span aria-hidden="true">/</span>
+              <span aria-current="page">{model.name}</span>
+            </nav>
+            <p className="eval-eyebrow">Model profile · Measured {measuredRun.date}</p>
+            <div className="model-profile-title-row">
+              <ModelAvatar model={model} size="lg" />
+              <h1 className="eval-title" id="model-profile-title">
+                {model.name}
+                <span>.</span>
+              </h1>
+            </div>
+            <p className="model-profile-provider">{model.provider}</p>
+            <p className="model-profile-provider">
+              <code>{model.modelId}</code>
+            </p>
+            <p className="eval-description">
+              Conformance runs with the OMP harness, three repetitions per case. Unranked, small
+              live samples; not answer accuracy.
+            </p>
+          </div>
+          <div className="model-profile-actions">
+            <Button
+              className="model-profile-download-button"
+              type="button"
+              variant="secondary"
+              onClick={downloadResults}
+            >
+              <Download size={15} aria-hidden="true" /> Download results
+            </Button>
+            <a className="eval-text-link" href="#/methodology">
+              View methodology <ArrowUpRight size={14} aria-hidden="true" />
+            </a>
+          </div>
+        </section>
+
+        <MeasuredMetricCards model={model} />
+
+        <Panel
+          className="model-profile-chart-panel"
+          title="Performance by task family"
+          description="Measured pass counts for the available families."
+        >
+          <ul className="model-profile-family-bars">
+            {available.map(({ family, result }) => (
+              <li key={family}>
+                <div className="model-profile-family-label">
+                  <span>{family}</span>
+                  <strong>
+                    {result.passed} / {result.total}
+                  </strong>
+                </div>
+                <div
+                  className="model-profile-family-track"
+                  role="img"
+                  aria-label={`${family}: ${result.passed} of ${result.total} passed`}
+                >
+                  <span
+                    className="model-profile-family-fill"
+                    style={{ width: `${result.passRateSortKey}%` }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="eval-muted model-profile-chart-note">
+            Bar width is passed ÷ graded for the displayed counts. No interval is shown; the sample
+            is small.
+          </p>
+        </Panel>
+
+        <Panel
+          className="model-profile-breakdown-panel"
+          title="Task family breakdown"
+          description="Measured conformance counts and exported dimensions."
+        >
+          <div
+            className="model-profile-table-scroll"
+            role="region"
+            aria-label="Measured task family breakdown"
+            tabIndex={0}
+          >
+            <table className="eval-table model-profile-table">
+              <thead>
+                <tr>
+                  <th scope="col">Task family</th>
+                  <th scope="col">Passed / total</th>
+                  <th scope="col">Failed</th>
+                  <th scope="col">Unscored timeouts</th>
+                  <th scope="col">Routing</th>
+                  <th scope="col">Arguments</th>
+                  <th scope="col">Completion</th>
+                  <th scope="col">Safety</th>
+                </tr>
+              </thead>
+              <tbody>
+                {available.map(({ family, result }) => (
+                  <tr key={family}>
+                    <th scope="row">{family}</th>
+                    <td>
+                      {result.passed} / {result.total}
+                    </td>
+                    <td>{result.failed}</td>
+                    <td>{result.unscoredTimeouts}</td>
+                    <td>
+                      {result.dimensions.routing.passed} · {result.dimensions.routing.failed}
+                    </td>
+                    <td>
+                      {result.dimensions.arguments.passed} · {result.dimensions.arguments.failed}
+                    </td>
+                    <td>
+                      {result.dimensions.completion.passed} · {result.dimensions.completion.failed}
+                    </td>
+                    <td>
+                      {result.dimensions.safety.passed} · {result.dimensions.safety.failed}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+
+        {available.map(({ family, result }) => (
+          <MeasuredCases key={family} family={family} result={result} />
+        ))}
+
+        <Panel
+          className="model-profile-run-panel"
+          title="Run details"
+          description="Exported provenance for this measured conformance run."
+        >
+          <dl className="model-profile-run-details">
+            <div>
+              <dt>Status</dt>
+              <dd>Measured conformance run</dd>
+            </div>
+            <div>
+              <dt>Model id</dt>
+              <dd>
+                <code>{model.modelId}</code>
+              </dd>
+            </div>
+            <div>
+              <dt>Harness</dt>
+              <dd>{measuredRun.harness}</dd>
+            </div>
+            <div>
+              <dt>Run date</dt>
+              <dd>{measuredRun.date}</dd>
+            </div>
+            <div>
+              <dt>Repetitions</dt>
+              <dd>{measuredRun.repetitions}</dd>
+            </div>
+            <div>
+              <dt>Timeout</dt>
+              <dd>{measuredRun.timeoutMs / 1000}s</dd>
+            </div>
+            {available.map(({ family, result }) => (
+              <div key={family}>
+                <dt>Run id · {family}</dt>
+                <dd>
+                  <code>{result.runId}</code>
+                </dd>
+              </div>
+            ))}
+            {available.map(({ family, result }) => (
+              <div key={`source-${family}`}>
+                <dt>Source commit · {family}</dt>
+                <dd>
+                  <code>{result.sourceCommit}</code>
+                </dd>
+              </div>
+            ))}
+            {available.some(({ family }) => family === "Perps" || family === "Predictions") && (
+              <div>
+                <dt>Executable source commit</dt>
+                <dd>
+                  <code>{measuredRun.executableSourceCommit}</code>
+                </dd>
+              </div>
+            )}
+          </dl>
+          <a
+            className="eval-text-link model-profile-run-link"
+            href={measuredRun.prUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Open GitHub PR #85 <ArrowUpRight size={14} aria-hidden="true" />
+          </a>
+        </Panel>
+
+        {available.some(({ family }) => family === "Perps" || family === "Predictions") && (
+          <>
+            <Panel title="Aborted original predictions run">
+              <dl className="model-profile-run-details">
+                {Object.entries(measuredRun.abortedRun ?? {}).map(([key, value]) => (
+                  <div key={key}>
+                    <dt>{key}</dt>
+                    <dd>
+                      <code>{String(value)}</code>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </Panel>
+            <Panel title="Limitations">
+              <ul>
+                {measuredRun.limitations.map((limitation) => (
+                  <li key={limitation}>{limitation}</li>
+                ))}
+              </ul>
+            </Panel>
+          </>
+        )}
+      </div>
+    </PageShell>
+  );
 }
 
 const numberFormatter = new Intl.NumberFormat("en-US");
@@ -119,7 +458,16 @@ function ComparisonCard({ model, featured }: { model: EvalModel; featured: boole
   );
 }
 
-export function ModelProfilePage({ modelId, initialCompareId }: ModelProfilePageProps) {
+export function ModelProfilePage(props: ModelProfilePageProps) {
+  const requestedModelId = props.modelId ?? featuredModel.id;
+  const measuredModel = getMeasuredModel(requestedModelId);
+  if (!getModel(requestedModelId) && measuredModel) {
+    return <MeasuredModelProfile model={measuredModel} />;
+  }
+  return <IllustrativeModelProfile {...props} />;
+}
+
+function IllustrativeModelProfile({ modelId, initialCompareId }: ModelProfilePageProps) {
   const requestedModelId = modelId ?? featuredModel.id;
   const model = getModel(requestedModelId);
   const [selectedCompareId, setSelectedCompareId] = useState(() =>
