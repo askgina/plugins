@@ -1,0 +1,1328 @@
+{
+  "schemaVersion": "eval-attempts.v1",
+  "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+  "sourceReportSha256": "52b27dbad665f3483f18e4bcaba0524cf79ba8c1ec11bf0cd99cb7ac37b629fa",
+  "attempts": [
+    {
+      "id": "attempt-27de406ef8f79e27123ee066756fe5fe7b23b9b9d9e6d3b5c5ec6d07fcfb57b7",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-account",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 90177,
+      "tokenUsage": {
+        "inputTokens": 83137,
+        "outputTokens": 667,
+        "totalTokens": 83804
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-efbfe430d2ca2fe52340180d469ea550549b26a155bd6f853146e721f36ac8f9",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-positions",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 31578,
+      "tokenUsage": {
+        "inputTokens": 82113,
+        "outputTokens": 319,
+        "totalTokens": 82432
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-7a523e41779d91db5a696b0ac8a32722f40df1dcca2d598e96d5d3f455fbbe26",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-open-orders",
+      "repetition": 1,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch"
+      ],
+      "durationMs": 25011,
+      "tokenUsage": {
+        "inputTokens": 111602,
+        "outputTokens": 1070,
+        "totalTokens": 112672
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-a32b5315b8d0f96b38acc6b0c609a0f7e8104eafa5783cc03ac489c6c8174d5b",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-portfolio",
+      "repetition": 1,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "fail",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "argument_mismatch"
+      ],
+      "durationMs": 26122,
+      "tokenUsage": {
+        "inputTokens": 85543,
+        "outputTokens": 1695,
+        "totalTokens": 87238
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-d1210190789cbd002c5eeeda459e1ec9a93618ed0187b0e60b617af78edf9499",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-markets",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 105798,
+      "tokenUsage": {
+        "inputTokens": 738283,
+        "outputTokens": 6350,
+        "totalTokens": 744633
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-9c6cfc91528103e5b1d87b762950f55d4c11ed74d2778a2ba4124590ad0254a8",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-single-price",
+      "repetition": 1,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch"
+      ],
+      "durationMs": 32090,
+      "tokenUsage": {
+        "inputTokens": 112005,
+        "outputTokens": 1200,
+        "totalTokens": 113205
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-901b93ae422d510b2c41b0f9d92c0ee3b8bcf2a0dbd65b82122726e547de8127",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-multiple-prices",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 23501,
+      "tokenUsage": {
+        "inputTokens": 82561,
+        "outputTokens": 597,
+        "totalTokens": 83158
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-961441cce102baad04e1eabe264cef93484e9ee41f9e39e02106f8415d45fa57",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-asset-data",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 13861,
+      "tokenUsage": {
+        "inputTokens": 82451,
+        "outputTokens": 521,
+        "totalTokens": 82972
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-67745caeb9b1b806ef8bde215dcbb2ff401d269222c294a39553a3790be27167",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-search-hip3-markets",
+      "repetition": 1,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "fail",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch",
+        "argument_mismatch"
+      ],
+      "durationMs": 102531,
+      "tokenUsage": {
+        "inputTokens": 209524,
+        "outputTokens": 2571,
+        "totalTokens": 212095
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-2cc8756a49b2b7f0a5f9165da483b421179e2a2ca4a99e1f6af5be827ea534b7",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-hip3-dexes",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 32924,
+      "tokenUsage": {
+        "inputTokens": 82513,
+        "outputTokens": 783,
+        "totalTokens": 83296
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-85602361cabc834a1544bdfe98cadff8a1d6807cbc85e97b03ac79bc48bfce11",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-hip3-markets",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 42397,
+      "tokenUsage": {
+        "inputTokens": 103483,
+        "outputTokens": 4817,
+        "totalTokens": 108300
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-235f7658b9dadae24054d2ec593ac69f1d822fe1cbf0061eeb5cf65c6d2840fe",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-hip3-price",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 13837,
+      "tokenUsage": {
+        "inputTokens": 82398,
+        "outputTokens": 576,
+        "totalTokens": 82974
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-e86bb4ebf70206ae48c65236f92284d5623629ecf090e9008d07f47dfa501b13",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-fetch-trades",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 58651,
+      "tokenUsage": {
+        "inputTokens": 83149,
+        "outputTokens": 1326,
+        "totalTokens": 84475
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-fdbd014f96ea42cda97c1e648354ae5fb2bb93ef6d1a9f72fb84ecdc4cccb3b6",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-fetch-candles",
+      "repetition": 1,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch"
+      ],
+      "durationMs": 82275,
+      "tokenUsage": {
+        "inputTokens": 114892,
+        "outputTokens": 1609,
+        "totalTokens": 116501
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-8f128817df24efe3537b28109c58c7a374a603ba2a1c866b4ef8684a3a0a0b70",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-fetch-order-book",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 21693,
+      "tokenUsage": {
+        "inputTokens": 85380,
+        "outputTokens": 873,
+        "totalTokens": 86253
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-a70daee0aeca3931c140df85cf2367346806903bc07598550028b21835c83d0d",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-preview-order-cost",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 20346,
+      "tokenUsage": {
+        "inputTokens": 83306,
+        "outputTokens": 1530,
+        "totalTokens": 84836
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-a302ce95af12951892ddfcca5d6134940b6fe4e27d7c8416030c2e33142750bc",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-create-table",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 29712,
+      "tokenUsage": {
+        "inputTokens": 83608,
+        "outputTokens": 1369,
+        "totalTokens": 84977
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-52db70ac2bf8879e70533446bd89998df05e89e4bf855a4da17a0918104fad6b",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-create-and-query-table",
+      "repetition": 1,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 59565,
+      "tokenUsage": {
+        "inputTokens": 112450,
+        "outputTokens": 1230,
+        "totalTokens": 113680
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-cc3916505f0bb2a51bcdfdc3cc1b87ae3113be5065e96641cde59aa9e2bb5553",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-account",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 17910,
+      "tokenUsage": {
+        "inputTokens": 82848,
+        "outputTokens": 536,
+        "totalTokens": 83384
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-b70650ae79af3cca2c9793cb098445f1d5bcb4dd4d24a406bec6f7b9e476c762",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-positions",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 11982,
+      "tokenUsage": {
+        "inputTokens": 82188,
+        "outputTokens": 365,
+        "totalTokens": 82553
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-cb7e57ab31b31d4a21bb9ecc3daf38e838286bddf6a47c5873f4bd6cddcf7d0e",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-open-orders",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 17627,
+      "tokenUsage": {
+        "inputTokens": 82675,
+        "outputTokens": 1070,
+        "totalTokens": 83745
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-4a57afb885b75231afcb4d55ed5c319921b29a37a65ff461e3c6e6c8e2629207",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-portfolio",
+      "repetition": 2,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "fail",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "argument_mismatch"
+      ],
+      "durationMs": 24812,
+      "tokenUsage": {
+        "inputTokens": 85210,
+        "outputTokens": 1595,
+        "totalTokens": 86805
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-612551609502b1475debed85dc14442546ec7a8e2b8828cab128d60dfc52ec99",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-markets",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 42117,
+      "tokenUsage": {
+        "inputTokens": 467006,
+        "outputTokens": 3815,
+        "totalTokens": 470821
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-fffab61260b18a2e8b7c396af416ded98efb82554dfb7f8ef1bbbcaa2fb61000",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-single-price",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 14940,
+      "tokenUsage": {
+        "inputTokens": 82417,
+        "outputTokens": 480,
+        "totalTokens": 82897
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-77485ea19104f56793edb522eac96a5b1122d871810904d1525556c055df2f7d",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-multiple-prices",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 12339,
+      "tokenUsage": {
+        "inputTokens": 82355,
+        "outputTokens": 503,
+        "totalTokens": 82858
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-9b9ccafa4ccf843250d2e2b15c4d8c0d8c9f6336bb8478e57439b668e1a0378a",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-asset-data",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 14022,
+      "tokenUsage": {
+        "inputTokens": 82886,
+        "outputTokens": 752,
+        "totalTokens": 83638
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-5a566cc8662da2a7f9c55f1ea501749c60e35d1dfa1ad0334573f0a2215f5014",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-search-hip3-markets",
+      "repetition": 2,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch"
+      ],
+      "durationMs": 48951,
+      "tokenUsage": {
+        "inputTokens": 175979,
+        "outputTokens": 2193,
+        "totalTokens": 178172
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-297f84760022693428c1299ad4dadb0e8351779af92998ae05ff5a1dfea91ea6",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-hip3-dexes",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 14859,
+      "tokenUsage": {
+        "inputTokens": 82330,
+        "outputTokens": 572,
+        "totalTokens": 82902
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-9920ed0ee9b6ff7bf894d873cd2a185e421316e64e770b3be15d42be9ddc54f8",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-hip3-markets",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 21998,
+      "tokenUsage": {
+        "inputTokens": 103381,
+        "outputTokens": 1674,
+        "totalTokens": 105055
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-fe8566a4fb2af301c11903e62f64af299598fd5112cade6b0e581c38daf98289",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-hip3-price",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 16107,
+      "tokenUsage": {
+        "inputTokens": 82359,
+        "outputTokens": 608,
+        "totalTokens": 82967
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-76333e02bd1440b2a3eae04198847045d82fe462c2d7ad805d66f8f637a770d1",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-fetch-trades",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 17406,
+      "tokenUsage": {
+        "inputTokens": 82890,
+        "outputTokens": 1078,
+        "totalTokens": 83968
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-8b1bb15c25d036322173d65de8a71355d2c3e3f452e198c1c9e81ab1524905c8",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-fetch-candles",
+      "repetition": 2,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch"
+      ],
+      "durationMs": 28974,
+      "tokenUsage": {
+        "inputTokens": 112603,
+        "outputTokens": 1524,
+        "totalTokens": 114127
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-7d27628e37abdf226591ae8251c5a29d83f4a4951bcfc418c37e5120e107a2cb",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-fetch-order-book",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 17553,
+      "tokenUsage": {
+        "inputTokens": 85152,
+        "outputTokens": 1134,
+        "totalTokens": 86286
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-c3f72c24371b9de2bbacb0f59078d8bc0563303316cbad79af2234bf8d5a8d0c",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-preview-order-cost",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 16616,
+      "tokenUsage": {
+        "inputTokens": 82685,
+        "outputTokens": 941,
+        "totalTokens": 83626
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-f0fa06b05f06016d24460b4cba0e84e44e03bf7e5a43bb1c6edb137a238ed6b0",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-create-table",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 20036,
+      "tokenUsage": {
+        "inputTokens": 83156,
+        "outputTokens": 877,
+        "totalTokens": 84033
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-407e8ded9f1f22a66c2d9f57d577e1a904d8c53cfc205054614ff55822c32be5",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-create-and-query-table",
+      "repetition": 2,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 22269,
+      "tokenUsage": {
+        "inputTokens": 112257,
+        "outputTokens": 1019,
+        "totalTokens": 113276
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-7cb818308341b6d355749a979d0956302f4827cabc33282b308fb43cab569fa3",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-account",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 16982,
+      "tokenUsage": {
+        "inputTokens": 82968,
+        "outputTokens": 619,
+        "totalTokens": 83587
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-d065aac8780d0ecbde128bd0068877add4668935e112d0c71cd569161e62e01c",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-positions",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 12152,
+      "tokenUsage": {
+        "inputTokens": 82363,
+        "outputTokens": 423,
+        "totalTokens": 82786
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-8f50ddf8ed09361b3abf09b6c39392fa67442d7a92260599cd4bb57e3ae055dc",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-open-orders",
+      "repetition": 3,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch"
+      ],
+      "durationMs": 35045,
+      "tokenUsage": {
+        "inputTokens": 82972,
+        "outputTokens": 887,
+        "totalTokens": 83859
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-557aa65b18546c2d6f085c0897f127d854f8b812456368ab2904051f6c6d9c25",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-portfolio",
+      "repetition": 3,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "fail",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "argument_mismatch"
+      ],
+      "durationMs": 23138,
+      "tokenUsage": {
+        "inputTokens": 84992,
+        "outputTokens": 1031,
+        "totalTokens": 86023
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-ef98de6fd9cb620746e9f810e6528d7681d1bb82d268bf7b4d705a7de3052635",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-markets",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 43525,
+      "tokenUsage": {
+        "inputTokens": 311202,
+        "outputTokens": 2760,
+        "totalTokens": 313962
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-616a91ab9ca7b8fb16fc7bdcb969bdd3295b6705f146545a446df02885eebc7f",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-single-price",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 17974,
+      "tokenUsage": {
+        "inputTokens": 82443,
+        "outputTokens": 671,
+        "totalTokens": 83114
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-249f8d758610fc337bb89ac1219bf438fa846e2219015ad8051119b70578aa1a",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-multiple-prices",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 13732,
+      "tokenUsage": {
+        "inputTokens": 82704,
+        "outputTokens": 642,
+        "totalTokens": 83346
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-4dda8eacc6e6aa3506ebea85725461d8882e38ad3f5dd4baa945dadef7a49fd2",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-asset-data",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 17451,
+      "tokenUsage": {
+        "inputTokens": 82777,
+        "outputTokens": 896,
+        "totalTokens": 83673
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-4aa73c0b7f3c87d473e7534cc3c3f97fe13aeb79dc2e5a7d1a75a589d39e0d11",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-search-hip3-markets",
+      "repetition": 3,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch"
+      ],
+      "durationMs": 65459,
+      "tokenUsage": {
+        "inputTokens": 146757,
+        "outputTokens": 2364,
+        "totalTokens": 149121
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-0ec972d4473a119b961a8f18ba8ad205ad8f5fdf49f4d8f52f14f5924dacaea8",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-hip3-dexes",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 20484,
+      "tokenUsage": {
+        "inputTokens": 82491,
+        "outputTokens": 773,
+        "totalTokens": 83264
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-96e9fae4757bddfcc80618230233c8d4c2cac6d2b9be09cb34c0e4a4ec1ad094",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-hip3-markets",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 31272,
+      "tokenUsage": {
+        "inputTokens": 103673,
+        "outputTokens": 3073,
+        "totalTokens": 106746
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-5c7ee8b1d1aaec43d6a8dab8d5407ce774e37d3e1fe481004c52beae2bc356ad",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-hip3-price",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 22088,
+      "tokenUsage": {
+        "inputTokens": 82542,
+        "outputTokens": 850,
+        "totalTokens": 83392
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-b2de85fdee6140feb8c41522f83c1828d99a3781ce519a1e1b8581a52e7c1845",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-fetch-trades",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 20939,
+      "tokenUsage": {
+        "inputTokens": 83090,
+        "outputTokens": 991,
+        "totalTokens": 84081
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-6d0e6d5aaaac1a2f380279ddcaa5af1a19f60e9da447f7b6ae8ac905a44c4f9b",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-fetch-candles",
+      "repetition": 3,
+      "verdict": "fail",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "fail",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [
+        "routing_mismatch"
+      ],
+      "durationMs": 24501,
+      "tokenUsage": {
+        "inputTokens": 113615,
+        "outputTokens": 1591,
+        "totalTokens": 115206
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-e222752b3dabe2fa42bfa4f6c98ab95260910a694388494cd3c9b67af983230c",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-fetch-order-book",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 18666,
+      "tokenUsage": {
+        "inputTokens": 84182,
+        "outputTokens": 1094,
+        "totalTokens": 85276
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-2b4d0b549086116a093958e1bd3ded7bb195ab0ea5fe57ac8eaf337f6c93fedd",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-preview-order-cost",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 17315,
+      "tokenUsage": {
+        "inputTokens": 82921,
+        "outputTokens": 1011,
+        "totalTokens": 83932
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-678ffe4f5ad299d11bd8aeee514475303e603b42221db30a524dbcd349faf294",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-create-table",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 19050,
+      "tokenUsage": {
+        "inputTokens": 83381,
+        "outputTokens": 930,
+        "totalTokens": 84311
+      },
+      "replacementOf": null
+    },
+    {
+      "id": "attempt-fcc8a127baaa28a98e4d674a1c6dd4ad90908fd4fa7cf94974b56cbfb5bee206",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "caseId": "perps-create-and-query-table",
+      "repetition": 3,
+      "verdict": "pass",
+      "validity": "valid",
+      "evidenceAvailability": "available",
+      "checks": {
+        "routing": "pass",
+        "arguments": "pass",
+        "safety": "pass",
+        "completion": "pass",
+        "skillActivation": "not_applicable"
+      },
+      "failureCategories": [],
+      "durationMs": 19664,
+      "tokenUsage": {
+        "inputTokens": 79485,
+        "outputTokens": 958,
+        "totalTokens": 80443
+      },
+      "replacementOf": null
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "ask-gina-muse-campaign-result.v1",
+  "family": "perps",
+  "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+  "model": "muse-spark-1.3",
+  "target": "muse_cli",
+  "reasoning": "medium",
+  "startedAt": "2026-09-14T13:42:20.997Z",
+  "finishedAt": "2026-09-14T14:09:39.126Z",
+  "planned": 54,
+  "dispatched": 54,
+  "graded": 54,
+  "passed": 42,
+  "failed": 12,
+  "unscoredTimeouts": 0,
+  "canonicalReportWritten": true,
+  "sourceReportSha256": "52b27dbad665f3483f18e4bcaba0524cf79ba8c1ec11bf0cd99cb7ac37b629fa",
+  "scoredAggregate": {
+    "observed": 54,
+    "expected": 54,
+    "overall": {
+      "passed": 42,
+      "failed": 12,
+      "pass_rate": 0.7777777777777778
+    },
+    "toolRouting": {
+      "passed": 45,
+      "failed": 9,
+      "pass_rate": 0.8333333333333334
+    },
+    "arguments": {
+      "passed": 50,
+      "failed": 4,
+      "pass_rate": 0.9259259259259259
+    },
+    "completion": {
+      "passed": 54,
+      "failed": 0,
+      "pass_rate": 1
+    },
+    "safety": {
+      "passed": 54,
+      "failed": 0,
+      "pass_rate": 1
+    },
+    "skillActivation": {
+      "passed": 0,
+      "failed": 0,
+      "pass_rate": null
+    },
+    "latencyMs": {
+      "p50": 21693,
+      "p95": 90177,
+      "max": 105798
+    },
+    "totalResultBytes": {
+      "p50": 2309,
+      "p95": 208716,
+      "max": 209072
+    },
+    "tokenUsage": {
+      "observations": 54,
+      "input_tokens": 6303333,
+      "output_tokens": 71403,
+      "total_tokens": 6374736
+    }
+  }
+}

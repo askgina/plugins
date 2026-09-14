@@ -1,0 +1,330 @@
+{
+  "slots": 54,
+  "canonicalReportSha256": "52b27dbad665f3483f18e4bcaba0524cf79ba8c1ec11bf0cd99cb7ac37b629fa",
+  "records": [
+    {
+      "caseId": "perps-account",
+      "repetition": 1,
+      "traceSha256": "94ec8837b89e7b442077e9ad27d65f6cb0ae03d26b4e31754fdca6a7878caff7",
+      "traceSizeBytes": 350621
+    },
+    {
+      "caseId": "perps-positions",
+      "repetition": 1,
+      "traceSha256": "ecd9d69baea8dce0b651737df9b17292d26ec7ada67a642b93ed0f043cfdd042",
+      "traceSizeBytes": 318284
+    },
+    {
+      "caseId": "perps-open-orders",
+      "repetition": 1,
+      "traceSha256": "3008cd62a45063cf9911bf3d1cbbc32ee556c5606b6edc0bc8accaf5a8ec2f5e",
+      "traceSizeBytes": 392762
+    },
+    {
+      "caseId": "perps-portfolio",
+      "repetition": 1,
+      "traceSha256": "63e2f2eaac203e8abbca1e603c82298539fce7531984b56db100eb6528092c04",
+      "traceSizeBytes": 397885
+    },
+    {
+      "caseId": "perps-markets",
+      "repetition": 1,
+      "traceSha256": "833a5a0a3997a6e6c0a4b9fd47f0ce701265ee6bf813775c2877d6ba2bcb76cd",
+      "traceSizeBytes": 2306082
+    },
+    {
+      "caseId": "perps-single-price",
+      "repetition": 1,
+      "traceSha256": "d9f850086a88d24c2f6f80b20672f585de2512d311611bdaecebb97a615d0129",
+      "traceSizeBytes": 399442
+    },
+    {
+      "caseId": "perps-multiple-prices",
+      "repetition": 1,
+      "traceSha256": "d6418ec188f5f8dffedad266312b477b60a272f4ed4a105336774777e1e60064",
+      "traceSizeBytes": 312195
+    },
+    {
+      "caseId": "perps-asset-data",
+      "repetition": 1,
+      "traceSha256": "2a9af2d8384c9e1d78b277f9e056ce04186e9fd8db1d0ffbe16501debb806f97",
+      "traceSizeBytes": 323388
+    },
+    {
+      "caseId": "perps-search-hip3-markets",
+      "repetition": 1,
+      "traceSha256": "cbc0273843c0f5ff8e1787d11371166efce1323596b2815386e7a7ecc5874183",
+      "traceSizeBytes": 937452
+    },
+    {
+      "caseId": "perps-hip3-dexes",
+      "repetition": 1,
+      "traceSha256": "60788784cab19f709be1a2536e01f7d320a312e9c0d36eea5f429b3f942613de",
+      "traceSizeBytes": 320560
+    },
+    {
+      "caseId": "perps-hip3-markets",
+      "repetition": 1,
+      "traceSha256": "aa65ee26753adb4da698beee38f74ebe7a70b72a542503d0520fba7cc79f00fe",
+      "traceSizeBytes": 775678
+    },
+    {
+      "caseId": "perps-hip3-price",
+      "repetition": 1,
+      "traceSha256": "99c03a9f142f2ea3631fde9079b1d7283457ab3f2f7e852e0ce384825064e062",
+      "traceSizeBytes": 322103
+    },
+    {
+      "caseId": "perps-fetch-trades",
+      "repetition": 1,
+      "traceSha256": "592f3302b6f75888e48f32d31c0c96106d856c764959329b2fb6a8c0a276387b",
+      "traceSizeBytes": 329108
+    },
+    {
+      "caseId": "perps-fetch-candles",
+      "repetition": 1,
+      "traceSha256": "980b612cb24b584a52aa169991ec255bcce5aa65d0a2c05b465145a26646a898",
+      "traceSizeBytes": 465390
+    },
+    {
+      "caseId": "perps-fetch-order-book",
+      "repetition": 1,
+      "traceSha256": "81e6f5d28acff754019a5ceac5cfbcb3e8c6970da84922a9ba6d9a146bcf75a8",
+      "traceSizeBytes": 383491
+    },
+    {
+      "caseId": "perps-preview-order-cost",
+      "repetition": 1,
+      "traceSha256": "46c198e174a3b91e30d2e3ccd9094f2204b6f90b8fc636c40e42cbbc829dfd05",
+      "traceSizeBytes": 343743
+    },
+    {
+      "caseId": "perps-create-table",
+      "repetition": 1,
+      "traceSha256": "74ee301cf487cabc4b993458dada12f885058bc99e094d9ad0e36d0400a8d6a7",
+      "traceSizeBytes": 331458
+    },
+    {
+      "caseId": "perps-create-and-query-table",
+      "repetition": 1,
+      "traceSha256": "cebf01a9678b7c1bb5d15166ac963c094c0bea215326a5dff678e4142461e3be",
+      "traceSizeBytes": 417495
+    },
+    {
+      "caseId": "perps-account",
+      "repetition": 2,
+      "traceSha256": "e83e6ee238e07a6d6cef0defa31795bb24e27e97edea5b590e58a548c72c4ffa",
+      "traceSizeBytes": 342852
+    },
+    {
+      "caseId": "perps-positions",
+      "repetition": 2,
+      "traceSha256": "fc90d969484a7f93b7a3cc1615b1d300b94adb24014cf039c1d38d7db7baf246",
+      "traceSizeBytes": 314336
+    },
+    {
+      "caseId": "perps-open-orders",
+      "repetition": 2,
+      "traceSha256": "fdbff8e44cf91cc0387d4a821a95cb7e9355a3b4ca8ed2ff8ea554155b2719f9",
+      "traceSizeBytes": 317922
+    },
+    {
+      "caseId": "perps-portfolio",
+      "repetition": 2,
+      "traceSha256": "c158afffbbb8aef1de9c3f971f94a1f16f01cee5799f35bdd552f026483631a1",
+      "traceSizeBytes": 402853
+    },
+    {
+      "caseId": "perps-markets",
+      "repetition": 2,
+      "traceSha256": "1fb4089d19feb42178437828993f8cd1abdeb2620df962d6d8dd9af4b84cd8c3",
+      "traceSizeBytes": 2059217
+    },
+    {
+      "caseId": "perps-single-price",
+      "repetition": 2,
+      "traceSha256": "c7d4b5d1d7f4957de72c22526365f303fe9234a37103dd89458e46ecd615b8aa",
+      "traceSizeBytes": 314305
+    },
+    {
+      "caseId": "perps-multiple-prices",
+      "repetition": 2,
+      "traceSha256": "4eb3e3d034354be90eb5e18cce319dd52cc3a061db25d9db08a3cd99b8495403",
+      "traceSizeBytes": 313965
+    },
+    {
+      "caseId": "perps-asset-data",
+      "repetition": 2,
+      "traceSha256": "57189e1b9d8560ef439da06ef8e9c1c6d1b45f00f0ba5ef6ccf8348ce7d4f1f3",
+      "traceSizeBytes": 322816
+    },
+    {
+      "caseId": "perps-search-hip3-markets",
+      "repetition": 2,
+      "traceSha256": "b525e80f4c705c5b50703b52cfc2d326ef4f589601f3fc47b05cb34390926371",
+      "traceSizeBytes": 825779
+    },
+    {
+      "caseId": "perps-hip3-dexes",
+      "repetition": 2,
+      "traceSha256": "f4d0e285803fe7befebbfb0142b883f026614993daf73c0fcf586eff5dda92d7",
+      "traceSizeBytes": 319396
+    },
+    {
+      "caseId": "perps-hip3-markets",
+      "repetition": 2,
+      "traceSha256": "416011c21e6da113b88e2ab16411f634442ef3edfe379935b03ccf9eeeca26ec",
+      "traceSizeBytes": 808938
+    },
+    {
+      "caseId": "perps-hip3-price",
+      "repetition": 2,
+      "traceSha256": "67f745588d0460714814a7f7fdb9859be2228a9c08a50cacd936cd5d5b9661f7",
+      "traceSizeBytes": 322091
+    },
+    {
+      "caseId": "perps-fetch-trades",
+      "repetition": 2,
+      "traceSha256": "96f920f5351920f846dfa1ce2a32671a75db6dbd6ca7793f4ed4bb19998053ab",
+      "traceSizeBytes": 329155
+    },
+    {
+      "caseId": "perps-fetch-candles",
+      "repetition": 2,
+      "traceSha256": "7c3e2f6f95e85982d90f5e0a3160068507640f637cffc51bcfd2c7a290ea8781",
+      "traceSizeBytes": 417077
+    },
+    {
+      "caseId": "perps-fetch-order-book",
+      "repetition": 2,
+      "traceSha256": "d94939f9dfe3b648ccd652807a2d66cbb7e8bb6a539a97580f65085aec90183f",
+      "traceSizeBytes": 396594
+    },
+    {
+      "caseId": "perps-preview-order-cost",
+      "repetition": 2,
+      "traceSha256": "0524c72f74120af4b1d06c18760587564dcd3a32b3d393aa797d1342ae02a92e",
+      "traceSizeBytes": 344273
+    },
+    {
+      "caseId": "perps-create-table",
+      "repetition": 2,
+      "traceSha256": "c81cfcc6497f7b3fb81e03092c1c949892eaacc541c0a13ab8976e2a17de95b8",
+      "traceSizeBytes": 330227
+    },
+    {
+      "caseId": "perps-create-and-query-table",
+      "repetition": 2,
+      "traceSha256": "580d9d1eb9177391b2f9ed10a0f41258953c1961d46c4bb5906b65a85f80c217",
+      "traceSizeBytes": 414020
+    },
+    {
+      "caseId": "perps-account",
+      "repetition": 3,
+      "traceSha256": "f53fcfa57d3255f02b224aec9a1c48d5526d77b470196227659757c74d812e10",
+      "traceSizeBytes": 339761
+    },
+    {
+      "caseId": "perps-positions",
+      "repetition": 3,
+      "traceSha256": "6c1c3fde21e2187c70e32680858a569aab271b0d7405049a12f1f36b067c77d6",
+      "traceSizeBytes": 314841
+    },
+    {
+      "caseId": "perps-open-orders",
+      "repetition": 3,
+      "traceSha256": "8e2c4d527d6b689a9db85e1d34b2789ac31567113f7c833cef4beb24217ee0d7",
+      "traceSizeBytes": 351663
+    },
+    {
+      "caseId": "perps-portfolio",
+      "repetition": 3,
+      "traceSha256": "d5954cd3d8a0b4694f0e7644e7c073d2a8b935fc8ce62a6a6130f1bc7be4d64c",
+      "traceSizeBytes": 392459
+    },
+    {
+      "caseId": "perps-markets",
+      "repetition": 3,
+      "traceSha256": "99b03fac03c0049eb59cd2472d75afb5e4e1003fa6c1f60df98c358c60bbabc9",
+      "traceSizeBytes": 1906061
+    },
+    {
+      "caseId": "perps-single-price",
+      "repetition": 3,
+      "traceSha256": "ecb9412b85631c3ef7e4a6783465320fb16f235f460a731bb1c584565a3a683e",
+      "traceSizeBytes": 317433
+    },
+    {
+      "caseId": "perps-multiple-prices",
+      "repetition": 3,
+      "traceSha256": "9ccc54352b71eb4c3c87136269dac54c1d6e916ebb0774e28fc8dda775196bfc",
+      "traceSizeBytes": 313422
+    },
+    {
+      "caseId": "perps-asset-data",
+      "repetition": 3,
+      "traceSha256": "3fe3a785d38ed68ca97bb9e53cf46ae43198047b46769509700d2c9129fe9611",
+      "traceSizeBytes": 323818
+    },
+    {
+      "caseId": "perps-search-hip3-markets",
+      "repetition": 3,
+      "traceSha256": "4c74a0c6df3b87f628f184316401de686c13e7a35bb38dcd88541907a31e9555",
+      "traceSizeBytes": 698358
+    },
+    {
+      "caseId": "perps-hip3-dexes",
+      "repetition": 3,
+      "traceSha256": "11a354b5f650ebe5e421d695edfbe1a9c91b35f36da584d933faf4908fdab3c5",
+      "traceSizeBytes": 323718
+    },
+    {
+      "caseId": "perps-hip3-markets",
+      "repetition": 3,
+      "traceSha256": "bfc4649fd5fcca6d39bab6ab9c9c27cfb210c7258c1f617bebbaf8b41d4da8ce",
+      "traceSizeBytes": 791379
+    },
+    {
+      "caseId": "perps-hip3-price",
+      "repetition": 3,
+      "traceSha256": "9c94ddcf23cf077a1eb828ea88bf112e1eb05abd80b82ed5d41fc971454ee8e6",
+      "traceSizeBytes": 324560
+    },
+    {
+      "caseId": "perps-fetch-trades",
+      "repetition": 3,
+      "traceSha256": "d4e728a183b8105cfba3e93f56d3b87cea4814efb52751f7f6b3993700a6d98b",
+      "traceSizeBytes": 328641
+    },
+    {
+      "caseId": "perps-fetch-candles",
+      "repetition": 3,
+      "traceSha256": "e0617977c17a934f748f76b8d13eb25126c5667ccbaf3c4442116a1fade95b3f",
+      "traceSizeBytes": 449292
+    },
+    {
+      "caseId": "perps-fetch-order-book",
+      "repetition": 3,
+      "traceSha256": "4fb173aefb123d9cb8c5d86b8be68bc74819f99095a518bb84d2c00f7addd932",
+      "traceSizeBytes": 355737
+    },
+    {
+      "caseId": "perps-preview-order-cost",
+      "repetition": 3,
+      "traceSha256": "47d29030cfc6f3ea6183223f572a4814c825256bb96b725fa1d65119f766aa6b",
+      "traceSizeBytes": 344577
+    },
+    {
+      "caseId": "perps-create-table",
+      "repetition": 3,
+      "traceSha256": "162f57afbbc49a974d50e6c076772354ea335fd42f45146526688b6609e91112",
+      "traceSizeBytes": 332654
+    },
+    {
+      "caseId": "perps-create-and-query-table",
+      "repetition": 3,
+      "traceSha256": "18b36e5684fc8e1a66e73eee7f81124124b0e3e62ad8a2f62c38b2835f6b7d12",
+      "traceSizeBytes": 283401
+    }
+  ]
+}

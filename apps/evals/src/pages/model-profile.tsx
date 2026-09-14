@@ -1,12 +1,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { ArrowUpRight, Download, GitCompare } from "lucide-react";
 import { dataset, families, featuredModel, getModel, models, type EvalModel } from "../data";
-import {
-  getMeasuredModel,
-  measuredRun,
-  type MeasuredFamilyResult,
-  type MeasuredModel,
-} from "../measured";
+import { getMeasuredModel, type MeasuredFamilyResult, type MeasuredModel } from "../measured";
 import { Modal, ModelAvatar, PageShell, Panel } from "../components/eval-ui";
 import { Button } from "../components/ui/button";
 import "./model-profile.css";
@@ -103,13 +98,16 @@ function MeasuredModelProfile({ model }: { model: MeasuredModel }) {
   });
   const downloadResults = () => {
     const url = URL.createObjectURL(
-      new Blob([`${JSON.stringify({ measured: true, run: measuredRun, model }, null, 2)}\n`], {
-        type: "application/json",
-      }),
+      new Blob(
+        [`${JSON.stringify({ measured: true, campaign: model.campaign, model }, null, 2)}\n`],
+        {
+          type: "application/json",
+        },
+      ),
     );
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `${model.id}-measured-2026-09-11.json`;
+    anchor.download = `${model.id}-measured-${model.campaign.date}.json`;
     document.body.append(anchor);
     anchor.click();
     anchor.remove();
@@ -118,7 +116,7 @@ function MeasuredModelProfile({ model }: { model: MeasuredModel }) {
   return (
     <PageShell
       active="models"
-      footerNote="Measured 2026-09-11 conformance sample. Unranked; not a benchmark."
+      footerNote={`Measured ${model.campaign.date} conformance sample. Unranked; not a benchmark.`}
     >
       <div className="eval-container model-profile-page">
         <section className="eval-hero model-profile-hero" aria-labelledby="model-profile-title">
@@ -131,7 +129,7 @@ function MeasuredModelProfile({ model }: { model: MeasuredModel }) {
               <span aria-hidden="true">/</span>
               <span aria-current="page">{model.name}</span>
             </nav>
-            <p className="eval-eyebrow">Model profile · Measured {measuredRun.date}</p>
+            <p className="eval-eyebrow">Model profile · Measured {model.campaign.date}</p>
             <div className="model-profile-title-row">
               <ModelAvatar model={model} size="lg" />
               <h1 className="eval-title" id="model-profile-title">
@@ -144,8 +142,8 @@ function MeasuredModelProfile({ model }: { model: MeasuredModel }) {
               <code>{model.modelId}</code>
             </p>
             <p className="eval-description">
-              Conformance runs with the OMP harness, three repetitions per case. Unranked, small
-              live samples; not answer accuracy.
+              Conformance runs with the {model.campaign.harness}, {model.campaign.repetitions}{" "}
+              repetitions per case. Unranked, small live samples; not answer accuracy.
             </p>
           </div>
           <div className="model-profile-actions">
@@ -272,19 +270,19 @@ function MeasuredModelProfile({ model }: { model: MeasuredModel }) {
             </div>
             <div>
               <dt>Harness</dt>
-              <dd>{measuredRun.harness}</dd>
+              <dd>{model.campaign.harness}</dd>
             </div>
             <div>
               <dt>Run date</dt>
-              <dd>{measuredRun.date}</dd>
+              <dd>{model.campaign.date}</dd>
             </div>
             <div>
               <dt>Repetitions</dt>
-              <dd>{measuredRun.repetitions}</dd>
+              <dd>{model.campaign.repetitions}</dd>
             </div>
             <div>
               <dt>Timeout</dt>
-              <dd>{measuredRun.timeoutMs / 1000}s</dd>
+              <dd>{model.campaign.timeoutMs / 1000}s</dd>
             </div>
             {available.map(({ family, result }) => (
               <div key={family}>
@@ -302,46 +300,53 @@ function MeasuredModelProfile({ model }: { model: MeasuredModel }) {
                 </dd>
               </div>
             ))}
-            {available.some(({ family }) => family === "Perps" || family === "Predictions") && (
+            {model.campaign.executableSourceCommit && (
               <div>
                 <dt>Executable source commit</dt>
                 <dd>
-                  <code>{measuredRun.executableSourceCommit}</code>
+                  <code>{model.campaign.executableSourceCommit}</code>
                 </dd>
               </div>
             )}
           </dl>
-          <a
-            className="eval-text-link model-profile-run-link"
-            href={measuredRun.prUrl}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Open GitHub PR #85 <ArrowUpRight size={14} aria-hidden="true" />
-          </a>
+          {model.campaign.prUrl && (
+            <a
+              className="eval-text-link model-profile-run-link"
+              href={model.campaign.prUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {model.campaign.prLabel ?? "Open GitHub PR"}{" "}
+              <ArrowUpRight size={14} aria-hidden="true" />
+            </a>
+          )}
         </Panel>
 
-        {available.some(({ family }) => family === "Perps" || family === "Predictions") && (
+        {(model.campaign.abortedRun || model.campaign.limitations.length > 0) && (
           <>
-            <Panel title="Aborted original predictions run">
-              <dl className="model-profile-run-details">
-                {Object.entries(measuredRun.abortedRun ?? {}).map(([key, value]) => (
-                  <div key={key}>
-                    <dt>{key}</dt>
-                    <dd>
-                      <code>{String(value)}</code>
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </Panel>
-            <Panel title="Limitations">
-              <ul>
-                {measuredRun.limitations.map((limitation) => (
-                  <li key={limitation}>{limitation}</li>
-                ))}
-              </ul>
-            </Panel>
+            {model.campaign.abortedRun && (
+              <Panel title="Aborted original predictions run">
+                <dl className="model-profile-run-details">
+                  {Object.entries(model.campaign.abortedRun).map(([key, value]) => (
+                    <div key={key}>
+                      <dt>{key}</dt>
+                      <dd>
+                        <code>{String(value)}</code>
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </Panel>
+            )}
+            {model.campaign.limitations.length > 0 && (
+              <Panel title="Limitations">
+                <ul>
+                  {model.campaign.limitations.map((limitation) => (
+                    <li key={limitation}>{limitation}</li>
+                  ))}
+                </ul>
+              </Panel>
+            )}
           </>
         )}
       </div>

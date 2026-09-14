@@ -1,10 +1,14 @@
 import { describe, expect, test } from "vitest";
-import { getMeasuredModel, measuredModels, measuredRun } from "../src/measured";
+import { getMeasuredModel, measuredCampaigns, measuredModels, ompCampaign } from "../src/measured";
 import { perpsPredictionsReport, spotComparison } from "../src/results";
 
 describe("measured models", () => {
-  test("maps the two measured models and their families", () => {
-    expect(measuredModels.map((model) => model.id)).toEqual(["gpt-5-5", "gpt-5-6-sol"]);
+  test("maps the measured models and their families", () => {
+    expect(measuredModels.map((model) => model.id)).toEqual([
+      "gpt-5-5",
+      "gpt-5-6-sol",
+      "muse-spark-1-3",
+    ]);
     expect(Object.keys(getMeasuredModel("gpt-5-5")!.families)).toEqual(["Spot"]);
     expect(Object.keys(getMeasuredModel("gpt-5-6-sol")!.families).sort()).toEqual([
       "Perps",
@@ -12,6 +16,11 @@ describe("measured models", () => {
       "Spot",
     ]);
     expect(getMeasuredModel("gpt-5-6-sol")!.families.Portfolio).toBeUndefined();
+    expect(Object.keys(getMeasuredModel("muse-spark-1-3")!.families).sort()).toEqual([
+      "Perps",
+      "Predictions",
+      "Spot",
+    ]);
   });
 
   test("perps and predictions counts are the exported counts", () => {
@@ -45,8 +54,8 @@ describe("measured models", () => {
   });
 
   test("run metadata is passed through", () => {
-    expect(measuredRun.prUrl).toBe(perpsPredictionsReport.prUrl);
-    expect(measuredRun.repetitions).toBe(3);
+    expect(ompCampaign.prUrl).toBe(perpsPredictionsReport.prUrl);
+    expect(ompCampaign.repetitions).toBe(3);
   });
 
   test("preserves per-bundle source commits and graded sort counts", () => {
@@ -59,5 +68,56 @@ describe("measured models", () => {
     expect(getMeasuredModel("gpt-5-6-sol")!.families.Predictions!.passRateSortKey).toBeCloseTo(
       (12 / 38) * 100,
     );
+  });
+
+  test("maps Muse campaign counts, dimensions, and cases", () => {
+    const muse = getMeasuredModel("muse-spark-1-3")!;
+    const spot = muse.families.Spot!;
+    const perps = muse.families.Perps!;
+    const predictions = muse.families.Predictions!;
+
+    expect(spot).toMatchObject({
+      passed: 9,
+      failed: 0,
+      unscoredTimeouts: 3,
+      total: 12,
+      passRateSortKey: 100,
+      dimensions: {
+        routing: { passed: 9, failed: 0 },
+        arguments: { passed: 9, failed: 0 },
+        completion: { passed: 9, failed: 0 },
+        safety: { passed: 9, failed: 0 },
+      },
+    });
+    expect(spot.cases).toHaveLength(4);
+    expect(perps).toMatchObject({
+      passed: 42,
+      failed: 12,
+      unscoredTimeouts: 0,
+      total: 54,
+      passRateSortKey: (42 / 54) * 100,
+    });
+    expect(perps.cases).toHaveLength(18);
+    expect(predictions).toMatchObject({
+      passed: 10,
+      failed: 28,
+      unscoredTimeouts: 1,
+      total: 39,
+      passRateSortKey: (10 / 38) * 100,
+      dimensions: { safety: { passed: 35, failed: 3 } },
+    });
+    expect(predictions.cases).toHaveLength(13);
+  });
+
+  test("keeps campaign metadata distinct", () => {
+    expect(measuredCampaigns).toHaveLength(2);
+    expect(measuredCampaigns.map((campaign) => campaign.date)).toEqual([
+      "2026-09-11",
+      "2026-09-14",
+    ]);
+    expect(getMeasuredModel("gpt-5-5")!.campaign).toBe(getMeasuredModel("gpt-5-6-sol")!.campaign);
+    expect(getMeasuredModel("gpt-5-5")!.campaign.id).toBe("omp-2026-09-11");
+    expect(getMeasuredModel("muse-spark-1-3")!.campaign.prUrl).toBeUndefined();
+    expect(getMeasuredModel("muse-spark-1-3")!.campaign.id).toBe("muse-2026-09-14");
   });
 });

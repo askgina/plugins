@@ -1,0 +1,278 @@
+{
+  "slots": 39,
+  "records": [
+    {
+      "caseId": "predictions-focused-fact-search-only",
+      "repetition": 1,
+      "outcome": "observed",
+      "traceSha256": "d258e5ece7c6c25788330a6515a13230652fd7941c9a7636d682463c6ef41d7f",
+      "traceSizeBytes": 840869
+    },
+    {
+      "caseId": "predictions-broad-nba-search-only",
+      "repetition": 1,
+      "outcome": "observed",
+      "traceSha256": "f5d7842f8bfbe07b8b4387dbafee269b5e87f4d7cd2e2112b422531c545922c9",
+      "traceSizeBytes": 747771
+    },
+    {
+      "caseId": "predictions-broad-football-search-only",
+      "repetition": 1,
+      "outcome": "observed",
+      "traceSha256": "7caaf93adfeead79f2248c689036c0a213bf745cd0a3287941ed0b225fba846e",
+      "traceSizeBytes": 566571
+    },
+    {
+      "caseId": "predictions-non-exact-no-render",
+      "repetition": 1,
+      "outcome": "observed",
+      "traceSha256": "e72b0165a294c478edecf26463d96bcb4f8c2f44145e93a10dbf007fac654ff7",
+      "traceSizeBytes": 1365598
+    },
+    {
+      "caseId": "predictions-sparse-history-no-render",
+      "repetition": 1,
+      "outcome": "observed",
+      "traceSha256": "1079a53f5958c94e02814513de3de099f94235c1d27eaf31b4cb86122d57f72f",
+      "traceSizeBytes": 835677
+    },
+    {
+      "caseId": "predictions-multi-series-no-render",
+      "repetition": 1,
+      "outcome": "observed",
+      "traceSha256": "6686157cdffc400e26c76f8884a9b8ed9d7dfbc44d7f94bb6a92742ba94d547e",
+      "traceSizeBytes": 1222680
+    },
+    {
+      "caseId": "predictions-expiring-markets",
+      "repetition": 1,
+      "outcome": "observed",
+      "traceSha256": "d8ce0cea733177e749bc3575cda8a5963819d9aec68d3d658c6ba870b8a46aa3",
+      "traceSizeBytes": 411851
+    },
+    {
+      "caseId": "predictions-series-market",
+      "repetition": 1,
+      "outcome": "observed",
+      "traceSha256": "e7922fc5dc2e46376becd8f4d385a4efe95f7c90ca847294c59d3b0cd69ad57d",
+      "traceSizeBytes": 709782
+    },
+    {
+      "caseId": "predictions-orderbook",
+      "repetition": 1,
+      "outcome": "observed",
+      "traceSha256": "ec37323b337933a8b775ee3067eba3a462f63213e9df0bc44632dff98494ea38",
+      "traceSizeBytes": 313940
+    },
+    {
+      "caseId": "predictions-fetch-market-data",
+      "repetition": 1,
+      "outcome": "observed",
+      "traceSha256": "09b0473c085a1560946732ac343b19b7d3aacb05d80921ba10787dfcc614daa0",
+      "traceSizeBytes": 610896
+    },
+    {
+      "caseId": "predictions-fetch-history-data",
+      "repetition": 1,
+      "outcome": "observed",
+      "traceSha256": "7f8ad8e4752c26bb8c1c666071eca31089d2e1e903e7931deb8b08a43603297a",
+      "traceSizeBytes": 1939191
+    },
+    {
+      "caseId": "predictions-open-positions",
+      "repetition": 1,
+      "outcome": "observed",
+      "traceSha256": "7274e3788131ab0b98d93bbb37793257d9157b4567b3ace0f97f196077777e2f",
+      "traceSizeBytes": 304724
+    },
+    {
+      "caseId": "predictions-order-history",
+      "repetition": 1,
+      "outcome": "observed",
+      "traceSha256": "4ae1c9f3d7477654c4596d23574dea318a921e23f7adc112794340acfc4eb779",
+      "traceSizeBytes": 401197
+    },
+    {
+      "caseId": "predictions-focused-fact-search-only",
+      "repetition": 2,
+      "outcome": "observed",
+      "traceSha256": "5c2f017105845214e38bf483e14444793ce3fec3dfbcc47427f1d467ba934c9d",
+      "traceSizeBytes": 748811
+    },
+    {
+      "caseId": "predictions-broad-nba-search-only",
+      "repetition": 2,
+      "outcome": "observed",
+      "traceSha256": "b5dbf911be2e8d97c3805cfbefe9499730381f083a6c5be98dedc1859d574fc3",
+      "traceSizeBytes": 337696
+    },
+    {
+      "caseId": "predictions-broad-football-search-only",
+      "repetition": 2,
+      "outcome": "observed",
+      "traceSha256": "7b161f957e1444c3b27abe51fc1e8655b64b17903ccb58a375b543e43fc11cfe",
+      "traceSizeBytes": 744768
+    },
+    {
+      "caseId": "predictions-non-exact-no-render",
+      "repetition": 2,
+      "outcome": "observed",
+      "traceSha256": "5be8fa04fe8eafa14d38304cee000cebba03f7c7648e17442dee44d0bd30f457",
+      "traceSizeBytes": 1311462
+    },
+    {
+      "caseId": "predictions-sparse-history-no-render",
+      "repetition": 2,
+      "outcome": "observed",
+      "traceSha256": "e4b15d557f9a2bc1b434fa982dae48ba63aa9be2151402afaddd9f122756e8a9",
+      "traceSizeBytes": 3720779
+    },
+    {
+      "caseId": "predictions-multi-series-no-render",
+      "repetition": 2,
+      "outcome": "observed",
+      "traceSha256": "9c185c5410a9ecd3c9b7ee3f60b97c2c357cb1a4bb2571dc52e00f39729fe4e0",
+      "traceSizeBytes": 1013976
+    },
+    {
+      "caseId": "predictions-expiring-markets",
+      "repetition": 2,
+      "outcome": "observed",
+      "traceSha256": "5a8294971f1ffa7b0ef2f4d7d099c0a8a1abb2cac301c44fbe9a8efcb5a906c2",
+      "traceSizeBytes": 424346
+    },
+    {
+      "caseId": "predictions-series-market",
+      "repetition": 2,
+      "outcome": "observed",
+      "traceSha256": "2dda1b987f438f898bd2ba6eae282b9f175841cd743a7d073a0176dc895b6a88",
+      "traceSizeBytes": 774448
+    },
+    {
+      "caseId": "predictions-orderbook",
+      "repetition": 2,
+      "outcome": "observed",
+      "traceSha256": "3706be99fb26339d1f059f00048064477ca22eac7d659149c76ed622ea2abc0c",
+      "traceSizeBytes": 315726
+    },
+    {
+      "caseId": "predictions-fetch-market-data",
+      "repetition": 2,
+      "outcome": "observed",
+      "traceSha256": "a5b40a26477778eb3c6532640ccd488c105aa35906d4c5c4c58f763fc78be668",
+      "traceSizeBytes": 1297458
+    },
+    {
+      "caseId": "predictions-fetch-history-data",
+      "repetition": 2,
+      "outcome": "observed",
+      "traceSha256": "7d8981bda50d8a0122abc92887442e8fe9975ce1669723a825ce172a5689a28b",
+      "traceSizeBytes": 2552595
+    },
+    {
+      "caseId": "predictions-open-positions",
+      "repetition": 2,
+      "outcome": "observed",
+      "traceSha256": "e0dfd9f667d5de87cfe25637e59a9ae2ab62e52b5ad9057fa1db558d87d6a438",
+      "traceSizeBytes": 306573
+    },
+    {
+      "caseId": "predictions-order-history",
+      "repetition": 2,
+      "outcome": "observed",
+      "traceSha256": "021544116c6e7731288e71d04a3b5021f94c6c267fff2ed9d16286796efa1612",
+      "traceSizeBytes": 397413
+    },
+    {
+      "caseId": "predictions-focused-fact-search-only",
+      "repetition": 3,
+      "outcome": "observed",
+      "traceSha256": "ec46e060887f98feea8ea2d4059810048d1fb8770c175214aa5ef9f83596b771",
+      "traceSizeBytes": 839230
+    },
+    {
+      "caseId": "predictions-broad-nba-search-only",
+      "repetition": 3,
+      "outcome": "observed",
+      "traceSha256": "3a504a8dfd26410e4fd81922727afa81ddc7faab47148e18db435c7117569778",
+      "traceSizeBytes": 746282
+    },
+    {
+      "caseId": "predictions-broad-football-search-only",
+      "repetition": 3,
+      "outcome": "observed",
+      "traceSha256": "9b558e90585b42747516457a25c7c35d9658a58fbe9295c8bb1e25340a8ca2ca",
+      "traceSizeBytes": 843611
+    },
+    {
+      "caseId": "predictions-non-exact-no-render",
+      "repetition": 3,
+      "outcome": "observed",
+      "traceSha256": "8894199a4fcf4e5494a42488a6d03a69693b869c7315af310d408105de7ebcee",
+      "traceSizeBytes": 1358201
+    },
+    {
+      "caseId": "predictions-sparse-history-no-render",
+      "repetition": 3,
+      "outcome": "observed",
+      "traceSha256": "38960fd0fdb178951fe70b3b238170f8308105399b0832b8fc00316aad048eda",
+      "traceSizeBytes": 777216
+    },
+    {
+      "caseId": "predictions-multi-series-no-render",
+      "repetition": 3,
+      "outcome": "timeout",
+      "traceSha256": "6f5aad09a6127a0291fd21452a6693df7e406857fa60007e75f56a07a81771b3",
+      "traceSizeBytes": 844097
+    },
+    {
+      "caseId": "predictions-expiring-markets",
+      "repetition": 3,
+      "outcome": "observed",
+      "traceSha256": "7883babb1625283502b2f49ca4abdd36a57b2fc702d48d63f68bfb3a090aafc7",
+      "traceSizeBytes": 423976
+    },
+    {
+      "caseId": "predictions-series-market",
+      "repetition": 3,
+      "outcome": "observed",
+      "traceSha256": "3612a4d88c1cf33585cb955c862867bc336a4422c56a615f10be2c77ca165ee9",
+      "traceSizeBytes": 679069
+    },
+    {
+      "caseId": "predictions-orderbook",
+      "repetition": 3,
+      "outcome": "observed",
+      "traceSha256": "816c9c485690891db4f1638b5416900745df6aa4ab611a2813e8e4a46a2410b1",
+      "traceSizeBytes": 313851
+    },
+    {
+      "caseId": "predictions-fetch-market-data",
+      "repetition": 3,
+      "outcome": "observed",
+      "traceSha256": "03b973efa690b4deb71c232326ba6174a1ee7374ea8f8e7a95a0e96bb7279206",
+      "traceSizeBytes": 1298316
+    },
+    {
+      "caseId": "predictions-fetch-history-data",
+      "repetition": 3,
+      "outcome": "observed",
+      "traceSha256": "80331c488f3e9f90ced495aa066d60f25fa6f90bc3f0675c2d50b140984d88ea",
+      "traceSizeBytes": 1847441
+    },
+    {
+      "caseId": "predictions-open-positions",
+      "repetition": 3,
+      "outcome": "observed",
+      "traceSha256": "e0195e9e313d95a52dd6c1bae15ad42c6bcea10fd81c61ebc730aa343764bc9e",
+      "traceSizeBytes": 304810
+    },
+    {
+      "caseId": "predictions-order-history",
+      "repetition": 3,
+      "outcome": "observed",
+      "traceSha256": "aa9a7bdbb59a76b52f698a694444d00f720baa0762104c8ce7139b7adf83ff39",
+      "traceSizeBytes": 396415
+    }
+  ]
+}

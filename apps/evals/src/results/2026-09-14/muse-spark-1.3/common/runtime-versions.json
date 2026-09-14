@@ -1,0 +1,9 @@
+{
+  "bunVersion": "1.4.2",
+  "platform": "Linux 6.17.0-1019-aws x86_64",
+  "reportRuntime": {
+    "python": "3.11.13",
+    "reportlab": "5.0.1",
+    "pymupdf": "1.28.2"
+  }
+}

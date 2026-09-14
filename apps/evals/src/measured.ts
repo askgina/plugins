@@ -1,5 +1,5 @@
 import type { TaskFamily } from "./data";
-import { perpsPredictionsReport, spotBundleManifest, spotComparison } from "./results";
+import { museReport, perpsPredictionsReport, spotBundleManifest, spotComparison } from "./results";
 
 export type MeasuredVerdict = "pass" | "fail" | "timeout";
 
@@ -56,7 +56,22 @@ export interface MeasuredModel {
   color: string;
   source: "measured";
   modelId: string;
+  campaign: MeasuredCampaign;
   families: Partial<Record<TaskFamily, MeasuredFamilyResult>>;
+}
+
+export interface MeasuredCampaign {
+  id: "omp-2026-09-11" | "muse-2026-09-14";
+  date: string;
+  harness: string;
+  repetitions: number;
+  timeoutMs: number;
+  sourceCommit: string;
+  executableSourceCommit?: string;
+  prUrl?: string;
+  prLabel?: string;
+  abortedRun?: typeof perpsPredictionsReport.abortedRun;
+  limitations: readonly string[];
 }
 
 const dimensionNames = ["routing", "arguments", "completion", "safety"] as const;
@@ -153,20 +168,96 @@ function perpsResult(run: (typeof perpsPredictionsReport.runs)[number]): Measure
   });
 }
 
+function museCases(
+  family: (typeof museReport.families)[number]["family"],
+  run: (typeof museReport.families)[number]["muse"],
+): readonly MeasuredCase[] {
+  const cases = new Map<string, MeasuredAttempt[]>();
+  for (const trial of run.trials) {
+    const attempts = cases.get(trial.caseId) ?? [];
+    attempts.push({
+      modelId: "muse-spark-1.3",
+      repetition: trial.repetition,
+      verdict: trial.outcome,
+      checks: trial.checks ?? {},
+      failureCategories: trial.categories,
+      durationMs: trial.durationMs ?? 0,
+      tokenUsage: trial.tokenUsage ?? {
+        inputTokens: 0,
+        outputTokens: 0,
+        totalTokens: 0,
+      },
+    });
+    cases.set(trial.caseId, attempts);
+  }
+  return Array.from(cases, ([id, attempts]) => ({
+    id,
+    ...(family === "spot"
+      ? {
+          prompt: spotComparison.casePrompts[id as keyof typeof spotComparison.casePrompts],
+        }
+      : {}),
+    results: attempts.map((attempt) => attempt.verdict),
+    passed: attempts.filter((attempt) => attempt.verdict === "pass").length,
+    graded: attempts.filter((attempt) => attempt.verdict !== "timeout").length,
+    attempts,
+  }));
+}
+
+function museResult(entry: (typeof museReport.families)[number]): MeasuredFamilyResult {
+  const run = entry.muse;
+  const family =
+    entry.family === "spot" ? "Spot" : entry.family === "perps" ? "Perps" : "Predictions";
+  return familyResult({
+    family,
+    runId: run.runId,
+    sourceCommit: museReport.provenance.runPlan.sourceCommit,
+    startedAt: run.startedAt,
+    passed: run.counts.passed,
+    failed: run.counts.failed,
+    unscoredTimeouts: run.counts.unscoredTimeouts,
+    total: run.counts.dispatched,
+    dimensions: dimensionsFrom(run.dimensions),
+    latencyMs: run.latencyMs,
+    tokenUsage: {
+      input: run.tokenUsage.inputTokens,
+      output: run.tokenUsage.outputTokens,
+      total: run.tokenUsage.totalTokens,
+      observations: run.tokenUsage.observations,
+    },
+    cases: museCases(entry.family, run),
+  });
+}
+
 const perpsResults = perpsPredictionsReport.runs.map(perpsResult);
 
-export const measuredRun = {
+export const ompCampaign = {
+  id: "omp-2026-09-11",
   date: perpsPredictionsReport.date,
-  generatedAt: perpsPredictionsReport.generatedAt,
   repetitions: perpsPredictionsReport.repetitions,
   timeoutMs: perpsPredictionsReport.timeoutMs,
-  prUrl: perpsPredictionsReport.prUrl,
+  harness: "OMP harness · native OpenAI OAuth (Gina tools:read)",
   sourceCommit: perpsPredictionsReport.sourceCommit,
   executableSourceCommit: perpsPredictionsReport.executableSourceCommit,
-  harness: "OMP harness · native OpenAI OAuth (Gina tools:read)",
+  prUrl: perpsPredictionsReport.prUrl,
+  prLabel: "GitHub PR #85",
   abortedRun: perpsPredictionsReport.abortedRun,
   limitations: perpsPredictionsReport.limitations,
-} as const;
+} satisfies MeasuredCampaign;
+
+export const museCampaign = {
+  id: "muse-2026-09-14",
+  date: "2026-09-14",
+  harness: "Native Muse client (muse_cli) · medium reasoning",
+  repetitions: museReport.repetitions,
+  timeoutMs: museReport.timeoutMs,
+  sourceCommit: museReport.provenance.runPlan.sourceCommit,
+  limitations: museReport.methodology,
+} satisfies MeasuredCampaign;
+
+export const measuredCampaigns: readonly MeasuredCampaign[] = [ompCampaign, museCampaign];
+
+const museResults = museReport.families.map(museResult);
 
 export const measuredModels: readonly MeasuredModel[] = [
   {
@@ -177,6 +268,7 @@ export const measuredModels: readonly MeasuredModel[] = [
     color: "#3b6f5e",
     source: "measured",
     modelId: "openai-codex/gpt-5.5",
+    campaign: ompCampaign,
     families: {
       Spot: spotResult(spotComparison.runs[0]!),
     },
@@ -189,10 +281,26 @@ export const measuredModels: readonly MeasuredModel[] = [
     color: "#2f5d8a",
     source: "measured",
     modelId: "openai-codex/gpt-5.6-sol",
+    campaign: ompCampaign,
     families: {
       Spot: spotResult(spotComparison.runs[1]!),
       Perps: perpsResults.find((result) => result.family === "Perps"),
       Predictions: perpsResults.find((result) => result.family === "Predictions"),
+    },
+  },
+  {
+    id: "muse-spark-1-3",
+    name: "Muse Spark 1.3",
+    provider: "Muse",
+    mark: "◎",
+    color: "#8a4b2f",
+    source: "measured",
+    modelId: "muse-spark-1.3",
+    campaign: museCampaign,
+    families: {
+      Spot: museResults.find((result) => result.family === "Spot"),
+      Perps: museResults.find((result) => result.family === "Perps"),
+      Predictions: museResults.find((result) => result.family === "Predictions"),
     },
   },
 ];
