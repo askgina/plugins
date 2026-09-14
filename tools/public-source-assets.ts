@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { Function } from "effect";
 
-export type PublicSourceAssetKind = "woff2" | "webp";
+export type PublicSourceAssetKind = "woff2" | "webp" | "png" | "ico";
 
 export type PublicSourceAsset = {
   readonly path: string;
@@ -46,6 +46,18 @@ export const PUBLIC_SOURCE_ASSETS: readonly PublicSourceAsset[] = [
     bytes: 85488,
     kind: "webp",
   },
+  {
+    path: "apps/evals/public/apple-touch-icon.png",
+    sha256: "649853e67f8eba6da365192d1725a27978928d6b99702234990398044ff88480",
+    bytes: 4200,
+    kind: "png",
+  },
+  {
+    path: "apps/evals/public/favicon.ico",
+    sha256: "00d7f7999e1d6890675433f79f195f28dd692cc794b17eacb9656412f6ed3106",
+    bytes: 5430,
+    kind: "ico",
+  },
 ];
 
 export const isAttestedPublicSourceAsset: {
@@ -65,10 +77,23 @@ export const isAttestedPublicSourceAsset: {
     if (asset.kind === "woff2") {
       return bytes.length >= 4 && WOFF2_SIGNATURE.every((value, index) => bytes[index] === value);
     }
+    if (asset.kind === "webp") {
+      return (
+        bytes.length >= 12 &&
+        WEBP_RIFF.every((value, index) => bytes[index] === value) &&
+        WEBP_FOURCC.every((value, index) => bytes[8 + index] === value)
+      );
+    }
+    if (asset.kind === "png") {
+      return (
+        bytes.length >= 8 &&
+        [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every(
+          (value, index) => bytes[index] === value,
+        )
+      );
+    }
     return (
-      bytes.length >= 12 &&
-      WEBP_RIFF.every((value, index) => bytes[index] === value) &&
-      WEBP_FOURCC.every((value, index) => bytes[8 + index] === value)
+      bytes.length >= 4 && bytes[0] === 0 && bytes[1] === 0 && bytes[2] === 1 && bytes[3] === 0
     );
   },
 );
