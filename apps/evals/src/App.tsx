@@ -134,7 +134,8 @@ export function MethodologyPage() {
         </div>
         <p className="eval-method-note">
           No evaluations, wallet connections, trades, or tool requests run from this site. Downloads
-          contain only the illustrative fixtures displayed here.
+          contain only the illustrative fixtures or the measured 2026-09-11 conformance data
+          displayed here.
         </p>
       </div>
     </PageShell>

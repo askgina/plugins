@@ -116,7 +116,10 @@ function MeasuredModelProfile({ model }: { model: MeasuredModel }) {
     URL.revokeObjectURL(url);
   };
   return (
-    <PageShell active="models">
+    <PageShell
+      active="models"
+      footerNote="Measured 2026-09-11 conformance sample. Unranked; not a benchmark."
+    >
       <div className="eval-container model-profile-page">
         <section className="eval-hero model-profile-hero" aria-labelledby="model-profile-title">
           <img className="eval-hero-art" src="/images/hero-watercolor-landscape.webp" alt="" />
