@@ -1,0 +1,48 @@
+{
+  "outputDirectory": "/home/ubuntu/.config/askgina-evals/muse-20260914T113940Z/campaign-20260914T133050Z",
+  "configHome": "/home/ubuntu/.config/askgina-evals/muse-20260914T113940Z/config",
+  "executablePath": "/home/ubuntu/.local/lib/askgina-evals/muse-1.2.1-R2847.1",
+  "expectedSha256": "3961a7cc405c83609a6a6dc36bf719671288b412740535c4b8ea7442ba801b49",
+  "graderSha256": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+  "sourceCommit": "b76c284de42c12d6470e937e4f74e069b78fa64c",
+  "sourceSnapshot": {
+    "archive": "source-snapshot.tar.gz",
+    "sha256": "9a93b1f7e9fa7847b220ca49182e3089e53d0e7a00d59100e4ff6aa4876795e8",
+    "sizeBytes": 666128,
+    "nativeVersion": "1.2.1-R2847.1",
+    "validation": {
+      "typecheck": "passed",
+      "build": "passed",
+      "focusedTests": 69,
+      "recoverySmoke": "muse-recovery-smoke-1789392535891",
+      "timeoutThenSuccessfulDispatch": true,
+      "compoundCaptureFailurePreserved": true
+    }
+  },
+  "families": [
+    {
+      "family": "spot",
+      "suitePath": "/home/ubuntu/plugins/plugins/ask-gina/evals/model/v1/families/spot.yaml",
+      "suiteSha256": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e",
+      "runId": "spot-muse-spark-1.3-native-20260914T133050Z",
+      "candidate": "muse-spark-1.3-native",
+      "expectedCases": 4
+    },
+    {
+      "family": "perps",
+      "suitePath": "/home/ubuntu/plugins/plugins/ask-gina/evals/model/v1/families/perps.yaml",
+      "suiteSha256": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+      "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+      "candidate": "muse-spark-1.3-native",
+      "expectedCases": 18
+    },
+    {
+      "family": "predictions",
+      "suitePath": "/home/ubuntu/plugins/plugins/ask-gina/evals/model/v1/families/predictions.yaml",
+      "suiteSha256": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+      "runId": "predictions-muse-spark-1.3-native-20260914T133050Z",
+      "candidate": "muse-spark-1.3-native",
+      "expectedCases": 13
+    }
+  ]
+}

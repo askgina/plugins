@@ -1,0 +1,101 @@
+{
+  "slots": 12,
+  "records": [
+    {
+      "caseId": "spot-token-metadata",
+      "repetition": 1,
+      "outcome": "observed",
+      "traceSha256": "d0e8f09989e6142c93bbbeac885a3672153845d87b821d725eb2dfa7dd012260",
+      "traceSizeBytes": 325183,
+      "promptContextsAbsent": true
+    },
+    {
+      "caseId": "spot-token-chart",
+      "repetition": 1,
+      "outcome": "observed",
+      "traceSha256": "42d5bcc57fe1e0ceffd9d6fc503fb44a7169822ec58bf4d20bfda6c15520bff5",
+      "traceSizeBytes": 473978,
+      "promptContextsAbsent": true
+    },
+    {
+      "caseId": "spot-simple-price",
+      "repetition": 1,
+      "outcome": "observed",
+      "traceSha256": "d26af323c1515533da2993801bf3e20dcc8e5af187aceb297cc916638a80d59c",
+      "traceSizeBytes": 283112,
+      "promptContextsAbsent": true
+    },
+    {
+      "caseId": "spot-fetch-swap-history",
+      "repetition": 1,
+      "outcome": "observed",
+      "traceSha256": "11c1d5bdd805eb58cf83bea894154b3529db6fab851daf44d9c9cd4ad7b5e1d1",
+      "traceSizeBytes": 352968,
+      "promptContextsAbsent": true
+    },
+    {
+      "caseId": "spot-token-metadata",
+      "repetition": 2,
+      "outcome": "timeout",
+      "traceSha256": "0db5e17d2a2748ee0a31dddc3212c0fe020313e4c0c705ac1427cff820c4559c",
+      "traceSizeBytes": 400232,
+      "promptContextsAbsent": true
+    },
+    {
+      "caseId": "spot-token-chart",
+      "repetition": 2,
+      "outcome": "observed",
+      "traceSha256": "d176983dab96f327ae706336b7e3e64c99fb7ec1beb72ec98faec40b745a6da1",
+      "traceSizeBytes": 475858,
+      "promptContextsAbsent": true
+    },
+    {
+      "caseId": "spot-simple-price",
+      "repetition": 2,
+      "outcome": "observed",
+      "traceSha256": "9bc007d55baefd957fecbc002535ee016a044d06f0c5d08fd83acacc74841d7e",
+      "traceSizeBytes": 283789,
+      "promptContextsAbsent": true
+    },
+    {
+      "caseId": "spot-fetch-swap-history",
+      "repetition": 2,
+      "outcome": "observed",
+      "traceSha256": "0238ba355f3e0bb51edf2f74c3fe9792adff845ca96188beddc185c81f80bffc",
+      "traceSizeBytes": 355699,
+      "promptContextsAbsent": true
+    },
+    {
+      "caseId": "spot-token-metadata",
+      "repetition": 3,
+      "outcome": "observed",
+      "traceSha256": "385ae5c50da9153ecd7515e5d37982fd39f28ceea38b1bda60e290c8cc8f1664",
+      "traceSizeBytes": 325125,
+      "promptContextsAbsent": true
+    },
+    {
+      "caseId": "spot-token-chart",
+      "repetition": 3,
+      "outcome": "timeout",
+      "traceSha256": "61a51091a326af91282c85d511ad0ef076d040631603c8e027cdc0d398d40b35",
+      "traceSizeBytes": 457066,
+      "promptContextsAbsent": true
+    },
+    {
+      "caseId": "spot-simple-price",
+      "repetition": 3,
+      "outcome": "timeout",
+      "traceSha256": "1847ac4e4558cd46b4e67658b015f73da8b70f4f38046befa3fba389f3e1d129",
+      "traceSizeBytes": 105387,
+      "promptContextsAbsent": true
+    },
+    {
+      "caseId": "spot-fetch-swap-history",
+      "repetition": 3,
+      "outcome": "observed",
+      "traceSha256": "10d52016b0427b9ed9952db0344a35a5b9c08627c59a7d09691d57728895ed23",
+      "traceSizeBytes": 351402,
+      "promptContextsAbsent": true
+    }
+  ]
+}

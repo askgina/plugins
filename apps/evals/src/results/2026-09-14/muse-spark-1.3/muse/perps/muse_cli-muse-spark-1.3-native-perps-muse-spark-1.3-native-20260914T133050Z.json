@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "v1",
+  "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+  "candidate": "muse-spark-1.3-native",
+  "target": "muse_cli",
+  "model": "muse-spark-1.3",
+  "reasoning": "medium",
+  "repetitions": 3,
+  "startedAt": "2026-09-14T13:32:17.436Z",
+  "cleanChat": true,
+  "accountClass": "oauth-readonly",
+  "aggregate": {
+    "schemaVersion": "v1",
+    "suiteId": "ask-gina-model-perps-v1",
+    "suiteVersion": 1,
+    "fixtureVersion": 1,
+    "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
+    "overall": {
+      "passed": 42,
+      "total": 54
+    },
+    "dimensions": {
+      "routing": {
+        "passed": 45,
+        "failed": 9
+      },
+      "arguments": {
+        "passed": 50,
+        "failed": 4
+      },
+      "safety": {
+        "passed": 54,
+        "failed": 0
+      },
+      "completion": {
+        "passed": 54,
+        "failed": 0
+      }
+    },
+    "skillActivation": {
+      "passed": 0,
+      "failed": 0
+    },
+    "latencyMs": {
+      "p50": 21693,
+      "p95": 90177,
+      "max": 105798
+    },
+    "totalResultBytes": {
+      "p50": 2309,
+      "p95": 208716,
+      "max": 209072
+    },
+    "tokenUsage": {
+      "observations": 54,
+      "inputTokens": 6303333,
+      "outputTokens": 71403,
+      "totalTokens": 6374736
+    },
+    "artifactPolicy": "sanitized"
+  }
+}

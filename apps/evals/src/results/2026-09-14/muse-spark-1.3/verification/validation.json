@@ -1,0 +1,28 @@
+{
+  "typecheck": {
+    "status": "passed",
+    "command": "bun node_modules/.bin/tsc --noEmit -p tsconfig.json"
+  },
+  "build": {
+    "status": "passed",
+    "command": "bun run build"
+  },
+  "focusedTests": {
+    "status": "passed",
+    "tests": 69,
+    "files": 5,
+    "log": "common/focused-tests.log"
+  },
+  "realRecoverySmoke": {
+    "status": "passed",
+    "scoredCampaignTrials": 0,
+    "timeoutThenSuccessfulDispatch": true,
+    "captureFailurePreserved": true,
+    "durationMs": 14378,
+    "outputDirectory": "/home/ubuntu/.config/askgina-evals/muse-20260914T113940Z/muse-recovery-smoke-1789392535891"
+  },
+  "notes": [
+    "Build and tests must run sequentially because build cleans package dist.",
+    "Generic shell and hub process services became unavailable due local filesystem EPERM; campaign runs as a finite SSH process with durable remote checkpoints."
+  ]
+}

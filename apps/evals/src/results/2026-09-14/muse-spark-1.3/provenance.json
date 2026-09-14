@@ -1,0 +1,273 @@
+{
+  "schemaVersion": "ask-gina-muse-eval-bundle.v1",
+  "campaignResult": {
+    "schemaVersion": "ask-gina-muse-campaign-result.v1",
+    "model": "muse-spark-1.3",
+    "target": "muse_cli",
+    "reasoning": "medium",
+    "repetitions": 3,
+    "timeoutMs": 120000,
+    "startedAt": "2026-09-14T13:32:17.436Z",
+    "finishedAt": "2026-09-14T14:39:16.468Z",
+    "families": [
+      {
+        "schemaVersion": "ask-gina-muse-campaign-result.v1",
+        "family": "spot",
+        "runId": "spot-muse-spark-1.3-native-20260914T133050Z",
+        "model": "muse-spark-1.3",
+        "target": "muse_cli",
+        "reasoning": "medium",
+        "startedAt": "2026-09-14T13:32:23.986Z",
+        "finishedAt": "2026-09-14T13:42:20.993Z",
+        "planned": 12,
+        "dispatched": 12,
+        "graded": 9,
+        "passed": 9,
+        "failed": 0,
+        "unscoredTimeouts": 3,
+        "canonicalReportWritten": false,
+        "sourceReportSha256": null,
+        "scoredAggregate": {
+          "observed": 9,
+          "expected": 12,
+          "overall": {
+            "passed": 9,
+            "failed": 0,
+            "pass_rate": 1
+          },
+          "toolRouting": {
+            "passed": 9,
+            "failed": 0,
+            "pass_rate": 1
+          },
+          "arguments": {
+            "passed": 9,
+            "failed": 0,
+            "pass_rate": 1
+          },
+          "completion": {
+            "passed": 9,
+            "failed": 0,
+            "pass_rate": 1
+          },
+          "safety": {
+            "passed": 9,
+            "failed": 0,
+            "pass_rate": 1
+          },
+          "skillActivation": {
+            "passed": 0,
+            "failed": 0,
+            "pass_rate": null
+          },
+          "latencyMs": {
+            "p50": 21890,
+            "p95": 64968,
+            "max": 64968
+          },
+          "totalResultBytes": {
+            "p50": 13748,
+            "p95": 76577,
+            "max": 76577
+          },
+          "tokenUsage": {
+            "observations": 9,
+            "input_tokens": 729402,
+            "output_tokens": 8158,
+            "total_tokens": 737560
+          }
+        }
+      },
+      {
+        "schemaVersion": "ask-gina-muse-campaign-result.v1",
+        "family": "perps",
+        "runId": "perps-muse-spark-1.3-native-20260914T133050Z",
+        "model": "muse-spark-1.3",
+        "target": "muse_cli",
+        "reasoning": "medium",
+        "startedAt": "2026-09-14T13:42:20.997Z",
+        "finishedAt": "2026-09-14T14:09:39.126Z",
+        "planned": 54,
+        "dispatched": 54,
+        "graded": 54,
+        "passed": 42,
+        "failed": 12,
+        "unscoredTimeouts": 0,
+        "canonicalReportWritten": true,
+        "sourceReportSha256": "52b27dbad665f3483f18e4bcaba0524cf79ba8c1ec11bf0cd99cb7ac37b629fa",
+        "scoredAggregate": {
+          "observed": 54,
+          "expected": 54,
+          "overall": {
+            "passed": 42,
+            "failed": 12,
+            "pass_rate": 0.7777777777777778
+          },
+          "toolRouting": {
+            "passed": 45,
+            "failed": 9,
+            "pass_rate": 0.8333333333333334
+          },
+          "arguments": {
+            "passed": 50,
+            "failed": 4,
+            "pass_rate": 0.9259259259259259
+          },
+          "completion": {
+            "passed": 54,
+            "failed": 0,
+            "pass_rate": 1
+          },
+          "safety": {
+            "passed": 54,
+            "failed": 0,
+            "pass_rate": 1
+          },
+          "skillActivation": {
+            "passed": 0,
+            "failed": 0,
+            "pass_rate": null
+          },
+          "latencyMs": {
+            "p50": 21693,
+            "p95": 90177,
+            "max": 105798
+          },
+          "totalResultBytes": {
+            "p50": 2309,
+            "p95": 208716,
+            "max": 209072
+          },
+          "tokenUsage": {
+            "observations": 54,
+            "input_tokens": 6303333,
+            "output_tokens": 71403,
+            "total_tokens": 6374736
+          }
+        }
+      },
+      {
+        "schemaVersion": "ask-gina-muse-campaign-result.v1",
+        "family": "predictions",
+        "runId": "predictions-muse-spark-1.3-native-20260914T133050Z",
+        "model": "muse-spark-1.3",
+        "target": "muse_cli",
+        "reasoning": "medium",
+        "startedAt": "2026-09-14T14:09:39.132Z",
+        "finishedAt": "2026-09-14T14:39:16.462Z",
+        "planned": 39,
+        "dispatched": 39,
+        "graded": 38,
+        "passed": 10,
+        "failed": 28,
+        "unscoredTimeouts": 1,
+        "canonicalReportWritten": false,
+        "sourceReportSha256": null,
+        "scoredAggregate": {
+          "observed": 38,
+          "expected": 39,
+          "overall": {
+            "passed": 10,
+            "failed": 28,
+            "pass_rate": 0.2631578947368421
+          },
+          "toolRouting": {
+            "passed": 13,
+            "failed": 25,
+            "pass_rate": 0.34210526315789475
+          },
+          "arguments": {
+            "passed": 32,
+            "failed": 6,
+            "pass_rate": 0.8421052631578947
+          },
+          "completion": {
+            "passed": 30,
+            "failed": 8,
+            "pass_rate": 0.7894736842105263
+          },
+          "safety": {
+            "passed": 35,
+            "failed": 3,
+            "pass_rate": 0.9210526315789473
+          },
+          "skillActivation": {
+            "passed": 0,
+            "failed": 0,
+            "pass_rate": null
+          },
+          "latencyMs": {
+            "p50": 38579,
+            "p95": 96302,
+            "max": 117494
+          },
+          "totalResultBytes": {
+            "p50": 65762,
+            "p95": 594517,
+            "max": 1158198
+          },
+          "tokenUsage": {
+            "observations": 38,
+            "input_tokens": 7135584,
+            "output_tokens": 72651,
+            "total_tokens": 7208235
+          }
+        }
+      }
+    ],
+    "totals": {
+      "planned": 105,
+      "dispatched": 105,
+      "graded": 101,
+      "passed": 61,
+      "failed": 40,
+      "unscoredTimeouts": 4
+    }
+  },
+  "baselineFiles": [
+    {
+      "file": "ask-gina-spot-model-comparison-2026-09-11.json",
+      "sha256": "0dd60c53dca29701a9bdcf3ad256d08d55b50dffbc5c948f49094146cecd9d80",
+      "sizeBytes": 39672
+    },
+    {
+      "file": "ask-gina-perps-predictions-evals-2026-09-11.json",
+      "sha256": "1e696f2f8fb81707624dafc4e83c0c680d75067101ecbe621b63b77d3baeedbf",
+      "sizeBytes": 48262
+    }
+  ],
+  "runtimeVersions": {
+    "bunVersion": "1.4.2",
+    "platform": "Linux 6.17.0-1019-aws x86_64",
+    "reportRuntime": {
+      "python": "3.11.13",
+      "reportlab": "5.0.1",
+      "pymupdf": "1.28.2"
+    }
+  },
+  "sourceSnapshot": {
+    "archive": "source-snapshot.tar.gz",
+    "sha256": "9a93b1f7e9fa7847b220ca49182e3089e53d0e7a00d59100e4ff6aa4876795e8",
+    "sizeBytes": 666128,
+    "nativeVersion": "1.2.1-R2847.1",
+    "validation": {
+      "typecheck": "passed",
+      "build": "passed",
+      "focusedTests": 69,
+      "recoverySmoke": "muse-recovery-smoke-1789392535891",
+      "timeoutThenSuccessfulDispatch": true,
+      "compoundCaptureFailurePreserved": true
+    }
+  },
+  "caseContract": "Original4spot/18perps/13predictions cases; all105 planned slots executed; identical suite/grader hashes to Sol baseline.",
+  "evidence": "All105 trace SHA256 references verified;101 genuine scored observations and4 explicit unscored timeouts. No campaign-level retries; native provider retries visible in retained evidence.",
+  "privacy": "Private local artifact, including account/tool evidence. No credentials or raw reasoning intended for retention. Known staged credential values and forbidden prompt-context keys scanned; do not publish this ZIP.",
+  "comparison": "Native Muse client/model/provider versus OMP Sol; not an isolated model-only or semantic answer-quality ranking.",
+  "reproduceReport": "python report/generate-muse-comparison.py --campaign-dir muse --baseline-dir baseline --output-json comparison.json --output-pdf comparison.pdf",
+  "reportDependencies": {
+    "python": "3.11.13",
+    "reportlab": "5.0.1",
+    "pymupdf": "1.28.2"
+  },
+  "sourceMembersScanned": 131
+}

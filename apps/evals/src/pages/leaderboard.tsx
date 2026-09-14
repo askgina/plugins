@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { BookOpen, BriefcaseBusiness, Search, ShieldCheck, X } from "lucide-react";
 import { dataset, familyMetrics, models, type EvalModel, type FamilyFilter } from "../data";
 import {
+  measuredCampaigns,
   measuredModels,
-  measuredRun,
   type MeasuredFamilyResult,
   type MeasuredModel,
 } from "../measured";
@@ -405,12 +405,19 @@ export function LeaderboardPage({
                 {dataset.label} · {numberFormatter.format(dataset.tasks)} tasks ·{" "}
                 {dataset.repetitions} runs each
               </span>
-              <span className="lb-measured-indicator">
-                Measured {measuredRun.date} · {measuredRun.repetitions} reps ·{" "}
-                <a href={measuredRun.prUrl} target="_blank" rel="noreferrer">
-                  PR #85
-                </a>
-              </span>
+              {measuredCampaigns.map((campaign) => (
+                <span className="lb-measured-indicator" key={campaign.id}>
+                  Measured {campaign.date} · {campaign.harness} · {campaign.repetitions} reps
+                  {campaign.prUrl && (
+                    <>
+                      {" · "}
+                      <a href={campaign.prUrl} target="_blank" rel="noreferrer">
+                        {campaign.prLabel ?? "GitHub PR"}
+                      </a>
+                    </>
+                  )}
+                </span>
+              ))}
             </span>
           </div>
 
@@ -572,7 +579,9 @@ export function LeaderboardPage({
                                   <span>{row.model.provider}</span>
                                   <span aria-hidden="true"> · </span>
                                   <code>
-                                    {row.kind === "measured" ? "OMP harness" : dataset.harness}
+                                    {row.kind === "measured"
+                                      ? row.model.campaign.harness
+                                      : dataset.harness}
                                   </code>
                                   {row.kind === "measured" && (
                                     <span className="lb-measured-pill">Measured</span>

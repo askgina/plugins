@@ -1,0 +1,69 @@
+{
+  "scope": "Three observed spot timeouts; not a claim about uninspected trials",
+  "nativeProviderRetries": "No campaign-level retries. All three inspected timeouts contain HTTP504 and a native second stream attempt after a1000ms delay.",
+  "attribution": "Timeouts occurred during native model work, not a pending Gina request or shutdown. Cause of backend HTTP504 itself is not established.",
+  "traces": [
+    {
+      "file": "spot/native-traces/0005.json",
+      "caseId": "spot-token-metadata",
+      "repetition": 2,
+      "durationMs": 120096,
+      "ginaCalls": 2,
+      "ginaDurationsMs": [
+        2454,
+        2901
+      ],
+      "ginaMcpErrors": false,
+      "ginaContentSuccess": true,
+      "firstProvider504AfterMs": 62687,
+      "modelStepDurationsMs": [
+        90228,
+        4316,
+        10139
+      ],
+      "timeoutPhase": "fourth native model step after completed Gina calls"
+    },
+    {
+      "file": "spot/native-traces/0010.json",
+      "caseId": "spot-token-chart",
+      "repetition": 3,
+      "durationMs": 120101,
+      "ginaCalls": 1,
+      "ginaDurationsMs": [
+        2582
+      ],
+      "ginaMcpErrors": false,
+      "ginaContentSuccess": null,
+      "provider504OpeningWaitMs": 60664,
+      "modelStepDurationsMs": [
+        11553,
+        3437
+      ],
+      "timeoutPhase": "native model continuation after completed Gina call"
+    },
+    {
+      "file": "spot/native-traces/0011.json",
+      "caseId": "spot-simple-price",
+      "repetition": 3,
+      "durationMs": 120076,
+      "ginaCalls": 0,
+      "ginaDurationsMs": [],
+      "provider504OpeningWaitMs": 60701,
+      "modelStepDurationsMs": [],
+      "timeoutPhase": "initial native model opening, before any Gina call"
+    }
+  ],
+  "successfulComparator": {
+    "file": "spot/native-traces/0001.json",
+    "durationMs": 23035,
+    "ginaCalls": 1,
+    "ginaDurationMs": 2365,
+    "modelStepDurationsMs": [
+      6077,
+      2466,
+      10360
+    ],
+    "provider504Observed": false
+  },
+  "shutdown": "Inspected terminal-to-session-end times31\u201346ms; not a shutdown stall."
+}

@@ -1,0 +1,117 @@
+{
+  "pages": 11,
+  "outOfBoundsSpans": [],
+  "pageSummary": [
+    {
+      "page": 1,
+      "characters": 1295,
+      "firstLines": [
+        "ASK GINA  |  Native Muse vs OMP Sol  |  Private report",
+        "Page 1",
+        "ASK GINA / LIVE EVALUATION",
+        "Native Muse vs OMP Sol"
+      ]
+    },
+    {
+      "page": 2,
+      "characters": 1388,
+      "firstLines": [
+        "ASK GINA  |  Native Muse vs OMP Sol  |  Private report",
+        "Page 2",
+        "FAMILY COMPARISON",
+        "Spot"
+      ]
+    },
+    {
+      "page": 3,
+      "characters": 1008,
+      "firstLines": [
+        "ASK GINA  |  Native Muse vs OMP Sol  |  Private report",
+        "Page 3",
+        "SPOT / ALL CASES",
+        "Case-by-case outcomes"
+      ]
+    },
+    {
+      "page": 4,
+      "characters": 1398,
+      "firstLines": [
+        "ASK GINA  |  Native Muse vs OMP Sol  |  Private report",
+        "Page 4",
+        "FAMILY COMPARISON",
+        "Perps"
+      ]
+    },
+    {
+      "page": 5,
+      "characters": 1797,
+      "firstLines": [
+        "ASK GINA  |  Native Muse vs OMP Sol  |  Private report",
+        "Page 5",
+        "PERPS / ALL CASES",
+        "Case-by-case outcomes"
+      ]
+    },
+    {
+      "page": 6,
+      "characters": 583,
+      "firstLines": [
+        "ASK GINA  |  Native Muse vs OMP Sol  |  Private report",
+        "Page 6",
+        "Client / case",
+        "All failed repetitions and unscored timeouts"
+      ]
+    },
+    {
+      "page": 7,
+      "characters": 1432,
+      "firstLines": [
+        "ASK GINA  |  Native Muse vs OMP Sol  |  Private report",
+        "Page 7",
+        "FAMILY COMPARISON",
+        "Predictions"
+      ]
+    },
+    {
+      "page": 8,
+      "characters": 2374,
+      "firstLines": [
+        "ASK GINA  |  Native Muse vs OMP Sol  |  Private report",
+        "Page 8",
+        "PREDICTIONS / ALL CASES",
+        "Case-by-case outcomes"
+      ]
+    },
+    {
+      "page": 9,
+      "characters": 1621,
+      "firstLines": [
+        "ASK GINA  |  Native Muse vs OMP Sol  |  Private report",
+        "Page 9",
+        "Client / case",
+        "All failed repetitions and unscored timeouts"
+      ]
+    },
+    {
+      "page": 10,
+      "characters": 3946,
+      "firstLines": [
+        "ASK GINA  |  Native Muse vs OMP Sol  |  Private report",
+        "Page 10",
+        "METHODS & LIMITATIONS",
+        "What this report measures"
+      ]
+    },
+    {
+      "page": 11,
+      "characters": 1778,
+      "firstLines": [
+        "ASK GINA  |  Native Muse vs OMP Sol  |  Private report",
+        "Page 11",
+        "EXACT INPUT PROVENANCE",
+        "Reproducible evidence"
+      ]
+    }
+  ],
+  "visualReview": "All11pages contact sheet and full-size overview/predictions comparison inspected; readable, no clipped spans."
+}

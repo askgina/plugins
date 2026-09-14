@@ -1,7 +1,7 @@
 import { useId, useState } from "react";
 import { BookOpen, Clock, ListTree, Search, Shield } from "lucide-react";
 import { getModel, type FamilyFilter, type TaskFamily } from "../data";
-import { measuredModels, measuredRun, type MeasuredCase } from "../measured";
+import { measuredModels, type MeasuredCase } from "../measured";
 import { FamilyTabs, Modal, ModelAvatar, PageShell } from "../components/eval-ui";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -35,49 +35,59 @@ function MeasuredCasesPanel({ family }: { family: TaskFamily }) {
       Boolean(entry.result),
     );
   if (measured.length === 0) return null;
-  const primary = measured[0]!;
   return (
     <Card className="task-measured-panel">
       <div className="task-measured-header">
         <div>
-          <p className="task-section-kicker">Measured · {measuredRun.date}</p>
-          <h3>Measured cases · {measuredRun.date}</h3>
-          <p>Conformance verdicts from the 2026-09-11 runs. Unranked; not answer accuracy.</p>
+          <p className="task-section-kicker">Measured cases</p>
+          <h3>Measured cases</h3>
+          <p>Conformance verdicts from the measured runs. Unranked; not answer accuracy.</p>
         </div>
       </div>
       <div className="task-measured-content">
-        {family === "Spot" ? (
-          primary.result.cases.map((measuredCase) => (
-            <MeasuredSpotCase key={measuredCase.id} measuredCase={measuredCase} models={measured} />
-          ))
-        ) : (
-          <div className="task-table-scroll">
-            <table className="eval-table">
-              <thead>
-                <tr>
-                  <th scope="col">Case id</th>
-                  <th scope="col">Results</th>
-                  <th scope="col">Passed / graded</th>
-                  <th scope="col">Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {primary.result.cases.map((measuredCase) => (
-                  <tr key={measuredCase.id}>
-                    <th scope="row">
-                      <code>{measuredCase.id}</code>
-                    </th>
-                    <td style={{ whiteSpace: "nowrap" }}>{measuredCase.results.join(" · ")}</td>
-                    <td>
-                      {measuredCase.passed} / {measuredCase.graded}
-                    </td>
-                    <td>{measuredCase.notes || "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {family === "Spot"
+          ? measured[0]!.result.cases.map((measuredCase) => (
+              <MeasuredSpotCase
+                key={measuredCase.id}
+                measuredCase={measuredCase}
+                models={measured}
+              />
+            ))
+          : measured.map(({ model, result }) => (
+              <div key={model.id} className="task-measured-model">
+                <p className="task-section-kicker">
+                  {model.name} · {model.campaign.date}
+                </p>
+                <div className="task-table-scroll">
+                  <table className="eval-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Case id</th>
+                        <th scope="col">Results</th>
+                        <th scope="col">Passed / graded</th>
+                        <th scope="col">Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {result.cases.map((measuredCase) => (
+                        <tr key={measuredCase.id}>
+                          <th scope="row">
+                            <code>{measuredCase.id}</code>
+                          </th>
+                          <td style={{ whiteSpace: "nowrap" }}>
+                            {measuredCase.results.join(" · ")}
+                          </td>
+                          <td>
+                            {measuredCase.passed} / {measuredCase.graded}
+                          </td>
+                          <td>{measuredCase.notes || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
       </div>
     </Card>
   );

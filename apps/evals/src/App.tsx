@@ -6,7 +6,7 @@ import { LeaderboardPage } from "./pages/leaderboard";
 import { ModelProfilePage } from "./pages/model-profile";
 import { TaskExplorerPage } from "./pages/task-explorer";
 import { HandoffPage } from "./pages/handoff";
-import { measuredModels, measuredRun } from "./measured";
+import { measuredCampaigns, measuredModels } from "./measured";
 
 export function MethodologyPage() {
   return (
@@ -36,50 +36,71 @@ export function MethodologyPage() {
                 model selection or financial decisions.
               </p>
               <p>
-                Rows and panels marked Measured are the exception: they come from conformance runs
-                of the OMP harness on 2026-09-11 and are shown as exported.
+                Rows and panels marked Measured are the exception: they come from the conformance
+                campaigns listed below (OMP harness 2026-09-11, native Muse client 2026-09-14) and
+                are shown as exported.
               </p>
             </div>
           </Panel>
-          <Panel title="Measured runs · 2026-09-11">
+          <Panel title="Measured runs">
             <div className="eval-method-body">
-              <p>
-                {measuredRun.harness}, {measuredRun.repetitions} repetitions per case,{" "}
-                {measuredRun.timeoutMs / 1000}s timeout. These are unranked, small live samples of
-                tool-use conformance, not answer accuracy or financial outcomes.
-              </p>
-              <p>
-                Spot:{" "}
-                <code>
-                  {measuredModels
-                    .map((model) => {
-                      const sourceCommit = model.families.Spot?.sourceCommit;
-                      return sourceCommit ? `${sourceCommit.slice(0, 7)} (${model.name})` : null;
-                    })
-                    .filter(Boolean)
-                    .join(" / ")}
-                </code>
-                ; perps/predictions:{" "}
-                <code>
-                  {measuredModels
-                    .find((model) => model.families.Perps)
-                    ?.families.Perps?.sourceCommit.slice(0, 7)}
-                </code>
-                , executable <code>{measuredRun.executableSourceCommit.slice(0, 7)}</code>
-              </p>
-              <a
-                className="eval-text-link"
-                href={measuredRun.prUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Open GitHub PR #85 <ArrowUpRight size={14} aria-hidden="true" />
-              </a>
-              <ul>
-                {measuredRun.limitations.map((limitation) => (
-                  <li key={limitation}>{limitation}</li>
-                ))}
-              </ul>
+              {measuredCampaigns.map((campaign) => (
+                <div key={campaign.id}>
+                  <p>
+                    {campaign.harness}, {campaign.repetitions} repetitions per case,{" "}
+                    {campaign.timeoutMs / 1000}s timeout ({campaign.date}). These are unranked,
+                    small live samples of tool-use conformance, not answer accuracy or financial
+                    outcomes.
+                  </p>
+                  {campaign.id === "omp-2026-09-11" ? (
+                    <>
+                      <p>
+                        Spot:{" "}
+                        <code>
+                          {measuredModels
+                            .filter((model) => model.campaign.id === campaign.id)
+                            .map((model) => {
+                              const sourceCommit = model.families.Spot?.sourceCommit;
+                              return sourceCommit
+                                ? `${sourceCommit.slice(0, 7)} (${model.name})`
+                                : null;
+                            })
+                            .filter(Boolean)
+                            .join(" / ")}
+                        </code>
+                        ; perps/predictions:{" "}
+                        <code>
+                          {measuredModels
+                            .find(
+                              (model) => model.campaign.id === campaign.id && model.families.Perps,
+                            )
+                            ?.families.Perps?.sourceCommit.slice(0, 7)}
+                        </code>
+                        , executable <code>{campaign.executableSourceCommit?.slice(0, 7)}</code>
+                      </p>
+                      {campaign.prUrl && (
+                        <a
+                          className="eval-text-link"
+                          href={campaign.prUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open GitHub PR #85 <ArrowUpRight size={14} aria-hidden="true" />
+                        </a>
+                      )}
+                    </>
+                  ) : (
+                    <p>
+                      Source commit <code>{campaign.sourceCommit.slice(0, 7)}</code>.
+                    </p>
+                  )}
+                  <ul>
+                    {campaign.limitations.map((limitation) => (
+                      <li key={limitation}>{limitation}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
           </Panel>
           <Panel title="What a task measures">
@@ -134,8 +155,7 @@ export function MethodologyPage() {
         </div>
         <p className="eval-method-note">
           No evaluations, wallet connections, trades, or tool requests run from this site. Downloads
-          contain only the illustrative fixtures or the measured 2026-09-11 conformance data
-          displayed here.
+          contain only the illustrative fixtures or the measured conformance data displayed here.
         </p>
       </div>
     </PageShell>
