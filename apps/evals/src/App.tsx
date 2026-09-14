@@ -36,8 +36,9 @@ export function MethodologyPage() {
                 model selection or financial decisions.
               </p>
               <p>
-                Rows and panels marked Measured are the exception: they come from conformance runs
-                of the OMP harness on 2026-09-11 and are shown as exported.
+                Rows and panels marked Measured are the exception: they come from the conformance
+                campaigns listed below (OMP harness 2026-09-11, native Muse client 2026-09-14) and
+                are shown as exported.
               </p>
             </div>
           </Panel>
@@ -154,8 +155,8 @@ export function MethodologyPage() {
         </div>
         <p className="eval-method-note">
           No evaluations, wallet connections, trades, or tool requests run from this site. Downloads
-          contain only the illustrative fixtures or the measured 2026-09-11 conformance data
-          displayed here.
+          contain only the illustrative fixtures or the measured conformance data displayed
+          here.
         </p>
       </div>
     </PageShell>
