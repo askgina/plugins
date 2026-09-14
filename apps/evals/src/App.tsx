@@ -37,8 +37,11 @@ export function MethodologyPage() {
               </p>
               <p>
                 Rows and panels marked Measured are the exception: they come from the conformance
-                campaigns listed below (OMP harness 2026-09-11, native Muse client 2026-09-14) and
-                are shown as exported.
+                campaigns listed below (
+                {measuredCampaigns
+                  .map((campaign) => `${campaign.harness}, ${campaign.date}`)
+                  .join("; ")}
+                ) and are shown as exported.
               </p>
             </div>
           </Panel>
