@@ -7,7 +7,7 @@ description: Run and visually test the Ask Gina Evals React frontend, including 
 
 - App source is `apps/evals`; inspect its package scripts and route handling in
   `src/App.tsx` before testing.
-- Check `http://localhost:5173/` first and reuse the existing Vite server.
+- Check whether the Vite dev server already answers on port 5173 and reuse it.
   If absent, start `bun run --cwd apps/evals dev` from the repo root.
 - Static results routes use bundled artifacts and require no API login.
   Do not launch live evaluations to test these read-only frontend pages.
