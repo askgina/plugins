@@ -290,14 +290,14 @@ function claudeCases(
 
 function claudeResult(
   run: (typeof claudeComparison.models)[number]["runs"][number],
-  modelId: string,
+  model: (typeof claudeComparison.models)[number],
 ): MeasuredFamilyResult {
   const family = run.family === "spot" ? "Spot" : run.family === "perps" ? "Perps" : "Predictions";
   return familyResult({
     family,
     runId: run.runId,
-    sourceCommit: claudeComparison.models[0]!.sourceCommit,
-    startedAt: claudeComparison.models[0]!.startedAt,
+    sourceCommit: model.sourceCommit,
+    startedAt: model.startedAt,
     passed: run.passed,
     failed: run.failed,
     unscoredTimeouts: run.unscored,
@@ -327,7 +327,7 @@ function claudeResult(
       total: run.tokenUsage.total,
       observations: run.tokenUsage.observations,
     },
-    cases: claudeCases(run.family, run, modelId),
+    cases: claudeCases(run.family, run, model.model),
   });
 }
 
@@ -376,7 +376,7 @@ export const measuredCampaigns: readonly MeasuredCampaign[] = [
 const museResults = museReport.families.map(museResult);
 const claudeModelResults = claudeComparison.models.map((model) => ({
   model,
-  results: model.runs.map((run) => claudeResult(run, model.model)),
+  results: model.runs.map((run) => claudeResult(run, model)),
 }));
 
 export const measuredModels: readonly MeasuredModel[] = [
