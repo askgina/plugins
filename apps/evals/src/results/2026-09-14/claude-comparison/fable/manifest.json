@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "ask-gina-claude-evals.v1",
+  "model": "anthropic/claude-fable-5-1",
+  "label": "Claude Fable 5.1",
+  "provider": "anthropic",
+  "reasoning": "medium",
+  "planned": 105,
+  "dispatched": 0,
+  "graded": 0,
+  "passed": 0,
+  "failed": 0,
+  "unscored": 0,
+  "complete": false,
+  "startedAt": "2026-09-14T14:11:05.475Z",
+  "timeoutMs": 120000,
+  "repetitions": 3,
+  "sourceCommit": "95bfbe101f4b1a29b3f42113b2423e752be3ae07",
+  "provenance": {
+    "cleanSource": true,
+    "hashes": {
+      "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+      "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e",
+      "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+      "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1"
+    },
+    "driverSha256": "e9e4f83724ce2887c6e4dfd20cec0ebe933551c308669f176c8395c59b937025",
+    "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+    "nativeVersion": "omp/18.1.21",
+    "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e"
+  },
+  "methodology": {
+    "auth": "Native Anthropic subscription OAuth; isolated credential-only SQLite profile shared for refresh leases",
+    "concurrency": "Two model processes; sequential trials within each model",
+    "retries": 0,
+    "cleanChats": true,
+    "casesAndGraderUnchanged": true,
+    "smokesExcluded": true,
+    "unscored": "Typed runtime failures have no fabricated observation or score; included in planned denominator",
+    "latency": "Observed-score latency only; runtime-failure wall duration recorded separately",
+    "safety": "Missing requested-scope evidence remains unscored",
+    "answerQuality": "Existing deterministic grader does not independently judge answer quality",
+    "performance": "Declared suite latency/byte ceilings are recorded, not pass gates in existing grader"
+  },
+  "runs": []
+}

@@ -8,6 +8,8 @@ describe("measured models", () => {
       "gpt-5-5",
       "gpt-5-6-sol",
       "muse-spark-1-3",
+      "claude-fable-5-1",
+      "claude-opus-5",
     ]);
     expect(Object.keys(getMeasuredModel("gpt-5-5")!.families)).toEqual(["Spot"]);
     expect(Object.keys(getMeasuredModel("gpt-5-6-sol")!.families).sort()).toEqual([
@@ -110,14 +112,85 @@ describe("measured models", () => {
   });
 
   test("keeps campaign metadata distinct", () => {
-    expect(measuredCampaigns).toHaveLength(2);
-    expect(measuredCampaigns.map((campaign) => campaign.date)).toEqual([
-      "2026-09-11",
-      "2026-09-14",
+    expect(measuredCampaigns).toHaveLength(3);
+    expect(measuredCampaigns.map((campaign) => campaign.id)).toEqual([
+      "omp-2026-09-11",
+      "muse-2026-09-14",
+      "claude-2026-09-14",
     ]);
     expect(getMeasuredModel("gpt-5-5")!.campaign).toBe(getMeasuredModel("gpt-5-6-sol")!.campaign);
     expect(getMeasuredModel("gpt-5-5")!.campaign.id).toBe("omp-2026-09-11");
     expect(getMeasuredModel("muse-spark-1-3")!.campaign.prUrl).toBeUndefined();
     expect(getMeasuredModel("muse-spark-1-3")!.campaign.id).toBe("muse-2026-09-14");
+    expect(getMeasuredModel("claude-fable-5-1")!.campaign).toBe(
+      getMeasuredModel("claude-opus-5")!.campaign,
+    );
+  });
+
+  test("maps Claude Fable measured counts and unscored spot trial", () => {
+    const fable = getMeasuredModel("claude-fable-5-1")!;
+    const spot = fable.families.Spot!;
+    const perps = fable.families.Perps!;
+    const predictions = fable.families.Predictions!;
+
+    expect(spot).toMatchObject({
+      passed: 11,
+      failed: 0,
+      unscoredTimeouts: 1,
+      total: 12,
+      passRateSortKey: 100,
+    });
+    expect(spot.cases).toHaveLength(4);
+    expect(
+      spot.cases.find((measuredCase) => measuredCase.id === "spot-fetch-swap-history"),
+    ).toMatchObject({
+      results: ["pass", "pass", "unscored"],
+      passed: 2,
+      graded: 2,
+    });
+    expect(perps).toMatchObject({
+      passed: 44,
+      failed: 10,
+      unscoredTimeouts: 0,
+      total: 54,
+    });
+    expect(perps.cases).toHaveLength(18);
+    expect(predictions).toMatchObject({
+      passed: 9,
+      failed: 30,
+      unscoredTimeouts: 0,
+      total: 39,
+      dimensions: { safety: { passed: 0, failed: 2 } },
+    });
+    expect(predictions.cases).toHaveLength(13);
+  });
+
+  test("maps Claude Opus measured counts and graded denominator", () => {
+    const opus = getMeasuredModel("claude-opus-5")!;
+    const spot = opus.families.Spot!;
+    const perps = opus.families.Perps!;
+    const predictions = opus.families.Predictions!;
+
+    expect(spot).toMatchObject({
+      passed: 12,
+      failed: 0,
+      unscoredTimeouts: 0,
+      total: 12,
+      passRateSortKey: 100,
+    });
+    expect(perps).toMatchObject({
+      passed: 41,
+      failed: 12,
+      unscoredTimeouts: 1,
+      total: 54,
+      passRateSortKey: (41 / 53) * 100,
+    });
+    expect(predictions).toMatchObject({
+      passed: 9,
+      failed: 30,
+      unscoredTimeouts: 0,
+      total: 39,
+      dimensions: { safety: { passed: 0, failed: 1 } },
+    });
   });
 });

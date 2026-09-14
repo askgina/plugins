@@ -1,0 +1,1223 @@
+{
+  "family": "spot",
+  "runId": "claude-fable-5-1-spot-20260914141105475",
+  "planned": 12,
+  "caseIds": [
+    "spot-token-metadata",
+    "spot-token-chart",
+    "spot-simple-price",
+    "spot-fetch-swap-history"
+  ],
+  "dispatched": 12,
+  "dispatches": [
+    {
+      "caseId": "spot-token-metadata",
+      "repetition": 1,
+      "dispatchedAt": "2026-09-14T14:11:09.319Z"
+    },
+    {
+      "caseId": "spot-token-chart",
+      "repetition": 1,
+      "dispatchedAt": "2026-09-14T14:11:36.106Z"
+    },
+    {
+      "caseId": "spot-simple-price",
+      "repetition": 1,
+      "dispatchedAt": "2026-09-14T14:12:08.934Z"
+    },
+    {
+      "caseId": "spot-fetch-swap-history",
+      "repetition": 1,
+      "dispatchedAt": "2026-09-14T14:12:24.888Z"
+    },
+    {
+      "caseId": "spot-token-metadata",
+      "repetition": 2,
+      "dispatchedAt": "2026-09-14T14:12:55.434Z"
+    },
+    {
+      "caseId": "spot-token-chart",
+      "repetition": 2,
+      "dispatchedAt": "2026-09-14T14:13:19.270Z"
+    },
+    {
+      "caseId": "spot-simple-price",
+      "repetition": 2,
+      "dispatchedAt": "2026-09-14T14:13:56.563Z"
+    },
+    {
+      "caseId": "spot-fetch-swap-history",
+      "repetition": 2,
+      "dispatchedAt": "2026-09-14T14:14:14.536Z"
+    },
+    {
+      "caseId": "spot-token-metadata",
+      "repetition": 3,
+      "dispatchedAt": "2026-09-14T14:14:38.329Z"
+    },
+    {
+      "caseId": "spot-token-chart",
+      "repetition": 3,
+      "dispatchedAt": "2026-09-14T14:15:01.489Z"
+    },
+    {
+      "caseId": "spot-simple-price",
+      "repetition": 3,
+      "dispatchedAt": "2026-09-14T14:15:38.571Z"
+    },
+    {
+      "caseId": "spot-fetch-swap-history",
+      "repetition": 3,
+      "dispatchedAt": "2026-09-14T14:15:57.573Z"
+    }
+  ],
+  "trials": [
+    {
+      "caseId": "spot-token-metadata",
+      "repetition": 1,
+      "outcome": "observed",
+      "dispatchedAt": "2026-09-14T14:11:09.319Z",
+      "wallDurationMs": 26786,
+      "observation": {
+        "version": 1,
+        "run_id": "claude-fable-5-1-spot-20260914141105475",
+        "case_id": "spot-token-metadata",
+        "target": "omp_harness",
+        "model": "anthropic/claude-fable-5-1",
+        "repetition": 1,
+        "started_at": "2026-09-14T14:11:09.321Z",
+        "status": "completed",
+        "duration_ms": 26781,
+        "activated_skills": [
+          "research-spot-tokens"
+        ],
+        "tool_calls": [
+          {
+            "sequence": 0,
+            "name": "spot.getTokenMetadata",
+            "arguments": {
+              "token": "AAVE",
+              "includeMarketData": true
+            },
+            "result_bytes": 5160
+          }
+        ],
+        "available_tools": [
+          "gina.getCrosschainPortfolio",
+          "gina.getAccountAddresses",
+          "gina.listScheduledPrompts",
+          "spot.getTokenMetadata",
+          "spot.getTokenChart",
+          "spot.getSimplePrice",
+          "spot.fetchSwapHistory",
+          "perps.getHyperliquidAccount",
+          "perps.getHyperliquidPositions",
+          "perps.getHyperliquidOpenOrders",
+          "perps.getHyperliquidPortfolio",
+          "perps.getHyperliquidMarkets",
+          "perps.getHyperliquidPrice",
+          "perps.getHyperliquidPrices",
+          "perps.getHyperliquidAssetData",
+          "perps.getHyperliquidPerpDexes",
+          "perps.fetchHyperliquidTrades",
+          "perps.fetchHyperliquidCandles",
+          "perps.fetchHyperliquidOrderBook",
+          "perps.previewHyperliquidOrderCost",
+          "perps.createHyperliquidTable",
+          "perps.executeSqlQuery",
+          "predictions.searchPredictionMarkets",
+          "predictions.getExpiringMarkets",
+          "predictions.getPredictionOrderbook",
+          "predictions.getSeriesMarket",
+          "predictions.getPredictionMarketDetails",
+          "predictions.fetchPolymarketData",
+          "predictions.fetchPolymarketHistory",
+          "predictions.getPolymarketPositions",
+          "predictions.getPolymarketOrderHistory"
+        ],
+        "token_usage": {
+          "input_tokens": 8,
+          "output_tokens": 783,
+          "total_tokens": 791
+        },
+        "final_answer": "**AAVE (Aave Token)** — source: Gina `spot.getTokenMetadata` (CoinGecko/GeckoTerminal), updated 2026-09-14 14:08 UTC.\n\n**Contract**\n- Chain: Ethereum mainnet\n- Address: `0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9`\n- Decimals: 18\n- CoinGecko ID: `aave`\n\n**Supply**\n- Max supply: 16,000,000 (finite)\n- Total supply: 16,000,000\n- Circulating: ~15,427,705 (~96.4% of max)\n\n**Market snapshot (for context, no chart)**\n- Price: ~$125.93 (24h range $123.98–$127.47, −1.27% 24h)\n- Market cap: ~$1.94B; FDV: ~$2.01B\n- 24h volume: ~$185.5M\n- ATH $661.69 (2021-05-18, −81%); ATL $26.02 (2020-11-05)\n\n**Top on-chain pools (Ethereum)**\n- `0x1c60dc7ce348dc9f1e8992c027350acfda4ba66e2365aa87cbdd98c490185088`\n- `0xcd019866bb9876e0c3f135bc5fe856a0566d490c1b2fcca97e8205ee25048e6f`\n- `0x5ab53ee1d50eef2c1dd3d5402789cd27bb52c1bb`\n\n**Not returned by the tool:** a project description and official links (website, docs, socials). The metadata endpoint exposes only the fields above. If you want those, I can look them up separately via the CoinGecko page for `aave` — that would be a different source than the Gina result, so say the word."
+      },
+      "score": {
+        "case_id": "spot-token-metadata",
+        "overall_pass": true,
+        "routing": {
+          "score": 1,
+          "details": [
+            "selected spot.getTokenMetadata"
+          ]
+        },
+        "arguments": {
+          "score": 1,
+          "details": [
+            "case has no argument constraint"
+          ]
+        },
+        "completion": {
+          "score": 1,
+          "details": [
+            "trial and tool calls completed"
+          ]
+        },
+        "latency_ms": 26781,
+        "total_result_bytes": 5160
+      },
+      "error": null
+    },
+    {
+      "caseId": "spot-token-chart",
+      "repetition": 1,
+      "outcome": "observed",
+      "dispatchedAt": "2026-09-14T14:11:36.106Z",
+      "wallDurationMs": 32828,
+      "observation": {
+        "version": 1,
+        "run_id": "claude-fable-5-1-spot-20260914141105475",
+        "case_id": "spot-token-chart",
+        "target": "omp_harness",
+        "model": "anthropic/claude-fable-5-1",
+        "repetition": 1,
+        "started_at": "2026-09-14T14:11:36.106Z",
+        "status": "completed",
+        "duration_ms": 32826,
+        "activated_skills": [
+          "research-spot-tokens"
+        ],
+        "tool_calls": [
+          {
+            "sequence": 0,
+            "name": "spot.getTokenChart",
+            "arguments": {
+              "coingeckoId": "ethereum",
+              "days": 7,
+              "timeInterval": "1h",
+              "tokenSymbol": "ETH"
+            },
+            "result_bytes": 76564
+          }
+        ],
+        "available_tools": [
+          "gina.getCrosschainPortfolio",
+          "gina.getAccountAddresses",
+          "gina.listScheduledPrompts",
+          "spot.getTokenMetadata",
+          "spot.getTokenChart",
+          "spot.getSimplePrice",
+          "spot.fetchSwapHistory",
+          "perps.getHyperliquidAccount",
+          "perps.getHyperliquidPositions",
+          "perps.getHyperliquidOpenOrders",
+          "perps.getHyperliquidPortfolio",
+          "perps.getHyperliquidMarkets",
+          "perps.getHyperliquidPrice",
+          "perps.getHyperliquidPrices",
+          "perps.getHyperliquidAssetData",
+          "perps.getHyperliquidPerpDexes",
+          "perps.fetchHyperliquidTrades",
+          "perps.fetchHyperliquidCandles",
+          "perps.fetchHyperliquidOrderBook",
+          "perps.previewHyperliquidOrderCost",
+          "perps.createHyperliquidTable",
+          "perps.executeSqlQuery",
+          "predictions.searchPredictionMarkets",
+          "predictions.getExpiringMarkets",
+          "predictions.getPredictionOrderbook",
+          "predictions.getSeriesMarket",
+          "predictions.getPredictionMarketDetails",
+          "predictions.fetchPolymarketData",
+          "predictions.fetchPolymarketHistory",
+          "predictions.getPolymarketPositions",
+          "predictions.getPolymarketOrderHistory"
+        ],
+        "token_usage": {
+          "input_tokens": 8,
+          "output_tokens": 1594,
+          "total_tokens": 1602
+        },
+        "final_answer": "ETH/USD 7-day chart is rendered above (source: CoinGecko, 1h candles, 2026-09-07 15:00Z → 2026-09-14 15:00Z).\n\n**Window summary (1h series evidence):** start $2,497.87 → end $2,500.57, +$2.70 (+0.11%), essentially flat net.\n\n**Daily OHLC (UTC, from the 1d series in the same result):**\n\n| Date | Open | High | Low | Close |\n|---|---|---|---|---|\n| Sep 7 | 2480.00 | 2523.33 | 2473.01 | 2514.65 |\n| Sep 8 | 2514.01 | 2532.72 | 2467.80 | 2489.42 |\n| Sep 9 | 2489.40 | 2505.13 | 2442.98 | 2484.75 |\n| Sep 10 | 2485.07 | 2521.51 | 2445.10 | 2467.47 |\n| Sep 11 | 2467.53 | 2482.52 | 2410.22 | 2437.51 |\n| Sep 12 | 2437.51 | 2647.68 | 2437.39 | 2515.58 |\n| Sep 13 | 2514.85 | 2543.69 | 2509.71 | 2525.70 |\n| Sep 14 (partial) | 2525.27 | 2526.68 | 2464.63 | 2476.32 |\n\n**Shape:** slow grind down Sep 7–11 (week low $2,410.22 on Sep 11), then a sharp spike on Sep 12 — 1h candles show a jump from ~$2,457 to $2,626 within one hour and a wick to $2,647.68 (week high) — that retraced to ~$2,510–2,530 over the following day. Sep 14 has drifted back toward ~$2,476–2,500. Range for the week: $2,410–$2,648 (~9.9%).\n\nNote: the last 1d row is the forming candle; the 1h series is the more current reading. Full raw series (1h + 1d) is in `artifact://0` if you want the row-level data."
+      },
+      "score": {
+        "case_id": "spot-token-chart",
+        "overall_pass": true,
+        "routing": {
+          "score": 1,
+          "details": [
+            "selected spot.getTokenChart"
+          ]
+        },
+        "arguments": {
+          "score": 1,
+          "details": [
+            "case has no argument constraint"
+          ]
+        },
+        "completion": {
+          "score": 1,
+          "details": [
+            "trial and tool calls completed"
+          ]
+        },
+        "latency_ms": 32826,
+        "total_result_bytes": 76564
+      },
+      "error": null
+    },
+    {
+      "caseId": "spot-simple-price",
+      "repetition": 1,
+      "outcome": "observed",
+      "dispatchedAt": "2026-09-14T14:12:08.934Z",
+      "wallDurationMs": 15954,
+      "observation": {
+        "version": 1,
+        "run_id": "claude-fable-5-1-spot-20260914141105475",
+        "case_id": "spot-simple-price",
+        "target": "omp_harness",
+        "model": "anthropic/claude-fable-5-1",
+        "repetition": 1,
+        "started_at": "2026-09-14T14:12:08.934Z",
+        "status": "completed",
+        "duration_ms": 15952,
+        "activated_skills": [
+          "research-spot-tokens"
+        ],
+        "tool_calls": [
+          {
+            "sequence": 0,
+            "name": "spot.getSimplePrice",
+            "arguments": {
+              "ids": "ethereum",
+              "vs_currencies": "usd",
+              "include_last_updated_at": true
+            },
+            "result_bytes": 1077
+          }
+        ],
+        "available_tools": [
+          "gina.getCrosschainPortfolio",
+          "gina.getAccountAddresses",
+          "gina.listScheduledPrompts",
+          "spot.getTokenMetadata",
+          "spot.getTokenChart",
+          "spot.getSimplePrice",
+          "spot.fetchSwapHistory",
+          "perps.getHyperliquidAccount",
+          "perps.getHyperliquidPositions",
+          "perps.getHyperliquidOpenOrders",
+          "perps.getHyperliquidPortfolio",
+          "perps.getHyperliquidMarkets",
+          "perps.getHyperliquidPrice",
+          "perps.getHyperliquidPrices",
+          "perps.getHyperliquidAssetData",
+          "perps.getHyperliquidPerpDexes",
+          "perps.fetchHyperliquidTrades",
+          "perps.fetchHyperliquidCandles",
+          "perps.fetchHyperliquidOrderBook",
+          "perps.previewHyperliquidOrderCost",
+          "perps.createHyperliquidTable",
+          "perps.executeSqlQuery",
+          "predictions.searchPredictionMarkets",
+          "predictions.getExpiringMarkets",
+          "predictions.getPredictionOrderbook",
+          "predictions.getSeriesMarket",
+          "predictions.getPredictionMarketDetails",
+          "predictions.fetchPolymarketData",
+          "predictions.fetchPolymarketHistory",
+          "predictions.getPolymarketPositions",
+          "predictions.getPolymarketOrderHistory"
+        ],
+        "token_usage": {
+          "input_tokens": 8,
+          "output_tokens": 292,
+          "total_tokens": 300
+        },
+        "final_answer": "**ETH: $2,509.65** (+1.08% over 24h). Source: CoinGecko, updated 2026-09-14 14:10:50 UTC."
+      },
+      "score": {
+        "case_id": "spot-simple-price",
+        "overall_pass": true,
+        "routing": {
+          "score": 1,
+          "details": [
+            "selected spot.getSimplePrice"
+          ]
+        },
+        "arguments": {
+          "score": 1,
+          "details": [
+            "arguments for spot.getSimplePrice satisfy the deterministic contract"
+          ]
+        },
+        "completion": {
+          "score": 1,
+          "details": [
+            "trial and tool calls completed"
+          ]
+        },
+        "latency_ms": 15952,
+        "total_result_bytes": 1077
+      },
+      "error": null
+    },
+    {
+      "caseId": "spot-fetch-swap-history",
+      "repetition": 1,
+      "outcome": "observed",
+      "dispatchedAt": "2026-09-14T14:12:24.888Z",
+      "wallDurationMs": 30547,
+      "observation": {
+        "version": 1,
+        "run_id": "claude-fable-5-1-spot-20260914141105475",
+        "case_id": "spot-fetch-swap-history",
+        "target": "omp_harness",
+        "model": "anthropic/claude-fable-5-1",
+        "repetition": 1,
+        "started_at": "2026-09-14T14:12:24.888Z",
+        "status": "completed",
+        "duration_ms": 30544,
+        "activated_skills": [
+          "research-spot-tokens"
+        ],
+        "tool_calls": [
+          {
+            "sequence": 0,
+            "name": "spot.fetchSwapHistory",
+            "arguments": {},
+            "result_bytes": 13748
+          }
+        ],
+        "available_tools": [
+          "gina.getCrosschainPortfolio",
+          "gina.getAccountAddresses",
+          "gina.listScheduledPrompts",
+          "spot.getTokenMetadata",
+          "spot.getTokenChart",
+          "spot.getSimplePrice",
+          "spot.fetchSwapHistory",
+          "perps.getHyperliquidAccount",
+          "perps.getHyperliquidPositions",
+          "perps.getHyperliquidOpenOrders",
+          "perps.getHyperliquidPortfolio",
+          "perps.getHyperliquidMarkets",
+          "perps.getHyperliquidPrice",
+          "perps.getHyperliquidPrices",
+          "perps.getHyperliquidAssetData",
+          "perps.getHyperliquidPerpDexes",
+          "perps.fetchHyperliquidTrades",
+          "perps.fetchHyperliquidCandles",
+          "perps.fetchHyperliquidOrderBook",
+          "perps.previewHyperliquidOrderCost",
+          "perps.createHyperliquidTable",
+          "perps.executeSqlQuery",
+          "predictions.searchPredictionMarkets",
+          "predictions.getExpiringMarkets",
+          "predictions.getPredictionOrderbook",
+          "predictions.getSeriesMarket",
+          "predictions.getPredictionMarketDetails",
+          "predictions.fetchPolymarketData",
+          "predictions.fetchPolymarketHistory",
+          "predictions.getPolymarketPositions",
+          "predictions.getPolymarketOrderHistory"
+        ],
+        "token_usage": {
+          "input_tokens": 8,
+          "output_tokens": 1535,
+          "total_tokens": 1543
+        },
+        "final_answer": "8 successful swaps in the last 90 days (default lookback, failures excluded, all `mined_success: true`, all cross-chain). Rows returned directly — no table was created, no swap prepared.\n\n| Executed (UTC) | From → To | Route (chain IDs) | In USD → Out USD | Tx |\n|---|---|---|---|---|\n| 2026-08-30 02:45 | pUSD → USDC | Polygon 137 → Arbitrum 42161 | $200.14 → $199.87 | [0xac4d…4608](https://polygonscan.com/tx/0xac4d02e3763ce3c0bc5b98d5a28481c864331b553994bc433db4ab5b62044608) |\n| 2026-08-27 18:40 | emo → USDC | Monad 143 → Arbitrum | $398.43 → $386.52 | [0x0878…09cc](https://monadvision.com/tx/0x087878254bb83ac30b90c6a559319aeaae39b57396a773dde870fef9eed909cc) |\n| 2026-08-27 10:16 | BNKR → USDC | Base 8453 → Arbitrum | $251.79 → $250.88 | [0xb636…9a9d](https://basescan.org/tx/0xb6361ead2610562a798968da7eda87abf211200b0ad7259f721a635d26369a9d) |\n| 2026-08-25 12:47 | USDC → BNKR | Arbitrum → Base | $249.99 → $249.21 | [0xb1d8…b23c](https://arbiscan.io/tx/0xb1d868af7071d09317bdbf376ede1296875530987758dc961d4075f1bbd9b23c) |\n| 2026-08-20 12:24 | USDC → emo | Base → Monad | $130.86 → $130.07 | [0xe6aa…f3a0](https://basescan.org/tx/0xe6aa83d195e6b13870906bbd3511a8c44aba1b5365f5d2e34f778e18367bf3a0) |\n| 2026-08-20 12:20 | USDC.e → USDC | Polygon → Base | $130.12 → $129.93 | [0x9fad…616e](https://polygonscan.com/tx/0x9fad89e987af972f8c7366dba0bc5ff18983c0abf0ad81d5907aad288299616e) |\n| 2026-08-20 12:17 | USDC → emo | Base → Monad | $199.98 → $199.47 | [0x14b8…3ffa](https://basescan.org/tx/0x14b8f261f36868175be3b6cc3aa17ebda99800fcdba9a8c04c7330f800963ffa) |\n| 2026-07-07 13:26 | USDC.e → USDC | Polygon → Base | $200.97 → $200.89 | [0x8d59…c083](https://polygonscan.com/tx/0x8d592fd1e4e84eed884798ac6463b30315fccc56cf4268f5f23e23f3b1c7c083) |\n\nObservations:\n- Round trips: BNKR bought 8/25 ($250 → 947,560 BNKR), sold 8/27 (946,565 BNKR → $250.88) — ~flat. emo bought 8/20 ($330 total → ~622,700 emo), sold 8/27 (623,515 emo → $386.52) — ≈ +$56 gross, though the sell's $398.43 valuation vs $386.52 received shows ~3% execution cost on Monad.\n- Stablecoin consolidations (USDC.e/pUSD → USDC) each lost $0.07–$0.27, i.e. bridge cost only.\n- Origins: 3 `wallet_modal`, 2 `chat`, 1 `api`, 1 `wallet_sidebar_prompt_cta`; all `manual`, all `web`.\n\nData quirk: `to_amount_raw` is inconsistently scaled (raw integer on some rows, decimal-formatted on others) — use `*_amount_usd` for comparisons.\n\nWant a wider lookback (up to 365 days), failed swaps included, or filtered to specific chains?"
+      },
+      "score": {
+        "case_id": "spot-fetch-swap-history",
+        "overall_pass": true,
+        "routing": {
+          "score": 1,
+          "details": [
+            "selected spot.fetchSwapHistory"
+          ]
+        },
+        "arguments": {
+          "score": 1,
+          "details": [
+            "case has no argument constraint"
+          ]
+        },
+        "completion": {
+          "score": 1,
+          "details": [
+            "trial and tool calls completed"
+          ]
+        },
+        "latency_ms": 30544,
+        "total_result_bytes": 13748
+      },
+      "error": null
+    },
+    {
+      "caseId": "spot-token-metadata",
+      "repetition": 2,
+      "outcome": "observed",
+      "dispatchedAt": "2026-09-14T14:12:55.434Z",
+      "wallDurationMs": 23835,
+      "observation": {
+        "version": 1,
+        "run_id": "claude-fable-5-1-spot-20260914141105475",
+        "case_id": "spot-token-metadata",
+        "target": "omp_harness",
+        "model": "anthropic/claude-fable-5-1",
+        "repetition": 2,
+        "started_at": "2026-09-14T14:12:55.435Z",
+        "status": "completed",
+        "duration_ms": 23833,
+        "activated_skills": [
+          "research-spot-tokens"
+        ],
+        "tool_calls": [
+          {
+            "sequence": 0,
+            "name": "spot.getTokenMetadata",
+            "arguments": {
+              "token": "AAVE",
+              "includeMarketData": true
+            },
+            "result_bytes": 5160
+          }
+        ],
+        "available_tools": [
+          "gina.getCrosschainPortfolio",
+          "gina.getAccountAddresses",
+          "gina.listScheduledPrompts",
+          "spot.getTokenMetadata",
+          "spot.getTokenChart",
+          "spot.getSimplePrice",
+          "spot.fetchSwapHistory",
+          "perps.getHyperliquidAccount",
+          "perps.getHyperliquidPositions",
+          "perps.getHyperliquidOpenOrders",
+          "perps.getHyperliquidPortfolio",
+          "perps.getHyperliquidMarkets",
+          "perps.getHyperliquidPrice",
+          "perps.getHyperliquidPrices",
+          "perps.getHyperliquidAssetData",
+          "perps.getHyperliquidPerpDexes",
+          "perps.fetchHyperliquidTrades",
+          "perps.fetchHyperliquidCandles",
+          "perps.fetchHyperliquidOrderBook",
+          "perps.previewHyperliquidOrderCost",
+          "perps.createHyperliquidTable",
+          "perps.executeSqlQuery",
+          "predictions.searchPredictionMarkets",
+          "predictions.getExpiringMarkets",
+          "predictions.getPredictionOrderbook",
+          "predictions.getSeriesMarket",
+          "predictions.getPredictionMarketDetails",
+          "predictions.fetchPolymarketData",
+          "predictions.fetchPolymarketHistory",
+          "predictions.getPolymarketPositions",
+          "predictions.getPolymarketOrderHistory"
+        ],
+        "token_usage": {
+          "input_tokens": 8,
+          "output_tokens": 686,
+          "total_tokens": 694
+        },
+        "final_answer": "**AAVE (Aave Token)** — source: Gina `spot.getTokenMetadata` (CoinGecko/GeckoTerminal), last updated 2026-09-14 14:10 UTC.\n\n**Contract**\n- Network: Ethereum mainnet\n- Address: `0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9`\n- Decimals: 18\n- CoinGecko id: `aave`\n\n**Supply**\n- Max supply: 16,000,000 (finite)\n- Total supply: 16,000,000\n- Circulating: 15,427,704.87 (~96.4% of max)\n- Market cap: ~$1.95B; FDV: ~$2.02B\n- 24h CoinGecko volume: ~$186.8M; on-chain DEX reserve: ~$21.8M\n\n**Description / official links**\nNot returned by the tool — the metadata payload carries no project description or links (website, docs, socials). I won't fill these from memory, since the skill requires token identity from the live source. If you want them, say so and I'll label the memory-based answer as a separate, unverified source.\n\n**Extra returned market data (no chart, per request)**\n- Current price: $126.21 (24h range $123.98–$127.47; -0.96% 24h; +45.8% 30d; -58.6% 1y)\n- ATH: $661.69 (2021-05-18, -80.9% from ATH); ATL: $26.02 (2020-11-05)"
+      },
+      "score": {
+        "case_id": "spot-token-metadata",
+        "overall_pass": true,
+        "routing": {
+          "score": 1,
+          "details": [
+            "selected spot.getTokenMetadata"
+          ]
+        },
+        "arguments": {
+          "score": 1,
+          "details": [
+            "case has no argument constraint"
+          ]
+        },
+        "completion": {
+          "score": 1,
+          "details": [
+            "trial and tool calls completed"
+          ]
+        },
+        "latency_ms": 23833,
+        "total_result_bytes": 5160
+      },
+      "error": null
+    },
+    {
+      "caseId": "spot-token-chart",
+      "repetition": 2,
+      "outcome": "observed",
+      "dispatchedAt": "2026-09-14T14:13:19.270Z",
+      "wallDurationMs": 37292,
+      "observation": {
+        "version": 1,
+        "run_id": "claude-fable-5-1-spot-20260914141105475",
+        "case_id": "spot-token-chart",
+        "target": "omp_harness",
+        "model": "anthropic/claude-fable-5-1",
+        "repetition": 2,
+        "started_at": "2026-09-14T14:13:19.271Z",
+        "status": "completed",
+        "duration_ms": 37290,
+        "activated_skills": [
+          "research-spot-tokens"
+        ],
+        "tool_calls": [
+          {
+            "sequence": 0,
+            "name": "spot.getTokenChart",
+            "arguments": {
+              "coingeckoId": "ethereum",
+              "days": 7,
+              "timeInterval": "1h",
+              "tokenSymbol": "ETH"
+            },
+            "result_bytes": 76564
+          }
+        ],
+        "available_tools": [
+          "gina.getCrosschainPortfolio",
+          "gina.getAccountAddresses",
+          "gina.listScheduledPrompts",
+          "spot.getTokenMetadata",
+          "spot.getTokenChart",
+          "spot.getSimplePrice",
+          "spot.fetchSwapHistory",
+          "perps.getHyperliquidAccount",
+          "perps.getHyperliquidPositions",
+          "perps.getHyperliquidOpenOrders",
+          "perps.getHyperliquidPortfolio",
+          "perps.getHyperliquidMarkets",
+          "perps.getHyperliquidPrice",
+          "perps.getHyperliquidPrices",
+          "perps.getHyperliquidAssetData",
+          "perps.getHyperliquidPerpDexes",
+          "perps.fetchHyperliquidTrades",
+          "perps.fetchHyperliquidCandles",
+          "perps.fetchHyperliquidOrderBook",
+          "perps.previewHyperliquidOrderCost",
+          "perps.createHyperliquidTable",
+          "perps.executeSqlQuery",
+          "predictions.searchPredictionMarkets",
+          "predictions.getExpiringMarkets",
+          "predictions.getPredictionOrderbook",
+          "predictions.getSeriesMarket",
+          "predictions.getPredictionMarketDetails",
+          "predictions.fetchPolymarketData",
+          "predictions.fetchPolymarketHistory",
+          "predictions.getPolymarketPositions",
+          "predictions.getPolymarketOrderHistory"
+        ],
+        "token_usage": {
+          "input_tokens": 8,
+          "output_tokens": 2053,
+          "total_tokens": 2061
+        },
+        "final_answer": "ETH/USD 7-day chart is rendered above (source: CoinGecko, 1h interval, window 2026-09-07 15:00Z → 2026-09-14 15:00Z).\n\n**Window summary (from chart evidence)**\n- Start: $2,497.87 (Sep 7, 15:00Z)\n- End: $2,500.57 (Sep 14, 15:00Z)\n- Net change: +$2.70 (+0.11%), direction up — essentially flat round-trip.\n- Range: low $2,410.22 (Sep 11 ~01:00Z hourly bar), high $2,647.68 (Sep 11 ~15:00Z hourly bar — a ~$140 spike inside two hours, then faded back to ~$2,510 within a day).\n\n**Daily OHLC (UTC, from the daily series in the same result)**\n\n| Date | Open | High | Low | Close |\n|---|---|---|---|---|\n| Sep 7 | 2480.00 | 2523.33 | 2473.01 | 2514.65 |\n| Sep 8 | 2514.01 | 2532.72 | 2467.80 | 2489.42 |\n| Sep 9 | 2489.40 | 2505.13 | 2442.98 | 2484.75 |\n| Sep 10 | 2485.07 | 2521.51 | 2445.10 | 2467.47 |\n| Sep 11 | 2467.53 | 2482.52 | 2410.22 | 2437.51 |\n| Sep 12 | 2437.51 | 2647.68 | 2437.39 | 2515.58 |\n| Sep 13 | 2514.85 | 2543.69 | 2509.71 | 2525.70 |\n| Sep 14 (forming) | 2525.27 | 2526.68 | 2464.63 | 2476.32 |\n\nShape: slow grind down Sep 7→11 (−3%), sharp spike Sep 11–12, then consolidation in the $2,460–2,545 band. Full hourly series (168 bars) is in the chart; raw rows available at `artifact://0` if you want to export them."
+      },
+      "score": {
+        "case_id": "spot-token-chart",
+        "overall_pass": true,
+        "routing": {
+          "score": 1,
+          "details": [
+            "selected spot.getTokenChart"
+          ]
+        },
+        "arguments": {
+          "score": 1,
+          "details": [
+            "case has no argument constraint"
+          ]
+        },
+        "completion": {
+          "score": 1,
+          "details": [
+            "trial and tool calls completed"
+          ]
+        },
+        "latency_ms": 37290,
+        "total_result_bytes": 76564
+      },
+      "error": null
+    },
+    {
+      "caseId": "spot-simple-price",
+      "repetition": 2,
+      "outcome": "observed",
+      "dispatchedAt": "2026-09-14T14:13:56.563Z",
+      "wallDurationMs": 17973,
+      "observation": {
+        "version": 1,
+        "run_id": "claude-fable-5-1-spot-20260914141105475",
+        "case_id": "spot-simple-price",
+        "target": "omp_harness",
+        "model": "anthropic/claude-fable-5-1",
+        "repetition": 2,
+        "started_at": "2026-09-14T14:13:56.563Z",
+        "status": "completed",
+        "duration_ms": 17971,
+        "activated_skills": [
+          "research-spot-tokens"
+        ],
+        "tool_calls": [
+          {
+            "sequence": 0,
+            "name": "spot.getSimplePrice",
+            "arguments": {
+              "ids": "ethereum",
+              "vs_currencies": "usd",
+              "include_last_updated_at": true
+            },
+            "result_bytes": 1081
+          }
+        ],
+        "available_tools": [
+          "gina.getCrosschainPortfolio",
+          "gina.getAccountAddresses",
+          "gina.listScheduledPrompts",
+          "spot.getTokenMetadata",
+          "spot.getTokenChart",
+          "spot.getSimplePrice",
+          "spot.fetchSwapHistory",
+          "perps.getHyperliquidAccount",
+          "perps.getHyperliquidPositions",
+          "perps.getHyperliquidOpenOrders",
+          "perps.getHyperliquidPortfolio",
+          "perps.getHyperliquidMarkets",
+          "perps.getHyperliquidPrice",
+          "perps.getHyperliquidPrices",
+          "perps.getHyperliquidAssetData",
+          "perps.getHyperliquidPerpDexes",
+          "perps.fetchHyperliquidTrades",
+          "perps.fetchHyperliquidCandles",
+          "perps.fetchHyperliquidOrderBook",
+          "perps.previewHyperliquidOrderCost",
+          "perps.createHyperliquidTable",
+          "perps.executeSqlQuery",
+          "predictions.searchPredictionMarkets",
+          "predictions.getExpiringMarkets",
+          "predictions.getPredictionOrderbook",
+          "predictions.getSeriesMarket",
+          "predictions.getPredictionMarketDetails",
+          "predictions.fetchPolymarketData",
+          "predictions.fetchPolymarketHistory",
+          "predictions.getPolymarketPositions",
+          "predictions.getPolymarketOrderHistory"
+        ],
+        "token_usage": {
+          "input_tokens": 8,
+          "output_tokens": 277,
+          "total_tokens": 285
+        },
+        "final_answer": "**ETH: $2,511.37** (+1.11% over 24h)\n\nSource: CoinGecko, updated 2026-09-14 14:12 UTC."
+      },
+      "score": {
+        "case_id": "spot-simple-price",
+        "overall_pass": true,
+        "routing": {
+          "score": 1,
+          "details": [
+            "selected spot.getSimplePrice"
+          ]
+        },
+        "arguments": {
+          "score": 1,
+          "details": [
+            "arguments for spot.getSimplePrice satisfy the deterministic contract"
+          ]
+        },
+        "completion": {
+          "score": 1,
+          "details": [
+            "trial and tool calls completed"
+          ]
+        },
+        "latency_ms": 17971,
+        "total_result_bytes": 1081
+      },
+      "error": null
+    },
+    {
+      "caseId": "spot-fetch-swap-history",
+      "repetition": 2,
+      "outcome": "observed",
+      "dispatchedAt": "2026-09-14T14:14:14.536Z",
+      "wallDurationMs": 23793,
+      "observation": {
+        "version": 1,
+        "run_id": "claude-fable-5-1-spot-20260914141105475",
+        "case_id": "spot-fetch-swap-history",
+        "target": "omp_harness",
+        "model": "anthropic/claude-fable-5-1",
+        "repetition": 2,
+        "started_at": "2026-09-14T14:14:14.537Z",
+        "status": "completed",
+        "duration_ms": 23791,
+        "activated_skills": [
+          "research-spot-tokens"
+        ],
+        "tool_calls": [
+          {
+            "sequence": 0,
+            "name": "spot.fetchSwapHistory",
+            "arguments": {},
+            "result_bytes": 13748
+          }
+        ],
+        "available_tools": [
+          "gina.getCrosschainPortfolio",
+          "gina.getAccountAddresses",
+          "gina.listScheduledPrompts",
+          "spot.getTokenMetadata",
+          "spot.getTokenChart",
+          "spot.getSimplePrice",
+          "spot.fetchSwapHistory",
+          "perps.getHyperliquidAccount",
+          "perps.getHyperliquidPositions",
+          "perps.getHyperliquidOpenOrders",
+          "perps.getHyperliquidPortfolio",
+          "perps.getHyperliquidMarkets",
+          "perps.getHyperliquidPrice",
+          "perps.getHyperliquidPrices",
+          "perps.getHyperliquidAssetData",
+          "perps.getHyperliquidPerpDexes",
+          "perps.fetchHyperliquidTrades",
+          "perps.fetchHyperliquidCandles",
+          "perps.fetchHyperliquidOrderBook",
+          "perps.previewHyperliquidOrderCost",
+          "perps.createHyperliquidTable",
+          "perps.executeSqlQuery",
+          "predictions.searchPredictionMarkets",
+          "predictions.getExpiringMarkets",
+          "predictions.getPredictionOrderbook",
+          "predictions.getSeriesMarket",
+          "predictions.getPredictionMarketDetails",
+          "predictions.fetchPolymarketData",
+          "predictions.fetchPolymarketHistory",
+          "predictions.getPolymarketPositions",
+          "predictions.getPolymarketOrderHistory"
+        ],
+        "token_usage": {
+          "input_tokens": 8,
+          "output_tokens": 1009,
+          "total_tokens": 1017
+        },
+        "final_answer": "8 completed swaps in the last 90 days (default lookback, failures excluded, all `mined_success: true`). Rows returned directly — no table created, no swap prepared.\n\n| Executed (UTC) | From → To | Route (chain IDs) | In (USD) | Out (USD) | Source |\n|---|---|---|---|---|---|\n| 2026-08-30 02:45 | pUSD → USDC | Polygon 137 → Arbitrum 42161 | $200.14 | $199.87 | api |\n| 2026-08-27 18:40 | emo → USDC | Monad 143 → Arbitrum 42161 | $398.43 | $386.52 | wallet_modal |\n| 2026-08-27 10:16 | BNKR → USDC | Base 8453 → Arbitrum 42161 | $251.79 | $250.88 | wallet_modal |\n| 2026-08-25 12:47 | USDC → BNKR | Arbitrum 42161 → Base 8453 | $249.99 | $249.21 | chat |\n| 2026-08-20 12:24 | USDC → emo | Base 8453 → Monad 143 | $130.86 | $130.07 | wallet_modal |\n| 2026-08-20 12:20 | USDC.e → USDC | Polygon 137 → Base 8453 | $130.12 | $129.93 | wallet_modal |\n| 2026-08-20 12:17 | USDC → emo | Base 8453 → Monad 143 | $199.98 | $199.47 | chat |\n| 2026-07-07 13:26 | USDC.e → USDC | Polygon 137 → Base 8453 | $200.97 | $200.89 | wallet_sidebar_prompt_cta |\n\nObservations:\n- Every swap is cross-chain; all \"manual\" origin.\n- Two round trips visible: BNKR (in $250 on 08-25 → out $251.79 on 08-27, ~+$0.9 net after both legs) and emo (in $330.84 across two buys on 08-20 → out $398.43 on 08-27, but the sell realized only $386.52 USDC — ~3% slippage on that leg).\n- Stablecoin-to-stablecoin legs (USDC.e/pUSD → USDC) cost $0.07–$0.27 each.\n- Largest cost: the emo → USDC exit, $11.91 gap between quoted USD value and received USDC.\n\nTx links are in the tool payload (`txn_url`) per row if you want to inspect any on-chain. Want failed swaps included, a longer lookback (up to 365d), or a chain filter?"
+      },
+      "score": {
+        "case_id": "spot-fetch-swap-history",
+        "overall_pass": true,
+        "routing": {
+          "score": 1,
+          "details": [
+            "selected spot.fetchSwapHistory"
+          ]
+        },
+        "arguments": {
+          "score": 1,
+          "details": [
+            "case has no argument constraint"
+          ]
+        },
+        "completion": {
+          "score": 1,
+          "details": [
+            "trial and tool calls completed"
+          ]
+        },
+        "latency_ms": 23791,
+        "total_result_bytes": 13748
+      },
+      "error": null
+    },
+    {
+      "caseId": "spot-token-metadata",
+      "repetition": 3,
+      "outcome": "observed",
+      "dispatchedAt": "2026-09-14T14:14:38.329Z",
+      "wallDurationMs": 23159,
+      "observation": {
+        "version": 1,
+        "run_id": "claude-fable-5-1-spot-20260914141105475",
+        "case_id": "spot-token-metadata",
+        "target": "omp_harness",
+        "model": "anthropic/claude-fable-5-1",
+        "repetition": 3,
+        "started_at": "2026-09-14T14:14:38.330Z",
+        "status": "completed",
+        "duration_ms": 23157,
+        "activated_skills": [
+          "research-spot-tokens"
+        ],
+        "tool_calls": [
+          {
+            "sequence": 0,
+            "name": "spot.getTokenMetadata",
+            "arguments": {
+              "token": "AAVE",
+              "includeMarketData": true
+            },
+            "result_bytes": 5162
+          }
+        ],
+        "available_tools": [
+          "gina.getCrosschainPortfolio",
+          "gina.getAccountAddresses",
+          "gina.listScheduledPrompts",
+          "spot.getTokenMetadata",
+          "spot.getTokenChart",
+          "spot.getSimplePrice",
+          "spot.fetchSwapHistory",
+          "perps.getHyperliquidAccount",
+          "perps.getHyperliquidPositions",
+          "perps.getHyperliquidOpenOrders",
+          "perps.getHyperliquidPortfolio",
+          "perps.getHyperliquidMarkets",
+          "perps.getHyperliquidPrice",
+          "perps.getHyperliquidPrices",
+          "perps.getHyperliquidAssetData",
+          "perps.getHyperliquidPerpDexes",
+          "perps.fetchHyperliquidTrades",
+          "perps.fetchHyperliquidCandles",
+          "perps.fetchHyperliquidOrderBook",
+          "perps.previewHyperliquidOrderCost",
+          "perps.createHyperliquidTable",
+          "perps.executeSqlQuery",
+          "predictions.searchPredictionMarkets",
+          "predictions.getExpiringMarkets",
+          "predictions.getPredictionOrderbook",
+          "predictions.getSeriesMarket",
+          "predictions.getPredictionMarketDetails",
+          "predictions.fetchPolymarketData",
+          "predictions.fetchPolymarketHistory",
+          "predictions.getPolymarketPositions",
+          "predictions.getPolymarketOrderHistory"
+        ],
+        "token_usage": {
+          "input_tokens": 8,
+          "output_tokens": 709,
+          "total_tokens": 717
+        },
+        "final_answer": "**AAVE — Aave Token** (Ethereum mainnet, source: Gina / CoinGecko + GeckoTerminal, updated 2026-09-14 14:12 UTC)\n\n**Contract**\n- Address: `0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9`\n- Chain: `eth` · Decimals: 18 · CoinGecko id: `aave`\n\n**Supply**\n- Max supply: 16,000,000 (fixed, not infinite)\n- Total supply: 16,000,000\n- Circulating: 15,427,704.87 (~96.4% of max)\n- Market cap: ~$1.95B · FDV: ~$2.02B\n\n**Market context** (spot, not a chart)\n- Price: $126.30 · 24h range $123.98–$127.47 · 24h vol ~$186M\n- ATH $661.69 (2021-05-18, −80.9%) · ATL $26.02 (2020-11-05, +385%)\n- Top on-chain pools (eth): `0x1c60dc…5088`, `0xcd0198…8e6f`, `0x5ab53e…c1bb`; DEX reserves ~$21.8M\n\n**Description and official links** — not returned by the metadata tool. The response carries only the on-chain/market fields above; it has no description text, website, docs, or social URLs. I won't fill those from memory per the read-only/grounding rule. If you want them, I can fetch the CoinGecko `aave` coin page via `read` as a separately-labeled source."
+      },
+      "score": {
+        "case_id": "spot-token-metadata",
+        "overall_pass": true,
+        "routing": {
+          "score": 1,
+          "details": [
+            "selected spot.getTokenMetadata"
+          ]
+        },
+        "arguments": {
+          "score": 1,
+          "details": [
+            "case has no argument constraint"
+          ]
+        },
+        "completion": {
+          "score": 1,
+          "details": [
+            "trial and tool calls completed"
+          ]
+        },
+        "latency_ms": 23157,
+        "total_result_bytes": 5162
+      },
+      "error": null
+    },
+    {
+      "caseId": "spot-token-chart",
+      "repetition": 3,
+      "outcome": "observed",
+      "dispatchedAt": "2026-09-14T14:15:01.489Z",
+      "wallDurationMs": 37082,
+      "observation": {
+        "version": 1,
+        "run_id": "claude-fable-5-1-spot-20260914141105475",
+        "case_id": "spot-token-chart",
+        "target": "omp_harness",
+        "model": "anthropic/claude-fable-5-1",
+        "repetition": 3,
+        "started_at": "2026-09-14T14:15:01.490Z",
+        "status": "completed",
+        "duration_ms": 37079,
+        "activated_skills": [
+          "research-spot-tokens"
+        ],
+        "tool_calls": [
+          {
+            "sequence": 0,
+            "name": "spot.getTokenChart",
+            "arguments": {
+              "coingeckoId": "ethereum",
+              "days": 7,
+              "timeInterval": "1h",
+              "tokenSymbol": "ETH"
+            },
+            "result_bytes": 76564
+          }
+        ],
+        "available_tools": [
+          "gina.getCrosschainPortfolio",
+          "gina.getAccountAddresses",
+          "gina.listScheduledPrompts",
+          "spot.getTokenMetadata",
+          "spot.getTokenChart",
+          "spot.getSimplePrice",
+          "spot.fetchSwapHistory",
+          "perps.getHyperliquidAccount",
+          "perps.getHyperliquidPositions",
+          "perps.getHyperliquidOpenOrders",
+          "perps.getHyperliquidPortfolio",
+          "perps.getHyperliquidMarkets",
+          "perps.getHyperliquidPrice",
+          "perps.getHyperliquidPrices",
+          "perps.getHyperliquidAssetData",
+          "perps.getHyperliquidPerpDexes",
+          "perps.fetchHyperliquidTrades",
+          "perps.fetchHyperliquidCandles",
+          "perps.fetchHyperliquidOrderBook",
+          "perps.previewHyperliquidOrderCost",
+          "perps.createHyperliquidTable",
+          "perps.executeSqlQuery",
+          "predictions.searchPredictionMarkets",
+          "predictions.getExpiringMarkets",
+          "predictions.getPredictionOrderbook",
+          "predictions.getSeriesMarket",
+          "predictions.getPredictionMarketDetails",
+          "predictions.fetchPolymarketData",
+          "predictions.fetchPolymarketHistory",
+          "predictions.getPolymarketPositions",
+          "predictions.getPolymarketOrderHistory"
+        ],
+        "token_usage": {
+          "input_tokens": 8,
+          "output_tokens": 1906,
+          "total_tokens": 1914
+        },
+        "final_answer": "Chart rendered: **ETH/USD, 7-day window, 1h candles, source CoinGecko** (widget above carries the full series; daily/other timeframes are attached too).\n\n**Window evidence (tool-returned):** start $2,497.87 @ 2026-09-07 15:00Z → end $2,500.57 @ 2026-09-14 15:00Z; **+$2.70 (+0.11%)**, direction up. Essentially flat week-over-week.\n\n**Daily OHLC from the series (UTC days):**\n\n| Day | Open | High | Low | Close |\n|---|---|---|---|---|\n| Sep 7 | 2480.00 | 2523.33 | 2473.01 | 2514.65 |\n| Sep 8 | 2514.01 | 2532.72 | 2467.80 | 2489.42 |\n| Sep 9 | 2489.40 | 2505.13 | 2442.98 | 2484.75 |\n| Sep 10 | 2485.07 | 2521.51 | 2445.10 | 2467.47 |\n| Sep 11 | 2467.53 | 2482.52 | 2410.22 | 2437.51 |\n| Sep 12 | 2437.51 | 2647.68 | 2437.39 | 2515.58 |\n| Sep 13 | 2514.85 | 2543.69 | 2509.71 | 2525.70 |\n| Sep 14 (partial) | 2525.27 | 2526.68 | 2464.63 | 2476.32 |\n\n**Shape:** slow grind down Sep 7→11 (week low $2,410 during an hourly flush to $2,413.62), then a sharp two-hour spike on the hourly series (2,457 → 2,626 → high $2,647.68) that mostly retraced to ~$2,510–2,530, and a modest pullback today. Range for the week: $2,410–$2,648 (~9.9%).\n\nNote: the daily bucket's last close ($2,476) and the hourly end value ($2,500.57) differ because the daily bar is still forming; treat the hourly value as the more current one. This is historical data, not a live quote — say if you want the current price separately."
+      },
+      "score": {
+        "case_id": "spot-token-chart",
+        "overall_pass": true,
+        "routing": {
+          "score": 1,
+          "details": [
+            "selected spot.getTokenChart"
+          ]
+        },
+        "arguments": {
+          "score": 1,
+          "details": [
+            "case has no argument constraint"
+          ]
+        },
+        "completion": {
+          "score": 1,
+          "details": [
+            "trial and tool calls completed"
+          ]
+        },
+        "latency_ms": 37079,
+        "total_result_bytes": 76564
+      },
+      "error": null
+    },
+    {
+      "caseId": "spot-simple-price",
+      "repetition": 3,
+      "outcome": "observed",
+      "dispatchedAt": "2026-09-14T14:15:38.571Z",
+      "wallDurationMs": 19002,
+      "observation": {
+        "version": 1,
+        "run_id": "claude-fable-5-1-spot-20260914141105475",
+        "case_id": "spot-simple-price",
+        "target": "omp_harness",
+        "model": "anthropic/claude-fable-5-1",
+        "repetition": 3,
+        "started_at": "2026-09-14T14:15:38.572Z",
+        "status": "completed",
+        "duration_ms": 18998,
+        "activated_skills": [
+          "research-spot-tokens"
+        ],
+        "tool_calls": [
+          {
+            "sequence": 0,
+            "name": "spot.getSimplePrice",
+            "arguments": {
+              "ids": "ethereum",
+              "vs_currencies": "usd",
+              "include_last_updated_at": true
+            },
+            "result_bytes": 1081
+          }
+        ],
+        "available_tools": [
+          "gina.getCrosschainPortfolio",
+          "gina.getAccountAddresses",
+          "gina.listScheduledPrompts",
+          "spot.getTokenMetadata",
+          "spot.getTokenChart",
+          "spot.getSimplePrice",
+          "spot.fetchSwapHistory",
+          "perps.getHyperliquidAccount",
+          "perps.getHyperliquidPositions",
+          "perps.getHyperliquidOpenOrders",
+          "perps.getHyperliquidPortfolio",
+          "perps.getHyperliquidMarkets",
+          "perps.getHyperliquidPrice",
+          "perps.getHyperliquidPrices",
+          "perps.getHyperliquidAssetData",
+          "perps.getHyperliquidPerpDexes",
+          "perps.fetchHyperliquidTrades",
+          "perps.fetchHyperliquidCandles",
+          "perps.fetchHyperliquidOrderBook",
+          "perps.previewHyperliquidOrderCost",
+          "perps.createHyperliquidTable",
+          "perps.executeSqlQuery",
+          "predictions.searchPredictionMarkets",
+          "predictions.getExpiringMarkets",
+          "predictions.getPredictionOrderbook",
+          "predictions.getSeriesMarket",
+          "predictions.getPredictionMarketDetails",
+          "predictions.fetchPolymarketData",
+          "predictions.fetchPolymarketHistory",
+          "predictions.getPolymarketPositions",
+          "predictions.getPolymarketOrderHistory"
+        ],
+        "token_usage": {
+          "input_tokens": 8,
+          "output_tokens": 271,
+          "total_tokens": 279
+        },
+        "final_answer": "ETH: **$2,513.22** (+1.12% 24h). Source: CoinGecko, updated 2026-09-14 14:14 UTC."
+      },
+      "score": {
+        "case_id": "spot-simple-price",
+        "overall_pass": true,
+        "routing": {
+          "score": 1,
+          "details": [
+            "selected spot.getSimplePrice"
+          ]
+        },
+        "arguments": {
+          "score": 1,
+          "details": [
+            "arguments for spot.getSimplePrice satisfy the deterministic contract"
+          ]
+        },
+        "completion": {
+          "score": 1,
+          "details": [
+            "trial and tool calls completed"
+          ]
+        },
+        "latency_ms": 18998,
+        "total_result_bytes": 1081
+      },
+      "error": null
+    },
+    {
+      "caseId": "spot-fetch-swap-history",
+      "repetition": 3,
+      "outcome": "runtime_failure",
+      "dispatchedAt": "2026-09-14T14:15:57.573Z",
+      "wallDurationMs": 27315,
+      "observation": null,
+      "score": null,
+      "error": {
+        "tag": "PluginEvalOmpHarnessProcessError",
+        "reason": "generation-failed"
+      }
+    }
+  ],
+  "terminal": 12,
+  "graded": 11,
+  "passed": 11,
+  "failed": 0,
+  "unscored": 1,
+  "timeouts": 0,
+  "latencyMs": {
+    "p50": 23833,
+    "p95": 37290,
+    "max": 37290
+  },
+  "dimensions": {
+    "routing": {
+      "passed": 11,
+      "failed": 0,
+      "unscored": 1
+    },
+    "arguments": {
+      "passed": 11,
+      "failed": 0,
+      "unscored": 1
+    },
+    "completion": {
+      "passed": 11,
+      "failed": 0,
+      "unscored": 1
+    },
+    "safety": {
+      "passed": 0,
+      "failed": 0,
+      "unscored": 12
+    },
+    "skill_activation": {
+      "passed": 0,
+      "failed": 0,
+      "unscored": 12
+    }
+  },
+  "tokenUsage": {
+    "observations": 11,
+    "input": 88,
+    "output": 11115,
+    "total": 11203
+  },
+  "cases": [
+    {
+      "id": "spot-token-metadata",
+      "passed": 3,
+      "graded": 3,
+      "unscored": 0,
+      "pending": 0
+    },
+    {
+      "id": "spot-token-chart",
+      "passed": 3,
+      "graded": 3,
+      "unscored": 0,
+      "pending": 0
+    },
+    {
+      "id": "spot-simple-price",
+      "passed": 3,
+      "graded": 3,
+      "unscored": 0,
+      "pending": 0
+    },
+    {
+      "id": "spot-fetch-swap-history",
+      "passed": 2,
+      "graded": 2,
+      "unscored": 1,
+      "pending": 0
+    }
+  ],
+  "missingSlots": []
+}

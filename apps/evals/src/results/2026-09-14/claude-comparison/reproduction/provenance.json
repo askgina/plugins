@@ -1,0 +1,28 @@
+{
+  "sourceRepository": "https://github.com/askgina/plugins",
+  "sourceCommit": "95bfbe101f4b1a29b3f42113b2423e752be3ae07",
+  "localBranch": "eval/claude-fable-opus",
+  "sourceChanges": false,
+  "sourceHashes": {
+    "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+    "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e",
+    "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+    "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1"
+  },
+  "BunVersion": "1.4.0",
+  "OMPVersion": "omp/18.1.21",
+  "OMPExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+  "models": [
+    "anthropic/claude-fable-5-1",
+    "anthropic/claude-opus-5"
+  ],
+  "reasoning": "medium",
+  "repetitions": 3,
+  "timeoutMs": 120000,
+  "trialRetries": 0,
+  "concurrency": "Two model processes, sequential trials within each model",
+  "auth": "Native Anthropic OAuth via a shared isolated credential-only SQLite profile; Gina OAuth read grant",
+  "credentialPolicy": "Credentials, auth database, local launch configs and native executable excluded from artifacts; rerunning requires own credentials and the pinned executable",
+  "inputs": "Existing 35 source cases unchanged; three repetitions per model",
+  "verification": "210 unique terminal slots and transcripts; all 208 retained scores exactly match offline replay; two typed runtime failures remain unscored"
+}
