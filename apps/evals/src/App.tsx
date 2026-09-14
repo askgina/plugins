@@ -57,6 +57,7 @@ export function MethodologyPage() {
                         Spot:{" "}
                         <code>
                           {measuredModels
+                            .filter((model) => model.campaign.id === campaign.id)
                             .map((model) => {
                               const sourceCommit = model.families.Spot?.sourceCommit;
                               return sourceCommit
@@ -69,7 +70,9 @@ export function MethodologyPage() {
                         ; perps/predictions:{" "}
                         <code>
                           {measuredModels
-                            .find((model) => model.families.Perps)
+                            .find(
+                              (model) => model.campaign.id === campaign.id && model.families.Perps,
+                            )
                             ?.families.Perps?.sourceCommit.slice(0, 7)}
                         </code>
                         , executable <code>{campaign.executableSourceCommit?.slice(0, 7)}</code>
