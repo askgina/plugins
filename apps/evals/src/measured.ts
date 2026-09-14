@@ -1,5 +1,5 @@
 import type { TaskFamily } from "./data";
-import { perpsPredictionsReport, spotComparison } from "./results";
+import { perpsPredictionsReport, spotBundleManifest, spotComparison } from "./results";
 
 export type MeasuredVerdict = "pass" | "fail" | "timeout";
 
@@ -35,6 +35,7 @@ export interface MeasuredCase {
 export interface MeasuredFamilyResult {
   family: TaskFamily;
   runId: string;
+  sourceCommit: string;
   startedAt?: string;
   passed: number;
   failed: number;
@@ -74,8 +75,14 @@ function dimensionsFrom(dimensions: {
 function familyResult(result: Omit<MeasuredFamilyResult, "passRateSortKey">): MeasuredFamilyResult {
   return {
     ...result,
-    passRateSortKey: (result.passed / result.total) * 100,
+    passRateSortKey: (result.passed / (result.total - result.unscoredTimeouts)) * 100,
   };
+}
+
+function spotSourceCommit(runId: string): string {
+  const sourceCommit = spotBundleManifest.runs.find((run) => run.runId === runId)?.sourceCommit;
+  if (!sourceCommit) throw new Error(`Missing spot source commit for ${runId}`);
+  return sourceCommit;
 }
 
 function spotCases(run: (typeof spotComparison.runs)[number]): readonly MeasuredCase[] {
@@ -111,6 +118,7 @@ function spotResult(run: (typeof spotComparison.runs)[number]): MeasuredFamilyRe
   return familyResult({
     family: "Spot",
     runId: run.report.runId,
+    sourceCommit: spotSourceCommit(run.report.runId),
     startedAt: run.report.startedAt,
     passed: aggregate.overall.passed,
     failed: aggregate.overall.total - aggregate.overall.passed,
@@ -133,6 +141,7 @@ function perpsResult(run: (typeof perpsPredictionsReport.runs)[number]): Measure
   return familyResult({
     family,
     runId: run.runId,
+    sourceCommit: perpsPredictionsReport.sourceCommit,
     passed: run.passed,
     failed: run.failed,
     unscoredTimeouts: run.unscoredTimeouts,

@@ -6,7 +6,7 @@ import { LeaderboardPage } from "./pages/leaderboard";
 import { ModelProfilePage } from "./pages/model-profile";
 import { TaskExplorerPage } from "./pages/task-explorer";
 import { HandoffPage } from "./pages/handoff";
-import { measuredRun } from "./measured";
+import { measuredModels, measuredRun } from "./measured";
 
 export function MethodologyPage() {
   return (
@@ -49,8 +49,23 @@ export function MethodologyPage() {
                 tool-use conformance, not answer accuracy or financial outcomes.
               </p>
               <p>
-                Source <code>{measuredRun.sourceCommit}</code> · executable source{" "}
-                <code>{measuredRun.executableSourceCommit}</code>
+                Spot:{" "}
+                <code>
+                  {measuredModels
+                    .map((model) => {
+                      const sourceCommit = model.families.Spot?.sourceCommit;
+                      return sourceCommit ? `${sourceCommit.slice(0, 7)} (${model.name})` : null;
+                    })
+                    .filter(Boolean)
+                    .join(" / ")}
+                </code>
+                ; perps/predictions:{" "}
+                <code>
+                  {measuredModels
+                    .find((model) => model.families.Perps)
+                    ?.families.Perps?.sourceCommit.slice(0, 7)}
+                </code>
+                , executable <code>{measuredRun.executableSourceCommit.slice(0, 7)}</code>
               </p>
               <a
                 className="eval-text-link"

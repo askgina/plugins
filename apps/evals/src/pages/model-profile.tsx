@@ -190,7 +190,7 @@ function MeasuredModelProfile({ model }: { model: MeasuredModel }) {
             ))}
           </ul>
           <p className="eval-muted model-profile-chart-note">
-            Bar width is passed ÷ total for the displayed counts. No interval is shown; the sample
+            Bar width is passed ÷ graded for the displayed counts. No interval is shown; the sample
             is small.
           </p>
         </Panel>
@@ -216,6 +216,7 @@ function MeasuredModelProfile({ model }: { model: MeasuredModel }) {
                   <th scope="col">Routing</th>
                   <th scope="col">Arguments</th>
                   <th scope="col">Completion</th>
+                  <th scope="col">Safety</th>
                 </tr>
               </thead>
               <tbody>
@@ -235,6 +236,9 @@ function MeasuredModelProfile({ model }: { model: MeasuredModel }) {
                     </td>
                     <td>
                       {result.dimensions.completion.passed} · {result.dimensions.completion.failed}
+                    </td>
+                    <td>
+                      {result.dimensions.safety.passed} · {result.dimensions.safety.failed}
                     </td>
                   </tr>
                 ))}
@@ -287,18 +291,22 @@ function MeasuredModelProfile({ model }: { model: MeasuredModel }) {
                 </dd>
               </div>
             ))}
-            <div>
-              <dt>Source commit</dt>
-              <dd>
-                <code>{measuredRun.sourceCommit}</code>
-              </dd>
-            </div>
-            <div>
-              <dt>Executable source commit</dt>
-              <dd>
-                <code>{measuredRun.executableSourceCommit}</code>
-              </dd>
-            </div>
+            {available.map(({ family, result }) => (
+              <div key={`source-${family}`}>
+                <dt>Source commit · {family}</dt>
+                <dd>
+                  <code>{result.sourceCommit}</code>
+                </dd>
+              </div>
+            ))}
+            {available.some(({ family }) => family === "Perps" || family === "Predictions") && (
+              <div>
+                <dt>Executable source commit</dt>
+                <dd>
+                  <code>{measuredRun.executableSourceCommit}</code>
+                </dd>
+              </div>
+            )}
           </dl>
           <a
             className="eval-text-link model-profile-run-link"
@@ -310,7 +318,7 @@ function MeasuredModelProfile({ model }: { model: MeasuredModel }) {
           </a>
         </Panel>
 
-        {model.id === "gpt-5-6-sol" && (
+        {available.some(({ family }) => family === "Perps" || family === "Predictions") && (
           <>
             <Panel title="Aborted original predictions run">
               <dl className="model-profile-run-details">

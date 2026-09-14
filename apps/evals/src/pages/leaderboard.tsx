@@ -535,15 +535,12 @@ export function LeaderboardPage({
                   </thead>
                   <tbody>
                     {rows.map((row) => {
-                      const illustrativeRows = rows.filter(
-                        (candidate): candidate is IllustrativeRow =>
-                          candidate.kind === "illustrative",
-                      );
                       const rank =
                         row.kind === "illustrative"
-                          ? illustrativeRows.reduce(
+                          ? models.reduce(
                               (position, candidate) =>
-                                position + Number(candidate.passRate > row.passRate),
+                                position +
+                                Number(familyMetrics(candidate, family).passRate > row.passRate),
                               1,
                             )
                           : undefined;

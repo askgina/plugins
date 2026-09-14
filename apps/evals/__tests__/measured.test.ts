@@ -48,4 +48,16 @@ describe("measured models", () => {
     expect(measuredRun.prUrl).toBe(perpsPredictionsReport.prUrl);
     expect(measuredRun.repetitions).toBe(3);
   });
+
+  test("preserves per-bundle source commits and graded sort counts", () => {
+    expect(getMeasuredModel("gpt-5-5")!.families.Spot!.sourceCommit).toBe(
+      "5f98d54cf0f6514c90116a4c7c1d889cdd7dc485",
+    );
+    expect(getMeasuredModel("gpt-5-6-sol")!.families.Spot!.sourceCommit).toBe(
+      "780dc809e9956a329d9e60c72503de449477699b",
+    );
+    expect(getMeasuredModel("gpt-5-6-sol")!.families.Predictions!.passRateSortKey).toBeCloseTo(
+      (12 / 38) * 100,
+    );
+  });
 });
