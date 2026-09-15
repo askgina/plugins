@@ -1,0 +1,33 @@
+/* Check-dimension radar — square plot beside the eval-table source of truth.
+   The SVG is decorative (aria-hidden); the table always carries the numbers. */
+
+.check-dimension-radar-chart {
+  margin-block: 0.5rem;
+}
+
+.check-dimension-radar-chart [data-slot="chart"] {
+  width: min(100%, 22rem);
+  aspect-ratio: 1;
+  min-width: 15rem;
+  margin-inline: auto;
+}
+
+.check-dimension-radar-note {
+  margin: 0.5rem 0 0;
+}
+
+.check-dimension-radar-table-wrap {
+  overflow-x: auto;
+}
+
+.check-dimension-radar-table-wrap caption {
+  caption-side: bottom;
+  text-align: start;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 480px) {
+  .check-dimension-radar-chart {
+    display: none;
+  }
+}

@@ -81,6 +81,9 @@
   --color-warning: var(--warning);
   --color-info: var(--info);
   --color-landing-red: var(--landing-red);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
 
   --color-grayscale-1: var(--sand-1);
   --color-grayscale-2: var(--sand-2);
@@ -263,6 +266,9 @@
   --landing-logo-wordmark-filter: none;
   --landing-shadow-panel: 0 24px 70px rgb(0 0 0 / 10%);
   --landing-shadow-card: 0 16px 50px rgb(16 16 16 / 8%);
+  --chart-1: var(--primary);
+  --chart-2: var(--blue-9);
+  --chart-3: var(--green-9);
 }
 
 .dark {
@@ -286,6 +292,9 @@
   --border: #404040;
   --input: #383838;
   --ring: #80664d;
+  --chart-1: var(--primary);
+  --chart-2: var(--blue-9);
+  --chart-3: var(--green-9);
 }
 
 @layer base {
@@ -436,4 +445,9 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+[data-slot="chart"] .recharts-polar-grid line,
+[data-slot="chart"] .recharts-polar-grid circle {
+  stroke: var(--border);
 }
