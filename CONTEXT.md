@@ -6,6 +6,22 @@ Vocabulary for evaluation results that the framework exports and the evals app b
 
 ### Trials and attempts
 
+**Run**:
+One execution of a suite against one configuration, identified by its run ID plus the sha of its authoritative source artifact.
+_Avoid_: campaign, result, model (as identity)
+
+**Baseline reference**:
+A run ID another report embeds for comparison. It contributes no result of its own.
+_Avoid_: baseline run, duplicate run
+
+**Campaign**:
+A named grouping of publications. Holds references only, never metrics.
+_Avoid_: batch, comparison, bundle
+
+**Representative run**:
+The run a summary page shows for a model, family and configuration group: the newest by start time with complete dispatch coverage.
+_Avoid_: latest run, best run, current run
+
 **Planned slot**:
 One case and repetition the run plan says should execute.
 _Avoid_: trial (when the slot never ran), expected attempt
@@ -51,6 +67,10 @@ _Avoid_: accuracy, correctness, quality
 **Check**:
 One named grader dimension on an attempt (routing, arguments, safety, completion, skill activation) with outcome pass, fail, not applicable or not evaluated.
 _Avoid_: dimension, criterion, score
+
+**Check source**:
+Whether check outcomes came from the grader directly (native) or from thresholding numeric dimension scores (derived from scores).
+_Avoid_: derived checks, scored checks
 
 **Failure category**:
 A closed-vocabulary label derived from a failed check on a completed attempt.
@@ -117,6 +137,14 @@ The role that approves exact export content before it enters a public index. Hel
 _Avoid_: approver, sanitizer, CI
 
 ### Comparison
+
+**Cohort**:
+The machine-readable comparison key: suite, versions, catalog sha, target, account class, repetitions and evidence category.
+_Avoid_: benchmark, group, bucket
+
+**Configuration group**:
+Runs sharing one exact pinned configuration sha under a model. Labels-only runs belong to no group.
+_Avoid_: model group, setup
 
 **Evidence category**:
 The comparison class a run belongs to: controlled OpenRouter, native agent, or labels only.
