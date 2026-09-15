@@ -1,4 +1,4 @@
-// Shared building blocks for the `#/prototype/*` pages.
+// Shared building blocks for the canonical eval-browsing UI (`#/compare`).
 //
 // Styling stays inside design-system classes (eval-*, lb-*) and layout-only
 // inline styles — no new CSS files, no raw color values. Every unavailable
@@ -45,8 +45,8 @@ export function PrototypeBanner() {
     >
       <span className="lb-measured-pill">Prototype</span>
       <span className="eval-muted">
-        Canonical eval-browsing canary. Synthetic rows are labelled; measured counts come from the
-        bundled September campaign artifacts. Unavailable states render as reason codes — nothing is
+        Canonical eval browsing. Synthetic rows are labelled; measured counts come from the bundled
+        September campaign artifacts. Unavailable states render as reason codes — nothing is
         zero-filled.
       </span>
     </div>

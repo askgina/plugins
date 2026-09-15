@@ -1,5 +1,14 @@
 # Prototype map brief — canonical eval browsing (`#/prototype/*`)
 
+> **Shipped state (2026-09-15):** the `/prototype` slug was removed after review. The
+> standalone pages were dropped; canonical data now ships interwoven into the
+> production pages — synthetic runs render as labelled unranked rows on
+> `#/leaderboard`, artifact identities (suite/catalog/grader shas) sit in
+> `#/methodology`'s "Artifact identities" panel, and `#/compare` keeps the
+> run-comparison page. `apps/evals/src/prototype/` moved to
+> `apps/evals/src/canonical/` (dataset, selectors, shared chips, compare page).
+> Old `#/prototype/*` hashes redirect to the equivalent real paths.
+
 Continuation of the Wayfinder map (issue #100) prototype ticket (#101), built in the
 design system currently on `main`. A first canary was deployed for owner review but
 never pushed; this branch re-implements and completes the full prototype scope.

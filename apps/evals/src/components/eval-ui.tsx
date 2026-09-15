@@ -4,15 +4,15 @@ import { dataset, type EvalModel, type FamilyFilter, type PageId } from "../data
 import { Button } from "./ui/button";
 import { DialogRoot, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 
-type ShellPageId = PageId | "handoff" | "canary";
+type ShellPageId = PageId | "handoff" | "compare";
 
 const navigation: readonly { id: ShellPageId; label: string; href: string }[] = [
   { id: "leaderboard", label: "Leaderboard", href: "#/leaderboard" },
   { id: "models", label: "Models", href: "#/models/kimi-k3" },
   { id: "tasks", label: "Tasks", href: "#/tasks" },
   { id: "methodology", label: "Methodology", href: "#/methodology" },
+  { id: "compare", label: "Compare", href: "#/compare" },
   { id: "handoff", label: "Public results", href: "#/handoff" },
-  { id: "canary", label: "Canary", href: "#/prototype/leaderboard" },
 ];
 
 export function PageShell({

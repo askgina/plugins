@@ -454,3 +454,20 @@
     font-size: 15px;
   }
 }
+
+.lb-synthetic-pill {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #d5cfc8;
+  border-radius: 999px;
+  color: #6b6257;
+  font-size: 9px;
+  line-height: 1;
+  padding: 3px 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.lb-row-synthetic {
+  opacity: 0.55;
+}

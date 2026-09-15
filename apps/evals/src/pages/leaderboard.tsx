@@ -10,6 +10,12 @@ import {
 import { FamilyTabs, ModelAvatar, PageShell, Panel, ScoreBadge } from "../components/eval-ui";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import {
+  canonicalModels,
+  canonicalRuns,
+  type CanonicalModel,
+  type CanonicalRun,
+} from "../canonical/canonical";
 import "./leaderboard.css";
 
 const leaderboardFamilies = ["Spot", "Perps", "Predictions"] as const;
@@ -32,7 +38,15 @@ type MeasuredRow = {
   result: MeasuredFamilyResult;
 };
 
-type LeaderboardRow = IllustrativeRow | MeasuredRow;
+type SyntheticRow = {
+  kind: "synthetic";
+  model: CanonicalModel;
+  run: CanonicalRun;
+};
+
+type LeaderboardRow = IllustrativeRow | MeasuredRow | SyntheticRow;
+
+const canonicalModelById = new Map(canonicalModels.map((model) => [model.id, model]));
 
 const numberFormatter = new Intl.NumberFormat("en-US");
 const costFormatter = new Intl.NumberFormat("en-US", {
@@ -90,7 +104,9 @@ function ScatterPlot({
   const margin = { top: 24, right: 94, bottom: 46, left: 50 };
   const plotWidth = width - margin.left - margin.right;
   const plotHeight = height - margin.top - margin.bottom;
-  const chartRows = metric === "cost" ? rows.filter((row) => row.kind === "illustrative") : rows;
+  const chartRows = rows.filter((row): row is IllustrativeRow | MeasuredRow =>
+    metric === "latency" ? row.kind !== "synthetic" : row.kind === "illustrative",
+  );
   const xValues = chartRows.map((row) =>
     row.kind === "measured" ? row.result.latencyMs.p50 / 1000 : row.model[metric],
   );
@@ -273,13 +289,13 @@ export function LeaderboardPage({
 
   const rows = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
-    const illustrativeRows: LeaderboardRow[] = models
+    const illustrativeRows: IllustrativeRow[] = models
       .filter(
         (model) =>
           query.length === 0 ||
           `${model.name} ${model.provider}`.toLocaleLowerCase().includes(query),
       )
-      .map((model): LeaderboardRow => {
+      .map((model): IllustrativeRow => {
         const metrics = familyMetrics(model, family);
         return {
           kind: "illustrative",
@@ -288,7 +304,7 @@ export function LeaderboardPage({
           accuracy: metrics.accuracy,
         };
       });
-    const measuredRows: LeaderboardRow[] = measuredModels
+    const measuredRows: MeasuredRow[] = measuredModels
       .filter(
         (model) =>
           model.families[family] !== undefined &&
@@ -300,9 +316,24 @@ export function LeaderboardPage({
         model,
         result: model.families[family]!,
       }));
-    const visible = [...illustrativeRows, ...measuredRows];
+    const syntheticRows: SyntheticRow[] = canonicalRuns
+      .filter(
+        (run) =>
+          run.family === family &&
+          canonicalModelById.get(run.modelId)?.origin === "synthetic" &&
+          (query.length === 0 ||
+            `${canonicalModelById.get(run.modelId)?.name ?? ""} ${canonicalModelById.get(run.modelId)?.provider ?? ""}`
+              .toLocaleLowerCase()
+              .includes(query)),
+      )
+      .map((run) => ({
+        kind: "synthetic",
+        model: canonicalModelById.get(run.modelId)!,
+        run,
+      }));
+    const visible: (IllustrativeRow | MeasuredRow)[] = [...illustrativeRows, ...measuredRows];
 
-    return visible.sort((left, right) => {
+    const sorted = visible.sort((left, right) => {
       if ((sortMetric === "accuracy" || sortMetric === "cost") && left.kind !== right.kind) {
         return left.kind === "illustrative" ? -1 : 1;
       }
@@ -333,6 +364,7 @@ export function LeaderboardPage({
       if (difference === 0) return left.model.name.localeCompare(right.model.name);
       return sortDirection === "asc" ? difference : -difference;
     });
+    return [...sorted, ...syntheticRows];
   }, [family, search, sortDirection, sortMetric]);
 
   const sort = (nextMetric: SortMetric) => {
@@ -351,7 +383,11 @@ export function LeaderboardPage({
 
   const tableCaption = `Model results for the ${family} family, one of four ${numberFormatter.format(dataset.tasksPerFamily)}-task families.`;
   const displayedUniverse =
-    models.length + measuredModels.filter((model) => model.families[family] !== undefined).length;
+    models.length +
+    measuredModels.filter((model) => model.families[family] !== undefined).length +
+    canonicalRuns.filter(
+      (run) => run.family === family && canonicalModelById.get(run.modelId)?.origin === "synthetic",
+    ).length;
 
   return (
     <PageShell active="leaderboard">
@@ -445,7 +481,7 @@ export function LeaderboardPage({
           <Panel
             className="lb-table-panel"
             title="Ranked results"
-            description={`${rows.length} of ${displayedUniverse} models shown · ranked by ${metricLabels[sortMetric]} · measured rows are small unranked conformance samples`}
+            description={`${rows.length} of ${displayedUniverse} models shown · ranked by ${metricLabels[sortMetric]} · measured rows are small unranked conformance samples · synthetic rows are labelled previews`}
           >
             {rows.length > 0 ? (
               <div className="lb-table-scroll">
@@ -546,7 +582,10 @@ export function LeaderboardPage({
                             )
                           : undefined;
                       return (
-                        <tr key={row.model.id}>
+                        <tr
+                          key={row.model.id}
+                          className={row.kind === "synthetic" ? "lb-row-synthetic" : undefined}
+                        >
                           <td className="lb-rank-cell">
                             {rank === undefined ? (
                               <span
@@ -568,17 +607,26 @@ export function LeaderboardPage({
                             <div className="lb-model-cell">
                               <ModelAvatar model={row.model} />
                               <span className="lb-model-copy">
-                                <a href={`#/models/${row.model.id}`}>{row.model.name}</a>
+                                {row.kind === "synthetic" ? (
+                                  <span>{row.model.name}</span>
+                                ) : (
+                                  <a href={`#/models/${row.model.id}`}>{row.model.name}</a>
+                                )}
                                 <small>
                                   <span>{row.model.provider}</span>
                                   <span aria-hidden="true"> · </span>
                                   <code>
                                     {row.kind === "measured"
                                       ? row.model.campaign.harness
-                                      : dataset.harness}
+                                      : row.kind === "synthetic"
+                                        ? `${row.run.cohort.target} · ${row.run.cohort.evidenceCategory}`
+                                        : dataset.harness}
                                   </code>
                                   {row.kind === "measured" && (
                                     <span className="lb-measured-pill">Measured</span>
+                                  )}
+                                  {row.kind === "synthetic" && (
+                                    <span className="lb-synthetic-pill">Synthetic</span>
                                   )}
                                 </small>
                               </span>
@@ -590,6 +638,11 @@ export function LeaderboardPage({
                                 {numberFormatter.format(row.result.passed)} /{" "}
                                 {numberFormatter.format(row.result.total)}
                               </span>
+                            ) : row.kind === "synthetic" ? (
+                              <span className="lb-count">
+                                {numberFormatter.format(row.run.counts.passed)} /{" "}
+                                {numberFormatter.format(row.run.counts.started)}
+                              </span>
                             ) : (
                               <ScoreBadge
                                 value={row.passRate}
@@ -597,18 +650,28 @@ export function LeaderboardPage({
                               />
                             )}
                           </td>
-                          <td>{row.kind === "measured" ? "—" : `${row.accuracy}%`}</td>
+                          <td>{row.kind === "illustrative" ? `${row.accuracy}%` : "—"}</td>
                           <td>
                             {row.kind === "measured"
                               ? `${(row.result.latencyMs.p50 / 1000).toFixed(1)}s`
-                              : `${row.model.latency.toFixed(1)}s`}
+                              : row.kind === "synthetic"
+                                ? "p50" in row.run.metrics.latencyMs
+                                  ? `${(row.run.metrics.latencyMs.p50 / 1000).toFixed(1)}s`
+                                  : "—"
+                                : `${row.model.latency.toFixed(1)}s`}
                           </td>
                           <td>
-                            {row.kind === "measured" ? "—" : costFormatter.format(row.model.cost)}
+                            {row.kind === "illustrative"
+                              ? costFormatter.format(row.model.cost)
+                              : "—"}
                           </td>
                           <td>
                             {numberFormatter.format(
-                              row.kind === "measured" ? row.result.total : dataset.tasksPerFamily,
+                              row.kind === "measured"
+                                ? row.result.total
+                                : row.kind === "synthetic"
+                                  ? row.run.counts.planned
+                                  : dataset.tasksPerFamily,
                             )}
                           </td>
                         </tr>

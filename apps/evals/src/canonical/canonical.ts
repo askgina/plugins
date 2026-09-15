@@ -1,4 +1,5 @@
-// Canonical eval-browsing dataset for the `#/prototype/*` pages.
+// Canonical eval-browsing dataset for the `#/compare` page and the synthetic
+// rows interwoven into the leaderboard.
 //
 // This module is the single source of truth for the prototype domain records:
 // case definitions, runs, attempts, configurations, cohorts, campaigns and

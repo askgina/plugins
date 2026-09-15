@@ -1,4 +1,4 @@
-// `#/prototype/compare?left=<runId>&right=<runId>` — side-by-side run comparison.
+// `#/compare?left=<runId>&right=<runId>` — side-by-side run comparison.
 //
 // Run pickers are grouped by cohort (suite + harness target + account class +
 // repetitions + evidence category) and can be narrowed with the scope select.
@@ -77,7 +77,7 @@ function navigate(left: string | undefined, right: string | undefined, cohort: s
   if (right !== undefined) params.set("right", right);
   if (cohort !== ALL_COHORTS) params.set("cohort", cohort);
   const query = params.toString();
-  window.location.hash = `/prototype/compare${query === "" ? "" : `?${query}`}`;
+  window.location.hash = `/compare${query === "" ? "" : `?${query}`}`;
 }
 
 function runOptionLabel(run: CanonicalRun): string {
@@ -763,13 +763,13 @@ export function PrototypeComparePage({ left, right }: { left?: string; right?: s
 
   return (
     <PageShell
-      active="canary"
+      active="compare"
       footerNote="Prototype compare view over the canonical eval dataset; synthetic rows are labelled."
     >
       <div className="eval-container eval-proto-compare-page">
         <section className="eval-hero" aria-labelledby="prototype-compare-title">
           <p className="eval-eyebrow">
-            Canary · Run comparison · <PrototypeTag />
+            Canonical eval browsing · Run comparison · <PrototypeTag />
           </p>
           <h1 className="eval-title" id="prototype-compare-title">
             Compare runs<span className="eval-dot">.</span>
@@ -832,19 +832,13 @@ export function PrototypeComparePage({ left, right }: { left?: string; right?: s
             <span className="eval-muted">Try a pair:</span>
             <ul>
               <li>
-                <a
-                  className="eval-text-link"
-                  href="#/prototype/compare?left=sol-spot-1&right=sol-spot-2"
-                >
+                <a className="eval-text-link" href="#/compare?left=sol-spot-1&right=sol-spot-2">
                   sol-spot-1 vs sol-spot-2
                 </a>{" "}
                 — same model, eligible; reasoning medium vs high is a visible condition difference
               </li>
               <li>
-                <a
-                  className="eval-text-link"
-                  href="#/prototype/compare?left=gpt55-spot-1&right=fable-spot-1"
-                >
+                <a className="eval-text-link" href="#/compare?left=gpt55-spot-1&right=fable-spot-1">
                   gpt55-spot-1 vs fable-spot-1
                 </a>{" "}
                 — cross-model, eligible; checkSource native vs derived_from_scores is a condition,
@@ -853,17 +847,14 @@ export function PrototypeComparePage({ left, right }: { left?: string; right?: s
               <li>
                 <a
                   className="eval-text-link"
-                  href="#/prototype/compare?left=sol-spot-1&right=sol-spot-labels-only"
+                  href="#/compare?left=sol-spot-1&right=sol-spot-labels-only"
                 >
                   sol-spot-1 vs sol-spot-labels-only
                 </a>{" "}
                 — blocked: labels_only_configuration
               </li>
               <li>
-                <a
-                  className="eval-text-link"
-                  href="#/prototype/compare?left=muse-spot-1&right=fable-spot-1"
-                >
+                <a className="eval-text-link" href="#/compare?left=muse-spot-1&right=fable-spot-1">
                   muse-spot-1 vs fable-spot-1
                 </a>{" "}
                 — blocked: outside_selected_cohort (muse_cli vs omp_harness, same evidence category)
@@ -871,7 +862,7 @@ export function PrototypeComparePage({ left, right }: { left?: string; right?: s
               <li>
                 <a
                   className="eval-text-link"
-                  href="#/prototype/compare?left=sol-spot-1&right=meridian-spot-1"
+                  href="#/compare?left=sol-spot-1&right=meridian-spot-1"
                 >
                   sol-spot-1 vs meridian-spot-1
                 </a>{" "}
@@ -880,7 +871,7 @@ export function PrototypeComparePage({ left, right }: { left?: string; right?: s
               <li>
                 <a
                   className="eval-text-link"
-                  href="#/prototype/compare?left=sol-spot-1&right=sol-spot-incomplete"
+                  href="#/compare?left=sol-spot-1&right=sol-spot-incomplete"
                 >
                   sol-spot-1 vs sol-spot-incomplete
                 </a>{" "}

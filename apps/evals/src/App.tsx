@@ -7,11 +7,14 @@ import { ModelProfilePage } from "./pages/model-profile";
 import { TaskExplorerPage } from "./pages/task-explorer";
 import { HandoffPage } from "./pages/handoff";
 import { measuredCampaigns, measuredModels } from "./measured";
-import { PrototypeLeaderboardPage } from "./prototype/pages/leaderboard";
-import { PrototypeModelProfilePage } from "./prototype/pages/model-profile";
-import { PrototypeTaskExplorerPage } from "./prototype/pages/task-explorer";
-import { PrototypeComparePage } from "./prototype/pages/compare";
-import { PrototypeMethodologyPage } from "./prototype/pages/methodology";
+import { PrototypeComparePage as ComparePage } from "./canonical/pages/compare";
+import {
+  CATALOG_LABEL,
+  CATALOG_SHA_31_TOOLS,
+  GRADER_SHA256,
+  SUITE_IDS,
+  SUITE_SHA256,
+} from "./canonical/canonical";
 
 export function MethodologyPage() {
   return (
@@ -48,6 +51,23 @@ export function MethodologyPage() {
                   .join("; ")}
                 ) and are shown as exported.
               </p>
+            </div>
+          </Panel>
+          <Panel title="Artifact identities">
+            <div className="eval-method-body">
+              <p>
+                Measured campaigns pin the tool catalog <code>{CATALOG_LABEL}</code> (sha{" "}
+                <code>{CATALOG_SHA_31_TOOLS.slice(0, 12)}…</code>) and the deterministic grader{" "}
+                <code>grading.ts</code> at sha <code>{GRADER_SHA256.slice(0, 12)}…</code>.
+              </p>
+              <ul>
+                {(Object.keys(SUITE_IDS) as (keyof typeof SUITE_IDS)[]).map((family) => (
+                  <li key={family}>
+                    {family}: <code>{SUITE_IDS[family]}</code> · suite sha{" "}
+                    <code>{SUITE_SHA256[family].slice(0, 12)}…</code>
+                  </li>
+                ))}
+              </ul>
             </div>
           </Panel>
           <Panel title="Measured runs">
@@ -170,12 +190,43 @@ export function MethodologyPage() {
   );
 }
 
+const PROTOTYPE_MODEL_IDS: Record<string, string> = {
+  "gpt-5.5": "gpt-5-5",
+  "gpt-sol": "gpt-5-6-sol",
+  "muse-spark": "muse-spark-1-3",
+  "claude-fable": "claude-fable-5-1",
+  "claude-opus": "claude-opus-5",
+};
+
+function prototypeRedirect(route: string): string {
+  const [path = "", queryString] = route.split("?");
+  const segments = path.split("/");
+  if (segments[2] === "compare") return `/compare${queryString ? `?${queryString}` : ""}`;
+  if (segments[2] === "models") {
+    const mapped =
+      segments[3] === undefined ? undefined : (PROTOTYPE_MODEL_IDS[segments[3]] ?? segments[3]);
+    return mapped === undefined ? "/leaderboard" : `/models/${mapped}`;
+  }
+  const map: Record<string, string> = {
+    leaderboard: "/leaderboard",
+    tasks: "/tasks",
+    methodology: "/methodology",
+    "": "/leaderboard",
+  };
+  return map[segments[2] ?? ""] ?? "/leaderboard";
+}
+
 export default function App() {
   const [route, setRoute] = useState(() => window.location.hash.slice(1) || "/leaderboard");
   useEffect(() => {
     const handleRoute = () => {
       const nextRoute = window.location.hash.slice(1);
       if (nextRoute === "eval-main") return;
+      if (nextRoute.startsWith("/prototype")) {
+        const target = prototypeRedirect(nextRoute);
+        window.location.hash = `#${target}`;
+        return;
+      }
       setRoute(nextRoute || "/leaderboard");
       window.scrollTo({ top: 0, behavior: "auto" });
     };
@@ -191,34 +242,20 @@ export default function App() {
           ? "Methodology"
           : route === "/handoff"
             ? "Public results"
-            : "Leaderboard";
+            : route.startsWith("/compare")
+              ? "Compare"
+              : "Leaderboard";
     document.title = `${section} · Ask Gina Evals`;
   }, [route]);
-  if (route.startsWith("/prototype")) {
-    const [path = "", queryString] = route.split("?");
-    const params = new URLSearchParams(queryString ?? "");
-    const segments = path.split("/");
-    if (path === "/prototype" || path === "/prototype/" || path === "/prototype/leaderboard")
-      return <PrototypeLeaderboardPage key={route} />;
-    if (path === "/prototype/models" || path.startsWith("/prototype/models/"))
-      return (
-        <PrototypeModelProfilePage
-          key={route}
-          modelId={segments[3] || "gpt-sol"}
-          runId={params.get("run") ?? undefined}
-        />
-      );
-    if (path === "/prototype/tasks")
-      return <PrototypeTaskExplorerPage key={route} family={params.get("family") ?? undefined} />;
-    if (path === "/prototype/compare")
-      return (
-        <PrototypeComparePage
-          key={route}
-          left={params.get("left") ?? undefined}
-          right={params.get("right") ?? undefined}
-        />
-      );
-    if (path === "/prototype/methodology") return <PrototypeMethodologyPage key={route} />;
+  if (route.split("?")[0] === "/compare") {
+    const params = new URLSearchParams(route.split("?")[1] ?? "");
+    return (
+      <ComparePage
+        key={route}
+        left={params.get("left") ?? undefined}
+        right={params.get("right") ?? undefined}
+      />
+    );
   }
   if (route === "/models" || route.startsWith("/models/"))
     return <ModelProfilePage key={route} modelId={route.split("/")[2] || "kimi-k3"} />;
