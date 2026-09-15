@@ -11,7 +11,6 @@ import type {
   CanonicalAttempt,
   CheckOutcome,
   DispatchCoverage,
-  EligibilityReason,
   Evidence,
   ExecutionStatus,
   FailureAttribution,
@@ -21,7 +20,6 @@ import type {
 } from "./canonical";
 import {
   dispatchCoverageText,
-  eligibilityText,
   gradedOnlyLabel,
   type GradedOnlyRate,
   type Headline,
@@ -294,21 +292,8 @@ export function GradedOnlyRateValue({ rate }: { rate: GradedOnlyRate }) {
 }
 
 // ---------------------------------------------------------------------------
-// Eligibility + sample-count disclosure
+// Sample-count disclosure
 // ---------------------------------------------------------------------------
-
-export function EligibilityReasonList({ reasons }: { reasons: readonly EligibilityReason[] }) {
-  if (reasons.length === 0) return null;
-  return (
-    <span className="eval-compare-chip-row" role="list" aria-label="Eligibility reasons">
-      {reasons.map((reason) => (
-        <span className="eval-demo-label" role="listitem" key={reason} title={reason}>
-          {eligibilityText(reason)}
-        </span>
-      ))}
-    </span>
-  );
-}
 
 /** Sample-count disclosure required next to every statistic. */
 export function SampleCount({

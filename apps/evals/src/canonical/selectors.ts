@@ -247,22 +247,6 @@ export function eligibilityText(reason: EligibilityReason): string {
   return ELIGIBILITY_TEXT[reason];
 }
 
-/** Why a run may not appear ranked on the leaderboard. */
-export function leaderboardEligibility(
-  run: CanonicalRun,
-  cohort: CanonicalCohort,
-): readonly EligibilityReason[] {
-  const reasons: EligibilityReason[] = [];
-  if (run.origin === "synthetic") reasons.push("synthetic");
-  if (run.cohort.cohortId !== cohort.cohortId) reasons.push("outside_selected_cohort");
-  if (run.dispatchCoverage === "incomplete") reasons.push("incomplete_coverage");
-  if (run.dispatchCoverage === "unknown") reasons.push("coverage_unknown");
-  if (run.configuration.availability === "labels_only") {
-    reasons.push("labels_only_configuration");
-  }
-  return reasons;
-}
-
 /** Why two runs cannot be compared. */
 export function compareEligibility(
   left: CanonicalRun,
