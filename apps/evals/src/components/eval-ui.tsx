@@ -4,7 +4,7 @@ import { dataset, type EvalModel, type FamilyFilter, type PageId } from "../data
 import { Button } from "./ui/button";
 import { DialogRoot, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 
-type ShellPageId = PageId | "handoff";
+type ShellPageId = PageId | "handoff" | "canary";
 
 const navigation: readonly { id: ShellPageId; label: string; href: string }[] = [
   { id: "leaderboard", label: "Leaderboard", href: "#/leaderboard" },
@@ -12,6 +12,7 @@ const navigation: readonly { id: ShellPageId; label: string; href: string }[] = 
   { id: "tasks", label: "Tasks", href: "#/tasks" },
   { id: "methodology", label: "Methodology", href: "#/methodology" },
   { id: "handoff", label: "Public results", href: "#/handoff" },
+  { id: "canary", label: "Canary", href: "#/prototype/leaderboard" },
 ];
 
 export function PageShell({
