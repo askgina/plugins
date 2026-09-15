@@ -6,6 +6,9 @@ import "../styles/evals.css";
 const museSpotCohort = cohortsForFamily("Spot").find(
   (cohort) => cohort.target === "muse_cli",
 )?.cohortId;
+if (museSpotCohort === undefined) {
+  throw new Error("Expected a Spot cohort with target muse_cli in canonical data");
+}
 
 const meta = {
   title: "Evals/Leaderboard",
