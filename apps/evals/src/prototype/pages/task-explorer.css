@@ -1,0 +1,300 @@
+.eval-proto-tasks {
+  padding-bottom: 56px;
+}
+
+.eval-proto-hero {
+  padding-bottom: 26px;
+}
+
+.eval-proto-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.eval-proto-panel {
+  margin-bottom: 18px;
+}
+
+.eval-proto-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* Case index — selectable definition rows. */
+
+.eval-proto-case-table tbody tr:hover {
+  background: #fafaf8;
+}
+
+.eval-proto-case-table tbody tr[aria-current="true"] {
+  background: #f2f5f1;
+}
+
+.eval-proto-case-link {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+}
+
+.eval-proto-case-link:hover code {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.eval-proto-case-table code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* Case definition. */
+
+.eval-proto-definition {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 24px;
+  padding: 14px 20px 22px;
+}
+
+.eval-proto-definition-main h3 {
+  margin: 2px 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.eval-proto-definition-main p {
+  margin: 8px 0;
+  color: #4a4a48;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.eval-proto-prompt {
+  margin: 0 0 12px;
+  padding: 8px 14px;
+  border-left: 3px solid #d8d4cc;
+  background: #fafaf7;
+  border-radius: 0 8px 8px 0;
+  color: #3f3d3a;
+  font-size: 13px;
+  line-height: 1.65;
+  font-style: italic;
+}
+
+.eval-proto-criteria {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  color: #4a4a48;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.eval-proto-definition-meta {
+  margin: 0;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.eval-proto-definition-meta div {
+  display: grid;
+  gap: 2px;
+}
+
+.eval-proto-definition-meta dt {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6f6f72;
+}
+
+.eval-proto-definition-meta dd {
+  margin: 0;
+  font-size: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.eval-proto-definition-meta code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* Model × repetition outcome matrix. */
+
+.eval-proto-matrix {
+  min-width: 780px;
+}
+
+.eval-proto-matrix th,
+.eval-proto-matrix td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.eval-proto-matrix td {
+  text-align: center;
+}
+
+.eval-proto-matrix td.eval-proto-case-result {
+  text-align: left;
+}
+
+.eval-proto-run {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  text-align: left;
+}
+
+.eval-proto-run-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.eval-proto-run-name a {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.eval-proto-run-name a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.eval-proto-run-name small {
+  color: #686a64;
+  font-size: 11px;
+}
+
+.eval-proto-run-name code {
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.eval-proto-run-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+  align-items: center;
+}
+
+.eval-proto-detail-toggle {
+  border: 1px solid var(--eval-line);
+  background: #fff;
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-size: 10px;
+  color: #55544f;
+  white-space: nowrap;
+}
+
+.eval-proto-detail-toggle:hover {
+  color: #171717;
+  background: #fafaf8;
+}
+
+.eval-proto-detail-toggle[aria-expanded="true"] {
+  background: #f4f1ec;
+  color: #171717;
+}
+
+/* Per-run attempt drilldown. */
+
+.eval-proto-detail-cell {
+  background: #fbfaf7;
+}
+
+.eval-proto-detail {
+  padding: 10px 4px 16px;
+  white-space: normal;
+}
+
+.eval-proto-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-bottom: 10px;
+  font-size: 11px;
+  color: #55544f;
+}
+
+.eval-proto-detail-meta q {
+  color: #6f6f72;
+}
+
+.eval-proto-attempt-table {
+  min-width: 940px;
+  background: #fff;
+}
+
+.eval-proto-attempt-table th,
+.eval-proto-attempt-table td {
+  white-space: normal;
+  vertical-align: top;
+}
+
+.eval-proto-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+.eval-proto-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.eval-proto-check-name {
+  color: #757575;
+  font-size: 10px;
+}
+
+.eval-proto-withdrawn {
+  color: #6f6f72;
+  text-align: left;
+}
+
+/* Portfolio — no measured evidence state. */
+
+.eval-proto-empty {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding: 28px 20px 26px;
+}
+
+.eval-proto-empty h3 {
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.eval-proto-empty p {
+  margin: 0;
+  color: #6f6f72;
+  font-size: 13px;
+  max-width: 34rem;
+}
+
+@media (max-width: 900px) {
+  .eval-proto-definition {
+    grid-template-columns: 1fr;
+  }
+
+  .eval-proto-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
