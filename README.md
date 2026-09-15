@@ -53,10 +53,13 @@ bun run check:public-boundary
 bun run smoke:install
 ```
 
-`@shadcn/lint` is registered in the root `vite.config.ts` without enabling rules.
-`bun run lint` checks the whole workspace, and `bun run check` includes lint.
-Add rules under `lint.rules`, spreading `effectTsgoRecommended.rules` first,
-or in app-scoped `lint.overrides`. See the
+`@shadcn/lint` is registered in the root `vite.config.ts`.
+`apps/evals/src` enables `shadcn/no-raw-colors` and
+`shadcn/no-arbitrary-values` with `allow: ["layout"]`.
+`apps/evals/src/components/ui` turns `no-arbitrary-values` off so primitives
+can keep structural values. `bun run lint` checks the whole workspace, and
+`bun run check` includes lint. Add further rules under `lint.rules`, spreading
+`effectTsgoRecommended.rules` first, or in app-scoped `lint.overrides`. See the
 [available rules](https://github.com/shadcn-ui/lint/blob/main/README.md#rules) and
 [configuration examples](https://github.com/shadcn-ui/lint/blob/main/docs/design-systems.md).
 

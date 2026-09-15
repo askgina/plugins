@@ -71,10 +71,10 @@ export const Foundations: Story = {
   render: () => (
     <div className="mx-auto grid w-full max-w-6xl gap-10">
       <header className="max-w-3xl">
-        <p className="mb-2 font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground">
+        <p className="mb-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Operator ledger
         </p>
-        <h1 className="font-heading text-5xl font-semibold leading-[1.02] tracking-[-0.025em] sm:text-6xl">
+        <h1 className="font-heading text-5xl font-semibold leading-none tracking-tight sm:text-6xl">
           Warm surfaces, precise state.
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
@@ -113,7 +113,7 @@ export const Foundations: Story = {
           </p>
         </div>
         <div className="rounded-card border bg-muted/45 p-6">
-          <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
             Run identity
           </p>
           <p className="mt-3 font-mono text-sm">eval_2026_09_03_a4f8</p>
@@ -141,7 +141,7 @@ export const LandingLanguage: Story = {
           <h1 className="landing-heading landing-hero-heading">
             Open evaluations,
             <br />
-            built in public<span className="text-[var(--landing-red)]">.</span>
+            built in public<span className="text-landing-red">.</span>
           </h1>
           <p className="landing-subtext mx-auto mt-3 max-w-[460px] text-base leading-7">
             Inspect task definitions, compare model behavior, and trace every published result.
@@ -152,8 +152,8 @@ export const LandingLanguage: Story = {
         </div>
 
         <div className="relative z-20 mx-auto mt-10 w-full max-w-[760px] [mask-image:linear-gradient(to_bottom,#000_0%,#000_62%,rgba(0,0,0,0.7)_72%,rgba(0,0,0,0.25)_80%,transparent_88%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,#000_0%,#000_62%,rgba(0,0,0,0.7)_72%,rgba(0,0,0,0.25)_80%,transparent_88%,transparent_100%)]">
-          <div className="rounded-[34px] border border-zinc-300/70 bg-zinc-200/45 p-2 shadow-[0_18px_44px_rgba(15,23,42,0.14)] ring-1 ring-zinc-500/10 backdrop-blur-xl">
-            <div className="grid min-h-[330px] overflow-hidden rounded-[28px] border border-black/[0.04] bg-white p-5 text-left text-[#111] sm:grid-cols-[0.36fr_1fr]">
+          <div className="rounded-4xl border border-border/70 bg-muted/45 p-2 shadow-popover ring-1 ring-primary/10 backdrop-blur-xl">
+            <div className="grid min-h-[330px] overflow-hidden rounded-4xl border border-black/[0.04] bg-white p-5 text-left text-foreground sm:grid-cols-[0.36fr_1fr]">
               <aside className="hidden border-r border-black/[0.055] pr-5 sm:block">
                 <p className="font-heading text-2xl font-semibold">Ask Gina</p>
                 <div className="mt-6 space-y-2 text-xs text-black/55">
@@ -168,12 +168,12 @@ export const LandingLanguage: Story = {
               <main className="sm:pl-6">
                 <div className="flex items-end justify-between border-b border-black/[0.055] pb-4">
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-black/42">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-black/42">
                       Overall pass rate
                     </p>
                     <p className="mt-1 text-4xl font-semibold tracking-tight">78%</p>
                   </div>
-                  <Badge className="bg-emerald-50 text-emerald-700">Published</Badge>
+                  <Badge className="bg-green-3 text-green-11">Published</Badge>
                 </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
                   {[
@@ -183,7 +183,7 @@ export const LandingLanguage: Story = {
                   ].map(([label, value]) => (
                     <div
                       key={label}
-                      className="rounded-[18px] border border-black/[0.055] bg-white/88 p-4 shadow-[0_14px_40px_rgba(15,23,42,0.045)]"
+                      className="rounded-2xl border border-black/[0.055] bg-white/88 p-4 shadow-card"
                     >
                       <p className="text-xs text-black/48">{label}</p>
                       <p className="mt-2 text-xl font-semibold">{value}</p>
@@ -403,7 +403,7 @@ function ThemeSurface({ theme }: { readonly theme: "light" | "dark" }) {
       <div className="h-full rounded-card border bg-background p-6 text-foreground shadow-card">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
               {theme} theme
             </p>
             <h2 className="mt-2 text-xl font-semibold">Canonical result</h2>

@@ -85,6 +85,19 @@ export default defineConfig({
           "effecttsgo/global-fetch": "off",
         },
       },
+      {
+        files: ["apps/evals/src/**"],
+        rules: {
+          "shadcn/no-raw-colors": "error",
+          "shadcn/no-arbitrary-values": ["error", { allow: ["layout"] }],
+        },
+      },
+      {
+        files: ["apps/evals/src/components/ui/**"],
+        rules: {
+          "shadcn/no-arbitrary-values": "off",
+        },
+      },
     ],
     options: {
       ...effectTsgoRecommended.options,

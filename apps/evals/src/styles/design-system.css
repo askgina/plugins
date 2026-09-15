@@ -80,6 +80,7 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-info: var(--info);
+  --color-landing-red: var(--landing-red);
 
   --color-grayscale-1: var(--sand-1);
   --color-grayscale-2: var(--sand-2);
