@@ -7,6 +7,11 @@ import { ModelProfilePage } from "./pages/model-profile";
 import { TaskExplorerPage } from "./pages/task-explorer";
 import { HandoffPage } from "./pages/handoff";
 import { measuredCampaigns, measuredModels } from "./measured";
+import { PrototypeLeaderboardPage } from "./prototype/pages/leaderboard";
+import { PrototypeModelProfilePage } from "./prototype/pages/model-profile";
+import { PrototypeTaskExplorerPage } from "./prototype/pages/task-explorer";
+import { PrototypeComparePage } from "./prototype/pages/compare";
+import { PrototypeMethodologyPage } from "./prototype/pages/methodology";
 
 export function MethodologyPage() {
   return (
@@ -189,6 +194,32 @@ export default function App() {
             : "Leaderboard";
     document.title = `${section} · Ask Gina Evals`;
   }, [route]);
+  if (route.startsWith("/prototype")) {
+    const [path = "", queryString] = route.split("?");
+    const params = new URLSearchParams(queryString ?? "");
+    const segments = path.split("/");
+    if (path === "/prototype" || path === "/prototype/" || path === "/prototype/leaderboard")
+      return <PrototypeLeaderboardPage key={route} />;
+    if (path === "/prototype/models" || path.startsWith("/prototype/models/"))
+      return (
+        <PrototypeModelProfilePage
+          key={route}
+          modelId={segments[3] || "gpt-sol"}
+          runId={params.get("run") ?? undefined}
+        />
+      );
+    if (path === "/prototype/tasks")
+      return <PrototypeTaskExplorerPage key={route} family={params.get("family") ?? undefined} />;
+    if (path === "/prototype/compare")
+      return (
+        <PrototypeComparePage
+          key={route}
+          left={params.get("left") ?? undefined}
+          right={params.get("right") ?? undefined}
+        />
+      );
+    if (path === "/prototype/methodology") return <PrototypeMethodologyPage key={route} />;
+  }
   if (route === "/models" || route.startsWith("/models/"))
     return <ModelProfilePage key={route} modelId={route.split("/")[2] || "kimi-k3"} />;
   if (route === "/tasks") return <TaskExplorerPage />;
