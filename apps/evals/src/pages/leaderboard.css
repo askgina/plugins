@@ -432,9 +432,39 @@
   fill: var(--eval-paper);
 }
 
+.lb-chart-hit {
+  fill: transparent;
+  pointer-events: all;
+}
+
 .lb-chart-model-label {
   fill: var(--eval-ink);
   font-size: 11px;
+}
+
+.lb-scatterplot:has(.lb-chart-model:hover) .lb-chart-model {
+  opacity: 0.34;
+}
+
+.lb-scatterplot:has(.lb-chart-model:hover) .lb-chart-model:hover {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lb-chart-point,
+  .lb-chart-point-halo {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 120ms ease;
+  }
+
+  .lb-chart-model:hover .lb-chart-point-halo {
+    transform: scale(1.28);
+  }
+
+  .lb-chart-model:hover .lb-chart-point {
+    transform: scale(1.12);
+  }
 }
 
 .lb-visually-hidden {
