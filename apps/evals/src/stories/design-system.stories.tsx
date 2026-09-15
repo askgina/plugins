@@ -173,7 +173,7 @@ export const LandingLanguage: Story = {
                     </p>
                     <p className="mt-1 text-4xl font-semibold tracking-tight">78%</p>
                   </div>
-                  <Badge className="bg-green-3 text-green-11">Published</Badge>
+                  <Badge variant="success">Published</Badge>
                 </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
                   {[
@@ -215,6 +215,7 @@ export const Components: Story = {
         <Separator className="my-6" />
         <div className="flex flex-wrap items-center gap-2">
           <Badge>Selected</Badge>
+          <Badge variant="success">Published</Badge>
           <Badge variant="secondary">Read only</Badge>
           <Badge variant="outline">Unverified</Badge>
           <Badge variant="destructive">Failed</Badge>
@@ -246,23 +247,23 @@ export const Components: Story = {
 
         <div className="rounded-card border bg-background p-6 shadow-card">
           <Tabs defaultValue="summary">
-            <TabsList className="w-full justify-start rounded-md">
+            <TabsList className="w-full justify-start">
               <TabsTrigger value="summary">Summary</TabsTrigger>
               <TabsTrigger value="failures">Failures</TabsTrigger>
               <TabsTrigger value="evidence">Evidence</TabsTrigger>
             </TabsList>
-            <TabsContent value="summary" className="pt-5">
-              <p className="text-sm leading-6 text-muted-foreground">
+            <TabsContent value="summary">
+              <p className="mt-5 text-sm leading-6 text-muted-foreground">
                 78% of tasks passed. The strongest family was Portfolio at 82%.
               </p>
             </TabsContent>
-            <TabsContent value="failures" className="pt-5">
-              <p className="text-sm leading-6 text-muted-foreground">
+            <TabsContent value="failures">
+              <p className="mt-5 text-sm leading-6 text-muted-foreground">
                 Failure clusters stay visible rather than being folded into one aggregate.
               </p>
             </TabsContent>
-            <TabsContent value="evidence" className="pt-5">
-              <p className="font-mono text-xs text-muted-foreground">
+            <TabsContent value="evidence">
+              <p className="mt-5 font-mono text-xs text-muted-foreground">
                 suite/portfolio/read-balances.yaml
               </p>
             </TabsContent>
@@ -276,37 +277,39 @@ export const Components: Story = {
 export const FormAndDialog: Story = {
   render: () => (
     <div className="mx-auto grid w-full max-w-4xl gap-6 md:grid-cols-2">
-      <Card className="bg-background">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Filter evaluation runs</CardTitle>
+          <CardTitle>Filter evaluation runs</CardTitle>
           <CardDescription>Use explicit labels and compact, predictable controls.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-5">
-          <div className="grid gap-2">
-            <Label htmlFor="run-search">Model or run id</Label>
-            <Input id="run-search" placeholder="Search published runs" />
+        <CardContent>
+          <div className="grid gap-5">
+            <div className="grid gap-2">
+              <Label htmlFor="run-search">Model or run id</Label>
+              <Input id="run-search" placeholder="Search published runs" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="family-select">Task family</Label>
+              <Select defaultValue="portfolio">
+                <SelectTrigger id="family-select">
+                  <SelectValue placeholder="Choose a family" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="portfolio">Portfolio</SelectItem>
+                  <SelectItem value="spot">Spot</SelectItem>
+                  <SelectItem value="perps">Perps</SelectItem>
+                  <SelectItem value="predictions">Predictions</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button className="w-full">Apply filters</Button>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="family-select">Task family</Label>
-            <Select defaultValue="portfolio">
-              <SelectTrigger id="family-select">
-                <SelectValue placeholder="Choose a family" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="portfolio">Portfolio</SelectItem>
-                <SelectItem value="spot">Spot</SelectItem>
-                <SelectItem value="perps">Perps</SelectItem>
-                <SelectItem value="predictions">Predictions</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button className="w-full">Apply filters</Button>
         </CardContent>
       </Card>
 
-      <Card className="bg-background">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Confirmation boundary</CardTitle>
+          <CardTitle>Confirmation boundary</CardTitle>
           <CardDescription>Dialogs name the action and preserve the consequence.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -325,7 +328,7 @@ export const FormAndDialog: Story = {
             <DialogTrigger asChild>
               <Button className="mt-5">Review replay</Button>
             </DialogTrigger>
-            <DialogContent className="gap-6 p-6">
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>Replay published fixtures?</DialogTitle>
                 <DialogDescription>
@@ -383,10 +386,18 @@ export const DataTable: Story = {
             ["Gemini 2.5", "61% ±5", "69%", "4.8s"],
           ].map(([model, passRate, accuracy, latency]) => (
             <TableRow key={model}>
-              <TableCell className="font-semibold">{model}</TableCell>
-              <TableCell className="font-mono">{passRate}</TableCell>
-              <TableCell className="font-mono">{accuracy}</TableCell>
-              <TableCell className="text-right font-mono">{latency}</TableCell>
+              <TableCell>
+                <span className="font-semibold">{model}</span>
+              </TableCell>
+              <TableCell>
+                <span className="font-mono">{passRate}</span>
+              </TableCell>
+              <TableCell>
+                <span className="font-mono">{accuracy}</span>
+              </TableCell>
+              <TableCell className="text-right">
+                <span className="font-mono">{latency}</span>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

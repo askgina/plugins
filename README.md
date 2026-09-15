@@ -54,10 +54,13 @@ bun run smoke:install
 ```
 
 `@shadcn/lint` is registered in the root `vite.config.ts`.
-`apps/evals/src` enables `shadcn/no-raw-colors` and
-`shadcn/no-arbitrary-values` with `allow: ["layout"]`.
-`apps/evals/src/components/ui` turns `no-arbitrary-values` off so primitives
-can keep structural values. `bun run lint` checks the whole workspace, and
+`apps/evals/src` enables `shadcn/no-raw-colors`,
+`shadcn/no-arbitrary-values` with `allow: ["layout"]`,
+`shadcn/no-restyle` with `allow: ["layout"]` plus named evals CSS hooks on
+primitives, and `shadcn/require-static-classes`.
+`apps/evals/src/components/ui` turns `no-arbitrary-values`, `no-restyle`, and
+`require-static-classes` off so primitives can keep structural values and
+internal variants. `bun run lint` checks the whole workspace, and
 `bun run check` includes lint. Add further rules under `lint.rules`, spreading
 `effectTsgoRecommended.rules` first, or in app-scoped `lint.overrides`. See the
 [available rules](https://github.com/shadcn-ui/lint/blob/main/README.md#rules) and
