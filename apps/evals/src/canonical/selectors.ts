@@ -17,6 +17,8 @@ import {
   canonicalModels,
   canonicalPublications,
   canonicalRuns,
+  MODEL_PRICING,
+  SUITE_IDS,
   withdrawnRuns,
   type CanonicalAttempt,
   type CanonicalCaseDefinition,
@@ -24,10 +26,13 @@ import {
   type CanonicalModel,
   type CanonicalPublication,
   type CanonicalRun,
+  type CanonicalRunCounts,
   type DispatchCoverage,
   type EligibilityReason,
   type Evidence,
+  type MetricUnavailable,
   type PrototypeFamily,
+  type StatisticPopulation,
   type WithdrawnRunRef,
 } from "./canonical";
 
@@ -467,4 +472,87 @@ export function dispatchCoverageText(coverage: DispatchCoverage): string {
   if (coverage === "complete") return "coverage complete";
   if (coverage === "incomplete") return "coverage incomplete";
   return "coverage unknown";
+}
+
+// ---------------------------------------------------------------------------
+// Cohort labels + family cohorts — shared by the leaderboard cohort selector
+// and the compare pickers.
+// ---------------------------------------------------------------------------
+
+const FAMILY_BY_SUITE_ID: Record<string, PrototypeFamily> = {
+  [SUITE_IDS.Spot]: "Spot",
+  [SUITE_IDS.Perps]: "Perps",
+  [SUITE_IDS.Predictions]: "Predictions",
+  [SUITE_IDS.Portfolio]: "Portfolio",
+};
+
+/** Human-readable cohort identity: family · target · account · reps · evidence. */
+export function cohortLabel(cohort: CanonicalCohort): string {
+  const family = FAMILY_BY_SUITE_ID[cohort.suiteId] ?? cohort.suiteId;
+  return `${family} · ${cohort.target} · ${cohort.accountClass} · ${cohort.repetitions} reps · ${cohort.evidenceCategory}`;
+}
+
+/** Every cohort declared for a family's suite (empty for unmeasured families). */
+export function cohortsForFamily(family: PrototypeFamily): readonly CanonicalCohort[] {
+  const suiteId = suiteIdForFamily(family);
+  return canonicalCohorts.filter((cohort) => cohort.suiteId === suiteId);
+}
+
+// ---------------------------------------------------------------------------
+// Derived cost — measured tokens × registry price over the token statistic's
+// own population (decision 10). Never presented as a measured field.
+// ---------------------------------------------------------------------------
+
+export interface DerivedCostAvailable {
+  readonly availability: "available";
+  readonly usdPerTask: number;
+  /** null when the token metric is aggregate_only (sample count not retained). */
+  readonly sampleCount: number | null;
+  readonly population: StatisticPopulation;
+  readonly priceAsOf: string;
+  readonly priceSource: string;
+}
+
+export type DerivedCost = DerivedCostAvailable | MetricUnavailable;
+
+const POPULATION_COUNT: Record<StatisticPopulation, (counts: CanonicalRunCounts) => number> = {
+  started: (counts) => counts.started,
+  completed: (counts) => counts.completed,
+  graded: (counts) => counts.graded,
+};
+
+/**
+ * Estimated USD per task for a run: the token aggregate priced at the model's
+ * published rate, divided by the number of tasks the statistic covers —
+ * `sampleCount` when retained, the population count for `aggregate_only`.
+ * Unavailable when token evidence is missing or the model has no pricing entry.
+ */
+export function derivedCostPerTask(run: CanonicalRun): DerivedCost {
+  const metric = run.metrics.tokenUsage;
+  if (metric.availability !== "available" && metric.availability !== "aggregate_only") {
+    return metric;
+  }
+  const pricing = MODEL_PRICING[run.modelId];
+  if (pricing === undefined) {
+    return { availability: "not_recorded", reason: "no published price for this model" };
+  }
+  const denominator =
+    metric.availability === "available"
+      ? metric.sampleCount
+      : POPULATION_COUNT[metric.population](run.counts);
+  if (denominator <= 0) {
+    return { availability: "not_recorded", reason: "token statistic covers no tasks" };
+  }
+  const usdTotal =
+    (metric.inputTokens * pricing.inputUsdPerMillion +
+      metric.outputTokens * pricing.outputUsdPerMillion) /
+    1_000_000;
+  return {
+    availability: "available",
+    usdPerTask: usdTotal / denominator,
+    sampleCount: metric.availability === "available" ? metric.sampleCount : null,
+    population: metric.population,
+    priceAsOf: pricing.asOf,
+    priceSource: pricing.source,
+  };
 }

@@ -1,19 +1,22 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { ArrowUpRight, FlaskConical, X } from "lucide-react";
-import { dataset, type EvalModel, type FamilyFilter, type PageId } from "../data";
 import { Button } from "./ui/button";
 import { DialogRoot, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 
-type ShellPageId = PageId | "handoff" | "compare";
+export type PageId = "leaderboard" | "models" | "tasks" | "methodology";
+export type ShellPageId = PageId | "handoff" | "compare";
 
 const navigation: readonly { id: ShellPageId; label: string; href: string }[] = [
   { id: "leaderboard", label: "Leaderboard", href: "#/leaderboard" },
-  { id: "models", label: "Models", href: "#/models/kimi-k3" },
+  { id: "models", label: "Models", href: "#/models" },
   { id: "tasks", label: "Tasks", href: "#/tasks" },
   { id: "methodology", label: "Methodology", href: "#/methodology" },
   { id: "compare", label: "Compare", href: "#/compare" },
-  { id: "handoff", label: "Public results", href: "#/handoff" },
+  { id: "handoff", label: "Exports", href: "#/handoff" },
 ];
+
+const DATA_ORIGIN_NOTE =
+  "Measured tool-use conformance exported from run artifacts — not answer accuracy or financial outcomes. Synthetic previews live in Storybook only.";
 
 export function PageShell({
   active,
@@ -49,14 +52,9 @@ export function PageShell({
           ))}
         </nav>
         <div className="eval-header-actions">
-          <span className="eval-demo-label">
-            {active === "handoff" ? "Public JSON handoff" : "Design concept · Illustrative data"}
-          </span>
-          {active !== "handoff" && (
-            <Button className="eval-run-button" onClick={() => setRunOpen(true)}>
-              Run an evaluation <ArrowUpRight size={14} aria-hidden="true" />
-            </Button>
-          )}
+          <Button className="eval-run-button" onClick={() => setRunOpen(true)}>
+            Run an evaluation <ArrowUpRight size={14} aria-hidden="true" />
+          </Button>
         </div>
       </header>
       <main id="eval-main" className="eval-main" tabIndex={-1}>
@@ -64,34 +62,56 @@ export function PageShell({
       </main>
       <footer className="eval-footer">
         <span>
-          {active === "handoff" ? (
-            "Public exports measure conformance, not answer accuracy or financial outcomes. Other pages use illustrative fixtures."
-          ) : (
-            <>
-              {footerNote ?? dataset.disclaimer} <a href="#/methodology">See methodology.</a>
-            </>
-          )}
+          {footerNote ?? DATA_ORIGIN_NOTE} <a href="#/methodology">See methodology.</a>
         </span>
         <span>Open tools. Transparent results.</span>
       </footer>
-      <Modal title="Run an evaluation" open={runOpen} onClose={() => setRunOpen(false)}>
+      <Modal
+        title="Run an evaluation"
+        description="How to reproduce these results with the open-source runner."
+        open={runOpen}
+        onClose={() => setRunOpen(false)}
+      >
         <div className="eval-run-intro">
           <FlaskConical size={25} aria-hidden="true" />
           <p>
-            This page is a design preview. It does not start live evaluations or connect to a
-            wallet.
+            This site only reads exported artifacts — it never starts evaluations or connects to a
+            wallet. The runner lives in <code>packages/evals</code> (Bun 1.4.x, run from the
+            repository root).
           </p>
         </div>
         <p>
-          The open-source eval runner lives in this repository. Replay its fixtures locally, or
-          follow the runner instructions to configure a live evaluation.
+          Hermetic replay grades the bundled suite against recorded observations — no credentials
+          and no live calls:
         </p>
-        <pre className="eval-code" role="region" aria-label="Run instructions" tabIndex={0}>
-          <code>bun install --frozen-lockfile{"\n"}bun run eval:replay</code>
+        <pre className="eval-code" role="region" aria-label="Replay instructions" tabIndex={0}>
+          <code>
+            bun install --frozen-lockfile{"\n"}
+            bun run eval:replay -- \{"\n"}
+            {"  "}--suite packages/evals/src/fixtures/model-smoke.yaml \{"\n"}
+            {"  "}--observations packages/evals/src/fixtures/synthetic-observations.yaml \{"\n"}
+            {"  "}--output /tmp/plugin-eval-report.json
+          </code>
+        </pre>
+        <p>
+          Live trials use the same suite and grader against a real backend. Every runner needs{" "}
+          <code>ASK_GINA_ACCESS_TOKEN</code> plus its own credential (for example{" "}
+          <code>OPENROUTER_API_KEY</code>), a clean Git worktree, and three to five repetitions:
+        </p>
+        <pre className="eval-code" role="region" aria-label="Live run instructions" tabIndex={0}>
+          <code>
+            bun run eval:openrouter -- \{"\n"}
+            {"  "}--suite packages/evals/src/fixtures/ask-gina-routing-smoke.yaml \{"\n"}
+            {"  "}--run-id local-openrouter-example --candidate main \{"\n"}
+            {"  "}--model openai/gpt-5.1 --reasoning medium \{"\n"}
+            {"  "}--repetitions 3 --account-class eval --timeout-ms 120000 \{"\n"}
+            {"  "}--max-steps 8 --openrouter-endpoint openai \{"\n"}
+            {"  "}--expected-provider OpenAI --max-cost-usd 25
+          </code>
         </pre>
         <p className="eval-muted">
-          The replay command checks the repository's own fixtures. It does not produce the
-          illustrative model scores shown here.
+          Responses, Codex, Claude, and OMP runners follow the same shape — see the package README
+          for each runner's flags and credentials.
         </p>
         <a
           className="eval-text-link"
@@ -110,7 +130,7 @@ export function ModelAvatar({
   model,
   size = "sm",
 }: {
-  model: Pick<EvalModel, "name" | "mark" | "color"> & { id?: string };
+  model: { name: string; mark: string; color: string; id?: string };
   size?: "sm" | "lg";
 }) {
   return (
@@ -155,7 +175,7 @@ export function Panel({
   );
 }
 
-export function FamilyTabs<T extends FamilyFilter>({
+export function FamilyTabs<T extends string>({
   value,
   onChange,
   options,
@@ -182,11 +202,13 @@ export function FamilyTabs<T extends FamilyFilter>({
 
 export function Modal({
   title,
+  description,
   children,
   open,
   onClose,
 }: {
   title: string;
+  description?: string;
   children: ReactNode;
   open: boolean;
   onClose: () => void;
@@ -205,9 +227,9 @@ export function Modal({
             <X size={18} aria-hidden="true" />
           </Button>
         </div>
-        <DialogDescription className="eval-modal-description">
-          Illustrative preview. All examples are synthetic, not measured results.
-        </DialogDescription>
+        {description !== undefined && (
+          <DialogDescription className="eval-modal-description">{description}</DialogDescription>
+        )}
         <div className="eval-modal-body">{children}</div>
       </DialogContent>
     </DialogRoot>

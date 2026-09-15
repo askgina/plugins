@@ -13,28 +13,59 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Kimi: Story = {
+export const Gpt55: Story = {
   args: {
-    modelId: "kimi-k3",
+    modelId: "gpt-5.5",
   },
 };
 
-export const Claude: Story = {
+export const GptSol: Story = {
   args: {
-    modelId: "claude-4",
+    modelId: "gpt-sol",
   },
 };
 
-export const ComparisonOpen: Story = {
+export const MuseSpark: Story = {
   args: {
-    modelId: "kimi-k3",
-    initialCompareId: "gpt-5",
+    modelId: "muse-spark-1-3",
+  },
+};
+
+export const ClaudeFable: Story = {
+  args: {
+    modelId: "claude-fable-5-1",
+  },
+};
+
+export const ClaudeOpus: Story = {
+  args: {
+    modelId: "claude-opus-5",
+  },
+};
+
+export const RunDetailExpanded: Story = {
+  args: {
+    modelId: "gpt-sol",
+    initialRunId: "sol-perps-1",
+  },
+};
+
+export const SyntheticDemonstration: Story = {
+  args: {
+    modelId: "synthetic-meridian",
+    includeSynthetic: true,
+  },
+};
+
+export const NotFound: Story = {
+  args: {
+    modelId: "unknown-model-xyz",
   },
 };
 
 export const Mobile: Story = {
   args: {
-    modelId: "kimi-k3",
+    modelId: "gpt-5.5",
   },
   globals: { viewport: { value: "mobile", isRotated: false } },
 };

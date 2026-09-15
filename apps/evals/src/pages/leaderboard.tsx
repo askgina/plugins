@@ -1,52 +1,61 @@
 import { useMemo, useState } from "react";
 import { BookOpen, BriefcaseBusiness, Search, ShieldCheck, X } from "lucide-react";
-import { dataset, familyMetrics, models, type EvalModel, type FamilyFilter } from "../data";
-import {
-  measuredCampaigns,
-  measuredModels,
-  type MeasuredFamilyResult,
-  type MeasuredModel,
-} from "../measured";
-import { FamilyTabs, ModelAvatar, PageShell, Panel, ScoreBadge } from "../components/eval-ui";
+import { FamilyTabs, ModelAvatar, PageShell, Panel } from "../components/eval-ui";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import {
-  canonicalModels,
-  canonicalRuns,
+  canonicalCampaigns,
+  type CanonicalCampaign,
   type CanonicalModel,
   type CanonicalRun,
 } from "../canonical/canonical";
+import {
+  AvailabilityMark,
+  EligibilityReasonList,
+  HeadlineValue,
+  LatencyValue,
+  SampleCount,
+} from "../canonical/components";
+import {
+  caseDefinitionsForFamily,
+  cohortLabel,
+  cohortsForFamily,
+  derivedCostPerTask,
+  getModel,
+  headlineFor,
+  headlineSortKey,
+  inCohort,
+  leaderboardEligibility,
+  runsForFamily,
+  type DerivedCost,
+  type Headline,
+} from "../canonical/selectors";
 import "./leaderboard.css";
 
 const leaderboardFamilies = ["Spot", "Perps", "Predictions"] as const;
 type LeaderboardFamily = (typeof leaderboardFamilies)[number];
 
-type SortMetric = "passRate" | "accuracy" | "latency" | "cost";
+const ALL_COHORTS = "all";
+
+type SortMetric = "headline" | "latency";
 type SortDirection = "asc" | "desc";
-type ScatterMetric = "latency" | "cost";
 
-type IllustrativeRow = {
-  kind: "illustrative";
-  model: EvalModel;
-  passRate: number;
-  accuracy: number;
-};
+/** One leaderboard row: a single measured canonical run. */
+interface LeaderboardRow {
+  readonly run: CanonicalRun;
+  readonly model: CanonicalModel | undefined;
+  readonly campaign: CanonicalCampaign | undefined;
+}
 
-type MeasuredRow = {
-  kind: "measured";
-  model: MeasuredModel;
-  result: MeasuredFamilyResult;
-};
+interface CohortGroup {
+  readonly cohortId: string;
+  readonly label: string;
+  readonly rows: readonly LeaderboardRow[];
+}
 
-type SyntheticRow = {
-  kind: "synthetic";
-  model: CanonicalModel;
-  run: CanonicalRun;
-};
-
-type LeaderboardRow = IllustrativeRow | MeasuredRow | SyntheticRow;
-
-const canonicalModelById = new Map(canonicalModels.map((model) => [model.id, model]));
+const campaignById: Record<string, CanonicalCampaign> = Object.fromEntries(
+  canonicalCampaigns.map((campaign) => [campaign.campaignId, campaign]),
+);
 
 const numberFormatter = new Intl.NumberFormat("en-US");
 const costFormatter = new Intl.NumberFormat("en-US", {
@@ -75,10 +84,8 @@ const benefits = [
 ] as const;
 
 const metricLabels: Record<SortMetric, string> = {
-  passRate: "pass rate",
-  accuracy: "accuracy",
+  headline: "headline passes/started",
   latency: "p50 latency",
-  cost: "cost per task",
 };
 
 function paddedDomain(values: readonly number[], paddingRatio: number): readonly [number, number] {
@@ -90,44 +97,194 @@ function paddedDomain(values: readonly number[], paddingRatio: number): readonly
   return [minimum - padding, maximum + padding];
 }
 
+/** Single sort rule: key order, unavailable always last, runId breaks ties. */
+function sortedRows(
+  rows: readonly LeaderboardRow[],
+  metric: SortMetric,
+  direction: SortDirection,
+): LeaderboardRow[] {
+  const keyFor = (row: LeaderboardRow): number | null => {
+    if (metric === "headline") {
+      const key = headlineSortKey(row.run);
+      return key < 0 ? null : key;
+    }
+    const latency = row.run.metrics.latencyMs;
+    return latency.availability === "available" || latency.availability === "aggregate_only"
+      ? latency.p50
+      : null;
+  };
+  return rows.slice().sort((left, right) => {
+    const leftKey = keyFor(left);
+    const rightKey = keyFor(right);
+    if (leftKey === null && rightKey === null) {
+      return left.run.runId.localeCompare(right.run.runId);
+    }
+    if (leftKey === null) return 1;
+    if (rightKey === null) return -1;
+    const difference = leftKey - rightKey;
+    if (difference === 0) return left.run.runId.localeCompare(right.run.runId);
+    return direction === "asc" ? difference : -difference;
+  });
+}
+
+function SortButton({
+  label,
+  metric,
+  activeMetric,
+  direction,
+  onSort,
+}: {
+  label: string;
+  metric: SortMetric;
+  activeMetric: SortMetric;
+  direction: SortDirection;
+  onSort: (metric: SortMetric) => void;
+}) {
+  const active = metric === activeMetric;
+  return (
+    <button className="lb-sort-button" type="button" onClick={() => onSort(metric)}>
+      <span>{label}</span>
+      <span
+        className={active ? "lb-sort-arrow lb-sort-arrow-active" : "lb-sort-arrow"}
+        aria-hidden="true"
+      >
+        {active ? (direction === "desc" ? "↓" : "↑") : "↕"}
+      </span>
+      <span className="lb-visually-hidden">
+        {active
+          ? `, sorted ${direction === "desc" ? "descending" : "ascending"}`
+          : ", activate to sort"}
+      </span>
+    </button>
+  );
+}
+
+/** Derived per-task cost — always labelled derived, with price provenance. */
+function CostValue({ cost }: { cost: DerivedCost }) {
+  if (cost.availability !== "available") {
+    return <AvailabilityMark availability={cost.availability} reason={cost.reason} />;
+  }
+  return (
+    <span className="lb-cost-stack">
+      <span className="lb-count">est. {costFormatter.format(cost.usdPerTask)}/task</span>
+      {cost.sampleCount === null ? (
+        <span className="eval-muted">of {cost.population}</span>
+      ) : (
+        <SampleCount sampleCount={cost.sampleCount} population={cost.population} />
+      )}
+      <span className="lb-cost-disclosure">
+        derived · {cost.priceSource} · as of {cost.priceAsOf}
+      </span>
+    </span>
+  );
+}
+
+function LeaderboardRowView({ row }: { row: LeaderboardRow }) {
+  const reasons = leaderboardEligibility(row.run, row.run.cohort);
+  const campaignDescriptor =
+    row.campaign === undefined
+      ? row.run.campaignId
+      : `${row.campaign.date} · ${row.campaign.harness}`;
+  const campaignTitle = `${
+    row.campaign === undefined
+      ? row.run.campaignId
+      : `${row.campaign.campaignId} · ${row.campaign.date} · ${row.campaign.harness}`
+  } · run ${row.run.runId}`;
+  return (
+    <tr>
+      <th scope="row">
+        <div className="lb-model-cell">
+          {row.model !== undefined && <ModelAvatar model={row.model} />}
+          <span className="lb-model-copy">
+            {row.model === undefined ? (
+              <span>{row.run.modelId}</span>
+            ) : (
+              <a href={`#/models/${row.model.id}`}>{row.model.name}</a>
+            )}
+            <small>
+              <span>{row.model?.provider ?? "unknown provider"}</span>
+              <span aria-hidden="true"> · </span>
+              <code className="lb-campaign" title={campaignTitle}>
+                {campaignDescriptor}
+              </code>
+            </small>
+          </span>
+        </div>
+      </th>
+      <td>
+        <HeadlineValue headline={headlineFor(row.run)} />
+      </td>
+      <td>
+        <LatencyValue metric={row.run.metrics.latencyMs} />
+      </td>
+      <td className="lb-cost-cell">
+        <CostValue cost={derivedCostPerTask(row.run)} />
+      </td>
+      <td>
+        <span className="lb-count">{numberFormatter.format(row.run.counts.planned)}</span>
+      </td>
+      <td>
+        {reasons.length > 0 ? (
+          <EligibilityReasonList reasons={reasons} />
+        ) : (
+          <span className="eval-muted">—</span>
+        )}
+      </td>
+    </tr>
+  );
+}
+
+interface ScatterPoint {
+  readonly row: LeaderboardRow;
+  readonly latencySeconds: number;
+  readonly headline: Extract<Headline, { kind: "rate" }>;
+}
+
+/** Quality vs. p50 latency — measured rows with both values available only. */
 function ScatterPlot({
   rows,
-  metric,
   family,
 }: {
   rows: readonly LeaderboardRow[];
-  metric: ScatterMetric;
-  family: FamilyFilter;
+  family: LeaderboardFamily;
 }) {
   const width = 620;
   const height = 310;
   const margin = { top: 24, right: 94, bottom: 46, left: 50 };
   const plotWidth = width - margin.left - margin.right;
   const plotHeight = height - margin.top - margin.bottom;
-  const chartRows = rows.filter((row): row is IllustrativeRow | MeasuredRow =>
-    metric === "latency" ? row.kind !== "synthetic" : row.kind === "illustrative",
-  );
-  const xValues = chartRows.map((row) =>
-    row.kind === "measured" ? row.result.latencyMs.p50 / 1000 : row.model[metric],
-  );
-  const yValues = chartRows.map((row) =>
-    row.kind === "measured" ? row.result.passRateSortKey : row.passRate,
-  );
-  const fallbackX: readonly [number, number] = metric === "latency" ? [3, 8] : [0.006, 0.02];
-  const rawXDomain = chartRows.length > 0 ? paddedDomain(xValues, 0.12) : fallbackX;
-  const rawYDomain = chartRows.length > 0 ? paddedDomain(yValues, 0.12) : ([0, 100] as const);
-  const xDomain: readonly [number, number] =
-    metric === "cost" ? [Math.max(0, rawXDomain[0]), rawXDomain[1]] : rawXDomain;
+  const points: ScatterPoint[] = rows.flatMap((row) => {
+    const latency = row.run.metrics.latencyMs;
+    if (latency.availability !== "available" && latency.availability !== "aggregate_only") {
+      return [];
+    }
+    const headline = headlineFor(row.run);
+    if (headline.kind !== "rate" || headline.started === 0) return [];
+    return [{ row, latencySeconds: latency.p50 / 1000, headline }];
+  });
+  const rawXDomain =
+    points.length > 0
+      ? paddedDomain(
+          points.map((point) => point.latencySeconds),
+          0.12,
+        )
+      : [3, 8];
+  const xDomain: readonly [number, number] = [Math.max(0, rawXDomain[0]), rawXDomain[1]];
+  const rawYDomain =
+    points.length > 0
+      ? paddedDomain(
+          points.map((point) => (point.headline.passed / point.headline.started) * 100),
+          0.12,
+        )
+      : [0, 100];
   const yDomain: readonly [number, number] = [
     Math.max(0, rawYDomain[0]),
     Math.min(100, rawYDomain[1]),
   ];
   const xTicks = [0, 1, 2, 3, 4].map((step) => xDomain[0] + ((xDomain[1] - xDomain[0]) * step) / 4);
   const yTicks = [0, 1, 2, 3, 4].map((step) => yDomain[0] + ((yDomain[1] - yDomain[0]) * step) / 4);
-  const chartId = `lb-${metric}-chart`;
-  const xLabel = metric === "latency" ? "p50 latency" : "Cost per task";
-  const formatX = (value: number) =>
-    metric === "latency" ? `${value.toFixed(1)}s` : costFormatter.format(value);
+  const chartId = "lb-latency-chart";
+  const formatX = (value: number) => `${value.toFixed(1)}s`;
   const xPosition = (value: number) =>
     margin.left + ((value - xDomain[0]) / (xDomain[1] - xDomain[0])) * plotWidth;
   const yPosition = (value: number) =>
@@ -141,11 +298,11 @@ function ScatterPlot({
         role="img"
         aria-labelledby={`${chartId}-title ${chartId}-description`}
       >
-        <title id={`${chartId}-title`}>Pass rate compared with {xLabel}</title>
+        <title id={`${chartId}-title`}>Headline pass rate compared with p50 latency</title>
         <desc id={`${chartId}-description`}>
-          {chartRows.length > 0
-            ? `${chartRows.length} visible models for ${family}. Higher on the chart means a higher pass rate.`
-            : `No models match the current ${family} filter and search.`}
+          {points.length > 0
+            ? `${points.length} measured runs for ${family} with headline and latency evidence. Higher on the chart means a higher pass rate.`
+            : `No measured runs for ${family} have both headline and latency evidence.`}
         </desc>
         <g className="lb-chart-grid" aria-hidden="true">
           {yTicks.map((value) => {
@@ -193,7 +350,7 @@ function ScatterPlot({
           y={height - 5}
           textAnchor="middle"
         >
-          {xLabel}
+          p50 latency
         </text>
         <text
           className="lb-chart-axis-label"
@@ -202,38 +359,43 @@ function ScatterPlot({
         >
           Pass rate
         </text>
-        {chartRows.length === 0 && (
+        {points.length === 0 && (
           <text
             className="lb-chart-empty"
             x={margin.left + plotWidth / 2}
             y={margin.top + plotHeight / 2}
             textAnchor="middle"
           >
-            No matching models to plot
+            No matching runs to plot
           </text>
         )}
-        {chartRows.map((row, index) => {
-          const xValue =
-            row.kind === "measured" ? row.result.latencyMs.p50 / 1000 : row.model[metric];
-          const yValue = row.kind === "measured" ? row.result.passRateSortKey : row.passRate;
-          const x = xPosition(xValue);
+        {points.map((point, index) => {
+          const yValue = (point.headline.passed / point.headline.started) * 100;
+          const x = xPosition(point.latencySeconds);
           const y = yPosition(yValue);
           const labelOnLeft = x > width - margin.right - 108;
+          const name = point.row.model?.name ?? point.row.run.modelId;
           return (
-            <g className="lb-chart-model" key={row.model.id}>
+            <g className="lb-chart-model" key={point.row.run.runId}>
               <title>
-                {row.model.name}: {yValue.toFixed(1)}% pass rate, {formatX(xValue)}{" "}
-                {xLabel.toLowerCase()}
+                {name}: {point.headline.passed}/{point.headline.started} passed ({yValue.toFixed(1)}
+                %), p50 {formatX(point.latencySeconds)}
               </title>
               <circle className="lb-chart-point-halo" cx={x} cy={y} r="7" />
-              <circle className="lb-chart-point" cx={x} cy={y} r="4.2" fill={row.model.color} />
+              <circle
+                className="lb-chart-point"
+                cx={x}
+                cy={y}
+                r="4.2"
+                fill={point.row.model?.color ?? "currentColor"}
+              />
               <text
                 className="lb-chart-model-label"
                 x={labelOnLeft ? x - 9 : x + 9}
                 y={y + (index % 2 === 0 ? -8 : 14)}
                 textAnchor={labelOnLeft ? "end" : "start"}
               >
-                {row.model.name}
+                {name}
               </text>
             </g>
           );
@@ -243,129 +405,82 @@ function ScatterPlot({
   );
 }
 
-function SortButton({
-  label,
-  metric,
-  activeMetric,
-  direction,
-  onSort,
-}: {
-  label: string;
-  metric: SortMetric;
-  activeMetric: SortMetric;
-  direction: SortDirection;
-  onSort: (metric: SortMetric) => void;
-}) {
-  const active = metric === activeMetric;
-  return (
-    <button className="lb-sort-button" type="button" onClick={() => onSort(metric)}>
-      <span>{label}</span>
-      <span
-        className={active ? "lb-sort-arrow lb-sort-arrow-active" : "lb-sort-arrow"}
-        aria-hidden="true"
-      >
-        {active ? (direction === "desc" ? "↓" : "↑") : "↕"}
-      </span>
-      <span className="lb-visually-hidden">
-        {active
-          ? `, sorted ${direction === "desc" ? "descending" : "ascending"}`
-          : ", activate to sort"}
-      </span>
-    </button>
-  );
-}
-
 export function LeaderboardPage({
   initialFamily = "Spot",
   initialSearch = "",
+  initialCohort = ALL_COHORTS,
 }: {
   initialFamily?: LeaderboardFamily;
   initialSearch?: string;
+  initialCohort?: string;
 }) {
   const [family, setFamily] = useState<LeaderboardFamily>(initialFamily);
   const [search, setSearch] = useState(initialSearch);
-  const [sortMetric, setSortMetric] = useState<SortMetric>("passRate");
+  const [cohort, setCohort] = useState(initialCohort);
+  const [sortMetric, setSortMetric] = useState<SortMetric>("headline");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+
+  const cohorts = cohortsForFamily(family);
+  const selectedCohort = cohorts.find((entry) => entry.cohortId === cohort);
+  const selectedCohortId = selectedCohort?.cohortId ?? ALL_COHORTS;
+
+  const familyRows = useMemo<readonly LeaderboardRow[]>(
+    () =>
+      runsForFamily(family)
+        .filter((run) => run.origin === "measured")
+        .map((run) => ({
+          run,
+          model: getModel(run.modelId),
+          campaign: campaignById[run.campaignId],
+        })),
+    [family],
+  );
+
+  const campaigns = useMemo(() => {
+    const byId: Record<string, CanonicalCampaign> = {};
+    for (const row of familyRows) {
+      if (row.campaign !== undefined) byId[row.campaign.campaignId] = row.campaign;
+    }
+    return Object.values(byId).sort((left, right) => left.date.localeCompare(right.date));
+  }, [familyRows]);
 
   const rows = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
-    const illustrativeRows: IllustrativeRow[] = models
-      .filter(
-        (model) =>
-          query.length === 0 ||
-          `${model.name} ${model.provider}`.toLocaleLowerCase().includes(query),
-      )
-      .map((model): IllustrativeRow => {
-        const metrics = familyMetrics(model, family);
-        return {
-          kind: "illustrative",
-          model,
-          passRate: metrics.passRate,
-          accuracy: metrics.accuracy,
-        };
-      });
-    const measuredRows: MeasuredRow[] = measuredModels
-      .filter(
-        (model) =>
-          model.families[family] !== undefined &&
-          (query.length === 0 ||
-            `${model.name} ${model.provider}`.toLocaleLowerCase().includes(query)),
-      )
-      .map((model) => ({
-        kind: "measured",
-        model,
-        result: model.families[family]!,
-      }));
-    const syntheticRows: SyntheticRow[] = canonicalRuns
-      .filter(
-        (run) =>
-          run.family === family &&
-          canonicalModelById.get(run.modelId)?.origin === "synthetic" &&
-          (query.length === 0 ||
-            `${canonicalModelById.get(run.modelId)?.name ?? ""} ${canonicalModelById.get(run.modelId)?.provider ?? ""}`
-              .toLocaleLowerCase()
-              .includes(query)),
-      )
-      .map((run) => ({
-        kind: "synthetic",
-        model: canonicalModelById.get(run.modelId)!,
-        run,
-      }));
-    const visible: (IllustrativeRow | MeasuredRow)[] = [...illustrativeRows, ...measuredRows];
+    return familyRows.filter(
+      (row) =>
+        query.length === 0 ||
+        `${row.model?.name ?? ""} ${row.model?.provider ?? ""}`.toLocaleLowerCase().includes(query),
+    );
+  }, [familyRows, search]);
 
-    const sorted = visible.sort((left, right) => {
-      if ((sortMetric === "accuracy" || sortMetric === "cost") && left.kind !== right.kind) {
-        return left.kind === "illustrative" ? -1 : 1;
-      }
-      const leftValue =
-        left.kind === "measured"
-          ? sortMetric === "passRate"
-            ? left.result.passRateSortKey
-            : sortMetric === "latency"
-              ? left.result.latencyMs.p50 / 1000
-              : undefined
-          : sortMetric === "passRate" || sortMetric === "accuracy"
-            ? left[sortMetric]
-            : left.model[sortMetric];
-      const rightValue =
-        right.kind === "measured"
-          ? sortMetric === "passRate"
-            ? right.result.passRateSortKey
-            : sortMetric === "latency"
-              ? right.result.latencyMs.p50 / 1000
-              : undefined
-          : sortMetric === "passRate" || sortMetric === "accuracy"
-            ? right[sortMetric]
-            : right.model[sortMetric];
-      if (leftValue === undefined || rightValue === undefined) {
-        return left.model.name.localeCompare(right.model.name);
-      }
-      const difference = leftValue - rightValue;
-      if (difference === 0) return left.model.name.localeCompare(right.model.name);
-      return sortDirection === "asc" ? difference : -difference;
-    });
-    return [...sorted, ...syntheticRows];
-  }, [family, search, sortDirection, sortMetric]);
+  const groups = useMemo<readonly CohortGroup[]>(() => {
+    if (selectedCohort === undefined) {
+      return cohorts
+        .map((entry): CohortGroup => {
+          const scoped = rows.filter((row) => inCohort(row.run, entry));
+          return {
+            cohortId: entry.cohortId,
+            label: cohortLabel(entry),
+            rows: sortedRows(scoped, sortMetric, sortDirection),
+          };
+        })
+        .filter((group) => group.rows.length > 0);
+    }
+    return [
+      {
+        cohortId: selectedCohort.cohortId,
+        label: cohortLabel(selectedCohort),
+        rows: sortedRows(
+          rows.filter((row) => inCohort(row.run, selectedCohort)),
+          sortMetric,
+          sortDirection,
+        ),
+      },
+    ];
+  }, [cohorts, rows, selectedCohort, sortDirection, sortMetric]);
+
+  const shownCount = groups.reduce((total, group) => total + group.rows.length, 0);
+  const chartRows = groups.flatMap((group) => group.rows);
 
   const sort = (nextMetric: SortMetric) => {
     if (nextMetric === sortMetric) {
@@ -373,21 +488,19 @@ export function LeaderboardPage({
       return;
     }
     setSortMetric(nextMetric);
-    setSortDirection(nextMetric === "latency" || nextMetric === "cost" ? "asc" : "desc");
+    setSortDirection(nextMetric === "latency" ? "asc" : "desc");
   };
 
-  const resetFilters = () => {
-    setFamily("Spot");
-    setSearch("");
-  };
-
-  const tableCaption = `Model results for the ${family} family, one of four ${numberFormatter.format(dataset.tasksPerFamily)}-task families.`;
-  const displayedUniverse =
-    models.length +
-    measuredModels.filter((model) => model.families[family] !== undefined).length +
-    canonicalRuns.filter(
-      (run) => run.family === family && canonicalModelById.get(run.modelId)?.origin === "synthetic",
-    ).length;
+  const tableCaption = `Measured runs for the ${family} family${
+    selectedCohort === undefined
+      ? ", grouped by cohort"
+      : ` in cohort ${cohortLabel(selectedCohort)}`
+  }.`;
+  const panelDescription = `${shownCount} measured ${shownCount === 1 ? "run" : "runs"} · sorted by ${metricLabels[sortMetric]} (${sortDirection === "desc" ? "descending" : "ascending"}) · unavailable values sort last${
+    selectedCohort === undefined
+      ? " · grouped by cohort"
+      : ` · cohort ${cohortLabel(selectedCohort)}`
+  }`;
 
   return (
     <PageShell active="leaderboard">
@@ -432,12 +545,12 @@ export function LeaderboardPage({
             </div>
             <span className="lb-dataset-indicator">
               <span>
-                {dataset.label} · {numberFormatter.format(dataset.tasks)} tasks ·{" "}
-                {dataset.repetitions} runs each
+                {family} family · {numberFormatter.format(caseDefinitionsForFamily(family).length)}{" "}
+                cases
               </span>
-              {measuredCampaigns.map((campaign) => (
-                <span className="lb-measured-indicator" key={campaign.id}>
-                  Measured {campaign.date} · {campaign.harness} · {campaign.repetitions} reps
+              {campaigns.map((campaign) => (
+                <span className="lb-measured-indicator" key={campaign.campaignId}>
+                  {campaign.campaignId} · {campaign.date} · {campaign.harness}
                   {campaign.prUrl && (
                     <>
                       {" · "}
@@ -452,53 +565,70 @@ export function LeaderboardPage({
           </div>
 
           <div className="lb-toolbar">
-            <FamilyTabs value={family} onChange={setFamily} options={leaderboardFamilies} />
-            <label className="lb-search-field">
-              <span className="lb-visually-hidden">Search models</span>
-              <Search size={15} aria-hidden="true" />
-              <Input
-                className="lb-search-input"
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.currentTarget.value)}
-                placeholder="Search models"
-              />
-              {search.length > 0 && (
-                <Button
-                  className="lb-search-clear"
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Clear model search"
-                  onClick={() => setSearch("")}
+            <FamilyTabs
+              value={family}
+              onChange={(next) => {
+                setFamily(next);
+                setCohort(ALL_COHORTS);
+              }}
+              options={leaderboardFamilies}
+            />
+            <div className="lb-toolbar-controls">
+              <label className="lb-cohort-field">
+                <span className="lb-cohort-label">Cohort</span>
+                <select
+                  className="lb-cohort-select"
+                  value={selectedCohortId}
+                  onChange={(event) => setCohort(event.currentTarget.value)}
                 >
-                  <X size={14} aria-hidden="true" />
-                </Button>
-              )}
-            </label>
+                  <option value={ALL_COHORTS}>All cohorts</option>
+                  {cohorts.map((entry) => (
+                    <option key={entry.cohortId} value={entry.cohortId}>
+                      {cohortLabel(entry)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="lb-search-field">
+                <span className="lb-visually-hidden">Search models</span>
+                <Search size={15} aria-hidden="true" />
+                <Input
+                  className="lb-search-input"
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.currentTarget.value)}
+                  placeholder="Search models"
+                />
+                {search.length > 0 && (
+                  <Button
+                    className="lb-search-clear"
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Clear model search"
+                    onClick={() => setSearch("")}
+                  >
+                    <X size={14} aria-hidden="true" />
+                  </Button>
+                )}
+              </label>
+            </div>
           </div>
 
-          <Panel
-            className="lb-table-panel"
-            title="Ranked results"
-            description={`${rows.length} of ${displayedUniverse} models shown · ranked by ${metricLabels[sortMetric]} · measured rows are small unranked conformance samples · synthetic rows are labelled previews`}
-          >
-            {rows.length > 0 ? (
+          <Panel className="lb-table-panel" title="Measured results" description={panelDescription}>
+            {shownCount > 0 ? (
               <div className="lb-table-scroll">
                 <table className="eval-table lb-table">
                   <caption className="lb-visually-hidden">{tableCaption}</caption>
                   <thead>
                     <tr>
-                      <th className="lb-rank-column" scope="col">
-                        Rank
-                      </th>
                       <th className="lb-model-column" scope="col">
-                        Model / harness
+                        Model / campaign
                       </th>
                       <th
                         scope="col"
                         aria-sort={
-                          sortMetric === "passRate"
+                          sortMetric === "headline"
                             ? sortDirection === "desc"
                               ? "descending"
                               : "ascending"
@@ -506,26 +636,8 @@ export function LeaderboardPage({
                         }
                       >
                         <SortButton
-                          label="Pass rate"
-                          metric="passRate"
-                          activeMetric={sortMetric}
-                          direction={sortDirection}
-                          onSort={sort}
-                        />
-                      </th>
-                      <th
-                        scope="col"
-                        aria-sort={
-                          sortMetric === "accuracy"
-                            ? sortDirection === "desc"
-                              ? "descending"
-                              : "ascending"
-                            : "none"
-                        }
-                      >
-                        <SortButton
-                          label="Accuracy"
-                          metric="accuracy"
+                          label="Headline"
+                          metric="headline"
                           activeMetric={sortMetric}
                           direction={sortDirection}
                           onSort={sort}
@@ -549,135 +661,28 @@ export function LeaderboardPage({
                           onSort={sort}
                         />
                       </th>
-                      <th
-                        scope="col"
-                        aria-sort={
-                          sortMetric === "cost"
-                            ? sortDirection === "desc"
-                              ? "descending"
-                              : "ascending"
-                            : "none"
-                        }
-                      >
-                        <SortButton
-                          label="Cost / task"
-                          metric="cost"
-                          activeMetric={sortMetric}
-                          direction={sortDirection}
-                          onSort={sort}
-                        />
-                      </th>
+                      <th scope="col">est. cost/task</th>
                       <th scope="col">Tasks</th>
+                      <th scope="col">Eligibility</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {rows.map((row) => {
-                      const rank =
-                        row.kind === "illustrative"
-                          ? models.reduce(
-                              (position, candidate) =>
-                                position +
-                                Number(familyMetrics(candidate, family).passRate > row.passRate),
-                              1,
-                            )
-                          : undefined;
-                      return (
-                        <tr
-                          key={row.model.id}
-                          className={row.kind === "synthetic" ? "lb-row-synthetic" : undefined}
-                        >
-                          <td className="lb-rank-cell">
-                            {rank === undefined ? (
-                              <span
-                                className="lb-rank-unranked"
-                                aria-label="Unranked measured sample"
-                              >
-                                —
-                              </span>
-                            ) : (
-                              <span
-                                className="lb-rank-medal"
-                                data-rank={rank <= 3 ? rank : undefined}
-                              >
-                                {rank}
-                              </span>
-                            )}
-                          </td>
-                          <th scope="row">
-                            <div className="lb-model-cell">
-                              <ModelAvatar model={row.model} />
-                              <span className="lb-model-copy">
-                                {row.kind === "synthetic" ? (
-                                  <span>{row.model.name}</span>
-                                ) : (
-                                  <a href={`#/models/${row.model.id}`}>{row.model.name}</a>
-                                )}
-                                <small>
-                                  <span>{row.model.provider}</span>
-                                  <span aria-hidden="true"> · </span>
-                                  <code>
-                                    {row.kind === "measured"
-                                      ? row.model.campaign.harness
-                                      : row.kind === "synthetic"
-                                        ? `${row.run.cohort.target} · ${row.run.cohort.evidenceCategory}`
-                                        : dataset.harness}
-                                  </code>
-                                  {row.kind === "measured" && (
-                                    <span className="lb-measured-pill">Measured</span>
-                                  )}
-                                  {row.kind === "synthetic" && (
-                                    <span className="lb-synthetic-pill">Synthetic</span>
-                                  )}
-                                </small>
-                              </span>
-                            </div>
+                  {groups.map((group) => (
+                    <tbody key={group.cohortId}>
+                      {selectedCohort === undefined && (
+                        <tr className="lb-cohort-row">
+                          <th scope="rowgroup" colSpan={6}>
+                            {group.label}{" "}
+                            <span className="lb-cohort-run-count">
+                              · {group.rows.length} {group.rows.length === 1 ? "run" : "runs"}
+                            </span>
                           </th>
-                          <td>
-                            {row.kind === "measured" ? (
-                              <span className="lb-count">
-                                {numberFormatter.format(row.result.passed)} /{" "}
-                                {numberFormatter.format(row.result.total)}
-                              </span>
-                            ) : row.kind === "synthetic" ? (
-                              <span className="lb-count">
-                                {numberFormatter.format(row.run.counts.passed)} /{" "}
-                                {numberFormatter.format(row.run.counts.started)}
-                              </span>
-                            ) : (
-                              <ScoreBadge
-                                value={row.passRate}
-                                uncertainty={row.model.uncertainty}
-                              />
-                            )}
-                          </td>
-                          <td>{row.kind === "illustrative" ? `${row.accuracy}%` : "—"}</td>
-                          <td>
-                            {row.kind === "measured"
-                              ? `${(row.result.latencyMs.p50 / 1000).toFixed(1)}s`
-                              : row.kind === "synthetic"
-                                ? "p50" in row.run.metrics.latencyMs
-                                  ? `${(row.run.metrics.latencyMs.p50 / 1000).toFixed(1)}s`
-                                  : "—"
-                                : `${row.model.latency.toFixed(1)}s`}
-                          </td>
-                          <td>
-                            {row.kind === "illustrative"
-                              ? costFormatter.format(row.model.cost)
-                              : "—"}
-                          </td>
-                          <td>
-                            {numberFormatter.format(
-                              row.kind === "measured"
-                                ? row.result.total
-                                : row.kind === "synthetic"
-                                  ? row.run.counts.planned
-                                  : dataset.tasksPerFamily,
-                            )}
-                          </td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
+                      )}
+                      {group.rows.map((row) => (
+                        <LeaderboardRowView key={row.run.runId} row={row} />
+                      ))}
+                    </tbody>
+                  ))}
                 </table>
               </div>
             ) : (
@@ -685,26 +690,34 @@ export function LeaderboardPage({
                 <span className="lb-empty-mark" aria-hidden="true">
                   0
                 </span>
-                <h3>No models found</h3>
+                <h3>No measured runs</h3>
                 <p>
-                  No model or provider matches "{search.trim()}" in {family.toLocaleLowerCase()}.
+                  {search.trim().length > 0
+                    ? `No model or provider matches "${search.trim()}" in ${family.toLocaleLowerCase()}.`
+                    : "No measured runs match the current family and cohort selection."}
                 </p>
                 <div className="lb-empty-actions">
+                  {search.trim().length > 0 && (
+                    <Button
+                      className="lb-reset-button"
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setSearch("")}
+                    >
+                      Clear search
+                    </Button>
+                  )}
                   <Button
                     className="lb-reset-button"
                     type="button"
                     variant="secondary"
                     size="sm"
-                    onClick={() => setSearch("")}
-                  >
-                    Clear search
-                  </Button>
-                  <Button
-                    className="lb-reset-button"
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={resetFilters}
+                    onClick={() => {
+                      setFamily("Spot");
+                      setSearch("");
+                      setCohort(ALL_COHORTS);
+                    }}
                   >
                     Reset filters
                   </Button>
@@ -714,20 +727,13 @@ export function LeaderboardPage({
           </Panel>
         </section>
 
-        <section className="eval-two-column lb-charts" aria-label="Model trade-off charts">
+        <section className="lb-charts" aria-label="Model trade-off chart">
           <Panel
             className="lb-chart-panel"
             title="Quality vs. latency"
-            description={`Pass rate and median response time · ${family}`}
+            description={`Headline pass rate and median response time · measured runs with both values · ${family}`}
           >
-            <ScatterPlot rows={rows} metric="latency" family={family} />
-          </Panel>
-          <Panel
-            className="lb-chart-panel"
-            title="Quality vs. cost"
-            description={`Pass rate and cost per task · ${family}`}
-          >
-            <ScatterPlot rows={rows} metric="cost" family={family} />
+            <ScatterPlot rows={chartRows} family={family} />
           </Panel>
         </section>
       </div>

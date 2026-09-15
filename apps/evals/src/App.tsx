@@ -1,278 +1,67 @@
-import { useEffect, useState } from "react";
-import { ArrowUpRight } from "lucide-react";
-import { dataset } from "./data";
-import { PageShell, Panel } from "./components/eval-ui";
+import { Fragment, useEffect, type ReactNode } from "react";
+import { PageShell } from "./components/eval-ui";
 import { LeaderboardPage } from "./pages/leaderboard";
+import { ModelIndexPage } from "./pages/model-index";
 import { ModelProfilePage } from "./pages/model-profile";
 import { TaskExplorerPage } from "./pages/task-explorer";
+import { MethodologyPage } from "./pages/methodology";
 import { HandoffPage } from "./pages/handoff";
-import { measuredCampaigns, measuredModels } from "./measured";
-import { PrototypeComparePage as ComparePage } from "./canonical/pages/compare";
-import {
-  CATALOG_LABEL,
-  CATALOG_SHA_31_TOOLS,
-  GRADER_SHA256,
-  SUITE_IDS,
-  SUITE_SHA256,
-} from "./canonical/canonical";
+import { ComparePage } from "./canonical/pages/compare";
+import { matchPath, parseRoute, useHashRoute } from "./router";
 
-export function MethodologyPage() {
-  return (
-    <PageShell active="methodology">
-      <div className="eval-container eval-methodology">
-        <section className="eval-hero">
-          <img className="eval-hero-art" src="/images/hero-watercolor-landscape.webp" alt="" />
-          <p className="eval-eyebrow">Methodology / Design preview</p>
-          <h1 className="eval-title">
-            Open to inspection<span className="eval-dot">.</span>
-          </h1>
-          <p className="eval-description">
-            A useful score needs a task, a rubric, and evidence you can read. Here is what this
-            preview shows, and what it does not.
-          </p>
-        </section>
-        <div className="eval-method-grid">
-          <Panel title="First, a note on the data">
-            <div className="eval-method-body">
-              <p>
-                Every model score, timing, price, tool trace, and distribution on these pages is a
-                synthetic design fixture. Model names identify the intended comparison layout, not
-                an evaluation that has taken place.
-              </p>
-              <p>
-                The dataset and run labels are illustrative too. These results should not inform
-                model selection or financial decisions.
-              </p>
-              <p>
-                Rows and panels marked Measured are the exception: they come from the conformance
-                campaigns listed below (
-                {measuredCampaigns
-                  .map((campaign) => `${campaign.harness}, ${campaign.date}`)
-                  .join("; ")}
-                ) and are shown as exported.
-              </p>
-            </div>
-          </Panel>
-          <Panel title="Artifact identities">
-            <div className="eval-method-body">
-              <p>
-                Measured campaigns pin the tool catalog <code>{CATALOG_LABEL}</code> (sha{" "}
-                <code>{CATALOG_SHA_31_TOOLS.slice(0, 12)}…</code>) and the deterministic grader{" "}
-                <code>grading.ts</code> at sha <code>{GRADER_SHA256.slice(0, 12)}…</code>.
-              </p>
-              <ul>
-                {(Object.keys(SUITE_IDS) as (keyof typeof SUITE_IDS)[]).map((family) => (
-                  <li key={family}>
-                    {family}: <code>{SUITE_IDS[family]}</code> · suite sha{" "}
-                    <code>{SUITE_SHA256[family].slice(0, 12)}…</code>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </Panel>
-          <Panel title="Measured runs">
-            <div className="eval-method-body">
-              {measuredCampaigns.map((campaign) => (
-                <div key={campaign.id}>
-                  <p>
-                    {campaign.harness}, {campaign.repetitions} repetitions per case,{" "}
-                    {campaign.timeoutMs / 1000}s timeout ({campaign.date}). These are unranked,
-                    small live samples of tool-use conformance, not answer accuracy or financial
-                    outcomes.
-                  </p>
-                  {campaign.id === "omp-2026-09-11" ? (
-                    <>
-                      <p>
-                        Spot:{" "}
-                        <code>
-                          {measuredModels
-                            .filter((model) => model.campaign.id === campaign.id)
-                            .map((model) => {
-                              const sourceCommit = model.families.Spot?.sourceCommit;
-                              return sourceCommit
-                                ? `${sourceCommit.slice(0, 7)} (${model.name})`
-                                : null;
-                            })
-                            .filter(Boolean)
-                            .join(" / ")}
-                        </code>
-                        ; perps/predictions:{" "}
-                        <code>
-                          {measuredModels
-                            .find(
-                              (model) => model.campaign.id === campaign.id && model.families.Perps,
-                            )
-                            ?.families.Perps?.sourceCommit.slice(0, 7)}
-                        </code>
-                        , executable <code>{campaign.executableSourceCommit?.slice(0, 7)}</code>
-                      </p>
-                      {campaign.prUrl && (
-                        <a
-                          className="eval-text-link"
-                          href={campaign.prUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Open GitHub PR #85 <ArrowUpRight size={14} aria-hidden="true" />
-                        </a>
-                      )}
-                    </>
-                  ) : (
-                    <p>
-                      Source commit <code>{campaign.sourceCommit.slice(0, 7)}</code>.
-                    </p>
-                  )}
-                  <ul>
-                    {campaign.limitations.map((limitation) => (
-                      <li key={limitation}>{limitation}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </Panel>
-          <Panel title="What a task measures">
-            <div className="eval-method-body">
-              <p>
-                Tasks cover portfolio analysis, spot markets, perpetuals, and prediction markets.
-                Each asks the agent to answer a financial question using read-only tools.
-              </p>
-              <ul>
-                <li>Choose the right tools for the question.</li>
-                <li>Use valid arguments and the requested scope.</li>
-                <li>Ground the answer in the returned evidence.</li>
-                <li>Respect read-only safety and report missing data.</li>
-              </ul>
-            </div>
-          </Panel>
-          <Panel title="Reading the scores">
-            <div className="eval-method-body">
-              <p>
-                Pass rate is the proportion of tasks that meet the rubric. Tool selection accuracy
-                measures whether the agent chose the expected tools. Task scores summarize the
-                individual rubric checks.
-              </p>
-              <p>
-                The preview uses {dataset.tasks.toLocaleString("en-US")} tasks split equally across
-                four families. Displayed uncertainty ranges and histogram counts demonstrate the
-                proposed visual treatment. They are not computed confidence intervals.
-              </p>
-            </div>
-          </Panel>
-          <Panel title="Latency, cost, and reproducibility">
-            <div className="eval-method-body">
-              <p>
-                Median latency is elapsed time per task. Cost is the estimated model cost per task
-                in USD. A published benchmark would need pinned model versions, tool definitions,
-                dataset, repetitions, and pricing assumptions.
-              </p>
-              <p>
-                The open-source runner is separate from this preview. The task explorer contains
-                sanitized synthetic examples, not exported production conversations.
-              </p>
-              <a
-                className="eval-text-link"
-                href="https://github.com/askgina/plugins/tree/main/packages/evals"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Explore the eval runner <ArrowUpRight size={14} aria-hidden="true" />
-              </a>
-            </div>
-          </Panel>
-        </div>
-        <p className="eval-method-note">
-          No evaluations, wallet connections, trades, or tool requests run from this site. Downloads
-          contain only the illustrative fixtures or the measured conformance data displayed here.
-        </p>
-      </div>
-    </PageShell>
-  );
+interface RouteEntry {
+  readonly pattern: string;
+  readonly title: string;
+  readonly render: (params: Readonly<Record<string, string>>, query: URLSearchParams) => ReactNode;
 }
 
-const PROTOTYPE_MODEL_IDS: Record<string, string> = {
-  "gpt-5.5": "gpt-5-5",
-  "gpt-sol": "gpt-5-6-sol",
-  "muse-spark": "muse-spark-1-3",
-  "claude-fable": "claude-fable-5-1",
-  "claude-opus": "claude-opus-5",
-};
-
-function prototypeRedirect(route: string): string {
-  const [path = "", queryString] = route.split("?");
-  const segments = path.split("/");
-  if (segments[2] === "compare") return `/compare${queryString ? `?${queryString}` : ""}`;
-  if (segments[2] === "models") {
-    const mapped =
-      segments[3] === undefined ? undefined : (PROTOTYPE_MODEL_IDS[segments[3]] ?? segments[3]);
-    return mapped === undefined ? "/leaderboard" : `/models/${mapped}`;
-  }
-  const map: Record<string, string> = {
-    leaderboard: "/leaderboard",
-    tasks: "/tasks",
-    methodology: "/methodology",
-    "": "/leaderboard",
-  };
-  return map[segments[2] ?? ""] ?? "/leaderboard";
-}
+const ROUTES: readonly RouteEntry[] = [
+  { pattern: "/", title: "Leaderboard", render: () => <LeaderboardPage /> },
+  { pattern: "/leaderboard", title: "Leaderboard", render: () => <LeaderboardPage /> },
+  { pattern: "/models", title: "Models", render: () => <ModelIndexPage /> },
+  {
+    pattern: "/models/:id",
+    title: "Models",
+    render: (params) => <ModelProfilePage modelId={params.id ?? ""} />,
+  },
+  { pattern: "/tasks", title: "Tasks", render: () => <TaskExplorerPage /> },
+  {
+    pattern: "/compare",
+    title: "Compare",
+    render: (_params, query) => (
+      <ComparePage left={query.get("left") ?? undefined} right={query.get("right") ?? undefined} />
+    ),
+  },
+  { pattern: "/methodology", title: "Methodology", render: () => <MethodologyPage /> },
+  { pattern: "/handoff", title: "Exports", render: () => <HandoffPage /> },
+];
 
 export default function App() {
-  const [route, setRoute] = useState(() => window.location.hash.slice(1) || "/leaderboard");
+  const route = useHashRoute();
+  const parsed = parseRoute(route);
+  const [matched] = ROUTES.flatMap((entry) => {
+    const params = matchPath(entry.pattern, parsed.path);
+    return params === null ? [] : [{ entry, params }];
+  });
   useEffect(() => {
-    const handleRoute = () => {
-      const nextRoute = window.location.hash.slice(1);
-      if (nextRoute === "eval-main") return;
-      if (nextRoute.startsWith("/prototype")) {
-        const target = prototypeRedirect(nextRoute);
-        window.location.hash = `#${target}`;
-        return;
-      }
-      setRoute(nextRoute || "/leaderboard");
-      window.scrollTo({ top: 0, behavior: "auto" });
-    };
-    window.addEventListener("hashchange", handleRoute);
-    return () => window.removeEventListener("hashchange", handleRoute);
-  }, []);
-  useEffect(() => {
-    const section = route.startsWith("/models")
-      ? "Models"
-      : route === "/tasks"
-        ? "Tasks"
-        : route === "/methodology"
-          ? "Methodology"
-          : route === "/handoff"
-            ? "Public results"
-            : route.startsWith("/compare")
-              ? "Compare"
-              : "Leaderboard";
-    document.title = `${section} · Ask Gina Evals`;
-  }, [route]);
-  if (route.split("?")[0] === "/compare") {
-    const params = new URLSearchParams(route.split("?")[1] ?? "");
-    return (
-      <ComparePage
-        key={route}
-        left={params.get("left") ?? undefined}
-        right={params.get("right") ?? undefined}
-      />
-    );
-  }
-  if (route === "/models" || route.startsWith("/models/"))
-    return <ModelProfilePage key={route} modelId={route.split("/")[2] || "kimi-k3"} />;
-  if (route === "/tasks") return <TaskExplorerPage />;
-  if (route === "/methodology") return <MethodologyPage />;
-  if (route === "/handoff") return <HandoffPage />;
-  if (route === "/leaderboard" || route === "/") return <LeaderboardPage />;
+    document.title = `${matched?.entry.title ?? "Not found"} · Ask Gina Evals`;
+  }, [matched]);
   return (
-    <PageShell active="leaderboard">
-      <div className="eval-container eval-hero">
-        <h1 className="eval-title">
-          Page not found<span className="eval-dot">.</span>
-        </h1>
-        <a className="eval-text-link" href="#/leaderboard">
-          Back to the leaderboard
-        </a>
-      </div>
-    </PageShell>
+    <Fragment key={route}>
+      {matched ? (
+        matched.entry.render(matched.params, parsed.query)
+      ) : (
+        <PageShell active="leaderboard">
+          <div className="eval-container eval-hero">
+            <h1 className="eval-title">
+              Page not found<span className="eval-dot">.</span>
+            </h1>
+            <a className="eval-text-link" href="#/leaderboard">
+              Back to the leaderboard
+            </a>
+          </div>
+        </PageShell>
+      )}
+    </Fragment>
   );
 }
