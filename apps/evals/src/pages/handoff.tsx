@@ -11,7 +11,7 @@ import {
 } from "../lib/public-results";
 import "../styles/handoff.css";
 
-type LoadState =
+export type LoadState =
   | { status: "empty" }
   | { status: "loading" }
   | { status: "error"; message: string }
@@ -22,8 +22,13 @@ type LoadState =
       publicationSha256: string | null;
     };
 
-export function HandoffPage() {
-  const [state, setState] = useState<LoadState>({ status: "empty" });
+export interface HandoffPageProps {
+  /** Story seam for pinning a load state; the app default stays empty. */
+  readonly initialState?: LoadState;
+}
+
+export function HandoffPage({ initialState = { status: "empty" } }: HandoffPageProps) {
+  const [state, setState] = useState<LoadState>(initialState);
   const generation = useRef(0);
   const input = useRef<HTMLInputElement>(null);
 
