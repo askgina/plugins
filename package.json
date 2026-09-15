@@ -48,8 +48,9 @@
     "@askgina/contracts": "workspace:*",
     "@effect/language-service": "0.87.2",
     "@effect/platform-bun": "4.0.0-rc.111",
-    "@effect/tsgo": "0.36.5",
+    "@effect/tsgo": "0.37.0",
     "@effect/vitest": "4.0.0-rc.111",
+    "@shadcn/lint": "0.1.0",
     "@types/bun": "1.4.0",
     "@types/node": "25.6.0",
     "effect": "4.0.0-rc.111",
@@ -61,7 +62,7 @@
   "overrides": {
     "@effect/platform-node-shared": "4.0.0-rc.111",
     "esbuild": "0.28.1",
-    "oxlint": "1.78.0",
+    "oxlint": "1.80.0",
     "qs": "6.16.0"
   },
   "engines": {
