@@ -399,12 +399,18 @@
 
 .lb-scatterplot {
   display: block;
+  overflow: visible;
   width: 100%;
   height: auto;
 }
 
+.lb-chart-grid line,
+.lb-chart-axis {
+  vector-effect: non-scaling-stroke;
+}
+
 .lb-chart-grid line {
-  stroke: #eceae4;
+  stroke: var(--eval-line);
   stroke-width: 1;
 }
 
@@ -412,26 +418,22 @@
 .lb-chart-axis-label,
 .lb-chart-empty,
 .lb-chart-model-label {
-  fill: #686a64;
+  fill: var(--eval-muted);
   font-family: var(--font-sans);
   font-size: 10px;
 }
 
 .lb-chart-axis {
-  stroke: #d8d4cc;
+  stroke: var(--landing-line);
   stroke-width: 1;
 }
 
-.lb-chart-axis-label {
-  fill: #6f6c67;
-}
-
 .lb-chart-point-halo {
-  fill: #fff;
+  fill: var(--eval-paper);
 }
 
 .lb-chart-model-label {
-  fill: #3f3d3a;
+  fill: var(--eval-ink);
   font-size: 11px;
 }
 
