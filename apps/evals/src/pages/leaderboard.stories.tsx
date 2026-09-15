@@ -19,9 +19,15 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Portfolio: Story = {
+export const Perps: Story = {
   args: {
-    initialFamily: "Portfolio",
+    initialFamily: "Perps",
+  },
+};
+
+export const Predictions: Story = {
+  args: {
+    initialFamily: "Predictions",
   },
 };
 
