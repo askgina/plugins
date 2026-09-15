@@ -53,6 +53,13 @@ bun run check:public-boundary
 bun run smoke:install
 ```
 
+`@shadcn/lint` is registered in the root `vite.config.ts` without enabling rules.
+`bun run lint` checks the whole workspace, and `bun run check` includes lint.
+Add rules under `lint.rules`, spreading `effectTsgoRecommended.rules` first,
+or in app-scoped `lint.overrides`. See the
+[available rules](https://github.com/shadcn-ui/lint/blob/main/README.md#rules) and
+[configuration examples](https://github.com/shadcn-ui/lint/blob/main/docs/design-systems.md).
+
 `bun run artifacts` builds the five package outputs with `vp pack`; the
 custom packer then creates five package tarballs, six complete host archives, one
 four-skill candidate archive, and contract, package, target, and eval receipts
