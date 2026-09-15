@@ -31,7 +31,7 @@ function MeasuredMetricCards({ model }: { model: MeasuredModel }) {
             p50 {(result.latencyMs.p50 / 1000).toFixed(1)}s · p95{" "}
             {(result.latencyMs.p95 / 1000).toFixed(1)}s ·{" "}
             {numberFormatter.format(result.tokenUsage.total)} tokens · {result.unscoredTimeouts}{" "}
-            unscored timeouts
+            unscored
           </p>
         </article>
       ))}
@@ -213,7 +213,7 @@ function MeasuredModelProfile({ model }: { model: MeasuredModel }) {
                   <th scope="col">Task family</th>
                   <th scope="col">Passed / total</th>
                   <th scope="col">Failed</th>
-                  <th scope="col">Unscored timeouts</th>
+                  <th scope="col">Unscored</th>
                   <th scope="col">Routing</th>
                   <th scope="col">Arguments</th>
                   <th scope="col">Completion</th>

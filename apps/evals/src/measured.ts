@@ -1,7 +1,13 @@
 import type { TaskFamily } from "./data";
-import { museReport, perpsPredictionsReport, spotBundleManifest, spotComparison } from "./results";
+import {
+  claudeComparison,
+  museReport,
+  perpsPredictionsReport,
+  spotBundleManifest,
+  spotComparison,
+} from "./results";
 
-export type MeasuredVerdict = "pass" | "fail" | "timeout";
+export type MeasuredVerdict = "pass" | "fail" | "timeout" | "unscored";
 
 export interface MeasuredDimension {
   passed: number;
@@ -61,7 +67,7 @@ export interface MeasuredModel {
 }
 
 export interface MeasuredCampaign {
-  id: "omp-2026-09-11" | "muse-2026-09-14";
+  id: "omp-2026-09-11" | "muse-2026-09-14" | "claude-2026-09-14";
   date: string;
   harness: string;
   repetitions: number;
@@ -229,6 +235,102 @@ function museResult(entry: (typeof museReport.families)[number]): MeasuredFamily
   });
 }
 
+function claudeCases(
+  family: (typeof claudeComparison.models)[number]["runs"][number]["family"],
+  run: (typeof claudeComparison.models)[number]["runs"][number],
+  modelId: string,
+): readonly MeasuredCase[] {
+  const cases = new Map<string, MeasuredAttempt[]>();
+  for (const trial of run.trials) {
+    const outcome =
+      trial.outcome === "observed" ? (trial.score?.overall_pass ? "pass" : "fail") : "unscored";
+    const attempts = cases.get(trial.caseId) ?? [];
+    attempts.push({
+      modelId,
+      repetition: trial.repetition,
+      verdict: outcome,
+      checks:
+        trial.outcome === "observed" && trial.score
+          ? {
+              routing: trial.score.routing.score > 0 ? "pass" : "fail",
+              arguments: trial.score.arguments.score > 0 ? "pass" : "fail",
+              completion: trial.score.completion.score > 0 ? "pass" : "fail",
+            }
+          : {},
+      failureCategories: trial.error ? [trial.error.tag] : [],
+      durationMs: trial.score?.latency_ms ?? trial.wallDurationMs,
+      tokenUsage: trial.observation?.token_usage
+        ? {
+            inputTokens: trial.observation.token_usage.input_tokens,
+            outputTokens: trial.observation.token_usage.output_tokens,
+            totalTokens: trial.observation.token_usage.total_tokens,
+          }
+        : {
+            inputTokens: 0,
+            outputTokens: 0,
+            totalTokens: 0,
+          },
+    });
+    cases.set(trial.caseId, attempts);
+  }
+  return Array.from(cases, ([id, attempts]) => ({
+    id,
+    ...(family === "spot"
+      ? {
+          prompt: spotComparison.casePrompts[id as keyof typeof spotComparison.casePrompts],
+        }
+      : {}),
+    results: attempts.map((attempt) => attempt.verdict),
+    passed: attempts.filter((attempt) => attempt.verdict === "pass").length,
+    graded: attempts.filter((attempt) => attempt.verdict === "pass" || attempt.verdict === "fail")
+      .length,
+    attempts,
+  }));
+}
+
+function claudeResult(
+  run: (typeof claudeComparison.models)[number]["runs"][number],
+  model: (typeof claudeComparison.models)[number],
+): MeasuredFamilyResult {
+  const family = run.family === "spot" ? "Spot" : run.family === "perps" ? "Perps" : "Predictions";
+  return familyResult({
+    family,
+    runId: run.runId,
+    sourceCommit: model.sourceCommit,
+    startedAt: model.startedAt,
+    passed: run.passed,
+    failed: run.failed,
+    unscoredTimeouts: run.unscored,
+    total: run.dispatched,
+    dimensions: dimensionsFrom({
+      routing: {
+        passed: run.dimensions.routing.passed,
+        failed: run.dimensions.routing.failed,
+      },
+      arguments: {
+        passed: run.dimensions.arguments.passed,
+        failed: run.dimensions.arguments.failed,
+      },
+      completion: {
+        passed: run.dimensions.completion.passed,
+        failed: run.dimensions.completion.failed,
+      },
+      safety: {
+        passed: run.dimensions.safety.passed,
+        failed: run.dimensions.safety.failed,
+      },
+    }),
+    latencyMs: run.latencyMs,
+    tokenUsage: {
+      input: run.tokenUsage.input,
+      output: run.tokenUsage.output,
+      total: run.tokenUsage.total,
+      observations: run.tokenUsage.observations,
+    },
+    cases: claudeCases(run.family, run, model.model),
+  });
+}
+
 const perpsResults = perpsPredictionsReport.runs.map(perpsResult);
 
 export const ompCampaign = {
@@ -255,9 +357,27 @@ export const museCampaign = {
   limitations: museReport.methodology,
 } satisfies MeasuredCampaign;
 
-export const measuredCampaigns: readonly MeasuredCampaign[] = [ompCampaign, museCampaign];
+export const claudeCampaign = {
+  id: "claude-2026-09-14",
+  date: "2026-09-14",
+  harness: "OMP harness · native Anthropic OAuth",
+  repetitions: claudeComparison.methodology.repetitions,
+  timeoutMs: claudeComparison.methodology.timeoutMs,
+  sourceCommit: claudeComparison.models[0]!.sourceCommit,
+  limitations: claudeComparison.methodology.caveats,
+} satisfies MeasuredCampaign;
+
+export const measuredCampaigns: readonly MeasuredCampaign[] = [
+  ompCampaign,
+  museCampaign,
+  claudeCampaign,
+];
 
 const museResults = museReport.families.map(museResult);
+const claudeModelResults = claudeComparison.models.map((model) => ({
+  model,
+  results: model.runs.map((run) => claudeResult(run, model)),
+}));
 
 export const measuredModels: readonly MeasuredModel[] = [
   {
@@ -301,6 +421,36 @@ export const measuredModels: readonly MeasuredModel[] = [
       Spot: museResults.find((result) => result.family === "Spot"),
       Perps: museResults.find((result) => result.family === "Perps"),
       Predictions: museResults.find((result) => result.family === "Predictions"),
+    },
+  },
+  {
+    id: "claude-fable-5-1",
+    name: "Claude Fable 5.1",
+    provider: "Anthropic",
+    mark: "◎",
+    color: "#b0623a",
+    source: "measured",
+    modelId: "anthropic/claude-fable-5-1",
+    campaign: claudeCampaign,
+    families: {
+      Spot: claudeModelResults[0]!.results.find((result) => result.family === "Spot"),
+      Perps: claudeModelResults[0]!.results.find((result) => result.family === "Perps"),
+      Predictions: claudeModelResults[0]!.results.find((result) => result.family === "Predictions"),
+    },
+  },
+  {
+    id: "claude-opus-5",
+    name: "Claude Opus 5",
+    provider: "Anthropic",
+    mark: "◎",
+    color: "#6b4c9a",
+    source: "measured",
+    modelId: "anthropic/claude-opus-5",
+    campaign: claudeCampaign,
+    families: {
+      Spot: claudeModelResults[1]!.results.find((result) => result.family === "Spot"),
+      Perps: claudeModelResults[1]!.results.find((result) => result.family === "Perps"),
+      Predictions: claudeModelResults[1]!.results.find((result) => result.family === "Predictions"),
     },
   },
 ];

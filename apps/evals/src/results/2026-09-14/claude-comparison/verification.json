@@ -1,0 +1,21 @@
+{
+  "verified": [
+    {
+      "model": "anthropic/claude-fable-5-1",
+      "uniqueSlots": 105,
+      "retainedTranscripts": 105,
+      "identicalRegradedScores": 104,
+      "unscored": 1,
+      "summarySha256": "4fe6e3e012db7e8a1993b0a0d55b3530725504466947f1f53d1d7deeea3a7194"
+    },
+    {
+      "model": "anthropic/claude-opus-5",
+      "uniqueSlots": 105,
+      "retainedTranscripts": 105,
+      "identicalRegradedScores": 104,
+      "unscored": 1,
+      "summarySha256": "0d5d9dc432c91242a08791a197810c1fbde987e82f61fa5ef72961aed9253f0f"
+    }
+  ],
+  "totalTerminal": 210
+}
