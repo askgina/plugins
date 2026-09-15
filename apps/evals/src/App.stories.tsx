@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import App, { MethodologyPage } from "./App";
+import App from "./App";
+import { MethodologyPage } from "./pages/methodology";
 
 const meta = {
   title: "Evals/Public pages",
