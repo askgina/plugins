@@ -7,7 +7,7 @@ const meta = {
   component: TaskExplorerPage,
   render: (args) => (
     <TaskExplorerPage
-      key={`${args.initialFamily}:${args.initialSample}:${args.initialTrace}`}
+      key={`${args.initialFamily}:${args.initialCaseId}:${args.initialInspectCaseId}:${args.initialEvidenceSection}`}
       {...args}
     />
   ),
@@ -20,9 +20,11 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Portfolio: Story = {
+export const Default: Story = {};
+
+export const Perps: Story = {
   args: {
-    initialFamily: "Portfolio",
+    initialFamily: "Perps",
   },
 };
 
@@ -32,17 +34,32 @@ export const Predictions: Story = {
   },
 };
 
-export const TraceOpen: Story = {
+/** Portfolio has published case definitions but no measured runs — the explicit
+ * no-evidence state. */
+export const PortfolioNoEvidence: Story = {
   args: {
     initialFamily: "Portfolio",
-    initialSample: 1,
-    initialTrace: "kimi",
+  },
+};
+
+/** Attempt drilldown open on a Spot case — full evidence (native checks,
+ * durations, tokens) for the September 11 runs, withheld fields for Claude. */
+export const InspectAttempts: Story = {
+  args: {
+    initialFamily: "Spot",
+    initialInspectCaseId: "spot-token-metadata",
+  },
+};
+
+/** Evidence modal on the expected-tool section for a selected case. */
+export const EvidenceOpen: Story = {
+  args: {
+    initialFamily: "Spot",
+    initialCaseId: "spot-simple-price",
+    initialEvidenceSection: "tools",
   },
 };
 
 export const Mobile: Story = {
-  args: {
-    initialFamily: "Portfolio",
-  },
   globals: { viewport: { value: "mobile", isRotated: false } },
 };
