@@ -19,7 +19,6 @@
 //   Every publication here is a synthetic preview — no real review exists.
 
 import { claudeComparison, museReport, perpsPredictionsReport, spotComparison } from "../results";
-import { measuredCampaigns } from "../measured";
 import perpsAttemptsJson from "../results/2026-09-11/perps-predictions/perps/perps-openai-oauth-sol-20260911T152450Z.attempts.json";
 
 // ---------------------------------------------------------------------------
@@ -470,6 +469,57 @@ export const canonicalModels: readonly CanonicalModel[] = [
 ];
 
 // ---------------------------------------------------------------------------
+// Pricing registry — published metered prices used to derive cost per task
+// from measured token usage (decision 3). Entries match how each run was
+// billed: OpenRouter rates for the Sep 11 controlled OpenRouter runs, provider
+// list prices for the native Muse/Claude runs. Derived cost is always labelled
+// derived; models without a published price have no entry and derived cost is
+// unavailable for their runs. Synthetic models are never priced.
+// ---------------------------------------------------------------------------
+
+export interface ModelPricing {
+  readonly inputUsdPerMillion: number;
+  readonly outputUsdPerMillion: number;
+  /** ISO date the price was checked. */
+  readonly asOf: string;
+  /** Price source label, e.g. "openrouter", "anthropic", "openai". */
+  readonly source: string;
+}
+
+export const MODEL_PRICING: Readonly<Record<string, ModelPricing>> = {
+  "gpt-5.5": {
+    inputUsdPerMillion: 1.25,
+    outputUsdPerMillion: 10,
+    asOf: "2026-09-15",
+    source: "openrouter",
+  },
+  "gpt-sol": {
+    inputUsdPerMillion: 1.5,
+    outputUsdPerMillion: 12,
+    asOf: "2026-09-15",
+    source: "openrouter",
+  },
+  "muse-spark": {
+    inputUsdPerMillion: 2,
+    outputUsdPerMillion: 8,
+    asOf: "2026-09-15",
+    source: "muse",
+  },
+  "claude-fable": {
+    inputUsdPerMillion: 3,
+    outputUsdPerMillion: 15,
+    asOf: "2026-09-15",
+    source: "anthropic",
+  },
+  "claude-opus": {
+    inputUsdPerMillion: 15,
+    outputUsdPerMillion: 75,
+    asOf: "2026-09-15",
+    source: "anthropic",
+  },
+};
+
+// ---------------------------------------------------------------------------
 // Cohorts — suiteId + suiteVersion + fixtureVersion + catalogSha + target +
 // accountClass + repetitions + evidence category.
 // ---------------------------------------------------------------------------
@@ -663,45 +713,41 @@ const solSpotLabelsOnlyConfiguration: CanonicalConfiguration = {
 };
 
 // ---------------------------------------------------------------------------
-// Campaigns — from measured.ts (itself derived from the bundled reports).
+// Campaigns — derived directly from the bundled reports under ../results.
 // ---------------------------------------------------------------------------
-
-const omp = measuredCampaigns.find((campaign) => campaign.id === "omp-2026-09-11");
-const muse = measuredCampaigns.find((campaign) => campaign.id === "muse-2026-09-14");
-const claude = measuredCampaigns.find((campaign) => campaign.id === "claude-2026-09-14");
 
 export const canonicalCampaigns: readonly CanonicalCampaign[] = [
   {
     campaignId: "omp-2026-09-11",
-    date: omp?.date ?? "2026-09-11",
-    harness: omp?.harness ?? "OMP harness · native OpenAI OAuth (Gina tools:read)",
-    repetitions: omp?.repetitions ?? 3,
-    timeoutMs: omp?.timeoutMs ?? 120000,
-    sourceCommit: omp?.sourceCommit ?? "",
-    executableSourceCommit: omp?.executableSourceCommit,
-    prUrl: omp?.prUrl,
-    prLabel: omp?.prLabel,
-    limitations: omp?.limitations ?? [],
+    date: perpsPredictionsReport.date,
+    harness: "OMP harness · native OpenAI OAuth (Gina tools:read)",
+    repetitions: perpsPredictionsReport.repetitions,
+    timeoutMs: perpsPredictionsReport.timeoutMs,
+    sourceCommit: perpsPredictionsReport.sourceCommit,
+    executableSourceCommit: perpsPredictionsReport.executableSourceCommit,
+    prUrl: perpsPredictionsReport.prUrl,
+    prLabel: "GitHub PR #85",
+    limitations: perpsPredictionsReport.limitations,
     origin: "measured",
   },
   {
     campaignId: "muse-2026-09-14",
-    date: muse?.date ?? "2026-09-14",
-    harness: muse?.harness ?? "Native Muse client (muse_cli) · medium reasoning",
-    repetitions: muse?.repetitions ?? 3,
-    timeoutMs: muse?.timeoutMs ?? 120000,
-    sourceCommit: muse?.sourceCommit ?? "",
-    limitations: muse?.limitations ?? [],
+    date: "2026-09-14",
+    harness: "Native Muse client (muse_cli) · medium reasoning",
+    repetitions: museReport.repetitions,
+    timeoutMs: museReport.timeoutMs,
+    sourceCommit: museReport.provenance.runPlan.sourceCommit,
+    limitations: museReport.methodology,
     origin: "measured",
   },
   {
     campaignId: "claude-2026-09-14",
-    date: claude?.date ?? "2026-09-14",
-    harness: claude?.harness ?? "OMP harness · native Anthropic OAuth",
-    repetitions: claude?.repetitions ?? 3,
-    timeoutMs: claude?.timeoutMs ?? 120000,
-    sourceCommit: claude?.sourceCommit ?? "",
-    limitations: claude?.limitations ?? [],
+    date: "2026-09-14",
+    harness: "OMP harness · native Anthropic OAuth",
+    repetitions: claudeComparison.methodology.repetitions,
+    timeoutMs: claudeComparison.methodology.timeoutMs,
+    sourceCommit: claudeComparison.models[0]!.sourceCommit,
+    limitations: claudeComparison.methodology.caveats,
     origin: "measured",
   },
   {
