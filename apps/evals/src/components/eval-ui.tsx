@@ -1,6 +1,6 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { ArrowUpRight, FlaskConical, X } from "lucide-react";
-import { dataset, families, type EvalModel, type FamilyFilter, type PageId } from "../data";
+import { dataset, type EvalModel, type FamilyFilter, type PageId } from "../data";
 import { Button } from "./ui/button";
 import { DialogRoot, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 
@@ -154,16 +154,15 @@ export function Panel({
   );
 }
 
-export function FamilyTabs({
+export function FamilyTabs<T extends FamilyFilter>({
   value,
   onChange,
-  includeAll = true,
+  options,
 }: {
-  value: FamilyFilter;
-  onChange: (value: FamilyFilter) => void;
-  includeAll?: boolean;
+  value: T;
+  onChange: (value: T) => void;
+  options: readonly T[];
 }) {
-  const options: readonly FamilyFilter[] = includeAll ? ["All tasks", ...families] : families;
   return (
     <div className="eval-family-tabs" role="group" aria-label="Task family">
       {options.map((family) => (

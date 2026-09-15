@@ -12,6 +12,9 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import "./leaderboard.css";
 
+const leaderboardFamilies = ["Spot", "Perps", "Predictions"] as const;
+type LeaderboardFamily = (typeof leaderboardFamilies)[number];
+
 type SortMetric = "passRate" | "accuracy" | "latency" | "cost";
 type SortDirection = "asc" | "desc";
 type ScatterMetric = "latency" | "cost";
@@ -257,13 +260,13 @@ function SortButton({
 }
 
 export function LeaderboardPage({
-  initialFamily = "All tasks",
+  initialFamily = "Spot",
   initialSearch = "",
 }: {
-  initialFamily?: FamilyFilter;
+  initialFamily?: LeaderboardFamily;
   initialSearch?: string;
 }) {
-  const [family, setFamily] = useState<FamilyFilter>(initialFamily);
+  const [family, setFamily] = useState<LeaderboardFamily>(initialFamily);
   const [search, setSearch] = useState(initialSearch);
   const [sortMetric, setSortMetric] = useState<SortMetric>("passRate");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
@@ -285,21 +288,18 @@ export function LeaderboardPage({
           accuracy: metrics.accuracy,
         };
       });
-    const measuredRows: LeaderboardRow[] =
-      family === "All tasks"
-        ? []
-        : measuredModels
-            .filter(
-              (model) =>
-                model.families[family] !== undefined &&
-                (query.length === 0 ||
-                  `${model.name} ${model.provider}`.toLocaleLowerCase().includes(query)),
-            )
-            .map((model) => ({
-              kind: "measured",
-              model,
-              result: model.families[family]!,
-            }));
+    const measuredRows: LeaderboardRow[] = measuredModels
+      .filter(
+        (model) =>
+          model.families[family] !== undefined &&
+          (query.length === 0 ||
+            `${model.name} ${model.provider}`.toLocaleLowerCase().includes(query)),
+      )
+      .map((model) => ({
+        kind: "measured",
+        model,
+        result: model.families[family]!,
+      }));
     const visible = [...illustrativeRows, ...measuredRows];
 
     return visible.sort((left, right) => {
@@ -345,19 +345,13 @@ export function LeaderboardPage({
   };
 
   const resetFilters = () => {
-    setFamily("All tasks");
+    setFamily("Spot");
     setSearch("");
   };
 
-  const tableCaption =
-    family === "All tasks"
-      ? `Model results across all ${numberFormatter.format(dataset.tasks)} illustrative tasks.`
-      : `Model results for the ${family} family, one of four ${numberFormatter.format(dataset.tasksPerFamily)}-task families.`;
+  const tableCaption = `Model results for the ${family} family, one of four ${numberFormatter.format(dataset.tasksPerFamily)}-task families.`;
   const displayedUniverse =
-    models.length +
-    (family === "All tasks"
-      ? 0
-      : measuredModels.filter((model) => model.families[family] !== undefined).length);
+    models.length + measuredModels.filter((model) => model.families[family] !== undefined).length;
 
   return (
     <PageShell active="leaderboard">
@@ -422,7 +416,7 @@ export function LeaderboardPage({
           </div>
 
           <div className="lb-toolbar">
-            <FamilyTabs value={family} onChange={setFamily} />
+            <FamilyTabs value={family} onChange={setFamily} options={leaderboardFamilies} />
             <label className="lb-search-field">
               <span className="lb-visually-hidden">Search models</span>
               <Search size={15} aria-hidden="true" />
@@ -614,11 +608,7 @@ export function LeaderboardPage({
                           </td>
                           <td>
                             {numberFormatter.format(
-                              row.kind === "measured"
-                                ? row.result.total
-                                : family === "All tasks"
-                                  ? dataset.tasks
-                                  : dataset.tasksPerFamily,
+                              row.kind === "measured" ? row.result.total : dataset.tasksPerFamily,
                             )}
                           </td>
                         </tr>

@@ -1,6 +1,6 @@
 import { useId, useState } from "react";
 import { BookOpen, Clock, ListTree, Search, Shield } from "lucide-react";
-import { getModel, type FamilyFilter, type TaskFamily } from "../data";
+import { families, getModel, type TaskFamily } from "../data";
 import { measuredModels, type MeasuredCase } from "../measured";
 import { FamilyTabs, Modal, ModelAvatar, PageShell } from "../components/eval-ui";
 import { Badge } from "../components/ui/badge";
@@ -171,8 +171,7 @@ export function TaskExplorerPage({
   const task = samples[sampleIndex] ?? sampleAt(family, 1);
   const trace = openTrace ? task.traces[openTrace] : null;
 
-  function changeFamily(next: FamilyFilter) {
-    if (next === "All tasks") return;
+  function changeFamily(next: TaskFamily) {
     setFamily(next);
     setSampleIndex(0);
   }
@@ -188,7 +187,7 @@ export function TaskExplorerPage({
         <EditorialColumn />
         <section className="task-main" aria-labelledby="task-main-heading">
           <div className="task-toolbar">
-            <FamilyTabs value={family} onChange={changeFamily} includeAll={false} />
+            <FamilyTabs value={family} onChange={changeFamily} options={families} />
             <div className="task-sample">
               <Label id={sampleLabelId} htmlFor="task-sample-trigger">
                 Sample
