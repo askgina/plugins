@@ -70,6 +70,7 @@ export default defineConfig({
   },
   lint: {
     ...effectTsgoRecommended,
+    jsPlugins: ["@shadcn/lint"],
     overrides: [
       ...(effectTsgoRecommended.overrides ?? []),
       {

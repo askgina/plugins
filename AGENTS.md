@@ -1,5 +1,9 @@
 # Agent instructions
 
+## Verification
+
+After making changes, run `bun run lint` and fix all errors.
+
 ## Agent skills
 
 Project-local skills live only under `.agents/skills/`. Treat `skills-lock.json` as their provenance lock; do not create or use agent-specific mirrors such as `.claude/skills/`.
