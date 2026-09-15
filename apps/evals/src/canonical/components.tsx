@@ -1,9 +1,9 @@
 // Shared building blocks for the canonical eval-browsing UI (`#/compare`).
 //
-// Styling stays inside design-system classes (eval-*, lb-*) and layout-only
-// inline styles — no new CSS files, no raw color values. Every unavailable
-// state renders through a reason-code label so withheld / not_retained /
-// not_recorded / aggregate_only stay visibly distinct.
+// Styling stays inside design-system classes (eval-*, lb-*, eval-compare-*)
+// — no new CSS files, no raw color values. Every unavailable state renders
+// through a reason-code label so withheld / not_retained / not_recorded /
+// aggregate_only stay visibly distinct.
 
 import type { ReactNode } from "react";
 
@@ -27,36 +27,9 @@ import {
   type Headline,
 } from "./selectors";
 
-const rowStyle = { display: "inline-flex", alignItems: "center", gap: "6px" } as const;
-const chipRow = { display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" } as const;
-
 // ---------------------------------------------------------------------------
-// Prototype + origin markers
+// Origin markers — measured/synthetic labelling is permanent.
 // ---------------------------------------------------------------------------
-
-/** Visible "Prototype" marker required on every prototype page. */
-export function PrototypeBanner() {
-  return (
-    <div
-      className="eval-panel"
-      role="note"
-      aria-label="Prototype notice"
-      style={{ padding: "12px 18px", ...chipRow }}
-    >
-      <span className="lb-measured-pill">Prototype</span>
-      <span className="eval-muted">
-        Canonical eval browsing. Synthetic rows are labelled; measured counts come from the bundled
-        September campaign artifacts. Unavailable states render as reason codes — nothing is
-        zero-filled.
-      </span>
-    </div>
-  );
-}
-
-/** Small "Prototype" pill for headers and breadcrumbs. */
-export function PrototypeTag() {
-  return <span className="lb-measured-pill">Prototype</span>;
-}
 
 /** Marks a synthetic model, run, or publication — never implied. */
 export function SyntheticTag() {
@@ -294,7 +267,7 @@ export function HeadlineValue({ headline }: { headline: Headline }) {
     );
   }
   return (
-    <span style={rowStyle}>
+    <span className="eval-compare-row">
       <span className="lb-count">
         {headline.passed}/{headline.started}
       </span>
@@ -311,7 +284,7 @@ export function HeadlineValue({ headline }: { headline: Headline }) {
 /** Graded-only rate — always carries its exclusion label. */
 export function GradedOnlyRateValue({ rate }: { rate: GradedOnlyRate }) {
   return (
-    <span style={rowStyle}>
+    <span className="eval-compare-row">
       <span className="lb-count">
         {rate.passed}/{rate.graded}
       </span>
@@ -327,7 +300,7 @@ export function GradedOnlyRateValue({ rate }: { rate: GradedOnlyRate }) {
 export function EligibilityReasonList({ reasons }: { reasons: readonly EligibilityReason[] }) {
   if (reasons.length === 0) return null;
   return (
-    <span style={chipRow} role="list" aria-label="Eligibility reasons">
+    <span className="eval-compare-chip-row" role="list" aria-label="Eligibility reasons">
       {reasons.map((reason) => (
         <span className="eval-demo-label" role="listitem" key={reason} title={reason}>
           {eligibilityText(reason)}
@@ -359,7 +332,7 @@ export function SampleCount({
 export function LatencyValue({ metric }: { metric: LatencyMetric }) {
   if (metric.availability === "available") {
     return (
-      <span style={chipRow}>
+      <span className="eval-compare-chip-row">
         <span className="lb-count">
           p50 {metric.p50}ms · p95 {metric.p95}ms · max {metric.max}ms
         </span>
@@ -369,7 +342,7 @@ export function LatencyValue({ metric }: { metric: LatencyMetric }) {
   }
   if (metric.availability === "aggregate_only") {
     return (
-      <span style={chipRow}>
+      <span className="eval-compare-chip-row">
         <span className="lb-count">
           p50 {metric.p50}ms · p95 {metric.p95}ms · max {metric.max}ms
         </span>
@@ -387,7 +360,7 @@ export function TokenUsageValue({ metric }: { metric: TokenUsageMetric }) {
   if (metric.availability === "available" || metric.availability === "aggregate_only") {
     const total = metric.totalTokens.toLocaleString("en-US");
     return (
-      <span style={chipRow}>
+      <span className="eval-compare-chip-row">
         <span className="lb-count">
           {total} tokens ({metric.inputTokens.toLocaleString("en-US")} in ·{" "}
           {metric.outputTokens.toLocaleString("en-US")} out)

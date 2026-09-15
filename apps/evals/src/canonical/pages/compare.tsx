@@ -10,21 +10,21 @@
 import { useMemo } from "react";
 import { ArrowLeftRight, RotateCcw } from "lucide-react";
 import { ModelAvatar, PageShell, Panel } from "../../components/eval-ui";
+import { navigate, useHashRoute } from "../../router";
 import {
   canonicalCampaigns,
   canonicalRuns,
-  SUITE_IDS,
   type CanonicalAttempt,
   type CanonicalCohort,
   type CanonicalRun,
   type EligibilityReason,
   type Evidence,
   type MetricUnavailable,
-  type PrototypeFamily,
 } from "../canonical";
 import {
   attemptsFor,
   caseDefinitionsForFamily,
+  cohortLabel,
   compareEligibility,
   eligibilityText,
   getCaseDefinition,
@@ -42,8 +42,6 @@ import {
   HeadlineValue,
   LatencyValue,
   OriginTag,
-  PrototypeBanner,
-  PrototypeTag,
   TokenUsageValue,
   VerdictChip,
 } from "../components";
@@ -51,33 +49,19 @@ import "./compare.css";
 
 const ALL_COHORTS = "all";
 
-const FAMILY_BY_SUITE_ID = new Map<string, PrototypeFamily>(
-  Object.entries(SUITE_IDS).map(([family, suiteId]) => [suiteId, family as PrototypeFamily]),
-);
-
 const numberFormatter = new Intl.NumberFormat("en-US");
-
-function cohortLabel(cohort: CanonicalCohort): string {
-  const family = FAMILY_BY_SUITE_ID.get(cohort.suiteId) ?? cohort.suiteId;
-  return `${family} · ${cohort.target} · ${cohort.accountClass} · ${cohort.repetitions} reps · ${cohort.evidenceCategory}`;
-}
 
 function shortSha(sha: string | null | undefined): string | null {
   return sha === null || sha === undefined ? null : `${sha.slice(0, 12)}…`;
 }
 
-function readCohortScope(): string {
-  const query = window.location.hash.split("?")[1] ?? "";
-  return new URLSearchParams(query).get("cohort") ?? ALL_COHORTS;
-}
-
-function navigate(left: string | undefined, right: string | undefined, cohort: string): void {
+function comparePath(left: string | undefined, right: string | undefined, cohort: string): string {
   const params = new URLSearchParams();
   if (left !== undefined) params.set("left", left);
   if (right !== undefined) params.set("right", right);
   if (cohort !== ALL_COHORTS) params.set("cohort", cohort);
   const query = params.toString();
-  window.location.hash = `/compare${query === "" ? "" : `?${query}`}`;
+  return `/compare${query === "" ? "" : `?${query}`}`;
 }
 
 function runOptionLabel(run: CanonicalRun): string {
@@ -137,7 +121,7 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
   if (runId === undefined) {
     return (
       <Panel title={title}>
-        <div className="eval-proto-run-card">
+        <div className="eval-compare-run-card">
           <p className="eval-muted">No run selected yet — pick one above.</p>
         </div>
       </Panel>
@@ -148,19 +132,19 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
     const withdrawn = getWithdrawnRun(runId);
     return (
       <Panel title={title}>
-        <div className="eval-proto-run-card">
+        <div className="eval-compare-run-card">
           {withdrawn === undefined ? (
             <>
               <p className="eval-muted">
-                <code className="eval-proto-mono">{runId}</code> is not a canonical run id.
+                <code className="eval-compare-mono">{runId}</code> is not a canonical run id.
               </p>
             </>
           ) : (
             <>
-              <div className="eval-proto-chip-row">
-                <span className="eval-proto-run-name">{withdrawn.runId}</span>
+              <div className="eval-compare-chip-row">
+                <span className="eval-compare-run-name">{withdrawn.runId}</span>
                 <OriginTag origin={withdrawn.origin} />
-                <span className="eval-proto-condition">withdrawn</span>
+                <span className="eval-compare-condition">withdrawn</span>
               </div>
               <p className="eval-muted">
                 {withdrawn.withdrawal.notice} Reason: {withdrawn.withdrawal.reason} · withdrawn{" "}
@@ -178,22 +162,22 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
   const baseline = resolveBaselineRun(run);
   return (
     <Panel title={title}>
-      <div className="eval-proto-run-card">
-        <div className="eval-proto-run-heading">
+      <div className="eval-compare-run-card">
+        <div className="eval-compare-run-heading">
           {model && <ModelAvatar model={model} />}
           <span>
-            <span className="eval-proto-run-name">{model?.name ?? run.modelId}</span>{" "}
-            <span className="eval-proto-run-sub">
-              <code className="eval-proto-mono">{run.runId}</code> · {run.startedAt.slice(0, 10)}
+            <span className="eval-compare-run-name">{model?.name ?? run.modelId}</span>{" "}
+            <span className="eval-compare-run-sub">
+              <code className="eval-compare-mono">{run.runId}</code> · {run.startedAt.slice(0, 10)}
             </span>
           </span>
           <OriginTag origin={run.origin} />
         </div>
-        <div className="eval-proto-chip-row">
+        <div className="eval-compare-chip-row">
           <CoverageChip coverage={run.dispatchCoverage} />
-          <span className="eval-proto-condition">grading {run.gradingCoverage}</span>
-          <span className="eval-proto-condition">checks {run.checkSource}</span>
-          <span className="eval-proto-condition">{run.caseBinding}</span>
+          <span className="eval-compare-condition">grading {run.gradingCoverage}</span>
+          <span className="eval-compare-condition">checks {run.checkSource}</span>
+          <span className="eval-compare-condition">{run.caseBinding}</span>
           {run.withheldFields.map((field) => (
             <AvailabilityMark
               key={field.field}
@@ -202,7 +186,7 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
             />
           ))}
         </div>
-        <dl className="eval-proto-kv">
+        <dl className="eval-compare-kv">
           <div>
             <dt>Headline</dt>
             <dd>
@@ -213,7 +197,7 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
             <dt>Configuration</dt>
             <dd>
               {run.configuration.availability === "pinned" ? (
-                <code className="eval-proto-mono">
+                <code className="eval-compare-mono">
                   pin {shortSha(run.configuration.pinnedSha256)}
                 </code>
               ) : (
@@ -229,7 +213,7 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
           <div>
             <dt>Campaign</dt>
             <dd title={campaign?.harness}>
-              <code className="eval-proto-mono">{run.campaignId}</code>
+              <code className="eval-compare-mono">{run.campaignId}</code>
             </dd>
           </div>
           <div>
@@ -240,7 +224,7 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
                 <>
                   {" "}
                   · Sol baseline imported once as{" "}
-                  <code className="eval-proto-mono">{baseline.runId}</code>
+                  <code className="eval-compare-mono">{baseline.runId}</code>
                 </>
               )}
             </dd>
@@ -295,15 +279,15 @@ function HeadlinePanel({ left, right }: { left: CanonicalRun; right: CanonicalRu
       title="Headline"
       description="Passes over started — the only ordering key — for each run. The delta is a pass-count difference over equal denominators, never an averaged rate."
     >
-      <div className="eval-proto-headline-grid">
-        <div className="eval-proto-headline-cell">
-          <span className="eval-proto-run-name">{leftModel?.name ?? left.modelId}</span>
-          <span className="eval-proto-headline-value">
+      <div className="eval-compare-headline-grid">
+        <div className="eval-compare-headline-cell">
+          <span className="eval-compare-run-name">{leftModel?.name ?? left.modelId}</span>
+          <span className="eval-compare-headline-value">
             <HeadlineValue headline={leftHeadline} />
           </span>
           <span className="eval-muted">passes / started</span>
         </div>
-        <div className="eval-proto-delta" aria-label="Pass difference">
+        <div className="eval-compare-delta" aria-label="Pass difference">
           {sameDenominator ? (
             <>
               <span>
@@ -320,9 +304,9 @@ function HeadlinePanel({ left, right }: { left: CanonicalRun; right: CanonicalRu
             </span>
           )}
         </div>
-        <div className="eval-proto-headline-cell eval-proto-headline-cell-right">
-          <span className="eval-proto-run-name">{rightModel?.name ?? right.modelId}</span>
-          <span className="eval-proto-headline-value">
+        <div className="eval-compare-headline-cell eval-compare-headline-cell-right">
+          <span className="eval-compare-run-name">{rightModel?.name ?? right.modelId}</span>
+          <span className="eval-compare-headline-value">
             <HeadlineValue headline={rightHeadline} />
           </span>
           <span className="eval-muted">passes / started</span>
@@ -340,8 +324,8 @@ function CoveragePanel({ left, right }: { left: CanonicalRun; right: CanonicalRu
       title="Coverage & counts"
       description="Dispatch and grading coverage with the full attempt counts for each run."
     >
-      <div className="eval-proto-table-wrap">
-        <table className="eval-table eval-proto-table">
+      <div className="eval-compare-table-wrap">
+        <table className="eval-table eval-compare-table">
           <thead>
             <tr>
               <th scope="col">Count</th>
@@ -362,10 +346,10 @@ function CoveragePanel({ left, right }: { left: CanonicalRun; right: CanonicalRu
             <tr>
               <th scope="row">grading coverage</th>
               <td>
-                <span className="eval-proto-condition">{left.gradingCoverage}</span>
+                <span className="eval-compare-condition">{left.gradingCoverage}</span>
               </td>
               <td>
-                <span className="eval-proto-condition">{right.gradingCoverage}</span>
+                <span className="eval-compare-condition">{right.gradingCoverage}</span>
               </td>
             </tr>
             {COUNT_ROWS.map((row) => (
@@ -379,7 +363,7 @@ function CoveragePanel({ left, right }: { left: CanonicalRun; right: CanonicalRu
         </table>
       </div>
       {(leftFailures !== null || rightFailures !== null) && (
-        <div className="eval-proto-run-card">
+        <div className="eval-compare-run-card">
           <span className="eval-muted">
             runtime failures — left: {leftFailures ?? "none"} · right: {rightFailures ?? "none"}
           </span>
@@ -404,8 +388,8 @@ function MetricsPanel({ left, right }: { left: CanonicalRun; right: CanonicalRun
       title="Metrics"
       description="Run-level statistics; every value carries its sample count and population."
     >
-      <div className="eval-proto-table-wrap">
-        <table className="eval-table eval-proto-table">
+      <div className="eval-compare-table-wrap">
+        <table className="eval-table eval-compare-table">
           <thead>
             <tr>
               <th scope="col">Metric</th>
@@ -480,8 +464,8 @@ function AttemptOutcome({ attempt }: { attempt: CanonicalAttempt | undefined }) 
     return <span className="eval-muted">—</span>;
   }
   return (
-    <span className="eval-proto-rep" title={attemptLabel(attempt)}>
-      <span className="eval-muted eval-proto-rep-num">r{attempt.repetition}</span>
+    <span className="eval-compare-rep" title={attemptLabel(attempt)}>
+      <span className="eval-muted eval-compare-rep-num">r{attempt.repetition}</span>
       {attempt.execution === "completed" ? (
         <VerdictChip verdict={attempt.verdict} />
       ) : (
@@ -561,8 +545,8 @@ function OutcomePanel({ left, right }: { left: CanonicalRun; right: CanonicalRun
       title="Per-case outcomes"
       description="One row per case, repetition slots aligned across both runs. Missing slots render as —."
     >
-      <div className="eval-proto-table-wrap">
-        <table className="eval-table eval-proto-table">
+      <div className="eval-compare-table-wrap">
+        <table className="eval-table eval-compare-table">
           <thead>
             <tr>
               <th scope="col">Case</th>
@@ -575,20 +559,20 @@ function OutcomePanel({ left, right }: { left: CanonicalRun; right: CanonicalRun
               <tr key={row.caseId}>
                 <th scope="row">
                   {row.title}
-                  <div className="eval-proto-run-sub">
-                    <code className="eval-proto-mono">{row.caseId}</code>
+                  <div className="eval-compare-run-sub">
+                    <code className="eval-compare-mono">{row.caseId}</code>
                     {row.category ? ` · ${row.category}` : ""}
                   </div>
                 </th>
                 <td>
-                  <span className="eval-proto-rep-list">
+                  <span className="eval-compare-rep-list">
                     {row.left.map((attempt, index) => (
                       <AttemptOutcome key={index} attempt={attempt} />
                     ))}
                   </span>
                 </td>
                 <td>
-                  <span className="eval-proto-rep-list">
+                  <span className="eval-compare-rep-list">
                     {row.right.map((attempt, index) => (
                       <AttemptOutcome key={index} attempt={attempt} />
                     ))}
@@ -649,19 +633,19 @@ function SideFacts({ run }: { run: CanonicalRun }) {
   const artifactSha = shortSha(run.provenance.sourceArtifactSha256);
   const availability = attemptFieldAvailability(run);
   return (
-    <div className="eval-proto-side">
+    <div className="eval-compare-side">
       <h4>
-        <code className="eval-proto-mono">{run.runId}</code>
+        <code className="eval-compare-mono">{run.runId}</code>
       </h4>
       {availability.length > 0 && (
-        <ul className="eval-proto-note-list" aria-label="Field availability">
+        <ul className="eval-compare-note-list" aria-label="Field availability">
           {availability.map((line) => (
             <li key={line}>{line}</li>
           ))}
         </ul>
       )}
       {run.notes.length > 0 && (
-        <ul className="eval-proto-note-list" aria-label="Run notes">
+        <ul className="eval-compare-note-list" aria-label="Run notes">
           {run.notes.map((note) => (
             <li key={note}>{note}</li>
           ))}
@@ -672,7 +656,7 @@ function SideFacts({ run }: { run: CanonicalRun }) {
         {artifactSha !== null ? (
           <>
             {" "}
-            · sha <code className="eval-proto-mono">{artifactSha}</code>
+            · sha <code className="eval-compare-mono">{artifactSha}</code>
           </>
         ) : (
           " · no source artifact retained"
@@ -681,13 +665,13 @@ function SideFacts({ run }: { run: CanonicalRun }) {
           <>
             {" "}
             · commit{" "}
-            <code className="eval-proto-mono">{run.provenance.sourceCommit.slice(0, 7)}</code>
+            <code className="eval-compare-mono">{run.provenance.sourceCommit.slice(0, 7)}</code>
           </>
         )}
       </span>
       {publication !== undefined && (
         <span className="eval-muted">
-          <code className="eval-proto-mono">{publication.publicationId}</code> ·{" "}
+          <code className="eval-compare-mono">{publication.publicationId}</code> ·{" "}
           {publication.status} · {publication.revisions.length} revision
           {publication.revisions.length === 1 ? "" : "s"}
           {currentRevision?.supersedes
@@ -704,17 +688,29 @@ function SideFacts({ run }: { run: CanonicalRun }) {
 // Page
 // ---------------------------------------------------------------------------
 
-export function PrototypeComparePage({ left, right }: { left?: string; right?: string }) {
-  const scope = readCohortScope();
+export function ComparePage({
+  left,
+  right,
+  // Decision 9: synthetic runs never appear in the app's pickers — they exist
+  // for Storybook state demos only, so stories pass includeSynthetic.
+  includeSynthetic = false,
+}: {
+  left?: string;
+  right?: string;
+  includeSynthetic?: boolean;
+}) {
+  const route = useHashRoute();
+  const scope = new URLSearchParams(route.split("?")[1] ?? "").get("cohort") ?? ALL_COHORTS;
   const cohortsInUse = useMemo(() => {
     const groups = new Map<string, { cohort: CanonicalCohort; runs: CanonicalRun[] }>();
     for (const run of canonicalRuns) {
+      if (!includeSynthetic && run.origin !== "measured") continue;
       const group = groups.get(run.cohort.cohortId) ?? { cohort: run.cohort, runs: [] };
       group.runs.push(run);
       groups.set(run.cohort.cohortId, group);
     }
     return [...groups.values()];
-  }, []);
+  }, [includeSynthetic]);
 
   const scopedGroups =
     scope === ALL_COHORTS ? cohortsInUse : cohortsInUse.filter((g) => g.cohort.cohortId === scope);
@@ -733,18 +729,18 @@ export function PrototypeComparePage({ left, right }: { left?: string; right?: s
   ];
 
   const picker = (side: "left" | "right", value: string | undefined) => (
-    <div className="eval-proto-field">
-      <label className="eval-proto-field-label" htmlFor={`eval-proto-${side}-picker`}>
+    <div className="eval-compare-field">
+      <label className="eval-compare-field-label" htmlFor={`eval-compare-${side}-picker`}>
         {side === "left" ? "Left run" : "Right run"}
       </label>
       <select
-        id={`eval-proto-${side}-picker`}
-        className="eval-proto-select"
+        id={`eval-compare-${side}-picker`}
+        className="eval-compare-select"
         value={value ?? ""}
         onChange={(event) => {
           const selected = event.currentTarget.value || undefined;
-          if (side === "left") navigate(selected, right, scope);
-          else navigate(left, selected, scope);
+          if (side === "left") navigate(comparePath(selected, right, scope));
+          else navigate(comparePath(left, selected, scope));
         }}
       >
         <option value="">Select a run…</option>
@@ -764,14 +760,12 @@ export function PrototypeComparePage({ left, right }: { left?: string; right?: s
   return (
     <PageShell
       active="compare"
-      footerNote="Prototype compare view over the canonical eval dataset; synthetic rows are labelled."
+      footerNote="Run comparison over the canonical eval dataset; measured rows only."
     >
-      <div className="eval-container eval-proto-compare-page">
-        <section className="eval-hero" aria-labelledby="prototype-compare-title">
-          <p className="eval-eyebrow">
-            Canonical eval browsing · Run comparison · <PrototypeTag />
-          </p>
-          <h1 className="eval-title" id="prototype-compare-title">
+      <div className="eval-container eval-compare-page">
+        <section className="eval-hero" aria-labelledby="compare-title">
+          <p className="eval-eyebrow">Canonical eval browsing · Run comparison</p>
+          <h1 className="eval-title" id="compare-title">
             Compare runs<span className="eval-dot">.</span>
           </h1>
           <p className="eval-description">
@@ -780,21 +774,20 @@ export function PrototypeComparePage({ left, right }: { left?: string; right?: s
             explain the reason codes and stay disabled.
           </p>
         </section>
-        <PrototypeBanner />
 
         <Panel
           title="Pick two runs"
           description="Runs are grouped by cohort (suite, harness target, account class, repetitions, evidence category). Use the scope to narrow the list; picks outside the same cohort show their blocking reason."
         >
-          <div className="eval-proto-scope">
-            <label className="eval-proto-field-label" htmlFor="eval-proto-cohort-scope">
+          <div className="eval-compare-scope">
+            <label className="eval-compare-field-label" htmlFor="eval-compare-cohort-scope">
               Cohort scope
             </label>
             <select
-              id="eval-proto-cohort-scope"
-              className="eval-proto-select"
+              id="eval-compare-cohort-scope"
+              className="eval-compare-select"
               value={scope}
-              onChange={(event) => navigate(left, right, event.currentTarget.value)}
+              onChange={(event) => navigate(comparePath(left, right, event.currentTarget.value))}
             >
               <option value={ALL_COHORTS}>
                 All cohorts — cross-cohort picks show why they block
@@ -806,37 +799,39 @@ export function PrototypeComparePage({ left, right }: { left?: string; right?: s
               ))}
             </select>
           </div>
-          <div className="eval-proto-pickers">
+          <div className="eval-compare-pickers">
             {picker("left", left)}
-            <div className="eval-proto-picker-actions">
+            <div className="eval-compare-picker-actions">
               <button
                 type="button"
-                className="eval-proto-button"
+                className="eval-compare-button"
                 aria-label="Swap left and right runs"
-                onClick={() => navigate(right, left, scope)}
+                onClick={() => navigate(comparePath(right, left, scope))}
               >
                 <ArrowLeftRight size={13} aria-hidden="true" /> Swap
               </button>
               <button
                 type="button"
-                className="eval-proto-button"
+                className="eval-compare-button"
                 aria-label="Clear both run selections"
-                onClick={() => navigate(undefined, undefined, scope)}
+                onClick={() => navigate(comparePath(undefined, undefined, scope))}
               >
                 <RotateCcw size={13} aria-hidden="true" /> Clear
               </button>
             </div>
             {picker("right", right)}
           </div>
-          <div className="eval-proto-examples">
+          <div className="eval-compare-examples">
             <span className="eval-muted">Try a pair:</span>
             <ul>
-              <li>
-                <a className="eval-text-link" href="#/compare?left=sol-spot-1&right=sol-spot-2">
-                  sol-spot-1 vs sol-spot-2
-                </a>{" "}
-                — same model, eligible; reasoning medium vs high is a visible condition difference
-              </li>
+              {includeSynthetic && (
+                <li>
+                  <a className="eval-text-link" href="#/compare?left=sol-spot-1&right=sol-spot-2">
+                    sol-spot-1 vs sol-spot-2
+                  </a>{" "}
+                  — same model, eligible; reasoning medium vs high is a visible condition difference
+                </li>
+              )}
               <li>
                 <a className="eval-text-link" href="#/compare?left=gpt55-spot-1&right=fable-spot-1">
                   gpt55-spot-1 vs fable-spot-1
@@ -844,44 +839,50 @@ export function PrototypeComparePage({ left, right }: { left?: string; right?: s
                 — cross-model, eligible; checkSource native vs derived_from_scores is a condition,
                 not a block
               </li>
-              <li>
-                <a
-                  className="eval-text-link"
-                  href="#/compare?left=sol-spot-1&right=sol-spot-labels-only"
-                >
-                  sol-spot-1 vs sol-spot-labels-only
-                </a>{" "}
-                — blocked: labels_only_configuration
-              </li>
+              {includeSynthetic && (
+                <li>
+                  <a
+                    className="eval-text-link"
+                    href="#/compare?left=sol-spot-1&right=sol-spot-labels-only"
+                  >
+                    sol-spot-1 vs sol-spot-labels-only
+                  </a>{" "}
+                  — blocked: labels_only_configuration
+                </li>
+              )}
               <li>
                 <a className="eval-text-link" href="#/compare?left=muse-spot-1&right=fable-spot-1">
                   muse-spot-1 vs fable-spot-1
                 </a>{" "}
                 — blocked: outside_selected_cohort (muse_cli vs omp_harness, same evidence category)
               </li>
-              <li>
-                <a
-                  className="eval-text-link"
-                  href="#/compare?left=sol-spot-1&right=meridian-spot-1"
-                >
-                  sol-spot-1 vs meridian-spot-1
-                </a>{" "}
-                — blocked: different_evidence_category (conformance vs answer_quality)
-              </li>
-              <li>
-                <a
-                  className="eval-text-link"
-                  href="#/compare?left=sol-spot-1&right=sol-spot-incomplete"
-                >
-                  sol-spot-1 vs sol-spot-incomplete
-                </a>{" "}
-                — blocked: incomplete_coverage
-              </li>
+              {includeSynthetic && (
+                <li>
+                  <a
+                    className="eval-text-link"
+                    href="#/compare?left=sol-spot-1&right=meridian-spot-1"
+                  >
+                    sol-spot-1 vs meridian-spot-1
+                  </a>{" "}
+                  — blocked: different_evidence_category (conformance vs answer_quality)
+                </li>
+              )}
+              {includeSynthetic && (
+                <li>
+                  <a
+                    className="eval-text-link"
+                    href="#/compare?left=sol-spot-1&right=sol-spot-incomplete"
+                  >
+                    sol-spot-1 vs sol-spot-incomplete
+                  </a>{" "}
+                  — blocked: incomplete_coverage
+                </li>
+              )}
             </ul>
           </div>
         </Panel>
 
-        <div className="eval-two-column eval-proto-section">
+        <div className="eval-two-column eval-compare-section">
           <RunSummaryCard title="Left run" runId={left} />
           <RunSummaryCard title="Right run" runId={right} />
         </div>
@@ -898,23 +899,23 @@ export function PrototypeComparePage({ left, right }: { left?: string; right?: s
             <div
               className={
                 eligibility.eligible
-                  ? "eval-proto-verdict"
-                  : "eval-proto-verdict eval-proto-verdict-blocked"
+                  ? "eval-compare-verdict"
+                  : "eval-compare-verdict eval-compare-verdict-blocked"
               }
             >
               {eligibility.eligible ? (
-                <div className="eval-proto-chip-row">
+                <div className="eval-compare-chip-row">
                   <span className="eval-score eval-score-positive">
                     <strong>same cohort</strong>
                   </span>
-                  <code className="eval-proto-mono eval-muted">{leftRun.cohort.cohortId}</code>
+                  <code className="eval-compare-mono eval-muted">{leftRun.cohort.cohortId}</code>
                 </div>
               ) : (
-                <ul className="eval-proto-reason-list">
+                <ul className="eval-compare-reason-list">
                   {eligibility.reasons.map((reason) => (
-                    <li className="eval-proto-reason" key={reason}>
-                      <span className="eval-proto-chip-row">
-                        <span className="eval-proto-condition">{reason}</span>
+                    <li className="eval-compare-reason" key={reason}>
+                      <span className="eval-compare-chip-row">
+                        <span className="eval-compare-condition">{reason}</span>
                         <span>{eligibilityText(reason)}</span>
                       </span>
                       {reasonContext(reason, leftRun, rightRun) !== null && (
@@ -927,9 +928,9 @@ export function PrototypeComparePage({ left, right }: { left?: string; right?: s
                 </ul>
               )}
               {conditions.length > 0 && (
-                <ul className="eval-proto-conditions" aria-label="Condition differences">
+                <ul className="eval-compare-conditions" aria-label="Condition differences">
                   {conditions.map((condition) => (
-                    <li className="eval-proto-condition" key={condition}>
+                    <li className="eval-compare-condition" key={condition}>
                       {condition}
                     </li>
                   ))}
@@ -941,23 +942,23 @@ export function PrototypeComparePage({ left, right }: { left?: string; right?: s
 
         {eligibility?.eligible === true && leftRun !== undefined && rightRun !== undefined && (
           <>
-            <div className="eval-proto-section">
+            <div className="eval-compare-section">
               <HeadlinePanel left={leftRun} right={rightRun} />
             </div>
-            <div className="eval-proto-section">
+            <div className="eval-compare-section">
               <CoveragePanel left={leftRun} right={rightRun} />
             </div>
-            <div className="eval-proto-section">
+            <div className="eval-compare-section">
               <MetricsPanel left={leftRun} right={rightRun} />
             </div>
-            <div className="eval-proto-section">
+            <div className="eval-compare-section">
               <OutcomePanel left={leftRun} right={rightRun} />
             </div>
             <Panel
               title="Availability & provenance"
               description="Withheld and missing evidence per run — withheld, not_retained, not_recorded and aggregate_only stay distinct — plus notes, sources and publication state."
             >
-              <div className="eval-proto-side-grid">
+              <div className="eval-compare-side-grid">
                 <SideFacts run={leftRun} />
                 <SideFacts run={rightRun} />
               </div>
