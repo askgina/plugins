@@ -90,12 +90,38 @@ export default defineConfig({
         rules: {
           "shadcn/no-raw-colors": "error",
           "shadcn/no-arbitrary-values": ["error", { allow: ["layout"] }],
+          "shadcn/no-restyle": [
+            "error",
+            {
+              allow: [
+                "layout",
+                "eval-run-button",
+                "eval-modal",
+                "eval-modal-description",
+                "eval-panel",
+                "task-measured-panel",
+                "task-sample-trigger",
+                "task-evidence-rule",
+                "task-card",
+                "task-badge-pass",
+                "task-badge-partial",
+                "lb-search-input",
+                "lb-search-clear",
+                "lb-reset-button",
+                "model-profile-download-button",
+                "model-profile-compare-button",
+              ],
+            },
+          ],
+          "shadcn/require-static-classes": "error",
         },
       },
       {
         files: ["apps/evals/src/components/ui/**"],
         rules: {
           "shadcn/no-arbitrary-values": "off",
+          "shadcn/no-restyle": "off",
+          "shadcn/require-static-classes": "off",
         },
       },
     ],
