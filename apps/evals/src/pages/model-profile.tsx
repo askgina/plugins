@@ -1,505 +1,943 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { ArrowUpRight, Download, GitCompare } from "lucide-react";
-import { dataset, families, featuredModel, getModel, models, type EvalModel } from "../data";
-import { getMeasuredModel, type MeasuredFamilyResult, type MeasuredModel } from "../measured";
-import { Modal, ModelAvatar, PageShell, Panel } from "../components/eval-ui";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowUpRight, ChevronDown, ChevronRight, Download } from "lucide-react";
+import {
+  canonicalCampaigns,
+  MEASURED_FAMILIES,
+  withdrawnRuns,
+  type CanonicalAttempt,
+  type CanonicalCampaign,
+  type CanonicalRun,
+  type WithdrawnRunRef,
+} from "../canonical/canonical";
+import {
+  cohortLabel,
+  configurationGroupKey,
+  derivedCostPerTask,
+  getModel,
+  gradedOnlyRate,
+  headlineFor,
+  outcomeMatrixFor,
+  publicationFor,
+  resolveBaselineRun,
+  runHistoryFor,
+  runsForModel,
+  type DerivedCost,
+  type OutcomeMatrixRow,
+} from "../canonical/selectors";
+import {
+  AvailabilityMark,
+  CheckMark,
+  CoverageChip,
+  ExecutionChip,
+  GradedOnlyRateValue,
+  HeadlineValue,
+  LatencyValue,
+  OriginTag,
+  OutcomeMatrixCell,
+  SampleCount,
+  TokenUsageValue,
+  VerdictChip,
+} from "../canonical/components";
+import { ModelAvatar, PageShell, Panel } from "../components/eval-ui";
 import { Button } from "../components/ui/button";
 import "./model-profile.css";
 
-export interface ModelProfilePageProps {
-  modelId?: string;
-  initialCompareId?: string;
+// ---------------------------------------------------------------------------
+// Bundled source artifact downloads (decision 13: byte-identical ?url imports)
+// ---------------------------------------------------------------------------
+
+import gpt55SpotReportUrl from "../results/2026-09-11/spot-comparison/comparison.json?url";
+import solReportUrl from "../results/2026-09-11/perps-predictions/report/ask-gina-perps-predictions-evals-2026-09-11.json?url";
+import museReportUrl from "../results/2026-09-14/muse-spark-1.3/report/ask-gina-muse-spark-1.3-evals-2026-09-14.json?url";
+import claudeComparisonUrl from "../results/2026-09-14/claude-comparison/ask-gina-claude-comparison.json?url";
+
+interface BundledArtifact {
+  readonly url: string;
+  readonly filename: string;
+  readonly description: string;
 }
 
-function MeasuredMetricCards({ model }: { model: MeasuredModel }) {
-  const results = families.flatMap((family) => {
-    const result = model.families[family];
-    return result ? [{ family, result }] : [];
-  });
+const MODEL_ARTIFACTS: Readonly<Record<string, BundledArtifact>> = {
+  "gpt-5.5": {
+    url: gpt55SpotReportUrl,
+    filename: "ask-gina-spot-comparison-2026-09-11.json",
+    description: "Spot comparison report (2026-09-11)",
+  },
+  "gpt-sol": {
+    url: solReportUrl,
+    filename: "ask-gina-perps-predictions-evals-2026-09-11.json",
+    description: "Perps & predictions evaluation report (2026-09-11)",
+  },
+  "muse-spark": {
+    url: museReportUrl,
+    filename: "ask-gina-muse-spark-1.3-evals-2026-09-14.json",
+    description: "Muse Spark 1.3 full campaign report (2026-09-14)",
+  },
+  "claude-fable": {
+    url: claudeComparisonUrl,
+    filename: "ask-gina-claude-comparison-2026-09-14.json",
+    description: "Claude comparison evaluation report (2026-09-14)",
+  },
+  "claude-opus": {
+    url: claudeComparisonUrl,
+    filename: "ask-gina-claude-comparison-2026-09-14.json",
+    description: "Claude comparison evaluation report (2026-09-14)",
+  },
+};
+
+export interface ModelProfilePageProps {
+  modelId?: string;
+  initialRunId?: string;
+  includeSynthetic?: boolean;
+}
+
+function shortSha(sha: string | null | undefined): string | null {
+  return sha === null || sha === undefined ? null : `${sha.slice(0, 12)}…`;
+}
+
+function readRunQueryParam(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  const hash = window.location.hash;
+  const queryIndex = hash.indexOf("?");
+  if (queryIndex === -1) return undefined;
+  const params = new URLSearchParams(hash.slice(queryIndex + 1));
+  return params.get("run") ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
+// Derived cost row
+// ---------------------------------------------------------------------------
+
+function DerivedCostRow({ cost }: { cost: DerivedCost }) {
+  if (cost.availability !== "available") {
+    return (
+      <tr>
+        <th scope="row">est. cost / task (derived)</th>
+        <td>
+          <AvailabilityMark availability={cost.availability} reason={cost.reason} />
+        </td>
+      </tr>
+    );
+  }
   return (
-    <section
-      className="model-profile-metrics"
-      aria-label={`${model.name} measured summary metrics`}
-    >
-      {results.map(({ family, result }) => (
-        <article className="model-profile-metric" key={family}>
-          <span className="model-profile-metric-label">{family}</span>
-          <strong>
-            {numberFormatter.format(result.passed)} / {numberFormatter.format(result.total)}
-          </strong>
-          <p>
-            p50 {(result.latencyMs.p50 / 1000).toFixed(1)}s · p95{" "}
-            {(result.latencyMs.p95 / 1000).toFixed(1)}s ·{" "}
-            {numberFormatter.format(result.tokenUsage.total)} tokens · {result.unscoredTimeouts}{" "}
-            unscored
-          </p>
-        </article>
-      ))}
+    <tr>
+      <th scope="row">est. cost / task (derived)</th>
+      <td>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+          <span className="lb-count">${cost.usdPerTask.toFixed(4)}</span>
+          {cost.sampleCount !== null ? (
+            <SampleCount sampleCount={cost.sampleCount} population={cost.population} />
+          ) : (
+            <span className="eval-muted">({cost.population} aggregate)</span>
+          )}
+          <span className="eval-muted" title={cost.priceSource}>
+            · price as of {cost.priceAsOf}
+          </span>
+        </span>
+      </td>
+    </tr>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Metric cards per family (newest representative measured run)
+// ---------------------------------------------------------------------------
+
+function FamilyMetricCards({
+  modelId,
+  includeSynthetic,
+  onSelectRun,
+}: {
+  modelId: string;
+  includeSynthetic: boolean;
+  onSelectRun: (runId: string) => void;
+}) {
+  const cards = useMemo(() => {
+    return MEASURED_FAMILIES.map((family) => {
+      const runs = runHistoryFor(modelId, family).filter(
+        (run) => includeSynthetic || run.origin === "measured",
+      );
+      const representative = runs[0];
+      return { family, representative, count: runs.length };
+    }).filter((entry) => entry.representative !== undefined);
+  }, [modelId, includeSynthetic]);
+
+  if (cards.length === 0) return null;
+
+  return (
+    <section className="model-profile-metrics" aria-label="Summary metrics by task family">
+      {cards.map(({ family, representative }) => {
+        if (!representative) return null;
+        const headline = headlineFor(representative);
+        const unscored = representative.counts.started - representative.counts.graded;
+        return (
+          <article className="model-profile-metric" key={family}>
+            <div className="model-profile-metric-header">
+              <span className="model-profile-metric-label">{family}</span>
+              <CoverageChip coverage={representative.dispatchCoverage} />
+            </div>
+            <div className="model-profile-metric-headline">
+              <strong>
+                <HeadlineValue headline={headline} />
+              </strong>
+              <span className="eval-muted">passes / started</span>
+            </div>
+            <dl className="model-profile-metric-details">
+              <div className="model-profile-metric-row">
+                <dt className="eval-muted">Latency:</dt>
+                <dd>
+                  <LatencyValue metric={representative.metrics.latencyMs} />
+                </dd>
+              </div>
+              <div className="model-profile-metric-row">
+                <dt className="eval-muted">Tokens:</dt>
+                <dd>
+                  <TokenUsageValue metric={representative.metrics.tokenUsage} />
+                </dd>
+              </div>
+            </dl>
+            <div className="model-profile-metric-unscored">
+              {unscored > 0 ? (
+                <span>
+                  {unscored} unscored (
+                  {[
+                    representative.counts.timedOut > 0
+                      ? `${representative.counts.timedOut} timed out`
+                      : null,
+                    representative.counts.runtimeFailure > 0
+                      ? `${representative.counts.runtimeFailure} runtime failure`
+                      : null,
+                    representative.counts.pending > 0
+                      ? `${representative.counts.pending} pending`
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
+                  )
+                </span>
+              ) : (
+                <span className="eval-muted">All started attempts graded</span>
+              )}
+            </div>
+            <button
+              type="button"
+              className="eval-text-link"
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                textAlign: "left",
+                font: "inherit",
+              }}
+              onClick={() => onSelectRun(representative.runId)}
+            >
+              Inspect run <code>{representative.runId}</code> →
+            </button>
+          </article>
+        );
+      })}
     </section>
   );
 }
 
-function MeasuredCases({ family, result }: { family: string; result: MeasuredFamilyResult }) {
+// ---------------------------------------------------------------------------
+// Configuration groups
+// ---------------------------------------------------------------------------
+
+function ConfigurationGroupsPanel({
+  runs,
+  onSelectRun,
+}: {
+  runs: readonly CanonicalRun[];
+  onSelectRun: (runId: string) => void;
+}) {
+  const groups = useMemo(() => {
+    const map = new Map<string, CanonicalRun[]>();
+    for (const run of runs) {
+      const key = configurationGroupKey(run);
+      const list = map.get(key) ?? [];
+      list.push(run);
+      map.set(key, list);
+    }
+    return [...map.entries()].map(([key, groupRuns]) => {
+      const first = groupRuns[0]!;
+      const isPinned = first.configuration.availability === "pinned";
+      const sha = first.configuration.pinnedSha256;
+      return {
+        key,
+        isPinned,
+        sha,
+        candidate: first.configuration.candidate,
+        reasoning: first.configuration.reasoning,
+        model: first.configuration.model,
+        runs: groupRuns,
+      };
+    });
+  }, [runs]);
+
+  if (groups.length === 0) return null;
+
   return (
-    <Panel title={`Cases · ${family}`} description="Exported case-level conformance verdicts.">
-      <div
-        className="model-profile-table-scroll"
-        role="region"
-        aria-label={`${family} measured cases`}
-        tabIndex={0}
-      >
-        <table className="eval-table model-profile-table">
-          <thead>
-            <tr>
-              <th scope="col">Case id</th>
-              <th scope="col">Results</th>
-              <th scope="col">Passed / graded</th>
-              <th scope="col">Notes</th>
-            </tr>
-          </thead>
-          <tbody>
-            {result.cases.map((measuredCase) => {
-              const failureCategories =
-                family === "Spot"
-                  ? measuredCase.attempts
-                      ?.flatMap((attempt) => attempt.failureCategories)
-                      .filter(
-                        (category, index, categories) => categories.indexOf(category) === index,
-                      )
-                      .join(", ")
-                  : "";
-              return (
-                <tr key={measuredCase.id}>
-                  <th scope="row">
-                    <code>{measuredCase.id}</code>
-                    {measuredCase.prompt && <small>{measuredCase.prompt}</small>}
-                  </th>
-                  <td style={{ whiteSpace: "nowrap" }}>{measuredCase.results.join(" · ")}</td>
-                  <td>
-                    {measuredCase.passed} / {measuredCase.graded}
-                  </td>
-                  <td>
-                    {[measuredCase.notes, failureCategories].filter(Boolean).join(" · ") || "—"}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+    <Panel
+      title="Configuration groups"
+      description="Runs are grouped by exact pinnedSha256 identity. Labels-only configurations stand alone and cannot match a pinned group."
+    >
+      <div className="model-profile-config-groups">
+        {groups.map((group) => (
+          <article className="model-profile-config-group" key={group.key}>
+            <div className="model-profile-config-header">
+              <span className="model-profile-config-title">
+                {group.isPinned ? (
+                  <>
+                    <span>Pinned configuration </span>
+                    <code>{shortSha(group.sha)}</code>
+                  </>
+                ) : (
+                  <AvailabilityMark
+                    availability="not_recorded"
+                    reason="labels-only configuration"
+                  />
+                )}
+              </span>
+              <span className="eval-muted">
+                candidate <code>{group.candidate}</code>
+                {group.reasoning !== null && ` · reasoning ${group.reasoning}`}
+              </span>
+            </div>
+            <div className="model-profile-config-runs">
+              <span className="eval-muted">Runs ({group.runs.length}):</span>
+              {group.runs.map((run) => (
+                <Button
+                  key={run.runId}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onSelectRun(run.runId)}
+                >
+                  {run.family} · <code>{run.runId}</code> ({run.startedAt.slice(0, 10)})
+                </Button>
+              ))}
+            </div>
+          </article>
+        ))}
       </div>
     </Panel>
   );
 }
 
-function MeasuredModelProfile({ model }: { model: MeasuredModel }) {
-  const available = families.flatMap((family) => {
-    const result = model.families[family];
-    return result ? [{ family, result }] : [];
-  });
-  const downloadResults = () => {
-    const url = URL.createObjectURL(
-      new Blob(
-        [`${JSON.stringify({ measured: true, campaign: model.campaign, model }, null, 2)}\n`],
-        {
-          type: "application/json",
-        },
-      ),
-    );
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `${model.id}-measured-${model.campaign.date}.json`;
-    document.body.append(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(url);
-  };
+// ---------------------------------------------------------------------------
+// Per-attempt detailed table (inside expandable run detail)
+// ---------------------------------------------------------------------------
+
+function AttemptDetailsTable({ attempts }: { attempts: readonly CanonicalAttempt[] }) {
+  const [open, setOpen] = useState(false);
+  if (attempts.length === 0) return null;
+
   return (
-    <PageShell
-      active="models"
-      footerNote={`Measured ${model.campaign.date} conformance sample. Unranked; not a benchmark.`}
-    >
-      <div className="eval-container model-profile-page">
-        <section className="eval-hero model-profile-hero" aria-labelledby="model-profile-title">
-          <img className="eval-hero-art" src="/images/hero-watercolor-landscape.webp" alt="" />
-          <div className="model-profile-intro">
-            <nav className="model-profile-breadcrumbs" aria-label="Breadcrumb">
-              <a href="#/leaderboard">Leaderboard</a>
-              <span aria-hidden="true">/</span>
-              <a href="#/models/kimi-k3">Models</a>
-              <span aria-hidden="true">/</span>
-              <span aria-current="page">{model.name}</span>
-            </nav>
-            <p className="eval-eyebrow">Model profile · Measured {model.campaign.date}</p>
-            <div className="model-profile-title-row">
-              <ModelAvatar model={model} size="lg" />
-              <h1 className="eval-title" id="model-profile-title">
-                {model.name}
-                <span>.</span>
-              </h1>
+    <div className="model-profile-detail-section">
+      <button
+        type="button"
+        className="eval-text-link"
+        style={{
+          background: "none",
+          border: "none",
+          padding: 0,
+          cursor: "pointer",
+          textAlign: "left",
+          font: "inherit",
+        }}
+        onClick={() => setOpen((prev) => !prev)}
+      >
+        {open ? "Hide" : "Show"} detailed attempt logs ({attempts.length} attempts)
+      </button>
+      {open && (
+        <div className="model-profile-table-scroll">
+          <table className="eval-table model-profile-table">
+            <thead>
+              <tr>
+                <th scope="col">Case id</th>
+                <th scope="col">Rep</th>
+                <th scope="col">Execution</th>
+                <th scope="col">Verdict</th>
+                <th scope="col">Duration</th>
+                <th scope="col">Tokens</th>
+                <th scope="col">Checks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {attempts.map((attempt) => (
+                <tr key={`${attempt.caseId}-${attempt.repetition}`}>
+                  <th scope="row">
+                    <code>{attempt.caseId}</code>
+                  </th>
+                  <td>r{attempt.repetition}</td>
+                  <td>
+                    <ExecutionChip
+                      execution={attempt.execution}
+                      failureAttribution={attempt.failureAttribution}
+                    />
+                  </td>
+                  <td>
+                    <VerdictChip verdict={attempt.verdict} />
+                  </td>
+                  <td>
+                    {attempt.durationMs.availability === "available" ? (
+                      `${attempt.durationMs.value.toLocaleString("en-US")}ms`
+                    ) : (
+                      <AvailabilityMark availability={attempt.durationMs.availability} />
+                    )}
+                  </td>
+                  <td>
+                    {attempt.tokenUsage.availability === "available" ? (
+                      `${attempt.tokenUsage.value.totalTokens.toLocaleString("en-US")} (${attempt.tokenUsage.value.inputTokens.toLocaleString("en-US")} in / ${attempt.tokenUsage.value.outputTokens.toLocaleString("en-US")} out)`
+                    ) : (
+                      <AvailabilityMark availability={attempt.tokenUsage.availability} />
+                    )}
+                  </td>
+                  <td>
+                    {attempt.checks.availability === "available" ? (
+                      <span style={{ display: "inline-flex", gap: "4px", flexWrap: "wrap" }}>
+                        {Object.entries(attempt.checks.value).map(([name, outcome]) => (
+                          <span key={name} title={`${name}: ${outcome}`}>
+                            <CheckMark outcome={outcome} />
+                          </span>
+                        ))}
+                      </span>
+                    ) : (
+                      <AvailabilityMark availability={attempt.checks.availability} />
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Expandable run detail panel
+// ---------------------------------------------------------------------------
+
+function RunDetail({ run }: { run: CanonicalRun }) {
+  const publication = publicationFor(run);
+  const cost = derivedCostPerTask(run);
+  const rate = gradedOnlyRate(run);
+  const baseline = resolveBaselineRun(run);
+  const matrix: readonly OutcomeMatrixRow[] = useMemo(() => outcomeMatrixFor(run), [run]);
+  const attempts: readonly CanonicalAttempt[] = useMemo(() => {
+    return run.attempts.availability === "available" ? run.attempts.value : [];
+  }, [run]);
+
+  const runtimeFailures = attempts.filter((attempt) => attempt.execution === "runtime_failure");
+
+  return (
+    <div className="model-profile-run-detail">
+      {/* State chips */}
+      <div className="model-profile-detail-section">
+        <div className="model-profile-detail-chips">
+          <CoverageChip coverage={run.dispatchCoverage} />
+          <span className="eval-demo-label">grading {run.gradingCoverage}</span>
+          <span className="eval-demo-label">checks {run.checkSource}</span>
+          <span className="eval-demo-label">{run.caseBinding}</span>
+          <OriginTag origin={run.origin} />
+          {run.withheldFields.map((field) => (
+            <AvailabilityMark
+              key={field.field}
+              availability="withheld"
+              reason={`${field.field} · ${field.reason}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Headline & graded-only rate */}
+      <div className="model-profile-detail-section">
+        <h4 className="model-profile-detail-heading">Headline & grading</h4>
+        <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "baseline" }}>
+          <div>
+            <span className="eval-muted">Passes over started: </span>
+            <strong>
+              <HeadlineValue headline={headlineFor(run)} />
+            </strong>
+          </div>
+          {rate !== null && (
+            <div>
+              <GradedOnlyRateValue rate={rate} />
             </div>
-            <p className="model-profile-provider">{model.provider}</p>
-            <p className="model-profile-provider">
-              <code>{model.modelId}</code>
-            </p>
-            <p className="eval-description">
-              Conformance runs with the {model.campaign.harness}, {model.campaign.repetitions}{" "}
-              repetitions per case. Unranked, small live samples; not answer accuracy.
-            </p>
-          </div>
-          <div className="model-profile-actions">
-            <Button
-              className="model-profile-download-button"
-              type="button"
-              variant="secondary"
-              onClick={downloadResults}
-            >
-              <Download size={15} aria-hidden="true" /> Download results
-            </Button>
-            <a className="eval-text-link" href="#/methodology">
-              View methodology <ArrowUpRight size={14} aria-hidden="true" />
-            </a>
-          </div>
-        </section>
+          )}
+        </div>
+      </div>
 
-        <MeasuredMetricCards model={model} />
+      {/* Counts grid */}
+      <div className="model-profile-detail-section">
+        <h4 className="model-profile-detail-heading">Attempt counts</h4>
+        <div className="model-profile-counts-grid">
+          <div className="model-profile-count-cell">
+            <span className="model-profile-count-label">planned</span>
+            <span className="model-profile-count-value">{run.counts.planned}</span>
+          </div>
+          <div className="model-profile-count-cell">
+            <span className="model-profile-count-label">started</span>
+            <span className="model-profile-count-value">{run.counts.started}</span>
+          </div>
+          <div className="model-profile-count-cell">
+            <span className="model-profile-count-label">completed</span>
+            <span className="model-profile-count-value">{run.counts.completed}</span>
+          </div>
+          <div className="model-profile-count-cell">
+            <span className="model-profile-count-label">passed</span>
+            <span className="model-profile-count-value">{run.counts.passed}</span>
+          </div>
+          <div className="model-profile-count-cell">
+            <span className="model-profile-count-label">failed</span>
+            <span className="model-profile-count-value">{run.counts.failed}</span>
+          </div>
+          <div className="model-profile-count-cell">
+            <span className="model-profile-count-label">graded</span>
+            <span className="model-profile-count-value">{run.counts.graded}</span>
+          </div>
+          <div className="model-profile-count-cell">
+            <span className="model-profile-count-label">timed out</span>
+            <span className="model-profile-count-value">{run.counts.timedOut}</span>
+          </div>
+          <div className="model-profile-count-cell">
+            <span className="model-profile-count-label">runtime failures</span>
+            <span className="model-profile-count-value">{run.counts.runtimeFailure}</span>
+          </div>
+          <div className="model-profile-count-cell">
+            <span className="model-profile-count-label">unstarted</span>
+            <span className="model-profile-count-value">{run.counts.unstarted}</span>
+          </div>
+          <div className="model-profile-count-cell">
+            <span className="model-profile-count-label">unknown</span>
+            <span className="model-profile-count-value">{run.counts.unknown}</span>
+          </div>
+        </div>
+      </div>
 
-        <Panel
-          className="model-profile-chart-panel"
-          title="Performance by task family"
-          description="Measured pass counts for the available families."
-        >
-          <ul className="model-profile-family-bars">
-            {available.map(({ family, result }) => (
-              <li key={family}>
-                <div className="model-profile-family-label">
-                  <span>{family}</span>
-                  <strong>
-                    {result.passed} / {result.total}
-                  </strong>
-                </div>
-                <div
-                  className="model-profile-family-track"
-                  role="img"
-                  aria-label={`${family}: ${result.passed} of ${result.total} passed`}
-                >
-                  <span
-                    className="model-profile-family-fill"
-                    style={{ width: `${result.passRateSortKey}%` }}
-                  />
-                </div>
+      {/* Runtime failures with attribution */}
+      {runtimeFailures.length > 0 && (
+        <div className="model-profile-detail-section">
+          <h4 className="model-profile-detail-heading">Runtime failures</h4>
+          <ul style={{ margin: 0, paddingLeft: "18px" }}>
+            {runtimeFailures.map((attempt) => (
+              <li key={`${attempt.caseId}-${attempt.repetition}`}>
+                <code>{attempt.caseId}</code> rep {attempt.repetition}: attribution{" "}
+                <strong>{attempt.failureAttribution ?? "unattributed"}</strong>
+                {attempt.wallDurationMs.availability === "available" && (
+                  <span className="eval-muted">
+                    {" "}
+                    (wall {attempt.wallDurationMs.value.toLocaleString("en-US")}ms)
+                  </span>
+                )}
               </li>
             ))}
           </ul>
-          <p className="eval-muted model-profile-chart-note">
-            Bar width is passed ÷ graded for the displayed counts. No interval is shown; the sample
-            is small.
-          </p>
-        </Panel>
+        </div>
+      )}
 
-        <Panel
-          className="model-profile-breakdown-panel"
-          title="Task family breakdown"
-          description="Measured conformance counts and exported dimensions."
-        >
-          <div
-            className="model-profile-table-scroll"
-            role="region"
-            aria-label="Measured task family breakdown"
-            tabIndex={0}
-          >
-            <table className="eval-table model-profile-table">
+      {/* Run metrics table */}
+      <div className="model-profile-detail-section">
+        <h4 className="model-profile-detail-heading">Measured metrics</h4>
+        <div className="model-profile-table-scroll">
+          <table className="eval-table model-profile-table">
+            <tbody>
+              <tr>
+                <th scope="row">latency (p50 · p95 · max)</th>
+                <td>
+                  <LatencyValue metric={run.metrics.latencyMs} />
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">token usage</th>
+                <td>
+                  <TokenUsageValue metric={run.metrics.tokenUsage} />
+                </td>
+              </tr>
+              <DerivedCostRow cost={cost} />
+              <tr>
+                <th scope="row">answer accuracy</th>
+                <td>
+                  <AvailabilityMark
+                    availability={run.metrics.answerAccuracy.availability}
+                    reason={run.metrics.answerAccuracy.reason}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">USD cost (measured)</th>
+                <td>
+                  <AvailabilityMark
+                    availability={run.metrics.usdCost.availability}
+                    reason={run.metrics.usdCost.reason}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">uncertainty</th>
+                <td>
+                  <AvailabilityMark
+                    availability={run.metrics.uncertainty.availability}
+                    reason={run.metrics.uncertainty.reason}
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Per-check outcome matrix */}
+      {matrix.length > 0 && (
+        <div className="model-profile-detail-section">
+          <h4 className="model-profile-detail-heading">Outcome matrix (cases × repetitions)</h4>
+          <div className="model-profile-matrix-wrap">
+            <table className="model-profile-matrix-table">
               <thead>
                 <tr>
-                  <th scope="col">Task family</th>
-                  <th scope="col">Passed / total</th>
-                  <th scope="col">Failed</th>
-                  <th scope="col">Unscored</th>
-                  <th scope="col">Routing</th>
-                  <th scope="col">Arguments</th>
-                  <th scope="col">Completion</th>
-                  <th scope="col">Safety</th>
+                  <th scope="col">Case</th>
+                  {Array.from(
+                    {
+                      length: Math.max(...matrix.map((row) => row.attempts.length), 1),
+                    },
+                    (_, index) => (
+                      <th scope="col" key={index}>
+                        r{index + 1}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
               <tbody>
-                {available.map(({ family, result }) => (
-                  <tr key={family}>
-                    <th scope="row">{family}</th>
-                    <td>
-                      {result.passed} / {result.total}
-                    </td>
-                    <td>{result.failed}</td>
-                    <td>{result.unscoredTimeouts}</td>
-                    <td>
-                      {result.dimensions.routing.passed} · {result.dimensions.routing.failed}
-                    </td>
-                    <td>
-                      {result.dimensions.arguments.passed} · {result.dimensions.arguments.failed}
-                    </td>
-                    <td>
-                      {result.dimensions.completion.passed} · {result.dimensions.completion.failed}
-                    </td>
-                    <td>
-                      {result.dimensions.safety.passed} · {result.dimensions.safety.failed}
-                    </td>
+                {matrix.map((row) => (
+                  <tr key={row.caseId}>
+                    <th scope="row">
+                      <span>{row.definition?.title ?? row.caseId}</span>
+                      <span className="model-profile-matrix-case-meta">
+                        {row.caseId}
+                        {row.definition?.category ? ` · ${row.definition.category}` : ""}
+                      </span>
+                    </th>
+                    {row.attempts.map((attempt, index) => (
+                      <OutcomeMatrixCell key={index} attempt={attempt} />
+                    ))}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </Panel>
+        </div>
+      )}
 
-        {available.map(({ family, result }) => (
-          <MeasuredCases key={family} family={family} result={result} />
-        ))}
+      {/* Attempt log table */}
+      <AttemptDetailsTable attempts={attempts} />
 
-        <Panel
-          className="model-profile-run-panel"
-          title="Run details"
-          description="Exported provenance for this measured conformance run."
-        >
-          <dl className="model-profile-run-details">
+      {/* Provenance & publication */}
+      <div className="model-profile-detail-section">
+        <h4 className="model-profile-detail-heading">Provenance & publication</h4>
+        <dl className="model-profile-run-details">
+          <div>
+            <dt>Run id</dt>
+            <dd>
+              <code>{run.runId}</code>
+            </dd>
+          </div>
+          <div>
+            <dt>Campaign id</dt>
+            <dd>
+              <code>{run.campaignId}</code>
+            </dd>
+          </div>
+          <div>
+            <dt>Started at</dt>
+            <dd>{run.startedAt}</dd>
+          </div>
+          <div>
+            <dt>Cohort</dt>
+            <dd>{cohortLabel(run.cohort)}</dd>
+          </div>
+          <div>
+            <dt>Source label</dt>
+            <dd>{run.provenance.sourceLabel}</dd>
+          </div>
+          {run.provenance.sourceArtifactSha256 && (
             <div>
-              <dt>Status</dt>
-              <dd>Measured conformance run</dd>
-            </div>
-            <div>
-              <dt>Model id</dt>
+              <dt>Source artifact SHA-256</dt>
               <dd>
-                <code>{model.modelId}</code>
+                <code>{run.provenance.sourceArtifactSha256}</code>
               </dd>
             </div>
-            <div>
-              <dt>Harness</dt>
-              <dd>{model.campaign.harness}</dd>
-            </div>
-            <div>
-              <dt>Run date</dt>
-              <dd>{model.campaign.date}</dd>
-            </div>
-            <div>
-              <dt>Repetitions</dt>
-              <dd>{model.campaign.repetitions}</dd>
-            </div>
-            <div>
-              <dt>Timeout</dt>
-              <dd>{model.campaign.timeoutMs / 1000}s</dd>
-            </div>
-            {available.map(({ family, result }) => (
-              <div key={family}>
-                <dt>Run id · {family}</dt>
-                <dd>
-                  <code>{result.runId}</code>
-                </dd>
-              </div>
-            ))}
-            {available.map(({ family, result }) => (
-              <div key={`source-${family}`}>
-                <dt>Source commit · {family}</dt>
-                <dd>
-                  <code>{result.sourceCommit}</code>
-                </dd>
-              </div>
-            ))}
-            {model.campaign.executableSourceCommit && (
-              <div>
-                <dt>Executable source commit</dt>
-                <dd>
-                  <code>{model.campaign.executableSourceCommit}</code>
-                </dd>
-              </div>
-            )}
-          </dl>
-          {model.campaign.prUrl && (
-            <a
-              className="eval-text-link model-profile-run-link"
-              href={model.campaign.prUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {model.campaign.prLabel ?? "Open GitHub PR"}{" "}
-              <ArrowUpRight size={14} aria-hidden="true" />
-            </a>
           )}
-        </Panel>
-
-        {(model.campaign.abortedRun || model.campaign.limitations.length > 0) && (
-          <>
-            {model.campaign.abortedRun && (
-              <Panel title="Aborted original predictions run">
-                <dl className="model-profile-run-details">
-                  {Object.entries(model.campaign.abortedRun).map(([key, value]) => (
-                    <div key={key}>
-                      <dt>{key}</dt>
-                      <dd>
-                        <code>{String(value)}</code>
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              </Panel>
-            )}
-            {model.campaign.limitations.length > 0 && (
-              <Panel title="Limitations">
-                <ul>
-                  {model.campaign.limitations.map((limitation) => (
-                    <li key={limitation}>{limitation}</li>
-                  ))}
-                </ul>
-              </Panel>
-            )}
-          </>
+          {run.provenance.sourceCommit && (
+            <div>
+              <dt>Source commit</dt>
+              <dd>
+                <code>{run.provenance.sourceCommit}</code>
+              </dd>
+            </div>
+          )}
+          {baseline && (
+            <div>
+              <dt>Embedded baseline</dt>
+              <dd>
+                Resolves to canonical run <code>{baseline.runId}</code>
+              </dd>
+            </div>
+          )}
+          {publication && (
+            <div>
+              <dt>Publication</dt>
+              <dd>
+                <code>{publication.publicationId}</code> · status:{" "}
+                <strong>{publication.status}</strong> · {publication.revisions.length} revision
+                {publication.revisions.length === 1 ? "" : "s"}
+              </dd>
+            </div>
+          )}
+        </dl>
+        {run.notes.length > 0 && (
+          <div style={{ padding: "0 20px 8px" }}>
+            <span className="eval-muted">Notes:</span>
+            <ul style={{ margin: "4px 0 0", paddingLeft: "18px" }}>
+              {run.notes.map((note) => (
+                <li key={note} className="eval-muted">
+                  {note}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
-    </PageShell>
+    </div>
   );
 }
 
-const numberFormatter = new Intl.NumberFormat("en-US");
+// ---------------------------------------------------------------------------
+// Run history table with expandable rows
+// ---------------------------------------------------------------------------
 
-const metricDefinitions = [
-  {
-    id: "pass-rate",
-    label: "Overall pass",
-    description: "Tasks completed within the fixture contract",
-    value: (model: EvalModel) => `${model.passRate}%`,
-  },
-  {
-    id: "tool-accuracy",
-    label: "Tool selection accuracy",
-    description: "Calls routed to the expected Gina tool",
-    value: (model: EvalModel) => `${model.accuracy}%`,
-  },
-  {
-    id: "latency",
-    label: "Median latency",
-    description: "Illustrative end-to-end task duration",
-    value: (model: EvalModel) => `${model.latency.toFixed(1)}s`,
-  },
-  {
-    id: "cost",
-    label: "Cost per task",
-    description: "Illustrative model cost at fixture rates",
-    value: (model: EvalModel) => `$${model.cost.toFixed(3)}`,
-  },
-] as const;
-
-const histogramBuckets = [
-  { label: "0-49", midpoint: 35 },
-  { label: "50-59", midpoint: 55 },
-  { label: "60-69", midpoint: 65 },
-  { label: "70-79", midpoint: 75 },
-  { label: "80-89", midpoint: 85 },
-  { label: "90-100", midpoint: 95 },
-] as const;
-
-type HistogramBucket = (typeof histogramBuckets)[number] & { count: number };
-
-function getPreferredComparison(model: EvalModel, requestedId?: string): EvalModel {
-  const requested = requestedId ? getModel(requestedId) : undefined;
-  if (requested && requested.id !== model.id) return requested;
-  return models.find((candidate) => candidate.id !== model.id) ?? model;
-}
-
-function hasValidInitialComparison(model: EvalModel | undefined, requestedId?: string): boolean {
-  if (!model || !requestedId) return false;
-  const requested = getModel(requestedId);
-  return Boolean(requested && requested.id !== model.id);
-}
-
-function buildIllustrativeDistribution(model: EvalModel): HistogramBucket[] {
-  const spread = 10 + model.uncertainty;
-  const weights = histogramBuckets.map((bucket) =>
-    Math.exp(-((bucket.midpoint - model.passRate) ** 2) / (2 * spread ** 2)),
-  );
-  const totalWeight = weights.reduce((sum, value) => sum + value, 0);
-  const counts = weights.map((weight) => Math.round((weight / totalWeight) * dataset.tasks));
-  const remainder = dataset.tasks - counts.reduce((sum, count) => sum + count, 0);
-  const largestBucket = counts.reduce(
-    (largestIndex, count, index) => (count > counts[largestIndex]! ? index : largestIndex),
-    0,
-  );
-  counts[largestBucket] = counts[largestBucket]! + remainder;
-
-  return histogramBuckets.map((bucket, index) => ({
-    ...bucket,
-    count: counts[index]!,
-  }));
-}
-
-function MetricCards({ model }: { model: EvalModel }) {
+function RunHistoryPanel({
+  runs,
+  withdrawn,
+  expandedRunId,
+  onToggleRun,
+}: {
+  runs: readonly CanonicalRun[];
+  withdrawn: readonly WithdrawnRunRef[];
+  expandedRunId?: string;
+  onToggleRun: (runId: string) => void;
+}) {
   return (
-    <section className="model-profile-metrics" aria-label={`${model.name} summary metrics`}>
-      {metricDefinitions.map((metric) => (
-        <article className="model-profile-metric" key={metric.id}>
-          <span className="model-profile-metric-label">{metric.label}</span>
-          <strong>{metric.value(model)}</strong>
-          <p>{metric.description}</p>
-        </article>
-      ))}
-    </section>
+    <Panel
+      className="model-profile-history-panel"
+      title="Run history"
+      description="All evaluations for this model, ordered newest first. Click any row to expand attempt counts, per-case outcomes, and provenance."
+    >
+      <div className="model-profile-table-scroll">
+        <table className="eval-table model-profile-table">
+          <thead>
+            <tr>
+              <th scope="col" style={{ width: "32px" }}></th>
+              <th scope="col">Run id</th>
+              <th scope="col">Family</th>
+              <th scope="col">Date</th>
+              <th scope="col">Headline</th>
+              <th scope="col">Coverage</th>
+              <th scope="col">Configuration</th>
+              <th scope="col">Publication</th>
+            </tr>
+          </thead>
+          <tbody>
+            {runs.map((run) => {
+              const isExpanded = expandedRunId === run.runId;
+              const publication = publicationFor(run);
+              const headline = headlineFor(run);
+              return (
+                <tr
+                  key={run.runId}
+                  className={`model-profile-history-row ${
+                    isExpanded ? "model-profile-history-row-expanded" : ""
+                  }`}
+                  onClick={() => onToggleRun(run.runId)}
+                >
+                  <td>
+                    <button
+                      type="button"
+                      className="model-profile-expand-toggle"
+                      aria-label={isExpanded ? "Collapse run details" : "Expand run details"}
+                      aria-expanded={isExpanded}
+                    >
+                      {isExpanded ? (
+                        <ChevronDown size={12} aria-hidden="true" />
+                      ) : (
+                        <ChevronRight size={12} aria-hidden="true" />
+                      )}
+                    </button>
+                  </td>
+                  <th scope="row">
+                    <div className="model-profile-run-id-cell">
+                      <code>{run.runId}</code>
+                      <OriginTag origin={run.origin} />
+                    </div>
+                  </th>
+                  <td>{run.family}</td>
+                  <td>{run.startedAt.slice(0, 10)}</td>
+                  <td>
+                    <HeadlineValue headline={headline} />
+                  </td>
+                  <td>
+                    <CoverageChip coverage={run.dispatchCoverage} />
+                  </td>
+                  <td>
+                    {run.configuration.availability === "pinned" ? (
+                      <code>pin {shortSha(run.configuration.pinnedSha256)}</code>
+                    ) : (
+                      <AvailabilityMark availability="not_recorded" reason="labels-only" />
+                    )}
+                  </td>
+                  <td>
+                    {publication ? (
+                      <span>
+                        rev {publication.revisions.length}
+                        {publication.status === "withdrawn" && " · withdrawn"}
+                      </span>
+                    ) : (
+                      <span className="eval-muted">—</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+            {/* Withdrawn demonstration rows */}
+            {withdrawn.map((item) => (
+              <tr key={item.runId} className="eval-muted">
+                <td></td>
+                <th scope="row">
+                  <div className="model-profile-run-id-cell">
+                    <code>{item.runId}</code>
+                    <OriginTag origin={item.origin} />
+                    <span className="eval-demo-label">withdrawn</span>
+                  </div>
+                </th>
+                <td>{item.family}</td>
+                <td>{item.startedAt.slice(0, 10)}</td>
+                <td colSpan={4}>
+                  <span>
+                    {item.withdrawal.notice} (reason: {item.withdrawal.reason} ·{" "}
+                    {item.withdrawal.withdrawnAt.slice(0, 10)})
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Expanded detail row container */}
+      {expandedRunId &&
+        (() => {
+          const run = runs.find((r) => r.runId === expandedRunId);
+          if (!run) return null;
+          return <RunDetail run={run} />;
+        })()}
+    </Panel>
   );
 }
 
-function ComparisonCard({ model, featured }: { model: EvalModel; featured: boolean }) {
+// ---------------------------------------------------------------------------
+// Campaigns & limitations panel
+// ---------------------------------------------------------------------------
+
+function CampaignsPanel({ campaigns }: { campaigns: readonly CanonicalCampaign[] }) {
+  if (campaigns.length === 0) return null;
   return (
-    <article className="model-profile-comparison-card">
-      <header>
-        <ModelAvatar model={model} size="lg" />
-        <div>
-          <span>{featured ? "Profile model" : "Comparison model"}</span>
-          <h3>{model.name}</h3>
-          <p>{model.provider}</p>
-        </div>
-      </header>
-      <dl>
-        {metricDefinitions.map((metric) => (
-          <div key={metric.id}>
-            <dt>{metric.label}</dt>
-            <dd>{metric.value(model)}</dd>
+    <Panel
+      title="Campaigns & limitations"
+      description="Harness versions, execution dates, and known review limitations."
+    >
+      <dl className="model-profile-run-details">
+        {campaigns.map((campaign) => (
+          <div key={campaign.campaignId}>
+            <dt>{campaign.campaignId}</dt>
+            <dd>
+              {campaign.date} · {campaign.harness} · {campaign.repetitions} reps ·{" "}
+              {campaign.timeoutMs / 1000}s timeout
+              {campaign.sourceCommit && (
+                <>
+                  {" "}
+                  · commit <code>{campaign.sourceCommit.slice(0, 7)}</code>
+                </>
+              )}
+            </dd>
           </div>
         ))}
       </dl>
-    </article>
+      {campaigns.some((c) => c.limitations.length > 0) && (
+        <div style={{ padding: "0 20px 18px" }}>
+          <span className="eval-muted">Limitations:</span>
+          <ul style={{ margin: "4px 0 0", paddingLeft: "18px" }}>
+            {campaigns
+              .flatMap((c) => c.limitations)
+              .map((limitation, index) => (
+                <li key={index}>{limitation}</li>
+              ))}
+          </ul>
+        </div>
+      )}
+      {campaigns.some((c) => c.prUrl) && (
+        <div style={{ padding: "0 20px 18px" }}>
+          {campaigns
+            .filter((c) => c.prUrl)
+            .map((c) => (
+              <a
+                key={c.campaignId}
+                className="eval-text-link model-profile-run-link"
+                href={c.prUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {c.prLabel ?? "Open GitHub PR"} ({c.campaignId}){" "}
+                <ArrowUpRight size={14} aria-hidden="true" />
+              </a>
+            ))}
+        </div>
+      )}
+    </Panel>
   );
 }
 
-export function ModelProfilePage(props: ModelProfilePageProps) {
-  const requestedModelId = props.modelId ?? featuredModel.id;
-  const measuredModel = getMeasuredModel(requestedModelId);
-  if (!getModel(requestedModelId) && measuredModel) {
-    return <MeasuredModelProfile model={measuredModel} />;
-  }
-  return <IllustrativeModelProfile {...props} />;
-}
+// ---------------------------------------------------------------------------
+// Model profile page
+// ---------------------------------------------------------------------------
 
-function IllustrativeModelProfile({ modelId, initialCompareId }: ModelProfilePageProps) {
-  const requestedModelId = modelId ?? featuredModel.id;
-  const model = getModel(requestedModelId);
-  const [selectedCompareId, setSelectedCompareId] = useState(() =>
-    model ? getPreferredComparison(model, initialCompareId).id : "",
-  );
-  const [compareOpen, setCompareOpen] = useState(() =>
-    hasValidInitialComparison(model, initialCompareId),
-  );
+const MODEL_ID_ALIASES: Readonly<Record<string, string>> = {
+  "muse-spark-1-3": "muse-spark",
+  "claude-fable-5-1": "claude-fable",
+  "claude-opus-5": "claude-opus",
+  "gpt-5-5": "gpt-5.5",
+  "gpt-5-6-sol": "gpt-sol",
+};
+
+export function ModelProfilePage({
+  modelId: propModelId,
+  initialRunId,
+  includeSynthetic = false,
+}: ModelProfilePageProps) {
+  // Strip any query string attached to the prop (e.g. `gpt-5.5?run=…`)
+  const rawId = propModelId?.split("?")[0] || "gpt-5.5";
+  const cleanModelId = MODEL_ID_ALIASES[rawId] ?? rawId;
+  const model = getModel(cleanModelId);
+
+  const [expandedRunId, setExpandedRunId] = useState<string | undefined>(() => {
+    return initialRunId ?? readRunQueryParam();
+  });
 
   useEffect(() => {
-    if (!model) {
-      setSelectedCompareId("");
-      setCompareOpen(false);
-      return;
-    }
-
-    setSelectedCompareId(getPreferredComparison(model, initialCompareId).id);
-    setCompareOpen(hasValidInitialComparison(model, initialCompareId));
-  }, [initialCompareId, model]);
-
-  const comparisonModel = model ? getPreferredComparison(model, selectedCompareId) : undefined;
-  const comparisonOptions = model ? models.filter((candidate) => candidate.id !== model.id) : [];
-  const distribution = useMemo(() => (model ? buildIllustrativeDistribution(model) : []), [model]);
-  const largestDistributionBucket = distribution.reduce(
-    (largest, bucket) => Math.max(largest, bucket.count),
-    0,
-  );
+    if (initialRunId) setExpandedRunId(initialRunId);
+  }, [initialRunId]);
 
   if (!model) {
     return (
@@ -507,26 +945,25 @@ function IllustrativeModelProfile({ modelId, initialCompareId }: ModelProfilePag
         <div className="eval-container model-profile-page">
           <section
             className="eval-hero model-profile-not-found"
-            aria-labelledby="model-profile-title"
+            aria-labelledby="model-profile-not-found-title"
           >
             <img className="eval-hero-art" src="/images/hero-watercolor-landscape.webp" alt="" />
             <nav className="model-profile-breadcrumbs" aria-label="Breadcrumb">
               <a href="#/leaderboard">Leaderboard</a>
               <span aria-hidden="true">/</span>
-              <a href="#/models/kimi-k3">Models</a>
+              <a href="#/models">Models</a>
               <span aria-hidden="true">/</span>
               <span aria-current="page">Not found</span>
             </nav>
-            <p className="eval-eyebrow">Model profile · Gina financial-task harness</p>
-            <h1 className="eval-title" id="model-profile-title">
+            <p className="eval-eyebrow">Model profile · Conformance harness</p>
+            <h1 className="eval-title" id="model-profile-not-found-title">
               Model not found<span>.</span>
             </h1>
             <p className="eval-description">
-              The illustrative fixture does not include a model with the ID{" "}
-              <code>{requestedModelId}</code>.
+              No canonical model matches the identifier <code>{cleanModelId}</code>.
             </p>
-            <a className="eval-text-link" href="#/leaderboard">
-              Return to the leaderboard <ArrowUpRight size={14} aria-hidden="true" />
+            <a className="eval-text-link" href="#/models">
+              Browse all models <ArrowUpRight size={14} aria-hidden="true" />
             </a>
           </section>
         </div>
@@ -534,275 +971,111 @@ function IllustrativeModelProfile({ modelId, initialCompareId }: ModelProfilePag
     );
   }
 
-  const downloadResults = () => {
-    const payload = {
-      illustrative: true,
-      disclaimer: dataset.disclaimer,
-      kind: "gina-evals-model-profile",
-      dataset,
-      model,
-    };
-    const url = URL.createObjectURL(
-      new Blob([`${JSON.stringify(payload, null, 2)}\n`], { type: "application/json" }),
-    );
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `${model.id}-${dataset.version}-illustrative-results.json`;
-    document.body.append(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(url);
+  // Filter runs by origin: synthetic runs are excluded from app pages (decision 9).
+  // They remain reachable when includeSynthetic is true (Storybook).
+  const runs = runsForModel(model.id).filter(
+    (run) => includeSynthetic || run.origin === "measured",
+  );
+
+  const modelWithdrawn = withdrawnRuns.filter(
+    (w) => w.modelId === model.id && (includeSynthetic || w.origin === "measured"),
+  );
+
+  const campaignIds = [...new Set(runs.map((run) => run.campaignId))];
+  const campaigns = canonicalCampaigns.filter((c) => campaignIds.includes(c.campaignId));
+
+  const artifact = MODEL_ARTIFACTS[model.id];
+
+  const handleSelectRun = (runId: string) => {
+    setExpandedRunId(runId);
+    // Smooth scroll down to the history section
+    const el = document.querySelector(".model-profile-history-panel");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleToggleRun = (runId: string) => {
+    setExpandedRunId((prev) => (prev === runId ? undefined : runId));
   };
 
   return (
-    <PageShell active="models">
+    <PageShell
+      active="models"
+      footerNote={`Canonical evaluation profile for ${model.name}. Conformance results from bundled campaign artifacts.`}
+    >
       <div className="eval-container model-profile-page">
+        {/* Hero section */}
         <section className="eval-hero model-profile-hero" aria-labelledby="model-profile-title">
           <img className="eval-hero-art" src="/images/hero-watercolor-landscape.webp" alt="" />
           <div className="model-profile-intro">
             <nav className="model-profile-breadcrumbs" aria-label="Breadcrumb">
               <a href="#/leaderboard">Leaderboard</a>
               <span aria-hidden="true">/</span>
-              <a href="#/models/kimi-k3">Models</a>
+              <a href="#/models">Models</a>
               <span aria-hidden="true">/</span>
               <span aria-current="page">{model.name}</span>
             </nav>
-            <p className="eval-eyebrow">Model profile · Gina financial-task harness</p>
+            <p className="eval-eyebrow">
+              Model profile ·{" "}
+              {model.origin === "synthetic" ? "Synthetic demonstration" : "Measured conformance"}
+            </p>
             <div className="model-profile-title-row">
               <ModelAvatar model={model} size="lg" />
               <h1 className="eval-title" id="model-profile-title">
                 {model.name}
                 <span>.</span>
               </h1>
+              <OriginTag origin={model.origin} />
             </div>
-            <p className="model-profile-provider">{model.provider}</p>
+            <p className="model-profile-provider">
+              {model.provider} · <code>{model.providerModel}</code>
+            </p>
             <p className="eval-description">
-              A compact look at {model.name} across portfolio, spot, perps, and prediction-market
-              tasks in the illustrative {dataset.version} fixture.
+              {campaigns.length > 0
+                ? campaigns.map((c) => `${c.harness} (${c.date}, ${c.repetitions} reps)`).join("; ")
+                : "Canonical evaluation profile"}
+              . Small live samples; measures tool routing, arguments, completion and safety.
             </p>
           </div>
 
           <div className="model-profile-actions">
-            <label className="model-profile-compare-field">
-              <span>Compare with</span>
-              <select
-                value={comparisonModel?.id ?? ""}
-                onChange={(event) => setSelectedCompareId(event.target.value)}
-                aria-label="Choose a model to compare"
-                disabled={comparisonOptions.length === 0}
-              >
-                {comparisonOptions.map((candidate) => (
-                  <option key={candidate.id} value={candidate.id}>
-                    {candidate.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <Button
-              className="model-profile-compare-button"
-              type="button"
-              onClick={() => setCompareOpen(true)}
-              disabled={!comparisonModel || comparisonModel.id === model.id}
-            >
-              <GitCompare size={16} aria-hidden="true" /> Compare models
-            </Button>
-            <Button
-              className="model-profile-download-button"
-              type="button"
-              variant="secondary"
-              onClick={downloadResults}
-            >
-              <Download size={15} aria-hidden="true" /> Download results
-            </Button>
+            {artifact ? (
+              <Button asChild className="model-profile-download-button" variant="secondary">
+                <a
+                  href={artifact.url}
+                  download={artifact.filename}
+                  title={`Download bundled JSON artifact (${artifact.description})`}
+                >
+                  <Download size={15} aria-hidden="true" /> Download results
+                </a>
+              </Button>
+            ) : null}
             <a className="eval-text-link" href="#/methodology">
               View methodology <ArrowUpRight size={14} aria-hidden="true" />
             </a>
           </div>
         </section>
 
-        <MetricCards model={model} />
+        {/* Metric cards per family */}
+        <FamilyMetricCards
+          modelId={model.id}
+          includeSynthetic={includeSynthetic}
+          onSelectRun={handleSelectRun}
+        />
 
-        <section className="eval-two-column model-profile-chart-grid" aria-label="Profile charts">
-          <Panel
-            className="model-profile-chart-panel"
-            title="Performance by task family"
-            description={`Pass rate with an illustrative ±${model.uncertainty} percentage-point interval.`}
-          >
-            <ul className="model-profile-family-bars">
-              {families.map((family) => {
-                const familyResult = model.families[family];
-                const intervalStart = Math.max(0, familyResult.passRate - model.uncertainty);
-                const intervalEnd = Math.min(100, familyResult.passRate + model.uncertainty);
-                return (
-                  <li key={family}>
-                    <div className="model-profile-family-label">
-                      <span>{family}</span>
-                      <strong>
-                        {familyResult.passRate}% <small>±{model.uncertainty} pp</small>
-                      </strong>
-                    </div>
-                    <div
-                      className="model-profile-family-track"
-                      role="img"
-                      aria-label={`${family}: ${familyResult.passRate} percent pass rate, plus or minus ${model.uncertainty} illustrative percentage points`}
-                    >
-                      <span
-                        className="model-profile-family-fill"
-                        style={{ width: `${familyResult.passRate}%` }}
-                      />
-                      <span
-                        className="model-profile-family-interval"
-                        style={{
-                          left: `${intervalStart}%`,
-                          width: `${intervalEnd - intervalStart}%`,
-                        }}
-                      />
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-            <p className="eval-muted model-profile-chart-note">
-              Intervals are visual fixture annotations, not confidence intervals from measured runs.
-            </p>
-          </Panel>
+        {/* Configuration groups */}
+        <ConfigurationGroupsPanel runs={runs} onSelectRun={handleSelectRun} />
 
-          <Panel
-            className="model-profile-chart-panel"
-            title="Task score distribution"
-            description={`${numberFormatter.format(dataset.tasks)} illustrative task scores grouped by score band.`}
-          >
-            <p className="model-profile-sr-only">
-              Illustrative distribution for {model.name}:{" "}
-              {distribution
-                .map((bucket) => `${bucket.label}, ${numberFormatter.format(bucket.count)} tasks`)
-                .join("; ")}
-              .
-            </p>
-            <div className="model-profile-histogram" aria-hidden="true">
-              {distribution.map((bucket) => {
-                const height =
-                  largestDistributionBucket === 0
-                    ? 0
-                    : (bucket.count / largestDistributionBucket) * 100;
-                return (
-                  <div className="model-profile-histogram-column" key={bucket.label}>
-                    <span className="model-profile-histogram-count">
-                      {numberFormatter.format(bucket.count)}
-                    </span>
-                    <span className="model-profile-histogram-track">
-                      <span
-                        className="model-profile-histogram-bar"
-                        style={{ "--histogram-height": `${height}%` } as CSSProperties}
-                      />
-                    </span>
-                    <span className="model-profile-histogram-label">{bucket.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="eval-muted model-profile-chart-note">
-              Illustrative distribution derived from the profile fixture. It is not observed
-              task-level data.
-            </p>
-          </Panel>
-        </section>
+        {/* Run history table with expandable rows */}
+        <RunHistoryPanel
+          runs={runs}
+          withdrawn={modelWithdrawn}
+          expandedRunId={expandedRunId}
+          onToggleRun={handleToggleRun}
+        />
 
-        <section className="eval-two-column model-profile-lower-grid">
-          <Panel
-            className="model-profile-breakdown-panel"
-            title="Task family breakdown"
-            description={`${numberFormatter.format(dataset.tasksPerFamily)} tasks per family in the illustrative fixture.`}
-          >
-            <div
-              className="model-profile-table-scroll"
-              role="region"
-              aria-label={`Illustrative results for ${model.name} by task family`}
-              tabIndex={0}
-            >
-              <table className="eval-table model-profile-table">
-                <caption className="model-profile-sr-only">
-                  Illustrative results for {model.name} by task family
-                </caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Task family</th>
-                    <th scope="col">Pass rate</th>
-                    <th scope="col">Tool accuracy</th>
-                    <th scope="col">Unsuccessful tasks</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {families.map((family) => {
-                    const familyResult = model.families[family];
-                    return (
-                      <tr key={family}>
-                        <th scope="row">{family}</th>
-                        <td>{familyResult.passRate}%</td>
-                        <td>{familyResult.accuracy}%</td>
-                        <td>{numberFormatter.format(familyResult.failures)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </Panel>
-
-          <Panel
-            className="model-profile-run-panel"
-            title="Run details"
-            description="Fixture provenance for every number on this page."
-          >
-            <dl className="model-profile-run-details">
-              <div>
-                <dt>Status</dt>
-                <dd>Illustrative fixture</dd>
-              </div>
-              <div>
-                <dt>Dataset</dt>
-                <dd>{dataset.label}</dd>
-              </div>
-              <div>
-                <dt>Harness</dt>
-                <dd>{dataset.harness}</dd>
-              </div>
-              <div>
-                <dt>Run date</dt>
-                <dd>{dataset.runDate}</dd>
-              </div>
-              <div>
-                <dt>Total tasks</dt>
-                <dd>{numberFormatter.format(dataset.tasks)}</dd>
-              </div>
-              <div>
-                <dt>Repetitions</dt>
-                <dd>{dataset.repetitions}</dd>
-              </div>
-            </dl>
-            <a className="eval-text-link model-profile-run-link" href="#/methodology">
-              Read the evaluation methodology <ArrowUpRight size={14} aria-hidden="true" />
-            </a>
-          </Panel>
-        </section>
+        {/* Campaigns & limitations */}
+        <CampaignsPanel campaigns={campaigns} />
       </div>
-
-      {comparisonModel && comparisonModel.id !== model.id && (
-        <Modal
-          title={`Compare ${model.name} and ${comparisonModel.name}`}
-          open={compareOpen}
-          onClose={() => setCompareOpen(false)}
-        >
-          <div className="model-profile-comparison-grid">
-            <ComparisonCard model={model} featured />
-            <ComparisonCard model={comparisonModel} featured={false} />
-          </div>
-          <p className="eval-muted model-profile-comparison-note">
-            Values come from the same {dataset.label.toLowerCase()} fixture. No measured advantage
-            is implied.
-          </p>
-        </Modal>
-      )}
     </PageShell>
   );
 }
