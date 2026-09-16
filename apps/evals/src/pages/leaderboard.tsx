@@ -135,7 +135,7 @@ export function LeaderboardPage({
     <PageShell active="leaderboard">
       <div className="eval-container results-page">
         <ResultsHeader
-          title="AI Financial Tasks Leaderboard"
+          title="Gina Model Leaderboard"
           description="Compare model results on spot, perpetuals, and prediction-market tasks."
         >
           <p className="results-context">{benchmarkSummary(rows)}</p>
@@ -160,7 +160,7 @@ export function LeaderboardPage({
         <div
           className="results-scroll"
           role="region"
-          aria-label="AI Financial Tasks Leaderboard"
+          aria-label="Gina Model Leaderboard"
           tabIndex={0}
         >
           <table className="results-table leaderboard-table">
