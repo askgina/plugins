@@ -12,6 +12,7 @@
   "scripts": {
     "evals:dev": "bun run --cwd apps/evals dev",
     "evals:build": "bun run --cwd apps/evals build",
+    "evals:check-public": "bun tools/check-eval-public-artifacts.ts",
     "evals:typecheck": "bun run --cwd apps/evals typecheck",
     "storybook": "bun run --cwd apps/evals storybook",
     "build-storybook": "bun run --cwd apps/evals build-storybook",

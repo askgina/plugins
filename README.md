@@ -20,15 +20,18 @@ The contracts and SDK packages have no CommonJS, browser, edge, or subpath entry
 
 ## Public evals app
 
-`apps/evals` is a private React/Vite app with the Ask Gina landing-page typography,
+`apps/evals` is a non-published React/Vite package with the Ask Gina landing-page typography,
 watercolor artwork, UI components, and Storybook. It has a leaderboard, model
-profiles, task evidence explorer, and methodology page. All scores and traces are
-illustrative fixtures, not measured benchmarks. It makes no live tool or wallet calls.
+profiles, task evidence explorer, and methodology page. Measured September reports
+coexist with explicitly illustrative fixtures. Measured rows cover tool conformance,
+not final-answer correctness; public downloads are reviewed projections, not full
+conversation archives. The viewer makes no live tool or wallet calls.
 
 ```sh
 bun run evals:dev       # App on port 5173
 bun run storybook       # Stories on port 6006
 bun run evals:typecheck
+bun run evals:check-public
 ```
 
 CI also runs `evals:build` and `build-storybook`. Their outputs stay in
@@ -36,6 +39,13 @@ CI also runs `evals:build` and `build-storybook`. Their outputs stay in
 package artifacts. Storybook uses the existing TypeScript 7 toolchain plus a
 TypeScript 5 compiler-API alias and the two docgen compatibility patches under
 `patches/`. Local fonts and artwork are pinned in `tools/public-source-assets.ts`.
+
+Before bundling, the public-artifact gate checks historical Claude reports against
+strict projection fields and an exact reviewed path/hash allowlist. Changed or new
+Claude JSON requires privacy review and corresponding provenance/allowlist updates;
+never update a hash merely to admit raw provider output. Full conversations remain
+outside the public repository. Sanitizing current files does not remove historical
+Git objects, fork-network copies, or previous deployment/cache contents.
 
 ## Commands
 
