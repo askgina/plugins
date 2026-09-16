@@ -16,7 +16,7 @@ const navigation: readonly { id: ShellPageId; label: string; href: string }[] = 
 ];
 
 const DATA_ORIGIN_NOTE =
-  "Measured tool-use conformance exported from run artifacts — not answer accuracy or financial outcomes. Synthetic previews live in Storybook only.";
+  "Tool-use results from measured runs. Missing data is shown as unavailable.";
 
 export function PageShell({
   active,
@@ -64,7 +64,6 @@ export function PageShell({
         <span>
           {footerNote ?? DATA_ORIGIN_NOTE} <a href="#/methodology">See methodology.</a>
         </span>
-        <span>Open tools. Transparent results.</span>
       </footer>
       <Modal
         title="Run an evaluation"

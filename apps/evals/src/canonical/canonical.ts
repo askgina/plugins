@@ -773,6 +773,7 @@ interface CaseSpec {
   readonly category: string;
   readonly prompt: string;
   readonly expectedTool: string | null;
+  readonly expectedSequence?: readonly string[];
   readonly routingKind: string;
   readonly requiredArguments: Readonly<Record<string, unknown>> | null;
   readonly forbiddenTools: readonly string[];
@@ -792,7 +793,7 @@ const CATEGORY_OBJECTIVES: Record<string, string> = {
 function gradingCriteriaFor(spec: CaseSpec): readonly string[] {
   const criteria = [
     spec.routingKind === "sequence"
-      ? "routing: calls the declared tools in the required order"
+      ? `routing: calls ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in the required order`
       : `routing: exactly one call to ${spec.expectedTool ?? "the expected tool"}`,
     spec.requiredArguments
       ? "arguments: required fields carry the declared values; additional fields allowed"
@@ -807,7 +808,7 @@ function gradingCriteriaFor(spec: CaseSpec): readonly string[] {
 function expectedBehaviorFor(spec: CaseSpec): string {
   const parts = [
     spec.routingKind === "sequence"
-      ? "Call the declared tools in sequence"
+      ? `Call ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in sequence`
       : `Call ${spec.expectedTool} exactly once`,
   ];
   if (spec.requiredArguments) {
@@ -1125,6 +1126,7 @@ const PERPS_CASES: readonly CaseSpec[] = [
     prompt:
       "Create a provider-aware Hyperliquid BTC hourly-candles table named eval_btc_candle_stats, then use the exact returned tableName to query its minimum low, maximum high, and average volume.",
     expectedTool: null,
+    expectedSequence: ["perps.createHyperliquidTable", "perps.executeSqlQuery"],
     routingKind: "sequence",
     requiredArguments: null,
     forbiddenTools: [],

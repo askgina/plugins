@@ -1,875 +1,581 @@
-// `#/tasks` — case-definition browser plus outcome matrix (Phase 4, decisions 7/9).
-//
-// Every figure traces to the canonical dataset: case definitions come from
-// `caseDefinitionsForFamily`, matrix cells from `attemptsFor` on measured runs
-// only (synthetic rows stay Storybook-only). Drilldown depth follows evidence —
-// attempts render checks/durations/tokens where retained and availability marks
-// where withheld or missing. The editorial column stays per decision 6.
-
-import { useMemo, useState } from "react";
-import { BookOpen, ListTree, Search, Shield } from "lucide-react";
+import { Fragment, useEffect, useState } from "react";
+import { ChevronDown, Search } from "lucide-react";
 import {
   CHECK_NAMES,
-  canonicalCampaigns,
   PROTOTYPE_FAMILIES,
   type CanonicalAttempt,
   type CanonicalCaseDefinition,
   type CanonicalRun,
   type PrototypeFamily,
 } from "../canonical/canonical";
+import { CheckMark, EvidenceValue } from "../canonical/components";
 import {
-  attemptsFor,
   caseDefinitionsForFamily,
-  cohortLabel,
   getCaseDefinition,
-  getModel,
-  runsForFamily,
+  sortLeaderboardRows,
+  summarizeTask,
+  unifiedLeaderboardRows,
+  type LeaderboardModelRow,
 } from "../canonical/selectors";
-import {
-  AvailabilityMark,
-  CheckMark,
-  CoverageChip,
-  EvidenceValue,
-  ExecutionChip,
-  OutcomeMatrixCell,
-  VerdictChip,
-} from "../canonical/components";
-import { FamilyTabs, Modal, ModelAvatar, PageShell } from "../components/eval-ui";
-import { Button } from "../components/ui/button";
-import { Separator } from "../components/ui/separator";
-import "./task-explorer.css";
+import { PageShell } from "../components/eval-ui";
+import { InfoPopover, ResultsHeader, RunDetails, seconds } from "../components/results-ui";
 
-type EvidenceSection = "definition" | "tools" | "rubric" | "dataset";
+const defaultRows = sortLeaderboardRows(unifiedLeaderboardRows());
 
-function formatTime(ms: number): string {
-  return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${ms}ms`;
+const taskNames: Record<string, string> = {
+  "spot-token-metadata": "Token information",
+  "spot-token-chart": "Token price chart",
+  "spot-simple-price": "Current token price",
+  "spot-fetch-swap-history": "Swap history",
+  "perps-account": "Account balance",
+  "perps-positions": "Open positions",
+  "perps-open-orders": "Open orders",
+  "perps-portfolio": "Portfolio performance",
+  "perps-markets": "Available markets",
+  "perps-single-price": "Single market price",
+  "perps-multiple-prices": "Multiple market prices",
+  "perps-asset-data": "Asset market data",
+  "perps-search-hip3-markets": "Find HIP-3 markets",
+  "perps-hip3-dexes": "HIP-3 venues",
+  "perps-hip3-markets": "Markets on a HIP-3 venue",
+  "perps-hip3-price": "HIP-3 market price",
+  "perps-fetch-trades": "Recent trades",
+  "perps-fetch-candles": "Price candles",
+  "perps-fetch-order-book": "Order book",
+  "perps-preview-order-cost": "Order cost estimate",
+  "perps-create-table": "Create a market data table",
+  "perps-create-and-query-table": "Create and query market data",
+  "predictions-focused-fact-search-only": "Find current market odds",
+  "predictions-broad-nba-search-only": "Find NBA markets",
+  "predictions-broad-football-search-only": "Find football markets",
+  "predictions-non-exact-no-render": "Find election markets",
+  "predictions-sparse-history-no-render": "Handle limited price history",
+  "predictions-multi-series-no-render": "Compare market histories",
+  "predictions-expiring-markets": "Find expiring markets",
+  "predictions-series-market": "Find a recurring market",
+  "predictions-orderbook": "Market order book",
+  "predictions-fetch-market-data": "Market data",
+  "predictions-fetch-history-data": "Historical market data",
+  "predictions-open-positions": "Open positions",
+  "predictions-order-history": "Order history",
+  "portfolio-crosschain-balances": "Balances across chains",
+  "portfolio-account-addresses": "Linked wallet addresses",
+  "portfolio-list-scheduled-prompts": "Scheduled prompts",
+};
+const taskName = (definition: CanonicalCaseDefinition) =>
+  taskNames[definition.caseId] ?? definition.title;
+const checkNames = {
+  routing: "Tool selection",
+  arguments: "Arguments",
+  safety: "Restrictions",
+  completion: "Completion",
+  skillActivation: "Skill activation",
+};
+
+function attemptLabel(attempt: CanonicalAttempt | undefined): string {
+  if (!attempt) return "Not recorded";
+  if (attempt.execution === "timed_out") return "Timed out";
+  if (attempt.execution === "runtime_failure") return "Run error";
+  if (attempt.execution === "pending") return "Pending";
+  if (attempt.execution === "unstarted") return "Not started";
+  if (attempt.execution === "unknown") return "Unknown";
+  return attempt.verdict === "pass"
+    ? "Passed"
+    : attempt.verdict === "fail"
+      ? "Failed"
+      : "Not graded";
 }
 
-/** Repetition slots for one case: the widest of cohort plan and observed attempts. */
-function repetitionSlots(
-  caseId: string,
-  runs: readonly CanonicalRun[],
-  attemptsByRun: ReadonlyMap<string, ReadonlyMap<string, readonly CanonicalAttempt[]>>,
-): number {
-  let slots = 0;
-  for (const run of runs) {
-    slots = Math.max(slots, run.cohort.repetitions);
-    for (const attempt of attemptsByRun.get(run.runId)?.get(caseId) ?? []) {
-      slots = Math.max(slots, attempt.repetition);
-    }
-  }
-  return slots;
-}
-
-// ---------------------------------------------------------------------------
-// Case card — versioned definition + run × repetition outcome matrix
-// ---------------------------------------------------------------------------
-
-function CaseCard({
-  definition,
-  runs,
-  attemptsByRun,
-  selected,
-  onSelect,
-  onInspect,
-  onEvidence,
-}: {
-  definition: CanonicalCaseDefinition;
-  runs: readonly CanonicalRun[];
-  attemptsByRun: ReadonlyMap<string, ReadonlyMap<string, readonly CanonicalAttempt[]>>;
-  selected: boolean;
-  onSelect: () => void;
-  onInspect: () => void;
-  onEvidence: () => void;
-}) {
-  const slots = repetitionSlots(definition.caseId, runs, attemptsByRun);
+function GradingInfo({ definition }: { definition: CanonicalCaseDefinition }) {
   return (
-    <article className={selected ? "task-case task-case-selected" : "task-case"}>
-      <header className="task-case-head">
-        <button
-          type="button"
-          className="task-case-title"
-          aria-pressed={selected}
-          onClick={onSelect}
-        >
-          {definition.title}
-        </button>
-        <div className="task-case-actions">
-          <Button type="button" variant="secondary" size="sm" onClick={onInspect}>
-            Inspect attempts
-          </Button>
-          <Button type="button" variant="secondary" size="sm" onClick={onEvidence}>
-            <BookOpen aria-hidden="true" />
-            Evidence
-          </Button>
-        </div>
-      </header>
-      <p className="task-case-id">
-        <code>{definition.caseId}</code> · {definition.category} · suite{" "}
-        <code>{definition.suiteId}</code> v{definition.suiteVersion}
+    <InfoPopover label={`Grading criteria: ${taskName(definition)}`}>
+      <ul>
+        <li>
+          {definition.routingKind === "sequence"
+            ? "Call the required tools in order."
+            : "Make exactly one call to the required tool."}
+        </li>
+        <li>
+          {definition.requiredArguments
+            ? "Use the required argument values. Extra fields are allowed."
+            : "No task-specific argument values are required."}
+        </li>
+        <li>Finish the attempt and tool calls without errors.</li>
+        {(definition.forbiddenTools.length > 0 || definition.forbiddenScopes.length > 0) && (
+          <li>Avoid the forbidden tools and permissions listed in Technical details.</li>
+        )}
+      </ul>
+      <p>
+        Final-answer accuracy is not scored. Exact tool and argument requirements are in Technical
+        details.
       </p>
-      <dl className="task-case-fields">
+    </InfoPopover>
+  );
+}
+
+function AttemptDetails({ attempt }: { attempt: CanonicalAttempt }) {
+  return (
+    <div className="task-attempt-details">
+      <h4>
+        Attempt {attempt.repetition}: {attemptLabel(attempt)}
+      </h4>
+      <EvidenceValue
+        evidence={attempt.checks}
+        renderValue={(checks) => (
+          <dl className="task-checks">
+            {CHECK_NAMES.map((name) => (
+              <div key={name}>
+                <dt>{checkNames[name]}</dt>
+                <dd>
+                  <CheckMark outcome={checks[name]} />
+                </dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      />
+      <dl className="results-facts">
         <div>
-          <dt>Objective</dt>
-          <dd>{definition.objective}</dd>
-        </div>
-        <div>
-          <dt>Expected behavior</dt>
-          <dd>{definition.expectedBehavior}</dd>
-        </div>
-        <div>
-          <dt>Grading criteria</dt>
+          <dt>Failure reasons</dt>
           <dd>
-            <ul className="task-criteria">
-              {definition.gradingCriteria.map((criterion) => (
-                <li key={criterion}>{criterion}</li>
-              ))}
-            </ul>
+            {attempt.failureCategories.length
+              ? attempt.failureCategories.map((reason) => reason.replaceAll("_", " ")).join(", ")
+              : attempt.verdict === "pass"
+                ? "None"
+                : "No further reason recorded"}
           </dd>
         </div>
         <div>
-          <dt>Prompt</dt>
+          <dt>Time</dt>
+          <dd>
+            <EvidenceValue evidence={attempt.durationMs} renderValue={seconds} />
+          </dd>
+        </div>
+        {attempt.execution === "runtime_failure" && (
+          <div>
+            <dt>Wall time</dt>
+            <dd>
+              <EvidenceValue evidence={attempt.wallDurationMs} renderValue={seconds} />
+            </dd>
+          </div>
+        )}
+        <div>
+          <dt>Token usage</dt>
           <dd>
             <EvidenceValue
-              evidence={definition.prompt}
-              renderValue={(prompt) => (
-                <blockquote className="task-case-prompt">{prompt}</blockquote>
-              )}
+              evidence={attempt.tokenUsage}
+              renderValue={(usage) =>
+                `${usage.inputTokens.toLocaleString()} input / ${usage.outputTokens.toLocaleString()} output`
+              }
             />
           </dd>
         </div>
         <div>
-          <dt>Routing</dt>
+          <dt>Checks recorded as</dt>
           <dd>
-            {definition.routingKind}
-            {definition.expectedTool !== null ? (
-              <>
-                {" "}
-                → <code>{definition.expectedTool}</code>
-              </>
-            ) : null}
-            {definition.requiredArguments !== null ? (
-              <>
-                {" "}
-                · args <code>{JSON.stringify(definition.requiredArguments)}</code>
-              </>
-            ) : null}
-          </dd>
-        </div>
-        {definition.forbiddenTools.length > 0 ? (
-          <div>
-            <dt>Forbidden tools</dt>
-            <dd>
-              {definition.forbiddenTools.map((tool) => (
-                <code key={tool} className="task-forbidden">
-                  {tool}
-                </code>
-              ))}
-            </dd>
-          </div>
-        ) : null}
-        {definition.forbiddenScopes.length > 0 ? (
-          <div>
-            <dt>Forbidden scopes</dt>
-            <dd>
-              {definition.forbiddenScopes.map((scope) => (
-                <code key={scope} className="task-forbidden">
-                  {scope}
-                </code>
-              ))}
-            </dd>
-          </div>
-        ) : null}
-      </dl>
-      {runs.length > 0 ? (
-        <div className="task-table-scroll">
-          <table className="eval-table">
-            <thead>
-              <tr>
-                <th scope="col">Run</th>
-                {Array.from({ length: slots }, (_, index) => (
-                  <th scope="col" key={index}>
-                    rep {index + 1}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {runs.map((run) => (
-                <MatrixRunRow
-                  key={run.runId}
-                  run={run}
-                  caseAttempts={attemptsByRun.get(run.runId)?.get(definition.caseId) ?? []}
-                  slots={slots}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <p className="eval-muted">
-          No measured run has executed this case — the definition is published but unexercised.
-        </p>
-      )}
-    </article>
-  );
-}
-
-function MatrixRunRow({
-  run,
-  caseAttempts,
-  slots,
-}: {
-  run: CanonicalRun;
-  caseAttempts: readonly CanonicalAttempt[];
-  slots: number;
-}) {
-  const model = getModel(run.modelId);
-  return (
-    <tr>
-      <th scope="row" className="task-run-cell">
-        <span className="task-run-name">
-          {model ? <ModelAvatar model={model} /> : null}
-          {model?.name ?? run.modelId}
-        </span>
-        <span className="task-run-sub">
-          <code>{run.runId}</code> · {run.startedAt.slice(0, 10)}
-        </span>
-        <span className="task-run-sub">{cohortLabel(run.cohort)}</span>
-        <span className="task-run-chips">
-          <span className="eval-demo-label">checks {run.checkSource}</span>
-          <span className="eval-demo-label">{run.caseBinding}</span>
-          {run.dispatchCoverage !== "complete" ? (
-            <CoverageChip coverage={run.dispatchCoverage} />
-          ) : null}
-          {run.attempts.availability !== "available" ? (
-            <AvailabilityMark availability={run.attempts.availability} reason="attempt detail" />
-          ) : null}
-        </span>
-      </th>
-      {Array.from({ length: slots }, (_, index) => (
-        <OutcomeMatrixCell
-          key={index}
-          attempt={caseAttempts.find((attempt) => attempt.repetition === index + 1)}
-        />
-      ))}
-    </tr>
-  );
-}
-
-/** Attempts exist for a case id with no bundled definition (catalog-sha binding). */
-function UnboundCaseCard({
-  caseId,
-  runs,
-  attemptsByRun,
-  onInspect,
-}: {
-  caseId: string;
-  runs: readonly CanonicalRun[];
-  attemptsByRun: ReadonlyMap<string, ReadonlyMap<string, readonly CanonicalAttempt[]>>;
-  onInspect: () => void;
-}) {
-  const slots = repetitionSlots(caseId, runs, attemptsByRun);
-  return (
-    <article className="task-case">
-      <header className="task-case-head">
-        <span className="task-case-title">
-          <code>{caseId}</code>
-        </span>
-        <div className="task-case-actions">
-          <Button type="button" variant="secondary" size="sm" onClick={onInspect}>
-            Inspect attempts
-          </Button>
-        </div>
-      </header>
-      <p className="eval-muted">
-        Attempts reference this case id, but no published definition is bundled — the run was bound
-        by catalog hash.
-      </p>
-      <div className="task-table-scroll">
-        <table className="eval-table">
-          <thead>
-            <tr>
-              <th scope="col">Run</th>
-              {Array.from({ length: slots }, (_, index) => (
-                <th scope="col" key={index}>
-                  rep {index + 1}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {runs.map((run) => (
-              <MatrixRunRow
-                key={run.runId}
-                run={run}
-                caseAttempts={attemptsByRun.get(run.runId)?.get(caseId) ?? []}
-                slots={slots}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </article>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Attempt drilldown — depth follows evidence
-// ---------------------------------------------------------------------------
-
-function AttemptDrilldown({
-  caseId,
-  definition,
-  runs,
-  attemptsByRun,
-}: {
-  caseId: string;
-  definition: CanonicalCaseDefinition | undefined;
-  runs: readonly CanonicalRun[];
-  attemptsByRun: ReadonlyMap<string, ReadonlyMap<string, readonly CanonicalAttempt[]>>;
-}) {
-  return (
-    <div className="task-drilldown">
-      {definition !== undefined ? (
-        <p className="eval-muted">
-          {definition.title} · <code>{definition.caseId}</code> · suite{" "}
-          <code>{definition.suiteId}</code> v{definition.suiteVersion}
-        </p>
-      ) : (
-        <p className="eval-muted">
-          <code>{caseId}</code> has no published case definition in this bundle.
-        </p>
-      )}
-      {runs.map((run) => {
-        const model = getModel(run.modelId);
-        const attempts = (attemptsByRun.get(run.runId)?.get(caseId) ?? [])
-          .slice()
-          .sort((left, right) => left.repetition - right.repetition);
-        return (
-          <section key={run.runId} className="task-drilldown-run">
-            <h3>
-              {model ? <ModelAvatar model={model} /> : null}
-              {model?.name ?? run.modelId} · <code>{run.runId}</code>
-            </h3>
-            <p className="task-run-sub">
-              {run.startedAt.slice(0, 10)} · {cohortLabel(run.cohort)}
-              {canonicalCampaigns.find((campaign) => campaign.campaignId === run.campaignId)
-                ?.harness !== undefined
-                ? ` · ${canonicalCampaigns.find((campaign) => campaign.campaignId === run.campaignId)!.harness}`
-                : ""}
-            </p>
-            <div className="task-run-chips">
-              <span className="eval-demo-label">checks {run.checkSource}</span>
-              <span className="eval-demo-label">{run.caseBinding}</span>
-              <CoverageChip coverage={run.dispatchCoverage} />
-              {run.withheldFields.map((field) => (
-                <AvailabilityMark
-                  key={field.field}
-                  availability="withheld"
-                  reason={`${field.field} · ${field.reason}`}
-                />
-              ))}
-            </div>
-            {run.attempts.availability !== "available" ? (
-              <p>
-                <AvailabilityMark
-                  availability={run.attempts.availability}
-                  reason="attempt detail"
-                />
-              </p>
-            ) : attempts.length === 0 ? (
-              <p className="eval-muted">This run did not execute this case.</p>
-            ) : (
-              attempts.map((attempt) => (
-                <AttemptDetail key={attempt.repetition} attempt={attempt} />
-              ))
-            )}
-          </section>
-        );
-      })}
-    </div>
-  );
-}
-
-function AttemptDetail({ attempt }: { attempt: CanonicalAttempt }) {
-  const checks = attempt.checks;
-  return (
-    <article className="task-attempt">
-      <header className="task-attempt-head">
-        <span className="task-attempt-rep">rep {attempt.repetition}</span>
-        {attempt.execution === "completed" ? (
-          <VerdictChip verdict={attempt.verdict} />
-        ) : (
-          <ExecutionChip
-            execution={attempt.execution}
-            failureAttribution={attempt.failureAttribution}
-          />
-        )}
-        <span className="eval-demo-label">checks {attempt.checkSource}</span>
-      </header>
-      {attempt.failureCategories.length > 0 ? (
-        <p className="task-attempt-categories">
-          failure categories: {attempt.failureCategories.join(", ")}
-        </p>
-      ) : null}
-      <div className="task-attempt-checks">
-        {checks.availability === "available" ? (
-          CHECK_NAMES.map((name) => (
-            <span key={name} className="task-check">
-              <span className="task-check-name">{name}</span>
-              <CheckMark outcome={checks.value[name]} />
-            </span>
-          ))
-        ) : (
-          <AvailabilityMark availability={checks.availability} reason="per-attempt checks" />
-        )}
-      </div>
-      <dl className="task-attempt-metrics">
-        <div>
-          <dt>Duration</dt>
-          <dd>
-            <EvidenceValue evidence={attempt.durationMs} renderValue={(ms) => formatTime(ms)} />
+            {attempt.checkSource === "native" ? "Native checks" : "Derived from recorded scores"}
           </dd>
         </div>
         <div>
-          <dt>Wall duration</dt>
-          <dd>
-            <EvidenceValue evidence={attempt.wallDurationMs} renderValue={(ms) => formatTime(ms)} />
-          </dd>
-        </div>
-        <div>
-          <dt>Tokens</dt>
+          <dt>Answer</dt>
           <dd>
             <EvidenceValue
-              evidence={attempt.tokenUsage}
-              renderValue={(tokens) =>
-                `in ${tokens.inputTokens.toLocaleString("en-US")} · out ${tokens.outputTokens.toLocaleString("en-US")} · total ${tokens.totalTokens.toLocaleString("en-US")}`
+              evidence={attempt.answer}
+              renderValue={(answer) => <pre className="task-answer">{answer}</pre>}
+            />
+          </dd>
+        </div>
+        <div>
+          <dt>Tool calls</dt>
+          <dd>
+            <EvidenceValue
+              evidence={attempt.toolCalls}
+              renderValue={(calls) =>
+                calls.length ? (
+                  <ul>
+                    {calls.map((call, index) => (
+                      <li key={`${call.name}-${index}`}>
+                        <code>{call.name}</code>
+                        {call.error ? " (error)" : ""}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  "No tool calls"
+                )
               }
             />
           </dd>
         </div>
       </dl>
-      <div className="task-attempt-field">
-        <h4>Answer</h4>
-        <EvidenceValue
-          evidence={attempt.answer}
-          renderValue={(answer) => <blockquote className="task-case-prompt">{answer}</blockquote>}
-        />
-      </div>
-      <div className="task-attempt-field">
-        <h4>Tool calls</h4>
-        <EvidenceValue
-          evidence={attempt.toolCalls}
-          renderValue={(calls) => (
-            <ul className="task-criteria">
-              {calls.map((call, index) => (
-                <li key={index}>
-                  <code>{call.name}</code>
-                  {call.error ? <span className="eval-demo-label">error</span> : null}
-                </li>
-              ))}
-            </ul>
-          )}
-        />
-      </div>
-    </article>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Evidence modal — CanonicalCaseDefinition fields
-// ---------------------------------------------------------------------------
-
-const evidenceLabels: Record<EvidenceSection, string> = {
-  definition: "Case definition",
-  tools: "Expected tool set",
-  rubric: "Grading criteria",
-  dataset: "Prompt & expected call",
-};
-
-function EvidenceBody({
-  definition,
-  section,
-}: {
-  definition: CanonicalCaseDefinition;
-  section: EvidenceSection;
-}) {
-  return (
-    <div className="task-evidence-body">
-      <h3>{evidenceLabels[section]}</h3>
-      <p className="eval-muted">
-        {definition.family} · <code>{definition.caseId}</code> · suite{" "}
-        <code>{definition.suiteId}</code> v{definition.suiteVersion}
-      </p>
-      {section === "definition" ? (
-        <>
-          <h4>Objective</h4>
-          <p>{definition.objective}</p>
-          <h4>Expected behavior</h4>
-          <p>{definition.expectedBehavior}</p>
-          <h4>Category</h4>
-          <p>{definition.category}</p>
-        </>
-      ) : null}
-      {section === "tools" ? (
-        <>
-          <h4>Expected tool</h4>
-          <p>
-            {definition.expectedTool !== null ? (
-              <code>{definition.expectedTool}</code>
-            ) : (
-              "none declared"
-            )}{" "}
-            · routing {definition.routingKind}
-          </p>
-          {definition.requiredArguments !== null ? (
-            <>
-              <h4>Required arguments</h4>
-              <pre className="eval-code" role="region" aria-label="Required arguments" tabIndex={0}>
-                <code>{JSON.stringify(definition.requiredArguments, null, 2)}</code>
-              </pre>
-            </>
-          ) : null}
-          <h4>Forbidden tools</h4>
-          {definition.forbiddenTools.length > 0 ? (
-            <ul>
-              {definition.forbiddenTools.map((tool) => (
-                <li key={tool}>
-                  <code>{tool}</code>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>none</p>
-          )}
-          <h4>Forbidden scopes</h4>
-          <ul>
-            {definition.forbiddenScopes.map((scope) => (
-              <li key={scope}>
-                <code>{scope}</code>
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : null}
-      {section === "rubric" ? (
-        <ul>
-          {definition.gradingCriteria.map((criterion) => (
-            <li key={criterion}>{criterion}</li>
-          ))}
-        </ul>
-      ) : null}
-      {section === "dataset" ? (
-        <>
-          <h4>Prompt</h4>
-          <EvidenceValue
-            evidence={definition.prompt}
-            renderValue={(prompt) => <blockquote>{prompt}</blockquote>}
-          />
-          <h4>Expected call</h4>
-          <p>
-            {definition.expectedTool !== null ? (
-              <code>{definition.expectedTool}</code>
-            ) : (
-              "none declared"
-            )}
-            {definition.requiredArguments !== null ? (
-              <>
-                {" "}
-                with <code>{JSON.stringify(definition.requiredArguments)}</code>
-              </>
-            ) : null}
-          </p>
-        </>
-      ) : null}
     </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Editorial column + evidence sidebar (decision 6)
-// ---------------------------------------------------------------------------
-
-function EditorialColumn() {
-  return (
-    <aside className="task-editorial">
-      <h1 className="task-editorial-title">
-        <span>Every score,</span>
-        <span>
-          backed by evidence
-          <span className="task-red-dot" aria-hidden="true" />
-        </span>
-      </h1>
-      <p className="eval-description task-editorial-copy">
-        Explore the case definitions, outcomes, and grading criteria behind every task.
-      </p>
-      <figure className="task-watercolor" aria-hidden="true">
-        <img
-          className="task-watercolor-image"
-          src="/images/hero-watercolor-landscape.webp"
-          alt=""
-        />
-      </figure>
-      <blockquote className="eval-quote task-editorial-quote">
-        "A benchmark should show the work, not just crown a winner."
-      </blockquote>
-    </aside>
-  );
-}
-
-function EvidenceSidebar({
-  selectedCase,
-  onOpen,
+function TaskDetail({
+  definition,
+  rows,
+  modelId,
+  onModel,
 }: {
-  selectedCase: CanonicalCaseDefinition | undefined;
-  onOpen: (section: EvidenceSection) => void;
+  definition: CanonicalCaseDefinition;
+  rows: readonly LeaderboardModelRow[];
+  modelId: string;
+  onModel: (id: string) => void;
 }) {
+  const row = rows.find((entry) => entry.model.id === modelId) ?? rows[0];
+  const run = row?.runs[definition.family];
+  const summary = summarizeTask(run, definition.caseId);
+  const [repetition, setRepetition] = useState<number | null>(null);
+  const attempt = summary.slots.find((entry) => entry?.repetition === repetition);
   return (
-    <aside className="task-evidence" aria-labelledby="task-evidence-heading">
-      <h2 id="task-evidence-heading">What this task measures</h2>
-      <ul className="task-evidence-points">
-        <li>
-          <Search size={16} aria-hidden="true" />
-          <div>
-            <strong>Tools.</strong> The agent may call the listed read tools and nothing else.
-          </div>
-        </li>
-        <li>
-          <ListTree size={16} aria-hidden="true" />
-          <div>
-            <strong>Grounded.</strong> The answer has to cite fields that came back. Missing quotes
-            stay missing.
-          </div>
-        </li>
-        <li>
-          <Shield size={16} aria-hidden="true" />
-          <div>
-            <strong>Strict read-only.</strong> No orders, swaps, transfers, or schedule writes. A
-            blank price is a limitation, not a trade.
-          </div>
-        </li>
-      </ul>
-      <Separator className="task-evidence-rule" />
-      <div className="task-evidence-links">
-        <p className="task-evidence-lead">
-          Evidence &amp; provenance
-          {selectedCase !== undefined ? (
-            <>
-              {" "}
-              — <code>{selectedCase.caseId}</code>
-            </>
-          ) : null}
-        </p>
-        <nav className="task-provenance" aria-label="Case evidence">
-          <Button
-            type="button"
-            variant="link"
-            disabled={selectedCase === undefined}
-            onClick={() => onOpen("definition")}
-          >
-            Case definition
-          </Button>
-          <Button
-            type="button"
-            variant="link"
-            disabled={selectedCase === undefined}
-            onClick={() => onOpen("tools")}
-          >
-            Expected tool set
-          </Button>
-          <Button
-            type="button"
-            variant="link"
-            disabled={selectedCase === undefined}
-            onClick={() => onOpen("rubric")}
-          >
-            Grading criteria
-          </Button>
-          <Button
-            type="button"
-            variant="link"
-            disabled={selectedCase === undefined}
-            onClick={() => onOpen("dataset")}
-          >
-            Prompt &amp; expected call
-          </Button>
-        </nav>
+    <div className="results-detail-body task-detail">
+      <h3>{taskName(definition)}</h3>
+      <h4>Full prompt</h4>
+      <EvidenceValue
+        evidence={definition.prompt}
+        renderValue={(prompt) => <blockquote className="task-full-prompt">{prompt}</blockquote>}
+      />
+      <div className="task-model-picker">
+        <label htmlFor={`model-${definition.caseId}`}>Model</label>
+        <select
+          id={`model-${definition.caseId}`}
+          value={row?.model.id ?? ""}
+          onChange={(event) => {
+            setRepetition(null);
+            onModel(event.target.value);
+          }}
+        >
+          {rows.map((entry) => (
+            <option key={entry.model.id} value={entry.model.id}>
+              {entry.model.name}
+            </option>
+          ))}
+        </select>
       </div>
-    </aside>
+      {summary.status !== "available" && (
+        <p role="status">
+          {summary.status === "not_evaluated"
+            ? "Not evaluated"
+            : summary.status === "incomplete"
+              ? "Incomplete results"
+              : "Results unavailable"}
+          : {summary.reason}
+        </p>
+      )}
+      <div className="task-attempts" aria-label="Attempts">
+        {summary.slots.map((entry, index) => (
+          <button
+            key={index}
+            type="button"
+            disabled={!entry}
+            aria-pressed={entry !== undefined && repetition === entry.repetition}
+            className={`task-attempt ${entry?.verdict === "pass" ? "task-attempt-pass" : ""}`}
+            onClick={() => setRepetition(entry?.repetition ?? null)}
+          >
+            <span>Attempt {index + 1}</span>
+            <strong>{attemptLabel(entry)}</strong>
+          </button>
+        ))}
+      </div>
+      {attempt && <AttemptDetails attempt={attempt} />}
+      <details className="results-accordion">
+        <summary>Technical details</summary>
+        <div>
+          <dl className="results-facts">
+            <div>
+              <dt>Task identifier</dt>
+              <dd>
+                <code>{definition.caseId}</code>
+              </dd>
+            </div>
+            <div>
+              <dt>Suite</dt>
+              <dd>
+                <code>{definition.suiteId}</code> v{definition.suiteVersion}
+              </dd>
+            </div>
+            <div>
+              <dt>Expected behavior</dt>
+              <dd>{definition.expectedBehavior}</dd>
+            </div>
+            <div>
+              <dt>Required arguments</dt>
+              <dd>
+                {definition.requiredArguments ? (
+                  <pre>{JSON.stringify(definition.requiredArguments, null, 2)}</pre>
+                ) : (
+                  "No task-specific constraints"
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>Forbidden tools</dt>
+              <dd>{definition.forbiddenTools.join(", ") || "None declared"}</dd>
+            </div>
+            <div>
+              <dt>Forbidden permissions</dt>
+              <dd>{definition.forbiddenScopes.join(", ") || "None declared"}</dd>
+            </div>
+          </dl>
+          <h4>Recorded grading rules</h4>
+          <ul>
+            {definition.gradingCriteria.map((criterion) => (
+              <li key={criterion}>{criterion}</li>
+            ))}
+          </ul>
+          {run && (
+            <>
+              <RunDetails run={run} />
+              <dl className="results-facts">
+                <div>
+                  <dt>Source</dt>
+                  <dd>
+                    {run.provenance.sourceLabel}
+                    <br />
+                    <code>{run.provenance.sourceCommit}</code>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Artifact hash</dt>
+                  <dd>
+                    <code>{run.provenance.sourceArtifactSha256 ?? "Not retained"}</code>
+                  </dd>
+                </div>
+              </dl>
+              {run.notes.map((note) => (
+                <p key={note}>{note}</p>
+              ))}
+            </>
+          )}
+        </div>
+      </details>
+    </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
+function TaskResult({
+  run,
+  caseId,
+  onClick,
+}: {
+  run: CanonicalRun | undefined;
+  caseId: string;
+  onClick: () => void;
+}) {
+  const summary = summarizeTask(run, caseId);
+  if (summary.status === "not_evaluated")
+    return <span className="task-unavailable">Not evaluated</span>;
+  return (
+    <button className="task-result" onClick={onClick}>
+      {summary.status === "available" ? (
+        <>
+          {summary.passed}/{summary.started} <span>passed</span>
+        </>
+      ) : summary.status === "incomplete" ? (
+        "Incomplete results"
+      ) : (
+        "Results unavailable"
+      )}
+    </button>
+  );
+}
 
 export function TaskExplorerPage({
   initialFamily = "Spot",
   initialCaseId,
-  initialInspectCaseId,
-  initialEvidenceSection,
+  initialModelId,
+  initialSearch = "",
+  onNavigate,
+  rows = defaultRows,
 }: {
   initialFamily?: PrototypeFamily;
   initialCaseId?: string;
-  initialInspectCaseId?: string;
-  initialEvidenceSection?: EvidenceSection;
+  initialModelId?: string;
+  initialSearch?: string;
+  onNavigate?: (family: PrototypeFamily, modelId?: string, caseId?: string) => void;
+  rows?: readonly LeaderboardModelRow[];
 }) {
-  const [family, setFamily] = useState<PrototypeFamily>(initialFamily);
-  const [selectedCaseId, setSelectedCaseId] = useState<string | null>(initialCaseId ?? null);
-  const [inspectCaseId, setInspectCaseId] = useState<string | null>(initialInspectCaseId ?? null);
-  const [evidenceSection, setEvidenceSection] = useState<EvidenceSection | null>(
-    initialEvidenceSection ?? null,
+  const validCase = initialCaseId ? getCaseDefinition(initialCaseId) : undefined;
+  const initialCategory = validCase?.family ?? initialFamily;
+  const [family, setFamily] = useState<PrototypeFamily>(initialCategory);
+  const [search, setSearch] = useState(initialSearch);
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(
+    new Set(validCase ? [validCase.caseId] : []),
   );
-
-  const definitions = useMemo(() => caseDefinitionsForFamily(family), [family]);
-  // Measured runs only — synthetic rows never render on app pages (decision 9).
-  const runs = useMemo(
-    () => runsForFamily(family).filter((run) => run.origin === "measured"),
-    [family],
+  const [models, setModels] = useState<Readonly<Record<string, string>>>({});
+  // URL changes include browser back/forward, not only actions inside this page.
+  useEffect(() => {
+    setFamily(initialCategory);
+    setSearch(initialSearch);
+  }, [initialCategory, initialSearch]);
+  useEffect(() => {
+    if (validCase) {
+      setExpanded((current) => new Set([...current, validCase.caseId]));
+      if (initialModelId)
+        setModels((current) => ({ ...current, [validCase.caseId]: initialModelId }));
+    }
+  }, [validCase, initialModelId]);
+  const definitions = caseDefinitionsForFamily(family);
+  const query = search.trim().toLocaleLowerCase();
+  const shown = definitions.filter((definition) =>
+    `${taskName(definition)} ${definition.prompt.availability === "available" ? definition.prompt.value : ""}`
+      .toLocaleLowerCase()
+      .includes(query),
   );
-
-  // Attempts indexed run → case for matrix cells and drilldown.
-  const attemptsByRun = useMemo(() => {
-    const byRun = new Map<string, Map<string, CanonicalAttempt[]>>();
-    for (const run of runs) {
-      const byCase = new Map<string, CanonicalAttempt[]>();
-      for (const attempt of attemptsFor(run)) {
-        const list = byCase.get(attempt.caseId) ?? [];
-        list.push(attempt);
-        byCase.set(attempt.caseId, list);
-      }
-      byRun.set(run.runId, byCase);
-    }
-    return byRun;
-  }, [runs]);
-
-  // Attempts on case ids with no published definition still surface.
-  const unboundCaseIds = useMemo(() => {
-    const defined = new Set(definitions.map((definition) => definition.caseId));
-    const ids = new Set<string>();
-    for (const byCase of attemptsByRun.values()) {
-      for (const caseId of byCase.keys()) {
-        if (!defined.has(caseId)) ids.add(caseId);
-      }
-    }
-    return [...ids].sort();
-  }, [definitions, attemptsByRun]);
-
-  const selectedCase =
-    definitions.find((definition) => definition.caseId === selectedCaseId) ?? definitions[0];
-  const inspectDefinition =
-    inspectCaseId === null
-      ? undefined
-      : (definitions.find((definition) => definition.caseId === inspectCaseId) ??
-        getCaseDefinition(inspectCaseId));
-
-  function changeFamily(next: PrototypeFamily) {
-    setFamily(next);
-    setSelectedCaseId(null);
-    setInspectCaseId(null);
-    setEvidenceSection(null);
+  const defaultModel =
+    rows.find((row) => row.model.id === initialModelId)?.model.id ?? rows[0]?.model.id ?? "";
+  function select(caseId: string, modelId: string) {
+    setExpanded((current) => new Set([...current, caseId]));
+    setModels((current) => ({ ...current, [caseId]: modelId }));
+    onNavigate?.(family, modelId, caseId);
   }
-
-  function openEvidence(caseId: string, section: EvidenceSection) {
-    setSelectedCaseId(caseId);
-    setEvidenceSection(section);
+  function toggle(caseId: string) {
+    if (expanded.has(caseId)) {
+      setExpanded((current) => {
+        const next = new Set(current);
+        next.delete(caseId);
+        return next;
+      });
+      onNavigate?.(family, defaultModel);
+    } else select(caseId, models[caseId] ?? defaultModel);
   }
-
   return (
     <PageShell active="tasks">
-      <div className="task-explorer">
-        <EditorialColumn />
-        <section className="task-main" aria-labelledby="task-main-heading">
-          <div className="task-toolbar">
-            <FamilyTabs value={family} onChange={changeFamily} options={PROTOTYPE_FAMILIES} />
-            <p className="task-toolbar-note">
-              {definitions.length} case definition{definitions.length === 1 ? "" : "s"} ·{" "}
-              {runs.length} measured run{runs.length === 1 ? "" : "s"}
-            </p>
-          </div>
-          <p className="eval-eyebrow">
-            {family} · case definitions and measured outcomes — unranked, evidence-first
-          </p>
-          <h2 id="task-main-heading" className="task-prompt-title">
-            {family} cases
-          </h2>
-          {runs.length === 0 ? (
-            <div className="task-empty">
-              <p className="task-empty-title">No measured evidence for {family}</p>
-              <p className="eval-muted">
-                The {family} suite is published —{" "}
-                {definitions.length > 0
-                  ? `${definitions.length} case definition${definitions.length === 1 ? "" : "s"} below —`
-                  : "but no case definitions are bundled yet —"}{" "}
-                and no measured run has executed it. Outcome cells appear once a measured run
-                exists.
-              </p>
-            </div>
-          ) : null}
-          {definitions.length === 0 ? (
-            <div className="task-empty">
-              <p className="task-empty-title">No case definitions for {family}</p>
-              <p className="eval-muted">
-                No versioned case definitions are bundled for this family.
-              </p>
-            </div>
-          ) : (
-            definitions.map((definition) => (
-              <CaseCard
-                key={definition.caseId}
-                definition={definition}
-                runs={runs}
-                attemptsByRun={attemptsByRun}
-                selected={selectedCase?.caseId === definition.caseId}
-                onSelect={() => setSelectedCaseId(definition.caseId)}
-                onInspect={() => setInspectCaseId(definition.caseId)}
-                onEvidence={() => openEvidence(definition.caseId, "definition")}
-              />
-            ))
-          )}
-          {unboundCaseIds.map((caseId) => (
-            <UnboundCaseCard
-              key={caseId}
-              caseId={caseId}
-              runs={runs}
-              attemptsByRun={attemptsByRun}
-              onInspect={() => setInspectCaseId(caseId)}
-            />
-          ))}
-        </section>
-        <EvidenceSidebar
-          selectedCase={selectedCase}
-          onOpen={(section) => {
-            if (selectedCase !== undefined) openEvidence(selectedCase.caseId, section);
-          }}
+      <div className="eval-container results-page">
+        <ResultsHeader
+          title="Tasks"
+          description="Read each prompt and compare the models’ results."
         />
+        <div className="results-toolbar task-toolbar">
+          <nav className="results-category-tabs" aria-label="Task categories">
+            {PROTOTYPE_FAMILIES.map((category) => (
+              <button
+                key={category}
+                type="button"
+                aria-current={family === category ? "page" : undefined}
+                onClick={() => {
+                  setFamily(category);
+                  setSearch("");
+                  onNavigate?.(category, defaultModel);
+                }}
+              >
+                {category} <span>({caseDefinitionsForFamily(category).length})</span>
+                {category === "Portfolio" && <small>Not evaluated</small>}
+              </button>
+            ))}
+          </nav>
+          <label className="results-search">
+            <Search size={17} aria-hidden="true" />
+            <span className="results-sr-only">Search tasks or prompts</span>
+            <input
+              type="search"
+              placeholder="Search tasks or prompts"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
+        </div>
+        <p className="results-footnote">
+          {family === "Portfolio"
+            ? "Portfolio tasks have not been evaluated and do not contribute to Overall."
+            : "Each result shows passed attempts out of started attempts. Open a task to see its full prompt and individual attempts."}
+        </p>
+        <div
+          className="results-scroll"
+          role="region"
+          aria-label={`${family} tasks and model results`}
+          tabIndex={0}
+        >
+          <table className="results-table tasks-table">
+            <caption className="results-sr-only">{family} prompts and model results</caption>
+            <thead>
+              <tr>
+                <th scope="col" className="results-sticky">
+                  Task
+                </th>
+                <th scope="col">Prompt</th>
+                {rows.map((row) => (
+                  <th
+                    scope="col"
+                    key={row.model.id}
+                    className={row.model.id === initialModelId ? "task-highlight" : undefined}
+                  >
+                    {row.model.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {shown.map((definition) => (
+                <Fragment key={definition.caseId}>
+                  <tr>
+                    <th scope="row" className="results-sticky">
+                      <div className="task-name">
+                        <button
+                          className="task-name-button"
+                          aria-expanded={expanded.has(definition.caseId)}
+                          aria-controls={`task-${definition.caseId}`}
+                          onClick={() => toggle(definition.caseId)}
+                        >
+                          <ChevronDown size={16} aria-hidden="true" />
+                          <span>{taskName(definition)}</span>
+                        </button>
+                        <GradingInfo definition={definition} />
+                      </div>
+                    </th>
+                    <td>
+                      <EvidenceValue
+                        evidence={definition.prompt}
+                        renderValue={(prompt) => <p className="task-prompt-preview">{prompt}</p>}
+                      />
+                    </td>
+                    {rows.map((row) => (
+                      <td
+                        key={row.model.id}
+                        className={row.model.id === initialModelId ? "task-highlight" : undefined}
+                      >
+                        <TaskResult
+                          run={row.runs[family]}
+                          caseId={definition.caseId}
+                          onClick={() => select(definition.caseId, row.model.id)}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                  <tr
+                    id={`task-${definition.caseId}`}
+                    hidden={!expanded.has(definition.caseId)}
+                    className="results-expanded"
+                  >
+                    <td colSpan={rows.length + 2}>
+                      {expanded.has(definition.caseId) && (
+                        <TaskDetail
+                          definition={definition}
+                          rows={rows}
+                          modelId={models[definition.caseId] ?? defaultModel}
+                          onModel={(modelId) => select(definition.caseId, modelId)}
+                        />
+                      )}
+                    </td>
+                  </tr>
+                </Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {shown.length === 0 && (
+          <div className="results-empty" role="status">
+            <h2>No matching tasks</h2>
+            <p>Search by task name or words in the prompt.</p>
+            <button onClick={() => setSearch("")}>Clear search</button>
+          </div>
+        )}
+        <p className="results-footnote">
+          Scores check tool use and completion. Final-answer accuracy is not graded.{" "}
+          <a href="#/methodology">How scoring works ↗</a>
+        </p>
       </div>
-      <Modal
-        title={inspectCaseId !== null ? `Inspect attempts · ${inspectCaseId}` : "Inspect attempts"}
-        description="Measured attempts only. Missing checks, durations, and tokens render as their availability state."
-        open={inspectCaseId !== null}
-        onClose={() => setInspectCaseId(null)}
-      >
-        {inspectCaseId !== null ? (
-          <AttemptDrilldown
-            caseId={inspectCaseId}
-            definition={inspectDefinition}
-            runs={runs}
-            attemptsByRun={attemptsByRun}
-          />
-        ) : null}
-      </Modal>
-      <Modal
-        title="Case evidence"
-        description="Versioned case definition from the canonical suite — not a measured result."
-        open={evidenceSection !== null && selectedCase !== undefined}
-        onClose={() => setEvidenceSection(null)}
-      >
-        {evidenceSection !== null && selectedCase !== undefined ? (
-          <EvidenceBody definition={selectedCase} section={evidenceSection} />
-        ) : null}
-      </Modal>
     </PageShell>
   );
 }

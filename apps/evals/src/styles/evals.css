@@ -460,7 +460,7 @@ body,
     padding: 18px 32px;
     gap: 22px;
   }
-  .eval-demo-label {
+  .eval-header .eval-demo-label {
     display: none;
   }
   .eval-nav {
@@ -552,4 +552,24 @@ body,
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* Shared measured-result formatting, also used by model and comparison views. */
+.lb-count {
+  color: var(--eval-green);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.lb-measured-pill {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--green-6);
+  border-radius: 999px;
+  color: var(--eval-green);
+  font-size: 9px;
+  line-height: 1;
+  padding: 3px 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
