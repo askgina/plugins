@@ -25,7 +25,8 @@ const PACKAGES = [
   { slug: "evals", name: "@askgina/evals", directory: "packages/evals" },
 ];
 const MAX_FINDINGS = 100;
-const MAX_TEXT_BYTES = 2 * 1024 * 1024;
+// Bound full-file scanning while matching the supported archive-member size.
+const MAX_TEXT_BYTES = 16 * 1024 * 1024;
 const DOCUMENTATION_PNG_ASSETS: Record<string, true> = {
   "docs/images/product/agent-setup-read-only.png": true,
   "docs/images/product/agent-setup-full-access.png": true,
@@ -256,6 +257,62 @@ export const findEmbeddedSourceMapBoundaryRules = (text: string): readonly strin
   return rules;
 };
 
+export const scanPublicBoundaryFile: {
+  (
+    label: string,
+    receipt: boolean,
+    report: (rule: string, path: string) => void,
+  ): (absolute: string) => Effect.Effect<void, PublicBoundaryError, FileSystem.FileSystem>;
+  (
+    absolute: string,
+    label: string,
+    receipt: boolean,
+    report: (rule: string, path: string) => void,
+  ): Effect.Effect<void, PublicBoundaryError, FileSystem.FileSystem>;
+} = Function.dual(
+  4,
+  (
+    absolute: string,
+    label: string,
+    receipt: boolean,
+    report: (rule: string, path: string) => void,
+  ): Effect.Effect<void, PublicBoundaryError, FileSystem.FileSystem> =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const info = yield* fs
+        .stat(absolute)
+        .pipe(Effect.mapError((cause) => fail(`cannot inspect ${absolute}`, cause)));
+      if (info.size > BigInt(MAX_TEXT_BYTES)) {
+        report("unscannable-oversized-file", label);
+        return;
+      }
+      const bytes = yield* fs
+        .readFile(absolute)
+        .pipe(Effect.mapError((cause) => fail(`cannot read ${absolute}`, cause)));
+      for (const rule of findPublicBinaryBoundaryRules(label, bytes)) {
+        report(rule, label);
+      }
+      if (bytes.includes(0)) return;
+      const scanText = (text: string, sourceLabel: string, isReceipt: boolean): void => {
+        for (const rule of findPublicBoundaryTextRules(text, sourceLabel, isReceipt)) {
+          report(rule, sourceLabel);
+        }
+      };
+      const text = new TextDecoder().decode(bytes);
+      scanText(text, label, receipt);
+      if (label.endsWith(".map")) {
+        const sourceMap = inspectSourceMapText(text);
+        if (sourceMap === undefined) report("invalid-source-map", label);
+        else {
+          if (sourceMap.unsafeSourcePath) report("absolute-source-map-path", label);
+          for (const [index, source] of sourceMap.sourcesContent.entries()) {
+            scanText(source, `${label}#${sourceMap.sources[index] ?? index}`, false);
+          }
+        }
+      }
+    }),
+);
+
 const readText = (file: string) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
@@ -351,40 +408,10 @@ const program = Effect.scoped(
       if (findings.length < MAX_FINDINGS)
         findings.push({ rule, path: file.split(path.sep).join("/") });
     };
-    const scanText = (text: string, label: string, receipt: boolean): void => {
-      for (const rule of findPublicBoundaryTextRules(text, label, receipt)) {
-        addFinding(rule, label);
-      }
-    };
     const scanFile = (absolute: string, label: string, receipt: boolean) =>
       Effect.gen(function* () {
         scannedFiles += 1;
-        const info = yield* fs
-          .stat(absolute)
-          .pipe(Effect.mapError((cause) => fail(`cannot inspect ${absolute}`, cause)));
-        if (info.size > BigInt(MAX_TEXT_BYTES)) {
-          addFinding("unscannable-oversized-file", label);
-          return;
-        }
-        const bytes = yield* fs
-          .readFile(absolute)
-          .pipe(Effect.mapError((cause) => fail(`cannot read ${absolute}`, cause)));
-        for (const rule of findPublicBinaryBoundaryRules(label, bytes)) {
-          addFinding(rule, label);
-        }
-        if (bytes.includes(0)) return;
-        const text = new TextDecoder().decode(bytes);
-        scanText(text, label, receipt);
-        if (label.endsWith(".map")) {
-          const sourceMap = inspectSourceMapText(text);
-          if (sourceMap === undefined) addFinding("invalid-source-map", label);
-          else {
-            if (sourceMap.unsafeSourcePath) addFinding("absolute-source-map-path", label);
-            for (const [index, source] of sourceMap.sourcesContent.entries()) {
-              scanText(source, `${label}#${sourceMap.sources[index] ?? index}`, false);
-            }
-          }
-        }
+        yield* scanPublicBoundaryFile(absolute, label, receipt, addFinding);
       });
     const comparePackageDeclarations = (stage: string, definition: PackageDefinition) =>
       Effect.gen(function* () {

@@ -1,6 +1,8 @@
+import * as BunServices from "@effect/platform-bun/BunServices";
 import { assert, describe, it } from "@effect/vitest";
+import { Effect, FileSystem, Path } from "effect";
 
-import { findPublicBinaryBoundaryRules } from "../check-public-boundary";
+import { findPublicBinaryBoundaryRules, scanPublicBoundaryFile } from "../check-public-boundary";
 import { isAttestedPublicSourceAsset, type PublicSourceAsset } from "../public-source-assets";
 
 const PNG = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]);
@@ -122,5 +124,63 @@ describe("public binary boundary", () => {
     ]);
     assert.isFalse(isAttestedPublicSourceAsset(FONT_PATH, WOFF2));
     assert.isFalse(isAttestedPublicSourceAsset(WOFF2)(FONT_PATH));
+  });
+});
+
+const scanTextFixture = (text: string) =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const paths = yield* Path.Path;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "public-boundary-test-" });
+      const file = paths.join(directory, "fixture.txt");
+      yield* fs.writeFileString(file, text);
+      const findings: { rule: string; path: string }[] = [];
+      yield* scanPublicBoundaryFile(file, "fixture.txt", false, (rule, path) => {
+        findings.push({ rule, path });
+      });
+      return findings;
+    }),
+  );
+
+describe("public file boundary", () => {
+  it.layer(BunServices.layer)((it) => {
+    it.effect("accepts clean text larger than 2 MiB", () =>
+      Effect.gen(function* () {
+        const findings = yield* scanTextFixture(" ".repeat(2 * 1024 * 1024 + 1));
+        assert.deepStrictEqual(findings, []);
+      }),
+    );
+
+    it.effect("detects a forbidden repository marker after the former 2 MiB boundary", () =>
+      Effect.gen(function* () {
+        const marker = ["nextjs", "-ai-chatbot"].join("");
+        const findings = yield* scanTextFixture(" ".repeat(2 * 1024 * 1024) + marker);
+        assert.deepStrictEqual(findings, [
+          { rule: "private-repository-name", path: "fixture.txt" },
+        ]);
+      }),
+    );
+
+    it.effect("scans a forbidden tail marker at exactly 16 MiB", () =>
+      Effect.gen(function* () {
+        const marker = ["nextjs", "-ai-chatbot"].join("");
+        const findings = yield* scanTextFixture(
+          " ".repeat(16 * 1024 * 1024 - marker.length) + marker,
+        );
+        assert.deepStrictEqual(findings, [
+          { rule: "private-repository-name", path: "fixture.txt" },
+        ]);
+      }),
+    );
+
+    it.effect("rejects files larger than 16 MiB as unscannable", () =>
+      Effect.gen(function* () {
+        const findings = yield* scanTextFixture(" ".repeat(16 * 1024 * 1024 + 1));
+        assert.deepStrictEqual(findings, [
+          { rule: "unscannable-oversized-file", path: "fixture.txt" },
+        ]);
+      }),
+    );
   });
 });
