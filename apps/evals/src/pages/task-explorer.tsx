@@ -17,7 +17,7 @@ import {
   unifiedLeaderboardRows,
   type LeaderboardModelRow,
 } from "../canonical/selectors";
-import { PageShell } from "../components/eval-ui";
+import { ModelAvatar, PageShell } from "../components/eval-ui";
 import { InfoPopover, ResultsHeader, RunDetails, seconds } from "../components/results-ui";
 
 const defaultRows = sortLeaderboardRows(unifiedLeaderboardRows());
@@ -501,7 +501,10 @@ export function TaskExplorerPage({
                     key={row.model.id}
                     className={row.model.id === initialModelId ? "task-highlight" : undefined}
                   >
-                    {row.model.name}
+                    <span className="task-model-heading">
+                      <ModelAvatar model={row.model} />
+                      <span>{row.model.name}</span>
+                    </span>
                   </th>
                 ))}
               </tr>

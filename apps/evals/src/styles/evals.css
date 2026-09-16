@@ -279,6 +279,15 @@ body,
   height: 48px;
   font-size: 32px;
 }
+.eval-avatar.eval-avatar-logo {
+  background: transparent;
+}
+.eval-avatar-logo img {
+  display: block;
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+}
 .eval-avatar-claude-4 {
   background: #e9d2bc;
   color: #4f2e1a;

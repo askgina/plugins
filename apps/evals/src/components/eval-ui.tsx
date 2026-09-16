@@ -125,20 +125,32 @@ export function PageShell({
   );
 }
 
+const providerLogos: Readonly<Record<string, string>> = {
+  openai: "/images/model-logos/openai.svg",
+  anthropic: "/images/model-logos/claude.svg",
+  muse: "/images/model-logos/meta.svg",
+  meta: "/images/model-logos/meta.svg",
+};
+
 export function ModelAvatar({
   model,
   size = "sm",
 }: {
-  model: { name: string; mark: string; color: string; id?: string };
+  model: { name: string; mark: string; color: string; id?: string; provider?: string };
   size?: "sm" | "lg";
 }) {
+  const logo = providerLogos[model.provider?.toLowerCase() ?? ""];
   return (
     <span
-      className={`eval-avatar eval-avatar-${size} ${model.id ? `eval-avatar-${model.id}` : ""}`}
+      className={`eval-avatar eval-avatar-${size} ${logo ? "eval-avatar-logo" : ""} ${model.id ? `eval-avatar-${model.id}` : ""}`}
       style={{ "--model-color": model.color } as CSSProperties}
       aria-hidden="true"
     >
-      {model.mark}
+      {logo ? (
+        <img src={logo} alt="" width={size === "lg" ? 38 : 24} height={size === "lg" ? 38 : 24} />
+      ) : (
+        model.mark
+      )}
     </span>
   );
 }

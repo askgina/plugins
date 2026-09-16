@@ -660,7 +660,9 @@
     gap: 6px;
   }
   .results-model .eval-avatar {
-    display: none;
+    width: 24px;
+    height: 28px;
+    flex-basis: 24px;
   }
   .tasks-table th:first-child {
     width: 180px;
@@ -684,4 +686,14 @@
 }
 .results-detail-body .eval-demo-label {
   white-space: normal;
+}
+.task-model-heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.task-model-heading .eval-avatar {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
 }
