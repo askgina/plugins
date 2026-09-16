@@ -38,6 +38,7 @@ import {
   TokenUsageValue,
   VerdictChip,
 } from "../canonical/components";
+import { CheckDimensionPanel } from "../components/check-dimension-radar";
 import { ModelAvatar, PageShell, Panel } from "../components/eval-ui";
 import { Button } from "../components/ui/button";
 import "./model-profile.css";
@@ -589,6 +590,11 @@ function RunDetail({ run }: { run: CanonicalRun }) {
           </table>
         </div>
       </div>
+
+      <CheckDimensionPanel
+        fill
+        series={[{ key: "run", label: run.runId, dimensions: run.dimensions }]}
+      />
 
       {/* Per-check outcome matrix */}
       {matrix.length > 0 && (

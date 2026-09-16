@@ -9,6 +9,7 @@
 
 import { useMemo } from "react";
 import { ArrowLeftRight, RotateCcw } from "lucide-react";
+import { CheckDimensionPanel } from "../../components/check-dimension-radar";
 import { ModelAvatar, PageShell, Panel } from "../../components/eval-ui";
 import { navigate, useHashRoute } from "../../router";
 import {
@@ -944,6 +945,23 @@ export function ComparePage({
           <>
             <div className="eval-compare-section">
               <HeadlinePanel left={leftRun} right={rightRun} />
+            </div>
+            <div className="eval-compare-section">
+              <CheckDimensionPanel
+                fill={false}
+                series={[
+                  {
+                    key: "left",
+                    label: getModel(leftRun.modelId)?.name ?? leftRun.modelId,
+                    dimensions: leftRun.dimensions,
+                  },
+                  {
+                    key: "right",
+                    label: getModel(rightRun.modelId)?.name ?? rightRun.modelId,
+                    dimensions: rightRun.dimensions,
+                  },
+                ]}
+              />
             </div>
             <div className="eval-compare-section">
               <CoveragePanel left={leftRun} right={rightRun} />
