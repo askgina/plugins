@@ -120,13 +120,16 @@ const RAW_FIELDS: Readonly<Record<string, true>> = {
   reasoningcontent: true,
   providererror: true,
 };
+// Mirrors OMP_REASONING in packages/evals/src/omp-harness.ts.
 const REASONING_LEVELS: Readonly<Record<string, true>> = {
-  none: true,
+  off: true,
   minimal: true,
   low: true,
   medium: true,
   high: true,
   xhigh: true,
+  max: true,
+  auto: true,
 };
 const DIGEST = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u;
 const CLAUDE_ID = /(?:^|[/-])claude(?:[/-]|$)/iu;
