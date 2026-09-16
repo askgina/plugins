@@ -150,6 +150,7 @@ export default defineConfig({
     tasks: {
       quality: {
         command: [
+          "bun run evals:check-public",
           "vp check .",
           "node_modules/.bin/tsc --noEmit -p tsconfig.json",
           "bun run check:typescript-imports",

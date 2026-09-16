@@ -24,5 +24,177 @@
   "auth": "Native Anthropic OAuth via a shared isolated credential-only SQLite profile; Gina OAuth read grant",
   "credentialPolicy": "Credentials, auth database, local launch configs and native executable excluded from artifacts; rerunning requires own credentials and the pinned executable",
   "inputs": "Existing 35 source cases unchanged; three repetitions per model",
-  "verification": "210 unique terminal slots and transcripts; all 208 retained scores exactly match offline replay; two typed runtime failures remain unscored"
+  "verification": "210 unique terminal slots and transcripts; all 208 retained scores exactly match offline replay; two typed runtime failures remain unscored",
+  "verificationScope": "Historical private source-bundle verification receipt, not a new replay. Native transcripts and original provider content remain private and are not included in the current public projection.",
+  "sourceHashScope": "Original evaluation source, catalog, driver and executable identities are unchanged; these are provenance receipts, not current public-artifact hashes.",
+  "publicProjection": {
+    "artifactPolicy": "sanitized",
+    "originalArtifactSha256": "1a355c3e3aacad72425bafd141aaa3343bfc6f7da78e80255eafb82df1e9e66c",
+    "originalArtifactAvailability": "withheld",
+    "withheldReason": "privacy_review",
+    "observationFields": [
+      "version",
+      "run_id",
+      "case_id",
+      "target",
+      "model",
+      "repetition",
+      "started_at",
+      "status",
+      "duration_ms",
+      "token_usage"
+    ],
+    "tokenUsageFields": [
+      "input_tokens",
+      "output_tokens",
+      "total_tokens"
+    ],
+    "withheldFields": [
+      "final_answer",
+      "tool_calls",
+      "activated_skills",
+      "available_tools",
+      "observation.error",
+      "score.*.details",
+      "trial.error.reason",
+      "native_transcripts",
+      "provider_reasoning"
+    ],
+    "withheldTextMarker": "withheld: privacy_review",
+    "numericEvidencePolicy": "Planned, dispatched, terminal, graded, passed, failed and unscored counts, numeric score dimensions, timing, token and result-byte metrics, and stable run/case/model/repetition identities are preserved without regrading or zero-filling.",
+    "originalPrivateArtifactsScope": "Exact pre-containment JSON byte receipts, preserved outside the repository with private permissions; hashes are not current public bytes and do not make full transcripts public.",
+    "originalPrivateArtifacts": [
+      {
+        "path": "verification.json",
+        "sha256": "c42bd7ab4fc155d22dbacdacedbd7f01faa53551cba27e5c80fde42be009e4ec",
+        "bytes": 578
+      },
+      {
+        "path": "ask-gina-claude-comparison.json",
+        "sha256": "eb7d78993621733eac82c11b898191bd7a0a2a35f902783ac143372bac354f9f",
+        "bytes": 1212293
+      },
+      {
+        "path": "opus/summary.json",
+        "sha256": "0d5d9dc432c91242a08791a197810c1fbde987e82f61fa5ef72961aed9253f0f",
+        "bytes": 550685
+      },
+      {
+        "path": "opus/manifest.json",
+        "sha256": "a06a7b0e47c33d7f23d37fb9c19cb9d22243f090cea5e7b1c776cd6d9e14a24b",
+        "bytes": 2137
+      },
+      {
+        "path": "opus/perps/summary.json",
+        "sha256": "ac644c4d90b729e840eb33f7f0170ad579d1af1effbc23324c5972b65d23c2e5",
+        "bytes": 246303
+      },
+      {
+        "path": "opus/predictions/summary.json",
+        "sha256": "1fa99d82f2eb89392fe5867cda8836e38f648fca18e192a024d034dc13f59c8d",
+        "bytes": 204205
+      },
+      {
+        "path": "opus/spot/summary.json",
+        "sha256": "508c170ee58674e2fdb9bde8d80843d2c07d5af592e3ed694115d913812cc489",
+        "bytes": 50640
+      },
+      {
+        "path": "reproduction/provenance.json",
+        "sha256": "1a355c3e3aacad72425bafd141aaa3343bfc6f7da78e80255eafb82df1e9e66c",
+        "bytes": 1641
+      },
+      {
+        "path": "fable/summary.json",
+        "sha256": "4fe6e3e012db7e8a1993b0a0d55b3530725504466947f1f53d1d7deeea3a7194",
+        "bytes": 555308
+      },
+      {
+        "path": "fable/manifest.json",
+        "sha256": "86febc02123b7cb943a3948501307da155c2322a6f18916cb02b6d31eace4ba3",
+        "bytes": 2143
+      },
+      {
+        "path": "fable/spot/summary.json",
+        "sha256": "a3dd85bece1760657948f8e239be85890a2da70942171acf0423103ec0b3b486",
+        "bytes": 48576
+      },
+      {
+        "path": "fable/predictions/summary.json",
+        "sha256": "e811623176886ca7b35787d89bbd8114ec4b1f9b49cf4f8af8ccd171402be74f",
+        "bytes": 218102
+      },
+      {
+        "path": "fable/perps/summary.json",
+        "sha256": "6b0e5f6d35d26bb51d625f227877cfb513b7993993b985d5338391f4fa470d7d",
+        "bytes": 238575
+      }
+    ],
+    "currentPublicArtifactsScope": "SHA-256 and byte length of every current sibling Claude-comparison JSON artifact, with paths relative to the claude-comparison directory. This provenance file is explicitly excluded to avoid a self-referential digest.",
+    "currentPublicArtifactsExcluded": [
+      "reproduction/provenance.json"
+    ],
+    "currentPublicArtifacts": [
+      {
+        "path": "ask-gina-claude-comparison.json",
+        "sha256": "acf6b70af1dafe75b305326555244e3798f02bcce390dfde4d2ffa299e8bd573",
+        "bytes": 412231
+      },
+      {
+        "path": "fable/manifest.json",
+        "sha256": "86febc02123b7cb943a3948501307da155c2322a6f18916cb02b6d31eace4ba3",
+        "bytes": 2143
+      },
+      {
+        "path": "fable/perps/summary.json",
+        "sha256": "f7ce5a1b8465bc10a3e3598022e3c36a2ac6f625a4a4f7dd2de1abeac7df2bf8",
+        "bytes": 78396
+      },
+      {
+        "path": "fable/predictions/summary.json",
+        "sha256": "64ca89edf23ed1082258447e4da21333cdf505b9f7d1014c40558a15f46e0918",
+        "bytes": 59658
+      },
+      {
+        "path": "fable/spot/summary.json",
+        "sha256": "5cf51d5d122fce4bc6283b1f0b47875d3c4de2a5e30515fabe54869e7dafefe8",
+        "bytes": 17448
+      },
+      {
+        "path": "fable/summary.json",
+        "sha256": "90ed9f5f7e4dc6ec03aeff63520f3ad1d3ac21e7132dbd5580d123b887b9bc0f",
+        "bytes": 181239
+      },
+      {
+        "path": "opus/manifest.json",
+        "sha256": "a06a7b0e47c33d7f23d37fb9c19cb9d22243f090cea5e7b1c776cd6d9e14a24b",
+        "bytes": 2137
+      },
+      {
+        "path": "opus/perps/summary.json",
+        "sha256": "9923741be37ac93e54e74fb008b2d7c6bf195cba53ce801edb42d7922f6fb5f5",
+        "bytes": 77172
+      },
+      {
+        "path": "opus/predictions/summary.json",
+        "sha256": "ce176afdb2cdeac8afdbe4a04825b2ef2af71bc229984b3b86ffca47245ab21e",
+        "bytes": 59284
+      },
+      {
+        "path": "opus/spot/summary.json",
+        "sha256": "a6ee7e2b16a5a50ed00fe6c07b5f3dfba1201b627bc90ca96a1e23ee0be44da9",
+        "bytes": 18265
+      },
+      {
+        "path": "opus/summary.json",
+        "sha256": "fc51350994c62ef6cf5a66e01cf114663f8dc6924e4bfae8b8c6064c98ce762f",
+        "bytes": 180428
+      },
+      {
+        "path": "verification.json",
+        "sha256": "2e94fc424fd8f5d113cc12eaf1652ed6543d752f1c0f0a8bdae6169cff49dabd",
+        "bytes": 1481
+      }
+    ]
+  }
 }

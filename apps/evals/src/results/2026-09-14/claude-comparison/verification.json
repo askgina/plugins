@@ -6,7 +6,10 @@
       "retainedTranscripts": 105,
       "identicalRegradedScores": 104,
       "unscored": 1,
-      "summarySha256": "4fe6e3e012db7e8a1993b0a0d55b3530725504466947f1f53d1d7deeea3a7194"
+      "summarySha256": "4fe6e3e012db7e8a1993b0a0d55b3530725504466947f1f53d1d7deeea3a7194",
+      "summaryAvailability": "withheld",
+      "retainedTranscriptsAvailability": "withheld",
+      "publicSummarySha256": "90ed9f5f7e4dc6ec03aeff63520f3ad1d3ac21e7132dbd5580d123b887b9bc0f"
     },
     {
       "model": "anthropic/claude-opus-5",
@@ -14,8 +17,18 @@
       "retainedTranscripts": 105,
       "identicalRegradedScores": 104,
       "unscored": 1,
-      "summarySha256": "0d5d9dc432c91242a08791a197810c1fbde987e82f61fa5ef72961aed9253f0f"
+      "summarySha256": "0d5d9dc432c91242a08791a197810c1fbde987e82f61fa5ef72961aed9253f0f",
+      "summaryAvailability": "withheld",
+      "retainedTranscriptsAvailability": "withheld",
+      "publicSummarySha256": "fc51350994c62ef6cf5a66e01cf114663f8dc6924e4bfae8b8c6064c98ce762f"
     }
   ],
-  "totalTerminal": 210
+  "totalTerminal": 210,
+  "verificationScope": "Historical verification receipt for the original private source bundle; summarySha256 identifies the private pre-projection summary, and retainedTranscripts counts private transcripts not published here. The public projections were not regraded.",
+  "publicProjection": {
+    "artifactPolicy": "sanitized",
+    "originalArtifactSha256": "c42bd7ab4fc155d22dbacdacedbd7f01faa53551cba27e5c80fde42be009e4ec",
+    "originalArtifactAvailability": "withheld",
+    "withheldReason": "privacy_review"
+  }
 }
