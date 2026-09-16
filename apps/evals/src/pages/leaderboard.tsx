@@ -11,7 +11,6 @@ import {
 } from "../canonical/canonical";
 import {
   AvailabilityMark,
-  EligibilityReasonList,
   HeadlineValue,
   LatencyValue,
   SampleCount,
@@ -25,7 +24,6 @@ import {
   headlineFor,
   headlineSortKey,
   inCohort,
-  leaderboardEligibility,
   runsForFamily,
   type DerivedCost,
   type Headline,
@@ -84,7 +82,7 @@ const benefits = [
 ] as const;
 
 const metricLabels: Record<SortMetric, string> = {
-  headline: "headline passes/started",
+  headline: "pass rate",
   latency: "p50 latency",
 };
 
@@ -180,16 +178,6 @@ function CostValue({ cost }: { cost: DerivedCost }) {
 }
 
 function LeaderboardRowView({ row }: { row: LeaderboardRow }) {
-  const reasons = leaderboardEligibility(row.run, row.run.cohort);
-  const campaignDescriptor =
-    row.campaign === undefined
-      ? row.run.campaignId
-      : `${row.campaign.date} · ${row.campaign.harness}`;
-  const campaignTitle = `${
-    row.campaign === undefined
-      ? row.run.campaignId
-      : `${row.campaign.campaignId} · ${row.campaign.date} · ${row.campaign.harness}`
-  } · run ${row.run.runId}`;
   return (
     <tr>
       <th scope="row">
@@ -201,13 +189,6 @@ function LeaderboardRowView({ row }: { row: LeaderboardRow }) {
             ) : (
               <a href={`#/models/${row.model.id}`}>{row.model.name}</a>
             )}
-            <small>
-              <span>{row.model?.provider ?? "unknown provider"}</span>
-              <span aria-hidden="true"> · </span>
-              <code className="lb-campaign" title={campaignTitle}>
-                {campaignDescriptor}
-              </code>
-            </small>
           </span>
         </div>
       </th>
@@ -219,16 +200,6 @@ function LeaderboardRowView({ row }: { row: LeaderboardRow }) {
       </td>
       <td className="lb-cost-cell">
         <CostValue cost={derivedCostPerTask(row.run)} />
-      </td>
-      <td>
-        <span className="lb-count">{numberFormatter.format(row.run.counts.planned)}</span>
-      </td>
-      <td>
-        {reasons.length > 0 ? (
-          <EligibilityReasonList reasons={reasons} />
-        ) : (
-          <span className="eval-muted">—</span>
-        )}
       </td>
     </tr>
   );
@@ -623,7 +594,7 @@ export function LeaderboardPage({
                   <thead>
                     <tr>
                       <th className="lb-model-column" scope="col">
-                        Model / campaign
+                        Model
                       </th>
                       <th
                         scope="col"
@@ -636,7 +607,7 @@ export function LeaderboardPage({
                         }
                       >
                         <SortButton
-                          label="Headline"
+                          label="Pass rate"
                           metric="headline"
                           activeMetric={sortMetric}
                           direction={sortDirection}
@@ -662,15 +633,13 @@ export function LeaderboardPage({
                         />
                       </th>
                       <th scope="col">est. cost/task</th>
-                      <th scope="col">Tasks</th>
-                      <th scope="col">Eligibility</th>
                     </tr>
                   </thead>
                   {groups.map((group) => (
                     <tbody key={group.cohortId}>
                       {selectedCohort === undefined && (
                         <tr className="lb-cohort-row">
-                          <th scope="rowgroup" colSpan={6}>
+                          <th scope="rowgroup" colSpan={4}>
                             {group.label}{" "}
                             <span className="lb-cohort-run-count">
                               · {group.rows.length} {group.rows.length === 1 ? "run" : "runs"}
