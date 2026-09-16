@@ -4,7 +4,7 @@ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import { createHash } from "node:crypto";
-import { Data, Effect, FileSystem, Layer, Option, Path, Schema } from "effect";
+import { Data, Effect, FileSystem, Function, Layer, Option, Path, Schema } from "effect";
 import type { Plugin } from "vite-plus";
 
 import {
@@ -217,10 +217,14 @@ const hasClaudeIdentity = (value: unknown, field = ""): boolean => {
   );
 };
 
-export const validateClaudePublicArtifact = (input: unknown, file: string) =>
+export const validateClaudePublicArtifact = Function.dual<
+  (file: string) => (input: unknown) => Effect.Effect<void, EvalPublicArtifactError>,
+  (input: unknown, file: string) => Effect.Effect<void, EvalPublicArtifactError>
+>(2, (input, file) =>
   safeMetadata(input)
     ? Effect.void
-    : Effect.fail(new EvalPublicArtifactError({ file, reason: "private_payload" }));
+    : Effect.fail(new EvalPublicArtifactError({ file, reason: "private_payload" })),
+);
 
 /** Scan source imports AND copied public assets, not a hand-maintained report list. */
 export const checkEvalPublicArtifacts = (appRoot?: string) =>
@@ -275,14 +279,20 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
   });
 
 const services = Layer.merge(BunFileSystem.layer, BunPath.layer);
+const main = (appRoot?: string) =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const context = yield* Layer.build(services);
+      return yield* checkEvalPublicArtifacts(appRoot).pipe(Effect.provide(context));
+    }),
+  );
 
 /** Runs before Vite reads JSON imports, emits ?url assets, or copies public/. */
 export const evalPublicArtifactsPlugin = (appRoot?: string): Plugin => ({
   name: "check-eval-public-artifacts",
-  configResolved: () =>
-    Effect.runPromise(checkEvalPublicArtifacts(appRoot).pipe(Effect.provide(services))),
+  configResolved: () => Effect.runPromise(main(appRoot)),
 });
 
 if (import.meta.main) {
-  BunRuntime.runMain(checkEvalPublicArtifacts().pipe(Effect.provide(services)));
+  BunRuntime.runMain(main());
 }

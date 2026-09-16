@@ -1,7 +1,7 @@
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, Schema } from "effect";
+import { Effect, FileSystem, Function, Layer, Path, Schema } from "effect";
 import { build } from "vite-plus";
 
 import {
@@ -146,7 +146,7 @@ describe("Claude static public artifact boundary", () => {
       Effect.gen(function* () {
         const original = structuredClone(report);
         yield* validateClaudePublicArtifact(report, "comparison.json");
-        yield* validateClaudePublicArtifact(family, "family/summary.json");
+        yield* Function.pipe(family, validateClaudePublicArtifact("family/summary.json"));
         assert.deepStrictEqual(report, original);
       }),
   );
@@ -160,7 +160,11 @@ describe("Claude static public artifact boundary", () => {
         assert.notInclude(encodeJson(failure), SENTINEL);
       }
       const relocated = { ...family, nested: [{ final_answer: SENTINEL }] };
-      const failure = yield* Effect.flip(validateClaudePublicArtifact(relocated, "summary.json"));
+      const failure = yield* Function.pipe(
+        relocated,
+        validateClaudePublicArtifact("summary.json"),
+        Effect.flip,
+      );
       assert.strictEqual(failure.reason, "private_payload");
     }),
   );
