@@ -1,5 +1,5 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
-import { ArrowUpRight, FlaskConical, X } from "lucide-react";
+import { type CSSProperties, type ReactNode } from "react";
+import { X } from "lucide-react";
 import { Button } from "./ui/button";
 import { DialogRoot, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 
@@ -27,18 +27,15 @@ export function PageShell({
   children: ReactNode;
   footerNote?: string;
 }) {
-  const [runOpen, setRunOpen] = useState(false);
   return (
     <div className="eval-app">
       <a className="eval-skip-link" href="#eval-main">
         Skip to content
       </a>
       <header className="eval-header">
-        <a className="eval-wordmark" href="#/leaderboard" aria-label="Ask Gina Evals home">
-          <strong>
-            Ask Gina<span className="eval-brand-dot">·</span>
-          </strong>
-          <span>Evals</span>
+        <a className="eval-wordmark" href="#/leaderboard" aria-label="Ask Gina home">
+          <img src="/favicon.svg" width={40} height={40} alt="" />
+          <strong>Ask Gina</strong>
         </a>
         <nav className="eval-nav" aria-label="Main navigation">
           {navigation.map((item) => (
@@ -51,11 +48,6 @@ export function PageShell({
             </a>
           ))}
         </nav>
-        <div className="eval-header-actions">
-          <Button className="eval-run-button" onClick={() => setRunOpen(true)}>
-            Run an evaluation <ArrowUpRight size={14} aria-hidden="true" />
-          </Button>
-        </div>
       </header>
       <main id="eval-main" className="eval-main" tabIndex={-1}>
         {children}
@@ -65,62 +57,6 @@ export function PageShell({
           {footerNote ?? DATA_ORIGIN_NOTE} <a href="#/methodology">See methodology.</a>
         </span>
       </footer>
-      <Modal
-        title="Run an evaluation"
-        description="How to reproduce these results with the open-source runner."
-        open={runOpen}
-        onClose={() => setRunOpen(false)}
-      >
-        <div className="eval-run-intro">
-          <FlaskConical size={25} aria-hidden="true" />
-          <p>
-            This site only reads exported artifacts — it never starts evaluations or connects to a
-            wallet. The runner lives in <code>packages/evals</code> (Bun 1.4.x, run from the
-            repository root).
-          </p>
-        </div>
-        <p>
-          Hermetic replay grades the bundled suite against recorded observations — no credentials
-          and no live calls:
-        </p>
-        <pre className="eval-code" role="region" aria-label="Replay instructions" tabIndex={0}>
-          <code>
-            bun install --frozen-lockfile{"\n"}
-            bun run eval:replay -- \{"\n"}
-            {"  "}--suite packages/evals/src/fixtures/model-smoke.yaml \{"\n"}
-            {"  "}--observations packages/evals/src/fixtures/synthetic-observations.yaml \{"\n"}
-            {"  "}--output /tmp/plugin-eval-report.json
-          </code>
-        </pre>
-        <p>
-          Live trials use the same suite and grader against a real backend. Every runner needs{" "}
-          <code>ASK_GINA_ACCESS_TOKEN</code> plus its own credential (for example{" "}
-          <code>OPENROUTER_API_KEY</code>), a clean Git worktree, and three to five repetitions:
-        </p>
-        <pre className="eval-code" role="region" aria-label="Live run instructions" tabIndex={0}>
-          <code>
-            bun run eval:openrouter -- \{"\n"}
-            {"  "}--suite packages/evals/src/fixtures/ask-gina-routing-smoke.yaml \{"\n"}
-            {"  "}--run-id local-openrouter-example --candidate main \{"\n"}
-            {"  "}--model openai/gpt-5.1 --reasoning medium \{"\n"}
-            {"  "}--repetitions 3 --account-class eval --timeout-ms 120000 \{"\n"}
-            {"  "}--max-steps 8 --openrouter-endpoint openai \{"\n"}
-            {"  "}--expected-provider OpenAI --max-cost-usd 25
-          </code>
-        </pre>
-        <p className="eval-muted">
-          Responses, Codex, Claude, and OMP runners follow the same shape — see the package README
-          for each runner's flags and credentials.
-        </p>
-        <a
-          className="eval-text-link"
-          href="https://github.com/askgina/plugins/tree/main/packages/evals"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Read eval runner instructions <ArrowUpRight size={14} aria-hidden="true" />
-        </a>
-      </Modal>
     </div>
   );
 }

@@ -54,8 +54,8 @@ body,
 }
 .eval-wordmark {
   display: flex;
-  align-items: baseline;
-  gap: 3px;
+  align-items: center;
+  gap: 8px;
   flex-shrink: 0;
 }
 .eval-wordmark strong {
@@ -63,19 +63,11 @@ body,
   font-weight: 600;
   letter-spacing: -1.3px;
 }
-.eval-wordmark > span {
-  color: #737373;
-  font-size: 13px;
-}
-.eval-brand-dot {
-  color: var(--eval-red);
-  padding: 0 3px 0 4px;
-}
 .eval-nav {
   display: flex;
   align-items: center;
   gap: 28px;
-  margin: 0 auto;
+  margin: 0 0 0 auto;
 }
 .eval-nav a {
   font-size: 12px;
@@ -97,11 +89,6 @@ body,
   right: 0;
   bottom: 0;
 }
-.eval-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
 .eval-demo-label {
   font-size: 10px;
   line-height: 1.4;
@@ -110,18 +97,6 @@ body,
   border-radius: 7px;
   padding: 6px 10px;
   white-space: nowrap;
-}
-.eval-run-button {
-  height: 38px;
-  border-radius: 10px;
-  background: #0b0b0d;
-  color: white;
-  font-size: 11px;
-  gap: 15px;
-  box-shadow: 0 5px 14px #0b0b0d12;
-}
-.eval-run-button:hover {
-  background: #2b2b2d;
 }
 .eval-main {
   outline: none;
@@ -412,14 +387,6 @@ body,
   border-radius: 10px;
   padding: 18px;
 }
-.eval-run-intro {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-}
-.eval-run-intro svg {
-  flex-shrink: 0;
-}
 .eval-text-link {
   display: inline-flex;
   gap: 8px;
@@ -475,9 +442,6 @@ body,
   .eval-nav {
     gap: 22px;
   }
-  .eval-header-actions {
-    gap: 8px;
-  }
 }
 @media (max-width: 760px) {
   .eval-header {
@@ -485,17 +449,8 @@ body,
     padding: 18px 22px 0;
     gap: 16px;
   }
-  .eval-header-actions {
-    margin-left: auto;
-  }
   .eval-wordmark strong {
     font-size: 22px;
-  }
-  .eval-run-button {
-    height: 34px;
-    font-size: 10px;
-    padding: 0 10px;
-    gap: 8px;
   }
   .eval-nav {
     order: 3;

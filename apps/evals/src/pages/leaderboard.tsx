@@ -135,7 +135,7 @@ export function LeaderboardPage({
     <PageShell active="leaderboard">
       <div className="eval-container results-page">
         <ResultsHeader
-          title="Model leaderboard"
+          title="AI Financial Tasks Leaderboard"
           description="Compare model results on spot, perpetuals, and prediction-market tasks."
         >
           <p className="results-context">{benchmarkSummary(rows)}</p>
@@ -157,7 +157,12 @@ export function LeaderboardPage({
             />
           </label>
         </div>
-        <div className="results-scroll" role="region" aria-label="Model leaderboard" tabIndex={0}>
+        <div
+          className="results-scroll"
+          role="region"
+          aria-label="AI Financial Tasks Leaderboard"
+          tabIndex={0}
+        >
           <table className="results-table leaderboard-table">
             <caption className="results-sr-only">
               Models sorted by {columns.find((col) => col.metric === metric)?.label},{" "}
