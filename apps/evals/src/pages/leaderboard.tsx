@@ -211,6 +211,64 @@ interface ScatterPoint {
   readonly headline: Extract<Headline, { kind: "rate" }>;
 }
 
+interface PlottedScatterPoint extends ScatterPoint {
+  readonly x: number;
+  readonly y: number;
+  readonly yValue: number;
+  readonly name: string;
+}
+
+function placeScatterLabels(
+  plotted: readonly PlottedScatterPoint[],
+  chartWidth: number,
+  chartHeight: number,
+): Array<PlottedScatterPoint & { labelX: number; labelY: number; labelAnchor: "start" | "end" }> {
+  const occupied: Array<readonly [number, number, number, number]> = [];
+  return plotted.map((point) => {
+    const width = Math.min(118, Math.max(22, point.name.length * 6.15));
+    const fallback = { labelX: point.x + 9, labelY: point.y - 8, labelAnchor: "start" as const };
+    const candidates = [
+      fallback,
+      { labelX: point.x + 9, labelY: point.y + 14, labelAnchor: "start" as const },
+      { labelX: point.x - 9, labelY: point.y - 8, labelAnchor: "end" as const },
+      { labelX: point.x - 9, labelY: point.y + 14, labelAnchor: "end" as const },
+    ];
+    for (const candidate of candidates) {
+      const left = candidate.labelAnchor === "end" ? candidate.labelX - width : candidate.labelX;
+      const box = [left, candidate.labelY - 9, left + width, candidate.labelY + 3] as const;
+      const inBounds =
+        box[0] >= 4 && box[2] <= chartWidth - 4 && box[1] >= 2 && box[3] <= chartHeight - 18;
+      const hitsLabel = occupied.some(
+        (other) =>
+          box[0] < other[2] + 2 &&
+          box[2] + 2 > other[0] &&
+          box[1] < other[3] + 2 &&
+          box[3] + 2 > other[1],
+      );
+      const hitsPoint = plotted.some((other) => {
+        if (other === point) return false;
+        return (
+          other.x >= box[0] - 6 &&
+          other.x <= box[2] + 6 &&
+          other.y >= box[1] - 6 &&
+          other.y <= box[3] + 6
+        );
+      });
+      if (inBounds && !hitsLabel && !hitsPoint) {
+        occupied.push(box);
+        return { ...point, ...candidate };
+      }
+    }
+    occupied.push([
+      fallback.labelX,
+      fallback.labelY - 9,
+      fallback.labelX + width,
+      fallback.labelY + 3,
+    ]);
+    return { ...point, ...fallback };
+  });
+}
+
 /** Quality vs. p50 latency — measured rows with both values available only. */
 function ScatterPlot({
   rows,
@@ -260,6 +318,20 @@ function ScatterPlot({
     margin.left + ((value - xDomain[0]) / (xDomain[1] - xDomain[0])) * plotWidth;
   const yPosition = (value: number) =>
     margin.top + (1 - (value - yDomain[0]) / (yDomain[1] - yDomain[0])) * plotHeight;
+  const labeled = placeScatterLabels(
+    points.map((point) => {
+      const yValue = (point.headline.passed / point.headline.started) * 100;
+      return {
+        ...point,
+        yValue,
+        x: xPosition(point.latencySeconds),
+        y: yPosition(yValue),
+        name: point.row.model?.name ?? point.row.run.modelId,
+      };
+    }),
+    width,
+    height,
+  );
 
   return (
     <div className="lb-chart-wrap">
@@ -340,37 +412,30 @@ function ScatterPlot({
             No matching runs to plot
           </text>
         )}
-        {points.map((point, index) => {
-          const yValue = (point.headline.passed / point.headline.started) * 100;
-          const x = xPosition(point.latencySeconds);
-          const y = yPosition(yValue);
-          const labelOnLeft = x > width - margin.right - 108;
-          const name = point.row.model?.name ?? point.row.run.modelId;
-          return (
-            <g className="lb-chart-model" key={point.row.run.runId}>
-              <title>
-                {name}: {point.headline.passed}/{point.headline.started} passed ({yValue.toFixed(1)}
-                %), p50 {formatX(point.latencySeconds)}
-              </title>
-              <circle className="lb-chart-point-halo" cx={x} cy={y} r="7" />
-              <circle
-                className="lb-chart-point"
-                cx={x}
-                cy={y}
-                r="4.2"
-                fill={point.row.model?.color ?? "currentColor"}
-              />
-              <text
-                className="lb-chart-model-label"
-                x={labelOnLeft ? x - 9 : x + 9}
-                y={y + (index % 2 === 0 ? -8 : 14)}
-                textAnchor={labelOnLeft ? "end" : "start"}
-              >
-                {name}
-              </text>
-            </g>
-          );
-        })}
+        {labeled.map((point) => (
+          <g className="lb-chart-model" key={point.row.run.runId}>
+            <title>
+              {`${point.name}: ${point.headline.passed}/${point.headline.started} passed (${point.yValue.toFixed(1)}%), p50 ${formatX(point.latencySeconds)}`}
+            </title>
+            <circle className="lb-chart-hit" cx={point.x} cy={point.y} r="16" />
+            <circle className="lb-chart-point-halo" cx={point.x} cy={point.y} r="7" />
+            <circle
+              className="lb-chart-point"
+              cx={point.x}
+              cy={point.y}
+              r="4.2"
+              fill={point.row.model?.color ?? "currentColor"}
+            />
+            <text
+              className="lb-chart-model-label"
+              x={point.labelX}
+              y={point.labelY}
+              textAnchor={point.labelAnchor}
+            >
+              {point.name}
+            </text>
+          </g>
+        ))}
       </svg>
     </div>
   );
