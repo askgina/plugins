@@ -24,6 +24,7 @@ import {
   getCaseDefinition,
   getModel,
   runsForFamily,
+  scoringCoverageFor,
 } from "../canonical/selectors";
 import {
   AvailabilityMark,
@@ -239,9 +240,7 @@ function MatrixRunRow({
         <span className="task-run-chips">
           <span className="eval-demo-label">checks {run.checkSource}</span>
           <span className="eval-demo-label">{run.caseBinding}</span>
-          {run.dispatchCoverage !== "complete" ? (
-            <CoverageChip coverage={run.dispatchCoverage} />
-          ) : null}
+          {scoringCoverageFor(run) !== "complete" ? <CoverageChip run={run} /> : null}
           {run.attempts.availability !== "available" ? (
             <AvailabilityMark availability={run.attempts.availability} reason="attempt detail" />
           ) : null}
@@ -362,7 +361,7 @@ function AttemptDrilldown({
             <div className="task-run-chips">
               <span className="eval-demo-label">checks {run.checkSource}</span>
               <span className="eval-demo-label">{run.caseBinding}</span>
-              <CoverageChip coverage={run.dispatchCoverage} />
+              <CoverageChip run={run} />
               {run.withheldFields.map((field) => (
                 <AvailabilityMark
                   key={field.field}

@@ -11,6 +11,7 @@ import {
   PUBLIC_EVAL_DECODE_OPTIONS,
   PublicEvalIdentifierSchema,
   PublicEvalModelSchema,
+  PublicEvalSha256Schema,
   PublicEvalTimestampSchema,
 } from "../packages/contracts/src/eval-results";
 import { isSafePublicEvalText } from "../packages/evals/src/sanitize";
@@ -36,7 +37,7 @@ const Observation = Schema.Struct({
   started_at: PublicEvalTimestampSchema,
   status: Schema.Literals(["completed", "failed"]),
   duration_ms: Count,
-  token_usage: TokenUsage,
+  token_usage: Schema.NullOr(TokenUsage),
 });
 const ScoreDimension = Schema.Struct({
   score: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })),
@@ -53,7 +54,19 @@ const Score = Schema.Struct({
   total_result_bytes: Count,
 });
 const TrialError = Schema.Struct({
-  tag: Schema.Literals(["PluginEvalOmpHarnessProcessError", "PluginEvalOmpHarnessTimeoutError"]),
+  tag: Schema.Literals([
+    "PluginEvalOmpHarnessProcessError",
+    "PluginEvalOmpHarnessTimeoutError",
+    "PluginEvalOmpHarnessSpawnError",
+    "PluginEvalOmpHarnessMcpError",
+    "PluginEvalMuseCliTimeoutError",
+    "PluginEvalMuseCliProcessError",
+    "PluginEvalMuseMcpError",
+    "PluginEvalDevinTimeoutError",
+    "PluginEvalDevinSpawnError",
+    "PluginEvalDevinMcpError",
+    "PluginEvalDevinProcessError",
+  ]),
   reason: Schema.NullOr(Schema.Literal(WITHHELD)),
 });
 const Trial = Schema.Struct({
@@ -75,6 +88,35 @@ const Dimensions = Schema.Struct({
   skill_activation: DimensionCounts,
 });
 
+const RuntimeClassificationCounts = Schema.Struct({
+  planned: Count,
+  terminal: Count,
+  graded: Count,
+  passed: Count,
+  failed: Count,
+  unscored: Count,
+  timeouts: Count,
+  pending: Count,
+});
+const RuntimeClassification = Schema.Struct({
+  schemaVersion: Schema.Literal("ask-gina-runtime-classification.v1"),
+  receipt: Schema.Literal("classification-receipt.json"),
+  receiptAvailability: Schema.Literal("withheld"),
+  receiptSha256: PublicEvalSha256Schema,
+  classifierSha256: PublicEvalSha256Schema,
+  derived: Schema.Literal(true),
+  scope: Schema.Literal("post-run-runtime-classification"),
+  noAnswerRegrade: Schema.Literal(true),
+  noOutcomeSelectiveRerun: Schema.Literal(true),
+  rawEvidenceUnchanged: Schema.Literal(true),
+  observationFiles: Schema.Literal("raw-unchanged"),
+  counts: Schema.Struct({
+    raw: RuntimeClassificationCounts,
+    corrected: RuntimeClassificationCounts,
+    changed: Count,
+  }),
+});
+
 // Schema.is is a type guard, not the exporter's excess-property decoder.
 // Decode strictly, discard the decoded value, and leave public bytes unchanged.
 const strictFields: Readonly<Record<string, (value: unknown) => Option.Option<unknown>>> = {
@@ -83,7 +125,11 @@ const strictFields: Readonly<Record<string, (value: unknown) => Option.Option<un
   score: Schema.decodeUnknownOption(Schema.NullOr(Score), PUBLIC_EVAL_DECODE_OPTIONS),
   error: Schema.decodeUnknownOption(Schema.NullOr(TrialError), PUBLIC_EVAL_DECODE_OPTIONS),
   dimensions: Schema.decodeUnknownOption(Dimensions, PUBLIC_EVAL_DECODE_OPTIONS),
-  token_usage: Schema.decodeUnknownOption(TokenUsage, PUBLIC_EVAL_DECODE_OPTIONS),
+  token_usage: Schema.decodeUnknownOption(Schema.NullOr(TokenUsage), PUBLIC_EVAL_DECODE_OPTIONS),
+  runtimeClassification: Schema.decodeUnknownOption(
+    Schema.NullOr(RuntimeClassification),
+    PUBLIC_EVAL_DECODE_OPTIONS,
+  ),
 };
 const RAW_FIELDS: Readonly<Record<string, true>> = {
   activatedskills: true,
@@ -130,6 +176,7 @@ const REASONING_LEVELS: Readonly<Record<string, true>> = {
   xhigh: true,
   max: true,
   auto: true,
+  none: true,
 };
 const DIGEST = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u;
 const CLAUDE_ID = /(?:^|[/-])claude(?:[/-]|$)/iu;
@@ -162,6 +209,26 @@ const APPROVED_CLAUDE_ARTIFACTS: Readonly<Record<string, string>> = {
     "678bb0a4a8bf78122bc47fa67d28a590eef97a2e41405bf6419112de4f658655",
   "src/results/2026-09-14/claude-comparison/verification.json":
     "2e94fc424fd8f5d113cc12eaf1652ed6543d752f1c0f0a8bdae6169cff49dabd",
+  "src/results/2026-09-16/reasoning-sweep/ask-gina-reasoning-sweep-claude.json":
+    "2251a59ddd477dddd9d1831634782e25cf64aafb59a8f49cdb458b7bc4f97a16",
+  "src/results/2026-09-16/reasoning-sweep/reproduction/provenance.json":
+    "8e26080dd94fa33802803d5f8c4b203a287a9a7a5e6ec9d4421c32087e2ee425",
+  "src/results/2026-09-16/reasoning-sweep/verification.json":
+    "33ba9d49e2218b901db7230acf3b8503034a99b898c8a3a8139ad8f0866b8fb5",
+  "src/results/2026-09-16/reasoning-sweep/rows/devin-fable-high.json":
+    "e4f1ec6eac7758fa212a7118c74908299d9111714c64eeb919d9eb78075492ac",
+  "src/results/2026-09-16/reasoning-sweep/rows/devin-fable-low.json":
+    "23321f3435bc37f9db9ec552160b538f83b3c83f0e5952b0197e9e2ec3d32a98",
+  "src/results/2026-09-16/reasoning-sweep/rows/devin-fable-max.json":
+    "ae20f924e55291b8aa9b70283fbf4d13dbeeaa208e318fe377b3ac9f5ab7d994",
+  "src/results/2026-09-16/reasoning-sweep/rows/devin-fable-medium.json":
+    "c5349e539be95d1170d4ad032a686497ea67567c8d56ff7b0301c4ecf27474a2",
+  "src/results/2026-09-16/reasoning-sweep/rows/opus-high.json":
+    "a2e2df1867fa194afaffd8aded5a8c34624004fdb2580d01403f65d941dc4705",
+  "src/results/2026-09-16/reasoning-sweep/rows/opus-low.json":
+    "8d6dc429f29d04da550aeaae9b843845d692c16d68a541ad3133babb2967722c",
+  "src/results/2026-09-16/reasoning-sweep/rows/opus-medium.json":
+    "81c1d22deed01918d26e9953e692769332b7354607f5324f2ff969d4b7abb128",
 };
 const textDecoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const decodeArtifactJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
@@ -267,8 +334,12 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
           Effect.flatMap(decodeArtifactJson),
           Effect.mapError(() => fail(relative, "invalid_json")),
         );
-        if (/claude/iu.test(relative) || hasClaudeIdentity(input)) {
+        const claudeBearing = /claude/iu.test(relative) || hasClaudeIdentity(input);
+        const sweepArtifact = relative.startsWith("src/results/2026-09-16/reasoning-sweep/");
+        if (claudeBearing || sweepArtifact) {
           yield* validateClaudePublicArtifact(input, relative);
+        }
+        if (claudeBearing) {
           if (
             !Object.hasOwn(APPROVED_CLAUDE_ARTIFACTS, relative) ||
             createHash("sha256").update(bytes).digest("hex") !== APPROVED_CLAUDE_ARTIFACTS[relative]

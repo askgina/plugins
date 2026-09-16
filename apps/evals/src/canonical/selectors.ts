@@ -365,12 +365,11 @@ export function representativeRuns(family: PrototypeFamily): readonly Representa
   return rows;
 }
 
-/** Newest-first run history for a model on a family (all config groups). */
-export function runHistoryFor(modelId: string, family: PrototypeFamily): readonly CanonicalRun[] {
+/** Newest-first run history for a model, optionally limited to a family (all config groups). */
+export function runHistoryFor(modelId: string, family?: PrototypeFamily): readonly CanonicalRun[] {
   return canonicalRuns
-    .filter((run) => run.modelId === modelId && run.family === family)
-    .slice()
-    .sort((a, b) => (a.startedAt >= b.startedAt ? -1 : 1));
+    .filter((run) => run.modelId === modelId && (family === undefined || run.family === family))
+    .sort((a, b) => (a.startedAt > b.startedAt ? -1 : a.startedAt < b.startedAt ? 1 : 0));
 }
 
 // ---------------------------------------------------------------------------
@@ -452,10 +451,22 @@ export function evidenceState(evidence: Evidence<unknown> | { availability: stri
   return evidence.availability;
 }
 
+/** Dispatch completion never implies that every planned attempt was graded. */
+export function scoringCoverageFor(run: {
+  readonly dispatchCoverage: DispatchCoverage;
+  readonly counts: Pick<CanonicalRunCounts, "planned" | "graded">;
+}): "complete" | "partial" | "none" | "unknown" {
+  if (run.counts.graded === 0) return "none";
+  if (run.dispatchCoverage === "unknown") return "unknown";
+  return run.dispatchCoverage === "complete" && run.counts.graded === run.counts.planned
+    ? "complete"
+    : "partial";
+}
+
 export function dispatchCoverageText(coverage: DispatchCoverage): string {
-  if (coverage === "complete") return "coverage complete";
-  if (coverage === "incomplete") return "coverage incomplete";
-  return "coverage unknown";
+  if (coverage === "complete") return "dispatch complete";
+  if (coverage === "incomplete") return "dispatch incomplete";
+  return "dispatch unknown";
 }
 
 // ---------------------------------------------------------------------------
@@ -516,9 +527,9 @@ export function derivedCostPerTask(run: CanonicalRun): DerivedCost {
   if (metric.availability !== "available" && metric.availability !== "aggregate_only") {
     return metric;
   }
-  const pricing = MODEL_PRICING[run.modelId];
-  if (pricing === undefined) {
-    return { availability: "not_recorded", reason: "no published price for this model" };
+  const pricing = run.pricing === undefined ? MODEL_PRICING[run.modelId] : run.pricing;
+  if (pricing == null) {
+    return { availability: "not_recorded", reason: "no verified price for this model and route" };
   }
   const denominator =
     metric.availability === "available"

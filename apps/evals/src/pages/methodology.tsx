@@ -73,9 +73,11 @@ export function MethodologyPage() {
                 <div key={campaign.campaignId}>
                   <p>
                     {campaign.harness}, {campaign.repetitions} repetitions per case,{" "}
-                    {campaign.timeoutMs / 1000}s timeout ({campaign.date}). These are unranked,
-                    small live samples of tool-use conformance, not answer accuracy or financial
-                    outcomes.
+                    {campaign.timeoutMs === null
+                      ? "route-specific timeouts"
+                      : `${campaign.timeoutMs / 1000}s timeout`}{" "}
+                    ({campaign.date}). These are unranked, small live samples of tool-use
+                    conformance, not answer accuracy or financial outcomes.
                   </p>
                   {campaign.campaignId === "omp-2026-09-11" ? (
                     <>
@@ -116,10 +118,12 @@ export function MethodologyPage() {
                         </a>
                       )}
                     </>
-                  ) : (
+                  ) : campaign.sourceCommit !== null ? (
                     <p>
                       Source commit <code>{campaign.sourceCommit.slice(0, 7)}</code>.
                     </p>
+                  ) : (
+                    <p>Source checkout and extracted snapshot identities are retained per route.</p>
                   )}
                   <ul>
                     {campaign.limitations.map((limitation) => (
@@ -168,8 +172,10 @@ export function MethodologyPage() {
                 unavailable where token evidence or a published price is missing.
               </p>
               <p>
-                The open-source runner in <code>packages/evals</code> reproduces these runs: same
-                suite, pinned tool catalog, deterministic grader, and declared repetitions.
+                Suites and the deterministic grader live in <code>packages/evals</code>. Native
+                route drivers, source identities and executable hashes are recorded per campaign.
+                Reruns require authenticated access to the live backend; identical outputs are not
+                guaranteed.
               </p>
               <a
                 className="eval-text-link"

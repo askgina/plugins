@@ -123,7 +123,7 @@ function ModelCard({ model }: { model: CanonicalModel }) {
                 <span className="model-index-family-name">{family}</span>
                 <div className="model-index-family-stat">
                   <HeadlineValue headline={headline} />
-                  <CoverageChip coverage={latest.dispatchCoverage} />
+                  <CoverageChip run={latest} />
                   <a
                     className="model-index-family-link"
                     href={`#/models/${model.id}?run=${latest.runId}`}

@@ -18,7 +18,14 @@
 //   corrected bytes reachable, withdrawals remove bytes but stay visible.
 //   Every publication here is a synthetic preview — no real review exists.
 
-import { claudeComparison, museReport, perpsPredictionsReport, spotComparison } from "../results";
+import {
+  claudeComparison,
+  museReport,
+  perpsPredictionsReport,
+  reasoningSweep,
+  reasoningSweepClaude,
+  spotComparison,
+} from "../results";
 import perpsAttemptsJson from "../results/2026-09-11/perps-predictions/perps/perps-openai-oauth-sol-20260911T152450Z.attempts.json";
 
 // ---------------------------------------------------------------------------
@@ -271,6 +278,7 @@ export interface CanonicalRunCounts {
   readonly failed: number;
   /** pass + fail; only completed attempts are graded. */
   readonly graded: number;
+  readonly unscored?: number;
 }
 
 export interface CanonicalRun {
@@ -280,6 +288,9 @@ export interface CanonicalRun {
   readonly family: PrototypeFamily;
   readonly campaignId: string;
   readonly startedAt: string;
+  readonly timeoutMs?: number;
+  /** Undefined uses the legacy registry; null means this route has no verified price. */
+  readonly pricing?: ModelPricing | null;
   readonly dispatchCoverage: DispatchCoverage;
   readonly gradingCoverage: GradingCoverage;
   readonly coveragePlan: {
@@ -307,6 +318,7 @@ export interface CanonicalRun {
     readonly sourceArtifactSha256: string | null;
     readonly sourceLabel: string;
     readonly sourceCommit: string;
+    readonly sourceKind?: "git_checkout" | "extracted_snapshot";
     /** Set when this run is embedded as a baseline inside another report. */
     readonly baselineRunId?: string;
   };
@@ -334,8 +346,8 @@ export interface CanonicalCampaign {
   readonly date: string;
   readonly harness: string;
   readonly repetitions: number;
-  readonly timeoutMs: number;
-  readonly sourceCommit: string;
+  readonly timeoutMs: number | null;
+  readonly sourceCommit: string | null;
   readonly executableSourceCommit?: string;
   readonly prUrl?: string;
   readonly prLabel?: string;
@@ -458,6 +470,51 @@ export const canonicalModels: readonly CanonicalModel[] = [
     origin: "measured",
   },
   {
+    id: "gpt-terra",
+    name: "GPT-5.6 Terra",
+    provider: "OpenAI",
+    providerModel: "openai-codex/gpt-5.6-terra",
+    mark: "◎",
+    color: "#4a6fa5",
+    origin: "measured",
+  },
+  {
+    id: "astra",
+    name: "GPT-6 Astra",
+    provider: "OpenAI",
+    providerModel: "openai-codex/gpt-6-astra",
+    mark: "◎",
+    color: "#1f4e79",
+    origin: "measured",
+  },
+  {
+    id: "grok",
+    name: "Grok 4.6",
+    provider: "xAI",
+    providerModel: "xai-oauth/grok-4.6",
+    mark: "◎",
+    color: "#3a3a3a",
+    origin: "measured",
+  },
+  {
+    id: "gemini",
+    name: "Gemini 3.8 Flash",
+    provider: "Google",
+    providerModel: "devin/gemini-3-8-flash",
+    mark: "◎",
+    color: "#3c7d5a",
+    origin: "measured",
+  },
+  {
+    id: "swe-2",
+    name: "SWE-2",
+    provider: "Devin",
+    providerModel: "devin/swe-2",
+    mark: "◎",
+    color: "#7a5c99",
+    origin: "measured",
+  },
+  {
     id: "synthetic-meridian",
     name: "Meridian 0.1",
     provider: "Synthetic",
@@ -571,6 +628,22 @@ const musePredictionsCohort = cohort({
   suiteId: SUITE_IDS.Predictions,
   target: "muse_cli",
 });
+const devinSpotCohort = cohort({ suiteId: SUITE_IDS.Spot, target: "devin_cli" });
+const devinPerpsCohort = cohort({ suiteId: SUITE_IDS.Perps, target: "devin_cli" });
+const devinPredictionsCohort = cohort({ suiteId: SUITE_IDS.Predictions, target: "devin_cli" });
+
+const SWEEP_COHORTS: Readonly<
+  Record<string, Readonly<Record<"Spot" | "Perps" | "Predictions", CanonicalCohort>>>
+> = {
+  omp_harness: { Spot: ompSpotCohort, Perps: ompPerpsCohort, Predictions: ompPredictionsCohort },
+  muse_cli: { Spot: museSpotCohort, Perps: musePerpsCohort, Predictions: musePredictionsCohort },
+  devin_cli: {
+    Spot: devinSpotCohort,
+    Perps: devinPerpsCohort,
+    Predictions: devinPredictionsCohort,
+  },
+};
+
 const meridianSpotCohort = cohort({
   suiteId: SUITE_IDS.Spot,
   catalogSha: "b3f5c9e1a2d48f6b7c0e9a1b3c5d7e9f0a2b4c6d8e0f2a4b6c8d0e2f4a6b8c0d2",
@@ -585,6 +658,9 @@ export const canonicalCohorts: readonly CanonicalCohort[] = [
   museSpotCohort,
   musePerpsCohort,
   musePredictionsCohort,
+  devinSpotCohort,
+  devinPerpsCohort,
+  devinPredictionsCohort,
   meridianSpotCohort,
 ];
 
@@ -748,6 +824,16 @@ export const canonicalCampaigns: readonly CanonicalCampaign[] = [
     timeoutMs: claudeComparison.methodology.timeoutMs,
     sourceCommit: claudeComparison.models[0]!.sourceCommit,
     limitations: claudeComparison.methodology.caveats,
+    origin: "measured",
+  },
+  {
+    campaignId: "reasoning-sweep-2026-09-16",
+    date: "2026-09-16",
+    harness: "OMP, native Muse and native Devin reasoning sweep",
+    repetitions: reasoningSweep.methodology.repetitions,
+    timeoutMs: null,
+    sourceCommit: null,
+    limitations: reasoningSweep.methodology.caveats,
     origin: "measured",
   },
   {
@@ -1869,24 +1955,53 @@ function museRun(family: "spot" | "perps" | "predictions"): CanonicalRun {
 
 type ClaudeModel = (typeof claudeComparison.models)[number];
 type ClaudeRun = ClaudeModel["runs"][number];
-type ClaudeTrial = ClaudeRun["trials"][number];
 
-function claudeAttemptToCanonical(trial: ClaudeTrial): CanonicalAttempt {
+/** Sanitized trial shared by the legacy Claude report and the reasoning sweep. */
+interface ProjectedTrial {
+  readonly caseId: string;
+  readonly repetition: number;
+  readonly outcome: string;
+  readonly wallDurationMs?: number | null;
+  readonly error: { readonly tag: string } | null;
+  readonly observation: {
+    readonly token_usage: {
+      readonly input_tokens: number;
+      readonly output_tokens: number;
+      readonly total_tokens: number;
+    } | null;
+  } | null;
+  readonly score: {
+    readonly overall_pass: boolean;
+    readonly routing: { readonly score: number };
+    readonly arguments: { readonly score: number };
+    readonly completion: { readonly score: number };
+    readonly safety?: { readonly score: number };
+    readonly latency_ms: number;
+  } | null;
+}
+
+const PROJECTED_TIMEOUT_TAGS: Readonly<Record<string, true>> = {
+  PluginEvalOmpHarnessTimeoutError: true,
+  PluginEvalMuseCliTimeoutError: true,
+  PluginEvalDevinTimeoutError: true,
+};
+
+function projectedTrialToCanonical(trial: ProjectedTrial): CanonicalAttempt {
   if (trial.outcome !== "observed") {
     const checks = notEvaluatedChecks();
+    const timedOut = trial.error !== null && Object.hasOwn(PROJECTED_TIMEOUT_TAGS, trial.error.tag);
     return {
       caseId: trial.caseId,
       repetition: trial.repetition,
-      execution: "runtime_failure",
-      failureAttribution: "unattributed",
+      execution: timedOut ? "timed_out" : "runtime_failure",
+      failureAttribution: timedOut ? null : "unattributed",
       verdict: "not_graded",
       checks: available(checks),
       checkSource: "derived_from_scores",
       failureCategories: trial.error ? [trial.error.tag] : [],
       durationMs: NOT_RECORDED,
       // Wall duration is recorded separately for runtime failures.
-      wallDurationMs:
-        trial.wallDurationMs === undefined ? NOT_RECORDED : available(trial.wallDurationMs),
+      wallDurationMs: trial.wallDurationMs == null ? NOT_RECORDED : available(trial.wallDurationMs),
       tokenUsage: NOT_RECORDED,
       answer: PRIVATE_TEXT_WITHHELD.answer,
       toolCalls: PRIVATE_TEXT_WITHHELD.toolCalls,
@@ -1933,7 +2048,7 @@ function claudeAttemptToCanonical(trial: ClaudeTrial): CanonicalAttempt {
         ? NOT_RECORDED
         : available(trial.wallDurationMs),
     tokenUsage:
-      trial.observation === null || trial.observation === undefined
+      trial.observation?.token_usage == null
         ? NOT_RECORDED
         : available({
             inputTokens: trial.observation.token_usage.input_tokens,
@@ -1953,7 +2068,7 @@ function claudeFamilyRun(
 ): CanonicalRun {
   const family: PrototypeFamily =
     run.family === "spot" ? "Spot" : run.family === "perps" ? "Perps" : "Predictions";
-  const attempts = run.trials.map(claudeAttemptToCanonical);
+  const attempts = run.trials.map(projectedTrialToCanonical);
   const configuration =
     modelId === "claude-fable"
       ? family === "Spot"
@@ -1984,8 +2099,8 @@ function claudeFamilyRun(
       planned: run.dispatched,
       started: run.dispatched,
       completed: run.passed + run.failed,
-      timedOut: 0,
-      runtimeFailure: run.unscored,
+      timedOut: run.timeouts,
+      runtimeFailure: run.unscored - run.timeouts,
       pending: 0,
       unstarted: 0,
       unknown: 0,
@@ -2034,6 +2149,185 @@ function claudeFamilyRun(
     },
     notes: [
       "Checks are derived_from_scores, not native grader output; answers and tool arguments are withheld under privacy_review.",
+    ],
+  };
+}
+
+// --- September 16 reasoning sweep (one run per row × family) -----------------
+
+interface SweepRun {
+  readonly family: string;
+  readonly runId: string;
+  readonly planned: number;
+  readonly dispatched: number;
+  readonly graded: number;
+  readonly passed: number;
+  readonly failed: number;
+  readonly unscored: number;
+  readonly timeouts: number;
+  readonly latencyMs: {
+    readonly p50: number | null;
+    readonly p95: number | null;
+    readonly max: number | null;
+  };
+  readonly tokenUsage: {
+    readonly observations: number;
+    readonly input: number | null;
+    readonly output: number | null;
+    readonly total: number | null;
+  };
+  readonly configuration: { readonly candidate: string; readonly pinnedSha256: string };
+  readonly trials: readonly ProjectedTrial[];
+  readonly runtimeClassification?: { readonly counts: { readonly changed: number } } | null;
+}
+
+interface SweepRow {
+  readonly rowId: string;
+  readonly model: string;
+  readonly reasoning: string;
+  readonly target: string;
+  readonly startedAt: string;
+  readonly timeoutMs: number;
+  readonly sourceCommit: string;
+  readonly sourceSummarySha256: string;
+  readonly provenance: {
+    readonly catalogSha: string;
+    readonly sourceKind: string;
+  };
+  readonly runtimeClassification?: { readonly derived: boolean } | null;
+  readonly runs: readonly SweepRun[];
+}
+
+const SWEEP_CAMPAIGN_ID = "reasoning-sweep-2026-09-16";
+const SWEEP_FAMILY: Readonly<Record<string, "Spot" | "Perps" | "Predictions">> = {
+  spot: "Spot",
+  perps: "Perps",
+  predictions: "Predictions",
+};
+const sweepModelIdByIdentity = new Map(
+  canonicalModels.map((model) => [model.providerModel, model.id]),
+);
+const reasoningSweepRows: readonly SweepRow[] = [
+  ...reasoningSweep.models,
+  ...reasoningSweepClaude.models,
+];
+
+function sweepFamilyRun(row: SweepRow, run: SweepRun): CanonicalRun {
+  const family = SWEEP_FAMILY[run.family];
+  const modelId = sweepModelIdByIdentity.get(row.model);
+  const routeCohort = family === undefined ? undefined : SWEEP_COHORTS[row.target]?.[family];
+  if (family === undefined || modelId === undefined || routeCohort === undefined) {
+    throw new Error(`unregistered reasoning-sweep row ${row.rowId}/${run.family}`);
+  }
+  const attempts = run.trials.map(projectedTrialToCanonical);
+  const { p50, p95, max } = run.latencyMs;
+  const usage = run.tokenUsage;
+  const snapshot = row.provenance.sourceKind === "extracted_snapshot";
+  return {
+    runId: `${row.rowId}-${run.family}-1`,
+    origin: "measured",
+    modelId,
+    family,
+    campaignId: SWEEP_CAMPAIGN_ID,
+    startedAt: row.startedAt,
+    timeoutMs: row.timeoutMs,
+    pricing: null,
+    dispatchCoverage: run.dispatched === run.planned ? "complete" : "incomplete",
+    gradingCoverage: run.graded === run.planned ? "complete" : "partial",
+    coveragePlan: { planSource: "run_manifest", planSha256: null, statusSha256: null },
+    caseBinding: "bound_by_catalog_sha",
+    checkSource: "derived_from_scores",
+    counts: {
+      planned: run.planned,
+      started: run.dispatched,
+      completed: run.graded,
+      timedOut: run.timeouts,
+      runtimeFailure: run.unscored - run.timeouts,
+      pending: run.dispatched - run.graded - run.unscored,
+      unstarted: run.planned - run.dispatched,
+      unknown: 0,
+      passed: run.passed,
+      failed: run.failed,
+      graded: run.graded,
+      unscored: run.unscored,
+    },
+    cohort:
+      row.provenance.catalogSha === routeCohort.catalogSha
+        ? routeCohort
+        : cohort({
+            suiteId: routeCohort.suiteId,
+            target: row.target,
+            catalogSha: row.provenance.catalogSha,
+          }),
+    configuration: pinnedConfiguration({
+      candidate: run.configuration.candidate,
+      model: row.model,
+      reasoning: row.reasoning,
+      pinnedSha256: run.configuration.pinnedSha256,
+    }),
+    metrics: {
+      latencyMs:
+        p50 === null || p95 === null || max === null
+          ? { availability: "not_recorded" }
+          : {
+              availability: "available",
+              p50,
+              p95,
+              max,
+              sampleCount: run.graded,
+              population: "graded",
+            },
+      tokenUsage:
+        usage.observations === 0 ||
+        usage.input === null ||
+        usage.output === null ||
+        usage.total === null
+          ? { availability: "not_recorded" }
+          : {
+              availability: "available",
+              inputTokens: usage.input,
+              outputTokens: usage.output,
+              totalTokens: usage.total,
+              sampleCount: usage.observations,
+              population: "graded",
+            },
+      answerAccuracy: { availability: "no_declared_method" },
+      usdCost: { availability: "no_declared_method" },
+      uncertainty: { availability: "no_declared_method" },
+    },
+    dimensions: available(dimensionsFromAttempts(attempts)),
+    attempts: available(attempts),
+    withheldFields: [
+      { field: "answer", reason: "privacy_review" },
+      { field: "toolCalls", reason: "privacy_review" },
+    ],
+    provenance: {
+      sourceArtifactSha256: row.sourceSummarySha256,
+      sourceLabel: `reasoning-sweep row ${row.rowId} ${row.runtimeClassification?.derived ? "post-run classified" : "source"} summary`,
+      sourceCommit: row.sourceCommit,
+      sourceKind: snapshot ? "extracted_snapshot" : "git_checkout",
+    },
+    notes: [
+      `Reasoning level ${row.reasoning}; ${row.target} timeout ${row.timeoutMs / 1000}s.`,
+      row.target === "omp_harness"
+        ? "Effort evidence is OMP runtime configuration, not provider-applied reasoning."
+        : row.target === "muse_cli"
+          ? "Effort evidence is Muse adapter argv only; no provider-applied effort is recorded."
+          : "Effort evidence is the exact Devin model UID recorded in ATIF when available.",
+      ...(modelId === "claude-fable" && row.target === "devin_cli"
+        ? [
+            "Exact Claude Fable 5.1 runs through Devin after provider 429 failures on the OMP route; this fallback does not apply to Opus.",
+          ]
+        : []),
+      ...((run.runtimeClassification?.counts.changed ?? 0) > 0
+        ? [
+            `Post-run runtime classification applies to ${run.runtimeClassification!.counts.changed} slots. Native failures are unscored, not failed conformance; raw evidence is unchanged and no answers were regraded.`,
+          ]
+        : []),
+      snapshot
+        ? "Source is an extracted snapshot; the source commit is a reference, not a clean-checkout attestation. Recorded archive or file hashes are retained in provenance."
+        : "Source is the pinned clean OMP checkout.",
+      "Pass/fail measures tool-use conformance, not answer correctness. Answers and tool arguments are withheld under privacy_review.",
     ],
   };
 }
@@ -2396,7 +2690,7 @@ const meridianSpot1 = syntheticRun({
 });
 
 // ---------------------------------------------------------------------------
-// The canonical run list: 13 retained family runs + the synthetic rows above.
+// The canonical run list: retained legacy and reasoning-sweep family runs, then synthetic rows.
 // ---------------------------------------------------------------------------
 
 export const canonicalRuns: readonly CanonicalRun[] = [
@@ -2419,6 +2713,7 @@ export const canonicalRuns: readonly CanonicalRun[] = [
       ),
     ),
   ),
+  ...reasoningSweepRows.flatMap((row) => row.runs.map((run) => sweepFamilyRun(row, run))),
   solSpot2,
   solSpotIncomplete,
   solSpotUnknown,
@@ -2450,7 +2745,7 @@ export const withdrawnRuns: readonly WithdrawnRunRef[] = [
 
 const SYNTHETIC_REVIEW = { status: "synthetic_preview" } as const;
 
-function revisionSha(revisionId: string): string {
+function revisionSha(revisionId: string): string | null {
   const table: Record<string, string> = {
     "pub-gpt55-spot-1-r1": "11d7858720f8274e77c8b102d7403095d6371c55614acd53fc70514b02ea879e",
     "pub-sol-spot-1-r1": "2180aec2011f88e3a12c45b865f3f5409e754b71d27c1ade3359f261f945e987",
@@ -2477,7 +2772,7 @@ function revisionSha(revisionId: string): string {
     "pub-opus-predictions-1-r1": "fadc04f475e9ab7abb568811fb9e2d5630c15407d28c161434e23b39429a12be",
     "pub-meridian-spot-1-r1": "34009a1cd762177b27ab72d15048c42b3ece5994e2767e9471e56673b1f0ca84",
   };
-  return table[revisionId] ?? "0".repeat(64);
+  return table[revisionId] ?? null;
 }
 
 function resultPublication(run: CanonicalRun, publishedAt: string): CanonicalPublication {
@@ -2592,7 +2887,12 @@ export const canonicalPublications: readonly CanonicalPublication[] = [
   ...canonicalRuns.map((run) =>
     run.runId === "sol-spot-1"
       ? correctedPublication(run)
-      : resultPublication(run, "2026-09-14T18:00:00.000Z"),
+      : resultPublication(
+          run,
+          run.campaignId === SWEEP_CAMPAIGN_ID
+            ? reasoningSweep.generatedAt
+            : "2026-09-14T18:00:00.000Z",
+        ),
   ),
   ...withdrawnRuns.map(withdrawnPublication),
 ];

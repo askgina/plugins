@@ -39,6 +39,7 @@ import {
 import {
   AvailabilityMark,
   CoverageChip,
+  CoverageLabel,
   ExecutionChip,
   HeadlineValue,
   LatencyValue,
@@ -175,8 +176,8 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
           <OriginTag origin={run.origin} />
         </div>
         <div className="eval-compare-chip-row">
-          <CoverageChip coverage={run.dispatchCoverage} />
-          <span className="eval-compare-condition">grading {run.gradingCoverage}</span>
+          <CoverageChip run={run} />
+          <span className="eval-compare-condition">dispatch {run.dispatchCoverage}</span>
           <span className="eval-compare-condition">checks {run.checkSource}</span>
           <span className="eval-compare-condition">{run.caseBinding}</span>
           {run.withheldFields.map((field) => (
@@ -338,19 +339,19 @@ function CoveragePanel({ left, right }: { left: CanonicalRun; right: CanonicalRu
             <tr>
               <th scope="row">dispatch coverage</th>
               <td>
-                <CoverageChip coverage={left.dispatchCoverage} />
+                <CoverageLabel coverage={left.dispatchCoverage} />
               </td>
               <td>
-                <CoverageChip coverage={right.dispatchCoverage} />
+                <CoverageLabel coverage={right.dispatchCoverage} />
               </td>
             </tr>
             <tr>
-              <th scope="row">grading coverage</th>
+              <th scope="row">scoring coverage</th>
               <td>
-                <span className="eval-compare-condition">{left.gradingCoverage}</span>
+                <CoverageChip run={left} />
               </td>
               <td>
-                <span className="eval-compare-condition">{right.gradingCoverage}</span>
+                <CoverageChip run={right} />
               </td>
             </tr>
             {COUNT_ROWS.map((row) => (

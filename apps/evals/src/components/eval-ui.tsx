@@ -1,5 +1,6 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { ArrowUpRight, FlaskConical, X } from "lucide-react";
+import { reasoningSweepPublication } from "../results";
 import { Button } from "./ui/button";
 import { DialogRoot, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 
@@ -58,6 +59,16 @@ export function PageShell({
         </div>
       </header>
       <main id="eval-main" className="eval-main" tabIndex={-1}>
+        {(reasoningSweepPublication.publishedRows < reasoningSweepPublication.plannedRows ||
+          reasoningSweepPublication.publishedSlots < reasoningSweepPublication.plannedSlots) && (
+          <p className="eval-container eval-muted" role="status">
+            <strong>Partial sweep.</strong> {reasoningSweepPublication.publishedRows}/
+            {reasoningSweepPublication.plannedRows} reasoning rows and{" "}
+            {reasoningSweepPublication.publishedSlots}/{reasoningSweepPublication.plannedSlots}{" "}
+            planned slots published. Remaining rows are not included yet; runtime failures may
+            remain unscored.
+          </p>
+        )}
         {children}
       </main>
       <footer className="eval-footer">

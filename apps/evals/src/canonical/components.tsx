@@ -10,6 +10,7 @@ import type { ReactNode } from "react";
 import type {
   CanonicalAttempt,
   CheckOutcome,
+  CanonicalRun,
   DispatchCoverage,
   Evidence,
   ExecutionStatus,
@@ -21,6 +22,7 @@ import type {
 import {
   dispatchCoverageText,
   gradedOnlyLabel,
+  scoringCoverageFor,
   type GradedOnlyRate,
   type Headline,
 } from "./selectors";
@@ -102,22 +104,25 @@ export function ExecutionChip({
   return <span className="eval-demo-label">{label}</span>;
 }
 
-export function CoverageChip({ coverage }: { coverage: DispatchCoverage }) {
+export function CoverageChip({ run }: { run: Pick<CanonicalRun, "counts" | "dispatchCoverage"> }) {
+  const coverage = scoringCoverageFor(run);
+  const dispatch = dispatchCoverageText(run.dispatchCoverage);
   if (coverage === "complete") {
     return (
-      <span className="eval-score eval-score-positive">
-        <strong>coverage complete</strong>
+      <span className="eval-score eval-score-positive" title={dispatch}>
+        <strong>Fully scored</strong>
       </span>
     );
   }
-  if (coverage === "incomplete") {
-    return (
-      <span className="eval-score eval-score-negative">
-        <strong>coverage incomplete</strong>
-      </span>
-    );
-  }
-  return <span className="eval-demo-label">coverage unknown</span>;
+  return (
+    <span className="eval-demo-label" title={dispatch}>
+      {coverage === "none"
+        ? "Not scored"
+        : coverage === "partial"
+          ? "Partially scored"
+          : "Scoring coverage unknown"}
+    </span>
+  );
 }
 
 // ---------------------------------------------------------------------------
