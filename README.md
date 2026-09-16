@@ -20,8 +20,8 @@ The contracts and SDK packages have no CommonJS, browser, edge, or subpath entry
 
 ## Public evals app
 
-`apps/evals` is a non-published React/Vite package with the Ask Gina landing-page typography,
-watercolor artwork, UI components, and Storybook. It has a leaderboard, model
+`apps/evals` is the public React/Vite app (not an npm-published package) with the Ask Gina
+landing-page typography, watercolor artwork, UI components, and Storybook. It has a leaderboard, model
 profiles, task evidence explorer, and methodology page. Measured September reports
 coexist with explicitly illustrative fixtures. Measured rows cover tool conformance,
 not final-answer correctness; public downloads are reviewed projections, not full
