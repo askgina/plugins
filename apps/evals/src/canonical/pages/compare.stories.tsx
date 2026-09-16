@@ -5,7 +5,9 @@ import "../../styles/evals.css";
 const meta = {
   title: "Evals/Compare",
   component: ComparePage,
-  render: (args) => <ComparePage key={`${args.left}:${args.right}`} {...args} />,
+  render: (args) => (
+    <ComparePage key={`${args.left}:${args.right}:${args.includeSynthetic}`} {...args} />
+  ),
   parameters: {
     layout: "fullscreen",
   },
@@ -43,4 +45,18 @@ export const BlockedEvidenceCategory: Story = {
 // sol-spot-incomplete is synthetic — Storybook-only blocked-state demo.
 export const BlockedIncompleteCoverage: Story = {
   args: { left: "sol-spot-1", right: "sol-spot-incomplete", includeSynthetic: true },
+};
+
+export const Mobile: Story = {
+  args: { left: "gpt55-spot-1", right: "fable-spot-1" },
+  globals: { viewport: { value: "mobile", isRotated: false } },
+};
+
+// sol-spot-withdrawn is a withdrawn ref — result bytes removed, id retained.
+export const Withdrawn: Story = {
+  args: { left: "sol-spot-withdrawn", right: "sol-spot-1" },
+};
+
+export const UnknownRun: Story = {
+  args: { left: "not-a-canonical-run" },
 };

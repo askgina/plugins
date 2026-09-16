@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import App from "./App";
-import { MethodologyPage } from "./pages/methodology";
 
 const meta = {
   title: "Evals/Public pages",
@@ -13,9 +12,15 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const RoutedApp: Story = {
-  render: () => <App />,
+  render: () => {
+    window.location.hash = "#/leaderboard";
+    return <App key="/leaderboard" />;
+  },
 };
 
-export const Methodology: Story = {
-  render: () => <MethodologyPage />,
+export const NotFound: Story = {
+  render: () => {
+    window.location.hash = "#/no-such-page";
+    return <App key="/no-such-page" />;
+  },
 };

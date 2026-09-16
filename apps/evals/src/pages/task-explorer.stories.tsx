@@ -60,6 +60,45 @@ export const EvidenceOpen: Story = {
   },
 };
 
+/** Evidence modal on the case-definition section — objective, expected
+ * behavior, and category for the selected case. */
+export const EvidenceDefinition: Story = {
+  args: {
+    initialFamily: "Spot",
+    initialCaseId: "spot-simple-price",
+    initialEvidenceSection: "definition",
+  },
+};
+
+/** Evidence modal on the grading-criteria section — the rubric list a
+ * measured attempt is scored against. */
+export const EvidenceRubric: Story = {
+  args: {
+    initialFamily: "Spot",
+    initialCaseId: "spot-simple-price",
+    initialEvidenceSection: "rubric",
+  },
+};
+
+/** Evidence modal on the dataset section — the prompt and expected call the
+ * case was authored with. */
+export const EvidenceDataset: Story = {
+  args: {
+    initialFamily: "Spot",
+    initialCaseId: "spot-simple-price",
+    initialEvidenceSection: "dataset",
+  },
+};
+
+/** Attempt drilldown on a Perps confusion-pair case — different run set and
+ * forbidden-tool context than the Spot inspect story. */
+export const PerpsInspect: Story = {
+  args: {
+    initialFamily: "Perps",
+    initialInspectCaseId: "perps-account",
+  },
+};
+
 export const Mobile: Story = {
   globals: { viewport: { value: "mobile", isRotated: false } },
 };
