@@ -88,60 +88,11 @@
         "started_at": "2026-09-14T14:11:09.406Z",
         "status": "completed",
         "duration_ms": 25354,
-        "activated_skills": [
-          "research-spot-tokens"
-        ],
-        "tool_calls": [
-          {
-            "sequence": 0,
-            "name": "spot.getTokenMetadata",
-            "arguments": {
-              "token": "AAVE",
-              "network": "eth",
-              "includeMarketData": true
-            },
-            "result_bytes": 5160
-          }
-        ],
-        "available_tools": [
-          "gina.getCrosschainPortfolio",
-          "gina.getAccountAddresses",
-          "gina.listScheduledPrompts",
-          "spot.getTokenMetadata",
-          "spot.getTokenChart",
-          "spot.getSimplePrice",
-          "spot.fetchSwapHistory",
-          "perps.getHyperliquidAccount",
-          "perps.getHyperliquidPositions",
-          "perps.getHyperliquidOpenOrders",
-          "perps.getHyperliquidPortfolio",
-          "perps.getHyperliquidMarkets",
-          "perps.getHyperliquidPrice",
-          "perps.getHyperliquidPrices",
-          "perps.getHyperliquidAssetData",
-          "perps.getHyperliquidPerpDexes",
-          "perps.fetchHyperliquidTrades",
-          "perps.fetchHyperliquidCandles",
-          "perps.fetchHyperliquidOrderBook",
-          "perps.previewHyperliquidOrderCost",
-          "perps.createHyperliquidTable",
-          "perps.executeSqlQuery",
-          "predictions.searchPredictionMarkets",
-          "predictions.getExpiringMarkets",
-          "predictions.getPredictionOrderbook",
-          "predictions.getSeriesMarket",
-          "predictions.getPredictionMarketDetails",
-          "predictions.fetchPolymarketData",
-          "predictions.fetchPolymarketHistory",
-          "predictions.getPolymarketPositions",
-          "predictions.getPolymarketOrderHistory"
-        ],
         "token_usage": {
           "input_tokens": 8,
           "output_tokens": 675,
           "total_tokens": 683
-        },
-        "final_answer": "**Aave Token (AAVE)** — Ethereum mainnet, via Gina `spot.getTokenMetadata` (last updated 2026-09-14T14:08:30Z).\n\n**Contract**\n- Address: `0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9`\n- Chain: Ethereum (`eth`), decimals 18\n- CoinGecko id: `aave`\n\n**Supply**\n| Field | Value |\n|---|---|\n| Max supply | 16,000,000 (finite) |\n| Total supply | 16,000,000 |\n| Circulating | 15,427,704.87 |\n| Market cap | $1.942B |\n| FDV | $2.014B |\n\n**Description**: the metadata read returned no description field — identity fields only (name, symbol, decimals, image, supply, market data). I won't substitute a remembered summary; say the word and I'll pull a description from a separate, labeled source.\n\n**Links**: no official website/docs/social URLs are exposed by this tool either. The only URL returned is the token image: `https://coin-images.coingecko.com/coins/images/12645/large/aave-token-round.png?1720472354`.\n\nNo chart requested, none fetched. Top liquidity pools (Ethereum) are available if useful: `0x5ab53ee1d50eef2c1dd3d5402789cd27bb52c1bb` plus two Balancer/v4-style pool ids."
+        }
       },
       "score": {
         "case_id": "spot-token-metadata",
@@ -149,19 +100,19 @@
         "routing": {
           "score": 1,
           "details": [
-            "selected spot.getTokenMetadata"
+            "withheld: privacy_review"
           ]
         },
         "arguments": {
           "score": 1,
           "details": [
-            "case has no argument constraint"
+            "withheld: privacy_review"
           ]
         },
         "completion": {
           "score": 1,
           "details": [
-            "trial and tool calls completed"
+            "withheld: privacy_review"
           ]
         },
         "latency_ms": 25354,
@@ -185,61 +136,11 @@
         "started_at": "2026-09-14T14:11:34.791Z",
         "status": "completed",
         "duration_ms": 21676,
-        "activated_skills": [
-          "research-spot-tokens"
-        ],
-        "tool_calls": [
-          {
-            "sequence": 0,
-            "name": "spot.getTokenChart",
-            "arguments": {
-              "coingeckoId": "ethereum",
-              "days": 7,
-              "timeInterval": "1h",
-              "tokenSymbol": "ETH"
-            },
-            "result_bytes": 76577
-          }
-        ],
-        "available_tools": [
-          "gina.getCrosschainPortfolio",
-          "gina.getAccountAddresses",
-          "gina.listScheduledPrompts",
-          "spot.getTokenMetadata",
-          "spot.getTokenChart",
-          "spot.getSimplePrice",
-          "spot.fetchSwapHistory",
-          "perps.getHyperliquidAccount",
-          "perps.getHyperliquidPositions",
-          "perps.getHyperliquidOpenOrders",
-          "perps.getHyperliquidPortfolio",
-          "perps.getHyperliquidMarkets",
-          "perps.getHyperliquidPrice",
-          "perps.getHyperliquidPrices",
-          "perps.getHyperliquidAssetData",
-          "perps.getHyperliquidPerpDexes",
-          "perps.fetchHyperliquidTrades",
-          "perps.fetchHyperliquidCandles",
-          "perps.fetchHyperliquidOrderBook",
-          "perps.previewHyperliquidOrderCost",
-          "perps.createHyperliquidTable",
-          "perps.executeSqlQuery",
-          "predictions.searchPredictionMarkets",
-          "predictions.getExpiringMarkets",
-          "predictions.getPredictionOrderbook",
-          "predictions.getSeriesMarket",
-          "predictions.getPredictionMarketDetails",
-          "predictions.fetchPolymarketData",
-          "predictions.fetchPolymarketHistory",
-          "predictions.getPolymarketPositions",
-          "predictions.getPolymarketOrderHistory"
-        ],
         "token_usage": {
           "input_tokens": 8,
           "output_tokens": 560,
           "total_tokens": 568
-        },
-        "final_answer": "**ETH/USD — 7-day chart displayed** (source: CoinGecko, 1h candles, 2026-09-07T14:00Z → 2026-09-14T14:00Z).\n\nNet move: **$2,505.12 → $2,504.16**, −$0.96 (**−0.04%**) — flat on the week, but not quiet inside it.\n\nPath within the window:\n- Drifted down from ~$2,505 to a low near **$2,410** (2026-09-11 ~06:00Z), the weakest print of the week.\n- Sharp spike on 2026-09-11 late session: ran from ~$2,457 to a high of **$2,647.68** within two hourly bars.\n- Faded back through the $2,560s/$2,510s and has held a tight $2,460–$2,545 band since, closing at **$2,504.16**.\n\nWeekly range: **$2,410.22 – $2,647.68** (≈9.8% high-low spread) against a ~0% net change — round-trip, not trend."
+        }
       },
       "score": {
         "case_id": "spot-token-chart",
@@ -247,19 +148,19 @@
         "routing": {
           "score": 1,
           "details": [
-            "selected spot.getTokenChart"
+            "withheld: privacy_review"
           ]
         },
         "arguments": {
           "score": 1,
           "details": [
-            "case has no argument constraint"
+            "withheld: privacy_review"
           ]
         },
         "completion": {
           "score": 1,
           "details": [
-            "trial and tool calls completed"
+            "withheld: privacy_review"
           ]
         },
         "latency_ms": 21676,
@@ -283,60 +184,11 @@
         "started_at": "2026-09-14T14:11:56.471Z",
         "status": "completed",
         "duration_ms": 15641,
-        "activated_skills": [
-          "research-spot-tokens"
-        ],
-        "tool_calls": [
-          {
-            "sequence": 0,
-            "name": "spot.getSimplePrice",
-            "arguments": {
-              "ids": "ethereum",
-              "vs_currencies": "usd",
-              "include_24hr_change": true
-            },
-            "result_bytes": 984
-          }
-        ],
-        "available_tools": [
-          "gina.getCrosschainPortfolio",
-          "gina.getAccountAddresses",
-          "gina.listScheduledPrompts",
-          "spot.getTokenMetadata",
-          "spot.getTokenChart",
-          "spot.getSimplePrice",
-          "spot.fetchSwapHistory",
-          "perps.getHyperliquidAccount",
-          "perps.getHyperliquidPositions",
-          "perps.getHyperliquidOpenOrders",
-          "perps.getHyperliquidPortfolio",
-          "perps.getHyperliquidMarkets",
-          "perps.getHyperliquidPrice",
-          "perps.getHyperliquidPrices",
-          "perps.getHyperliquidAssetData",
-          "perps.getHyperliquidPerpDexes",
-          "perps.fetchHyperliquidTrades",
-          "perps.fetchHyperliquidCandles",
-          "perps.fetchHyperliquidOrderBook",
-          "perps.previewHyperliquidOrderCost",
-          "perps.createHyperliquidTable",
-          "perps.executeSqlQuery",
-          "predictions.searchPredictionMarkets",
-          "predictions.getExpiringMarkets",
-          "predictions.getPredictionOrderbook",
-          "predictions.getSeriesMarket",
-          "predictions.getPredictionMarketDetails",
-          "predictions.fetchPolymarketData",
-          "predictions.fetchPolymarketHistory",
-          "predictions.getPolymarketPositions",
-          "predictions.getPolymarketOrderHistory"
-        ],
         "token_usage": {
           "input_tokens": 8,
           "output_tokens": 275,
           "total_tokens": 283
-        },
-        "final_answer": "**ETH: $2,506.29** (+0.94% 24h)\n\nSource: CoinGecko, live quote at 2026-09-14 14:12 UTC."
+        }
       },
       "score": {
         "case_id": "spot-simple-price",
@@ -344,19 +196,19 @@
         "routing": {
           "score": 1,
           "details": [
-            "selected spot.getSimplePrice"
+            "withheld: privacy_review"
           ]
         },
         "arguments": {
           "score": 1,
           "details": [
-            "arguments for spot.getSimplePrice satisfy the deterministic contract"
+            "withheld: privacy_review"
           ]
         },
         "completion": {
           "score": 1,
           "details": [
-            "trial and tool calls completed"
+            "withheld: privacy_review"
           ]
         },
         "latency_ms": 15641,
@@ -380,59 +232,11 @@
         "started_at": "2026-09-14T14:12:12.114Z",
         "status": "completed",
         "duration_ms": 24554,
-        "activated_skills": [
-          "research-spot-tokens"
-        ],
-        "tool_calls": [
-          {
-            "sequence": 0,
-            "name": "spot.fetchSwapHistory",
-            "arguments": {
-              "limit": 200,
-              "lookbackDays": 90
-            },
-            "result_bytes": 13748
-          }
-        ],
-        "available_tools": [
-          "gina.getCrosschainPortfolio",
-          "gina.getAccountAddresses",
-          "gina.listScheduledPrompts",
-          "spot.getTokenMetadata",
-          "spot.getTokenChart",
-          "spot.getSimplePrice",
-          "spot.fetchSwapHistory",
-          "perps.getHyperliquidAccount",
-          "perps.getHyperliquidPositions",
-          "perps.getHyperliquidOpenOrders",
-          "perps.getHyperliquidPortfolio",
-          "perps.getHyperliquidMarkets",
-          "perps.getHyperliquidPrice",
-          "perps.getHyperliquidPrices",
-          "perps.getHyperliquidAssetData",
-          "perps.getHyperliquidPerpDexes",
-          "perps.fetchHyperliquidTrades",
-          "perps.fetchHyperliquidCandles",
-          "perps.fetchHyperliquidOrderBook",
-          "perps.previewHyperliquidOrderCost",
-          "perps.createHyperliquidTable",
-          "perps.executeSqlQuery",
-          "predictions.searchPredictionMarkets",
-          "predictions.getExpiringMarkets",
-          "predictions.getPredictionOrderbook",
-          "predictions.getSeriesMarket",
-          "predictions.getPredictionMarketDetails",
-          "predictions.fetchPolymarketData",
-          "predictions.fetchPolymarketHistory",
-          "predictions.getPolymarketPositions",
-          "predictions.getPolymarketOrderHistory"
-        ],
         "token_usage": {
           "input_tokens": 8,
           "output_tokens": 961,
           "total_tokens": 969
-        },
-        "final_answer": "8 completed swaps in the last 90 days (limit 200, failures excluded — all 8 mined successfully, all manual/web origin).\n\n| Date (UTC) | Route | Chains | In → Out (USD) |\n|---|---|---|---|\n| 2026-08-30 | pUSD → USDC | Polygon → Arbitrum | $200.14 → $199.87 |\n| 2026-08-27 | emo → USDC | Monad → Arbitrum | $398.43 → $386.52 |\n| 2026-08-27 | BNKR → USDC | Base → Arbitrum | $251.79 → $250.88 |\n| 2026-08-25 | USDC → BNKR | Arbitrum → Base | $249.99 → $249.21 |\n| 2026-08-20 | USDC → emo | Base → Monad | $130.86 → $130.07 |\n| 2026-08-20 | USDC.e → USDC | Polygon → Base | $130.12 → $129.93 |\n| 2026-08-20 | USDC → emo | Base → Monad | $199.98 → $199.47 |\n| 2026-07-07 | USDC.e → USDC | Polygon → Base | $200.97 → $200.89 |\n\nPatterns:\n- Every swap is cross-chain; Arbitrum USDC is the recurring exit leg, Base/Polygon the funding legs.\n- Two round trips closed: BNKR bought 8-25 for $249.99, sold 8-27 for $250.88 (+$0.89 notional, ~+0.4%). emo bought 8-20 ($199.98 + $130.86 = $330.84 in) and sold in one leg 8-27 for $386.52 (~+$55.7, ~+17%), though the sold size (623,515 emo) exceeds the two buys combined (622,702), so a small portion came from elsewhere.\n- Remaining flow is stablecoin rebalancing (USDC.e → USDC, pUSD → USDC) with ~0.1–0.4% slippage per hop.\n- Largest single execution cost: the emo exit, $398.43 in → $386.52 out (~3.0% spread), consistent with thinner Monad-side liquidity.\n\nRead-only: no table was created and nothing is queryable via SQL; these are bounded rows returned directly. No swap was prepared or executed — this skill only researches."
+        }
       },
       "score": {
         "case_id": "spot-fetch-swap-history",
@@ -440,19 +244,19 @@
         "routing": {
           "score": 1,
           "details": [
-            "selected spot.fetchSwapHistory"
+            "withheld: privacy_review"
           ]
         },
         "arguments": {
           "score": 1,
           "details": [
-            "case has no argument constraint"
+            "withheld: privacy_review"
           ]
         },
         "completion": {
           "score": 1,
           "details": [
-            "trial and tool calls completed"
+            "withheld: privacy_review"
           ]
         },
         "latency_ms": 24554,
@@ -476,60 +280,11 @@
         "started_at": "2026-09-14T14:12:36.670Z",
         "status": "completed",
         "duration_ms": 24454,
-        "activated_skills": [
-          "research-spot-tokens"
-        ],
-        "tool_calls": [
-          {
-            "sequence": 0,
-            "name": "spot.getTokenMetadata",
-            "arguments": {
-              "token": "AAVE",
-              "network": "eth",
-              "includeMarketData": true
-            },
-            "result_bytes": 5160
-          }
-        ],
-        "available_tools": [
-          "gina.getCrosschainPortfolio",
-          "gina.getAccountAddresses",
-          "gina.listScheduledPrompts",
-          "spot.getTokenMetadata",
-          "spot.getTokenChart",
-          "spot.getSimplePrice",
-          "spot.fetchSwapHistory",
-          "perps.getHyperliquidAccount",
-          "perps.getHyperliquidPositions",
-          "perps.getHyperliquidOpenOrders",
-          "perps.getHyperliquidPortfolio",
-          "perps.getHyperliquidMarkets",
-          "perps.getHyperliquidPrice",
-          "perps.getHyperliquidPrices",
-          "perps.getHyperliquidAssetData",
-          "perps.getHyperliquidPerpDexes",
-          "perps.fetchHyperliquidTrades",
-          "perps.fetchHyperliquidCandles",
-          "perps.fetchHyperliquidOrderBook",
-          "perps.previewHyperliquidOrderCost",
-          "perps.createHyperliquidTable",
-          "perps.executeSqlQuery",
-          "predictions.searchPredictionMarkets",
-          "predictions.getExpiringMarkets",
-          "predictions.getPredictionOrderbook",
-          "predictions.getSeriesMarket",
-          "predictions.getPredictionMarketDetails",
-          "predictions.fetchPolymarketData",
-          "predictions.fetchPolymarketHistory",
-          "predictions.getPolymarketPositions",
-          "predictions.getPolymarketOrderHistory"
-        ],
         "token_usage": {
           "input_tokens": 8,
           "output_tokens": 757,
           "total_tokens": 765
-        },
-        "final_answer": "**Aave Token (AAVE)** — Ethereum mainnet, via Gina token metadata (CoinGecko/GeckoTerminal), last updated 2026-09-14 14:10:40Z.\n\n**Identity & contract**\n- Contract: `0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9`\n- Chain: Ethereum (`eth`), decimals 18, CoinGecko ID `aave`\n\n**Supply**\n- Max supply: 16,000,000 (fixed, not infinite)\n- Total supply: 16,000,000 (on-chain raw `16000000e18`)\n- Circulating: 15,427,704.87 (~96.4% of max)\n- Market cap $1.945B vs FDV $2.017B\n\n**Market context** (not a chart)\n- Price $126.21; 24h range $123.98–$127.47; 24h −0.96%, 7d −5.11%, 30d +45.83%, 1y −58.59%\n- ATH $661.69 (2021-05-18), −80.93%; ATL $26.02 (2020-11-05), +384.99%\n\n**Description** — the metadata read returns no description field, so I won't invent one. AAVE is the governance/safety-module token of the Aave lending protocol; that's general knowledge, not from this Gina result.\n\n**Official links** — the metadata payload exposed no homepage, docs, or social URLs. The only URL returned is the token logo: `https://coin-images.coingecko.com/coins/images/12645/large/aave-token-round.png`. Say the word and I'll re-query without the network filter (global CoinGecko path) to see if a richer link set is exposed."
+        }
       },
       "score": {
         "case_id": "spot-token-metadata",
@@ -537,19 +292,19 @@
         "routing": {
           "score": 1,
           "details": [
-            "selected spot.getTokenMetadata"
+            "withheld: privacy_review"
           ]
         },
         "arguments": {
           "score": 1,
           "details": [
-            "case has no argument constraint"
+            "withheld: privacy_review"
           ]
         },
         "completion": {
           "score": 1,
           "details": [
-            "trial and tool calls completed"
+            "withheld: privacy_review"
           ]
         },
         "latency_ms": 24454,
@@ -573,61 +328,11 @@
         "started_at": "2026-09-14T14:13:01.129Z",
         "status": "completed",
         "duration_ms": 21643,
-        "activated_skills": [
-          "research-spot-tokens"
-        ],
-        "tool_calls": [
-          {
-            "sequence": 0,
-            "name": "spot.getTokenChart",
-            "arguments": {
-              "coingeckoId": "ethereum",
-              "days": 7,
-              "timeInterval": "1h",
-              "tokenSymbol": "ETH"
-            },
-            "result_bytes": 76564
-          }
-        ],
-        "available_tools": [
-          "gina.getCrosschainPortfolio",
-          "gina.getAccountAddresses",
-          "gina.listScheduledPrompts",
-          "spot.getTokenMetadata",
-          "spot.getTokenChart",
-          "spot.getSimplePrice",
-          "spot.fetchSwapHistory",
-          "perps.getHyperliquidAccount",
-          "perps.getHyperliquidPositions",
-          "perps.getHyperliquidOpenOrders",
-          "perps.getHyperliquidPortfolio",
-          "perps.getHyperliquidMarkets",
-          "perps.getHyperliquidPrice",
-          "perps.getHyperliquidPrices",
-          "perps.getHyperliquidAssetData",
-          "perps.getHyperliquidPerpDexes",
-          "perps.fetchHyperliquidTrades",
-          "perps.fetchHyperliquidCandles",
-          "perps.fetchHyperliquidOrderBook",
-          "perps.previewHyperliquidOrderCost",
-          "perps.createHyperliquidTable",
-          "perps.executeSqlQuery",
-          "predictions.searchPredictionMarkets",
-          "predictions.getExpiringMarkets",
-          "predictions.getPredictionOrderbook",
-          "predictions.getSeriesMarket",
-          "predictions.getPredictionMarketDetails",
-          "predictions.fetchPolymarketData",
-          "predictions.fetchPolymarketHistory",
-          "predictions.getPolymarketPositions",
-          "predictions.getPolymarketOrderHistory"
-        ],
         "token_usage": {
           "input_tokens": 8,
           "output_tokens": 557,
           "total_tokens": 565
-        },
-        "final_answer": "**ETH/USD, 7-day hourly series (CoinGecko) — chart rendered above.**\n\n| Field | Value |\n|---|---|\n| Window start | 2026-09-07T15:00Z @ **$2,497.87** |\n| Window end | 2026-09-14T15:00Z @ **$2,500.57** |\n| Change | **+$2.70 / +0.11%** (up) |\n| Interval | 1h |\n\nShape of the week: range-bound $2,440–$2,520 for the first five days, a drawdown low near **$2,413** (Sep 12 ~06:00Z), then a sharp spike on Sep 13 — one hourly bar ran $2,509 → $2,626 with a high of **$2,647.68**, the week's top. That spike retraced within hours back to ~$2,510, leaving the week net flat.\n\nNet: round-trip week. Intraweek swing ≈ 9.7% peak-to-trough, but start and end are within 0.11%."
+        }
       },
       "score": {
         "case_id": "spot-token-chart",
@@ -635,19 +340,19 @@
         "routing": {
           "score": 1,
           "details": [
-            "selected spot.getTokenChart"
+            "withheld: privacy_review"
           ]
         },
         "arguments": {
           "score": 1,
           "details": [
-            "case has no argument constraint"
+            "withheld: privacy_review"
           ]
         },
         "completion": {
           "score": 1,
           "details": [
-            "trial and tool calls completed"
+            "withheld: privacy_review"
           ]
         },
         "latency_ms": 21643,
@@ -671,61 +376,11 @@
         "started_at": "2026-09-14T14:13:22.774Z",
         "status": "completed",
         "duration_ms": 15567,
-        "activated_skills": [
-          "research-spot-tokens"
-        ],
-        "tool_calls": [
-          {
-            "sequence": 0,
-            "name": "spot.getSimplePrice",
-            "arguments": {
-              "ids": "ethereum",
-              "vs_currencies": "usd",
-              "include_24hr_change": true,
-              "include_last_updated_at": true
-            },
-            "result_bytes": 1081
-          }
-        ],
-        "available_tools": [
-          "gina.getCrosschainPortfolio",
-          "gina.getAccountAddresses",
-          "gina.listScheduledPrompts",
-          "spot.getTokenMetadata",
-          "spot.getTokenChart",
-          "spot.getSimplePrice",
-          "spot.fetchSwapHistory",
-          "perps.getHyperliquidAccount",
-          "perps.getHyperliquidPositions",
-          "perps.getHyperliquidOpenOrders",
-          "perps.getHyperliquidPortfolio",
-          "perps.getHyperliquidMarkets",
-          "perps.getHyperliquidPrice",
-          "perps.getHyperliquidPrices",
-          "perps.getHyperliquidAssetData",
-          "perps.getHyperliquidPerpDexes",
-          "perps.fetchHyperliquidTrades",
-          "perps.fetchHyperliquidCandles",
-          "perps.fetchHyperliquidOrderBook",
-          "perps.previewHyperliquidOrderCost",
-          "perps.createHyperliquidTable",
-          "perps.executeSqlQuery",
-          "predictions.searchPredictionMarkets",
-          "predictions.getExpiringMarkets",
-          "predictions.getPredictionOrderbook",
-          "predictions.getSeriesMarket",
-          "predictions.getPredictionMarketDetails",
-          "predictions.fetchPolymarketData",
-          "predictions.fetchPolymarketHistory",
-          "predictions.getPolymarketPositions",
-          "predictions.getPolymarketOrderHistory"
-        ],
         "token_usage": {
           "input_tokens": 8,
           "output_tokens": 296,
           "total_tokens": 304
-        },
-        "final_answer": "**ETH: $2,511.37 USD** (+1.11% 24h)\n\nSource: CoinGecko, last updated 2026-09-14 14:12:10 UTC."
+        }
       },
       "score": {
         "case_id": "spot-simple-price",
@@ -733,19 +388,19 @@
         "routing": {
           "score": 1,
           "details": [
-            "selected spot.getSimplePrice"
+            "withheld: privacy_review"
           ]
         },
         "arguments": {
           "score": 1,
           "details": [
-            "arguments for spot.getSimplePrice satisfy the deterministic contract"
+            "withheld: privacy_review"
           ]
         },
         "completion": {
           "score": 1,
           "details": [
-            "trial and tool calls completed"
+            "withheld: privacy_review"
           ]
         },
         "latency_ms": 15567,
@@ -769,60 +424,11 @@
         "started_at": "2026-09-14T14:13:38.344Z",
         "status": "completed",
         "duration_ms": 24248,
-        "activated_skills": [
-          "research-spot-tokens"
-        ],
-        "tool_calls": [
-          {
-            "sequence": 0,
-            "name": "spot.fetchSwapHistory",
-            "arguments": {
-              "limit": 100,
-              "lookbackDays": 90,
-              "includeFailures": false
-            },
-            "result_bytes": 13748
-          }
-        ],
-        "available_tools": [
-          "gina.getCrosschainPortfolio",
-          "gina.getAccountAddresses",
-          "gina.listScheduledPrompts",
-          "spot.getTokenMetadata",
-          "spot.getTokenChart",
-          "spot.getSimplePrice",
-          "spot.fetchSwapHistory",
-          "perps.getHyperliquidAccount",
-          "perps.getHyperliquidPositions",
-          "perps.getHyperliquidOpenOrders",
-          "perps.getHyperliquidPortfolio",
-          "perps.getHyperliquidMarkets",
-          "perps.getHyperliquidPrice",
-          "perps.getHyperliquidPrices",
-          "perps.getHyperliquidAssetData",
-          "perps.getHyperliquidPerpDexes",
-          "perps.fetchHyperliquidTrades",
-          "perps.fetchHyperliquidCandles",
-          "perps.fetchHyperliquidOrderBook",
-          "perps.previewHyperliquidOrderCost",
-          "perps.createHyperliquidTable",
-          "perps.executeSqlQuery",
-          "predictions.searchPredictionMarkets",
-          "predictions.getExpiringMarkets",
-          "predictions.getPredictionOrderbook",
-          "predictions.getSeriesMarket",
-          "predictions.getPredictionMarketDetails",
-          "predictions.fetchPolymarketData",
-          "predictions.fetchPolymarketHistory",
-          "predictions.getPolymarketPositions",
-          "predictions.getPolymarketOrderHistory"
-        ],
         "token_usage": {
           "input_tokens": 8,
           "output_tokens": 995,
           "total_tokens": 1003
-        },
-        "final_answer": "8 completed swaps returned (90-day lookback, successes only, limit 100). Rows are a bounded read — no queryable table was created, and nothing was prepared or executed.\n\n**Recent → older**\n\n| Date (UTC) | Route | Chains | In USD → Out USD |\n|---|---|---|---|\n| 2026-08-30 02:45 | pUSD → USDC | Polygon → Arbitrum | 200.14 → 199.87 |\n| 2026-08-27 18:40 | emo → USDC | Monad → Arbitrum | 398.43 → 386.52 |\n| 2026-08-27 10:16 | BNKR → USDC | Base → Arbitrum | 251.79 → 250.88 |\n| 2026-08-25 12:47 | USDC → BNKR | Arbitrum → Base | 249.99 → 249.21 |\n| 2026-08-20 12:24 | USDC → emo | Base → Monad | 130.86 → 130.07 |\n| 2026-08-20 12:20 | USDC.e → USDC | Polygon → Base | 130.12 → 129.93 |\n| 2026-08-20 12:17 | USDC → emo | Base → Monad | 199.98 → 199.47 |\n| 2026-07-07 13:26 | USDC.e → USDC | Polygon → Base | 200.97 → 200.89 |\n\nObservations:\n- All 8 mined successfully; all cross-chain; all `origin_type: manual` (sources: wallet_modal ×3, chat ×2, api, wallet_sidebar_prompt_cta).\n- Two round trips visible. **BNKR**: bought $249.99 on 08-25, sold $250.88 on 08-27 — roughly flat (+$0.89 net of the ~947.6k vs 946.6k share difference). **emo**: bought $199.47 + $130.07 (622.7k tokens, 08-20), sold 623.5k tokens for $386.52 on 08-27 — about **−$43** on the position.\n- Stablecoin consolidation legs (USDC.e → USDC, pUSD → USDC) cost 0.04%–0.15% each in slippage/fees.\n- Activity is clustered: 7 of 8 swaps in the 08-20 → 08-30 window; nothing since 08-30.\n\nWant a longer lookback (up to 365 days) or failures included?"
+        }
       },
       "score": {
         "case_id": "spot-fetch-swap-history",
@@ -830,19 +436,19 @@
         "routing": {
           "score": 1,
           "details": [
-            "selected spot.fetchSwapHistory"
+            "withheld: privacy_review"
           ]
         },
         "arguments": {
           "score": 1,
           "details": [
-            "case has no argument constraint"
+            "withheld: privacy_review"
           ]
         },
         "completion": {
           "score": 1,
           "details": [
-            "trial and tool calls completed"
+            "withheld: privacy_review"
           ]
         },
         "latency_ms": 24248,
@@ -866,60 +472,11 @@
         "started_at": "2026-09-14T14:14:02.595Z",
         "status": "completed",
         "duration_ms": 20692,
-        "activated_skills": [
-          "research-spot-tokens"
-        ],
-        "tool_calls": [
-          {
-            "sequence": 0,
-            "name": "spot.getTokenMetadata",
-            "arguments": {
-              "token": "AAVE",
-              "network": "eth",
-              "includeMarketData": true
-            },
-            "result_bytes": 5162
-          }
-        ],
-        "available_tools": [
-          "gina.getCrosschainPortfolio",
-          "gina.getAccountAddresses",
-          "gina.listScheduledPrompts",
-          "spot.getTokenMetadata",
-          "spot.getTokenChart",
-          "spot.getSimplePrice",
-          "spot.fetchSwapHistory",
-          "perps.getHyperliquidAccount",
-          "perps.getHyperliquidPositions",
-          "perps.getHyperliquidOpenOrders",
-          "perps.getHyperliquidPortfolio",
-          "perps.getHyperliquidMarkets",
-          "perps.getHyperliquidPrice",
-          "perps.getHyperliquidPrices",
-          "perps.getHyperliquidAssetData",
-          "perps.getHyperliquidPerpDexes",
-          "perps.fetchHyperliquidTrades",
-          "perps.fetchHyperliquidCandles",
-          "perps.fetchHyperliquidOrderBook",
-          "perps.previewHyperliquidOrderCost",
-          "perps.createHyperliquidTable",
-          "perps.executeSqlQuery",
-          "predictions.searchPredictionMarkets",
-          "predictions.getExpiringMarkets",
-          "predictions.getPredictionOrderbook",
-          "predictions.getSeriesMarket",
-          "predictions.getPredictionMarketDetails",
-          "predictions.fetchPolymarketData",
-          "predictions.fetchPolymarketHistory",
-          "predictions.getPolymarketPositions",
-          "predictions.getPolymarketOrderHistory"
-        ],
         "token_usage": {
           "input_tokens": 8,
           "output_tokens": 742,
           "total_tokens": 750
-        },
-        "final_answer": "**Aave Token (AAVE)** — Ethereum mainnet, via Gina token metadata (CoinGecko/GeckoTerminal), last updated 2026-09-14 14:12 UTC.\n\n**Identity / contract**\n- Contract: `0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9`\n- Chain: Ethereum (`eth`), decimals 18, CoinGecko id `aave`\n\n**Supply**\n- Max supply: 16,000,000 (fixed, not infinite)\n- Total supply: 16,000,000\n- Circulating: 15,427,704.87 (~96.4% of max)\n- Market cap $1.95B vs FDV $2.02B\n\n**Price context** (not a chart)\n- $126.30, 24h range $123.98–$127.47, −0.92% 24h, −5.04% 7d, +45.94% 30d, −58.56% 1y\n- ATH $661.69 (2021-05-18, −80.9%); ATL $26.02 (2020-11-05, +385.3%)\n\n**Links / description**\n- The metadata read returned no description field and no official website/social links — that data isn't exposed by this tool, so I won't invent it. Only asset links returned: token logo `https://coin-images.coingecko.com/coins/images/12645/large/aave-token-round.png` and three top Ethereum pools (`0x5ab53ee1d50eef2c1dd3d5402789cd27bb52c1bb` plus two pool ids).\n\nIf you want the project description and official site/docs/socials, say so and I'll pull them from a separate source, labeled as such."
+        }
       },
       "score": {
         "case_id": "spot-token-metadata",
@@ -927,19 +484,19 @@
         "routing": {
           "score": 1,
           "details": [
-            "selected spot.getTokenMetadata"
+            "withheld: privacy_review"
           ]
         },
         "arguments": {
           "score": 1,
           "details": [
-            "case has no argument constraint"
+            "withheld: privacy_review"
           ]
         },
         "completion": {
           "score": 1,
           "details": [
-            "trial and tool calls completed"
+            "withheld: privacy_review"
           ]
         },
         "latency_ms": 20692,
@@ -963,61 +520,11 @@
         "started_at": "2026-09-14T14:14:23.290Z",
         "status": "completed",
         "duration_ms": 19245,
-        "activated_skills": [
-          "research-spot-tokens"
-        ],
-        "tool_calls": [
-          {
-            "sequence": 0,
-            "name": "spot.getTokenChart",
-            "arguments": {
-              "coingeckoId": "ethereum",
-              "days": 7,
-              "timeInterval": "1h",
-              "tokenSymbol": "ETH"
-            },
-            "result_bytes": 76564
-          }
-        ],
-        "available_tools": [
-          "gina.getCrosschainPortfolio",
-          "gina.getAccountAddresses",
-          "gina.listScheduledPrompts",
-          "spot.getTokenMetadata",
-          "spot.getTokenChart",
-          "spot.getSimplePrice",
-          "spot.fetchSwapHistory",
-          "perps.getHyperliquidAccount",
-          "perps.getHyperliquidPositions",
-          "perps.getHyperliquidOpenOrders",
-          "perps.getHyperliquidPortfolio",
-          "perps.getHyperliquidMarkets",
-          "perps.getHyperliquidPrice",
-          "perps.getHyperliquidPrices",
-          "perps.getHyperliquidAssetData",
-          "perps.getHyperliquidPerpDexes",
-          "perps.fetchHyperliquidTrades",
-          "perps.fetchHyperliquidCandles",
-          "perps.fetchHyperliquidOrderBook",
-          "perps.previewHyperliquidOrderCost",
-          "perps.createHyperliquidTable",
-          "perps.executeSqlQuery",
-          "predictions.searchPredictionMarkets",
-          "predictions.getExpiringMarkets",
-          "predictions.getPredictionOrderbook",
-          "predictions.getSeriesMarket",
-          "predictions.getPredictionMarketDetails",
-          "predictions.fetchPolymarketData",
-          "predictions.fetchPolymarketHistory",
-          "predictions.getPolymarketPositions",
-          "predictions.getPolymarketOrderHistory"
-        ],
         "token_usage": {
           "input_tokens": 8,
           "output_tokens": 558,
           "total_tokens": 566
-        },
-        "final_answer": "**ETH/USD — 7-day chart displayed** (source: CoinGecko, 1h candles).\n\n| Metric | Value |\n|---|---|\n| Window start | $2,497.87 @ 2026-09-07 15:00 UTC |\n| Window end | $2,500.57 @ 2026-09-14 15:00 UTC |\n| Change | +$2.70 (**+0.11%**, up) |\n\nFlat week net, but not quiet inside it. Range in the hourly series ran roughly **$2,413 low** (2026-09-11, ~13:00 UTC) to **$2,647.68 high** (2026-09-13, ~13:00 UTC) — a ~9.7% peak-to-trough spread. The dominant move was a single vertical impulse on 09-13: ~$2,457 → $2,627 in two hourly bars, then a fade back into the $2,510–2,530 band where it has consolidated since.\n\nTime series is in the rendered chart; no additional call needed to answer direction."
+        }
       },
       "score": {
         "case_id": "spot-token-chart",
@@ -1025,19 +532,19 @@
         "routing": {
           "score": 1,
           "details": [
-            "selected spot.getTokenChart"
+            "withheld: privacy_review"
           ]
         },
         "arguments": {
           "score": 1,
           "details": [
-            "case has no argument constraint"
+            "withheld: privacy_review"
           ]
         },
         "completion": {
           "score": 1,
           "details": [
-            "trial and tool calls completed"
+            "withheld: privacy_review"
           ]
         },
         "latency_ms": 19245,
@@ -1061,60 +568,11 @@
         "started_at": "2026-09-14T14:14:42.538Z",
         "status": "completed",
         "duration_ms": 13367,
-        "activated_skills": [
-          "research-spot-tokens"
-        ],
-        "tool_calls": [
-          {
-            "sequence": 0,
-            "name": "spot.getSimplePrice",
-            "arguments": {
-              "ids": "ethereum",
-              "vs_currencies": "usd",
-              "include_24hr_change": true
-            },
-            "result_bytes": 984
-          }
-        ],
-        "available_tools": [
-          "gina.getCrosschainPortfolio",
-          "gina.getAccountAddresses",
-          "gina.listScheduledPrompts",
-          "spot.getTokenMetadata",
-          "spot.getTokenChart",
-          "spot.getSimplePrice",
-          "spot.fetchSwapHistory",
-          "perps.getHyperliquidAccount",
-          "perps.getHyperliquidPositions",
-          "perps.getHyperliquidOpenOrders",
-          "perps.getHyperliquidPortfolio",
-          "perps.getHyperliquidMarkets",
-          "perps.getHyperliquidPrice",
-          "perps.getHyperliquidPrices",
-          "perps.getHyperliquidAssetData",
-          "perps.getHyperliquidPerpDexes",
-          "perps.fetchHyperliquidTrades",
-          "perps.fetchHyperliquidCandles",
-          "perps.fetchHyperliquidOrderBook",
-          "perps.previewHyperliquidOrderCost",
-          "perps.createHyperliquidTable",
-          "perps.executeSqlQuery",
-          "predictions.searchPredictionMarkets",
-          "predictions.getExpiringMarkets",
-          "predictions.getPredictionOrderbook",
-          "predictions.getSeriesMarket",
-          "predictions.getPredictionMarketDetails",
-          "predictions.fetchPolymarketData",
-          "predictions.fetchPolymarketHistory",
-          "predictions.getPolymarketPositions",
-          "predictions.getPolymarketOrderHistory"
-        ],
         "token_usage": {
           "input_tokens": 8,
           "output_tokens": 244,
           "total_tokens": 252
-        },
-        "final_answer": "**ETH: $2,510.76 USD** (+1.09% 24h)\n\nSource: CoinGecko, live quote at 2026-09-14T14:14:53Z."
+        }
       },
       "score": {
         "case_id": "spot-simple-price",
@@ -1122,19 +580,19 @@
         "routing": {
           "score": 1,
           "details": [
-            "selected spot.getSimplePrice"
+            "withheld: privacy_review"
           ]
         },
         "arguments": {
           "score": 1,
           "details": [
-            "arguments for spot.getSimplePrice satisfy the deterministic contract"
+            "withheld: privacy_review"
           ]
         },
         "completion": {
           "score": 1,
           "details": [
-            "trial and tool calls completed"
+            "withheld: privacy_review"
           ]
         },
         "latency_ms": 13367,
@@ -1158,60 +616,11 @@
         "started_at": "2026-09-14T14:14:55.907Z",
         "status": "completed",
         "duration_ms": 26975,
-        "activated_skills": [
-          "research-spot-tokens"
-        ],
-        "tool_calls": [
-          {
-            "sequence": 0,
-            "name": "spot.fetchSwapHistory",
-            "arguments": {
-              "limit": 100,
-              "lookbackDays": 90,
-              "includeFailures": false
-            },
-            "result_bytes": 13748
-          }
-        ],
-        "available_tools": [
-          "gina.getCrosschainPortfolio",
-          "gina.getAccountAddresses",
-          "gina.listScheduledPrompts",
-          "spot.getTokenMetadata",
-          "spot.getTokenChart",
-          "spot.getSimplePrice",
-          "spot.fetchSwapHistory",
-          "perps.getHyperliquidAccount",
-          "perps.getHyperliquidPositions",
-          "perps.getHyperliquidOpenOrders",
-          "perps.getHyperliquidPortfolio",
-          "perps.getHyperliquidMarkets",
-          "perps.getHyperliquidPrice",
-          "perps.getHyperliquidPrices",
-          "perps.getHyperliquidAssetData",
-          "perps.getHyperliquidPerpDexes",
-          "perps.fetchHyperliquidTrades",
-          "perps.fetchHyperliquidCandles",
-          "perps.fetchHyperliquidOrderBook",
-          "perps.previewHyperliquidOrderCost",
-          "perps.createHyperliquidTable",
-          "perps.executeSqlQuery",
-          "predictions.searchPredictionMarkets",
-          "predictions.getExpiringMarkets",
-          "predictions.getPredictionOrderbook",
-          "predictions.getSeriesMarket",
-          "predictions.getPredictionMarketDetails",
-          "predictions.fetchPolymarketData",
-          "predictions.fetchPolymarketHistory",
-          "predictions.getPolymarketPositions",
-          "predictions.getPolymarketOrderHistory"
-        ],
         "token_usage": {
           "input_tokens": 8,
           "output_tokens": 1268,
           "total_tokens": 1276
-        },
-        "final_answer": "**8 completed swaps** (90-day lookback, limit 100, failures excluded). Rows fetched directly — no queryable table was created, and nothing was prepared for execution.\n\n| Date (UTC) | Route | In → Out | USD in → out |\n|---|---|---|---|\n| 2026-08-30 | Polygon → Arbitrum | pUSD → USDC | $200.14 → $199.87 |\n| 2026-08-27 | Monad → Arbitrum | emo → USDC | $398.43 → $386.52 |\n| 2026-08-27 | Base → Arbitrum | BNKR → USDC | $251.79 → $250.88 |\n| 2026-08-25 | Arbitrum → Base | USDC → BNKR | $249.99 → $249.21 |\n| 2026-08-20 | Base → Monad | USDC → emo | $130.86 → $130.07 |\n| 2026-08-20 | Polygon → Base | USDC.e → USDC | $130.12 → $129.93 |\n| 2026-08-20 | Base → Monad | USDC → emo | $199.98 → $199.47 |\n| 2026-07-07 | Polygon → Base | USDC.e → USDC | $200.97 → $200.89 |\n\nPatterns worth noting:\n\n- **Two completed round trips.** BNKR: bought 947,560 on 2026-08-25 (~$250), sold 946,565 on 2026-08-27 (~$251.79) — roughly flat, ~+0.7% on notional. emo: bought 374,945 + 247,758 = 622,703 across two 2026-08-20 legs (~$330.86 in), sold 623,515 on 2026-08-27 for $398.43 — a ~+20% exit.\n- **All 8 are cross-chain**, no same-chain swaps. Hubs are Base and Arbitrum; USDC is the settlement leg in every trade.\n- **Three are pure stable consolidation** (USDC.e → USDC ×2, pUSD → USDC), not directional trades.\n- **Execution cost** is consistently 0.1–0.6% of notional, except the emo exit at ~3.0% (`$398.43 → $386.52`) — the widest slippage in the set, likely Monad-side liquidity.\n- **Entry surfaces**: 4 `wallet_modal`, 2 `chat`, 1 `api`, 1 `wallet_sidebar_prompt_cta`; all `manual` origin, all `web` channel.\n\nOnly one trade in the window predates August (2026-07-07). If you want a longer view, the lookback caps at 365 days — say the word and I'll re-pull, or include failed attempts to see what didn't mine."
+        }
       },
       "score": {
         "case_id": "spot-fetch-swap-history",
@@ -1219,19 +628,19 @@
         "routing": {
           "score": 1,
           "details": [
-            "selected spot.fetchSwapHistory"
+            "withheld: privacy_review"
           ]
         },
         "arguments": {
           "score": 1,
           "details": [
-            "case has no argument constraint"
+            "withheld: privacy_review"
           ]
         },
         "completion": {
           "score": 1,
           "details": [
-            "trial and tool calls completed"
+            "withheld: privacy_review"
           ]
         },
         "latency_ms": 26975,
@@ -1314,5 +723,11 @@
       "pending": 0
     }
   ],
-  "missingSlots": []
+  "missingSlots": [],
+  "publicProjection": {
+    "artifactPolicy": "sanitized",
+    "originalArtifactSha256": "508c170ee58674e2fdb9bde8d80843d2c07d5af592e3ed694115d913812cc489",
+    "originalArtifactAvailability": "withheld",
+    "withheldReason": "privacy_review"
+  }
 }
