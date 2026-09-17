@@ -3,7 +3,7 @@ title: "Features and Allowlist"
 description: "The complete host-tool boundary for Spot MCP"
 ---
 
-Spot MCP exposes the following 23 tools directly. The same allowlist is available inside the `bash` sandbox. `bash` remains a separate twenty-fourth tool for scripts, files, SQL, short waits, and composed workflows.
+Spot MCP exposes the following 29 tools directly. `bash` remains a separate tool for scripts, files, SQL, short waits, and composed workflows. Its host-tool allowlist covers the same 29 tools plus two sandbox-only analysis helpers: `spot.captureDataset` snapshots a caller-created SQL table, and `spot.sql` runs isolated queries over captured datasets.
 
 ## Market Reads
 
@@ -26,6 +26,33 @@ Spot MCP exposes the following 23 tools directly. The same allowlist is availabl
 | `getLongLaunches`    | Recent LONG launchpad observations (delayed, not live)              |
 | `getPoolState`       | Pinned-block Uniswap V2/V3 compatible pool state on Robinhood Chain |
 | `getRecentPoolSwaps` | Recent swaps for a pool address                                     |
+
+## Liquidity positions (Uniswap v3/v4)
+
+| Host tool              | Purpose                                                                  |
+| ---------------------- | ------------------------------------------------------------------------ |
+| `getLpPositions`       | List LP positions owned by the delegated wallet on Robinhood Chain       |
+| `quoteLpOperation`     | Quote an open, increase, decrease, collect, close, or recenter operation |
+| `executeLpOperation`   | Execute a previously quoted operation                                    |
+| `getLpOperationStatus` | Read an operation's durable settlement status                            |
+| `getLpAllowlist`       | List allowlisted pools and the current revision                          |
+| `updateLpAllowlist`    | Grant or revoke a pool on the allowlist                                  |
+
+LP reads and writes run against the user's delegated wallet on Robinhood
+Chain (chain 4663). `getLpPositions` can also read another address, but that
+result is labelled foreign and can never be quoted or executed.
+`quoteLpOperation` returns a bound quote id plus explicit spend and receive
+bounds; nothing is signed or sent until `executeLpOperation` submits that
+quote. A status of submitted or pending means the outcome is still unknown;
+settled, partial, or failed is reported only from chain evidence.
+
+The per-user pool allowlist decides which pools may take new or increased
+exposure. Revoking a pool never blocks exits: decrease, collect, and close
+stay quotable on an existing position. `updateLpAllowlist` takes
+`action: "add"` with the full pool identity, or `action: "remove"` with the
+entry's `poolKey`, and requires the current `expectedRevision` from
+`getLpAllowlist`. A v4 pool whose hook can return a liquidity delta cannot be
+admitted.
 
 ## Account Support
 

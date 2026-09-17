@@ -6,11 +6,12 @@ description: "Frequently asked questions about Spot MCP"
 <AccordionGroup>
   <Accordion title="Is Spot MCP the same as Gina MCP?">
     No. Gina MCP at `/ai/gina/mcp` is cross-market and read-only. Spot MCP at `/ai/spot/mcp` is
-    venue-scoped write access with 23 native tools and a sandboxed `bash` fallback.
+    venue-scoped write access with 29 native tools and a sandboxed `bash` fallback.
   </Accordion>
   <Accordion title="What can Spot MCP write?">
-    It can prepare swaps and transfers, execute approved supertransactions, and manage scheduled
-    prompts. Its full host-tool boundary is listed on the [Features and
+    It can prepare swaps and transfers, execute approved supertransactions, quote and execute
+    Uniswap v3/v4 liquidity operations on Robinhood Chain, manage the LP pool allowlist, and manage
+    scheduled prompts. Its full host-tool boundary is listed on the [Features and
     Allowlist](/spot-mcp/features) page.
   </Accordion>
   <Accordion title="Can Spot MCP trade Predictions or Perps?">
@@ -18,8 +19,8 @@ description: "Frequently asked questions about Spot MCP"
   </Accordion>
   <Accordion title="Why does Spot include both native tools and bash?">
     Native tools are the fast path for ordinary reads and transactions. `bash` remains available for
-    scripts, files, SQL, short waits, and composed workflows. Its host-tool allowlist matches the 23
-    native tools.
+    scripts, files, SQL, short waits, and composed workflows. Its host-tool allowlist covers the 29
+    native tools plus two sandbox-only analysis helpers.
   </Accordion>
   <Accordion title="Do I have to type confirm execute?">
     No. A complete imperative transaction request authorizes preparation and execution. If
