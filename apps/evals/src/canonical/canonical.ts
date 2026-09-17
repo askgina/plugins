@@ -189,6 +189,8 @@ export interface CheckDimensionSummary {
 // ---------------------------------------------------------------------------
 
 export interface CanonicalModel {
+  /** Public release of this specific model version; distinct from evaluation dates. */
+  readonly release?: { readonly date: string; readonly source: string };
   readonly id: string;
   readonly name: string;
   readonly provider: string;
@@ -414,6 +416,7 @@ export const SUITE_SHA256 = {
 export const canonicalModels: readonly CanonicalModel[] = [
   {
     id: "gpt-5.5",
+    release: { date: "2026-04-23", source: "https://openai.com/index/introducing-gpt-5-5/" },
     name: "GPT-5.5",
     provider: "OpenAI",
     providerModel: "openai-codex/gpt-5.5",
@@ -423,6 +426,7 @@ export const canonicalModels: readonly CanonicalModel[] = [
   },
   {
     id: "gpt-sol",
+    release: { date: "2026-07-09", source: "https://openai.com/index/gpt-5-6/" },
     name: "GPT-5.6 Sol",
     provider: "OpenAI",
     providerModel: "openai-codex/gpt-5.6-sol",
@@ -432,6 +436,10 @@ export const canonicalModels: readonly CanonicalModel[] = [
   },
   {
     id: "muse-spark",
+    release: {
+      date: "2026-09-02",
+      source: "https://research.meta.ai/blog/introducing-muse-spark-1-3",
+    },
     name: "Muse Spark 1.3",
     provider: "Muse",
     providerModel: "muse-spark-1.3",
@@ -441,6 +449,7 @@ export const canonicalModels: readonly CanonicalModel[] = [
   },
   {
     id: "claude-fable",
+    release: { date: "2026-09-01", source: "https://www.anthropic.com/claude/fable" },
     name: "Claude Fable 5.1",
     provider: "Anthropic",
     providerModel: "anthropic/claude-fable-5-1",
@@ -450,6 +459,7 @@ export const canonicalModels: readonly CanonicalModel[] = [
   },
   {
     id: "claude-opus",
+    release: { date: "2026-07-24", source: "https://www.anthropic.com/news/claude-opus-5" },
     name: "Claude Opus 5",
     provider: "Anthropic",
     providerModel: "anthropic/claude-opus-5",

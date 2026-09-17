@@ -58,6 +58,17 @@ export function getWithdrawnRun(runId: string): WithdrawnRunRef | undefined {
   return withdrawnById.get(runId);
 }
 
+/** Model directory order: newest public release first; unknown dates last. */
+export function modelsByReleaseDate(): readonly CanonicalModel[] {
+  return canonicalModels
+    .filter((model) => model.origin === "measured")
+    .sort(
+      (a, b) =>
+        (b.release?.date ?? "").localeCompare(a.release?.date ?? "") ||
+        a.name.localeCompare(b.name),
+    );
+}
+
 export function getModel(modelId: string): CanonicalModel | undefined {
   return modelById.get(modelId);
 }
