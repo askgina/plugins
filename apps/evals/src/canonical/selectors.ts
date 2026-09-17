@@ -1,8 +1,8 @@
 // Data rules for the prototype pages — the single home for every derivation.
 //
 // Page components must not reimplement any of these rules:
-// - headline availability (passes/started only when dispatch coverage is
-//   complete; otherwise counts-only with the coverage reason)
+// - headline availability (passes/started only when dispatch and grading are
+//   complete; otherwise counts-only with the reason, without quality ranking)
 // - representative-run selection per model × family × configuration group
 // - eligibility-reason derivation + display text
 // - configuration grouping by exact pinnedSha256 (labels-only stands alone)
@@ -109,16 +109,16 @@ export function resolveBaselineRun(run: CanonicalRun): CanonicalRun | undefined 
 }
 
 // ---------------------------------------------------------------------------
-// Headline — the only sort key is passes/started, and it exists only when
-// dispatch coverage is complete. Incomplete coverage => `incomplete_coverage`
-// (counts only). Unknown coverage => `coverage_unknown` (counts only).
+// Headline — passes/started is a quality sort key only when dispatch and grading
+// are complete. Dispatch reasons take precedence over incomplete grading;
+// otherwise show counts only, without treating unscored starts as failures.
 // ---------------------------------------------------------------------------
 
 export type Headline =
   | { readonly kind: "rate"; readonly passed: number; readonly started: number }
   | {
       readonly kind: "counts_only";
-      readonly reason: "incomplete_coverage" | "coverage_unknown";
+      readonly reason: "incomplete_coverage" | "coverage_unknown" | "incomplete_grading";
       readonly passed: number;
       readonly started: number;
     };
@@ -136,6 +136,14 @@ export function headlineFor(run: CanonicalRun): Headline {
     return {
       kind: "counts_only",
       reason: "coverage_unknown",
+      passed: run.counts.passed,
+      started: run.counts.started,
+    };
+  }
+  if (scoringCoverageFor(run) !== "complete") {
+    return {
+      kind: "counts_only",
+      reason: "incomplete_grading",
       passed: run.counts.passed,
       started: run.counts.started,
     };
@@ -236,6 +244,8 @@ const ELIGIBILITY_TEXT: Record<EligibilityReason, string> = {
   synthetic: "Synthetic demonstration row — no measured evidence",
   incomplete_coverage: "Dispatch coverage incomplete — showing counts, not a rate",
   coverage_unknown: "Dispatch coverage unknown — showing counts, not a rate",
+  incomplete_grading:
+    "Grading incomplete: unscored attempts are not quality failures; showing counts, not a rate",
   missing_pinned_configuration: "No pinned configuration declared",
   labels_only_configuration: "Labels-only configuration — cannot match a pinned configuration",
   different_evidence_category: "Different evidence category — not the same measure",
@@ -288,6 +298,12 @@ export function compareEligibility(
   if (left.dispatchCoverage === "unknown" || right.dispatchCoverage === "unknown") {
     reasons.push("coverage_unknown");
   }
+  if (
+    (left.dispatchCoverage === "complete" && scoringCoverageFor(left) !== "complete") ||
+    (right.dispatchCoverage === "complete" && scoringCoverageFor(right) !== "complete")
+  ) {
+    reasons.push("incomplete_grading");
+  }
   return {
     eligible: reasons.length === 0,
     reasons,
@@ -296,10 +312,10 @@ export function compareEligibility(
 }
 
 // ---------------------------------------------------------------------------
-// Representative runs — per model × family × configuration group, the newest
-// startedAt among non-withdrawn publications with complete dispatch coverage.
-// When no run in a group has a headline, the newest run is still the pick and
-// carries the coverage reason. Corrections never move the pick.
+// Representative runs: per model × family × configuration group, prefer
+// non-withdrawn publications with complete dispatch, then select the newest
+// startedAt. If none have complete dispatch, select the newest publication.
+// Grading completeness and quality never affect this pick; corrections do not either.
 // ---------------------------------------------------------------------------
 
 export interface RepresentativeRow {
@@ -309,7 +325,7 @@ export interface RepresentativeRow {
   /** Number of distinct configuration groups that produced candidates. */
   readonly configurationGroups: number;
   /** Present when the representative run has no headline rate. */
-  readonly coverageReason: "incomplete_coverage" | "coverage_unknown" | null;
+  readonly coverageReason: Extract<Headline, { kind: "counts_only" }>["reason"] | null;
 }
 
 function isPublished(run: CanonicalRun): boolean {
@@ -349,17 +365,13 @@ export function representativeRuns(family: PrototypeFamily): readonly Representa
     const measuredReps = groupReps.filter((run) => run.origin === "measured");
     const repPool = measuredReps.length > 0 ? measuredReps : groupReps;
     const pick = repPool.reduce((a, b) => (a.startedAt >= b.startedAt ? a : b));
+    const headline = headlineFor(pick);
     rows.push({
       modelId,
       family,
       run: pick,
       configurationGroups: groups.size,
-      coverageReason:
-        pick.dispatchCoverage === "incomplete"
-          ? "incomplete_coverage"
-          : pick.dispatchCoverage === "unknown"
-            ? "coverage_unknown"
-            : null,
+      coverageReason: headline.kind === "counts_only" ? headline.reason : null,
     });
   }
   return rows;

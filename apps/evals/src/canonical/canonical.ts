@@ -110,6 +110,7 @@ export const ELIGIBILITY_REASONS = [
   "synthetic",
   "incomplete_coverage",
   "coverage_unknown",
+  "incomplete_grading",
   "missing_pinned_configuration",
   "labels_only_configuration",
   "different_evidence_category",

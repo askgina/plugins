@@ -182,5 +182,32 @@ describe("public file boundary", () => {
         ]);
       }),
     );
+
+    it.effect("rejects a file that grows beyond 16 MiB after stat without scanning its tail", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const paths = yield* Path.Path;
+          const directory = yield* fs.makeTempDirectoryScoped({ prefix: "public-boundary-test-" });
+          const file = paths.join(directory, "fixture.txt");
+          yield* fs.writeFileString(file, "clean");
+          const marker = ["nextjs", "-ai-chatbot"].join("");
+          const text = " ".repeat(16 * 1024 * 1024 + 1 - marker.length) + marker;
+          const findings: { rule: string; path: string }[] = [];
+          yield* scanPublicBoundaryFile(file, "fixture.txt", false, (rule, path) => {
+            findings.push({ rule, path });
+          }).pipe(
+            Effect.provideService(FileSystem.FileSystem, {
+              ...fs,
+              readFile: (path) =>
+                fs.writeFileString(path, text).pipe(Effect.andThen(fs.readFile(path))),
+            }),
+          );
+          assert.deepStrictEqual(findings, [
+            { rule: "unscannable-oversized-file", path: "fixture.txt" },
+          ]);
+        }),
+      ),
+    );
   });
 });

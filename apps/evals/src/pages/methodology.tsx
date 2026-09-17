@@ -151,8 +151,10 @@ export function MethodologyPage() {
           <Panel title="Reading the scores">
             <div className="eval-method-body">
               <p>
-                The headline is passes over started tasks, shown only when dispatch coverage is
-                complete; incomplete or unknown coverage shows counts with the reason instead. Tool
+                The headline is passes over started tasks, shown only when dispatch and grading are
+                complete. Incomplete or unknown dispatch, or incomplete grading, shows counts with
+                the reason instead, without quality ordering or comparison. For incompletely graded
+                runs, graded-only rates describe only the graded subset, not quality rankings. Tool
                 selection accuracy measures whether the agent chose the expected tools. Task scores
                 summarize the individual rubric checks.
               </p>

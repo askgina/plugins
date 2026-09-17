@@ -21,6 +21,7 @@ import type {
 } from "./canonical";
 import {
   dispatchCoverageText,
+  eligibilityText,
   gradedOnlyLabel,
   scoringCoverageFor,
   type GradedOnlyRate,
@@ -260,7 +261,7 @@ export function OutcomeMatrixCell({ attempt }: { attempt: CanonicalAttempt | und
 // Headline + graded-only rate
 // ---------------------------------------------------------------------------
 
-/** passes/started when coverage is complete; counts + reason otherwise. */
+/** passes/started when dispatch and grading are complete; counts + reason otherwise. */
 export function HeadlineValue({ headline }: { headline: Headline }) {
   if (headline.kind === "rate") {
     return (
@@ -270,16 +271,27 @@ export function HeadlineValue({ headline }: { headline: Headline }) {
     );
   }
   return (
-    <span className="eval-compare-row">
+    <span className="lb-cost-stack">
       <span className="lb-count">
-        {headline.passed}/{headline.started}
+        {headline.passed} passed · {headline.started} started
       </span>
-      <AvailabilityMark
-        availability={headline.reason === "incomplete_coverage" ? "not_retained" : "not_recorded"}
-        reason={
-          headline.reason === "incomplete_coverage" ? "incomplete coverage" : "coverage unknown"
-        }
-      />
+      {headline.reason === "incomplete_grading" ? (
+        <span className="eval-muted" title={eligibilityText(headline.reason)}>
+          Incomplete grading · counts only · not ranked
+        </span>
+      ) : (
+        <>
+          <AvailabilityMark
+            availability={
+              headline.reason === "incomplete_coverage" ? "not_retained" : "not_recorded"
+            }
+            reason={
+              headline.reason === "incomplete_coverage" ? "incomplete coverage" : "coverage unknown"
+            }
+          />
+          <span className="eval-muted">Counts only · not ranked</span>
+        </>
+      )}
     </span>
   );
 }

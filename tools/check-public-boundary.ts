@@ -289,6 +289,10 @@ export const scanPublicBoundaryFile: {
       const bytes = yield* fs
         .readFile(absolute)
         .pipe(Effect.mapError((cause) => fail(`cannot read ${absolute}`, cause)));
+      if (bytes.byteLength > MAX_TEXT_BYTES) {
+        report("unscannable-oversized-file", label);
+        return;
+      }
       for (const rule of findPublicBinaryBoundaryRules(label, bytes)) {
         report(rule, label);
       }

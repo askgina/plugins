@@ -204,7 +204,6 @@ function FamilyMetricCards({
           if (!representative) return null;
           const headline = headlineFor(representative);
           const unscored = representative.counts.started - representative.counts.graded;
-          const sweep = representative.campaignId === "reasoning-sweep-2026-09-16";
           const timeoutMs =
             representative.timeoutMs ??
             canonicalCampaigns.find((campaign) => campaign.campaignId === representative.campaignId)
@@ -224,15 +223,9 @@ function FamilyMetricCards({
               </p>
               <div className="model-profile-metric-headline">
                 <strong>
-                  {sweep ? (
-                    `${representative.counts.passed} / ${representative.counts.planned}`
-                  ) : (
-                    <HeadlineValue headline={headline} />
-                  )}
+                  <HeadlineValue headline={headline} />
                 </strong>
-                <span className="eval-muted">
-                  {sweep ? "passes / planned" : "passes / started"}
-                </span>
+                {headline.kind === "rate" && <span className="eval-muted">passes / started</span>}
               </div>
               <dl className="model-profile-metric-details">
                 <div className="model-profile-metric-row">
@@ -517,7 +510,7 @@ function RunDetail({ run }: { run: CanonicalRun }) {
         <h4 className="model-profile-detail-heading">Headline & grading</h4>
         <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "baseline" }}>
           <div>
-            <span className="eval-muted">Passes over started: </span>
+            <span className="eval-muted">Headline: </span>
             <strong>
               <HeadlineValue headline={headlineFor(run)} />
             </strong>

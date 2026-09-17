@@ -35,6 +35,7 @@ import {
   getWithdrawnRun,
   headlineFor,
   resolveBaselineRun,
+  scoringCoverageFor,
 } from "../selectors";
 import {
   AvailabilityMark,
@@ -105,6 +106,16 @@ function reasonContext(
       return `applies to ${sides
         .map((run) => `${sideName(run, left)} (${run.dispatchCoverage} coverage)`)
         .join(", ")}`;
+    }
+    case "incomplete_grading": {
+      const sides = [left, right].flatMap((run, index) =>
+        scoringCoverageFor(run) === "complete"
+          ? []
+          : [
+              `${index === 0 ? "left" : "right"} (${run.counts.graded}/${run.counts.started} graded/started)`,
+            ],
+      );
+      return `applies to ${sides.join(", ")}`;
     }
     case "synthetic": {
       const sides = [left, right].filter((run) => run.origin === "synthetic");

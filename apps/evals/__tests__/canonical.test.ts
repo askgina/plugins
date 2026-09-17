@@ -1,7 +1,11 @@
 import { describe, expect, test } from "vitest";
-import { canonicalCampaigns, canonicalRuns } from "../src/canonical/canonical";
+import { canonicalCampaigns, canonicalRuns, type CanonicalRun } from "../src/canonical/canonical";
 import {
+  compareEligibility,
   derivedCostPerTask,
+  gradedOnlyRate,
+  headlineFor,
+  headlineSortKey,
   runHistoryFor,
   runsForFamily,
   runsForModel,
@@ -32,6 +36,113 @@ describe("scoring coverage", () => {
     expect(
       scoringCoverageFor({ dispatchCoverage: "incomplete", counts: { planned: 39, graded: 38 } }),
     ).toBe("partial");
+  });
+
+  test("ranks a fully graded zero-pass run above unscored runs and blocks their comparisons", () => {
+    const base = canonicalRuns.find(
+      (run) =>
+        run.configuration.availability === "pinned" && scoringCoverageFor(run) === "complete",
+    )!;
+    const zeroPass: CanonicalRun = {
+      ...base,
+      counts: { ...base.counts, passed: 0, failed: base.counts.graded },
+    };
+    const partial: CanonicalRun = {
+      ...base,
+      counts: {
+        ...base.counts,
+        completed: base.counts.started - 1,
+        graded: base.counts.started - 1,
+        passed: base.counts.started - 1,
+        failed: 0,
+        timedOut: 0,
+        runtimeFailure: 1,
+        unscored: 1,
+      },
+    };
+    const unscored: CanonicalRun = {
+      ...partial,
+      counts: {
+        ...partial.counts,
+        completed: 0,
+        graded: 0,
+        passed: 0,
+        runtimeFailure: partial.counts.started,
+        unscored: partial.counts.started,
+      },
+    };
+
+    expect(headlineFor(zeroPass).kind).toBe("rate");
+    expect(headlineSortKey(zeroPass)).toBe(0);
+    expect(compareEligibility(zeroPass, base).eligible).toBe(true);
+    expect(gradedOnlyRate(partial)).not.toBeNull();
+    expect(gradedOnlyRate(unscored)).toBeNull();
+    for (const run of [partial, unscored]) {
+      expect(headlineFor(run)).toMatchObject({
+        kind: "counts_only",
+        reason: "incomplete_grading",
+      });
+      expect(headlineSortKey(run)).toBeLessThan(headlineSortKey(zeroPass));
+      for (const pair of [
+        [run, zeroPass],
+        [zeroPass, run],
+      ] as const) {
+        expect(compareEligibility(...pair)).toMatchObject({
+          eligible: false,
+          reasons: ["incomplete_grading"],
+        });
+      }
+    }
+  });
+
+  test("preserves dispatch precedence and existing comparison restrictions", () => {
+    const base = canonicalRuns.find(
+      (run) =>
+        run.configuration.availability === "pinned" && scoringCoverageFor(run) === "complete",
+    )!;
+    for (const [dispatchCoverage, reason] of [
+      ["incomplete", "incomplete_coverage"],
+      ["unknown", "coverage_unknown"],
+    ] as const) {
+      const run: CanonicalRun = {
+        ...base,
+        dispatchCoverage,
+        counts: { ...base.counts, graded: 0, passed: 0, failed: 0 },
+      };
+      expect(headlineFor(run)).toMatchObject({ kind: "counts_only", reason });
+      expect(compareEligibility(base, run)).toMatchObject({ eligible: false, reasons: [reason] });
+    }
+    for (const [run, reason] of [
+      [
+        {
+          ...base,
+          cohort: {
+            ...base.cohort,
+            cohortId: "different-target-cohort",
+            target: "different-target",
+          },
+        },
+        "outside_selected_cohort",
+      ],
+      [
+        {
+          ...base,
+          cohort: {
+            ...base.cohort,
+            cohortId: "different-evidence-cohort",
+            evidenceCategory:
+              base.cohort.evidenceCategory === "conformance" ? "answer_quality" : "conformance",
+          },
+        },
+        "different_evidence_category",
+      ],
+      [
+        { ...base, configuration: { ...base.configuration, availability: "labels_only" } },
+        "labels_only_configuration",
+      ],
+    ] as const) {
+      expect(compareEligibility(base, run)).toMatchObject({ eligible: false, reasons: [reason] });
+    }
   });
 });
 
@@ -117,20 +228,17 @@ describe("reasoning sweep runs", () => {
       expect(artifact.planned).toBe(artifact.models.reduce((sum, row) => sum + row.planned, 0));
     }
     expect(reasoningSweepPublication).toEqual({
-      publishedRows: rows.length,
-      publishedSlots: reasoningSweep.planned + reasoningSweepClaude.planned,
+      publishedRows: 25,
+      publishedSlots: 2625,
       plannedRows: 35,
       plannedSlots: 3675,
     });
-    expect(rows.length).toBeGreaterThan(1);
-    expect(rows.length).toBeLessThanOrEqual(35);
+    expect(rows).toHaveLength(25);
     expect(new Set(rows.map((row) => row.rowId)).size).toBe(rows.length);
-    expect(new Set(rows.map((row) => row.reasoning)).size).toBeGreaterThan(1);
     expect(runs).toHaveLength(rows.length * 3);
     expect(runs.reduce((sum, run) => sum + run.counts.planned, 0)).toBe(
       reasoningSweepPublication.publishedSlots,
     );
-    expect(reasoningSweepPublication.publishedSlots).toBeLessThanOrEqual(3675);
     for (const row of rows) {
       expect(row.runs.map((run) => run.family).sort()).toEqual(["perps", "predictions", "spot"]);
       expect(row.runs.reduce((sum, run) => sum + run.planned, 0)).toBe(row.planned);
