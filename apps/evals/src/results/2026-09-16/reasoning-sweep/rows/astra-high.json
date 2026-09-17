@@ -1303,7 +1303,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "receiptSha256": "cfb26d100aa84f2d36e981b9c2f5aca31f6f393e46a7cca83c40f68f6a4f5cc5",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -4842,7 +4842,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "receiptSha256": "cfb26d100aa84f2d36e981b9c2f5aca31f6f393e46a7cca83c40f68f6a4f5cc5",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -7103,7 +7103,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "receiptSha256": "cfb26d100aa84f2d36e981b9c2f5aca31f6f393e46a7cca83c40f68f6a4f5cc5",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -7728,12 +7728,12 @@
     "rawEvidenceUnchanged": true,
     "receipt": "classification-receipt.json",
     "receiptAvailability": "withheld",
-    "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+    "receiptSha256": "cfb26d100aa84f2d36e981b9c2f5aca31f6f393e46a7cca83c40f68f6a4f5cc5",
     "schemaVersion": "ask-gina-runtime-classification.v1",
     "scope": "post-run-runtime-classification"
   },
   "sourceCommit": "1ad5387698bb530e37cf2b9d45ede27f5c530e23",
-  "sourceSummarySha256": "2be3543ac5715a1cdf53a1c7cbc3c54cf0ba2119a0967a855dcbcefc88898d38",
+  "sourceSummarySha256": "7cadc500b3bed9f32524da91745c391d2e1e7b9c3b585b0841271d69c69c3f6b",
   "startedAt": "2026-09-16T15:52:56.358Z",
   "target": "omp_harness",
   "timeoutMs": 120000,

@@ -1401,7 +1401,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "receiptSha256": "cfb26d100aa84f2d36e981b9c2f5aca31f6f393e46a7cca83c40f68f6a4f5cc5",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -4946,7 +4946,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "receiptSha256": "cfb26d100aa84f2d36e981b9c2f5aca31f6f393e46a7cca83c40f68f6a4f5cc5",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -7214,7 +7214,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "receiptSha256": "cfb26d100aa84f2d36e981b9c2f5aca31f6f393e46a7cca83c40f68f6a4f5cc5",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -7839,12 +7839,12 @@
     "rawEvidenceUnchanged": true,
     "receipt": "classification-receipt.json",
     "receiptAvailability": "withheld",
-    "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+    "receiptSha256": "cfb26d100aa84f2d36e981b9c2f5aca31f6f393e46a7cca83c40f68f6a4f5cc5",
     "schemaVersion": "ask-gina-runtime-classification.v1",
     "scope": "post-run-runtime-classification"
   },
   "sourceCommit": "b76c284de42c12d6470e937e4f74e069b78fa64c",
-  "sourceSummarySha256": "77c71fbd2f885be3bf8c0fa06059bd2ef9df40bc1549015262969172785e320a",
+  "sourceSummarySha256": "8342b35387856bbc6fd81641626753a203827a721a17c3110dbe8f92bb3ec51e",
   "startedAt": "2026-09-16T12:53:44.554Z",
   "target": "devin_cli",
   "timeoutMs": 300000,

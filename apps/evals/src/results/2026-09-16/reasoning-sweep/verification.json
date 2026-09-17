@@ -762,7 +762,7 @@
         "unscored": 0
       },
       "summaryBytes": 589376,
-      "summarySha256": "2be3543ac5715a1cdf53a1c7cbc3c54cf0ba2119a0967a855dcbcefc88898d38"
+      "summarySha256": "7cadc500b3bed9f32524da91745c391d2e1e7b9c3b585b0841271d69c69c3f6b"
     },
     {
       "attempt": 1,
@@ -1526,7 +1526,7 @@
         "unscored": 0
       },
       "summaryBytes": 579768,
-      "summarySha256": "f112dc0187369ad1441d013fc65181c03314445a50c03da3a52bf950a0c5c1ca"
+      "summarySha256": "9c9f007e441525d997cf5b5c18c5efeb639c41edcae8d5e5607e348ee5141578"
     },
     {
       "attempt": 1,
@@ -2290,7 +2290,7 @@
         "unscored": 73
       },
       "summaryBytes": 269345,
-      "summarySha256": "184fa22a16c938ab7aa4c51887319d8191b26c2859e3723e8af77e832a0f0178"
+      "summarySha256": "0861630cac91a44fd91fa3219da3afc21ebfdce0db084cdc7eec82e3a0320bb6"
     },
     {
       "attempt": 1,
@@ -3054,7 +3054,7 @@
         "unscored": 0
       },
       "summaryBytes": 589625,
-      "summarySha256": "bd68783239a3dfed7ecdf57fc7e34a97c32cc67bc2a14e7a5464bf62c1bde775"
+      "summarySha256": "6af936cdd607cf29735ff7b318f23d089419327c9079428f6f7ca74708f211b7"
     },
     {
       "attempt": 1,
@@ -3818,7 +3818,7 @@
         "unscored": 51
       },
       "summaryBytes": 377002,
-      "summarySha256": "ffbfe50700769beac81c1494c42341d3849ab575b8ac2ce29e7cd893ac011eae"
+      "summarySha256": "b754fc9be11cca85c5b699e98704bf8410aa822e55eefd733cf65767579fd6db"
     },
     {
       "attempt": 1,
@@ -4582,7 +4582,7 @@
         "unscored": 0
       },
       "summaryBytes": 637511,
-      "summarySha256": "8a7beb27aa4383f4b7b458def17af5d4f5c26bd19f26779a3df6464aabee1f6a"
+      "summarySha256": "ff4c7ee972e2609c3123aa55c38ea30ab6cf284cef7868d145807f5a22e98508"
     },
     {
       "attempt": 1,
@@ -5346,7 +5346,7 @@
         "unscored": 0
       },
       "summaryBytes": 633807,
-      "summarySha256": "789610f6bf4bef0002a368e65c3310098902df82639113e3935f73d964f2afa8"
+      "summarySha256": "9f9e2dc7d5177faf416a348b5e84482ddc038f7461a30917ae7342dd3c5e68d2"
     },
     {
       "attempt": 1,
@@ -6110,7 +6110,7 @@
         "unscored": 3
       },
       "summaryBytes": 557188,
-      "summarySha256": "77c71fbd2f885be3bf8c0fa06059bd2ef9df40bc1549015262969172785e320a"
+      "summarySha256": "8342b35387856bbc6fd81641626753a203827a721a17c3110dbe8f92bb3ec51e"
     },
     {
       "attempt": 1,
@@ -6874,7 +6874,7 @@
         "unscored": 3
       },
       "summaryBytes": 577234,
-      "summarySha256": "0ef2b3cfb6c9e968f77381a4b38f60f1edee084bc32f72c3fc777f6ea2351f0f"
+      "summarySha256": "10cb9fa2dbe643119f0e3eea64b7f2a04cb92550b3681c4d89751466a1aeba7f"
     },
     {
       "attempt": 1,
@@ -7638,7 +7638,7 @@
         "unscored": 1
       },
       "summaryBytes": 564007,
-      "summarySha256": "6de809ea68c6906b9117483ddb10d7a4a624e93a9b6b5aed8a1f2bb4550f3614"
+      "summarySha256": "66fb11e81cd6f207d0b4edba96314a02e80760ffcd65fb2421f4543b0c54b76b"
     },
     {
       "attempt": 1,
@@ -8402,7 +8402,7 @@
         "unscored": 0
       },
       "summaryBytes": 718526,
-      "summarySha256": "1eeb0caedba78b07aaab1a8b571bd2347b45e13977a492498b75cd8e031df7d5"
+      "summarySha256": "2a04246255466a8382762d62a898432c45d7d5324930651e05b9244447076841"
     },
     {
       "attempt": 1,
@@ -9166,7 +9166,771 @@
         "unscored": 0
       },
       "summaryBytes": 680320,
-      "summarySha256": "2875eb103d2ae10c9185ce4b457883873ccb9144ede044b0e674eb1f039fae1d"
+      "summarySha256": "91165cb6e7eb83a2c5fc7671eed764929a307b7bafb989727ab9adc0c1361eac"
+    },
+    {
+      "attempt": 1,
+      "complete": true,
+      "families": [
+        {
+          "aborted": [],
+          "family": "spot",
+          "matchesSummary": true,
+          "mismatches": [],
+          "planned": 12,
+          "recomputed": {
+            "dispatched": 12,
+            "failed": 1,
+            "graded": 7,
+            "passed": 6,
+            "terminal": 12,
+            "timeouts": 5,
+            "unscored": 5
+          },
+          "resumed": 0,
+          "runId": "fable-max-spot-20260917134923533",
+          "runIdMismatches": 0,
+          "summary": {
+            "dispatched": 12,
+            "failed": 1,
+            "graded": 7,
+            "passed": 6,
+            "terminal": 12,
+            "timeouts": 5,
+            "unscored": 5
+          },
+          "terminals": [
+            {
+              "bytes": 858,
+              "caseId": "spot-fetch-swap-history",
+              "repetition": 1,
+              "sha256": "0f162b5296e6fdd1d15c06d7c2d990763152f4f60d62b09cc675bfc3217a80ee"
+            },
+            {
+              "bytes": 3378,
+              "caseId": "spot-simple-price",
+              "repetition": 1,
+              "sha256": "95e965b7e352073c333c3f8f0d2b0cbac1124a291921c8e5e24a58067fcc33cc"
+            },
+            {
+              "bytes": 4514,
+              "caseId": "spot-token-chart",
+              "repetition": 1,
+              "sha256": "d4921e419fece7f1939c2c9b7f7612048a5e9cbd1c7feb104691a32e8cb94c15"
+            },
+            {
+              "bytes": 3996,
+              "caseId": "spot-token-metadata",
+              "repetition": 1,
+              "sha256": "015eb206770a99aa39b2b7ea6b59351231f03e1dcc5b18aaf176bd1dec726f2b"
+            },
+            {
+              "bytes": 858,
+              "caseId": "spot-fetch-swap-history",
+              "repetition": 2,
+              "sha256": "36a8aaa0170c20e000b6d1304be16827f978b4b1fc6de70b8ac3b6927aa58afa"
+            },
+            {
+              "bytes": 3381,
+              "caseId": "spot-simple-price",
+              "repetition": 2,
+              "sha256": "b421d5d4973237cadd42745b3a2df111d172a8223a5b9e6b04a90b6a4652b1d6"
+            },
+            {
+              "bytes": 851,
+              "caseId": "spot-token-chart",
+              "repetition": 2,
+              "sha256": "70a807019e361fc3ebcef5424daf511f3a8c052b5c8a56ebbb96ebe6e8107612"
+            },
+            {
+              "bytes": 5214,
+              "caseId": "spot-token-metadata",
+              "repetition": 2,
+              "sha256": "9edd5294f5dd1ce564e283df3e0db20dfb5df3a369795b8521531a00ee1487da"
+            },
+            {
+              "bytes": 858,
+              "caseId": "spot-fetch-swap-history",
+              "repetition": 3,
+              "sha256": "eb834825d29da33a4d0d043183e6a24076d5c6ea8ac406a0395075ac365b9ac8"
+            },
+            {
+              "bytes": 3381,
+              "caseId": "spot-simple-price",
+              "repetition": 3,
+              "sha256": "66e28fa4aa99c2daf060e3b916bd401fa3b2a177d9906d0f6dbea741e8cee247"
+            },
+            {
+              "bytes": 851,
+              "caseId": "spot-token-chart",
+              "repetition": 3,
+              "sha256": "3a4fea079717e1a07509a6a4edde993602f363755ead321f5eabe083be691f38"
+            },
+            {
+              "bytes": 4633,
+              "caseId": "spot-token-metadata",
+              "repetition": 3,
+              "sha256": "0f59a3c59f2f6c3639b63fc2dad664a1d997f768e0d5a492d44ef22174e8cab4"
+            }
+          ]
+        },
+        {
+          "aborted": [],
+          "family": "perps",
+          "matchesSummary": true,
+          "mismatches": [],
+          "planned": 54,
+          "recomputed": {
+            "dispatched": 54,
+            "failed": 11,
+            "graded": 39,
+            "passed": 28,
+            "terminal": 54,
+            "timeouts": 15,
+            "unscored": 15
+          },
+          "resumed": 0,
+          "runId": "fable-max-perps-20260917134923533",
+          "runIdMismatches": 0,
+          "summary": {
+            "dispatched": 54,
+            "failed": 11,
+            "graded": 39,
+            "passed": 28,
+            "terminal": 54,
+            "timeouts": 15,
+            "unscored": 15
+          },
+          "terminals": [
+            {
+              "bytes": 4910,
+              "caseId": "perps-account",
+              "repetition": 1,
+              "sha256": "3431f7933fa345a5aabeb6f5e1a6dfa443e56241f4b6e854b929ec3678984bd9"
+            },
+            {
+              "bytes": 3916,
+              "caseId": "perps-asset-data",
+              "repetition": 1,
+              "sha256": "eb6f510c6cbd9f13188063b2c4d3854bba15bfb5ead81771371597e2381e7d14"
+            },
+            {
+              "bytes": 864,
+              "caseId": "perps-create-and-query-table",
+              "repetition": 1,
+              "sha256": "de4b6ae88fa855bdc5331ce8ec9f238d8c57d8a5152ca9caa9c71aabbd3c68f9"
+            },
+            {
+              "bytes": 854,
+              "caseId": "perps-create-table",
+              "repetition": 1,
+              "sha256": "196763ba01e123bd521f63bff39ffb5150abae617c3a338d4a8d8ee8c556f55d"
+            },
+            {
+              "bytes": 9802,
+              "caseId": "perps-fetch-candles",
+              "repetition": 1,
+              "sha256": "d9f4384260105ee31ee41a248cb136a32996ce70d8a16e327495b735efc3698f"
+            },
+            {
+              "bytes": 4409,
+              "caseId": "perps-fetch-order-book",
+              "repetition": 1,
+              "sha256": "972bdee72e0212d510c39ac5a7eaa733c0e1878b3645b5579405c0782bf0040c"
+            },
+            {
+              "bytes": 853,
+              "caseId": "perps-fetch-trades",
+              "repetition": 1,
+              "sha256": "7b9eff5f87eb3e512ee57e968557f1c5c2a27b7d00c6c8a488e1fb94f519002c"
+            },
+            {
+              "bytes": 3813,
+              "caseId": "perps-hip3-dexes",
+              "repetition": 1,
+              "sha256": "de8598b49c751f06954de12fc1f7f014ac5b06a847f641663c675386a6ef6138"
+            },
+            {
+              "bytes": 853,
+              "caseId": "perps-hip3-markets",
+              "repetition": 1,
+              "sha256": "06f2dad53c9fd7351c2f3fe4c6176064e4ac8a9487a6c51454b4b37178d99698"
+            },
+            {
+              "bytes": 3537,
+              "caseId": "perps-hip3-price",
+              "repetition": 1,
+              "sha256": "b34d3078c623b52eefe0c3ad9a987672b5de553f58051bd418d20e8567d2f76f"
+            },
+            {
+              "bytes": 848,
+              "caseId": "perps-markets",
+              "repetition": 1,
+              "sha256": "6246848896cdf2adf411b801af00385905395c90a243e80afba146fda158137d"
+            },
+            {
+              "bytes": 3662,
+              "caseId": "perps-multiple-prices",
+              "repetition": 1,
+              "sha256": "1b6e34a9941e8cf53f4204bc0bfab680c58473d8ad69709a9af43213b0f5dd07"
+            },
+            {
+              "bytes": 3765,
+              "caseId": "perps-open-orders",
+              "repetition": 1,
+              "sha256": "cf63696cef63e5faaa071d0429fecdf6028cae29ce253ca53d87184fb0280203"
+            },
+            {
+              "bytes": 4110,
+              "caseId": "perps-portfolio",
+              "repetition": 1,
+              "sha256": "04c1c3afc232d33a749285a861fea4b6978a95dc827989a2eb90c1b208f2ec92"
+            },
+            {
+              "bytes": 3328,
+              "caseId": "perps-positions",
+              "repetition": 1,
+              "sha256": "e50282297db8b04933574d34dac262e220a4247cf31bcb20203d3df9fea81d7a"
+            },
+            {
+              "bytes": 4562,
+              "caseId": "perps-preview-order-cost",
+              "repetition": 1,
+              "sha256": "99c18cd34f4b34e8df23c9161e80010b3afc5fcb06701ce84edea74088446abc"
+            },
+            {
+              "bytes": 860,
+              "caseId": "perps-search-hip3-markets",
+              "repetition": 1,
+              "sha256": "74ad3d3b36e6b68a9756e57d3721235ea11d1369b72e5385d6c980f704ac77c4"
+            },
+            {
+              "bytes": 3560,
+              "caseId": "perps-single-price",
+              "repetition": 1,
+              "sha256": "32c8db3ba061ae380c699a76194d700c624625246ea93a3366f661dfdb74cd1d"
+            },
+            {
+              "bytes": 5206,
+              "caseId": "perps-account",
+              "repetition": 2,
+              "sha256": "7078394afc349edde0e8e553ee3ebe33a2c08df20d12adbc8aa14f75b46a0170"
+            },
+            {
+              "bytes": 4019,
+              "caseId": "perps-asset-data",
+              "repetition": 2,
+              "sha256": "41efa1b110dbf8d14a989e64dafdd734b8f76c3de35a570429f1c6a17c9eea59"
+            },
+            {
+              "bytes": 12465,
+              "caseId": "perps-create-and-query-table",
+              "repetition": 2,
+              "sha256": "8c35cc6d752cded7f0c5ba3ebd053899feca73ad6a9c4595bf16eb1390e35300"
+            },
+            {
+              "bytes": 854,
+              "caseId": "perps-create-table",
+              "repetition": 2,
+              "sha256": "97fa72749fccf422bddc5e5e01808bb872508b287af0f2f6b62e10bbb10e3c59"
+            },
+            {
+              "bytes": 9462,
+              "caseId": "perps-fetch-candles",
+              "repetition": 2,
+              "sha256": "318d207b487578026969a313617c4b538210eeca6c7346328ee53d77f2a6b519"
+            },
+            {
+              "bytes": 4447,
+              "caseId": "perps-fetch-order-book",
+              "repetition": 2,
+              "sha256": "1230785fd9e75426a9b8e172f81ef7c7cd640be55a05ee6822c5a1089e875107"
+            },
+            {
+              "bytes": 6911,
+              "caseId": "perps-fetch-trades",
+              "repetition": 2,
+              "sha256": "69bdf84220d6419ee5166f50d3298f12252630661e174a437ca0f00362dc871c"
+            },
+            {
+              "bytes": 3713,
+              "caseId": "perps-hip3-dexes",
+              "repetition": 2,
+              "sha256": "730b1567c0254255c25d92333f3d96c627499b6d0f94c7d516502fa53b0709de"
+            },
+            {
+              "bytes": 853,
+              "caseId": "perps-hip3-markets",
+              "repetition": 2,
+              "sha256": "8bc0567581dcb0b58ead160b907825e28075b6e903968e5fc4235200bbf023dc"
+            },
+            {
+              "bytes": 3526,
+              "caseId": "perps-hip3-price",
+              "repetition": 2,
+              "sha256": "dea55c6f0472eeff3e849be1943d4eed1ad65dadf141fcee941c0c7938189d63"
+            },
+            {
+              "bytes": 848,
+              "caseId": "perps-markets",
+              "repetition": 2,
+              "sha256": "7b7e29308ed3f7779617b553d58478d316fea6228c605c945c364890f9b39393"
+            },
+            {
+              "bytes": 3679,
+              "caseId": "perps-multiple-prices",
+              "repetition": 2,
+              "sha256": "e10fd9ba9abe8d3109666b4746e491c3ec8de2ee18fdae1b49e4f0ba8cb5ef47"
+            },
+            {
+              "bytes": 3722,
+              "caseId": "perps-open-orders",
+              "repetition": 2,
+              "sha256": "fc3a34fbd5f514fa9304e1aeb9981b68c4c9d61c31944c89c2f48898c7c315c2"
+            },
+            {
+              "bytes": 4577,
+              "caseId": "perps-portfolio",
+              "repetition": 2,
+              "sha256": "b8f2cd0ed26f9b9fbeb2eb22778a5040a2783eb33caa5e5a4f5f4107b2aa4f1f"
+            },
+            {
+              "bytes": 3271,
+              "caseId": "perps-positions",
+              "repetition": 2,
+              "sha256": "cbe77993f7ebdc39278004a65bdb4cf6668ee561fd64e348c5f145727ecf7c1c"
+            },
+            {
+              "bytes": 4506,
+              "caseId": "perps-preview-order-cost",
+              "repetition": 2,
+              "sha256": "28b78fbeb287c3a34566872d0025f0e90448e8431333739a2c20b90b6a97f822"
+            },
+            {
+              "bytes": 860,
+              "caseId": "perps-search-hip3-markets",
+              "repetition": 2,
+              "sha256": "6b0c1fa2482ceae7cf3862b7083cb4d62c84f99000bbd3cf7ea1ebea49b11656"
+            },
+            {
+              "bytes": 3572,
+              "caseId": "perps-single-price",
+              "repetition": 2,
+              "sha256": "bb14d3d808761d57c0c3eb1ca5a0e3a2f0abac3d762fb286fff5b720be97eef4"
+            },
+            {
+              "bytes": 5035,
+              "caseId": "perps-account",
+              "repetition": 3,
+              "sha256": "a2b75cc68b195becfb0c60b2f51e7b9a9bfacae2648f0a28de1596d57bd8e36b"
+            },
+            {
+              "bytes": 4015,
+              "caseId": "perps-asset-data",
+              "repetition": 3,
+              "sha256": "05ca028fa47ef0e1f222df0ac63c40a754d3b923589adc2dd75d9fbc7d2ddedb"
+            },
+            {
+              "bytes": 864,
+              "caseId": "perps-create-and-query-table",
+              "repetition": 3,
+              "sha256": "df20a0e293eed8fad85b798779a9f701f83e0ec3be51758c201b213214e9fe3f"
+            },
+            {
+              "bytes": 853,
+              "caseId": "perps-create-table",
+              "repetition": 3,
+              "sha256": "47967240223f41850b1ea1a5f381ab9eed7ec9b6e6289449df05ad0c00843e2e"
+            },
+            {
+              "bytes": 10573,
+              "caseId": "perps-fetch-candles",
+              "repetition": 3,
+              "sha256": "cc5c888f8091c05fa1b366661f50f07767852077ba1965b8a1945c3e26929160"
+            },
+            {
+              "bytes": 4387,
+              "caseId": "perps-fetch-order-book",
+              "repetition": 3,
+              "sha256": "0ac3a7a65a1a8fd90b73cbd5e51ad860bbf754e22766b29fcea4c1246db6cb63"
+            },
+            {
+              "bytes": 6590,
+              "caseId": "perps-fetch-trades",
+              "repetition": 3,
+              "sha256": "54bee162073c22b3cd8c74701bd6d7b849913e2ff312bddcd22852ad2070dd60"
+            },
+            {
+              "bytes": 4012,
+              "caseId": "perps-hip3-dexes",
+              "repetition": 3,
+              "sha256": "ff848cea5388eac60b27218d60519a907452d2936f037fbb554e172c44f492e9"
+            },
+            {
+              "bytes": 853,
+              "caseId": "perps-hip3-markets",
+              "repetition": 3,
+              "sha256": "2b66aace8dfb0dcb730477886c66067fef584e746ee079fec57094918dd5185b"
+            },
+            {
+              "bytes": 3510,
+              "caseId": "perps-hip3-price",
+              "repetition": 3,
+              "sha256": "9fa41e3cdee2aa5b5b74e839c2b2680e10f5729a7344c36285bb37694292a075"
+            },
+            {
+              "bytes": 848,
+              "caseId": "perps-markets",
+              "repetition": 3,
+              "sha256": "6ea4108929f89b8b582c69aae0f09bbb3dff8f2284136911b777175d62522b78"
+            },
+            {
+              "bytes": 3616,
+              "caseId": "perps-multiple-prices",
+              "repetition": 3,
+              "sha256": "b18b97f50f7eaa2c864a8492ccdfd06c2c987515649662563bd108b0efbf3182"
+            },
+            {
+              "bytes": 3786,
+              "caseId": "perps-open-orders",
+              "repetition": 3,
+              "sha256": "f26b94c8e91ea394b7b81a2ecb476752a2f47abc7bc2837e06d4180da09b1c2f"
+            },
+            {
+              "bytes": 4973,
+              "caseId": "perps-portfolio",
+              "repetition": 3,
+              "sha256": "5a1c1c2f5083d48fa22674293bf6ba07b6421fd040d81475ffd3ae3795654d0e"
+            },
+            {
+              "bytes": 3347,
+              "caseId": "perps-positions",
+              "repetition": 3,
+              "sha256": "fc96ba25fe84d4b59b7fc98b6556d151ec7c9eb083ec687a872bdbc2e5df3303"
+            },
+            {
+              "bytes": 4696,
+              "caseId": "perps-preview-order-cost",
+              "repetition": 3,
+              "sha256": "03d71c6dbf6231f99148b4336f2ecf480208291c2ab5face686446add1195bcf"
+            },
+            {
+              "bytes": 860,
+              "caseId": "perps-search-hip3-markets",
+              "repetition": 3,
+              "sha256": "ede8f7a8c9b1cb128d92e1bb01533e80402daea7236160542ccd967298c92592"
+            },
+            {
+              "bytes": 3529,
+              "caseId": "perps-single-price",
+              "repetition": 3,
+              "sha256": "c2c69f98efec08704915cfa5530844eea6711ec03178c8988e392ba6f819c390"
+            }
+          ]
+        },
+        {
+          "aborted": [],
+          "family": "predictions",
+          "matchesSummary": true,
+          "mismatches": [],
+          "planned": 39,
+          "recomputed": {
+            "dispatched": 39,
+            "failed": 23,
+            "graded": 29,
+            "passed": 6,
+            "terminal": 39,
+            "timeouts": 10,
+            "unscored": 10
+          },
+          "resumed": 0,
+          "runId": "fable-max-predictions-20260917134923533",
+          "runIdMismatches": 0,
+          "summary": {
+            "dispatched": 39,
+            "failed": 23,
+            "graded": 29,
+            "passed": 6,
+            "terminal": 39,
+            "timeouts": 10,
+            "unscored": 10
+          },
+          "terminals": [
+            {
+              "bytes": 7521,
+              "caseId": "predictions-broad-football-search-only",
+              "repetition": 1,
+              "sha256": "e22cd5cb322df018268900c43e581306911605bbd7110ab25fb36620082c414d"
+            },
+            {
+              "bytes": 5403,
+              "caseId": "predictions-broad-nba-search-only",
+              "repetition": 1,
+              "sha256": "597c7792f8dc835c24c1bc3b05e9e8e8190f68f812f4c9f240208b692f83e688"
+            },
+            {
+              "bytes": 9023,
+              "caseId": "predictions-expiring-markets",
+              "repetition": 1,
+              "sha256": "8f88d2ca75805168806777a0c38c0569d1270c9cc8a30a4107940e954d71b654"
+            },
+            {
+              "bytes": 865,
+              "caseId": "predictions-fetch-history-data",
+              "repetition": 1,
+              "sha256": "1edfedca044fd1e317dba0feb28307aec217c92ac610dcb43a5e72c5e620cf73"
+            },
+            {
+              "bytes": 4793,
+              "caseId": "predictions-fetch-market-data",
+              "repetition": 1,
+              "sha256": "abf8641bdfce7fb49dcd10e819d1807b183c16a5572d13179bd37e32c1bf318a"
+            },
+            {
+              "bytes": 5256,
+              "caseId": "predictions-focused-fact-search-only",
+              "repetition": 1,
+              "sha256": "00f9aee3ca4a0fe4e5c7cab70cb1cae6ec7236e25ab595a46d7a4b762d9d8001"
+            },
+            {
+              "bytes": 9120,
+              "caseId": "predictions-multi-series-no-render",
+              "repetition": 1,
+              "sha256": "b919bcfdb2cdfd5da85c986d647d2b48d6baa58c5dde105ad08fb9b914c97f5f"
+            },
+            {
+              "bytes": 6138,
+              "caseId": "predictions-non-exact-no-render",
+              "repetition": 1,
+              "sha256": "0b7a16455be8e99b8f5e0cc03334dc2118f76d74725e928dd08a1c57ca0f75f7"
+            },
+            {
+              "bytes": 4319,
+              "caseId": "predictions-open-positions",
+              "repetition": 1,
+              "sha256": "9856a1017270bb08f3e5ba5c939eda50681e18c5608cf21300505f6c5bea8f09"
+            },
+            {
+              "bytes": 860,
+              "caseId": "predictions-order-history",
+              "repetition": 1,
+              "sha256": "3303cd7850f88ea7cd591ef60f97b1f9ee8dec4c4772a260d009882396e5e194"
+            },
+            {
+              "bytes": 4515,
+              "caseId": "predictions-orderbook",
+              "repetition": 1,
+              "sha256": "a426adbbe36ba86f90849a3098b3e4f824d56d884aaeea6cb8a898dedd51eef7"
+            },
+            {
+              "bytes": 5163,
+              "caseId": "predictions-series-market",
+              "repetition": 1,
+              "sha256": "951ea0d41e9e60b6e95cae7014e30579a0d3b7c277770b0d96f6934439913df8"
+            },
+            {
+              "bytes": 6119,
+              "caseId": "predictions-sparse-history-no-render",
+              "repetition": 1,
+              "sha256": "9299155115d1bea3b18dbd31612ed6c5937ed4102932f66a86f8e526ba5f5309"
+            },
+            {
+              "bytes": 873,
+              "caseId": "predictions-broad-football-search-only",
+              "repetition": 2,
+              "sha256": "ade6842d3de1828e0da0efd9ebdc6e81a18686f0c36d62a717e06fa6cb47b46e"
+            },
+            {
+              "bytes": 6171,
+              "caseId": "predictions-broad-nba-search-only",
+              "repetition": 2,
+              "sha256": "5638dee7b17d5354eedb4b4448160f1152c59590f5f8920fc19b620990eec6ce"
+            },
+            {
+              "bytes": 863,
+              "caseId": "predictions-expiring-markets",
+              "repetition": 2,
+              "sha256": "6798fb6c997c68a5546741682e926898b8ddcdf0682f73189902467654f4aa41"
+            },
+            {
+              "bytes": 865,
+              "caseId": "predictions-fetch-history-data",
+              "repetition": 2,
+              "sha256": "3bbd08d6a0d3ffb1f633164d52b722e0cfa9c6d72d9e2ccafb95b2713a40dad7"
+            },
+            {
+              "bytes": 5203,
+              "caseId": "predictions-fetch-market-data",
+              "repetition": 2,
+              "sha256": "6c090d4cf7bffc0532c161b2b46bdb9ed935868b12c534cb1141f4a71441f680"
+            },
+            {
+              "bytes": 5288,
+              "caseId": "predictions-focused-fact-search-only",
+              "repetition": 2,
+              "sha256": "e3f70f152222cde0a034ccc7abbbd9c0304a4e8cc62ebe675450b20bafc5adc8"
+            },
+            {
+              "bytes": 7624,
+              "caseId": "predictions-multi-series-no-render",
+              "repetition": 2,
+              "sha256": "65b6fa2f36151df56dd4f66823f276d58056945b135ad7d54922329667b206bb"
+            },
+            {
+              "bytes": 5669,
+              "caseId": "predictions-non-exact-no-render",
+              "repetition": 2,
+              "sha256": "ffd3c6d763b74cf60ce444918dade308bfa915785bcb3af9ad16e5a4ead868c6"
+            },
+            {
+              "bytes": 3948,
+              "caseId": "predictions-open-positions",
+              "repetition": 2,
+              "sha256": "a68906149808b3385eb422b6eb969441bd27a0c39786fadfe3e2c6ba8348aca6"
+            },
+            {
+              "bytes": 860,
+              "caseId": "predictions-order-history",
+              "repetition": 2,
+              "sha256": "b5f740beed345fd385259c874e1c8e9254d684b199aeb1e7083e9ebffd827229"
+            },
+            {
+              "bytes": 4402,
+              "caseId": "predictions-orderbook",
+              "repetition": 2,
+              "sha256": "6a1620b747145a13d656da0da79f7a319e75f6b3b762fc683a44c592fd2611b9"
+            },
+            {
+              "bytes": 5285,
+              "caseId": "predictions-series-market",
+              "repetition": 2,
+              "sha256": "eb8eabb721108e98fd22bf3cc0b6839b6226507123a808775091f8c07203fafd"
+            },
+            {
+              "bytes": 6003,
+              "caseId": "predictions-sparse-history-no-render",
+              "repetition": 2,
+              "sha256": "533f64d37556c2c9777d8d3642944fa5459dff66a4d9d44d8234ac8b9452d3cc"
+            },
+            {
+              "bytes": 6245,
+              "caseId": "predictions-broad-football-search-only",
+              "repetition": 3,
+              "sha256": "1ab13db32082d8a48c2d929c95584dc4b718cc7c7fc34f9a080ddfe4b8cead9c"
+            },
+            {
+              "bytes": 5911,
+              "caseId": "predictions-broad-nba-search-only",
+              "repetition": 3,
+              "sha256": "3695d239d1a527c704457da66940a85ab79d8dc03cd2abe70cd9355098572738"
+            },
+            {
+              "bytes": 863,
+              "caseId": "predictions-expiring-markets",
+              "repetition": 3,
+              "sha256": "6275a9df442dbe45d75c62a00d316ef39822949fe50edea58943b34bf9cb6728"
+            },
+            {
+              "bytes": 865,
+              "caseId": "predictions-fetch-history-data",
+              "repetition": 3,
+              "sha256": "52ee703cb50fde2135ff2437e5e7a35fae8b90b1b1b1faf81940aeb9f52352a8"
+            },
+            {
+              "bytes": 5426,
+              "caseId": "predictions-fetch-market-data",
+              "repetition": 3,
+              "sha256": "ca58c14f3ef17865e28857ec567175bcc2995cdd9f830395dc28e766e8c4392b"
+            },
+            {
+              "bytes": 5546,
+              "caseId": "predictions-focused-fact-search-only",
+              "repetition": 3,
+              "sha256": "7888a8a45dc0eda2655cbddbeb3f19c9ed642940929a7fe15b6b8385f1e02b59"
+            },
+            {
+              "bytes": 869,
+              "caseId": "predictions-multi-series-no-render",
+              "repetition": 3,
+              "sha256": "68f86b5c6a1f40197e80c6e8e62e73e0506b9c6c636754e3ac0fddf40d120178"
+            },
+            {
+              "bytes": 866,
+              "caseId": "predictions-non-exact-no-render",
+              "repetition": 3,
+              "sha256": "12bb94c237bf06e423b13a0bf7487fafb80b0feb26e5677a172e90d276cfe9e8"
+            },
+            {
+              "bytes": 3869,
+              "caseId": "predictions-open-positions",
+              "repetition": 3,
+              "sha256": "2f8d6c284e79fb6d99c3f373b293d0eeb1793ea8539bda1cfe059346fd4f6398"
+            },
+            {
+              "bytes": 6331,
+              "caseId": "predictions-order-history",
+              "repetition": 3,
+              "sha256": "538ef0545fbe7b63eaca654879c5eda7a16b55d6b412c0817da814b731c6ed6c"
+            },
+            {
+              "bytes": 4495,
+              "caseId": "predictions-orderbook",
+              "repetition": 3,
+              "sha256": "100946aa5e7ff81342cd431a760c044ee03f3b305ec2cc391281243ecd8445c7"
+            },
+            {
+              "bytes": 4981,
+              "caseId": "predictions-series-market",
+              "repetition": 3,
+              "sha256": "c53d68e95d61d6f85dde036b2964c435af561cdd29f875374a874ae3965aec82"
+            },
+            {
+              "bytes": 6629,
+              "caseId": "predictions-sparse-history-no-render",
+              "repetition": 3,
+              "sha256": "ac097f7fc38b79937b9aa9543fe1a9ec33ed06e17b69cb4bef3b932a1781bbac"
+            }
+          ]
+        }
+      ],
+      "fatal": false,
+      "fatalAttempts": 0,
+      "manifests": [
+        {
+          "attempt": 1,
+          "bytes": 3439,
+          "sha256": "c765e13e817379a57b16cb3206399202e374021618139ad9e596fc6a3bb8b02c"
+        }
+      ],
+      "matchesSummary": true,
+      "mismatches": [],
+      "model": "anthropic/claude-fable-5-1",
+      "nativeModel": "anthropic/claude-fable-5-1",
+      "planned": 105,
+      "projection": {
+        "matches": 105,
+        "mismatches": [],
+        "summaryTrials": 105,
+        "terminalFiles": 105
+      },
+      "recomputed": {
+        "dispatched": 105,
+        "failed": 35,
+        "graded": 75,
+        "passed": 40,
+        "unscored": 30
+      },
+      "rowId": "fable-max",
+      "sourceDirectory": "fable-max",
+      "summary": {
+        "dispatched": 105,
+        "failed": 35,
+        "graded": 75,
+        "passed": 40,
+        "unscored": 30
+      },
+      "summaryBytes": 532860,
+      "summarySha256": "9d7d3c2e238fe1550c15b9910ec11b7965c770a689682cce2ff02d8c762a4fa9"
     },
     {
       "attempt": 1,
@@ -9930,7 +10694,7 @@
         "unscored": 0
       },
       "summaryBytes": 703602,
-      "summarySha256": "5388d5c74be3358d0d06a91c6ca37323ca5cfa139cebeb888299e65691a89e19"
+      "summarySha256": "2df57a53e24d811177a0decd84e6de3421654cb4f65ef683afe27ddfef3b2fff"
     },
     {
       "attempt": 1,
@@ -10694,7 +11458,7 @@
         "unscored": 59
       },
       "summaryBytes": 344273,
-      "summarySha256": "a892b544180565f2a7f44ebe0fd63901f94cd682517d4f937b096f071f663b50"
+      "summarySha256": "aad4571a60f2ee18eeae537bd5406c655f919e6ec0893a45f039e7aeadcc97ba"
     },
     {
       "attempt": 1,
@@ -11458,7 +12222,7 @@
         "unscored": 0
       },
       "summaryBytes": 631625,
-      "summarySha256": "4c0a7d77f35179689d3ba3783f892c2a85eec6d5b1dbc9e0ecae50ab436fd26e"
+      "summarySha256": "2ade7d479d64513a5f0b255b84c19f82925ab75fd3e18f7cc1586673238b7a6c"
     },
     {
       "attempt": 1,
@@ -12222,7 +12986,7 @@
         "unscored": 12
       },
       "summaryBytes": 573562,
-      "summarySha256": "e1f764f930b6e59c0e64c5dd9d51ecf5dfc43cb8bad52481bb5f3a64137b8cef"
+      "summarySha256": "ddbde145665925ca97c8a5e5450f346dac6bc3ca4554e1cba7a36888a31b495a"
     },
     {
       "attempt": 1,
@@ -12986,7 +13750,7 @@
         "unscored": 67
       },
       "summaryBytes": 297689,
-      "summarySha256": "c8079543c91738f9bbdb947b2aa7a798a15721eff866df41746b5de145d41cb5"
+      "summarySha256": "c82a162f169905334798edb0c4b84fbdf56895429f1413b65e53b781bc63b352"
     },
     {
       "attempt": 1,
@@ -13750,7 +14514,7 @@
         "unscored": 55
       },
       "summaryBytes": 369518,
-      "summarySha256": "e31726a0a7d88e33bdaf46bd7e1886ac0c247732c61845786a0f4c720b92e597"
+      "summarySha256": "862ca89baf2a5df47a1fceeb7782102fbd31475870654bcad55e2c39acd1933c"
     },
     {
       "attempt": 1,
@@ -14514,7 +15278,7 @@
         "unscored": 28
       },
       "summaryBytes": 499233,
-      "summarySha256": "da978eaa818379be8f026cb2c65a80f11d1d97fff5d9ae7979403a2464bcf40c"
+      "summarySha256": "b15227adb433320f4d643479670102cf99380a9cc4ee3ec98bb8f56d269af239"
     },
     {
       "attempt": 1,
@@ -15278,7 +16042,7 @@
         "unscored": 60
       },
       "summaryBytes": 341380,
-      "summarySha256": "36ac433dc9f403ec55fb95f0c45ba8bb94419cc0295cc02694fe04d2ab748a46"
+      "summarySha256": "5593954931c57fd9419a92db4b8fec48c87853cee2745266b2e6a3db91c92aed"
     },
     {
       "attempt": 1,
@@ -16042,7 +16806,7 @@
         "unscored": 46
       },
       "summaryBytes": 417630,
-      "summarySha256": "ed57289ea78e533c652486f8b47a6b4ae6089420e7c6a43abffecd0193bd5e0f"
+      "summarySha256": "f8f7806b41f19677e6af39ec89e78f2d5bb75416cd7302a92b03482ecaca3031"
     },
     {
       "attempt": 1,
@@ -16806,7 +17570,7 @@
         "unscored": 20
       },
       "summaryBytes": 523947,
-      "summarySha256": "fdfbac0dac197775f148aca750702f40d6f52d1a3f474dfe8f0c14322fc60562"
+      "summarySha256": "bf976631219e08a71cba3078a85d94f40fc0f07b647562d1c7599bd2be479e46"
     },
     {
       "attempt": 1,
@@ -17570,7 +18334,7 @@
         "unscored": 3
       },
       "summaryBytes": 692306,
-      "summarySha256": "0bad16c7dac91ac1bf6939bcb555b0e6b009aabefb3797b4bda6dab55c34a548"
+      "summarySha256": "3b7a86b280b146ca8d889d74e34699d9bdb9b48837907dea4403d2a4a449a922"
     },
     {
       "attempt": 1,
@@ -18334,7 +19098,7 @@
         "unscored": 0
       },
       "summaryBytes": 655985,
-      "summarySha256": "076926dd51c107fec5bd1597b2d38de151d2b37bf60901ee1d1244c0e2164984"
+      "summarySha256": "35eeb7737566591ae0f778420d39af5ea912e790b98cf65c92d9cc72af648635"
     },
     {
       "attempt": 1,
@@ -19098,7 +19862,7 @@
         "unscored": 20
       },
       "summaryBytes": 582352,
-      "summarySha256": "2d9b7d38fa8d54041c45c5866fab2c46847583c1353858f3a798c7ced1bc18fb"
+      "summarySha256": "41429348c659ab80b273499d88bb18725e5d6b66be4f19f0c0c13580daef52a2"
     },
     {
       "attempt": 1,
@@ -19862,7 +20626,7 @@
         "unscored": 0
       },
       "summaryBytes": 693576,
-      "summarySha256": "fc480f98f0cf229f31894079e5e80c98c648511a1b7d3a1275bceb89dc5695a4"
+      "summarySha256": "d2c9e03ad1d950ccb513502f1ffbbfb9a149472e0a195df35941d91b93d7e092"
     },
     {
       "attempt": 1,
@@ -20626,7 +21390,7 @@
         "unscored": 40
       },
       "summaryBytes": 426956,
-      "summarySha256": "a761fa35b69a8222871e8edaecce7fc7452b858acf3afc13864d2048fb641e54"
+      "summarySha256": "cb244f795cca70709d67ac02ef2278ccae7bb34189b00d196307992ae7f607b0"
     },
     {
       "attempt": 1,
@@ -21390,7 +22154,7 @@
         "unscored": 1
       },
       "summaryBytes": 597820,
-      "summarySha256": "73016f2b69e5a00f571029d937c2a063dced835f35fccc0f859ac7931265c588"
+      "summarySha256": "87853267b33bc590301b90384d7f756858775aa4261b091e8133e726b1854201"
     },
     {
       "attempt": 1,
@@ -22154,7 +22918,7 @@
         "unscored": 69
       },
       "summaryBytes": 273353,
-      "summarySha256": "7cfbb3199a0948ea049918ec6a95159390becffb399c4b472c42e2793c26b613"
+      "summarySha256": "40e6275145070aaa29a85dca8981bcaf1064540b0239910927e4247925038cd8"
     },
     {
       "attempt": 1,
@@ -22918,7 +23682,7 @@
         "unscored": 4
       },
       "summaryBytes": 606278,
-      "summarySha256": "3e15bbaeead12034c20b4fd1db08a00d5e89d57f09751584c5ff4a055db75e18"
+      "summarySha256": "525a4d16b39f48a830e3b674ff8362e424248606bcf00dc5d4bc6f447641bfc8"
     },
     {
       "attempt": 1,
@@ -23682,7 +24446,7 @@
         "unscored": 26
       },
       "summaryBytes": 480811,
-      "summarySha256": "3eb866d9354a43512808dc0aecec31dad7007a6bad726189611ab17cccbf4c06"
+      "summarySha256": "45e9dd6f09b786c9a0e540dc09b2b73260ebf9b83138bfc24007ce772dc8d08c"
     },
     {
       "attempt": 1,
@@ -24446,7 +25210,7 @@
         "unscored": 0
       },
       "summaryBytes": 613361,
-      "summarySha256": "69d33b7f7cde5b78c4ac5438a428dd695026e7c0d9ff17133a3dfe5f0aba4398"
+      "summarySha256": "3408d7d0615e0a4f976afc5965b992337bd242179d44629afa67c27d4511a0b6"
     },
     {
       "attempt": 1,
@@ -25210,7 +25974,7 @@
         "unscored": 74
       },
       "summaryBytes": 254572,
-      "summarySha256": "b0a2a4a35b30d1ef0e8e467d21b07ac3969ea591ba8adf5777633f4bf1131df9"
+      "summarySha256": "1129b133f126a0c2cb059a83d8331353b6d356e62e72a3b722631f662afe2123"
     },
     {
       "attempt": 1,
@@ -25974,22 +26738,22 @@
         "unscored": 0
       },
       "summaryBytes": 609796,
-      "summarySha256": "06c82e0abf36b679fdc81a6222e080514e40eb54b1a368796945f2588c847b5f"
+      "summarySha256": "b2100c199a4452831f032b09e4ca60521253293f105b287b89d8fe823e95d0fd"
     }
   ],
   "schemaVersion": "ask-gina-reasoning-sweep-verification.v1",
   "scope": "Counts recomputed from the private per-trial terminal and dispatch files, compared with each private row summary; digests identify private files that are not published. Aborted slots are quarantined predecessors of resumed trials and never enter any count.",
   "totals": {
     "aborted": 0,
-    "dispatched": 3570,
-    "failed": 1321,
-    "graded": 2855,
-    "matchingRows": 34,
-    "passed": 1534,
-    "planned": 3570,
-    "rows": 34,
-    "terminal": 3570,
-    "timeouts": 112,
-    "unscored": 715
+    "dispatched": 3675,
+    "failed": 1356,
+    "graded": 2930,
+    "matchingRows": 35,
+    "passed": 1574,
+    "planned": 3675,
+    "rows": 35,
+    "terminal": 3675,
+    "timeouts": 142,
+    "unscored": 745
   }
 }

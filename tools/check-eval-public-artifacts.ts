@@ -210,25 +210,27 @@ const APPROVED_CLAUDE_ARTIFACTS: Readonly<Record<string, string>> = {
   "src/results/2026-09-14/claude-comparison/verification.json":
     "2e94fc424fd8f5d113cc12eaf1652ed6543d752f1c0f0a8bdae6169cff49dabd",
   "src/results/2026-09-16/reasoning-sweep/ask-gina-reasoning-sweep-claude.json":
-    "9a4c53e99cc47b1170ec808d722c751e29d637282f9828951e7a286a0363cc53",
+    "11ece4bed01869d5ffa527356f2ef238f6f7f5e4eb31e21a67587b405c7bf50e",
   "src/results/2026-09-16/reasoning-sweep/reproduction/provenance.json":
-    "d4c0ef9b187809deb33b5ba1452acad0a23bb71e21d0b0072a4f4daa0190ab1a",
+    "42c7b624e51243db81b3efd183f46391948285d3a5799c84a63d2dc731a67afd",
   "src/results/2026-09-16/reasoning-sweep/verification.json":
-    "d67a5f5d6451e221ba8143e192acb8e68dbeb7dbab70d1493abadf64bc1681da",
+    "689cef4e22af910e1aa7ff76ff6dc837c16320fa993e9fd459d9ddffac595319",
   "src/results/2026-09-16/reasoning-sweep/rows/fable-high.json":
-    "37a0b4c78b4a54297d6fdc7bdfadcfe71f487a73651ea3cfbe9bcd6d22378eaf",
+    "0d3f04d44dbf0e98bea6c5d7975505e39227f316b277b3f1509f4b4c91078218",
   "src/results/2026-09-16/reasoning-sweep/rows/fable-low.json":
-    "315c405c949546e74466c6b2f5eeb54e6c59d1b3573b5101977c80e2f54a2a98",
+    "b08aaa7655458f24443e655f9180fbe7ddb0aa95e2fde9814f818fd1211c7098",
+  "src/results/2026-09-16/reasoning-sweep/rows/fable-max.json":
+    "74c4b82bc921de30df0586eebe335f2ba6f79cc1dd5ebb64c25ebca2a650674b",
   "src/results/2026-09-16/reasoning-sweep/rows/fable-medium.json":
-    "f36941bc6e4092827a08a3316ba37374abce7984b41425d8abb5d2e6bd828dfd",
+    "5591398e1c758018574b86f8f304ec51b07fc2a45eda23bdd8c188412906f2c8",
   "src/results/2026-09-16/reasoning-sweep/rows/opus-high.json":
-    "ca042bd06cdb68f9d95af5d60d419bca8258226b018c60ce7fc51585f9770806",
+    "fae1d2eefddcd092b63c8fa3e6d4b3330d5e0b0efdf8212145e38501ecd28873",
   "src/results/2026-09-16/reasoning-sweep/rows/opus-low.json":
-    "b3fb48b83a2c728eed5ca832dec041995db1247b701ed66dcd3cda6bbe822a1d",
+    "a97890fb582e740437ec21edf5b9d156a9e8dd270a76f21b8355f86571e8053b",
   "src/results/2026-09-16/reasoning-sweep/rows/opus-max.json":
-    "8145283ce8e54a709210171c2e4ca802c7d4785e145720a6f13d050dff939101",
+    "0b2f48588e105a01b997da02079e9454cd225659f89a1c7b12daa62d7700a8ba",
   "src/results/2026-09-16/reasoning-sweep/rows/opus-medium.json":
-    "aa20cc9c6eb5f20ccd123194c21094aa5ecd8e78b46e7afb575c300d6f14a301",
+    "7e8c040a63aeb74248df73fd683deb0d0fb37f52fee58616b786a361c9aeb1d5",
 };
 const textDecoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const decodeArtifactJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));

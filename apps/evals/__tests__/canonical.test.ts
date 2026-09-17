@@ -228,12 +228,12 @@ describe("reasoning sweep runs", () => {
       expect(artifact.planned).toBe(artifact.models.reduce((sum, row) => sum + row.planned, 0));
     }
     expect(reasoningSweepPublication).toEqual({
-      publishedRows: 34,
-      publishedSlots: 3570,
+      publishedRows: 35,
+      publishedSlots: 3675,
       plannedRows: 35,
       plannedSlots: 3675,
     });
-    expect(rows).toHaveLength(34);
+    expect(rows).toHaveLength(35);
     expect(new Set(rows.map((row) => row.rowId)).size).toBe(rows.length);
     expect(runs).toHaveLength(rows.length * 3);
     expect(runs.reduce((sum, run) => sum + run.counts.planned, 0)).toBe(
@@ -281,11 +281,12 @@ describe("reasoning sweep runs", () => {
   test("keeps the exact Fable and Opus identities on their native OAuth route", () => {
     const fableRuns = runs.filter((run) => run.modelId === "claude-fable");
     const opusRuns = runs.filter((run) => run.modelId === "claude-opus");
-    expect(fableRuns).toHaveLength(9);
+    expect(fableRuns).toHaveLength(12);
     expect(opusRuns).toHaveLength(12);
     expect([...new Set(fableRuns.map((run) => run.configuration.reasoning))].sort()).toEqual([
       "high",
       "low",
+      "max",
       "medium",
     ]);
     expect(
