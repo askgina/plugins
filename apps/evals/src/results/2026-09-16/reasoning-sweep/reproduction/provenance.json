@@ -2,18 +2,18 @@
   "attestation": {
     "atifExported": {
       "false": 7,
-      "null": 1680,
-      "true": 938
+      "null": 3045,
+      "true": 518
     },
     "copied": null,
     "credentialInSession": {
-      "false": 1155,
-      "null": 1470,
+      "false": 2520,
+      "null": 1050,
       "true": 0
     },
     "effortOptionConfigured": {
       "false": 0,
-      "null": 2100,
+      "null": 3045,
       "true": 525
     },
     "evidenceKinds": [
@@ -24,169 +24,216 @@
     "fallbackEvents": null,
     "levelMatches": {
       "false": 0,
-      "null": 1470,
-      "true": 1155
+      "null": 1453,
+      "true": 2117
     },
     "modelMatches": {
       "false": 0,
-      "null": 7,
-      "true": 2618
+      "null": 410,
+      "true": 3160
     },
     "resolvedModelIsFallback": {
-      "false": 1155,
-      "null": 1470,
+      "false": 2117,
+      "null": 1453,
       "true": 0
     },
     "sessionFiles": null,
     "thinkingLevels": {
-      "high": 105,
-      "low": 525,
-      "medium": 525,
-      "null": 1470
+      "high": 526,
+      "low": 630,
+      "max": 223,
+      "medium": 630,
+      "null": 1453,
+      "xhigh": 108
     },
-    "trialCount": 2625
+    "trialCount": 3570
   },
   "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
   "currentPublicArtifacts": [
     {
-      "bytes": 4620636,
+      "bytes": 6474072,
       "path": "ask-gina-reasoning-sweep.json",
-      "sha256": "4b9e38c712e14f798e133eb79410909b9f99a57e1d7cb1b196448172cbea2ddd"
+      "sha256": "600054286019f74ac0b47031ae05dd77aebcda352c8a111ee8d1641a9902811c"
     },
     {
-      "bytes": 1905422,
+      "bytes": 1847585,
       "path": "ask-gina-reasoning-sweep-claude.json",
-      "sha256": "2251a59ddd477dddd9d1831634782e25cf64aafb59a8f49cdb458b7bc4f97a16"
+      "sha256": "9a4c53e99cc47b1170ec808d722c751e29d637282f9828951e7a286a0363cc53"
+    },
+    {
+      "bytes": 236209,
+      "path": "rows/astra-high.json",
+      "sha256": "51dc16420528b7eb414100a45fdf1c8f4c58e2914ac843d8bda7266fff8486a5"
     },
     {
       "bytes": 235847,
       "path": "rows/astra-low.json",
-      "sha256": "58367a59afc4b9117c37dbef716cad33181a7a7ecd5aeeb28590cd6e7f31cae1"
+      "sha256": "ad26d5f6140e8a381584b11858d1b28be71a469e23b2aef26e6c58d2d3b2602a"
+    },
+    {
+      "bytes": 158718,
+      "path": "rows/astra-max.json",
+      "sha256": "374bae40face36c7ae5ee3dcc7690aa13434ec307c3f413812003fd93d64bc56"
     },
     {
       "bytes": 236836,
       "path": "rows/astra-medium.json",
-      "sha256": "285062d4e5a3f3cca83a3476a72635677dbb415a927773da822f8330dc1e09bd"
+      "sha256": "c91247250cfbd7e43f54eb9d5a992a38878501302eaaf9f3be8e4ffce138a09c"
     },
     {
-      "bytes": 243541,
-      "path": "rows/devin-fable-high.json",
-      "sha256": "e4f1ec6eac7758fa212a7118c74908299d9111714c64eeb919d9eb78075492ac"
-    },
-    {
-      "bytes": 242976,
-      "path": "rows/devin-fable-low.json",
-      "sha256": "23321f3435bc37f9db9ec552160b538f83b3c83f0e5952b0197e9e2ec3d32a98"
-    },
-    {
-      "bytes": 243048,
-      "path": "rows/devin-fable-max.json",
-      "sha256": "ae20f924e55291b8aa9b70283fbf4d13dbeeaa208e318fe377b3ac9f5ab7d994"
-    },
-    {
-      "bytes": 244600,
-      "path": "rows/devin-fable-medium.json",
-      "sha256": "c5349e539be95d1170d4ad032a686497ea67567c8d56ff7b0301c4ecf27474a2"
+      "bytes": 183042,
+      "path": "rows/astra-xhigh.json",
+      "sha256": "a373e7e40b0a0dfbbcbfcba2bed72cdf1c16dd15e840355984c3f645ce5f5133"
     },
     {
       "bytes": 245292,
       "path": "rows/devin-gemini-flash-high.json",
-      "sha256": "68c128d67ca83c8096a6b2880af923e24729b56bb1fd083b224fea2f248f41ac"
+      "sha256": "18e6bd3ba51433cfb99ae2806d1644ee45d3f34f013a2ff31cc36f7bf2092aac"
     },
     {
       "bytes": 246363,
       "path": "rows/devin-gemini-flash-medium.json",
-      "sha256": "1182f43f4f12fc75a0358e96e86161d978b0f972bbfc9ddc284d913364806c4b"
+      "sha256": "d7f9cd48c2c5e6a1e6c75a696f474fb9211f4a35a0e1a8136a7fbe179398dfab"
     },
     {
       "bytes": 236824,
       "path": "rows/devin-swe2-high.json",
-      "sha256": "24df446502b3d2f58f4b20ce7ab9eebcb3d4e89a422f2c144333f34bd9b3b135"
+      "sha256": "bc2689a0e69228ca4d3e0998143b2dcf7079c7bb635c6d617d3a3decd0c5d79e"
     },
     {
       "bytes": 236334,
       "path": "rows/devin-swe2-max.json",
-      "sha256": "43e6d266581c9ba1be360124372bbe0e6ea65ad06f1eff5e0c05454c5ee223f2"
+      "sha256": "abca469831a6fddb60ee1f698d1d37a9c63263edec8e170b45dce8e4cfb72751"
     },
     {
       "bytes": 239824,
       "path": "rows/devin-swe2-medium.json",
-      "sha256": "1966e0d97786bfa05f9cf6fa8f77d3424608491f043d5b0986319d7f0d194e1a"
+      "sha256": "8bf40c6c63cbbf3e61b3a166a3fb500e6375b207994db6c0db8bb90459c456b0"
+    },
+    {
+      "bytes": 236336,
+      "path": "rows/fable-high.json",
+      "sha256": "37a0b4c78b4a54297d6fdc7bdfadcfe71f487a73651ea3cfbe9bcd6d22378eaf"
+    },
+    {
+      "bytes": 235668,
+      "path": "rows/fable-low.json",
+      "sha256": "315c405c949546e74466c6b2f5eeb54e6c59d1b3573b5101977c80e2f54a2a98"
+    },
+    {
+      "bytes": 236674,
+      "path": "rows/fable-medium.json",
+      "sha256": "f36941bc6e4092827a08a3316ba37374abce7984b41425d8abb5d2e6bd828dfd"
+    },
+    {
+      "bytes": 173330,
+      "path": "rows/grok-high.json",
+      "sha256": "56a1786d03e6a6b136f8c7980ab1727754b22cf5bccdc7d0e48300a46725d999"
     },
     {
       "bytes": 235158,
       "path": "rows/grok-low.json",
-      "sha256": "dd0eddf571c3f7ff84ef19edf9902782586b2bf5748e85cbb9d3d540fc0d9d5c"
+      "sha256": "02ca3d5ff9bc7eab86c0d936a4e2601677393d9ccfe0efc2ce04f52c5700b241"
     },
     {
       "bytes": 223424,
       "path": "rows/grok-medium.json",
-      "sha256": "34d9fd3119b74ca3f0ae4b6fafb4208ba99ff430145a3e49894fba794dc6d37f"
+      "sha256": "56927ad1fca95ce32a47849a222795668428163a78730c257c30e2548074d78d"
+    },
+    {
+      "bytes": 165017,
+      "path": "rows/grok-xhigh.json",
+      "sha256": "91ac28ee1b45d2a5294de16b3889b90f602f05aafbeab86fa1ae597f6aadf1cd"
     },
     {
       "bytes": 184405,
       "path": "rows/muse-high.json",
-      "sha256": "4bcc6f4a1708ab7cf81757c04e2a594def6d669a6566480115fa569e57b37fd3"
+      "sha256": "6d3dd043e098a6b49b20a2a5bee541ad4a681efeb730e2aa97b6c9024f6701f9"
     },
     {
       "bytes": 216341,
       "path": "rows/muse-low.json",
-      "sha256": "2728a8918ac7a6813e5e097c72cdf68ac8dc09ac8f3ab7334076d2cf21606a3c"
+      "sha256": "c792b26a8f80902ff89bd21b3e95840ea44d1ecd8002c8d52011f706b5c5216b"
     },
     {
       "bytes": 178006,
       "path": "rows/muse-max.json",
-      "sha256": "0e9a34274f8dc2a207f432b797a315297e745d2c19efafcc414d31a9c3e5ba06"
+      "sha256": "57056176d69b318e997cc216b4c7c63b385674fa9111b927dd921a754274a5e3"
     },
     {
       "bytes": 195359,
       "path": "rows/muse-medium.json",
-      "sha256": "7c6fb5a4e1b68ed18e08a18cee50b3273c850b95ee76dc4de061d2e898748c7b"
+      "sha256": "a9b9567cf00bfa8eadab51533585fda674c5f4009371659a08053b177c5d97f4"
     },
     {
       "bytes": 226602,
       "path": "rows/muse-minimal.json",
-      "sha256": "74522463246fdafa79249161ee6484f3b43b2139faa3eb8a4a4cd4e04e036367"
+      "sha256": "9949c7623421178d9b1f63ce5951d6af184de07ce67c6bc6125434751baa51c5"
     },
     {
       "bytes": 232720,
       "path": "rows/opus-high.json",
-      "sha256": "a2e2df1867fa194afaffd8aded5a8c34624004fdb2580d01403f65d941dc4705"
+      "sha256": "ca042bd06cdb68f9d95af5d60d419bca8258226b018c60ce7fc51585f9770806"
     },
     {
       "bytes": 235348,
       "path": "rows/opus-low.json",
-      "sha256": "8d6dc429f29d04da550aeaae9b843845d692c16d68a541ad3133babb2967722c"
+      "sha256": "b3fb48b83a2c728eed5ca832dec041995db1247b701ed66dcd3cda6bbe822a1d"
+    },
+    {
+      "bytes": 214466,
+      "path": "rows/opus-max.json",
+      "sha256": "8145283ce8e54a709210171c2e4ca802c7d4785e145720a6f13d050dff939101"
     },
     {
       "bytes": 236675,
       "path": "rows/opus-medium.json",
-      "sha256": "81c1d22deed01918d26e9953e692769332b7354607f5324f2ff969d4b7abb128"
+      "sha256": "aa20cc9c6eb5f20ccd123194c21094aa5ecd8e78b46e7afb575c300d6f14a301"
+    },
+    {
+      "bytes": 193269,
+      "path": "rows/sol-high.json",
+      "sha256": "e89f6cbf1407b17f9e46b988ada1ac1e8384487c58756e46482ddfee6be07690"
     },
     {
       "bytes": 234579,
       "path": "rows/sol-low.json",
-      "sha256": "32f2b26ac55b6f63e60eac12faf7773d0af1fb8ef1d9c468a70da2bab6af7e49"
+      "sha256": "b0ad7d0db118347a323fb2679ec02e2bcb21def978bd9c80783be6a31dc7f29a"
+    },
+    {
+      "bytes": 162741,
+      "path": "rows/sol-max.json",
+      "sha256": "98b1b1d9e11540ea7a8a7fe6c1b8d692d2db23f860575ab44d0a44d2c2c77517"
     },
     {
       "bytes": 232422,
       "path": "rows/sol-medium.json",
-      "sha256": "d726b666184e2beda20007363d11f5f54c43c8f78b79f0c333fc6a38d2b7e596"
+      "sha256": "49c57175f00d6201b14cc3ba71908622f3f1c94350f03b7ca681477dccbb4539"
+    },
+    {
+      "bytes": 208520,
+      "path": "rows/terra-high.json",
+      "sha256": "ca34b6aec69ab9f1cf024107700320731335c29b724899f9dafdd0bd4493da23"
     },
     {
       "bytes": 236045,
       "path": "rows/terra-low.json",
-      "sha256": "918b345414b8cef11dcbe82a51d0447e4add087b47a787b847069f5d29ea986e"
+      "sha256": "31dc7f9bcbe678e09f95ef73d0633b0c3828533377508eba8e77c19e6a253618"
+    },
+    {
+      "bytes": 157656,
+      "path": "rows/terra-max.json",
+      "sha256": "dcd4fb2e0acdef8d7ee37bbedfa347dec8ee88a2c2f7798121bc84e02fa1e48a"
     },
     {
       "bytes": 237051,
       "path": "rows/terra-medium.json",
-      "sha256": "d6a569456cc12bf5f782d37b04c0f082630d33faf0a67507bccd0ceff19d1f8d"
+      "sha256": "b82b8444676bf66d07b01aea66adc78fda5de469c1a64ebd7a3def3d0f5c5eb4"
     },
     {
-      "bytes": 691501,
+      "bytes": 939616,
       "path": "verification.json",
-      "sha256": "33ba9d49e2218b901db7230acf3b8503034a99b898c8a3a8139ad8f0866b8fb5"
+      "sha256": "d67a5f5d6451e221ba8143e192acb8e68dbeb7dbab70d1493abadf64bc1681da"
     }
   ],
   "currentPublicArtifactsExcluded": [
@@ -2367,7 +2414,7 @@
     "sourceReceiptSha256": "f843ecb2abf14847a52576c4de193802f3436698221c6793856c630ea4da7a4c",
     "terminalCount": 424
   },
-  "generatedAt": "2026-09-16T16:46:59.361Z",
+  "generatedAt": "2026-09-17T15:20:21.025Z",
   "publicProjection": {
     "aggregatedOnlyFields": [
       "score.skill_activation"
@@ -2455,10 +2502,6 @@
       ],
       "route": "devin",
       "rowIds": [
-        "devin-fable-high",
-        "devin-fable-low",
-        "devin-fable-max",
-        "devin-fable-medium",
         "devin-gemini-flash-high",
         "devin-gemini-flash-medium",
         "devin-swe2-high",
@@ -2521,16 +2564,29 @@
       ],
       "route": "omp",
       "rowIds": [
+        "astra-high",
         "astra-low",
+        "astra-max",
         "astra-medium",
+        "astra-xhigh",
+        "fable-high",
+        "fable-low",
+        "fable-medium",
+        "grok-high",
         "grok-low",
         "grok-medium",
+        "grok-xhigh",
         "opus-high",
         "opus-low",
+        "opus-max",
         "opus-medium",
+        "sol-high",
         "sol-low",
+        "sol-max",
         "sol-medium",
+        "terra-high",
         "terra-low",
+        "terra-max",
         "terra-medium"
       ],
       "sourceCommits": [
@@ -2544,8 +2600,186 @@
       ]
     }
   ],
-  "rowCount": 25,
+  "rowCount": 34,
   "rows": [
+    {
+      "attempts": 1,
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "copied": 105,
+        "credentialInSession": {
+          "false": 105,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 0,
+          "true": 105
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 0,
+          "true": 105
+        },
+        "resolvedModelIsFallback": {
+          "false": 105,
+          "null": 0,
+          "true": 0
+        },
+        "sessionFiles": 105,
+        "thinkingLevels": {
+          "high": 105
+        },
+        "trialCount": 105
+      },
+      "candidate": "openai-codex-oauth-gpt-6-astra-high",
+      "caseFilter": null,
+      "cleanSource": true,
+      "complete": true,
+      "completedAt": "2026-09-16T16:52:37.732Z",
+      "digests": {
+        "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
+        "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+        "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+        "schedulerSha256": "d475c61a0316e85799d0925fca46100b15a9b20689e2d3e2dd677f57b3b5d221"
+      },
+      "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+      "durationMs": 3581374,
+      "families": [
+        "spot",
+        "perps",
+        "predictions"
+      ],
+      "fatal": false,
+      "fingerprint": "fb15a2a24e70734b988557824651d706e71e37116282b027f72e4251ba55e0f9",
+      "label": "GPT-6 Astra (high)",
+      "methodology": {
+        "auth": {
+          "ginaReadOnly": true,
+          "nativeLogin": true
+        },
+        "cleanChats": true,
+        "isolation": {
+          "freshConversation": true,
+          "sharedProviderCredentialProfile": true
+        },
+        "transcriptCaps": {
+          "finalAnswerRetained": true,
+          "overLimitToolResults": "omitted_whole",
+          "resultBytesRetained": true,
+          "toolResultLimitBytes": 65536
+        }
+      },
+      "model": "openai-codex/gpt-6-astra",
+      "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+      "nativeModel": "openai-codex/gpt-6-astra",
+      "nativeVersion": "omp/18.1.21",
+      "provider": "openai-codex",
+      "reasoning": "high",
+      "repetitions": 3,
+      "route": "omp",
+      "rowId": "astra-high",
+      "runs": [
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-6-astra-high",
+          "family": "spot",
+          "fixtureVersion": 1,
+          "runId": "astra-high-spot-20260916155256358",
+          "suiteId": "ask-gina-model-spot-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-6-astra-high",
+          "family": "perps",
+          "fixtureVersion": 1,
+          "runId": "astra-high-perps-20260916155256358",
+          "suiteId": "ask-gina-model-perps-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-6-astra-high",
+          "family": "predictions",
+          "fixtureVersion": 1,
+          "runId": "astra-high-predictions-20260916155256358",
+          "suiteId": "ask-gina-model-predictions-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        }
+      ],
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 48,
+            "graded": 105,
+            "passed": 57,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 0,
+            "unscored": 0
+          },
+          "raw": {
+            "failed": 48,
+            "graded": 105,
+            "passed": 57,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 0,
+            "unscored": 0
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "schedulerPolicy": {
+        "anthropic": 2,
+        "global": 6,
+        "openai-codex": 3,
+        "xai-oauth": 1
+      },
+      "sourceCommit": "1ad5387698bb530e37cf2b9d45ede27f5c530e23",
+      "sourceHashes": {
+        "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+        "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+        "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+        "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
+      },
+      "sourceKind": "git_checkout",
+      "sourceSnapshot": null,
+      "startedAt": "2026-09-16T15:52:56.358Z",
+      "target": "omp_harness",
+      "timeoutMs": 120000
+    },
     {
       "attempts": 1,
       "attestation": {
@@ -2701,7 +2935,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -2721,6 +2955,185 @@
       "sourceKind": "git_checkout",
       "sourceSnapshot": null,
       "startedAt": "2026-09-16T13:47:56.559Z",
+      "target": "omp_harness",
+      "timeoutMs": 120000
+    },
+    {
+      "attempts": 1,
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "copied": 37,
+        "credentialInSession": {
+          "false": 105,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 68,
+          "true": 37
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 68,
+          "true": 37
+        },
+        "resolvedModelIsFallback": {
+          "false": 37,
+          "null": 68,
+          "true": 0
+        },
+        "sessionFiles": 37,
+        "thinkingLevels": {
+          "max": 37,
+          "null": 68
+        },
+        "trialCount": 105
+      },
+      "candidate": "openai-codex-oauth-gpt-6-astra-max",
+      "caseFilter": null,
+      "cleanSource": true,
+      "complete": true,
+      "completedAt": "2026-09-16T23:55:25.944Z",
+      "digests": {
+        "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
+        "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+        "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+        "schedulerSha256": "d475c61a0316e85799d0925fca46100b15a9b20689e2d3e2dd677f57b3b5d221"
+      },
+      "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+      "durationMs": 3994583,
+      "families": [
+        "spot",
+        "perps",
+        "predictions"
+      ],
+      "fatal": false,
+      "fingerprint": "93a042b52437361084636b3c1e91f29cc027880f9f471acd00d0ffc78523a0ca",
+      "label": "GPT-6 Astra (max)",
+      "methodology": {
+        "auth": {
+          "ginaReadOnly": true,
+          "nativeLogin": true
+        },
+        "cleanChats": true,
+        "isolation": {
+          "freshConversation": true,
+          "sharedProviderCredentialProfile": true
+        },
+        "transcriptCaps": {
+          "finalAnswerRetained": true,
+          "overLimitToolResults": "omitted_whole",
+          "resultBytesRetained": true,
+          "toolResultLimitBytes": 65536
+        }
+      },
+      "model": "openai-codex/gpt-6-astra",
+      "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+      "nativeModel": "openai-codex/gpt-6-astra",
+      "nativeVersion": "omp/18.1.21",
+      "provider": "openai-codex",
+      "reasoning": "max",
+      "repetitions": 3,
+      "route": "omp",
+      "rowId": "astra-max",
+      "runs": [
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-6-astra-max",
+          "family": "spot",
+          "fixtureVersion": 1,
+          "runId": "astra-max-spot-20260916224851361",
+          "suiteId": "ask-gina-model-spot-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-6-astra-max",
+          "family": "perps",
+          "fixtureVersion": 1,
+          "runId": "astra-max-perps-20260916224851361",
+          "suiteId": "ask-gina-model-perps-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-6-astra-max",
+          "family": "predictions",
+          "fixtureVersion": 1,
+          "runId": "astra-max-predictions-20260916224851361",
+          "suiteId": "ask-gina-model-predictions-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        }
+      ],
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 9,
+            "graded": 32,
+            "passed": 23,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 5,
+            "unscored": 73
+          },
+          "raw": {
+            "failed": 9,
+            "graded": 32,
+            "passed": 23,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 5,
+            "unscored": 73
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "schedulerPolicy": {
+        "anthropic": 2,
+        "global": 6,
+        "openai-codex": 3,
+        "xai-oauth": 1
+      },
+      "sourceCommit": "1ad5387698bb530e37cf2b9d45ede27f5c530e23",
+      "sourceHashes": {
+        "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+        "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+        "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+        "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
+      },
+      "sourceKind": "git_checkout",
+      "sourceSnapshot": null,
+      "startedAt": "2026-09-16T22:48:51.361Z",
       "target": "omp_harness",
       "timeoutMs": 120000
     },
@@ -2879,7 +3292,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -2907,13 +3320,13 @@
       "attestation": {
         "atifExported": {
           "false": 0,
-          "null": 0,
-          "true": 105
-        },
-        "copied": null,
-        "credentialInSession": {
-          "false": 0,
           "null": 105,
+          "true": 0
+        },
+        "copied": 64,
+        "credentialInSession": {
+          "false": 105,
+          "null": 0,
           "true": 0
         },
         "effortOptionConfigured": {
@@ -2922,54 +3335,52 @@
           "true": 0
         },
         "evidenceKinds": [
-          "atif_model_uid"
+          "runtime_configuration"
         ],
-        "fallbackEvents": null,
+        "fallbackEvents": 0,
         "levelMatches": {
           "false": 0,
-          "null": 105,
-          "true": 0
+          "null": 41,
+          "true": 64
         },
         "modelMatches": {
           "false": 0,
-          "null": 0,
-          "true": 105
+          "null": 41,
+          "true": 64
         },
         "resolvedModelIsFallback": {
-          "false": 0,
-          "null": 105,
+          "false": 64,
+          "null": 41,
           "true": 0
         },
-        "sessionFiles": null,
+        "sessionFiles": 64,
         "thinkingLevels": {
-          "null": 105
+          "null": 41,
+          "xhigh": 64
         },
         "trialCount": 105
       },
-      "candidate": "devin-fable-high-devin-native-claude-fable-5-1-high",
+      "candidate": "openai-codex-oauth-gpt-6-astra-xhigh",
       "caseFilter": null,
-      "cleanSource": false,
+      "cleanSource": true,
       "complete": true,
-      "completedAt": "2026-09-16T15:26:29.859Z",
+      "completedAt": "2026-09-16T22:42:36.061Z",
       "digests": {
-        "adapterSha256": "bd7665bbca0debfc817178f14cfd0603e60c83e647d14578e08e2f46389b3663",
-        "bridgeSha256": "74073e61c8aa500a2fe4da1d1eda2000bb8b6b6b6ea935df7fda86519a0d741e",
         "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
-        "driverSha256": "aa415860704f90204c50fad4d399c6fe06f55bae81e1370d5e2e656245119786",
-        "evalsDistSha256": "320e55b9980f13ee4b98c41e38a6ff7e296da1ad9167548259c13af4584508b6",
-        "nativeExecutableSha256": "ba1956450c0e0bf95f477ccd442a0b45b14765402b2377d6737ae758126d70cd",
-        "runtimeSettingsSha256": "bffe389da5e2e48c2eab048d3dd56533a6132351b1ee0938ad6275a43e930d05"
+        "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+        "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+        "schedulerSha256": "d475c61a0316e85799d0925fca46100b15a9b20689e2d3e2dd677f57b3b5d221"
       },
-      "driverSha256": "aa415860704f90204c50fad4d399c6fe06f55bae81e1370d5e2e656245119786",
-      "durationMs": 6119124,
+      "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+      "durationMs": 20997570,
       "families": [
         "spot",
         "perps",
         "predictions"
       ],
       "fatal": false,
-      "fingerprint": "efa253d94cd1812ad523b2bf8b1aad9cac1a41abfdbe0da078e498ac9ded02c9",
-      "label": "Claude Fable 5.1 (high) via Devin",
+      "fingerprint": "1b2b52f954f6a4ca8e79e2583a4a44a3cdbde7087e642cbf6814aff95c7a7a11",
+      "label": "GPT-6 Astra (xhigh)",
       "methodology": {
         "auth": {
           "ginaReadOnly": true,
@@ -2978,50 +3389,54 @@
         "cleanChats": true,
         "isolation": {
           "freshConversation": true,
-          "perTrialCredentialCopy": true,
-          "perTrialHome": true,
-          "perTrialWorkspace": true
+          "sharedProviderCredentialProfile": true
+        },
+        "transcriptCaps": {
+          "finalAnswerRetained": true,
+          "overLimitToolResults": "omitted_whole",
+          "resultBytesRetained": true,
+          "toolResultLimitBytes": 65536
         }
       },
-      "model": "anthropic/claude-fable-5-1",
-      "nativeExecutableSha256": "ba1956450c0e0bf95f477ccd442a0b45b14765402b2377d6737ae758126d70cd",
-      "nativeModel": "claude-fable-5-1-high",
-      "nativeVersion": "devin 3000.10.21 (611c1cba)",
-      "provider": "devin",
-      "reasoning": "high",
+      "model": "openai-codex/gpt-6-astra",
+      "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+      "nativeModel": "openai-codex/gpt-6-astra",
+      "nativeVersion": "omp/18.1.21",
+      "provider": "openai-codex",
+      "reasoning": "xhigh",
       "repetitions": 3,
-      "route": "devin",
-      "rowId": "devin-fable-high",
+      "route": "omp",
+      "rowId": "astra-xhigh",
       "runs": [
         {
-          "accountClass": null,
-          "candidate": "devin-fable-high-devin-native-claude-fable-5-1-high",
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-6-astra-xhigh",
           "family": "spot",
-          "fixtureVersion": null,
-          "runId": "devin-fable-high-spot-20260916134430735",
-          "suiteId": null,
-          "suiteVersion": null,
-          "target": "devin_cli"
+          "fixtureVersion": 1,
+          "runId": "astra-xhigh-spot-20260916165238491",
+          "suiteId": "ask-gina-model-spot-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
         },
         {
-          "accountClass": null,
-          "candidate": "devin-fable-high-devin-native-claude-fable-5-1-high",
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-6-astra-xhigh",
           "family": "perps",
-          "fixtureVersion": null,
-          "runId": "devin-fable-high-perps-20260916134430735",
-          "suiteId": null,
-          "suiteVersion": null,
-          "target": "devin_cli"
+          "fixtureVersion": 1,
+          "runId": "astra-xhigh-perps-20260916165238491",
+          "suiteId": "ask-gina-model-perps-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
         },
         {
-          "accountClass": null,
-          "candidate": "devin-fable-high-devin-native-claude-fable-5-1-high",
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-6-astra-xhigh",
           "family": "predictions",
-          "fixtureVersion": null,
-          "runId": "devin-fable-high-predictions-20260916134430735",
-          "suiteId": null,
-          "suiteVersion": null,
-          "target": "devin_cli"
+          "fixtureVersion": 1,
+          "runId": "astra-xhigh-predictions-20260916165238491",
+          "suiteId": "ask-gina-model-predictions-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
         }
       ],
       "runtimeClassification": {
@@ -3029,24 +3444,24 @@
         "counts": {
           "changed": 0,
           "corrected": {
-            "failed": 60,
-            "graded": 105,
-            "passed": 45,
+            "failed": 29,
+            "graded": 54,
+            "passed": 25,
             "pending": 0,
             "planned": 105,
             "terminal": 105,
-            "timeouts": 0,
-            "unscored": 0
+            "timeouts": 10,
+            "unscored": 51
           },
           "raw": {
-            "failed": 60,
-            "graded": 105,
-            "passed": 45,
+            "failed": 29,
+            "graded": 54,
+            "passed": 25,
             "pending": 0,
             "planned": 105,
             "terminal": 105,
-            "timeouts": 0,
-            "unscored": 0
+            "timeouts": 10,
+            "unscored": 51
           }
         },
         "derived": true,
@@ -3056,539 +3471,28 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
-      "schedulerPolicy": null,
-      "sourceCommit": "b76c284de42c12d6470e937e4f74e069b78fa64c",
+      "schedulerPolicy": {
+        "anthropic": 2,
+        "global": 6,
+        "openai-codex": 3,
+        "xai-oauth": 1
+      },
+      "sourceCommit": "1ad5387698bb530e37cf2b9d45ede27f5c530e23",
       "sourceHashes": {
         "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
         "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
         "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
         "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
       },
-      "sourceKind": "extracted_snapshot",
+      "sourceKind": "git_checkout",
       "sourceSnapshot": null,
-      "startedAt": "2026-09-16T13:44:30.735Z",
-      "target": "devin_cli",
-      "timeoutMs": 300000
-    },
-    {
-      "attempts": 1,
-      "attestation": {
-        "atifExported": {
-          "false": 0,
-          "null": 0,
-          "true": 105
-        },
-        "copied": null,
-        "credentialInSession": {
-          "false": 0,
-          "null": 105,
-          "true": 0
-        },
-        "effortOptionConfigured": {
-          "false": 0,
-          "null": 105,
-          "true": 0
-        },
-        "evidenceKinds": [
-          "atif_model_uid"
-        ],
-        "fallbackEvents": null,
-        "levelMatches": {
-          "false": 0,
-          "null": 105,
-          "true": 0
-        },
-        "modelMatches": {
-          "false": 0,
-          "null": 0,
-          "true": 105
-        },
-        "resolvedModelIsFallback": {
-          "false": 0,
-          "null": 105,
-          "true": 0
-        },
-        "sessionFiles": null,
-        "thinkingLevels": {
-          "null": 105
-        },
-        "trialCount": 105
-      },
-      "candidate": "devin-fable-low-devin-native-claude-fable-5-1-low",
-      "caseFilter": null,
-      "cleanSource": false,
-      "complete": true,
-      "completedAt": "2026-09-16T15:09:07.427Z",
-      "digests": {
-        "adapterSha256": "bd7665bbca0debfc817178f14cfd0603e60c83e647d14578e08e2f46389b3663",
-        "bridgeSha256": "74073e61c8aa500a2fe4da1d1eda2000bb8b6b6b6ea935df7fda86519a0d741e",
-        "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
-        "driverSha256": "aa415860704f90204c50fad4d399c6fe06f55bae81e1370d5e2e656245119786",
-        "evalsDistSha256": "320e55b9980f13ee4b98c41e38a6ff7e296da1ad9167548259c13af4584508b6",
-        "nativeExecutableSha256": "ba1956450c0e0bf95f477ccd442a0b45b14765402b2377d6737ae758126d70cd",
-        "runtimeSettingsSha256": "bffe389da5e2e48c2eab048d3dd56533a6132351b1ee0938ad6275a43e930d05"
-      },
-      "driverSha256": "aa415860704f90204c50fad4d399c6fe06f55bae81e1370d5e2e656245119786",
-      "durationMs": 5076852,
-      "families": [
-        "spot",
-        "perps",
-        "predictions"
-      ],
-      "fatal": false,
-      "fingerprint": "406d910ec4e2b74396c3d0f7e94b6f46c12525d9de292db5c8e7c764ed649fa8",
-      "label": "Claude Fable 5.1 (low) via Devin",
-      "methodology": {
-        "auth": {
-          "ginaReadOnly": true,
-          "nativeLogin": true
-        },
-        "cleanChats": true,
-        "isolation": {
-          "freshConversation": true,
-          "perTrialCredentialCopy": true,
-          "perTrialHome": true,
-          "perTrialWorkspace": true
-        }
-      },
-      "model": "anthropic/claude-fable-5-1",
-      "nativeExecutableSha256": "ba1956450c0e0bf95f477ccd442a0b45b14765402b2377d6737ae758126d70cd",
-      "nativeModel": "claude-fable-5-1-low",
-      "nativeVersion": "devin 3000.10.21 (611c1cba)",
-      "provider": "devin",
-      "reasoning": "low",
-      "repetitions": 3,
-      "route": "devin",
-      "rowId": "devin-fable-low",
-      "runs": [
-        {
-          "accountClass": null,
-          "candidate": "devin-fable-low-devin-native-claude-fable-5-1-low",
-          "family": "spot",
-          "fixtureVersion": null,
-          "runId": "devin-fable-low-spot-20260916134430575",
-          "suiteId": null,
-          "suiteVersion": null,
-          "target": "devin_cli"
-        },
-        {
-          "accountClass": null,
-          "candidate": "devin-fable-low-devin-native-claude-fable-5-1-low",
-          "family": "perps",
-          "fixtureVersion": null,
-          "runId": "devin-fable-low-perps-20260916134430575",
-          "suiteId": null,
-          "suiteVersion": null,
-          "target": "devin_cli"
-        },
-        {
-          "accountClass": null,
-          "candidate": "devin-fable-low-devin-native-claude-fable-5-1-low",
-          "family": "predictions",
-          "fixtureVersion": null,
-          "runId": "devin-fable-low-predictions-20260916134430575",
-          "suiteId": null,
-          "suiteVersion": null,
-          "target": "devin_cli"
-        }
-      ],
-      "runtimeClassification": {
-        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
-        "counts": {
-          "changed": 0,
-          "corrected": {
-            "failed": 56,
-            "graded": 105,
-            "passed": 49,
-            "pending": 0,
-            "planned": 105,
-            "terminal": 105,
-            "timeouts": 0,
-            "unscored": 0
-          },
-          "raw": {
-            "failed": 56,
-            "graded": 105,
-            "passed": 49,
-            "pending": 0,
-            "planned": 105,
-            "terminal": 105,
-            "timeouts": 0,
-            "unscored": 0
-          }
-        },
-        "derived": true,
-        "noAnswerRegrade": true,
-        "noOutcomeSelectiveRerun": true,
-        "observationFiles": "raw-unchanged",
-        "rawEvidenceUnchanged": true,
-        "receipt": "classification-receipt.json",
-        "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
-        "schemaVersion": "ask-gina-runtime-classification.v1",
-        "scope": "post-run-runtime-classification"
-      },
-      "schedulerPolicy": null,
-      "sourceCommit": "b76c284de42c12d6470e937e4f74e069b78fa64c",
-      "sourceHashes": {
-        "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
-        "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
-        "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
-        "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
-      },
-      "sourceKind": "extracted_snapshot",
-      "sourceSnapshot": null,
-      "startedAt": "2026-09-16T13:44:30.575Z",
-      "target": "devin_cli",
-      "timeoutMs": 300000
-    },
-    {
-      "attempts": 1,
-      "attestation": {
-        "atifExported": {
-          "false": 0,
-          "null": 0,
-          "true": 105
-        },
-        "copied": null,
-        "credentialInSession": {
-          "false": 0,
-          "null": 105,
-          "true": 0
-        },
-        "effortOptionConfigured": {
-          "false": 0,
-          "null": 105,
-          "true": 0
-        },
-        "evidenceKinds": [
-          "atif_model_uid"
-        ],
-        "fallbackEvents": null,
-        "levelMatches": {
-          "false": 0,
-          "null": 105,
-          "true": 0
-        },
-        "modelMatches": {
-          "false": 0,
-          "null": 0,
-          "true": 105
-        },
-        "resolvedModelIsFallback": {
-          "false": 0,
-          "null": 105,
-          "true": 0
-        },
-        "sessionFiles": null,
-        "thinkingLevels": {
-          "null": 105
-        },
-        "trialCount": 105
-      },
-      "candidate": "devin-fable-max-devin-native-claude-fable-5-1-max",
-      "caseFilter": null,
-      "cleanSource": false,
-      "complete": true,
-      "completedAt": "2026-09-16T15:55:25.363Z",
-      "digests": {
-        "adapterSha256": "bd7665bbca0debfc817178f14cfd0603e60c83e647d14578e08e2f46389b3663",
-        "bridgeSha256": "74073e61c8aa500a2fe4da1d1eda2000bb8b6b6b6ea935df7fda86519a0d741e",
-        "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
-        "driverSha256": "aa415860704f90204c50fad4d399c6fe06f55bae81e1370d5e2e656245119786",
-        "evalsDistSha256": "320e55b9980f13ee4b98c41e38a6ff7e296da1ad9167548259c13af4584508b6",
-        "nativeExecutableSha256": "ba1956450c0e0bf95f477ccd442a0b45b14765402b2377d6737ae758126d70cd",
-        "runtimeSettingsSha256": "bffe389da5e2e48c2eab048d3dd56533a6132351b1ee0938ad6275a43e930d05"
-      },
-      "driverSha256": "aa415860704f90204c50fad4d399c6fe06f55bae81e1370d5e2e656245119786",
-      "durationMs": 7854601,
-      "families": [
-        "spot",
-        "perps",
-        "predictions"
-      ],
-      "fatal": false,
-      "fingerprint": "77e6efed38e631c7645fb4a5be28b06414bd33711dac14fdd7555460e5d8f38e",
-      "label": "Claude Fable 5.1 (max) via Devin",
-      "methodology": {
-        "auth": {
-          "ginaReadOnly": true,
-          "nativeLogin": true
-        },
-        "cleanChats": true,
-        "isolation": {
-          "freshConversation": true,
-          "perTrialCredentialCopy": true,
-          "perTrialHome": true,
-          "perTrialWorkspace": true
-        }
-      },
-      "model": "anthropic/claude-fable-5-1",
-      "nativeExecutableSha256": "ba1956450c0e0bf95f477ccd442a0b45b14765402b2377d6737ae758126d70cd",
-      "nativeModel": "claude-fable-5-1-max",
-      "nativeVersion": "devin 3000.10.21 (611c1cba)",
-      "provider": "devin",
-      "reasoning": "max",
-      "repetitions": 3,
-      "route": "devin",
-      "rowId": "devin-fable-max",
-      "runs": [
-        {
-          "accountClass": null,
-          "candidate": "devin-fable-max-devin-native-claude-fable-5-1-max",
-          "family": "spot",
-          "fixtureVersion": null,
-          "runId": "devin-fable-max-spot-20260916134430762",
-          "suiteId": null,
-          "suiteVersion": null,
-          "target": "devin_cli"
-        },
-        {
-          "accountClass": null,
-          "candidate": "devin-fable-max-devin-native-claude-fable-5-1-max",
-          "family": "perps",
-          "fixtureVersion": null,
-          "runId": "devin-fable-max-perps-20260916134430762",
-          "suiteId": null,
-          "suiteVersion": null,
-          "target": "devin_cli"
-        },
-        {
-          "accountClass": null,
-          "candidate": "devin-fable-max-devin-native-claude-fable-5-1-max",
-          "family": "predictions",
-          "fixtureVersion": null,
-          "runId": "devin-fable-max-predictions-20260916134430762",
-          "suiteId": null,
-          "suiteVersion": null,
-          "target": "devin_cli"
-        }
-      ],
-      "runtimeClassification": {
-        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
-        "counts": {
-          "changed": 0,
-          "corrected": {
-            "failed": 66,
-            "graded": 105,
-            "passed": 39,
-            "pending": 0,
-            "planned": 105,
-            "terminal": 105,
-            "timeouts": 0,
-            "unscored": 0
-          },
-          "raw": {
-            "failed": 66,
-            "graded": 105,
-            "passed": 39,
-            "pending": 0,
-            "planned": 105,
-            "terminal": 105,
-            "timeouts": 0,
-            "unscored": 0
-          }
-        },
-        "derived": true,
-        "noAnswerRegrade": true,
-        "noOutcomeSelectiveRerun": true,
-        "observationFiles": "raw-unchanged",
-        "rawEvidenceUnchanged": true,
-        "receipt": "classification-receipt.json",
-        "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
-        "schemaVersion": "ask-gina-runtime-classification.v1",
-        "scope": "post-run-runtime-classification"
-      },
-      "schedulerPolicy": null,
-      "sourceCommit": "b76c284de42c12d6470e937e4f74e069b78fa64c",
-      "sourceHashes": {
-        "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
-        "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
-        "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
-        "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
-      },
-      "sourceKind": "extracted_snapshot",
-      "sourceSnapshot": null,
-      "startedAt": "2026-09-16T13:44:30.762Z",
-      "target": "devin_cli",
-      "timeoutMs": 300000
-    },
-    {
-      "attempts": 1,
-      "attestation": {
-        "atifExported": {
-          "false": 0,
-          "null": 0,
-          "true": 105
-        },
-        "copied": null,
-        "credentialInSession": {
-          "false": 0,
-          "null": 105,
-          "true": 0
-        },
-        "effortOptionConfigured": {
-          "false": 0,
-          "null": 105,
-          "true": 0
-        },
-        "evidenceKinds": [
-          "atif_model_uid"
-        ],
-        "fallbackEvents": null,
-        "levelMatches": {
-          "false": 0,
-          "null": 105,
-          "true": 0
-        },
-        "modelMatches": {
-          "false": 0,
-          "null": 0,
-          "true": 105
-        },
-        "resolvedModelIsFallback": {
-          "false": 0,
-          "null": 105,
-          "true": 0
-        },
-        "sessionFiles": null,
-        "thinkingLevels": {
-          "null": 105
-        },
-        "trialCount": 105
-      },
-      "candidate": "devin-fable-medium-devin-native-claude-fable-5-1-medium",
-      "caseFilter": null,
-      "cleanSource": false,
-      "complete": true,
-      "completedAt": "2026-09-16T15:15:30.346Z",
-      "digests": {
-        "adapterSha256": "bd7665bbca0debfc817178f14cfd0603e60c83e647d14578e08e2f46389b3663",
-        "bridgeSha256": "74073e61c8aa500a2fe4da1d1eda2000bb8b6b6b6ea935df7fda86519a0d741e",
-        "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
-        "driverSha256": "aa415860704f90204c50fad4d399c6fe06f55bae81e1370d5e2e656245119786",
-        "evalsDistSha256": "320e55b9980f13ee4b98c41e38a6ff7e296da1ad9167548259c13af4584508b6",
-        "nativeExecutableSha256": "ba1956450c0e0bf95f477ccd442a0b45b14765402b2377d6737ae758126d70cd",
-        "runtimeSettingsSha256": "bffe389da5e2e48c2eab048d3dd56533a6132351b1ee0938ad6275a43e930d05"
-      },
-      "driverSha256": "aa415860704f90204c50fad4d399c6fe06f55bae81e1370d5e2e656245119786",
-      "durationMs": 5459838,
-      "families": [
-        "spot",
-        "perps",
-        "predictions"
-      ],
-      "fatal": false,
-      "fingerprint": "78a987b9329d6a7bb63dc16a74d016804900a0f2e32c582dbc83ddc6e0004f3b",
-      "label": "Claude Fable 5.1 (medium) via Devin",
-      "methodology": {
-        "auth": {
-          "ginaReadOnly": true,
-          "nativeLogin": true
-        },
-        "cleanChats": true,
-        "isolation": {
-          "freshConversation": true,
-          "perTrialCredentialCopy": true,
-          "perTrialHome": true,
-          "perTrialWorkspace": true
-        }
-      },
-      "model": "anthropic/claude-fable-5-1",
-      "nativeExecutableSha256": "ba1956450c0e0bf95f477ccd442a0b45b14765402b2377d6737ae758126d70cd",
-      "nativeModel": "claude-fable-5-1-medium",
-      "nativeVersion": "devin 3000.10.21 (611c1cba)",
-      "provider": "devin",
-      "reasoning": "medium",
-      "repetitions": 3,
-      "route": "devin",
-      "rowId": "devin-fable-medium",
-      "runs": [
-        {
-          "accountClass": null,
-          "candidate": "devin-fable-medium-devin-native-claude-fable-5-1-medium",
-          "family": "spot",
-          "fixtureVersion": null,
-          "runId": "devin-fable-medium-spot-20260916134430508",
-          "suiteId": null,
-          "suiteVersion": null,
-          "target": "devin_cli"
-        },
-        {
-          "accountClass": null,
-          "candidate": "devin-fable-medium-devin-native-claude-fable-5-1-medium",
-          "family": "perps",
-          "fixtureVersion": null,
-          "runId": "devin-fable-medium-perps-20260916134430508",
-          "suiteId": null,
-          "suiteVersion": null,
-          "target": "devin_cli"
-        },
-        {
-          "accountClass": null,
-          "candidate": "devin-fable-medium-devin-native-claude-fable-5-1-medium",
-          "family": "predictions",
-          "fixtureVersion": null,
-          "runId": "devin-fable-medium-predictions-20260916134430508",
-          "suiteId": null,
-          "suiteVersion": null,
-          "target": "devin_cli"
-        }
-      ],
-      "runtimeClassification": {
-        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
-        "counts": {
-          "changed": 0,
-          "corrected": {
-            "failed": 61,
-            "graded": 105,
-            "passed": 44,
-            "pending": 0,
-            "planned": 105,
-            "terminal": 105,
-            "timeouts": 0,
-            "unscored": 0
-          },
-          "raw": {
-            "failed": 61,
-            "graded": 105,
-            "passed": 44,
-            "pending": 0,
-            "planned": 105,
-            "terminal": 105,
-            "timeouts": 0,
-            "unscored": 0
-          }
-        },
-        "derived": true,
-        "noAnswerRegrade": true,
-        "noOutcomeSelectiveRerun": true,
-        "observationFiles": "raw-unchanged",
-        "rawEvidenceUnchanged": true,
-        "receipt": "classification-receipt.json",
-        "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
-        "schemaVersion": "ask-gina-runtime-classification.v1",
-        "scope": "post-run-runtime-classification"
-      },
-      "schedulerPolicy": null,
-      "sourceCommit": "b76c284de42c12d6470e937e4f74e069b78fa64c",
-      "sourceHashes": {
-        "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
-        "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
-        "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
-        "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
-      },
-      "sourceKind": "extracted_snapshot",
-      "sourceSnapshot": null,
-      "startedAt": "2026-09-16T13:44:30.508Z",
-      "target": "devin_cli",
-      "timeoutMs": 300000
+      "startedAt": "2026-09-16T16:52:38.491Z",
+      "target": "omp_harness",
+      "timeoutMs": 120000
     },
     {
       "attempts": 1,
@@ -3744,7 +3648,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -3916,7 +3820,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -4088,7 +3992,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -4260,7 +4164,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -4432,7 +4336,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -4449,6 +4353,719 @@
       "startedAt": "2026-09-16T12:53:43.686Z",
       "target": "devin_cli",
       "timeoutMs": 300000
+    },
+    {
+      "attempts": 1,
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "copied": 105,
+        "credentialInSession": {
+          "false": 105,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 0,
+          "true": 105
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 0,
+          "true": 105
+        },
+        "resolvedModelIsFallback": {
+          "false": 105,
+          "null": 0,
+          "true": 0
+        },
+        "sessionFiles": 105,
+        "thinkingLevels": {
+          "high": 105
+        },
+        "trialCount": 105
+      },
+      "candidate": "anthropic-oauth-claude-fable-5-1-high",
+      "caseFilter": null,
+      "cleanSource": true,
+      "complete": true,
+      "completedAt": "2026-09-17T14:53:00.942Z",
+      "digests": {
+        "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
+        "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+        "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+        "schedulerSha256": "d475c61a0316e85799d0925fca46100b15a9b20689e2d3e2dd677f57b3b5d221"
+      },
+      "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+      "durationMs": 4156131,
+      "families": [
+        "spot",
+        "perps",
+        "predictions"
+      ],
+      "fatal": false,
+      "fingerprint": "a42ed18ce43449583301b863a501837b6babbfc8d0e255e4d2ccb28f7612cc8a",
+      "label": "Claude Fable 5.1 (high)",
+      "methodology": {
+        "auth": {
+          "ginaReadOnly": true,
+          "nativeLogin": true
+        },
+        "cleanChats": true,
+        "isolation": {
+          "freshConversation": true,
+          "sharedProviderCredentialProfile": true
+        },
+        "transcriptCaps": {
+          "finalAnswerRetained": true,
+          "overLimitToolResults": "omitted_whole",
+          "resultBytesRetained": true,
+          "toolResultLimitBytes": 65536
+        }
+      },
+      "model": "anthropic/claude-fable-5-1",
+      "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+      "nativeModel": "anthropic/claude-fable-5-1",
+      "nativeVersion": "omp/18.1.21",
+      "provider": "anthropic",
+      "reasoning": "high",
+      "repetitions": 3,
+      "route": "omp",
+      "rowId": "fable-high",
+      "runs": [
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "anthropic-oauth-claude-fable-5-1-high",
+          "family": "spot",
+          "fixtureVersion": 1,
+          "runId": "fable-high-spot-20260917134344811",
+          "suiteId": "ask-gina-model-spot-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "anthropic-oauth-claude-fable-5-1-high",
+          "family": "perps",
+          "fixtureVersion": 1,
+          "runId": "fable-high-perps-20260917134344811",
+          "suiteId": "ask-gina-model-perps-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "anthropic-oauth-claude-fable-5-1-high",
+          "family": "predictions",
+          "fixtureVersion": 1,
+          "runId": "fable-high-predictions-20260917134344811",
+          "suiteId": "ask-gina-model-predictions-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        }
+      ],
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 50,
+            "graded": 105,
+            "passed": 55,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 0,
+            "unscored": 0
+          },
+          "raw": {
+            "failed": 50,
+            "graded": 105,
+            "passed": 55,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 0,
+            "unscored": 0
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "schedulerPolicy": {
+        "anthropic": 2,
+        "global": 6,
+        "openai-codex": 3,
+        "xai-oauth": 1
+      },
+      "sourceCommit": "1ad5387698bb530e37cf2b9d45ede27f5c530e23",
+      "sourceHashes": {
+        "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+        "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+        "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+        "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
+      },
+      "sourceKind": "git_checkout",
+      "sourceSnapshot": null,
+      "startedAt": "2026-09-17T13:43:44.811Z",
+      "target": "omp_harness",
+      "timeoutMs": 120000
+    },
+    {
+      "attempts": 1,
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "copied": 105,
+        "credentialInSession": {
+          "false": 105,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 0,
+          "true": 105
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 0,
+          "true": 105
+        },
+        "resolvedModelIsFallback": {
+          "false": 105,
+          "null": 0,
+          "true": 0
+        },
+        "sessionFiles": 105,
+        "thinkingLevels": {
+          "low": 105
+        },
+        "trialCount": 105
+      },
+      "candidate": "anthropic-oauth-claude-fable-5-1-low",
+      "caseFilter": null,
+      "cleanSource": true,
+      "complete": true,
+      "completedAt": "2026-09-17T13:43:43.994Z",
+      "digests": {
+        "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
+        "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+        "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+        "schedulerSha256": "d475c61a0316e85799d0925fca46100b15a9b20689e2d3e2dd677f57b3b5d221"
+      },
+      "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+      "durationMs": 3273918,
+      "families": [
+        "spot",
+        "perps",
+        "predictions"
+      ],
+      "fatal": false,
+      "fingerprint": "47fdb9650242655bf395c6960debc21d1c97f32931f2ff0c3a655cfb67c540d4",
+      "label": "Claude Fable 5.1 (low)",
+      "methodology": {
+        "auth": {
+          "ginaReadOnly": true,
+          "nativeLogin": true
+        },
+        "cleanChats": true,
+        "isolation": {
+          "freshConversation": true,
+          "sharedProviderCredentialProfile": true
+        },
+        "transcriptCaps": {
+          "finalAnswerRetained": true,
+          "overLimitToolResults": "omitted_whole",
+          "resultBytesRetained": true,
+          "toolResultLimitBytes": 65536
+        }
+      },
+      "model": "anthropic/claude-fable-5-1",
+      "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+      "nativeModel": "anthropic/claude-fable-5-1",
+      "nativeVersion": "omp/18.1.21",
+      "provider": "anthropic",
+      "reasoning": "low",
+      "repetitions": 3,
+      "route": "omp",
+      "rowId": "fable-low",
+      "runs": [
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "anthropic-oauth-claude-fable-5-1-low",
+          "family": "spot",
+          "fixtureVersion": 1,
+          "runId": "fable-low-spot-20260917124910076",
+          "suiteId": "ask-gina-model-spot-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "anthropic-oauth-claude-fable-5-1-low",
+          "family": "perps",
+          "fixtureVersion": 1,
+          "runId": "fable-low-perps-20260917124910076",
+          "suiteId": "ask-gina-model-perps-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "anthropic-oauth-claude-fable-5-1-low",
+          "family": "predictions",
+          "fixtureVersion": 1,
+          "runId": "fable-low-predictions-20260917124910076",
+          "suiteId": "ask-gina-model-predictions-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        }
+      ],
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 47,
+            "graded": 105,
+            "passed": 58,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 0,
+            "unscored": 0
+          },
+          "raw": {
+            "failed": 47,
+            "graded": 105,
+            "passed": 58,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 0,
+            "unscored": 0
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "schedulerPolicy": {
+        "anthropic": 2,
+        "global": 6,
+        "openai-codex": 3,
+        "xai-oauth": 1
+      },
+      "sourceCommit": "1ad5387698bb530e37cf2b9d45ede27f5c530e23",
+      "sourceHashes": {
+        "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+        "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+        "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+        "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
+      },
+      "sourceKind": "git_checkout",
+      "sourceSnapshot": null,
+      "startedAt": "2026-09-17T12:49:10.076Z",
+      "target": "omp_harness",
+      "timeoutMs": 120000
+    },
+    {
+      "attempts": 1,
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "copied": 105,
+        "credentialInSession": {
+          "false": 105,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 0,
+          "true": 105
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 0,
+          "true": 105
+        },
+        "resolvedModelIsFallback": {
+          "false": 105,
+          "null": 0,
+          "true": 0
+        },
+        "sessionFiles": 105,
+        "thinkingLevels": {
+          "medium": 105
+        },
+        "trialCount": 105
+      },
+      "candidate": "anthropic-oauth-claude-fable-5-1-medium",
+      "caseFilter": null,
+      "cleanSource": true,
+      "complete": true,
+      "completedAt": "2026-09-17T13:49:22.852Z",
+      "digests": {
+        "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
+        "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+        "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+        "schedulerSha256": "d475c61a0316e85799d0925fca46100b15a9b20689e2d3e2dd677f57b3b5d221"
+      },
+      "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+      "durationMs": 3612783,
+      "families": [
+        "spot",
+        "perps",
+        "predictions"
+      ],
+      "fatal": false,
+      "fingerprint": "65cb0b2931a524d81ede14a63f293b7a0fd0d00f39dba22e9c99d4d716dce40e",
+      "label": "Claude Fable 5.1 (medium)",
+      "methodology": {
+        "auth": {
+          "ginaReadOnly": true,
+          "nativeLogin": true
+        },
+        "cleanChats": true,
+        "isolation": {
+          "freshConversation": true,
+          "sharedProviderCredentialProfile": true
+        },
+        "transcriptCaps": {
+          "finalAnswerRetained": true,
+          "overLimitToolResults": "omitted_whole",
+          "resultBytesRetained": true,
+          "toolResultLimitBytes": 65536
+        }
+      },
+      "model": "anthropic/claude-fable-5-1",
+      "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+      "nativeModel": "anthropic/claude-fable-5-1",
+      "nativeVersion": "omp/18.1.21",
+      "provider": "anthropic",
+      "reasoning": "medium",
+      "repetitions": 3,
+      "route": "omp",
+      "rowId": "fable-medium",
+      "runs": [
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "anthropic-oauth-claude-fable-5-1-medium",
+          "family": "spot",
+          "fixtureVersion": 1,
+          "runId": "fable-medium-spot-20260917124910069",
+          "suiteId": "ask-gina-model-spot-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "anthropic-oauth-claude-fable-5-1-medium",
+          "family": "perps",
+          "fixtureVersion": 1,
+          "runId": "fable-medium-perps-20260917124910069",
+          "suiteId": "ask-gina-model-perps-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "anthropic-oauth-claude-fable-5-1-medium",
+          "family": "predictions",
+          "fixtureVersion": 1,
+          "runId": "fable-medium-predictions-20260917124910069",
+          "suiteId": "ask-gina-model-predictions-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        }
+      ],
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 48,
+            "graded": 105,
+            "passed": 57,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 0,
+            "unscored": 0
+          },
+          "raw": {
+            "failed": 48,
+            "graded": 105,
+            "passed": 57,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 0,
+            "unscored": 0
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "schedulerPolicy": {
+        "anthropic": 2,
+        "global": 6,
+        "openai-codex": 3,
+        "xai-oauth": 1
+      },
+      "sourceCommit": "1ad5387698bb530e37cf2b9d45ede27f5c530e23",
+      "sourceHashes": {
+        "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+        "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+        "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+        "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
+      },
+      "sourceKind": "git_checkout",
+      "sourceSnapshot": null,
+      "startedAt": "2026-09-17T12:49:10.069Z",
+      "target": "omp_harness",
+      "timeoutMs": 120000
+    },
+    {
+      "attempts": 1,
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "copied": 58,
+        "credentialInSession": {
+          "false": 105,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 47,
+          "true": 58
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 47,
+          "true": 58
+        },
+        "resolvedModelIsFallback": {
+          "false": 58,
+          "null": 47,
+          "true": 0
+        },
+        "sessionFiles": 58,
+        "thinkingLevels": {
+          "high": 58,
+          "null": 47
+        },
+        "trialCount": 105
+      },
+      "candidate": "xai-oauth-oauth-grok-4.6-high",
+      "caseFilter": null,
+      "cleanSource": true,
+      "complete": true,
+      "completedAt": "2026-09-16T19:50:54.058Z",
+      "digests": {
+        "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
+        "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+        "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+        "schedulerSha256": "d475c61a0316e85799d0925fca46100b15a9b20689e2d3e2dd677f57b3b5d221"
+      },
+      "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+      "durationMs": 12625405,
+      "families": [
+        "spot",
+        "perps",
+        "predictions"
+      ],
+      "fatal": false,
+      "fingerprint": "6a16b28a17e5f043e3f769535447d6c761142063b166a06b7b45cfe193a2d8ca",
+      "label": "Grok 4.6 (high)",
+      "methodology": {
+        "auth": {
+          "ginaReadOnly": true,
+          "nativeLogin": true
+        },
+        "cleanChats": true,
+        "isolation": {
+          "freshConversation": true,
+          "sharedProviderCredentialProfile": true
+        },
+        "transcriptCaps": {
+          "finalAnswerRetained": true,
+          "overLimitToolResults": "omitted_whole",
+          "resultBytesRetained": true,
+          "toolResultLimitBytes": 65536
+        }
+      },
+      "model": "xai-oauth/grok-4.6",
+      "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+      "nativeModel": "xai-oauth/grok-4.6",
+      "nativeVersion": "omp/18.1.21",
+      "provider": "xai-oauth",
+      "reasoning": "high",
+      "repetitions": 3,
+      "route": "omp",
+      "rowId": "grok-high",
+      "runs": [
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "xai-oauth-oauth-grok-4.6-high",
+          "family": "spot",
+          "fixtureVersion": 1,
+          "runId": "grok-high-spot-20260916162028653",
+          "suiteId": "ask-gina-model-spot-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "xai-oauth-oauth-grok-4.6-high",
+          "family": "perps",
+          "fixtureVersion": 1,
+          "runId": "grok-high-perps-20260916162028653",
+          "suiteId": "ask-gina-model-perps-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "xai-oauth-oauth-grok-4.6-high",
+          "family": "predictions",
+          "fixtureVersion": 1,
+          "runId": "grok-high-predictions-20260916162028653",
+          "suiteId": "ask-gina-model-predictions-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        }
+      ],
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 9,
+            "graded": 46,
+            "passed": 37,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 13,
+            "unscored": 59
+          },
+          "raw": {
+            "failed": 9,
+            "graded": 46,
+            "passed": 37,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 13,
+            "unscored": 59
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "schedulerPolicy": {
+        "anthropic": 2,
+        "global": 6,
+        "openai-codex": 3,
+        "xai-oauth": 1
+      },
+      "sourceCommit": "1ad5387698bb530e37cf2b9d45ede27f5c530e23",
+      "sourceHashes": {
+        "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+        "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+        "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+        "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
+      },
+      "sourceKind": "git_checkout",
+      "sourceSnapshot": null,
+      "startedAt": "2026-09-16T16:20:28.653Z",
+      "target": "omp_harness",
+      "timeoutMs": 120000
     },
     {
       "attempts": 1,
@@ -4605,7 +5222,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -4783,7 +5400,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -4803,6 +5420,185 @@
       "sourceKind": "git_checkout",
       "sourceSnapshot": null,
       "startedAt": "2026-09-16T14:51:03.755Z",
+      "target": "omp_harness",
+      "timeoutMs": 120000
+    },
+    {
+      "attempts": 1,
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "copied": 44,
+        "credentialInSession": {
+          "false": 105,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 61,
+          "true": 44
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 61,
+          "true": 44
+        },
+        "resolvedModelIsFallback": {
+          "false": 44,
+          "null": 61,
+          "true": 0
+        },
+        "sessionFiles": 44,
+        "thinkingLevels": {
+          "null": 61,
+          "xhigh": 44
+        },
+        "trialCount": 105
+      },
+      "candidate": "xai-oauth-oauth-grok-4.6-xhigh",
+      "caseFilter": null,
+      "cleanSource": true,
+      "complete": true,
+      "completedAt": "2026-09-16T23:55:22.206Z",
+      "digests": {
+        "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
+        "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+        "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+        "schedulerSha256": "d475c61a0316e85799d0925fca46100b15a9b20689e2d3e2dd677f57b3b5d221"
+      },
+      "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+      "durationMs": 3990845,
+      "families": [
+        "spot",
+        "perps",
+        "predictions"
+      ],
+      "fatal": false,
+      "fingerprint": "1a840711569da8c1d177429ac16b778eda64700a75725a32abe73b2d07075b4b",
+      "label": "Grok 4.6 (xhigh)",
+      "methodology": {
+        "auth": {
+          "ginaReadOnly": true,
+          "nativeLogin": true
+        },
+        "cleanChats": true,
+        "isolation": {
+          "freshConversation": true,
+          "sharedProviderCredentialProfile": true
+        },
+        "transcriptCaps": {
+          "finalAnswerRetained": true,
+          "overLimitToolResults": "omitted_whole",
+          "resultBytesRetained": true,
+          "toolResultLimitBytes": 65536
+        }
+      },
+      "model": "xai-oauth/grok-4.6",
+      "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+      "nativeModel": "xai-oauth/grok-4.6",
+      "nativeVersion": "omp/18.1.21",
+      "provider": "xai-oauth",
+      "reasoning": "xhigh",
+      "repetitions": 3,
+      "route": "omp",
+      "rowId": "grok-xhigh",
+      "runs": [
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "xai-oauth-oauth-grok-4.6-xhigh",
+          "family": "spot",
+          "fixtureVersion": 1,
+          "runId": "grok-xhigh-spot-20260916224851361",
+          "suiteId": "ask-gina-model-spot-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "xai-oauth-oauth-grok-4.6-xhigh",
+          "family": "perps",
+          "fixtureVersion": 1,
+          "runId": "grok-xhigh-perps-20260916224851361",
+          "suiteId": "ask-gina-model-perps-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "xai-oauth-oauth-grok-4.6-xhigh",
+          "family": "predictions",
+          "fixtureVersion": 1,
+          "runId": "grok-xhigh-predictions-20260916224851361",
+          "suiteId": "ask-gina-model-predictions-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        }
+      ],
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 5,
+            "graded": 38,
+            "passed": 33,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 6,
+            "unscored": 67
+          },
+          "raw": {
+            "failed": 5,
+            "graded": 38,
+            "passed": 33,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 6,
+            "unscored": 67
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "schedulerPolicy": {
+        "anthropic": 2,
+        "global": 6,
+        "openai-codex": 3,
+        "xai-oauth": 1
+      },
+      "sourceCommit": "1ad5387698bb530e37cf2b9d45ede27f5c530e23",
+      "sourceHashes": {
+        "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+        "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+        "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+        "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
+      },
+      "sourceKind": "git_checkout",
+      "sourceSnapshot": null,
+      "startedAt": "2026-09-16T22:48:51.361Z",
       "target": "omp_harness",
       "timeoutMs": 120000
     },
@@ -4956,7 +5752,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -5128,7 +5924,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -5300,7 +6096,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -5472,7 +6268,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -5644,7 +6440,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -5821,7 +6617,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -5999,7 +6795,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -6019,6 +6815,185 @@
       "sourceKind": "git_checkout",
       "sourceSnapshot": null,
       "startedAt": "2026-09-16T13:47:56.670Z",
+      "target": "omp_harness",
+      "timeoutMs": 120000
+    },
+    {
+      "attempts": 1,
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "copied": 104,
+        "credentialInSession": {
+          "false": 105,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 1,
+          "true": 104
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 1,
+          "true": 104
+        },
+        "resolvedModelIsFallback": {
+          "false": 104,
+          "null": 1,
+          "true": 0
+        },
+        "sessionFiles": 104,
+        "thinkingLevels": {
+          "max": 104,
+          "null": 1
+        },
+        "trialCount": 105
+      },
+      "candidate": "anthropic-oauth-claude-opus-5-max",
+      "caseFilter": null,
+      "cleanSource": true,
+      "complete": true,
+      "completedAt": "2026-09-16T16:54:32.650Z",
+      "digests": {
+        "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
+        "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+        "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+        "schedulerSha256": "d475c61a0316e85799d0925fca46100b15a9b20689e2d3e2dd677f57b3b5d221"
+      },
+      "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+      "durationMs": 6588646,
+      "families": [
+        "spot",
+        "perps",
+        "predictions"
+      ],
+      "fatal": false,
+      "fingerprint": "2d1c20c3a7cb1c0870e2481b7838935b965f75f21a86693fbd4e0d64fe6547a9",
+      "label": "Claude Opus 5 (max)",
+      "methodology": {
+        "auth": {
+          "ginaReadOnly": true,
+          "nativeLogin": true
+        },
+        "cleanChats": true,
+        "isolation": {
+          "freshConversation": true,
+          "sharedProviderCredentialProfile": true
+        },
+        "transcriptCaps": {
+          "finalAnswerRetained": true,
+          "overLimitToolResults": "omitted_whole",
+          "resultBytesRetained": true,
+          "toolResultLimitBytes": 65536
+        }
+      },
+      "model": "anthropic/claude-opus-5",
+      "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+      "nativeModel": "anthropic/claude-opus-5",
+      "nativeVersion": "omp/18.1.21",
+      "provider": "anthropic",
+      "reasoning": "max",
+      "repetitions": 3,
+      "route": "omp",
+      "rowId": "opus-max",
+      "runs": [
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "anthropic-oauth-claude-opus-5-max",
+          "family": "spot",
+          "fixtureVersion": 1,
+          "runId": "opus-max-spot-20260916150444004",
+          "suiteId": "ask-gina-model-spot-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "anthropic-oauth-claude-opus-5-max",
+          "family": "perps",
+          "fixtureVersion": 1,
+          "runId": "opus-max-perps-20260916150444004",
+          "suiteId": "ask-gina-model-perps-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "anthropic-oauth-claude-opus-5-max",
+          "family": "predictions",
+          "fixtureVersion": 1,
+          "runId": "opus-max-predictions-20260916150444004",
+          "suiteId": "ask-gina-model-predictions-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        }
+      ],
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 44,
+            "graded": 85,
+            "passed": 41,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 19,
+            "unscored": 20
+          },
+          "raw": {
+            "failed": 44,
+            "graded": 85,
+            "passed": 41,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 19,
+            "unscored": 20
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "schedulerPolicy": {
+        "anthropic": 2,
+        "global": 6,
+        "openai-codex": 3,
+        "xai-oauth": 1
+      },
+      "sourceCommit": "1ad5387698bb530e37cf2b9d45ede27f5c530e23",
+      "sourceHashes": {
+        "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+        "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+        "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+        "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
+      },
+      "sourceKind": "git_checkout",
+      "sourceSnapshot": null,
+      "startedAt": "2026-09-16T15:04:44.004Z",
       "target": "omp_harness",
       "timeoutMs": 120000
     },
@@ -6177,7 +7152,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -6197,6 +7172,185 @@
       "sourceKind": "git_checkout",
       "sourceSnapshot": null,
       "startedAt": "2026-09-16T13:47:56.740Z",
+      "target": "omp_harness",
+      "timeoutMs": 120000
+    },
+    {
+      "attempts": 1,
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "copied": 71,
+        "credentialInSession": {
+          "false": 105,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 34,
+          "true": 71
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 34,
+          "true": 71
+        },
+        "resolvedModelIsFallback": {
+          "false": 71,
+          "null": 34,
+          "true": 0
+        },
+        "sessionFiles": 71,
+        "thinkingLevels": {
+          "high": 71,
+          "null": 34
+        },
+        "trialCount": 105
+      },
+      "candidate": "openai-codex-oauth-gpt-5.6-sol-high",
+      "caseFilter": null,
+      "cleanSource": true,
+      "complete": true,
+      "completedAt": "2026-09-16T17:58:45.499Z",
+      "digests": {
+        "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
+        "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+        "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+        "schedulerSha256": "d475c61a0316e85799d0925fca46100b15a9b20689e2d3e2dd677f57b3b5d221"
+      },
+      "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+      "durationMs": 6737369,
+      "families": [
+        "spot",
+        "perps",
+        "predictions"
+      ],
+      "fatal": false,
+      "fingerprint": "3987f6ee9f186825552076d2e84a74617436a3897ff8acc0bd31b2ac843ec9ed",
+      "label": "GPT-5.6 Sol (high)",
+      "methodology": {
+        "auth": {
+          "ginaReadOnly": true,
+          "nativeLogin": true
+        },
+        "cleanChats": true,
+        "isolation": {
+          "freshConversation": true,
+          "sharedProviderCredentialProfile": true
+        },
+        "transcriptCaps": {
+          "finalAnswerRetained": true,
+          "overLimitToolResults": "omitted_whole",
+          "resultBytesRetained": true,
+          "toolResultLimitBytes": 65536
+        }
+      },
+      "model": "openai-codex/gpt-5.6-sol",
+      "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+      "nativeModel": "openai-codex/gpt-5.6-sol",
+      "nativeVersion": "omp/18.1.21",
+      "provider": "openai-codex",
+      "reasoning": "high",
+      "repetitions": 3,
+      "route": "omp",
+      "rowId": "sol-high",
+      "runs": [
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-5.6-sol-high",
+          "family": "spot",
+          "fixtureVersion": 1,
+          "runId": "sol-high-spot-20260916160628130",
+          "suiteId": "ask-gina-model-spot-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-5.6-sol-high",
+          "family": "perps",
+          "fixtureVersion": 1,
+          "runId": "sol-high-perps-20260916160628130",
+          "suiteId": "ask-gina-model-perps-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-5.6-sol-high",
+          "family": "predictions",
+          "fixtureVersion": 1,
+          "runId": "sol-high-predictions-20260916160628130",
+          "suiteId": "ask-gina-model-predictions-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        }
+      ],
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 18,
+            "graded": 65,
+            "passed": 47,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 7,
+            "unscored": 40
+          },
+          "raw": {
+            "failed": 18,
+            "graded": 65,
+            "passed": 47,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 7,
+            "unscored": 40
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "schedulerPolicy": {
+        "anthropic": 2,
+        "global": 6,
+        "openai-codex": 3,
+        "xai-oauth": 1
+      },
+      "sourceCommit": "1ad5387698bb530e37cf2b9d45ede27f5c530e23",
+      "sourceHashes": {
+        "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+        "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+        "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+        "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
+      },
+      "sourceKind": "git_checkout",
+      "sourceSnapshot": null,
+      "startedAt": "2026-09-16T16:06:28.130Z",
       "target": "omp_harness",
       "timeoutMs": 120000
     },
@@ -6355,7 +7509,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -6375,6 +7529,185 @@
       "sourceKind": "git_checkout",
       "sourceSnapshot": null,
       "startedAt": "2026-09-16T13:47:56.638Z",
+      "target": "omp_harness",
+      "timeoutMs": 120000
+    },
+    {
+      "attempts": 1,
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "copied": 43,
+        "credentialInSession": {
+          "false": 105,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 62,
+          "true": 43
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 62,
+          "true": 43
+        },
+        "resolvedModelIsFallback": {
+          "false": 43,
+          "null": 62,
+          "true": 0
+        },
+        "sessionFiles": 43,
+        "thinkingLevels": {
+          "max": 43,
+          "null": 62
+        },
+        "trialCount": 105
+      },
+      "candidate": "openai-codex-oauth-gpt-5.6-sol-max",
+      "caseFilter": null,
+      "cleanSource": true,
+      "complete": true,
+      "completedAt": "2026-09-16T23:55:26.619Z",
+      "digests": {
+        "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
+        "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+        "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+        "schedulerSha256": "d475c61a0316e85799d0925fca46100b15a9b20689e2d3e2dd677f57b3b5d221"
+      },
+      "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+      "durationMs": 3995260,
+      "families": [
+        "spot",
+        "perps",
+        "predictions"
+      ],
+      "fatal": false,
+      "fingerprint": "6e8acb27ed463bb817572cbf639edec4d82a77b839c360ce3d4c2b029e30c2cd",
+      "label": "GPT-5.6 Sol (max)",
+      "methodology": {
+        "auth": {
+          "ginaReadOnly": true,
+          "nativeLogin": true
+        },
+        "cleanChats": true,
+        "isolation": {
+          "freshConversation": true,
+          "sharedProviderCredentialProfile": true
+        },
+        "transcriptCaps": {
+          "finalAnswerRetained": true,
+          "overLimitToolResults": "omitted_whole",
+          "resultBytesRetained": true,
+          "toolResultLimitBytes": 65536
+        }
+      },
+      "model": "openai-codex/gpt-5.6-sol",
+      "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+      "nativeModel": "openai-codex/gpt-5.6-sol",
+      "nativeVersion": "omp/18.1.21",
+      "provider": "openai-codex",
+      "reasoning": "max",
+      "repetitions": 3,
+      "route": "omp",
+      "rowId": "sol-max",
+      "runs": [
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-5.6-sol-max",
+          "family": "spot",
+          "fixtureVersion": 1,
+          "runId": "sol-max-spot-20260916224851359",
+          "suiteId": "ask-gina-model-spot-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-5.6-sol-max",
+          "family": "perps",
+          "fixtureVersion": 1,
+          "runId": "sol-max-perps-20260916224851359",
+          "suiteId": "ask-gina-model-perps-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-5.6-sol-max",
+          "family": "predictions",
+          "fixtureVersion": 1,
+          "runId": "sol-max-predictions-20260916224851359",
+          "suiteId": "ask-gina-model-predictions-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        }
+      ],
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 8,
+            "graded": 36,
+            "passed": 28,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 7,
+            "unscored": 69
+          },
+          "raw": {
+            "failed": 8,
+            "graded": 36,
+            "passed": 28,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 7,
+            "unscored": 69
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "schedulerPolicy": {
+        "anthropic": 2,
+        "global": 6,
+        "openai-codex": 3,
+        "xai-oauth": 1
+      },
+      "sourceCommit": "1ad5387698bb530e37cf2b9d45ede27f5c530e23",
+      "sourceHashes": {
+        "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+        "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+        "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+        "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
+      },
+      "sourceKind": "git_checkout",
+      "sourceSnapshot": null,
+      "startedAt": "2026-09-16T22:48:51.359Z",
       "target": "omp_harness",
       "timeoutMs": 120000
     },
@@ -6533,7 +7866,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -6553,6 +7886,185 @@
       "sourceKind": "git_checkout",
       "sourceSnapshot": null,
       "startedAt": "2026-09-16T14:55:13.394Z",
+      "target": "omp_harness",
+      "timeoutMs": 120000
+    },
+    {
+      "attempts": 1,
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "copied": 82,
+        "credentialInSession": {
+          "false": 105,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 23,
+          "true": 82
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 23,
+          "true": 82
+        },
+        "resolvedModelIsFallback": {
+          "false": 82,
+          "null": 23,
+          "true": 0
+        },
+        "sessionFiles": 82,
+        "thinkingLevels": {
+          "high": 82,
+          "null": 23
+        },
+        "trialCount": 105
+      },
+      "candidate": "openai-codex-oauth-gpt-5.6-terra-high",
+      "caseFilter": null,
+      "cleanSource": true,
+      "complete": true,
+      "completedAt": "2026-09-16T17:58:45.412Z",
+      "digests": {
+        "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
+        "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+        "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+        "schedulerSha256": "d475c61a0316e85799d0925fca46100b15a9b20689e2d3e2dd677f57b3b5d221"
+      },
+      "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+      "durationMs": 6538208,
+      "families": [
+        "spot",
+        "perps",
+        "predictions"
+      ],
+      "fatal": false,
+      "fingerprint": "8202ea1fc81bd5d7e50fac6a6c7ed5517245f5c45b7936437b3a818058de577f",
+      "label": "GPT-5.6 Terra (high)",
+      "methodology": {
+        "auth": {
+          "ginaReadOnly": true,
+          "nativeLogin": true
+        },
+        "cleanChats": true,
+        "isolation": {
+          "freshConversation": true,
+          "sharedProviderCredentialProfile": true
+        },
+        "transcriptCaps": {
+          "finalAnswerRetained": true,
+          "overLimitToolResults": "omitted_whole",
+          "resultBytesRetained": true,
+          "toolResultLimitBytes": 65536
+        }
+      },
+      "model": "openai-codex/gpt-5.6-terra",
+      "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+      "nativeModel": "openai-codex/gpt-5.6-terra",
+      "nativeVersion": "omp/18.1.21",
+      "provider": "openai-codex",
+      "reasoning": "high",
+      "repetitions": 3,
+      "route": "omp",
+      "rowId": "terra-high",
+      "runs": [
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-5.6-terra-high",
+          "family": "spot",
+          "fixtureVersion": 1,
+          "runId": "terra-high-spot-20260916160947204",
+          "suiteId": "ask-gina-model-spot-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-5.6-terra-high",
+          "family": "perps",
+          "fixtureVersion": 1,
+          "runId": "terra-high-perps-20260916160947204",
+          "suiteId": "ask-gina-model-perps-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-5.6-terra-high",
+          "family": "predictions",
+          "fixtureVersion": 1,
+          "runId": "terra-high-predictions-20260916160947204",
+          "suiteId": "ask-gina-model-predictions-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        }
+      ],
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 29,
+            "graded": 79,
+            "passed": 50,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 4,
+            "unscored": 26
+          },
+          "raw": {
+            "failed": 29,
+            "graded": 79,
+            "passed": 50,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 4,
+            "unscored": 26
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "schedulerPolicy": {
+        "anthropic": 2,
+        "global": 6,
+        "openai-codex": 3,
+        "xai-oauth": 1
+      },
+      "sourceCommit": "1ad5387698bb530e37cf2b9d45ede27f5c530e23",
+      "sourceHashes": {
+        "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+        "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+        "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+        "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
+      },
+      "sourceKind": "git_checkout",
+      "sourceSnapshot": null,
+      "startedAt": "2026-09-16T16:09:47.204Z",
       "target": "omp_harness",
       "timeoutMs": 120000
     },
@@ -6711,7 +8223,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },
@@ -6731,6 +8243,185 @@
       "sourceKind": "git_checkout",
       "sourceSnapshot": null,
       "startedAt": "2026-09-16T13:47:56.663Z",
+      "target": "omp_harness",
+      "timeoutMs": 120000
+    },
+    {
+      "attempts": 1,
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "copied": 39,
+        "credentialInSession": {
+          "false": 105,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 105,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 66,
+          "true": 39
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 66,
+          "true": 39
+        },
+        "resolvedModelIsFallback": {
+          "false": 39,
+          "null": 66,
+          "true": 0
+        },
+        "sessionFiles": 39,
+        "thinkingLevels": {
+          "max": 39,
+          "null": 66
+        },
+        "trialCount": 105
+      },
+      "candidate": "openai-codex-oauth-gpt-5.6-terra-max",
+      "caseFilter": null,
+      "cleanSource": true,
+      "complete": true,
+      "completedAt": "2026-09-17T00:49:38.936Z",
+      "digests": {
+        "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
+        "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+        "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+        "schedulerSha256": "d475c61a0316e85799d0925fca46100b15a9b20689e2d3e2dd677f57b3b5d221"
+      },
+      "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+      "durationMs": 7247575,
+      "families": [
+        "spot",
+        "perps",
+        "predictions"
+      ],
+      "fatal": false,
+      "fingerprint": "242802c562d0c64b2c5b214ac7067ac20a73c7b50f7dd3363074979550ab3dfa",
+      "label": "GPT-5.6 Terra (max)",
+      "methodology": {
+        "auth": {
+          "ginaReadOnly": true,
+          "nativeLogin": true
+        },
+        "cleanChats": true,
+        "isolation": {
+          "freshConversation": true,
+          "sharedProviderCredentialProfile": true
+        },
+        "transcriptCaps": {
+          "finalAnswerRetained": true,
+          "overLimitToolResults": "omitted_whole",
+          "resultBytesRetained": true,
+          "toolResultLimitBytes": 65536
+        }
+      },
+      "model": "openai-codex/gpt-5.6-terra",
+      "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+      "nativeModel": "openai-codex/gpt-5.6-terra",
+      "nativeVersion": "omp/18.1.21",
+      "provider": "openai-codex",
+      "reasoning": "max",
+      "repetitions": 3,
+      "route": "omp",
+      "rowId": "terra-max",
+      "runs": [
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-5.6-terra-max",
+          "family": "spot",
+          "fixtureVersion": 1,
+          "runId": "terra-max-spot-20260916224851361",
+          "suiteId": "ask-gina-model-spot-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-5.6-terra-max",
+          "family": "perps",
+          "fixtureVersion": 1,
+          "runId": "terra-max-perps-20260916224851361",
+          "suiteId": "ask-gina-model-perps-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        },
+        {
+          "accountClass": "oauth-readonly",
+          "candidate": "openai-codex-oauth-gpt-5.6-terra-max",
+          "family": "predictions",
+          "fixtureVersion": 1,
+          "runId": "terra-max-predictions-20260916224851361",
+          "suiteId": "ask-gina-model-predictions-v1",
+          "suiteVersion": 1,
+          "target": "omp_harness"
+        }
+      ],
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 6,
+            "graded": 31,
+            "passed": 25,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 9,
+            "unscored": 74
+          },
+          "raw": {
+            "failed": 6,
+            "graded": 31,
+            "passed": 25,
+            "pending": 0,
+            "planned": 105,
+            "terminal": 105,
+            "timeouts": 9,
+            "unscored": 74
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "schedulerPolicy": {
+        "anthropic": 2,
+        "global": 6,
+        "openai-codex": 3,
+        "xai-oauth": 1
+      },
+      "sourceCommit": "1ad5387698bb530e37cf2b9d45ede27f5c530e23",
+      "sourceHashes": {
+        "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+        "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+        "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+        "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
+      },
+      "sourceKind": "git_checkout",
+      "sourceSnapshot": null,
+      "startedAt": "2026-09-16T22:48:51.361Z",
       "target": "omp_harness",
       "timeoutMs": 120000
     },
@@ -6889,7 +8580,7 @@
         "rawEvidenceUnchanged": true,
         "receipt": "classification-receipt.json",
         "receiptAvailability": "withheld",
-        "receiptSha256": "b6304e70f03bf695b0542f4c22d4bdb396c72a735fecff0502283cf30305958c",
+        "receiptSha256": "a435de460ba44a99d1af4acd9f05b60b3c53907be6e94fbbb62a7153aa6a2cea",
         "schemaVersion": "ask-gina-runtime-classification.v1",
         "scope": "post-run-runtime-classification"
       },

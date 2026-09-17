@@ -186,9 +186,9 @@ describe("canonical models and runs", () => {
     expect(history.every((run) => run.modelId === "claude-fable")).toBe(true);
     expect(
       history
-        .filter((run) => run.runId === "devin-fable-low-spot-1" || run.runId === "fable-spot-1")
+        .filter((run) => run.runId === "fable-low-spot-1" || run.runId === "fable-spot-1")
         .map((run) => run.runId),
-    ).toEqual(["devin-fable-low-spot-1", "fable-spot-1"]);
+    ).toEqual(["fable-low-spot-1", "fable-spot-1"]);
 
     for (const family of ["Spot", "Perps", "Predictions"] as const) {
       expect(runHistoryFor("claude-fable", family)).toEqual(
@@ -228,12 +228,12 @@ describe("reasoning sweep runs", () => {
       expect(artifact.planned).toBe(artifact.models.reduce((sum, row) => sum + row.planned, 0));
     }
     expect(reasoningSweepPublication).toEqual({
-      publishedRows: 25,
-      publishedSlots: 2625,
+      publishedRows: 34,
+      publishedSlots: 3570,
       plannedRows: 35,
       plannedSlots: 3675,
     });
-    expect(rows).toHaveLength(25);
+    expect(rows).toHaveLength(34);
     expect(new Set(rows.map((row) => row.rowId)).size).toBe(rows.length);
     expect(runs).toHaveLength(rows.length * 3);
     expect(runs.reduce((sum, run) => sum + run.counts.planned, 0)).toBe(
@@ -278,15 +278,20 @@ describe("reasoning sweep runs", () => {
     }
   });
 
-  test("keeps the exact Fable identity on its fallback route without moving healthy Opus", () => {
+  test("keeps the exact Fable and Opus identities on their native OAuth route", () => {
     const fableRuns = runs.filter((run) => run.modelId === "claude-fable");
     const opusRuns = runs.filter((run) => run.modelId === "claude-opus");
-    expect(fableRuns).toHaveLength(12);
-    expect(opusRuns.length).toBeGreaterThan(0);
+    expect(fableRuns).toHaveLength(9);
+    expect(opusRuns).toHaveLength(12);
+    expect([...new Set(fableRuns.map((run) => run.configuration.reasoning))].sort()).toEqual([
+      "high",
+      "low",
+      "medium",
+    ]);
     expect(
       fableRuns.every(
         (run) =>
-          run.cohort.target === "devin_cli" &&
+          run.cohort.target === "omp_harness" &&
           run.configuration.model === "anthropic/claude-fable-5-1",
       ),
     ).toBe(true);

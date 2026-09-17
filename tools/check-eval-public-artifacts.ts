@@ -210,25 +210,25 @@ const APPROVED_CLAUDE_ARTIFACTS: Readonly<Record<string, string>> = {
   "src/results/2026-09-14/claude-comparison/verification.json":
     "2e94fc424fd8f5d113cc12eaf1652ed6543d752f1c0f0a8bdae6169cff49dabd",
   "src/results/2026-09-16/reasoning-sweep/ask-gina-reasoning-sweep-claude.json":
-    "2251a59ddd477dddd9d1831634782e25cf64aafb59a8f49cdb458b7bc4f97a16",
+    "9a4c53e99cc47b1170ec808d722c751e29d637282f9828951e7a286a0363cc53",
   "src/results/2026-09-16/reasoning-sweep/reproduction/provenance.json":
-    "8e26080dd94fa33802803d5f8c4b203a287a9a7a5e6ec9d4421c32087e2ee425",
+    "d4c0ef9b187809deb33b5ba1452acad0a23bb71e21d0b0072a4f4daa0190ab1a",
   "src/results/2026-09-16/reasoning-sweep/verification.json":
-    "33ba9d49e2218b901db7230acf3b8503034a99b898c8a3a8139ad8f0866b8fb5",
-  "src/results/2026-09-16/reasoning-sweep/rows/devin-fable-high.json":
-    "e4f1ec6eac7758fa212a7118c74908299d9111714c64eeb919d9eb78075492ac",
-  "src/results/2026-09-16/reasoning-sweep/rows/devin-fable-low.json":
-    "23321f3435bc37f9db9ec552160b538f83b3c83f0e5952b0197e9e2ec3d32a98",
-  "src/results/2026-09-16/reasoning-sweep/rows/devin-fable-max.json":
-    "ae20f924e55291b8aa9b70283fbf4d13dbeeaa208e318fe377b3ac9f5ab7d994",
-  "src/results/2026-09-16/reasoning-sweep/rows/devin-fable-medium.json":
-    "c5349e539be95d1170d4ad032a686497ea67567c8d56ff7b0301c4ecf27474a2",
+    "d67a5f5d6451e221ba8143e192acb8e68dbeb7dbab70d1493abadf64bc1681da",
+  "src/results/2026-09-16/reasoning-sweep/rows/fable-high.json":
+    "37a0b4c78b4a54297d6fdc7bdfadcfe71f487a73651ea3cfbe9bcd6d22378eaf",
+  "src/results/2026-09-16/reasoning-sweep/rows/fable-low.json":
+    "315c405c949546e74466c6b2f5eeb54e6c59d1b3573b5101977c80e2f54a2a98",
+  "src/results/2026-09-16/reasoning-sweep/rows/fable-medium.json":
+    "f36941bc6e4092827a08a3316ba37374abce7984b41425d8abb5d2e6bd828dfd",
   "src/results/2026-09-16/reasoning-sweep/rows/opus-high.json":
-    "a2e2df1867fa194afaffd8aded5a8c34624004fdb2580d01403f65d941dc4705",
+    "ca042bd06cdb68f9d95af5d60d419bca8258226b018c60ce7fc51585f9770806",
   "src/results/2026-09-16/reasoning-sweep/rows/opus-low.json":
-    "8d6dc429f29d04da550aeaae9b843845d692c16d68a541ad3133babb2967722c",
+    "b3fb48b83a2c728eed5ca832dec041995db1247b701ed66dcd3cda6bbe822a1d",
+  "src/results/2026-09-16/reasoning-sweep/rows/opus-max.json":
+    "8145283ce8e54a709210171c2e4ca802c7d4785e145720a6f13d050dff939101",
   "src/results/2026-09-16/reasoning-sweep/rows/opus-medium.json":
-    "81c1d22deed01918d26e9953e692769332b7354607f5324f2ff969d4b7abb128",
+    "aa20cc9c6eb5f20ccd123194c21094aa5ecd8e78b46e7afb575c300d6f14a301",
 };
 const textDecoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const decodeArtifactJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
