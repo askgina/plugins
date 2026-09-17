@@ -54,8 +54,8 @@ body,
 }
 .eval-wordmark {
   display: flex;
-  align-items: baseline;
-  gap: 3px;
+  align-items: center;
+  gap: 8px;
   flex-shrink: 0;
 }
 .eval-wordmark strong {
@@ -63,19 +63,11 @@ body,
   font-weight: 600;
   letter-spacing: -1.3px;
 }
-.eval-wordmark > span {
-  color: #737373;
-  font-size: 13px;
-}
-.eval-brand-dot {
-  color: var(--eval-red);
-  padding: 0 3px 0 4px;
-}
 .eval-nav {
   display: flex;
   align-items: center;
   gap: 28px;
-  margin: 0 auto;
+  margin: 0 0 0 auto;
 }
 .eval-nav a {
   font-size: 12px;
@@ -97,11 +89,6 @@ body,
   right: 0;
   bottom: 0;
 }
-.eval-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
 .eval-demo-label {
   font-size: 10px;
   line-height: 1.4;
@@ -110,18 +97,6 @@ body,
   border-radius: 7px;
   padding: 6px 10px;
   white-space: nowrap;
-}
-.eval-run-button {
-  height: 38px;
-  border-radius: 10px;
-  background: #0b0b0d;
-  color: white;
-  font-size: 11px;
-  gap: 15px;
-  box-shadow: 0 5px 14px #0b0b0d12;
-}
-.eval-run-button:hover {
-  background: #2b2b2d;
 }
 .eval-main {
   outline: none;
@@ -279,6 +254,15 @@ body,
   height: 48px;
   font-size: 32px;
 }
+.eval-avatar.eval-avatar-logo {
+  background: transparent;
+}
+.eval-avatar-logo img {
+  display: block;
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+}
 .eval-avatar-claude-4 {
   background: #e9d2bc;
   color: #4f2e1a;
@@ -403,14 +387,6 @@ body,
   border-radius: 10px;
   padding: 18px;
 }
-.eval-run-intro {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-}
-.eval-run-intro svg {
-  flex-shrink: 0;
-}
 .eval-text-link {
   display: inline-flex;
   gap: 8px;
@@ -460,14 +436,11 @@ body,
     padding: 18px 32px;
     gap: 22px;
   }
-  .eval-demo-label {
+  .eval-header .eval-demo-label {
     display: none;
   }
   .eval-nav {
     gap: 22px;
-  }
-  .eval-header-actions {
-    gap: 8px;
   }
 }
 @media (max-width: 760px) {
@@ -476,17 +449,8 @@ body,
     padding: 18px 22px 0;
     gap: 16px;
   }
-  .eval-header-actions {
-    margin-left: auto;
-  }
   .eval-wordmark strong {
     font-size: 22px;
-  }
-  .eval-run-button {
-    height: 34px;
-    font-size: 10px;
-    padding: 0 10px;
-    gap: 8px;
   }
   .eval-nav {
     order: 3;
@@ -552,4 +516,24 @@ body,
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* Shared measured-result formatting, also used by model and comparison views. */
+.lb-count {
+  color: var(--eval-green);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.lb-measured-pill {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--green-6);
+  border-radius: 999px;
+  color: var(--eval-green);
+  font-size: 9px;
+  line-height: 1;
+  padding: 3px 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }

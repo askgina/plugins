@@ -7,7 +7,8 @@ import { TaskExplorerPage } from "./pages/task-explorer";
 import { MethodologyPage } from "./pages/methodology";
 import { HandoffPage } from "./pages/handoff";
 import { ComparePage } from "./canonical/pages/compare";
-import { matchPath, parseRoute, useHashRoute } from "./router";
+import { matchPath, navigate, parseRoute, useHashRoute } from "./router";
+import { PROTOTYPE_FAMILIES } from "./canonical/canonical";
 
 interface RouteEntry {
   readonly pattern: string;
@@ -24,7 +25,25 @@ const ROUTES: readonly RouteEntry[] = [
     title: "Models",
     render: (params) => <ModelProfilePage modelId={params.id ?? ""} />,
   },
-  { pattern: "/tasks", title: "Tasks", render: () => <TaskExplorerPage /> },
+  {
+    pattern: "/tasks",
+    title: "Tasks",
+    render: (_params, query) => (
+      <TaskExplorerPage
+        initialFamily={
+          PROTOTYPE_FAMILIES.find((family) => family === query.get("category")) ?? "Spot"
+        }
+        initialModelId={query.get("model") ?? undefined}
+        initialCaseId={query.get("task") ?? undefined}
+        onNavigate={(family, modelId, caseId) => {
+          const next = new URLSearchParams({ category: family });
+          if (modelId) next.set("model", modelId);
+          if (caseId) next.set("task", caseId);
+          navigate(`/tasks?${next.toString()}`);
+        }}
+      />
+    ),
+  },
   {
     pattern: "/compare",
     title: "Compare",
@@ -47,7 +66,7 @@ export default function App() {
     document.title = `${matched?.entry.title ?? "Not found"} · Ask Gina Evals`;
   }, [matched]);
   return (
-    <Fragment key={route}>
+    <Fragment key={parsed.path === "/tasks" ? parsed.path : route}>
       {matched ? (
         matched.entry.render(matched.params, parsed.query)
       ) : (
