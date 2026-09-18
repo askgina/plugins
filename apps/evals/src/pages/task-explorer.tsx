@@ -1,30 +1,42 @@
-import { Fragment, useEffect, useState } from "react";
-import { ChevronDown, Search } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, ChevronRight, Search, X } from "lucide-react";
 import {
-  CHECK_NAMES,
   PROTOTYPE_FAMILIES,
-  type CanonicalAttempt,
   type CanonicalCaseDefinition,
-  type CanonicalRun,
   type PrototypeFamily,
 } from "../canonical/canonical";
-import { CheckMark, EvidenceValue } from "../canonical/components";
+import { EvidenceValue } from "../canonical/components";
 import {
   caseDefinitionsForFamily,
   configurationLeaderboardRows,
   getCaseDefinition,
-  getRun,
-  sortLeaderboardRows,
   summarizeTask,
   unifiedLeaderboardRows,
   type LeaderboardModelRow,
+  type TaskSummary,
 } from "../canonical/selectors";
 import { ModelAvatar, PageShell } from "../components/eval-ui";
-import { InfoPopover, ResultsHeader, RunDetails, seconds } from "../components/results-ui";
+import { ResultsHeader, seconds } from "../components/results-ui";
 import { ConversationPanel } from "../components/conversation-panel";
+import { AttemptChecks, TaskCriteria, TaskRunEvidence } from "../components/task-evidence";
+import {
+  attemptLabel,
+  taskRunOptions,
+  taskSettingLabel,
+  type TaskSelection,
+  type TaskView,
+} from "../lib/task-workspace";
+import "../styles/task-workspace.css";
 
-const defaultRows = sortLeaderboardRows(unifiedLeaderboardRows());
+const defaultRows = [...unifiedLeaderboardRows()].sort((a, b) =>
+  a.model.name.localeCompare(b.model.name),
+);
 const configurationRows = configurationLeaderboardRows();
+const views = [
+  { id: "conversation", label: "Conversation" },
+  { id: "checks", label: "Checks" },
+  { id: "run", label: "Run details" },
+] as const;
 
 const taskNames: Record<string, string> = {
   "spot-token-metadata": "Token information",
@@ -68,328 +80,33 @@ const taskNames: Record<string, string> = {
 };
 const taskName = (definition: CanonicalCaseDefinition) =>
   taskNames[definition.caseId] ?? definition.title;
-const checkNames = {
-  routing: "Tool selection",
-  arguments: "Arguments",
-  safety: "Restrictions",
-  completion: "Completion",
-  skillActivation: "Skill activation",
-};
 
-function attemptLabel(attempt: CanonicalAttempt | undefined): string {
-  if (!attempt) return "Not recorded";
-  if (attempt.execution === "timed_out") return "Timed out";
-  if (attempt.execution === "runtime_failure") return "Run error";
-  if (attempt.execution === "pending") return "Pending";
-  if (attempt.execution === "unstarted") return "Not started";
-  if (attempt.execution === "unknown") return "Unknown";
-  return attempt.verdict === "pass"
-    ? "Passed"
-    : attempt.verdict === "fail"
-      ? "Failed"
-      : "Not graded";
-}
-
-function GradingInfo({ definition }: { definition: CanonicalCaseDefinition }) {
+function TaskOutcome({ summary }: { summary: TaskSummary }) {
+  if (summary.status === "available")
+    return (
+      <span>
+        {summary.passed}/{summary.started} passed
+      </span>
+    );
+  if (summary.status === "not_evaluated") return <span>Not evaluated</span>;
+  if (summary.status === "unavailable") return <span>Results unavailable</span>;
+  const failed = summary.slots.filter((entry) => entry?.verdict === "fail").length;
+  const timedOut = summary.slots.filter((entry) => entry?.execution === "timed_out").length;
+  const errors = summary.slots.filter((entry) => entry?.execution === "runtime_failure").length;
   return (
-    <InfoPopover label={`Grading criteria: ${taskName(definition)}`}>
-      <ul>
-        <li>
-          {definition.routingKind === "sequence"
-            ? "Call the required tools in order."
-            : "Make exactly one call to the required tool."}
-        </li>
-        <li>
-          {definition.requiredArguments
-            ? "Use the required argument values. Extra fields are allowed."
-            : "No task-specific argument values are required."}
-        </li>
-        <li>Finish the attempt and tool calls without errors.</li>
-        {(definition.forbiddenTools.length > 0 || definition.forbiddenScopes.length > 0) && (
-          <li>Avoid the forbidden tools and permissions listed in Technical details.</li>
-        )}
-      </ul>
-      <p>
-        Final-answer accuracy is not scored. Exact tool and argument requirements are in Technical
-        details.
-      </p>
-    </InfoPopover>
-  );
-}
-
-function AttemptDetails({ attempt }: { attempt: CanonicalAttempt }) {
-  return (
-    <div className="task-attempt-details">
-      <h4>
-        Attempt {attempt.repetition}: {attemptLabel(attempt)}
-      </h4>
-      <EvidenceValue
-        evidence={attempt.checks}
-        renderValue={(checks) => (
-          <dl className="task-checks">
-            {CHECK_NAMES.map((name) => (
-              <div key={name}>
-                <dt>{checkNames[name]}</dt>
-                <dd>
-                  <CheckMark outcome={checks[name]} />
-                </dd>
-              </div>
-            ))}
-          </dl>
-        )}
-      />
-      <dl className="results-facts">
-        <div>
-          <dt>Failure reasons</dt>
-          <dd>
-            {attempt.failureCategories.length
-              ? attempt.failureCategories.map((reason) => reason.replaceAll("_", " ")).join(", ")
-              : attempt.verdict === "pass"
-                ? "None"
-                : "No further reason recorded"}
-          </dd>
-        </div>
-        <div>
-          <dt>Time</dt>
-          <dd>
-            <EvidenceValue evidence={attempt.durationMs} renderValue={seconds} />
-          </dd>
-        </div>
-        {attempt.execution === "runtime_failure" && (
-          <div>
-            <dt>Wall time</dt>
-            <dd>
-              <EvidenceValue evidence={attempt.wallDurationMs} renderValue={seconds} />
-            </dd>
-          </div>
-        )}
-        <div>
-          <dt>Token usage</dt>
-          <dd>
-            <EvidenceValue
-              evidence={attempt.tokenUsage}
-              renderValue={(usage) =>
-                `${usage.inputTokens.toLocaleString()} input / ${usage.outputTokens.toLocaleString()} output`
-              }
-            />
-          </dd>
-        </div>
-        <div>
-          <dt>Checks recorded as</dt>
-          <dd>
-            {attempt.checkSource === "native" ? "Native checks" : "Derived from recorded scores"}
-          </dd>
-        </div>
-        <div>
-          <dt>Answer</dt>
-          <dd>
-            <EvidenceValue
-              evidence={attempt.answer}
-              renderValue={(answer) => <pre className="task-answer">{answer}</pre>}
-            />
-          </dd>
-        </div>
-        <div>
-          <dt>Tool calls</dt>
-          <dd>
-            <EvidenceValue
-              evidence={attempt.toolCalls}
-              renderValue={(calls) =>
-                calls.length ? (
-                  <ul>
-                    {calls.map((call, index) => (
-                      <li key={`${call.name}-${index}`}>
-                        <code>{call.name}</code>
-                        {call.error ? " (error)" : ""}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  "No tool calls"
-                )
-              }
-            />
-          </dd>
-        </div>
-      </dl>
-      <ConversationPanel reference={attempt.conversation} />
-    </div>
-  );
-}
-
-function TaskDetail({
-  definition,
-  rows,
-  modelId,
-  onModel,
-}: {
-  definition: CanonicalCaseDefinition;
-  rows: readonly LeaderboardModelRow[];
-  modelId: string;
-  onModel: (id: string) => void;
-}) {
-  const row = rows.find((entry) => entry.model.id === modelId) ?? rows[0];
-  const run = row?.runs[definition.family];
-  const summary = summarizeTask(run, definition.caseId);
-  const [repetition, setRepetition] = useState<number | null>(null);
-  const attempt = summary.slots.find((entry) => entry?.repetition === repetition);
-  return (
-    <div className="results-detail-body task-detail">
-      <h3>{taskName(definition)}</h3>
-      <h4>Full prompt</h4>
-      <EvidenceValue
-        evidence={definition.prompt}
-        renderValue={(prompt) => <blockquote className="task-full-prompt">{prompt}</blockquote>}
-      />
-      <div className="task-model-picker">
-        <label htmlFor={`model-${definition.caseId}`}>Model</label>
-        <select
-          id={`model-${definition.caseId}`}
-          value={row?.model.id ?? ""}
-          onChange={(event) => {
-            setRepetition(null);
-            onModel(event.target.value);
-          }}
-        >
-          {rows.map((entry) => (
-            <option key={entry.model.id} value={entry.model.id}>
-              {entry.model.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      {summary.status !== "available" && (
-        <p role="status">
-          {summary.status === "not_evaluated"
-            ? "Not evaluated"
-            : summary.status === "incomplete"
-              ? "Incomplete results"
-              : "Results unavailable"}
-          : {summary.reason}
-        </p>
-      )}
-      <div className="task-attempts" aria-label="Attempts">
-        {summary.slots.map((entry, index) => (
-          <button
-            key={index}
-            type="button"
-            disabled={!entry}
-            aria-pressed={entry !== undefined && repetition === entry.repetition}
-            className={`task-attempt ${entry?.verdict === "pass" ? "task-attempt-pass" : ""}`}
-            onClick={() => setRepetition(entry?.repetition ?? null)}
-          >
-            <span>Attempt {index + 1}</span>
-            <strong>{attemptLabel(entry)}</strong>
-          </button>
-        ))}
-      </div>
-      {attempt && <AttemptDetails attempt={attempt} />}
-      <details className="results-accordion">
-        <summary>Technical details</summary>
-        <div>
-          <dl className="results-facts">
-            <div>
-              <dt>Task identifier</dt>
-              <dd>
-                <code>{definition.caseId}</code>
-              </dd>
-            </div>
-            <div>
-              <dt>Suite</dt>
-              <dd>
-                <code>{definition.suiteId}</code> v{definition.suiteVersion}
-              </dd>
-            </div>
-            <div>
-              <dt>Expected behavior</dt>
-              <dd>{definition.expectedBehavior}</dd>
-            </div>
-            <div>
-              <dt>Required arguments</dt>
-              <dd>
-                {definition.requiredArguments ? (
-                  <pre>{JSON.stringify(definition.requiredArguments, null, 2)}</pre>
-                ) : (
-                  "No task-specific constraints"
-                )}
-              </dd>
-            </div>
-            <div>
-              <dt>Forbidden tools</dt>
-              <dd>{definition.forbiddenTools.join(", ") || "None declared"}</dd>
-            </div>
-            <div>
-              <dt>Forbidden permissions</dt>
-              <dd>{definition.forbiddenScopes.join(", ") || "None declared"}</dd>
-            </div>
-          </dl>
-          <h4>Recorded grading rules</h4>
-          <ul>
-            {definition.gradingCriteria.map((criterion) => (
-              <li key={criterion}>{criterion}</li>
-            ))}
-          </ul>
-          {run && (
-            <>
-              <RunDetails run={run} />
-              <dl className="results-facts">
-                <div>
-                  <dt>Source</dt>
-                  <dd>
-                    {run.provenance.sourceLabel}
-                    <br />
-                    <code>{run.provenance.sourceCommit}</code>
-                  </dd>
-                </div>
-                <div>
-                  <dt>Artifact hash</dt>
-                  <dd>
-                    <code>{run.provenance.sourceArtifactSha256 ?? "Not retained"}</code>
-                  </dd>
-                </div>
-              </dl>
-              {run.notes.map((note) => (
-                <p key={note}>{note}</p>
-              ))}
-            </>
-          )}
-        </div>
-      </details>
-    </div>
-  );
-}
-
-function TaskResult({
-  run,
-  caseId,
-  onClick,
-}: {
-  run: CanonicalRun | undefined;
-  caseId: string;
-  onClick: () => void;
-}) {
-  const summary = summarizeTask(run, caseId);
-  if (summary.status === "not_evaluated")
-    return <span className="task-unavailable">Not evaluated</span>;
-  return (
-    <button className="task-result" onClick={onClick}>
-      {summary.status === "available" ? (
-        <>
-          {summary.passed}/{summary.started} <span>passed</span>
-        </>
-      ) : summary.status === "incomplete" ? (
-        <span>
-          {summary.passed} passed ·{" "}
-          {summary.slots.filter((attempt) => attempt?.verdict === "fail").length} failed
-          <br />
-          {summary.slots.filter((attempt) => attempt?.execution === "timed_out").length} timed out ·{" "}
-          {summary.slots.filter((attempt) => attempt?.execution === "runtime_failure").length} run
-          errors
-        </span>
-      ) : (
-        "Results unavailable"
-      )}
-    </button>
+    <>
+      <span>
+        {summary.passed} passed · {failed} failed
+      </span>
+      <small>
+        {[
+          timedOut ? `${timedOut} timed out` : "",
+          errors ? `${errors} run ${errors === 1 ? "error" : "errors"}` : "",
+        ]
+          .filter(Boolean)
+          .join(" · ") || "Incomplete results"}
+      </small>
+    </>
   );
 }
 
@@ -398,6 +115,8 @@ export function TaskExplorerPage({
   initialCaseId,
   initialModelId,
   initialRunId,
+  initialAttempt,
+  initialView = import.meta.env.DEV ? "conversation" : "checks",
   initialSearch = "",
   onNavigate,
   rows: sourceRows = defaultRows,
@@ -406,91 +125,121 @@ export function TaskExplorerPage({
   initialCaseId?: string;
   initialModelId?: string;
   initialRunId?: string;
+  initialAttempt?: number;
+  initialView?: TaskView;
   initialSearch?: string;
-  onNavigate?: (family: PrototypeFamily, modelId?: string, caseId?: string) => void;
+  onNavigate?: (selection: TaskSelection) => void;
   rows?: readonly LeaderboardModelRow[];
 }) {
-  const selectedRun = initialRunId ? getRun(initialRunId) : undefined;
-  const selectedConfiguration = configurationRows.find((row) =>
-    Object.values(row.runs).some((run) => run.runId === initialRunId),
-  );
-  const rows =
-    selectedRun && selectedRun.modelId === initialModelId
-      ? sourceRows.map((row) =>
-          row.model.id === selectedRun.modelId
-            ? {
-                ...row,
-                runs: selectedConfiguration?.runs ?? {
-                  ...row.runs,
-                  [selectedRun.family]: selectedRun,
-                },
-              }
-            : row,
-        )
-      : sourceRows;
-  const validCase = initialCaseId ? getCaseDefinition(initialCaseId) : undefined;
-  const initialCategory = validCase?.family ?? initialFamily;
-  const [family, setFamily] = useState<PrototypeFamily>(initialCategory);
-  const displayedRun = selectedConfiguration?.runs[family] ?? selectedRun;
+  const [selection, setSelection] = useState<TaskSelection>({
+    family: initialFamily,
+    caseId: initialCaseId,
+    modelId: initialModelId,
+    runId: initialRunId,
+    attempt: initialAttempt,
+    view: initialView,
+  });
   const [search, setSearch] = useState(initialSearch);
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(
-    new Set(validCase ? [validCase.caseId] : []),
-  );
-  const [models, setModels] = useState<Readonly<Record<string, string>>>({});
-  // URL changes include browser back/forward, not only actions inside this page.
+  const [modelSearch, setModelSearch] = useState("");
+  const evidenceBody = useRef<HTMLDivElement>(null);
+  const modelList = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    setFamily(initialCategory);
-    setSearch(initialSearch);
-  }, [initialCategory, initialSearch]);
-  useEffect(() => {
-    if (validCase) {
-      setExpanded((current) => new Set([...current, validCase.caseId]));
-      if (initialModelId)
-        setModels((current) => ({ ...current, [validCase.caseId]: initialModelId }));
-    }
-  }, [validCase, initialModelId]);
+    setSelection({
+      family: initialFamily,
+      caseId: initialCaseId,
+      modelId: initialModelId,
+      runId: initialRunId,
+      attempt: initialAttempt,
+      view: initialView,
+    });
+  }, [initialFamily, initialCaseId, initialModelId, initialRunId, initialAttempt, initialView]);
+  useEffect(() => setSearch(initialSearch), [initialSearch]);
+
+  const family =
+    (selection.caseId ? getCaseDefinition(selection.caseId)?.family : undefined) ??
+    selection.family;
   const definitions = caseDefinitionsForFamily(family);
   const query = search.trim().toLocaleLowerCase();
-  const shown = definitions.filter((definition) =>
+  const shownTasks = definitions.filter((definition) =>
     `${taskName(definition)} ${definition.prompt.availability === "available" ? definition.prompt.value : ""}`
       .toLocaleLowerCase()
       .includes(query),
   );
-  const defaultModel =
-    rows.find((row) => row.model.id === initialModelId)?.model.id ?? rows[0]?.model.id ?? "";
-  function select(caseId: string, modelId: string) {
-    setExpanded((current) => new Set([...current, caseId]));
-    setModels((current) => ({ ...current, [caseId]: modelId }));
-    onNavigate?.(family, modelId, caseId);
+  const definition = shownTasks.find((entry) => entry.caseId === selection.caseId) ?? shownTasks[0];
+  const rows = [...new Map(sourceRows.map((row) => [row.model.id, row])).values()];
+  const row = rows.find((entry) => entry.model.id === selection.modelId) ?? rows[0];
+  const configurations = sourceRows === defaultRows ? configurationRows : sourceRows;
+  const runOptions = row ? taskRunOptions(row, family, configurations) : [];
+  const run = runOptions.find((entry) => entry.runId === selection.runId) ?? row?.runs[family];
+  const summary = summarizeTask(run, definition?.caseId ?? "");
+  const repetition =
+    selection.attempt &&
+    Number.isInteger(selection.attempt) &&
+    selection.attempt > 0 &&
+    selection.attempt <= summary.slots.length
+      ? selection.attempt
+      : (summary.slots.find((entry) => entry)?.repetition ?? 1);
+  const attempt = summary.slots[repetition - 1];
+  const view = selection.view ?? initialView;
+  const modelQuery = modelSearch.trim().toLocaleLowerCase();
+  const shownModels = rows.filter((entry) =>
+    `${entry.model.name} ${entry.model.provider}`.toLocaleLowerCase().includes(modelQuery),
+  );
+  useEffect(() => {
+    evidenceBody.current?.scrollTo({ top: 0 });
+  }, [definition?.caseId, run?.runId, repetition, view]);
+  useEffect(() => {
+    const list = modelList.current;
+    const selected = list?.querySelector<HTMLButtonElement>('[aria-pressed="true"]');
+    if (!list || !selected) return;
+    const top = selected.offsetTop;
+    const bottom = top + selected.offsetHeight;
+    if (top < list.scrollTop) list.scrollTop = top;
+    else if (bottom > list.scrollTop + list.clientHeight)
+      list.scrollTop = bottom - list.clientHeight;
+  }, [row?.model.id, modelQuery]);
+
+  function move(next: Partial<TaskSelection>) {
+    const updated = {
+      family,
+      caseId: definition?.caseId,
+      modelId: row?.model.id,
+      runId: run?.runId,
+      attempt: repetition,
+      view,
+      ...next,
+    };
+    setSelection(updated);
+    onNavigate?.(updated);
   }
-  function toggle(caseId: string) {
-    if (expanded.has(caseId)) {
-      setExpanded((current) => {
-        const next = new Set(current);
-        next.delete(caseId);
-        return next;
-      });
-      onNavigate?.(family, defaultModel);
-    } else select(caseId, models[caseId] ?? defaultModel);
+  function chooseFamily(next: PrototypeFamily) {
+    const configuration = configurations.find((entry) =>
+      Object.values(entry.runs).some((candidate) => candidate.runId === run?.runId),
+    );
+    setSearch("");
+    move({
+      family: next,
+      caseId: caseDefinitionsForFamily(next)[0]?.caseId,
+      runId: configuration?.runs[next]?.runId ?? row?.runs[next]?.runId,
+      attempt: undefined,
+    });
   }
+  function chooseModel(modelId: string) {
+    if (modelId === row?.model.id) return;
+    move({
+      modelId,
+      runId: rows.find((entry) => entry.model.id === modelId)?.runs[family]?.runId,
+      attempt: undefined,
+    });
+  }
+
   return (
     <PageShell active="tasks">
-      <div className="eval-container results-page">
+      <div className="eval-container results-page task-workspace-page">
         <ResultsHeader
           title="Tasks"
           description="Read each prompt and compare the models’ results."
         />
-        {displayedRun &&
-          displayedRun.modelId === initialModelId &&
-          displayedRun.family === family && (
-            <p className="results-context">
-              Selected run: {rows.find((row) => row.model.id === displayedRun.modelId)?.model.name}
-              {" · "}
-              {displayedRun.configuration.reasoning ?? "Unspecified"} reasoning
-              {" · "}
-              <code>{displayedRun.runId}</code>
-            </p>
-          )}
         <div className="results-toolbar task-toolbar">
           <nav className="results-category-tabs" aria-label="Task categories">
             {PROTOTYPE_FAMILIES.map((category) => (
@@ -498,11 +247,7 @@ export function TaskExplorerPage({
                 key={category}
                 type="button"
                 aria-current={family === category ? "page" : undefined}
-                onClick={() => {
-                  setFamily(category);
-                  setSearch("");
-                  onNavigate?.(category, defaultModel);
-                }}
+                onClick={() => chooseFamily(category)}
               >
                 {category} <span>({caseDefinitionsForFamily(category).length})</span>
                 {category === "Portfolio" && <small>Not evaluated</small>}
@@ -523,103 +268,299 @@ export function TaskExplorerPage({
         <p className="results-footnote">
           {family === "Portfolio"
             ? "Portfolio tasks have not been evaluated and do not contribute to Overall."
-            : "Each result shows passed attempts out of started attempts. Open a task to see its full prompt and individual attempts."}
+            : "Choose a task, then a model to inspect its recorded settings, attempts, and evidence."}
         </p>
-        <div
-          className="results-scroll"
-          role="region"
-          aria-label={`${family} tasks and model results`}
-          tabIndex={0}
-        >
-          <table className="results-table tasks-table">
-            <caption className="results-sr-only">{family} prompts and model results</caption>
-            <thead>
-              <tr>
-                <th scope="col" className="results-sticky">
-                  Task
-                </th>
-                <th scope="col">Prompt</th>
-                {rows.map((row) => (
-                  <th
-                    scope="col"
-                    key={row.model.id}
-                    className={row.model.id === initialModelId ? "task-highlight" : undefined}
+        {!definition ? (
+          <div className="task-workspace-empty" role="status">
+            <h2>No tasks match “{search}”</h2>
+            <p>Search a task name or a phrase from its prompt.</p>
+            <button type="button" onClick={() => setSearch("")}>
+              Clear task search
+            </button>
+          </div>
+        ) : (
+          <div className="task-workspace">
+            <section className="task-workspace-tasks" aria-labelledby="workspace-tasks-heading">
+              <div className="task-workspace-heading">
+                <h2 id="workspace-tasks-heading">{family} tasks</h2>
+                <span>
+                  {shownTasks.length} {shownTasks.length === 1 ? "task" : "tasks"}
+                </span>
+              </div>
+              <label className="task-workspace-task-select">
+                <span className="results-sr-only">Selected task</span>
+                <select
+                  value={definition.caseId}
+                  onChange={(event) => move({ caseId: event.target.value, attempt: undefined })}
+                >
+                  {shownTasks.map((entry) => (
+                    <option key={entry.caseId} value={entry.caseId}>
+                      {taskName(entry)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <nav className="task-workspace-task-list" aria-label={`${family} tasks`}>
+                {shownTasks.map((entry) => (
+                  <button
+                    type="button"
+                    key={entry.caseId}
+                    aria-current={definition.caseId === entry.caseId ? "true" : undefined}
+                    onClick={() => move({ caseId: entry.caseId, attempt: undefined })}
                   >
-                    <span className="task-model-heading">
-                      <ModelAvatar model={row.model} />
-                      <span>{row.model.name}</span>
-                    </span>
-                  </th>
+                    <ChevronRight size={15} aria-hidden="true" />
+                    <span>{taskName(entry)}</span>
+                  </button>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {shown.map((definition) => (
-                <Fragment key={definition.caseId}>
-                  <tr>
-                    <th scope="row" className="results-sticky">
-                      <div className="task-name">
-                        <button
-                          className="task-name-button"
-                          aria-expanded={expanded.has(definition.caseId)}
-                          aria-controls={`task-${definition.caseId}`}
-                          onClick={() => toggle(definition.caseId)}
-                        >
-                          <ChevronDown size={16} aria-hidden="true" />
-                          <span>{taskName(definition)}</span>
-                        </button>
-                        <GradingInfo definition={definition} />
-                      </div>
-                    </th>
-                    <td>
-                      <EvidenceValue
-                        evidence={definition.prompt}
-                        renderValue={(prompt) => <p className="task-prompt-preview">{prompt}</p>}
-                      />
-                    </td>
-                    {rows.map((row) => (
-                      <td
-                        key={row.model.id}
-                        className={row.model.id === initialModelId ? "task-highlight" : undefined}
-                      >
-                        <TaskResult
-                          run={row.runs[family]}
-                          caseId={definition.caseId}
-                          onClick={() => select(definition.caseId, row.model.id)}
-                        />
-                      </td>
-                    ))}
-                  </tr>
-                  <tr
-                    id={`task-${definition.caseId}`}
-                    hidden={!expanded.has(definition.caseId)}
-                    className="results-expanded"
-                  >
-                    <td colSpan={rows.length + 2}>
-                      {expanded.has(definition.caseId) && (
-                        <TaskDetail
-                          definition={definition}
-                          rows={rows}
-                          modelId={models[definition.caseId] ?? defaultModel}
-                          onModel={(modelId) => select(definition.caseId, modelId)}
-                        />
+              </nav>
+            </section>
+            <section className="task-workspace-models" aria-labelledby="workspace-task-heading">
+              <div className="task-workspace-prompt" key={definition.caseId}>
+                <h2 id="workspace-task-heading">{taskName(definition)}</h2>
+                <h3>Full prompt</h3>
+                <EvidenceValue
+                  evidence={definition.prompt}
+                  renderValue={(prompt) => <p>{prompt}</p>}
+                />
+                <TaskCriteria definition={definition} />
+              </div>
+              <div className="task-workspace-model-tools">
+                <div className="task-workspace-heading">
+                  <h3>Model results</h3>
+                  <span>
+                    {modelQuery ? `${shownModels.length} of ${rows.length}` : rows.length} models
+                  </span>
+                </div>
+                <label className="task-workspace-model-search">
+                  <Search size={15} aria-hidden="true" />
+                  <span className="results-sr-only">Search models</span>
+                  <input
+                    type="search"
+                    placeholder="Search models"
+                    value={modelSearch}
+                    onChange={(event) => setModelSearch(event.target.value)}
+                  />
+                </label>
+                <p className="task-workspace-hint">
+                  Latest recorded setting per model. Select a model to browse its history.
+                </p>
+              </div>
+              {shownModels.length ? (
+                <>
+                  <label className="task-workspace-model-select">
+                    <span className="results-sr-only">Selected model</span>
+                    <select
+                      value={row?.model.id ?? ""}
+                      onChange={(event) => chooseModel(event.target.value)}
+                    >
+                      {row && !shownModels.includes(row) && (
+                        <option value={row.model.id}>{row.model.name} (selected)</option>
                       )}
-                    </td>
-                  </tr>
-                </Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {shown.length === 0 && (
-          <div className="results-empty" role="status">
-            <h2>No matching tasks</h2>
-            <p>Search by task name or words in the prompt.</p>
-            <button onClick={() => setSearch("")}>Clear search</button>
+                      {shownModels.map((entry) => (
+                        <option key={entry.model.id} value={entry.model.id}>
+                          {entry.model.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div
+                    ref={modelList}
+                    className="task-workspace-model-list"
+                    role="group"
+                    aria-label="Model results"
+                  >
+                    {shownModels.map((entry) => {
+                      const selected = row?.model.id === entry.model.id;
+                      const modelRun = selected ? run : entry.runs[family];
+                      return (
+                        <button
+                          key={entry.model.id}
+                          type="button"
+                          className="task-workspace-model"
+                          aria-label={`View ${entry.model.name} results`}
+                          aria-pressed={selected}
+                          onClick={() => chooseModel(entry.model.id)}
+                        >
+                          <ModelAvatar model={entry.model} />
+                          <span className="task-workspace-model-name">
+                            <strong>{entry.model.name}</strong>
+                            <small>
+                              {modelRun ? taskSettingLabel(modelRun) : "No measured run"}
+                            </small>
+                            <span className="task-workspace-outcome">
+                              <TaskOutcome summary={summarizeTask(modelRun, definition.caseId)} />
+                            </span>
+                          </span>
+                          <ChevronRight size={15} aria-hidden="true" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <div className="task-workspace-empty-models" role="status">
+                  <p>
+                    {rows.length
+                      ? `No models match “${modelSearch}”.`
+                      : "No models have recorded results yet."}
+                  </p>
+                  {modelSearch && (
+                    <button type="button" onClick={() => setModelSearch("")}>
+                      <X size={14} aria-hidden="true" /> Clear model search
+                    </button>
+                  )}
+                </div>
+              )}
+            </section>
+            <section className="task-workspace-inspector" aria-labelledby="workspace-model-heading">
+              <div className="task-workspace-inspector-header">
+                <h2 id="workspace-model-heading">{row?.model.name ?? "No model selected"}</h2>
+                {run && (
+                  <label className="task-workspace-setting">
+                    <span>Recorded setting</span>
+                    <select
+                      value={run.runId}
+                      onChange={(event) => move({ runId: event.target.value, attempt: undefined })}
+                    >
+                      {runOptions.map((entry) => (
+                        <option key={entry.runId} value={entry.runId}>
+                          {taskSettingLabel(entry)} · {entry.startedAt.slice(0, 10)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                {summary.slots.length > 0 && (
+                  <div className="task-attempts" role="group" aria-label="Attempts">
+                    {summary.slots.map((entry, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        className={`task-attempt ${entry?.verdict === "pass" ? "task-attempt-pass" : ""}`}
+                        aria-pressed={repetition === index + 1}
+                        disabled={!entry}
+                        onClick={() => move({ attempt: index + 1 })}
+                      >
+                        <span>Attempt {index + 1}</span>
+                        <strong>{attemptLabel(entry)}</strong>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="task-workspace-tabs" role="tablist" aria-label="Attempt evidence">
+                  {views.map((entry, index) => (
+                    <button
+                      key={entry.id}
+                      id={`task-tab-${entry.id}`}
+                      role="tab"
+                      type="button"
+                      aria-selected={view === entry.id}
+                      aria-controls="task-evidence-panel"
+                      tabIndex={view === entry.id ? 0 : -1}
+                      onClick={() => move({ view: entry.id })}
+                      onKeyDown={(event) => {
+                        const next =
+                          event.key === "ArrowRight"
+                            ? (index + 1) % views.length
+                            : event.key === "ArrowLeft"
+                              ? (index + views.length - 1) % views.length
+                              : event.key === "Home"
+                                ? 0
+                                : event.key === "End"
+                                  ? views.length - 1
+                                  : null;
+                        if (next === null) return;
+                        event.preventDefault();
+                        move({ view: views[next]!.id });
+                        document.getElementById(`task-tab-${views[next]!.id}`)?.focus();
+                      }}
+                    >
+                      {entry.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div
+                ref={evidenceBody}
+                id="task-evidence-panel"
+                className="task-workspace-evidence"
+                role="tabpanel"
+                aria-labelledby={`task-tab-${view}`}
+                tabIndex={0}
+              >
+                {summary.status !== "available" && (
+                  <p className="task-workspace-status" role="status">
+                    <strong>
+                      {summary.status === "not_evaluated"
+                        ? "Not evaluated"
+                        : summary.status === "incomplete"
+                          ? "Incomplete results"
+                          : "Results unavailable"}
+                      .
+                    </strong>{" "}
+                    {summary.reason}
+                  </p>
+                )}
+                {view === "run" ? (
+                  run ? (
+                    <TaskRunEvidence run={run} />
+                  ) : (
+                    <p>No measured run is available for this model and category.</p>
+                  )
+                ) : attempt ? (
+                  view === "checks" ? (
+                    <AttemptChecks attempt={attempt} />
+                  ) : (
+                    <>
+                      <p className="task-workspace-attempt-meta">
+                        Attempt {repetition} · {attemptLabel(attempt)} ·{" "}
+                        <EvidenceValue evidence={attempt.durationMs} renderValue={seconds} />
+                      </p>
+                      <ConversationPanel reference={attempt.conversation} inline />
+                    </>
+                  )
+                ) : (
+                  <p>
+                    {summary.slots.length
+                      ? `Attempt ${repetition} was not recorded.`
+                      : "Individual attempts are not available for this selection."}
+                  </p>
+                )}
+              </div>
+              {summary.slots.length > 0 && (
+                <div className="task-workspace-attempt-navigation">
+                  <button
+                    type="button"
+                    disabled={!summary.slots.slice(0, repetition - 1).some(Boolean)}
+                    onClick={() => {
+                      const previous = summary.slots
+                        .slice(0, repetition - 1)
+                        .reverse()
+                        .find((entry) => entry);
+                      if (previous) move({ attempt: previous.repetition });
+                    }}
+                  >
+                    <ArrowLeft size={14} aria-hidden="true" />
+                    Previous attempt
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!summary.slots.slice(repetition).some(Boolean)}
+                    onClick={() => {
+                      const next = summary.slots.slice(repetition).find((entry) => entry);
+                      if (next) move({ attempt: next.repetition });
+                    }}
+                  >
+                    Next attempt
+                    <ArrowRight size={14} aria-hidden="true" />
+                  </button>
+                </div>
+              )}
+            </section>
           </div>
         )}
-        <p className="results-footnote">
-          Scores check tool use and completion. Final-answer accuracy is not graded.{" "}
+        <p className="results-footnote task-workspace-footnote">
+          Scores measure tool-use checks, not final-answer accuracy.{" "}
           <a href="#/methodology">How scoring works ↗</a>
         </p>
       </div>

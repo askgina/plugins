@@ -56,11 +56,16 @@ export function navigate(path: string): void {
 export function useHashRoute(): string {
   const [route, setRoute] = useState(() => window.location.hash.slice(1) || DEFAULT_ROUTE);
   useEffect(() => {
+    let previousRoute = window.location.hash.slice(1) || DEFAULT_ROUTE;
     const handleRoute = () => {
       const nextRoute = window.location.hash.slice(1);
       if (nextRoute === "eval-main") return;
       setRoute(nextRoute || DEFAULT_ROUTE);
-      window.scrollTo({ top: 0, behavior: "auto" });
+      // Task selections update the URL without throwing the reviewer back to the hero.
+      const withinTasks =
+        parseRoute(previousRoute).path === "/tasks" && parseRoute(nextRoute).path === "/tasks";
+      previousRoute = nextRoute || DEFAULT_ROUTE;
+      if (!withinTasks) window.scrollTo({ top: 0, behavior: "auto" });
     };
     window.addEventListener("hashchange", handleRoute);
     return () => window.removeEventListener("hashchange", handleRoute);
