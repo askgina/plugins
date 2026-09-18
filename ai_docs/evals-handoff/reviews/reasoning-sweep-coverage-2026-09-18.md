@@ -8,17 +8,17 @@ Only 13 settings have complete grading. The remaining 22 contain 745 ungraded at
 
 Every denominator below is 105. Settings are ordered by configured reasoning level.
 
-| Model | Graded attempts by setting | Fully graded settings |
-|---|---|---|
-| anthropic/claude-fable-5-1 | low: 105/105; medium: 105/105; high: 105/105; max: 75/105 | 3/4 |
-| anthropic/claude-opus-5 | low: 105/105; medium: 105/105; high: 102/105; max: 85/105 | 2/4 |
-| devin/gemini-3-8-flash | medium: 105/105; high: 105/105 | 2/2 |
-| devin/swe-2 | medium: 104/105; high: 102/105; max: 102/105 | 0/3 |
-| muse-spark-1.3 | minimal: 85/105; low: 77/105; medium: 59/105; high: 50/105; max: 45/105 | 0/5 |
-| openai-codex/gpt-5.6-sol | low: 104/105; medium: 101/105; high: 65/105; max: 36/105 | 0/4 |
-| openai-codex/gpt-5.6-terra | low: 105/105; medium: 105/105; high: 79/105; max: 31/105 | 2/4 |
-| openai-codex/gpt-6-astra | low: 105/105; medium: 105/105; high: 105/105; xhigh: 54/105; max: 32/105 | 3/5 |
-| xai-oauth/grok-4.6 | low: 105/105; medium: 93/105; high: 46/105; xhigh: 38/105 | 1/4 |
+| Model                      | Graded attempts by setting                                               | Fully graded settings |
+| -------------------------- | ------------------------------------------------------------------------ | --------------------- |
+| anthropic/claude-fable-5-1 | low: 105/105; medium: 105/105; high: 105/105; max: 75/105                | 3/4                   |
+| anthropic/claude-opus-5    | low: 105/105; medium: 105/105; high: 102/105; max: 85/105                | 2/4                   |
+| devin/gemini-3-8-flash     | medium: 105/105; high: 105/105                                           | 2/2                   |
+| devin/swe-2                | medium: 104/105; high: 102/105; max: 102/105                             | 0/3                   |
+| muse-spark-1.3             | minimal: 85/105; low: 77/105; medium: 59/105; high: 50/105; max: 45/105  | 0/5                   |
+| openai-codex/gpt-5.6-sol   | low: 104/105; medium: 101/105; high: 65/105; max: 36/105                 | 0/4                   |
+| openai-codex/gpt-5.6-terra | low: 105/105; medium: 105/105; high: 79/105; max: 31/105                 | 2/4                   |
+| openai-codex/gpt-6-astra   | low: 105/105; medium: 105/105; high: 105/105; xhigh: 54/105; max: 32/105 | 3/5                   |
+| xai-oauth/grok-4.6         | low: 105/105; medium: 93/105; high: 46/105; xhigh: 38/105                | 1/4                   |
 
 ## Interpretation and next work
 

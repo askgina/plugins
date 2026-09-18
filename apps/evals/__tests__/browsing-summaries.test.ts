@@ -193,7 +193,9 @@ describe("default leaderboard settings", () => {
     expect(astra.overall).toBeCloseTo(0.6396011396);
     expect(gemini.runs.Spot?.configuration.reasoning).toBe("high");
     expect(gemini.overall).toBeCloseTo(0.2331433998);
-    expect(configurations.find((row) => row.runs.Spot?.runId === "astra-max-spot-1")?.overall).toBeNull();
+    expect(
+      configurations.find((row) => row.runs.Spot?.runId === "astra-max-spot-1")?.overall,
+    ).toBeNull();
   });
 });
 
