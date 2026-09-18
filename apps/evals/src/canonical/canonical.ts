@@ -27,6 +27,7 @@ import {
   spotComparison,
 } from "../results";
 import perpsAttemptsJson from "../results/2026-09-11/perps-predictions/perps/perps-openai-oauth-sol-20260911T152450Z.attempts.json";
+import type { ConversationReference } from "../lib/conversations";
 
 // ---------------------------------------------------------------------------
 // Vocabulary
@@ -197,6 +198,8 @@ export interface CheckDimensionSummary {
 // ---------------------------------------------------------------------------
 
 export interface CanonicalModel {
+  /** Public release of this specific model version; distinct from evaluation dates. */
+  readonly release?: { readonly date: string; readonly source: string };
   readonly id: string;
   readonly name: string;
   readonly provider: string;
@@ -248,6 +251,7 @@ export interface CanonicalConfiguration {
 }
 
 export interface CanonicalAttempt {
+  readonly conversation?: ConversationReference;
   readonly caseId: string;
   readonly repetition: number;
   readonly execution: ExecutionStatus;
@@ -427,6 +431,7 @@ export const SUITE_SHA256 = {
 export const canonicalModels: readonly CanonicalModel[] = [
   {
     id: "gpt-5.5",
+    release: { date: "2026-04-23", source: "https://openai.com/index/introducing-gpt-5-5/" },
     name: "GPT-5.5",
     provider: "OpenAI",
     providerModel: "openai-codex/gpt-5.5",
@@ -436,6 +441,7 @@ export const canonicalModels: readonly CanonicalModel[] = [
   },
   {
     id: "gpt-sol",
+    release: { date: "2026-07-09", source: "https://openai.com/index/gpt-5-6/" },
     name: "GPT-5.6 Sol",
     provider: "OpenAI",
     providerModel: "openai-codex/gpt-5.6-sol",
@@ -445,6 +451,10 @@ export const canonicalModels: readonly CanonicalModel[] = [
   },
   {
     id: "muse-spark",
+    release: {
+      date: "2026-09-02",
+      source: "https://research.meta.ai/blog/introducing-muse-spark-1-3",
+    },
     name: "Muse Spark 1.3",
     provider: "Muse",
     providerModel: "muse-spark-1.3",
@@ -454,6 +464,7 @@ export const canonicalModels: readonly CanonicalModel[] = [
   },
   {
     id: "claude-fable",
+    release: { date: "2026-09-01", source: "https://www.anthropic.com/claude/fable" },
     name: "Claude Fable 5.1",
     provider: "Anthropic",
     providerModel: "anthropic/claude-fable-5-1",
@@ -463,6 +474,7 @@ export const canonicalModels: readonly CanonicalModel[] = [
   },
   {
     id: "claude-opus",
+    release: { date: "2026-07-24", source: "https://www.anthropic.com/news/claude-opus-5" },
     name: "Claude Opus 5",
     provider: "Anthropic",
     providerModel: "anthropic/claude-opus-5",
@@ -860,6 +872,7 @@ interface CaseSpec {
   readonly category: string;
   readonly prompt: string;
   readonly expectedTool: string | null;
+  readonly expectedSequence?: readonly string[];
   readonly routingKind: string;
   readonly requiredArguments: Readonly<Record<string, unknown>> | null;
   readonly forbiddenTools: readonly string[];
@@ -879,7 +892,7 @@ const CATEGORY_OBJECTIVES: Record<string, string> = {
 function gradingCriteriaFor(spec: CaseSpec): readonly string[] {
   const criteria = [
     spec.routingKind === "sequence"
-      ? "routing: calls the declared tools in the required order"
+      ? `routing: calls ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in the required order`
       : `routing: exactly one call to ${spec.expectedTool ?? "the expected tool"}`,
     spec.requiredArguments
       ? "arguments: required fields carry the declared values; additional fields allowed"
@@ -894,7 +907,7 @@ function gradingCriteriaFor(spec: CaseSpec): readonly string[] {
 function expectedBehaviorFor(spec: CaseSpec): string {
   const parts = [
     spec.routingKind === "sequence"
-      ? "Call the declared tools in sequence"
+      ? `Call ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in sequence`
       : `Call ${spec.expectedTool} exactly once`,
   ];
   if (spec.requiredArguments) {
@@ -1212,6 +1225,7 @@ const PERPS_CASES: readonly CaseSpec[] = [
     prompt:
       "Create a provider-aware Hyperliquid BTC hourly-candles table named eval_btc_candle_stats, then use the exact returned tableName to query its minimum low, maximum high, and average volume.",
     expectedTool: null,
+    expectedSequence: ["perps.createHyperliquidTable", "perps.executeSqlQuery"],
     routingKind: "sequence",
     requiredArguments: null,
     forbiddenTools: [],
@@ -2220,7 +2234,20 @@ function sweepFamilyRun(row: SweepRow, run: SweepRun): CanonicalRun {
   if (family === undefined || modelId === undefined || routeCohort === undefined) {
     throw new Error(`unregistered reasoning-sweep row ${row.rowId}/${run.family}`);
   }
-  const attempts = run.trials.map(projectedTrialToCanonical);
+  const attempts = run.trials.map((trial) => ({
+    ...projectedTrialToCanonical(trial),
+    conversation: {
+      campaignId: SWEEP_CAMPAIGN_ID,
+      rowId: row.rowId,
+      family: run.family,
+      caseId: trial.caseId,
+      repetition: trial.repetition,
+      sourceSummarySha256: row.sourceSummarySha256,
+      sourceCommit: row.sourceCommit,
+      catalogSha: row.provenance.catalogSha,
+      target: row.target,
+    },
+  }));
   const { p50, p95, max } = run.latencyMs;
   const usage = run.tokenUsage;
   const snapshot = row.provenance.sourceKind === "extracted_snapshot";

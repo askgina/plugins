@@ -58,6 +58,17 @@ export function getWithdrawnRun(runId: string): WithdrawnRunRef | undefined {
   return withdrawnById.get(runId);
 }
 
+/** Model directory order: newest public release first; unknown dates last. */
+export function modelsByReleaseDate(): readonly CanonicalModel[] {
+  return canonicalModels
+    .filter((model) => model.origin === "measured")
+    .sort(
+      (a, b) =>
+        (b.release?.date ?? "").localeCompare(a.release?.date ?? "") ||
+        a.name.localeCompare(b.name),
+    );
+}
+
 export function getModel(modelId: string): CanonicalModel | undefined {
   return modelById.get(modelId);
 }
@@ -562,4 +573,370 @@ export function derivedCostPerTask(run: CanonicalRun): DerivedCost {
     priceAsOf: pricing.asOf,
     priceSource: pricing.source,
   };
+}
+
+// Public browsing summaries. Keep the stricter pairwise comparison rules above.
+export const SCORED_FAMILIES = ["Spot", "Perps", "Predictions"] as const;
+export type ScoredFamily = (typeof SCORED_FAMILIES)[number];
+export type SummaryMetric =
+  | {
+      readonly availability: "available";
+      readonly value: number;
+      readonly sampleCount: number;
+      readonly excluded: number;
+    }
+  | { readonly availability: "unavailable"; readonly reason: string };
+export interface LeaderboardModelRow {
+  readonly rowId?: string;
+  readonly campaignId?: string;
+  readonly configurationLabel?: string;
+  readonly model: CanonicalModel;
+  readonly runs: Readonly<Partial<Record<PrototypeFamily, CanonicalRun>>>;
+  readonly scores: Readonly<Record<ScoredFamily, number | null>>;
+  readonly overall: number | null;
+  readonly overallReason: string | null;
+  readonly averageTime: SummaryMetric;
+  readonly estimatedCost: SummaryMetric;
+  readonly coverageLabel: string;
+}
+export type LeaderboardMetric = "overall" | ScoredFamily | "time" | "cost";
+
+/** Filter origin/lifecycle before choosing by date; never choose by score. */
+export function measuredRepresentativeRuns(
+  runs: readonly CanonicalRun[] = canonicalRuns,
+  publications: readonly CanonicalPublication[] = canonicalPublications,
+): readonly CanonicalRun[] {
+  const current = new Set(publications.filter((p) => p.status === "current").map((p) => p.runId));
+  const groups = new Map<string, CanonicalRun[]>();
+  for (const run of runs) {
+    if (run.origin !== "measured" || !current.has(run.runId)) continue;
+    const key = `${run.modelId}:${run.family}`;
+    const group = groups.get(key) ?? [];
+    group.push(run);
+    groups.set(key, group);
+  }
+  return [...groups.values()].map((group) => {
+    const complete = group.filter((run) => run.dispatchCoverage === "complete");
+    return [...(complete.length ? complete : group)].sort(
+      (a, b) => b.startedAt.localeCompare(a.startedAt) || a.runId.localeCompare(b.runId),
+    )[0]!;
+  });
+}
+
+const missingSummary = (reason: string): SummaryMetric => ({ availability: "unavailable", reason });
+
+function compatibleSuiteRuns(runs: readonly CanonicalRun[]): boolean {
+  const first = runs[0];
+  return (
+    first !== undefined &&
+    runs.every(
+      (run) =>
+        run.cohort.suiteId === SUITE_IDS[run.family] &&
+        run.cohort.suiteVersion === first.cohort.suiteVersion &&
+        run.cohort.fixtureVersion === first.cohort.fixtureVersion &&
+        run.cohort.catalogSha === first.cohort.catalogSha &&
+        run.cohort.target === first.cohort.target &&
+        run.cohort.accountClass === first.cohort.accountClass &&
+        run.cohort.repetitions === first.cohort.repetitions &&
+        run.cohort.evidenceCategory === "conformance" &&
+        run.configuration.reasoning === first.configuration.reasoning &&
+        run.configuration.candidate === first.configuration.candidate,
+    )
+  );
+}
+
+function pooledTime(runs: readonly CanonicalRun[]): SummaryMetric {
+  let total = 0;
+  let count = 0;
+  for (const run of runs) {
+    if (run.attempts.availability !== "available")
+      return missingSummary("Individual timings were not retained for every category.");
+    const completed = run.attempts.value.filter((attempt) => attempt.execution === "completed");
+    if (completed.length !== run.counts.completed)
+      return missingSummary("Timing records do not cover every completed attempt.");
+    for (const attempt of completed) {
+      if (attempt.durationMs.availability !== "available")
+        return missingSummary(
+          `Individual ${run.family} timings were not retained for every completed attempt.`,
+        );
+      total += attempt.durationMs.value;
+      count++;
+    }
+  }
+  return count === 0
+    ? missingSummary("No completed attempts with timings.")
+    : {
+        availability: "available",
+        value: total / count,
+        sampleCount: count,
+        excluded: runs.reduce((sum, run) => sum + run.counts.started, 0) - count,
+      };
+}
+
+function pooledCost(runs: readonly CanonicalRun[]): SummaryMetric {
+  let total = 0;
+  let count = 0;
+  let population: string | undefined;
+  for (const run of runs) {
+    const cost = derivedCostPerTask(run);
+    if (cost.availability !== "available" && "reason" in cost && cost.reason) {
+      return missingSummary(cost.reason);
+    }
+    if (cost.availability !== "available" || cost.sampleCount === null)
+      return missingSummary(
+        "Cost requires token usage, prices, and a known sample count in every category.",
+      );
+    // Graded and completed identify the same population only when their counts agree.
+    const normalized =
+      cost.population === "graded" && run.counts.graded === run.counts.completed
+        ? "completed"
+        : cost.population;
+    if (population !== undefined && population !== normalized)
+      return missingSummary("Token records cover different attempt populations.");
+    population = normalized;
+    total += cost.usdPerTask * cost.sampleCount;
+    count += cost.sampleCount;
+  }
+  return count === 0
+    ? missingSummary("No recorded token usage.")
+    : {
+        availability: "available",
+        value: total / count,
+        sampleCount: count,
+        excluded: runs.reduce((sum, run) => sum + run.counts.started, 0) - count,
+      };
+}
+
+export function unifiedLeaderboardRows(
+  sourceRuns: readonly CanonicalRun[] = canonicalRuns,
+  publications: readonly CanonicalPublication[] = canonicalPublications,
+  models: readonly CanonicalModel[] = canonicalModels,
+): readonly LeaderboardModelRow[] {
+  const selected = measuredRepresentativeRuns(sourceRuns, publications);
+  return models
+    .filter(
+      (model) => model.origin === "measured" && selected.some((run) => run.modelId === model.id),
+    )
+    .map((model) => {
+      const modelRuns = selected.filter((run) => run.modelId === model.id);
+      const runs = Object.fromEntries(modelRuns.map((run) => [run.family, run]));
+      const scores = Object.fromEntries(
+        SCORED_FAMILIES.map((family) => {
+          const run = runs[family];
+          const key = run ? headlineSortKey(run) : -1;
+          return [family, key < 0 ? null : key];
+        }),
+      ) as Record<ScoredFamily, number | null>;
+      const fullRuns = SCORED_FAMILIES.flatMap((family) => (runs[family] ? [runs[family]!] : []));
+      const missing = fullRuns.length !== SCORED_FAMILIES.length;
+      const overallReason = missing
+        ? "Results are needed in all three categories."
+        : !compatibleSuiteRuns(fullRuns)
+          ? "These runs have different benchmark settings."
+          : SCORED_FAMILIES.some((family) => scores[family] === null)
+            ? "Complete dispatch and grading are needed in every category."
+            : null;
+      const overall =
+        overallReason === null
+          ? SCORED_FAMILIES.reduce((sum, family) => sum + scores[family]!, 0) /
+            SCORED_FAMILIES.length
+          : null;
+      // Measurement availability is independent of whether execution produced
+      // enough graded attempts for a quality ranking.
+      const measurementReason = missing
+        ? "Results are needed in all three categories."
+        : !compatibleSuiteRuns(fullRuns)
+          ? "These runs have different benchmark settings."
+          : null;
+      return {
+        model,
+        runs,
+        scores,
+        overall,
+        overallReason,
+        averageTime:
+          measurementReason === null ? pooledTime(fullRuns) : missingSummary(measurementReason),
+        estimatedCost:
+          measurementReason === null ? pooledCost(fullRuns) : missingSummary(measurementReason),
+        coverageLabel: missing ? `${fullRuns.map((run) => run.family).join(" + ")} only` : "",
+      };
+    });
+}
+
+/** Keep every measured configuration visible instead of replacing it with a later effort. */
+export function configurationLeaderboardRows(
+  sourceRuns: readonly CanonicalRun[] = canonicalRuns,
+  publications: readonly CanonicalPublication[] = canonicalPublications,
+  models: readonly CanonicalModel[] = canonicalModels,
+): readonly LeaderboardModelRow[] {
+  const current = new Set(publications.filter((p) => p.status === "current").map((p) => p.runId));
+  const groups = new Map<string, CanonicalRun[]>();
+  for (const run of sourceRuns) {
+    if (run.origin !== "measured" || !current.has(run.runId)) continue;
+    const key = JSON.stringify([
+      run.modelId,
+      run.campaignId,
+      run.cohort.target,
+      run.cohort.accountClass,
+      run.configuration.candidate,
+      run.configuration.reasoning,
+      run.cohort.suiteVersion,
+      run.cohort.fixtureVersion,
+      run.cohort.catalogSha,
+      run.cohort.repetitions,
+      run.cohort.evidenceCategory,
+    ]);
+    const group = groups.get(key) ?? [];
+    group.push(run);
+    groups.set(key, group);
+  }
+  return [...groups.values()].flatMap((group) => {
+    const first = group[0]!;
+    const client =
+      first.cohort.target === "omp_harness"
+        ? "OMP"
+        : first.cohort.target === "muse_cli"
+          ? "Muse"
+          : first.cohort.target === "devin_cli"
+            ? "Devin"
+            : first.cohort.target;
+    return unifiedLeaderboardRows(group, publications, models).map((row) => ({
+      ...row,
+      rowId: Object.values(row.runs)
+        .map((run) => run.runId)
+        .sort()
+        .join("+"),
+      campaignId: first.campaignId,
+      configurationLabel: `${first.configuration.reasoning ?? "Unspecified"} reasoning · ${client}`,
+    }));
+  });
+}
+
+export function recordedOutcomes(runs: readonly CanonicalRun[]) {
+  return runs.reduce(
+    (total, run) => ({
+      planned: total.planned + run.counts.planned,
+      started: total.started + run.counts.started,
+      graded: total.graded + run.counts.graded,
+      passed: total.passed + run.counts.passed,
+      failed: total.failed + run.counts.failed,
+      timedOut: total.timedOut + run.counts.timedOut,
+      runtimeFailure: total.runtimeFailure + run.counts.runtimeFailure,
+      pending: total.pending + run.counts.pending,
+      unstarted: total.unstarted + run.counts.unstarted,
+      unknown: total.unknown + run.counts.unknown,
+    }),
+    {
+      planned: 0,
+      started: 0,
+      graded: 0,
+      passed: 0,
+      failed: 0,
+      timedOut: 0,
+      runtimeFailure: 0,
+      pending: 0,
+      unstarted: 0,
+      unknown: 0,
+    },
+  );
+}
+
+export function sortLeaderboardRows(
+  rows: readonly LeaderboardModelRow[],
+  metric: LeaderboardMetric = "overall",
+  direction: "asc" | "desc" = "desc",
+): LeaderboardModelRow[] {
+  const value = (row: LeaderboardModelRow): number | null => {
+    if (metric === "overall") return row.overall;
+    if (metric === "time" || metric === "cost") {
+      const summary = metric === "time" ? row.averageTime : row.estimatedCost;
+      return summary.availability === "available" ? summary.value : null;
+    }
+    return row.scores[metric];
+  };
+  return [...rows].sort((a, b) => {
+    const av = value(a);
+    const bv = value(b);
+    if (av === null && bv !== null) return 1;
+    if (bv === null && av !== null) return -1;
+    const difference = av === null || bv === null ? 0 : av - bv;
+    return (
+      (direction === "asc" ? difference : -difference) || a.model.name.localeCompare(b.model.name)
+    );
+  });
+}
+
+export interface TaskSummary {
+  readonly status: "available" | "not_evaluated" | "incomplete" | "unavailable";
+  readonly passed: number;
+  readonly started: number;
+  readonly slots: readonly (CanonicalAttempt | undefined)[];
+  readonly reason: string | null;
+}
+
+export function summarizeTask(run: CanonicalRun | undefined, caseId: string): TaskSummary {
+  if (!run)
+    return {
+      status: "not_evaluated",
+      passed: 0,
+      started: 0,
+      slots: [],
+      reason: "No measured run for this category.",
+    };
+  if (run.attempts.availability !== "available")
+    return {
+      status: "unavailable",
+      passed: 0,
+      started: 0,
+      slots: [],
+      reason: evidenceState(run.attempts),
+    };
+  const attempts = run.attempts.value.filter((attempt) => attempt.caseId === caseId);
+  const slots = Array.from(
+    { length: Math.max(run.cohort.repetitions, ...attempts.map((a) => a.repetition)) },
+    (_, index) => attempts.find((attempt) => attempt.repetition === index + 1),
+  );
+  const headline = headlineFor(run);
+  const complete =
+    headline.kind === "rate" &&
+    attempts.length === run.cohort.repetitions &&
+    slots.length === run.cohort.repetitions &&
+    slots.every(
+      (attempt) =>
+        attempt &&
+        attempt.execution === "completed" &&
+        (attempt.verdict === "pass" || attempt.verdict === "fail"),
+    );
+  return {
+    status: complete ? "available" : "incomplete",
+    passed: attempts.filter((attempt) => attempt.verdict === "pass").length,
+    started: attempts.filter((attempt) => !["unstarted", "unknown"].includes(attempt.execution))
+      .length,
+    slots,
+    reason: complete
+      ? null
+      : headline.kind === "counts_only"
+        ? eligibilityText(headline.reason)
+        : "Some attempts or coverage records are missing.",
+  };
+}
+
+export function benchmarkSummary(rows: readonly LeaderboardModelRow[]): string {
+  const runs = rows.flatMap((row) =>
+    SCORED_FAMILIES.flatMap((family) => (row.runs[family] ? [row.runs[family]!] : [])),
+  );
+  if (!runs.length) return "No measured results yet";
+  const taskCount = SCORED_FAMILIES.reduce(
+    (sum, family) => sum + caseDefinitionsForFamily(family).length,
+    0,
+  );
+  const repetitions = [...new Set(runs.map((run) => run.cohort.repetitions))];
+  const dates = runs.map((run) => run.startedAt.slice(0, 10)).sort();
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  return `${taskCount} tasks · ${repetitions.length === 1 ? `${repetitions[0]} attempts per task` : "Attempts vary by run"} · Results from ${formatter.formatRange(Date.parse(dates[0]!), Date.parse(dates[dates.length - 1]!))}`;
 }

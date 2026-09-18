@@ -1,0 +1,75 @@
+.conversation-panel {
+  margin-top: 20px;
+}
+.conversation-view {
+  min-width: 0;
+  max-width: 100%;
+}
+.conversation-label {
+  color: var(--eval-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.conversation-notices {
+  border: 1px solid var(--eval-line);
+  border-radius: 8px;
+  background: var(--sand-2);
+  padding: 12px 16px 12px 32px;
+  line-height: 1.7;
+  max-width: 75ch;
+}
+.conversation-messages {
+  padding: 0;
+  margin: 20px 0;
+  list-style: none;
+}
+.conversation-message {
+  padding: 16px 0;
+  border-top: 1px solid var(--eval-line);
+  min-width: 0;
+}
+.conversation-speaker {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+.conversation-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.7;
+  max-width: 75ch;
+  margin: 8px 0 12px;
+}
+.conversation-output {
+  margin: 10px 0;
+}
+.conversation-output summary {
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  line-height: 1.7;
+}
+.conversation-output summary:hover {
+  color: var(--eval-muted);
+}
+.conversation-output summary:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+}
+.conversation-output .conversation-text {
+  max-height: 32rem;
+  overflow-y: auto;
+  padding: 12px;
+  border-radius: 6px;
+  background: var(--sand-2);
+}
+.conversation-hash {
+  overflow-wrap: anywhere;
+}
+.conversation-loading {
+  min-height: 5rem;
+  color: var(--eval-muted);
+}

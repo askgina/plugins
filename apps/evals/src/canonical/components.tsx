@@ -271,7 +271,7 @@ export function HeadlineValue({ headline }: { headline: Headline }) {
     );
   }
   return (
-    <span className="lb-cost-stack">
+    <span className="eval-headline-stack">
       <span className="lb-count">
         {headline.passed} passed · {headline.started} started
       </span>

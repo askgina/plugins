@@ -1,199 +1,276 @@
-import { ArrowUpRight } from "lucide-react";
-import { PageShell, Panel } from "../components/eval-ui";
+import { PageShell } from "../components/eval-ui";
+import { ResultsHeader, RunDetails } from "../components/results-ui";
 import {
   CATALOG_LABEL,
   CATALOG_SHA_31_TOOLS,
   canonicalCampaigns,
-  canonicalRuns,
   GRADER_SHA256,
   SUITE_IDS,
   SUITE_SHA256,
 } from "../canonical/canonical";
-import { getModel } from "../canonical/selectors";
-
-const measuredCampaigns = canonicalCampaigns.filter((campaign) => campaign.origin === "measured");
+import {
+  SCORED_FAMILIES,
+  caseDefinitionsForFamily,
+  getModel,
+  measuredRepresentativeRuns,
+} from "../canonical/selectors";
 
 export function MethodologyPage() {
+  const runs = measuredRepresentativeRuns();
+  const campaigns = canonicalCampaigns.filter((campaign) =>
+    runs.some((run) => run.campaignId === campaign.campaignId),
+  );
+  const repetitions = [...new Set(runs.map((run) => run.cohort.repetitions))];
+  const timeouts = [
+    ...new Set(
+      runs.flatMap((run) => {
+        const timeout =
+          run.timeoutMs ??
+          campaigns.find((campaign) => campaign.campaignId === run.campaignId)?.timeoutMs;
+        return timeout == null ? [] : [timeout / 1000];
+      }),
+    ),
+  ].sort((a, b) => a - b);
   return (
     <PageShell active="methodology">
-      <div className="eval-container eval-methodology">
-        <section className="eval-hero">
-          <img className="eval-hero-art" src="/images/hero-watercolor-landscape.webp" alt="" />
-          <p className="eval-eyebrow">Methodology</p>
-          <h1 className="eval-title">
-            Open to inspection<span className="eval-dot">.</span>
-          </h1>
-          <p className="eval-description">
-            A useful score needs a task, a rubric, and evidence you can read. Here is what this site
-            shows, and what it does not.
+      <div className="eval-container results-page">
+        <ResultsHeader
+          title="How the evaluations work"
+          description="What we ask, what we check, and how the results are calculated."
+        />
+        <div className="method-content">
+          <p className="method-limits">
+            These results measure tool use and task completion. They do not measure final-answer
+            accuracy or trading returns. Samples are small, and models used different clients.
           </p>
-        </section>
-        <div className="eval-method-grid">
-          <Panel title="First, a note on the data">
-            <div className="eval-method-body">
+          <ol className="method-steps">
+            <li>
+              <h2>Choose the tasks</h2>
               <p>
-                Every score, timing, and tool trace on these pages comes from the measured
-                conformance campaigns listed below (
-                {measuredCampaigns
-                  .map((campaign) => `${campaign.harness}, ${campaign.date}`)
-                  .join("; ")}
-                ) and is shown as exported from the run artifacts.
+                We test three categories: spot markets ({caseDefinitionsForFamily("Spot").length}{" "}
+                tasks), perpetual futures ({caseDefinitionsForFamily("Perps").length}), and
+                prediction markets ({caseDefinitionsForFamily("Predictions").length}). Each task has
+                a fixed prompt and rules for the tools the model should use.
               </p>
               <p>
-                These are unranked, small samples of tool-use conformance — not answer accuracy and
-                not financial outcomes. They should not inform model selection or financial
-                decisions.
+                The {caseDefinitionsForFamily("Portfolio").length} Portfolio tasks are published but
+                have not been evaluated. They do not contribute to Overall.{" "}
+                <a href="#/tasks">Read the prompts ↗</a>
               </p>
+            </li>
+            <li>
+              <h2>
+                Run each prompt{" "}
+                {repetitions.length === 1 && repetitions[0] === 3 ? "three times" : "repeatedly"}
+              </h2>
               <p>
-                Synthetic rows exist only as labelled Storybook previews of unavailable and
-                lifecycle states; they never appear on these pages.
+                Each attempt starts a fresh conversation with access to read-only financial tools.
+                The current runs use {repetitions.join(" or ")} attempts per task and a{" "}
+                {timeouts.join(" or ")}-second timeout per attempt.
               </p>
-            </div>
-          </Panel>
-          <Panel title="Artifact identities">
-            <div className="eval-method-body">
-              <p>
-                Measured campaigns pin the tool catalog <code>{CATALOG_LABEL}</code> (sha{" "}
-                <code>{CATALOG_SHA_31_TOOLS.slice(0, 12)}…</code>) and the deterministic grader{" "}
-                <code>grading.ts</code> at sha <code>{GRADER_SHA256.slice(0, 12)}…</code>.
-              </p>
-              <ul>
-                {(Object.keys(SUITE_IDS) as (keyof typeof SUITE_IDS)[]).map((family) => (
-                  <li key={family}>
-                    {family}: <code>{SUITE_IDS[family]}</code> · suite sha{" "}
-                    <code>{SUITE_SHA256[family].slice(0, 12)}…</code>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </Panel>
-          <Panel title="Measured runs">
-            <div className="eval-method-body">
-              {measuredCampaigns.map((campaign) => (
-                <div key={campaign.campaignId}>
+              <details className="results-accordion">
+                <summary>Clients, settings, and run dates</summary>
+                <div>
                   <p>
-                    {campaign.harness}, {campaign.repetitions} repetitions per case,{" "}
-                    {campaign.timeoutMs === null
-                      ? "route-specific timeouts"
-                      : `${campaign.timeoutMs / 1000}s timeout`}{" "}
-                    ({campaign.date}). These are unranked, small live samples of tool-use
-                    conformance, not answer accuracy or financial outcomes.
+                    Runs use the OMP harness, native Muse, or native Devin. The leaderboard shows
+                    them together, but these results reflect the model and its client setup, not an
+                    isolated model-only comparison.
                   </p>
-                  {campaign.campaignId === "omp-2026-09-11" ? (
-                    <>
+                  {campaigns.map((campaign) => (
+                    <div className="method-record" key={campaign.campaignId}>
+                      <h3>{campaign.harness}</h3>
                       <p>
-                        Spot:{" "}
-                        <code>
-                          {canonicalRuns
-                            .filter(
-                              (run) =>
-                                run.campaignId === campaign.campaignId && run.family === "Spot",
-                            )
-                            .map((run) => {
-                              const model = getModel(run.modelId);
-                              return `${run.provenance.sourceCommit.slice(0, 7)} (${model?.name ?? run.modelId})`;
-                            })
-                            .join(" / ")}
-                        </code>
-                        ; perps/predictions:{" "}
-                        <code>
-                          {canonicalRuns
-                            .find(
-                              (run) =>
-                                run.campaignId === campaign.campaignId && run.family === "Perps",
-                            )
-                            ?.provenance.sourceCommit.slice(0, 7)}
-                        </code>
-                        , executable <code>{campaign.executableSourceCommit?.slice(0, 7)}</code>
+                        {campaign.date} · {campaign.repetitions} attempts per task ·{" "}
+                        {campaign.timeoutMs === null
+                          ? "route-specific timeouts"
+                          : `${campaign.timeoutMs / 1000}s timeout`}
                       </p>
-                      {campaign.prUrl && (
-                        <a
-                          className="eval-text-link"
-                          href={campaign.prUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Open {campaign.prLabel ?? "GitHub PR"}{" "}
-                          <ArrowUpRight size={14} aria-hidden="true" />
-                        </a>
-                      )}
-                    </>
-                  ) : campaign.sourceCommit !== null ? (
-                    <p>
-                      Source commit <code>{campaign.sourceCommit.slice(0, 7)}</code>.
-                    </p>
-                  ) : (
-                    <p>Source checkout and extracted snapshot identities are retained per route.</p>
-                  )}
-                  <ul>
-                    {campaign.limitations.map((limitation) => (
-                      <li key={limitation}>{limitation}</li>
-                    ))}
-                  </ul>
+                      <ul>
+                        {runs
+                          .filter((run) => run.campaignId === campaign.campaignId)
+                          .map((run) => (
+                            <li key={run.runId}>
+                              {getModel(run.modelId)?.name ?? run.modelId}, {run.family}:{" "}
+                              {run.configuration.reasoning ?? "unspecified"} reasoning;{" "}
+                              <code>{run.configuration.configurationId}</code>
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </Panel>
-          <Panel title="What a task measures">
-            <div className="eval-method-body">
+              </details>
+            </li>
+            <li>
+              <h2>Check what the model did</h2>
               <p>
-                Tasks cover portfolio analysis, spot markets, perpetuals, and prediction markets.
-                Each asks the agent to answer a financial question using read-only tools.
-              </p>
-              <ul>
-                <li>Choose the right tools for the question.</li>
-                <li>Use valid arguments and the requested scope.</li>
-                <li>Ground the answer in the returned evidence.</li>
-                <li>Respect read-only safety and report missing data.</li>
-              </ul>
-            </div>
-          </Panel>
-          <Panel title="Reading the scores">
-            <div className="eval-method-body">
-              <p>
-                The headline is passes over started tasks, shown only when dispatch and grading are
-                complete. Incomplete or unknown dispatch, or incomplete grading, shows counts with
-                the reason instead, without quality ordering or comparison. For incompletely graded
-                runs, graded-only rates describe only the graded subset, not quality rankings. Tool
-                selection accuracy measures whether the agent chose the expected tools. Task scores
-                summarize the individual rubric checks.
+                An attempt passes when it satisfies every applicable grading check: calling the
+                required tools, supplying the required arguments, completing without errors, and
+                obeying the task’s restrictions.
               </p>
               <p>
-                Every latency and token statistic carries its sample count and population (started,
-                completed, or graded). Missing measurements stay missing — withheld, not retained,
-                not recorded, and aggregate-only are distinct states and are never zero-filled.
+                Some tasks require one tool call; others require calls in a particular order. The
+                task’s grading criteria explain those requirements. Final-answer accuracy is not
+                scored. <a href="#/tasks">See task-specific rules ↗</a>
               </p>
-            </div>
-          </Panel>
-          <Panel title="Latency, cost, and reproducibility">
-            <div className="eval-method-body">
+            </li>
+            <li>
+              <h2>Calculate the scores</h2>
+              <div className="method-formulas">
+                <p>
+                  <strong>Category score</strong> = passed attempts ÷ started attempts × 100
+                </p>
+                <p>
+                  <strong>Overall</strong> = (Spot score + Perps score + Predictions score) ÷ 3
+                </p>
+              </div>
               <p>
-                Median latency is elapsed time per task over the reported population. Cost is
-                derived, never measured: the token aggregate priced at the model's published
-                per-token rate, shown as "est. cost/task" with its sample count and population, and
-                unavailable where token evidence or a published price is missing.
+                For example, category scores of 90%, 60%, and 30% give an Overall score of 60%. Each
+                category contributes one third, regardless of its number of tasks. Calculations use
+                full precision; the table displays one decimal place.
               </p>
               <p>
-                Suites and the deterministic grader live in <code>packages/evals</code>. Native
-                route drivers, source identities and executable hashes are recorded per campaign.
-                Reruns require authenticated access to the live backend; identical outputs are not
-                guaranteed.
+                Timeouts and run errors count as started attempts but remain unscored. We show a
+                category percentage only when dispatch and grading are complete. Otherwise, the
+                results are counts-only and excluded from quality rankings. If any category is
+                missing or incompletely graded, Overall is unavailable. An unavailable value is
+                never treated as zero. Every recorded reasoning configuration has its own row; the
+                Complete grading filter shows configurations graded across all three categories.
               </p>
-              <a
-                className="eval-text-link"
-                href="https://github.com/askgina/plugins/tree/main/packages/evals"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Explore the eval runner <ArrowUpRight size={14} aria-hidden="true" />
-              </a>
-            </div>
-          </Panel>
+              <p>
+                Sorting describes these observed results. It does not establish statistical
+                significance or change the exported pilot runs’ unranked status.
+              </p>
+            </li>
+            <li>
+              <h2>Report time and estimated cost</h2>
+              <p>
+                <strong>Average time</strong> is the sum of completed-attempt durations divided by
+                the number of completed attempts across all three categories. It excludes timeouts
+                and run errors. If any completed attempt lacks a timing, we leave the full-suite
+                mean unavailable instead of averaging medians. Incomplete grading does not hide
+                retained timings: the table shows the measured sample count and how many started
+                attempts were excluded.
+              </p>
+              <p>
+                <strong>Estimated cost per task</strong> uses recorded input and output token totals
+                and the model’s published token prices, divided by the attempts covered by those
+                records. Here, a task means one attempt. It is an estimate, not a bill; token
+                records may exclude failed or timed-out attempts.
+              </p>
+              <p>
+                Time and cost need data from all three categories. Open a model’s row to see sample
+                counts, exclusions, category timing percentiles, and pricing sources.
+              </p>
+            </li>
+          </ol>
+          <div className="method-reference">
+            <details className="results-accordion">
+              <summary>Run records</summary>
+              <div>
+                {campaigns.map((campaign) => (
+                  <section className="method-record" key={campaign.campaignId}>
+                    <h2>
+                      {campaign.date}: {campaign.harness}
+                    </h2>
+                    <p>
+                      Source commit:{" "}
+                      <code>{campaign.sourceCommit ?? "Recorded per route and run"}</code>
+                    </p>
+                    {campaign.executableSourceCommit && (
+                      <p>
+                        Executable commit: <code>{campaign.executableSourceCommit}</code>
+                      </p>
+                    )}
+                    {campaign.prUrl && (
+                      <a href={campaign.prUrl} target="_blank" rel="noreferrer">
+                        {campaign.prLabel ?? "Source pull request"} ↗
+                      </a>
+                    )}
+                    <ul>
+                      {campaign.limitations.map((limitation) => (
+                        <li key={limitation}>{limitation}</li>
+                      ))}
+                    </ul>
+                    {runs
+                      .filter((run) => run.campaignId === campaign.campaignId)
+                      .map((run) => (
+                        <details className="results-accordion" key={run.runId}>
+                          <summary>
+                            {getModel(run.modelId)?.name ?? run.modelId}: {run.family}
+                          </summary>
+                          <div>
+                            <RunDetails run={run} />
+                            <p>
+                              Artifact:{" "}
+                              <code>{run.provenance.sourceArtifactSha256 ?? "Not retained"}</code>
+                            </p>
+                            {run.notes.map((note) => (
+                              <p key={note}>{note}</p>
+                            ))}
+                          </div>
+                        </details>
+                      ))}
+                  </section>
+                ))}
+              </div>
+            </details>
+            <details className="results-accordion">
+              <summary>Technical setup</summary>
+              <div>
+                <p>
+                  Tool catalog: <code>{CATALOG_LABEL}</code>
+                </p>
+                <p>
+                  Catalog SHA: <code>{CATALOG_SHA_31_TOOLS}</code>
+                </p>
+                <p>
+                  Deterministic grader SHA: <code>{GRADER_SHA256}</code>
+                </p>
+                <ul>
+                  {[...SCORED_FAMILIES, "Portfolio" as const].map((family) => (
+                    <li key={family}>
+                      {family}: <code>{SUITE_IDS[family]}</code>
+                      <br />
+                      Suite SHA: <code>{SUITE_SHA256[family]}</code>
+                    </li>
+                  ))}
+                </ul>
+                <p>
+                  Native checks and checks derived from recorded scores retain their source labels.
+                  Withheld, not recorded, and not retained evidence remain distinct. Synthetic
+                  examples appear only in Storybook. The Compare tool still requires matching
+                  benchmark conditions.
+                </p>
+              </div>
+            </details>
+            <details className="results-accordion">
+              <summary>Reproduce the evaluation</summary>
+              <div>
+                <p>
+                  The evaluation runner is in <code>packages/evals</code>. Run these commands from
+                  the repository root with Bun 1.4.x.
+                </p>
+                <pre className="method-code">
+                  <code>{`bun install --frozen-lockfile\nbun run eval:replay -- \\\n  --suite packages/evals/src/fixtures/model-smoke.yaml \\\n  --observations packages/evals/src/fixtures/synthetic-observations.yaml \\\n  --output /tmp/plugin-eval-report.json`}</code>
+                </pre>
+                <p>
+                  This replay uses synthetic observations to check the runner without credentials or
+                  live calls. Reproducing measured runs requires the original suite and
+                  configuration plus the appropriate provider credentials; the README documents the
+                  live runner options.
+                </p>
+                <a
+                  href="https://github.com/askgina/plugins/tree/main/packages/evals"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Read the runner instructions ↗
+                </a>
+              </div>
+            </details>
+          </div>
         </div>
-        <p className="eval-method-note">
-          No evaluations, wallet connections, trades, or tool requests run from this site. Downloads
-          serve the exported conformance artifacts displayed here.
-        </p>
       </div>
     </PageShell>
   );

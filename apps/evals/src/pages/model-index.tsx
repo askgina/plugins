@@ -1,14 +1,10 @@
 import { useMemo } from "react";
 import { ArrowUpRight } from "lucide-react";
-import {
-  canonicalModels,
-  MEASURED_FAMILIES,
-  type CanonicalModel,
-  type CanonicalRun,
-} from "../canonical/canonical";
+import { MEASURED_FAMILIES, type CanonicalModel, type CanonicalRun } from "../canonical/canonical";
 import {
   configurationGroupKey,
   headlineFor,
+  modelsByReleaseDate,
   runHistoryFor,
   runsForModel,
 } from "../canonical/selectors";
@@ -75,6 +71,21 @@ function ModelCard({ model }: { model: CanonicalModel }) {
           <p className="model-index-card-provider">
             {model.provider} · <code>{model.providerModel}</code>
           </p>
+          {model.release && (
+            <p className="model-index-card-provider">
+              <a href={model.release.source} target="_blank" rel="noreferrer">
+                Released{" "}
+                <time dateTime={model.release.date}>
+                  {new Intl.DateTimeFormat("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    timeZone: "UTC",
+                  }).format(Date.parse(model.release.date))}
+                </time>
+              </a>
+            </p>
+          )}
         </div>
       </header>
 
@@ -150,10 +161,7 @@ function ModelCard({ model }: { model: CanonicalModel }) {
 }
 
 export function ModelIndexPage() {
-  // Exclude synthetic demonstration models from all app pages (decision 9)
-  const models = useMemo(() => {
-    return canonicalModels.filter((model) => model.origin === "measured");
-  }, []);
+  const models = useMemo(() => modelsByReleaseDate(), []);
 
   return (
     <PageShell
@@ -175,7 +183,7 @@ export function ModelIndexPage() {
           <p className="eval-description">
             Evaluated model configurations across Spot, Perps, and Predictions task families. Each
             card summarizes declared configuration groups and links directly to the latest
-            conformance runs.
+            conformance runs. Ordered by release date, newest first.
           </p>
         </section>
 

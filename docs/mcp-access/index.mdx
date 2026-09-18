@@ -5,12 +5,12 @@ description: "Compare read-only research with venue-specific trading and transfe
 
 Choose permissions before connecting a client. One read-only connection covers all markets; execution is split into three venue-specific connections.
 
-| Access                    | Server URL                              | OAuth scope     | Purpose                                          |
-| ------------------------- | --------------------------------------- | --------------- | ------------------------------------------------ |
-| Read-only                 | `https://askgina.ai/ai/gina/mcp`        | `tools:read`    | Research and account visibility across markets   |
-| Write access (Degen mode) | `https://askgina.ai/ai/spot/mcp`        | `tools:execute` | Spot execution, swaps, transfers, and scheduling |
-| Write access (Degen mode) | `https://askgina.ai/ai/predictions/mcp` | `tools:execute` | Prediction-market execution                      |
-| Write access (Degen mode) | `https://askgina.ai/ai/perps/mcp`       | `tools:execute` | Perpetual-futures execution                      |
+| Access                    | Server URL                              | OAuth scope     | Purpose                                                         |
+| ------------------------- | --------------------------------------- | --------------- | --------------------------------------------------------------- |
+| Read-only                 | `https://askgina.ai/ai/gina/mcp`        | `tools:read`    | Research and account visibility across markets                  |
+| Write access (Degen mode) | `https://askgina.ai/ai/spot/mcp`        | `tools:execute` | Spot execution, swaps, transfers, LP operations, and scheduling |
+| Write access (Degen mode) | `https://askgina.ai/ai/predictions/mcp` | `tools:execute` | Prediction-market execution                                     |
+| Write access (Degen mode) | `https://askgina.ai/ai/perps/mcp`       | `tools:execute` | Perpetual-futures execution                                     |
 
 ## Read-only access
 

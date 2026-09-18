@@ -1,5 +1,5 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
-import { ArrowUpRight, FlaskConical, X } from "lucide-react";
+import { type CSSProperties, type ReactNode } from "react";
+import { X } from "lucide-react";
 import { reasoningSweepPublication } from "../results";
 import { Button } from "./ui/button";
 import { DialogRoot, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
@@ -17,7 +17,7 @@ const navigation: readonly { id: ShellPageId; label: string; href: string }[] = 
 ];
 
 const DATA_ORIGIN_NOTE =
-  "Measured tool-use conformance exported from run artifacts — not answer accuracy or financial outcomes. Synthetic previews live in Storybook only.";
+  "Tool-use results from measured runs. Missing data is shown as unavailable.";
 
 export function PageShell({
   active,
@@ -28,18 +28,15 @@ export function PageShell({
   children: ReactNode;
   footerNote?: string;
 }) {
-  const [runOpen, setRunOpen] = useState(false);
   return (
     <div className="eval-app">
       <a className="eval-skip-link" href="#eval-main">
         Skip to content
       </a>
       <header className="eval-header">
-        <a className="eval-wordmark" href="#/leaderboard" aria-label="Ask Gina Evals home">
-          <strong>
-            Ask Gina<span className="eval-brand-dot">·</span>
-          </strong>
-          <span>Evals</span>
+        <a className="eval-wordmark" href="#/leaderboard" aria-label="Ask Gina home">
+          <img src="/favicon.svg" width={40} height={40} alt="" />
+          <strong>Ask Gina</strong>
         </a>
         <nav className="eval-nav" aria-label="Main navigation">
           {navigation.map((item) => (
@@ -52,11 +49,6 @@ export function PageShell({
             </a>
           ))}
         </nav>
-        <div className="eval-header-actions">
-          <Button className="eval-run-button" onClick={() => setRunOpen(true)}>
-            Run an evaluation <ArrowUpRight size={14} aria-hidden="true" />
-          </Button>
-        </div>
       </header>
       <main id="eval-main" className="eval-main" tabIndex={-1}>
         {(reasoningSweepPublication.publishedRows < reasoningSweepPublication.plannedRows ||
@@ -75,82 +67,37 @@ export function PageShell({
         <span>
           {footerNote ?? DATA_ORIGIN_NOTE} <a href="#/methodology">See methodology.</a>
         </span>
-        <span>Open tools. Transparent results.</span>
       </footer>
-      <Modal
-        title="Run an evaluation"
-        description="How to reproduce these results with the open-source runner."
-        open={runOpen}
-        onClose={() => setRunOpen(false)}
-      >
-        <div className="eval-run-intro">
-          <FlaskConical size={25} aria-hidden="true" />
-          <p>
-            This site only reads exported artifacts — it never starts evaluations or connects to a
-            wallet. The runner lives in <code>packages/evals</code> (Bun 1.4.x, run from the
-            repository root).
-          </p>
-        </div>
-        <p>
-          Hermetic replay grades the bundled suite against recorded observations — no credentials
-          and no live calls:
-        </p>
-        <pre className="eval-code" role="region" aria-label="Replay instructions" tabIndex={0}>
-          <code>
-            bun install --frozen-lockfile{"\n"}
-            bun run eval:replay -- \{"\n"}
-            {"  "}--suite packages/evals/src/fixtures/model-smoke.yaml \{"\n"}
-            {"  "}--observations packages/evals/src/fixtures/synthetic-observations.yaml \{"\n"}
-            {"  "}--output /tmp/plugin-eval-report.json
-          </code>
-        </pre>
-        <p>
-          Live trials use the same suite and grader against a real backend. Every runner needs{" "}
-          <code>ASK_GINA_ACCESS_TOKEN</code> plus its own credential (for example{" "}
-          <code>OPENROUTER_API_KEY</code>), a clean Git worktree, and three to five repetitions:
-        </p>
-        <pre className="eval-code" role="region" aria-label="Live run instructions" tabIndex={0}>
-          <code>
-            bun run eval:openrouter -- \{"\n"}
-            {"  "}--suite packages/evals/src/fixtures/ask-gina-routing-smoke.yaml \{"\n"}
-            {"  "}--run-id local-openrouter-example --candidate main \{"\n"}
-            {"  "}--model openai/gpt-5.1 --reasoning medium \{"\n"}
-            {"  "}--repetitions 3 --account-class eval --timeout-ms 120000 \{"\n"}
-            {"  "}--max-steps 8 --openrouter-endpoint openai \{"\n"}
-            {"  "}--expected-provider OpenAI --max-cost-usd 25
-          </code>
-        </pre>
-        <p className="eval-muted">
-          Responses, Codex, Claude, and OMP runners follow the same shape — see the package README
-          for each runner's flags and credentials.
-        </p>
-        <a
-          className="eval-text-link"
-          href="https://github.com/askgina/plugins/tree/main/packages/evals"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Read eval runner instructions <ArrowUpRight size={14} aria-hidden="true" />
-        </a>
-      </Modal>
     </div>
   );
 }
+
+const providerLogos: Readonly<Record<string, string>> = {
+  openai: "/images/model-logos/openai.svg",
+  anthropic: "/images/model-logos/claude.svg",
+  muse: "/images/model-logos/meta.svg",
+  meta: "/images/model-logos/meta.svg",
+};
 
 export function ModelAvatar({
   model,
   size = "sm",
 }: {
-  model: { name: string; mark: string; color: string; id?: string };
+  model: { name: string; mark: string; color: string; id?: string; provider?: string };
   size?: "sm" | "lg";
 }) {
+  const logo = providerLogos[model.provider?.toLowerCase() ?? ""];
   return (
     <span
-      className={`eval-avatar eval-avatar-${size} ${model.id ? `eval-avatar-${model.id}` : ""}`}
+      className={`eval-avatar eval-avatar-${size} ${logo ? "eval-avatar-logo" : ""} ${model.id ? `eval-avatar-${model.id}` : ""}`}
       style={{ "--model-color": model.color } as CSSProperties}
       aria-hidden="true"
     >
-      {model.mark}
+      {logo ? (
+        <img src={logo} alt="" width={size === "lg" ? 38 : 24} height={size === "lg" ? 38 : 24} />
+      ) : (
+        model.mark
+      )}
     </span>
   );
 }
