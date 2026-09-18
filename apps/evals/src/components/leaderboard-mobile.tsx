@@ -317,7 +317,6 @@ export function LeaderboardMobile({
           {totals.runtimeFailure} run errors
         </p>
       </div>
-      {mobile && <LeaderboardScatter rows={shown} compact />}
       <section aria-label="Leaderboard results">
         <div className="lb-mobile-controls">
           <label>
@@ -435,6 +434,7 @@ export function LeaderboardMobile({
           attempts; exclusions are shown. Costs are estimates, not billed spend.
         </p>
       </section>
+      {mobile && <LeaderboardScatter rows={shown} compact />}
     </div>
   );
 }

@@ -164,7 +164,6 @@ export function LeaderboardPage({
             </span>
           </p>
         </div>
-        <LeaderboardScatter rows={shown} />
         <div
           className="results-scroll"
           role="region"
@@ -377,6 +376,7 @@ export function LeaderboardPage({
           include cache discounts and are not billed spend or subscription charges. Evidence and
           sources include per-category latency, tokens, provenance, and recorded limitations.
         </p>
+        <LeaderboardScatter rows={shown} />
       </div>
     </PageShell>
   );
