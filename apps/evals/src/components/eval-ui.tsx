@@ -36,7 +36,20 @@ export function PageShell({
       <header className="eval-header">
         <a className="eval-wordmark" href="#/leaderboard" aria-label="Ask Gina home">
           <img src="/favicon.svg" width={40} height={40} alt="" />
-          <strong>Ask Gina</strong>
+          <img
+            className="eval-wordmark-light"
+            src="/images/brand/typography-full-blackOnNone-v2.svg"
+            width={104}
+            height={30}
+            alt=""
+          />
+          <img
+            className="eval-wordmark-dark"
+            src="/images/brand/typography-full-whiteOnNone-v2.svg"
+            width={104}
+            height={30}
+            alt=""
+          />
         </a>
         <nav className="eval-nav" aria-label="Main navigation">
           {navigation.map((item) => (

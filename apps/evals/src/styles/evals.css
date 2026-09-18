@@ -58,10 +58,15 @@ body,
   gap: 8px;
   flex-shrink: 0;
 }
-.eval-wordmark strong {
-  font-size: 23px;
-  font-weight: 600;
-  letter-spacing: -1.3px;
+.eval-wordmark :is(.eval-wordmark-light, .eval-wordmark-dark) {
+  width: auto;
+  height: 30px;
+}
+.eval-wordmark-light {
+  display: var(--eval-wordmark-light-display, block);
+}
+.eval-wordmark-dark {
+  display: var(--eval-wordmark-dark-display, none);
 }
 .eval-nav {
   display: flex;
@@ -232,12 +237,16 @@ body,
   background: var(--eval-red);
 }
 .dark {
+  --eval-wordmark-light-display: none;
+  --eval-wordmark-dark-display: block;
   --eval-avatar-light-display: none;
   --eval-avatar-dark-display: block;
 }
 /* Eval pages keep a light surface even when the surrounding app is dark. */
 .light,
 .eval-app {
+  --eval-wordmark-light-display: block;
+  --eval-wordmark-dark-display: none;
   --eval-avatar-light-display: block;
   --eval-avatar-dark-display: none;
 }
@@ -480,8 +489,8 @@ body,
     padding: 18px 22px 0;
     gap: 16px;
   }
-  .eval-wordmark strong {
-    font-size: 22px;
+  .eval-wordmark :is(.eval-wordmark-light, .eval-wordmark-dark) {
+    height: 28px;
   }
   .eval-nav {
     order: 3;
