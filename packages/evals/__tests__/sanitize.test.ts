@@ -2,8 +2,10 @@ import { assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
 
 import {
+  findPublicCredentialViolations,
   findPublicTextViolations,
   sanitizeEvalAggregate,
+  type PublicTextViolationKind,
   type SanitizedEvalAggregate,
   type SanitizedEvalAggregateProvenance,
 } from "../src/index";
@@ -54,6 +56,45 @@ const failureReasons = (input: unknown, provenance = expected) =>
   });
 
 describe("public eval text detection", () => {
+  it("keeps all seven source-boundary credential rules and their original offsets", () => {
+    const samples = [
+      ["sk", "-proj-0123456789abcdefghijklmnop"].join(""),
+      ["gh", "p_0123456789abcdefghijklmnopqrstuvwxyz"].join(""),
+      ["eyJabcdefghijk", "abcdefghijk", "abcdefghijk"].join("."),
+      ["Bearer", "abc123-secret-value"].join(" "),
+      ["Basic", btoa("user:private-password")].join(" "),
+      ["https://user", ":password@example.test/repo"].join(""),
+      ["-----BEGIN RSA", " PRIVATE KEY-----\nfixture\n-----END RSA", " PRIVATE KEY-----"].join(""),
+    ];
+    const kinds: readonly PublicTextViolationKind[] = [
+      "provider-api-key",
+      "github-token",
+      "jwt",
+      "bearer-credential",
+      "basic-credential",
+      "uri-userinfo",
+      "private-key",
+    ];
+    for (const [index, sample] of samples.entries()) {
+      const text = `prefix ${sample}`;
+      assert.deepStrictEqual(findPublicCredentialViolations(text), [
+        { kind: kinds[index], index: 7 },
+      ]);
+      assert.deepStrictEqual(
+        findPublicCredentialViolations(text),
+        findPublicTextViolations(text).filter((finding) => kinds.includes(finding.kind)),
+      );
+    }
+  });
+
+  it("scans credentials at the end of large serialized tool output without truncating", () => {
+    const prefix = '{"market":"https://example.test/a/b","price":123},'.repeat(10000);
+    const secret = ["gh", "p_0123456789abcdefghijklmnopqrstuvwxyz"].join("");
+    assert.deepStrictEqual(findPublicCredentialViolations(prefix + secret), [
+      { kind: "github-token", index: prefix.length },
+    ]);
+  });
+
   it("enumerates decoy-then-real assignments and provider tokens without values", () => {
     const secret = ["sk", "-proj-0123456789abcdefghijklmnop"].join("");
     const text = `OPENAI_API_KEY=synthetic-fixture OPENAI_API_KEY=${secret}`;

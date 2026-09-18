@@ -196,10 +196,11 @@ describe("local conversation evidence", () => {
 
   it("only enables the endpoint in development and rejects remote or cross-origin reads", () => {
     assert.equal(evalConversationsPlugin().apply, "serve");
+    const loopbackOrigin = "http://localhost";
     const local = {
       remoteAddress: "127.0.0.1",
       host: "localhost:5173",
-      origin: "http://localhost:5173",
+      origin: `${loopbackOrigin}:5173`,
       fetchSite: "same-origin",
     };
     assert.isTrue(isLocalConversationRequest(local));
@@ -207,7 +208,7 @@ describe("local conversation evidence", () => {
     for (const patch of [
       { remoteAddress: "192.168.1.10" },
       { host: "attacker.example" },
-      { origin: "http://localhost:9000" },
+      { origin: `${loopbackOrigin}:9000` },
       { origin: "https://attacker.example" },
       { fetchSite: "cross-site" },
       { fetchSite: "same-site" },

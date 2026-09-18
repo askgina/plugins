@@ -3,8 +3,8 @@
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import {
+  findPublicCredentialViolations,
   findPublicTextViolations,
-  type PublicTextViolationKind,
 } from "../packages/evals/src/index";
 import { Data, Effect, FileSystem, Function, Layer, Path, Schema } from "effect";
 
@@ -48,23 +48,11 @@ const DOCUMENTATION_PNG_ASSETS: Record<string, true> = {
   "docs/images/product/wallet-balance.png": true,
   "docs/images/product/workflow-results.png": true,
 };
-const HIGH_CONFIDENCE_SECRET_KINDS: ReadonlySet<PublicTextViolationKind> = new Set([
-  "basic-credential",
-  "bearer-credential",
-  "github-token",
-  "jwt",
-  "private-key",
-  "provider-api-key",
-  "uri-userinfo",
-]);
-
 const reportablePublicTextViolations = (
   text: string,
   receipt: boolean,
 ): ReturnType<typeof findPublicTextViolations> =>
-  findPublicTextViolations(text).filter(
-    (violation) => receipt || HIGH_CONFIDENCE_SECRET_KINDS.has(violation.kind),
-  );
+  receipt ? findPublicTextViolations(text) : findPublicCredentialViolations(text);
 const PRIVATE_ALIAS = ["@", "/"].join("");
 const PRIVATE_REPOSITORY = ["nextjs", "-ai-chatbot"].join("");
 const PRIVATE_REGISTRY = ["gina-tool", "-registry"].join("");
