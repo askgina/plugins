@@ -28,7 +28,6 @@
       "group": "Start here",
       "pages": [
         "what-is-gina",
-        "evaluations",
         "product-guide/wallet-and-account",
         {
           "group": "Automations",
@@ -40,6 +39,7 @@
             "product-guide/automations/copy-trading"
           ]
         },
+        "evaluations",
         "product-guide/networks-fees-and-pricing"
       ]
     },
