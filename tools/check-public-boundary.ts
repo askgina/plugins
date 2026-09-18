@@ -27,6 +27,8 @@ const PACKAGES = [
 const MAX_FINDINGS = 100;
 const MAX_TEXT_BYTES = 2 * 1024 * 1024;
 const DOCUMENTATION_PNG_ASSETS: Record<string, true> = {
+  "docs/images/clients/grok-bot.png": true,
+  "docs/images/clients/hermes.png": true,
   "docs/images/product/agent-setup-read-only.png": true,
   "docs/images/product/agent-setup-full-access.png": true,
   "docs/images/product/automations-overview.png": true,
