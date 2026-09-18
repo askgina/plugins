@@ -16,9 +16,9 @@ import {
   SCORED_FAMILIES,
   benchmarkSummary,
   configurationLeaderboardRows,
+  defaultLeaderboardRows,
   recordedOutcomes,
   sortLeaderboardRows,
-  unifiedLeaderboardRows,
   type LeaderboardMetric,
   type LeaderboardModelRow,
   type SummaryMetric,
@@ -32,16 +32,20 @@ const configurations = [...configurationLeaderboardRows()].sort((a, b) =>
 const latestCampaignConfigurations = configurations.filter(
   (row) => row.campaignId === configurations[0]?.campaignId,
 );
-const defaultRows = unifiedLeaderboardRows().map(
-  (row) =>
-    configurations.find(
-      (configuration) =>
-        configuration.model.id === row.model.id &&
-        SCORED_FAMILIES.every(
-          (family) => configuration.runs[family]?.runId === row.runs[family]?.runId,
-        ),
-    ) ?? row,
-);
+const defaultRows = defaultLeaderboardRows(configurations);
+
+function ConfigurationCoverage({ row }: { row: LeaderboardModelRow }) {
+  const settings = configurations.filter(
+    (setting) => setting.model.id === row.model.id && setting.campaignId === row.campaignId,
+  );
+  if (settings.length === 0) return null;
+  return (
+    <small>
+      {settings.filter((setting) => setting.overall !== null).length}/{settings.length} settings
+      fully graded across all categories
+    </small>
+  );
+}
 
 const columns: readonly { metric: LeaderboardMetric; label: string; explanation: string }[] = [
   {
@@ -254,6 +258,10 @@ export function LeaderboardPage({
           description="Compare model results on spot, perpetuals, and prediction-market tasks."
         >
           <p className="results-context">{benchmarkSummary(activeRows)}</p>
+          <p className="results-context">
+            Default: latest fully graded setting per model in its newest campaign, when available.
+            All recorded settings remain in run details.
+          </p>
         </ResultsHeader>
         <div className="results-toolbar">
           <p className="results-explanation">
@@ -351,6 +359,7 @@ export function LeaderboardPage({
                             </button>
                           )}
                           {row.configurationLabel && <small>{row.configurationLabel}</small>}
+                          {rows === defaultRows && <ConfigurationCoverage row={row} />}
                           {row.coverageLabel && <small>{row.coverageLabel}</small>}
                         </div>
                       </div>
@@ -406,7 +415,11 @@ export function LeaderboardPage({
                                 }))
                               }
                             >
-                              <option value="">Latest recorded runs</option>
+                              <option value="">
+                                {defaultRows.find((entry) => entry.model.id === row.model.id)?.overall != null
+                                  ? "Default: latest fully graded setting"
+                                  : "Default: latest recorded setting (unranked)"}
+                              </option>
                               {configurations
                                 .filter((configuration) => configuration.model.id === row.model.id)
                                 .map((configuration) => (

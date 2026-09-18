@@ -135,8 +135,11 @@ export function MethodologyPage() {
                 results are counts-only and excluded from quality rankings. If any category is
                 missing or incompletely graded, Overall is unavailable. An unavailable value is
                 never treated as zero. The leaderboard shows one row per model, using its latest
-                recorded runs by default. Expand a row to inspect or select another recorded
-                reasoning setting. Settings are never chosen for having the best score.
+                fully graded setting within its newest campaign by default. If none is fully graded,
+                its latest setting remains visible and unranked. Expand a row to inspect or select
+                any recorded reasoning setting, including later incomplete runs. Selection uses
+                grading coverage and date, never the highest score; it does not make different
+                clients, reasoning settings, or time budgets equivalent.
               </p>
               <p>
                 Sorting describes these observed results. It does not establish statistical

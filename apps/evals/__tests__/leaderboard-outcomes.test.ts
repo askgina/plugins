@@ -23,3 +23,15 @@ test("the page supplies all eligible sweep settings to the chart", () => {
   expect(html).toContain("GPT-6 Astra, low reasoning");
   expect(html).toContain("GPT-6 Astra, high reasoning");
 });
+
+test("the default table shows Astra's complete score and discloses the selection rule", () => {
+  const html = renderToStaticMarkup(createElement(LeaderboardPage));
+  expect(html).toContain("Default: latest fully graded setting per model");
+  expect(html).toContain("64.0%");
+  expect(html).toContain("1/4 settings fully graded across all categories");
+  expect(html).toContain("3/5 settings fully graded across all categories");
+  expect(html.indexOf('href="#/models/astra"')).toBeLessThan(
+    html.indexOf('href="#/models/gemini"'),
+  );
+  expect(html).toContain("max reasoning · OMP</option>");
+});

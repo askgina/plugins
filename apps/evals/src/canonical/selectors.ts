@@ -849,6 +849,32 @@ export function configurationLeaderboardRows(
   });
 }
 
+/** Choose by grading coverage and date within the newest campaign, never by score. */
+export function defaultLeaderboardRows(
+  configurations: readonly LeaderboardModelRow[] = configurationLeaderboardRows(),
+): readonly LeaderboardModelRow[] {
+  const startedAt = (row: LeaderboardModelRow) =>
+    Object.values(row.runs)
+      .map((run) => run.startedAt)
+      .sort()[0] ?? "";
+  const groups = new Map<string, LeaderboardModelRow[]>();
+  for (const row of configurations) {
+    const group = groups.get(row.model.id) ?? [];
+    group.push(row);
+    groups.set(row.model.id, group);
+  }
+  return [...groups.values()].map((group) => {
+    const newestFirst = [...group].sort(
+      (a, b) => startedAt(b).localeCompare(startedAt(a)) || (a.rowId ?? "").localeCompare(b.rowId ?? ""),
+    );
+    const newest = newestFirst[0]!;
+    return (
+      newestFirst.find((row) => row.campaignId === newest.campaignId && row.overall !== null) ??
+      newest
+    );
+  });
+}
+
 export function recordedOutcomes(runs: readonly CanonicalRun[]) {
   return runs.reduce(
     (total, run) => ({

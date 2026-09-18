@@ -9,12 +9,14 @@ import {
 import {
   compareEligibility,
   configurationLeaderboardRows,
+  defaultLeaderboardRows,
   eligibilityText,
   measuredRepresentativeRuns,
   sortLeaderboardRows,
   summarizeTask,
   unifiedLeaderboardRows,
   type ScoredFamily,
+  type LeaderboardModelRow,
 } from "../src/canonical/selectors";
 
 const model: CanonicalModel = {
@@ -150,6 +152,50 @@ function suite(): CanonicalRun[] {
 
 const rowFor = (runs: readonly CanonicalRun[]) =>
   unifiedLeaderboardRows(runs, publications(runs), [model])[0]!;
+
+describe("default leaderboard settings", () => {
+  function setting(id: string, day: number, score: number | null, campaignId = "newest") {
+    const base = rowFor(suite());
+    return {
+      ...base,
+      rowId: id,
+      campaignId,
+      overall: score,
+      runs: Object.fromEntries(
+        Object.entries(base.runs).map(([family, run]) => [
+          family,
+          { ...run, startedAt: `2026-09-${String(day).padStart(2, "0")}T00:00:00Z` },
+        ]),
+      ),
+    } satisfies LeaderboardModelRow;
+  }
+
+  test("keeps the newest fully graded setting visible without choosing the best score", () => {
+    const best = setting("older-best", 16, 1);
+    const zero = setting("newer-zero", 17, 0);
+    const incomplete = setting("latest-incomplete", 18, null);
+    expect(defaultLeaderboardRows([incomplete, best, zero])).toEqual([zero]);
+  });
+
+  test("keeps the latest setting unranked when the newest campaign has no complete result", () => {
+    const older = setting("old-complete", 15, 1, "older-campaign");
+    const latest = setting("latest-incomplete", 18, null);
+    expect(defaultLeaderboardRows([older, latest])).toEqual([latest]);
+    expect(defaultLeaderboardRows([])).toEqual([]);
+  });
+
+  test("uses retained Astra high results and preserves all incomplete settings", () => {
+    const configurations = configurationLeaderboardRows();
+    const defaults = defaultLeaderboardRows(configurations);
+    const astra = defaults.find((row) => row.model.id === "astra")!;
+    const gemini = defaults.find((row) => row.model.id === "gemini")!;
+    expect(astra.runs.Spot?.configuration.reasoning).toBe("high");
+    expect(astra.overall).toBeCloseTo(0.6396011396);
+    expect(gemini.runs.Spot?.configuration.reasoning).toBe("high");
+    expect(gemini.overall).toBeCloseTo(0.2331433998);
+    expect(configurations.find((row) => row.runs.Spot?.runId === "astra-max-spot-1")?.overall).toBeNull();
+  });
+});
 
 function retainedAttempts(run: CanonicalRun): readonly CanonicalAttempt[] {
   if (run.attempts.availability !== "available")

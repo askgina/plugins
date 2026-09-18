@@ -77,6 +77,8 @@ const providerLogos: Readonly<Record<string, string>> = {
   anthropic: "/images/model-logos/claude.svg",
   muse: "/images/model-logos/meta.svg",
   meta: "/images/model-logos/meta.svg",
+  xai: "/images/model-logos/grok.svg",
+  google: "/images/model-logos/gemini.svg",
 };
 
 export function ModelAvatar({
@@ -87,13 +89,19 @@ export function ModelAvatar({
   size?: "sm" | "lg";
 }) {
   const logo = providerLogos[model.provider?.toLowerCase() ?? ""];
+  const monochrome = model.provider?.toLowerCase() === "xai";
   return (
     <span
-      className={`eval-avatar eval-avatar-${size} ${logo ? "eval-avatar-logo" : ""} ${model.id ? `eval-avatar-${model.id}` : ""}`}
-      style={{ "--model-color": model.color } as CSSProperties}
+      className={`eval-avatar eval-avatar-${size} ${logo ? "eval-avatar-logo" : ""} ${monochrome ? "eval-avatar-monochrome" : ""} ${model.id ? `eval-avatar-${model.id}` : ""}`}
+      style={{
+        "--model-color": model.color,
+        ...(monochrome ? { "--model-logo": `url("${logo}")` } : {}),
+      } as CSSProperties}
       aria-hidden="true"
     >
-      {logo ? (
+      {monochrome ? (
+        <span className="eval-avatar-mask" />
+      ) : logo ? (
         <img src={logo} alt="" width={size === "lg" ? 38 : 24} height={size === "lg" ? 38 : 24} />
       ) : (
         model.mark

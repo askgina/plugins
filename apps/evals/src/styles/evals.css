@@ -263,6 +263,16 @@ body,
   height: 80%;
   object-fit: contain;
 }
+.eval-avatar.eval-avatar-monochrome {
+  color: inherit;
+}
+.eval-avatar-mask {
+  display: block;
+  width: 80%;
+  height: 80%;
+  background-color: currentColor;
+  mask: var(--model-logo) center / contain no-repeat;
+}
 .eval-avatar-claude-4 {
   background: #e9d2bc;
   color: #4f2e1a;
