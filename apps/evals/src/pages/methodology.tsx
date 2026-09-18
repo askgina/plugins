@@ -134,8 +134,9 @@ export function MethodologyPage() {
                 category percentage only when dispatch and grading are complete. Otherwise, the
                 results are counts-only and excluded from quality rankings. If any category is
                 missing or incompletely graded, Overall is unavailable. An unavailable value is
-                never treated as zero. Every recorded reasoning configuration has its own row; the
-                Complete grading filter shows configurations graded across all three categories.
+                never treated as zero. The leaderboard shows one row per model, using its latest
+                recorded runs by default. Expand a row to inspect or select another recorded
+                reasoning setting. Settings are never chosen for having the best score.
               </p>
               <p>
                 Sorting describes these observed results. It does not establish statistical
@@ -149,8 +150,8 @@ export function MethodologyPage() {
                 the number of completed attempts across all three categories. It excludes timeouts
                 and run errors. If any completed attempt lacks a timing, we leave the full-suite
                 mean unavailable instead of averaging medians. Incomplete grading does not hide
-                retained timings: the table shows the measured sample count and how many started
-                attempts were excluded.
+                retained timings: expanded run details show the measured sample count and how many
+                started attempts were excluded.
               </p>
               <p>
                 <strong>Estimated cost per task</strong> uses recorded input and output token totals

@@ -2,7 +2,6 @@ import { Fragment, useState } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { LeaderboardScatter } from "../components/leaderboard-scatter";
 import { ModelAvatar, PageShell } from "../components/eval-ui";
-import { canonicalCampaigns, type CanonicalRun } from "../canonical/canonical";
 import {
   InfoPopover,
   ResultsHeader,
@@ -17,13 +16,18 @@ import {
   configurationLeaderboardRows,
   recordedOutcomes,
   sortLeaderboardRows,
+  unifiedLeaderboardRows,
   type LeaderboardMetric,
   type LeaderboardModelRow,
   type SummaryMetric,
 } from "../canonical/selectors";
 
-const defaultRows = configurationLeaderboardRows();
-const rowKey = (row: LeaderboardModelRow) => row.rowId ?? row.model.id;
+const defaultRows = unifiedLeaderboardRows();
+const configurations = [...configurationLeaderboardRows()].sort((a, b) =>
+  (Object.values(b.runs)[0]?.startedAt ?? "").localeCompare(
+    Object.values(a.runs)[0]?.startedAt ?? "",
+  ),
+);
 
 const columns: readonly { metric: LeaderboardMetric; label: string; explanation: string }[] = [
   {
@@ -36,25 +40,25 @@ const columns: readonly { metric: LeaderboardMetric; label: string; explanation:
     metric: "Spot",
     label: "Spot",
     explanation:
-      "Passed attempts divided by started attempts on spot-market tasks, shown only with complete dispatch and grading. Unscored attempts are not quality failures.",
+      "Passed attempts divided by started attempts on spot-market tasks. Shown only with complete dispatch and grading. Timeouts and run errors remain unscored.",
   },
   {
     metric: "Perps",
     label: "Perps",
     explanation:
-      "Passed attempts divided by started attempts on perpetual-futures tasks, shown only with complete dispatch and grading. Unscored attempts are not quality failures.",
+      "Passed attempts divided by started attempts on perpetual-futures tasks. Shown only with complete dispatch and grading. Timeouts and run errors remain unscored.",
   },
   {
     metric: "Predictions",
     label: "Predictions",
     explanation:
-      "Passed attempts divided by started attempts on prediction-market tasks, shown only with complete dispatch and grading. Unscored attempts are not quality failures.",
+      "Passed attempts divided by started attempts on prediction-market tasks. Shown only with complete dispatch and grading. Timeouts and run errors remain unscored.",
   },
   {
     metric: "time",
     label: "Avg. time",
     explanation:
-      "Arithmetic mean of recorded completed-attempt durations across all three categories. Shown even when other attempts timed out or errored; the sample count tells you how many are included. This is not the median.",
+      "Arithmetic mean of completed-attempt durations across all three categories, in seconds. Unavailable if any completed attempt lacks a timing. This is not the median and excludes timeouts and run errors.",
   },
   {
     metric: "cost",
@@ -67,88 +71,16 @@ const columns: readonly { metric: LeaderboardMetric; label: string; explanation:
 function SummaryValue({
   metric,
   format,
-  kind,
 }: {
   metric: SummaryMetric;
   format: (value: number) => string;
-  kind: "time" | "cost";
 }) {
   return metric.availability === "available" ? (
-    <span className="results-value-stack">
-      <span>{format(metric.value)}</span>
-      <small>{metric.sampleCount} attempts measured</small>
-      {metric.excluded > 0 && <small>{metric.excluded} excluded</small>}
-    </span>
+    <>{format(metric.value)}</>
   ) : (
-    <span
-      className="results-unavailable"
-      title={metric.reason}
-      aria-label={`Unavailable: ${metric.reason}`}
-    >
-      {metric.reason.includes("price")
-        ? "Price unavailable"
-        : metric.reason.includes("all three")
-          ? "Partial coverage"
-          : kind === "time"
-            ? "No timing"
-            : "No cost estimate"}
+    <span title={metric.reason} aria-label={`Unavailable: ${metric.reason}`}>
+      —
     </span>
-  );
-}
-
-function RecordedResult({
-  runs,
-  score,
-  href,
-  overall = false,
-}: {
-  runs: readonly CanonicalRun[];
-  score: number | null;
-  href?: string;
-  overall?: boolean;
-}) {
-  if (!runs.length) return <span className="results-unavailable">Not evaluated</span>;
-  const counts = recordedOutcomes(runs);
-  const interruptions = [
-    counts.timedOut > 0 ? `${counts.timedOut} timed out` : "",
-    counts.runtimeFailure > 0
-      ? `${counts.runtimeFailure} run error${counts.runtimeFailure === 1 ? "" : "s"}`
-      : "",
-    counts.pending > 0 ? `${counts.pending} pending` : "",
-    counts.unstarted > 0 ? `${counts.unstarted} not started` : "",
-    counts.unknown > 0 ? `${counts.unknown} unknown` : "",
-  ]
-    .filter(Boolean)
-    .join(" · ");
-  const value =
-    score !== null
-      ? percent(score)
-      : overall
-        ? `${counts.graded}/${counts.planned} graded`
-        : `${counts.passed} passed · ${counts.failed} failed`;
-  return (
-    <div className={`results-value-stack ${score === null ? "results-partial" : ""}`}>
-      {href ? (
-        <a className="results-score-link" href={href}>
-          {value}
-        </a>
-      ) : (
-        <span>{value}</span>
-      )}
-      {score !== null || overall ? (
-        <small>
-          {counts.passed} passed · {counts.failed} failed
-        </small>
-      ) : (
-        <small>
-          {counts.graded}/{counts.planned} graded
-        </small>
-      )}
-      {interruptions && <small className="results-interruption">{interruptions}</small>}
-      {score === null && overall && (
-        <small>Not ranked{runs.length < 3 ? " · partial coverage" : ""}</small>
-      )}
-    </div>
   );
 }
 
@@ -176,26 +108,26 @@ export function LeaderboardPage({
   const [search, setSearch] = useState(initialSearch);
   const [metric, setMetric] = useState<LeaderboardMetric>("overall");
   const [direction, setDirection] = useState<"asc" | "desc">("desc");
-  const campaigns = canonicalCampaigns
-    .filter((campaign) => rows.some((row) => row.campaignId === campaign.campaignId))
-    .sort((a, b) => b.date.localeCompare(a.date));
-  const [campaignId, setCampaignId] = useState(campaigns[0]?.campaignId ?? "all");
-  const [grading, setGrading] = useState("all");
+  const [selectedConfigurations, setSelectedConfigurations] = useState<
+    Readonly<Record<string, string>>
+  >({});
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(
-    new Set(rows.filter((row) => row.model.id === initialExpandedModel).map(rowKey)),
+    new Set(initialExpandedModel ? [initialExpandedModel] : []),
   );
   const query = search.trim().toLocaleLowerCase();
-  const campaignRows = rows.filter((row) => campaignId === "all" || row.campaignId === campaignId);
-  const completeCount = campaignRows.filter((row) => row.overall !== null).length;
-  const totals = recordedOutcomes(campaignRows.flatMap((row) => Object.values(row.runs)));
+  const activeRows = rows.map(
+    (row) =>
+      (rows === defaultRows
+        ? configurations.find(
+            (configuration) =>
+              configuration.model.id === row.model.id &&
+              configuration.rowId === selectedConfigurations[row.model.id],
+          )
+        : undefined) ?? row,
+  );
   const shown = sortLeaderboardRows(
-    campaignRows.filter(
-      (row) =>
-        `${row.model.name} ${row.model.provider} ${row.configurationLabel ?? ""}`
-          .toLocaleLowerCase()
-          .includes(query) &&
-        (grading === "all" ||
-          (grading === "complete" ? row.overall !== null : row.overall === null)),
+    activeRows.filter((row) =>
+      `${row.model.name} ${row.model.provider}`.toLocaleLowerCase().includes(query),
     ),
     metric,
     direction,
@@ -227,12 +159,12 @@ export function LeaderboardPage({
           title="Gina Model Leaderboard"
           description="Compare model results on spot, perpetuals, and prediction-market tasks."
         >
-          <p className="results-context">{benchmarkSummary(campaignRows)}</p>
+          <p className="results-context">{benchmarkSummary(activeRows)}</p>
         </ResultsHeader>
         <div className="results-toolbar">
           <p className="results-explanation">
-            Each row is a recorded model and reasoning setting. Scores require complete grading;
-            other rows show the recorded passes, failures, timeouts, and run errors.{" "}
+            Scores measure tool-use checks in these runs. Models used different clients; answer
+            accuracy and trading returns were not evaluated.{" "}
             <a href="#/methodology">Methodology ↗</a>
           </p>
           <label className="results-search">
@@ -245,42 +177,6 @@ export function LeaderboardPage({
               placeholder="Search models"
             />
           </label>
-        </div>
-        <div className="results-filters">
-          {campaigns.length > 0 && (
-            <label>
-              Campaign
-              <select value={campaignId} onChange={(event) => setCampaignId(event.target.value)}>
-                {campaigns.map((campaign) => (
-                  <option key={campaign.campaignId} value={campaign.campaignId}>
-                    {campaign.date} ·{" "}
-                    {campaign.campaignId.startsWith("reasoning-sweep")
-                      ? "Reasoning sweep"
-                      : campaign.harness}
-                  </option>
-                ))}
-                <option value="all">All recorded campaigns</option>
-              </select>
-            </label>
-          )}
-          <label>
-            Grading
-            <select value={grading} onChange={(event) => setGrading(event.target.value)}>
-              <option value="all">All results ({campaignRows.length})</option>
-              <option value="complete">Complete grading ({completeCount})</option>
-              <option value="partial">
-                Needs completion ({campaignRows.length - completeCount})
-              </option>
-            </select>
-          </label>
-          <p role="status">
-            {totals.graded.toLocaleString()} / {totals.planned.toLocaleString()} attempts graded
-            <br />
-            <strong>{completeCount} configurations fully graded</strong>
-            {totals.started > totals.graded && (
-              <> · {(totals.started - totals.graded).toLocaleString()} attempts unscored</>
-            )}
-          </p>
         </div>
         <div
           className="results-scroll"
@@ -296,7 +192,7 @@ export function LeaderboardPage({
             <thead>
               <tr>
                 <th scope="col" className="results-sticky">
-                  Model / reasoning
+                  Model
                 </th>
                 {columns.map((column) => (
                   <th
@@ -327,16 +223,16 @@ export function LeaderboardPage({
             </thead>
             <tbody>
               {shown.map((row) => (
-                <Fragment key={rowKey(row)}>
+                <Fragment key={row.model.id}>
                   <tr>
                     <th scope="row" className="results-sticky">
                       <div className="results-model">
                         <button
                           className="results-disclosure"
-                          aria-label={`Run details for ${row.model.name}${row.configurationLabel ? `, ${row.configurationLabel}` : ""}`}
-                          aria-expanded={expanded.has(rowKey(row))}
-                          aria-controls={`runs-${rowKey(row)}`}
-                          onClick={() => toggle(rowKey(row))}
+                          aria-label={`Run details for ${row.model.name}`}
+                          aria-expanded={expanded.has(row.model.id)}
+                          aria-controls={`runs-${row.model.id}`}
+                          onClick={() => toggle(row.model.id)}
                         >
                           <ChevronDown size={16} />
                         </button>
@@ -349,49 +245,103 @@ export function LeaderboardPage({
                       </div>
                     </th>
                     <td className="results-overall">
-                      <RecordedResult runs={Object.values(row.runs)} score={row.overall} overall />
+                      {row.overall === null ? (
+                        <span
+                          aria-label={row.overallReason ?? "Unavailable"}
+                          title={row.overallReason ?? undefined}
+                        >
+                          —
+                        </span>
+                      ) : (
+                        percent(row.overall)
+                      )}
                     </td>
-                    {SCORED_FAMILIES.map((family) => {
-                      const run = row.runs[family];
-                      return (
-                        <td key={family}>
-                          <RecordedResult
-                            runs={run ? [run] : []}
-                            score={row.scores[family]}
-                            href={
-                              run
-                                ? `#/tasks?category=${family}&model=${row.model.id}&run=${encodeURIComponent(run.runId)}`
-                                : undefined
+                    {SCORED_FAMILIES.map((family) => (
+                      <td key={family}>
+                        {row.scores[family] === null ? (
+                          <span
+                            title={
+                              row.runs[family]
+                                ? "Complete dispatch and grading required. Open run details for recorded outcomes."
+                                : "Not evaluated"
                             }
-                          />
-                        </td>
-                      );
-                    })}
+                          >
+                            —
+                          </span>
+                        ) : (
+                          <a
+                            className="results-score-link"
+                            href={`#/tasks?category=${family}&model=${row.model.id}&run=${encodeURIComponent(row.runs[family]!.runId)}`}
+                          >
+                            {percent(row.scores[family])}
+                          </a>
+                        )}
+                      </td>
+                    ))}
                     <td>
-                      <SummaryValue metric={row.averageTime} format={seconds} kind="time" />
+                      <SummaryValue metric={row.averageTime} format={seconds} />
                     </td>
                     <td>
-                      <SummaryValue metric={row.estimatedCost} format={dollars} kind="cost" />
+                      <SummaryValue metric={row.estimatedCost} format={dollars} />
                     </td>
                   </tr>
                   <tr
-                    hidden={!expanded.has(rowKey(row))}
-                    id={`runs-${rowKey(row)}`}
+                    hidden={!expanded.has(row.model.id)}
+                    id={`runs-${row.model.id}`}
                     className="results-expanded"
                   >
                     <td colSpan={7}>
                       <div className="results-detail-body">
-                        <h2>
-                          {row.model.name}: {row.configurationLabel ?? "run details"}
-                        </h2>
+                        <h2>{row.model.name}: run details</h2>
+                        {rows === defaultRows && (
+                          <div className="task-model-picker">
+                            <label htmlFor={`configuration-${row.model.id}`}>
+                              Recorded setting
+                            </label>
+                            <select
+                              id={`configuration-${row.model.id}`}
+                              value={selectedConfigurations[row.model.id] ?? ""}
+                              onChange={(event) =>
+                                setSelectedConfigurations((current) => ({
+                                  ...current,
+                                  [row.model.id]: event.target.value,
+                                }))
+                              }
+                            >
+                              <option value="">Latest recorded runs</option>
+                              {configurations
+                                .filter((configuration) => configuration.model.id === row.model.id)
+                                .map((configuration) => (
+                                  <option key={configuration.rowId} value={configuration.rowId}>
+                                    {Object.values(configuration.runs)[0]?.startedAt.slice(0, 10)} ·{" "}
+                                    {configuration.configurationLabel}
+                                  </option>
+                                ))}
+                            </select>
+                          </div>
+                        )}
                         {row.overallReason && <p>{row.overallReason}</p>}
                         <div className="results-coverage">
+                          <p>
+                            {recordedOutcomes(Object.values(row.runs)).graded} /{" "}
+                            {recordedOutcomes(Object.values(row.runs)).planned} attempts graded.{" "}
+                            Open a category below for its outcomes, settings, and retained
+                            conversations.
+                          </p>
                           <CoverageNote label="Average time" metric={row.averageTime} />
                           <CoverageNote label="Estimated cost" metric={row.estimatedCost} />
                         </div>
                         {SCORED_FAMILIES.map((family) =>
                           row.runs[family] ? (
-                            <RunDetails key={family} run={row.runs[family]} />
+                            <Fragment key={family}>
+                              <RunDetails run={row.runs[family]} />
+                              <a
+                                className="results-score-link"
+                                href={`#/tasks?category=${family}&model=${row.model.id}&run=${encodeURIComponent(row.runs[family].runId)}`}
+                              >
+                                View {family} tasks and conversations ↗
+                              </a>
+                            </Fragment>
                           ) : null,
                         )}
                       </div>
@@ -410,9 +360,8 @@ export function LeaderboardPage({
           </div>
         )}
         <p className="results-footnote">
-          Time covers completed attempts, including graded failures. Timeouts and run errors are
-          excluded from the timing sample. Missing prices are labelled explicitly. Open a row for
-          sources.
+          Time covers completed attempts. Cost estimates cover recorded token usage; failed and
+          timed-out attempts may be excluded. Open a row for counts and sources.
         </p>
         <p className="results-footnote">
           These are small samples. Differences in scores do not establish statistical significance.

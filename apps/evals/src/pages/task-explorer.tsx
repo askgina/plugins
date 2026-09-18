@@ -369,9 +369,6 @@ function TaskResult({
   onClick: () => void;
 }) {
   const summary = summarizeTask(run, caseId);
-  const failed = summary.slots.filter((attempt) => attempt?.verdict === "fail").length;
-  const timedOut = summary.slots.filter((attempt) => attempt?.execution === "timed_out").length;
-  const errors = summary.slots.filter((attempt) => attempt?.execution === "runtime_failure").length;
   if (summary.status === "not_evaluated")
     return <span className="task-unavailable">Not evaluated</span>;
   return (
@@ -381,19 +378,7 @@ function TaskResult({
           {summary.passed}/{summary.started} <span>passed</span>
         </>
       ) : summary.status === "incomplete" ? (
-        <span className="results-value-stack results-partial">
-          <span>
-            {summary.passed} passed · {failed} failed
-          </span>
-          <small>
-            {[
-              timedOut > 0 ? `${timedOut} timed out` : "",
-              errors > 0 ? `${errors} run error${errors === 1 ? "" : "s"}` : "",
-            ]
-              .filter(Boolean)
-              .join(" · ") || "Incomplete run"}
-          </small>
-        </span>
+        "Incomplete results"
       ) : (
         "Results unavailable"
       )}
