@@ -74,19 +74,27 @@ describe("public binary boundary", () => {
     );
   });
 
-  it("admits only the reviewed documentation PNG", () => {
-    const reviewedPath = "docs/images/product/wallet-balance.png";
-
-    assert.deepStrictEqual(findPublicBinaryBoundaryRules(reviewedPath, PNG), []);
+  it("admits only reviewed documentation PNGs at their declared paths", () => {
+    for (const reviewedPath of [
+      "docs/images/product/wallet-balance.png",
+      "docs/images/clients/grok-bot.png",
+      "docs/images/clients/hermes.png",
+    ]) {
+      assert.deepStrictEqual(findPublicBinaryBoundaryRules(reviewedPath, PNG), []);
+      assert.deepStrictEqual(
+        findPublicBinaryBoundaryRules(
+          reviewedPath,
+          Uint8Array.from([0xff, 0xd8, 0xff, 0, 0xff, 0xd9]),
+        ),
+        ["unscannable-binary-file"],
+      );
+    }
     assert.deepStrictEqual(
       findPublicBinaryBoundaryRules("docs/images/product/unreviewed.png", PNG),
       ["unscannable-binary-file"],
     );
     assert.deepStrictEqual(
-      findPublicBinaryBoundaryRules(
-        reviewedPath,
-        Uint8Array.from([0xff, 0xd8, 0xff, 0, 0xff, 0xd9]),
-      ),
+      findPublicBinaryBoundaryRules("docs/images/clients/unreviewed.png", PNG),
       ["unscannable-binary-file"],
     );
   });

@@ -1,0 +1,20 @@
+---
+title: "Financial evaluations"
+description: "Explore how models perform on financial tasks using Gina's read-only tools."
+---
+
+We have run financial evaluations across multiple models on tasks spanning spot markets, perpetual futures, and prediction markets. Each attempt is graded against task-specific checks for tool use and task completion. The results are published on [Gina Evals](https://evals.askgina.ai/).
+
+## What we evaluate
+
+The tasks test whether a model selects the required tools, supplies the required arguments, follows the task's restrictions, and completes without errors. Some tasks need a single tool call; others require several calls in a particular order. Each attempt starts a fresh conversation with access to read-only financial tools.
+
+## Explore the results
+
+- [Model leaderboard](https://evals.askgina.ai/): compare pass rates across task categories, with timing and estimated cost where available.
+- [Tasks and grading criteria](https://evals.askgina.ai/#/tasks): inspect the prompts and checks used to grade each attempt.
+- [Evaluation methodology](https://evals.askgina.ai/#/methodology): see how runs are conducted, scores are calculated, and missing data is handled.
+
+The published scores measure tool use and task completion; final-answer accuracy and trading returns are not scored. Models used different clients, and the samples are small, so read the methodology and run details alongside the results.
+
+To try Gina with your own assistant, visit [Get Started](/connect/index).

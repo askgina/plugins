@@ -27,6 +27,20 @@
     {
       "group": "Start here",
       "pages": [
+        "connect/index",
+        {
+          "group": "Choose a client",
+          "pages": [
+            "connect/chatgpt",
+            "connect/claude",
+            "connect/grok-bot",
+            "connect/hermes",
+            "connect/openclaw",
+            "connect/codex",
+            "connect/perplexity",
+            "connect/other-clients"
+          ]
+        },
         "what-is-gina",
         "product-guide/wallet-and-account",
         {
@@ -39,6 +53,7 @@
             "product-guide/automations/copy-trading"
           ]
         },
+        "evaluations",
         "product-guide/networks-fees-and-pricing"
       ]
     },
@@ -47,25 +62,8 @@
       "pages": ["agents/start", "agents/plugins-and-skills", "agents/authentication"]
     },
     {
-      "group": "Connect Gina",
-      "pages": [
-        "connect/index",
-        "mcp-access/index",
-        "start/first-request",
-        {
-          "group": "Choose a client",
-          "pages": [
-            "connect/chatgpt",
-            "connect/claude",
-            "connect/codex",
-            "connect/grok-bot",
-            "connect/perplexity",
-            "connect/hermes",
-            "connect/openclaw",
-            "connect/other-clients"
-          ]
-        }
-      ]
+      "group": "Connection basics",
+      "pages": ["mcp-access/index", "start/first-request"]
     },
     {
       "group": "Read-only MCP",
@@ -145,11 +143,11 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "/what-is-gina"
+      "destination": "/connect/index"
     },
     {
       "source": "/index",
-      "destination": "/what-is-gina"
+      "destination": "/connect/index"
     },
     {
       "source": "/openclaw-skills",

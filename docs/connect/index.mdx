@@ -1,27 +1,88 @@
 ---
-title: "Connect Gina"
-description: "Choose a client and connect the read-only research tools."
+title: "Get Started"
+description: "Connect your agent to Gina to monitor your portfolio or trade across supported markets."
 ---
 
-Start with a direct read-only connection. Your host must support remote MCP and the authentication method shown below. Access can depend on your host's plan or workspace policy.
+## Choose your client
 
-| Client                            | Setup route                                                    | Authentication                        | Skills and result UI                                        |
-| --------------------------------- | -------------------------------------------------------------- | ------------------------------------- | ----------------------------------------------------------- |
-| [ChatGPT](/connect/chatgpt)       | Custom connection in developer mode                            | OAuth                                 | Direct tools; rich results depend on host support           |
-| [Claude](/connect/claude)         | Remote connector; Claude Code also supports repository plugins | OAuth                                 | Code plugin loads research skills; connector alone does not |
-| [Codex](/connect/codex)           | Remote MCP configuration                                       | OAuth                                 | Skills can be installed separately                          |
-| [Grok Bot](/connect/grok-bot)     | Plugins marketplace; Ask Gina listing unverified               | Browser authentication when requested | Plugin tools and packaged skills                            |
-| [Perplexity](/connect/perplexity) | Custom remote connector                                        | OAuth                                 | Direct tools; Gina-specific rendering unverified            |
-| [Hermes](/connect/hermes)         | Remote MCP in `config.yaml`                                    | OAuth or manual token                 | Tools discovered on connection; Gina rendering unverified   |
-| [OpenClaw](/connect/openclaw)     | Native MCP settings; optional skill directories                | OAuth or manual token                 | Skills load separately from MCP                             |
-| [Others](/connect/other-clients)  | Cursor, Grok web, and other Streamable HTTP clients            | OAuth or Bearer token                 | Depends on the client                                       |
+<div className="gina-client-links" role="navigation" aria-label="Connect your agent">
+  <a href="/connect/chatgpt">
+    <img
+      className="gina-client-logo-mono"
+      src="/images/clients/chatgpt.svg"
+      alt="ChatGPT logo"
+      width="36"
+      height="36"
+      noZoom
+    />
+    <span>ChatGPT</span>
+  </a>
+  <a href="/connect/claude">
+    <img src="/images/clients/claude.svg" alt="Claude logo" width="36" height="36" noZoom />
+    <span>Claude</span>
+  </a>
+  <a href="/connect/grok-bot">
+    <img src="/images/clients/grok-bot.png" alt="Grok Bot logo" width="36" height="36" noZoom />
+    <span>Grok Bot</span>
+  </a>
+  <a href="/connect/hermes">
+    <img src="/images/clients/hermes.png" alt="Hermes Agent logo" width="36" height="36" noZoom />
+    <span>Hermes Agent</span>
+  </a>
+  <a href="/connect/openclaw">
+    <img src="/images/clients/openclaw.svg" alt="OpenClaw logo" width="36" height="36" noZoom />
+    <span>OpenClaw</span>
+  </a>
+  <a href="/connect/codex">
+    <img
+      className="gina-client-logo-mono"
+      src="/images/clients/codex.svg"
+      alt="Codex logo"
+      width="36"
+      height="36"
+      noZoom
+    />
+    <span>Codex</span>
+  </a>
+</div>
 
-## Availability and verification
+Select your agent above to open its setup guide, or see [Perplexity](/connect/perplexity) and [other clients](/connect/other-clients). The client guides start with read-only access. Choose what you want your agent to do below to find the right connection.
 
-These setup routes are checked against the hosts' documentation. Authenticated Gina smoke tests in every host have not yet been completed. A client supporting MCP does not guarantee every Gina result widget is available.
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/GvVQjeCrxZc"
+  title="Connect Gina video"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  referrerPolicy="strict-origin-when-cross-origin"
+  allowFullScreen
+></iframe>
 
-Public Ask Gina marketplace listings for ChatGPT, Claude, and Cursor have not been verified here. Use the concrete direct-connection or source-install routes on these pages; do not interpret a repository manifest as marketplace approval.
+## What do you want to do?
 
-All setup examples in this section use **read-only access**. If you need execution, first choose [Write access (Degen mode)](/write-access/index), then follow the venue-specific setup and your host's execution restrictions.
+### Monitor your onchain portfolio
+
+Use the **read-only Ask Gina plugin** to review linked wallets, holdings across chains, and market positions. Your agent can research prices and inspect your portfolio without placing trades or moving funds. The plugin combines the Gina Read MCP connection with research skills.
+
+[Explore the read-only plugin](/agents/plugins-and-skills).
+
+### Have your agent trade crypto across chains
+
+Use **Spot MCP** to research tokens, prepare swaps and transfers, and execute transactions on supported chains. Connect this when you want your agent to act on your instructions, from swapping an asset to sending tokens.
+
+[Explore Spot MCP](/spot-mcp/index).
+
+### Have your agent trade on prediction markets
+
+Use **Predictions MCP** to discover Polymarket markets, inspect odds and order books, and buy or sell outcome shares. Your agent can also track positions and manage orders through the same connection.
+
+[Explore Predictions MCP](/predictions-mcp/index).
+
+### Have your agent trade perpetual futures
+
+Use **Perps MCP** to research Hyperliquid and HIP-3 markets, place orders, and manage perpetual-futures positions. Your agent can inspect margin and funding, adjust leverage, and set stop-loss or take-profit orders.
+
+[Explore Perps MCP](/perps-mcp/index).
+
+Spot, Predictions, and Perps use separate [write connections (Degen mode)](/write-access/index). Connect the markets you want your agent to trade; the read-only plugin does not grant execution access.
 
 Next: [First successful request](/start/first-request).
