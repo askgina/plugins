@@ -24,14 +24,44 @@ test("the page supplies all eligible sweep settings to the chart", () => {
   expect(html).toContain("GPT-6 Astra, high reasoning");
 });
 
-test("the default table shows Astra's complete score and discloses the selection rule", () => {
+test("shows every recorded model setting in its own row", () => {
+  const configurations = configurationLeaderboardRows();
   const html = renderToStaticMarkup(createElement(LeaderboardPage));
-  expect(html).toContain("Default: latest fully graded setting per model");
-  expect(html).toContain("64.0%");
-  expect(html).toContain("1/4 settings fully graded across all categories");
-  expect(html).toContain("3/5 settings fully graded across all categories");
-  expect(html.indexOf('href="#/models/astra"')).toBeLessThan(
-    html.indexOf('href="#/models/gemini"'),
+  expect(html.match(/<tr data-configuration=/gu)).toHaveLength(configurations.length);
+  for (const row of configurations) {
+    expect(html).toContain(`data-configuration="${row.rowId}"`);
+  }
+  expect(new Set(configurations.map((row) => row.model.id)).size).toBe(10);
+  expect(html).toContain("Every recorded setting has its own row");
+  expect(html).not.toContain("Recorded setting</label>");
+});
+
+test("Fable low, medium, high and incomplete max are visible without a setting switch", () => {
+  const html = renderToStaticMarkup(createElement(LeaderboardPage));
+  for (const [reasoning, result] of [
+    ["low", "57.4%"],
+    ["medium", "58.9%"],
+    ["high", "55.5%"],
+    ["max", "75/105 graded"],
+  ]) {
+    const row = html.match(
+      new RegExp(`<tr data-configuration="fable-${reasoning}-[^]*?</tr>`),
+    )?.[0];
+    expect(row).toBeDefined();
+    expect(row).toContain(result);
+    expect(row).toContain(`${reasoning} reasoning · OMP`);
+    expect(row).toContain("120s timeout");
+    expect(row).toMatch(/\$[0-9]+\.[0-9]{3}/u);
+  }
+});
+
+test("expanded evidence uses separate identities for each setting of the same model", () => {
+  const html = renderToStaticMarkup(
+    createElement(LeaderboardPage, { initialExpandedModel: "claude-fable" }),
   );
-  expect(html).toContain("max reasoning · OMP</option>");
+  const ids = [...html.matchAll(/ id="([^"]+)"/gu)].map((match) => match[1]);
+  expect(new Set(ids).size).toBe(ids.length);
+  expect(html).toContain("Source artifact SHA-256");
+  expect(html).toContain("Recorded tokens");
+  expect(html).toContain("View Predictions tasks and conversations");
 });

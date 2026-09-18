@@ -134,12 +134,12 @@ export function MethodologyPage() {
                 category percentage only when dispatch and grading are complete. Otherwise, the
                 results are counts-only and excluded from quality rankings. If any category is
                 missing or incompletely graded, Overall is unavailable. An unavailable value is
-                never treated as zero. The leaderboard shows one row per model, using its latest
-                fully graded setting within its newest campaign by default. If none is fully graded,
-                its latest setting remains visible and unranked. Expand a row to inspect or select
-                any recorded reasoning setting, including later incomplete runs. Selection uses
-                grading coverage and date, never the highest score; it does not make different
-                clients, reasoning settings, or time budgets equivalent.
+                never treated as zero. The leaderboard shows every recorded model, reasoning
+                setting, and campaign as a separate row. Complete and incomplete results remain
+                visible together; campaign and grading filters narrow the view explicitly. Each row
+                retains its category outcomes, timing and cost sample counts, timeout budget,
+                repetitions, source hashes, and links to individual attempts. Sorting does not make
+                different clients, reasoning settings, or time budgets equivalent.
               </p>
               <p>
                 Sorting describes these observed results. It does not establish statistical

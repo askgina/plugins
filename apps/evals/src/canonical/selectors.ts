@@ -770,7 +770,11 @@ export function unifiedLeaderboardRows(
         : !compatibleSuiteRuns(fullRuns)
           ? "These runs have different benchmark settings."
           : SCORED_FAMILIES.some((family) => scores[family] === null)
-            ? "Complete dispatch and grading are needed in every category."
+            ? (fullRuns
+                .map(headlineFor)
+                .flatMap((headline) =>
+                  headline.kind === "counts_only" ? [eligibilityText(headline.reason)] : [],
+                )[0] ?? "Complete dispatch and grading are needed in every category.")
             : null;
       const overall =
         overallReason === null
@@ -865,7 +869,8 @@ export function defaultLeaderboardRows(
   }
   return [...groups.values()].map((group) => {
     const newestFirst = [...group].sort(
-      (a, b) => startedAt(b).localeCompare(startedAt(a)) || (a.rowId ?? "").localeCompare(b.rowId ?? ""),
+      (a, b) =>
+        startedAt(b).localeCompare(startedAt(a)) || (a.rowId ?? "").localeCompare(b.rowId ?? ""),
     );
     const newest = newestFirst[0]!;
     return (

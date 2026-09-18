@@ -74,10 +74,12 @@ function RunConversationPicker({ run }: { run: CanonicalRun }) {
 }
 
 export function LeaderboardConversations({
+  panelId,
   row,
   open,
   onOpenChange,
 }: {
+  panelId?: string;
   row: LeaderboardModelRow;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -88,7 +90,7 @@ export function LeaderboardConversations({
   const run = row.runs[family];
   return (
     <details
-      id={`leaderboard-chat-${row.model.id}`}
+      id={panelId ?? `leaderboard-chat-${id}`}
       className="results-accordion leaderboard-conversations"
       open={open}
       onToggle={(event) => onOpenChange(event.currentTarget.open)}

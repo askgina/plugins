@@ -59,6 +59,8 @@ export function ResultsHeader({
 export function RunDetails({ run }: { run: CanonicalRun }) {
   const campaign = canonicalCampaigns.find((entry) => entry.campaignId === run.campaignId);
   const cost = derivedCostPerTask(run);
+  const tokens = run.metrics.tokenUsage;
+  const timeout = run.timeoutMs ?? campaign?.timeoutMs;
   return (
     <section className="results-run-details" aria-label={`${run.family} run details`}>
       <h3>{run.family}</h3>
@@ -77,12 +79,26 @@ export function RunDetails({ run }: { run: CanonicalRun }) {
           </dd>
         </div>
         <div>
+          <dt>Grading</dt>
+          <dd>
+            {run.counts.graded}/{run.counts.planned} graded · {run.counts.passed} passed ·{" "}
+            {run.counts.failed} failed
+          </dd>
+        </div>
+        <div>
           <dt>Run date</dt>
           <dd>{run.startedAt.slice(0, 10)}</dd>
         </div>
         <div>
           <dt>Client</dt>
-          <dd>{campaign?.harness ?? run.cohort.target}</dd>
+          <dd>{run.cohort.target}</dd>
+        </div>
+        <div>
+          <dt>Budget</dt>
+          <dd>
+            {timeout == null ? "Timeout not recorded" : `${timeout / 1000}s timeout`} ·{" "}
+            {run.cohort.repetitions} repetitions per task
+          </dd>
         </div>
         <div>
           <dt>Configuration</dt>
@@ -117,12 +133,61 @@ export function RunDetails({ run }: { run: CanonicalRun }) {
           </dd>
         </div>
         <div>
+          <dt>Recorded tokens</dt>
+          <dd>
+            {tokens.availability === "available" || tokens.availability === "aggregate_only" ? (
+              <>
+                {tokens.inputTokens.toLocaleString()} input · {tokens.outputTokens.toLocaleString()}{" "}
+                output · {tokens.totalTokens.toLocaleString()} total
+                <br />
+                {tokens.availability === "available"
+                  ? tokens.sampleCount
+                  : "Unknown number of"}{" "}
+                {tokens.population} attempts
+              </>
+            ) : (
+              tokens.availability.replaceAll("_", " ")
+            )}
+          </dd>
+        </div>
+        <div>
           <dt>Source run</dt>
           <dd>
             <code>{run.runId}</code>
           </dd>
         </div>
+        <div>
+          <dt>Source commit</dt>
+          <dd>
+            <code>{run.provenance.sourceCommit ?? "Not recorded"}</code>
+          </dd>
+        </div>
+        <div>
+          <dt>Source artifact SHA-256</dt>
+          <dd>
+            <code>{run.provenance.sourceArtifactSha256 ?? "Not recorded"}</code>
+          </dd>
+        </div>
+        <div>
+          <dt>Suite / fixture</dt>
+          <dd>
+            {run.cohort.suiteId} v{run.cohort.suiteVersion} · fixture v{run.cohort.fixtureVersion}
+          </dd>
+        </div>
+        <div>
+          <dt>Tool catalogue SHA-256</dt>
+          <dd>
+            <code>{run.cohort.catalogSha ?? "Not recorded"}</code>
+          </dd>
+        </div>
       </dl>
+      {run.notes.length > 0 && (
+        <ul className="results-run-notes">
+          {run.notes.map((note) => (
+            <li key={note}>{note}</li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

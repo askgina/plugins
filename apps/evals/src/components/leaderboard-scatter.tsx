@@ -148,9 +148,9 @@ export function LeaderboardScatter({
             role="group"
             aria-labelledby={`${id}-title ${id}-description`}
           >
-            <title id={`${id}-title`}>Overall score versus {label.toLowerCase()}</title>
+            <title id={`${id}-title`}>{`Overall score versus ${label.toLowerCase()}`}</title>
             <desc id={`${id}-description`}>
-              Each point is a fully graded model and reasoning setting from the latest sweep. Model
+              Each point is an eligible model and reasoning setting from the filtered results. Model
               links include the setting and exact values and open its profile. Scores use a zero to
               100 percent scale.
             </desc>
