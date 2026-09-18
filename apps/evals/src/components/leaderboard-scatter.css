@@ -1,0 +1,100 @@
+.lb-chart-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--eval-line);
+}
+.lb-chart-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.lb-chart-heading h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.lb-chart-heading p {
+  margin: 6px 0 0;
+  color: var(--eval-muted);
+  font-size: 12px;
+}
+.lb-chart-controls {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.lb-chart-controls button {
+  padding: 9px 12px;
+  border: 1px solid var(--eval-line);
+  border-radius: 7px;
+  background: var(--eval-paper);
+  color: var(--eval-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+.lb-chart-controls button:hover,
+.lb-chart-controls button[aria-pressed="true"] {
+  background: var(--sand-3);
+  color: var(--eval-ink);
+}
+.lb-chart-controls button[aria-pressed="true"] {
+  border-color: var(--eval-muted);
+}
+.lb-chart-controls button:focus-visible,
+.lb-chart-wrap:focus-visible,
+.lb-chart-model:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+.lb-chart-wrap {
+  margin-top: 14px;
+  overflow-x: auto;
+}
+.lb-scatterplot {
+  display: block;
+  width: 100%;
+  min-width: 560px;
+  max-width: 960px;
+  height: auto;
+  margin: 0 auto;
+}
+.lb-chart-grid line {
+  stroke: var(--eval-line);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.lb-chart-grid text,
+.lb-chart-axis-label {
+  fill: var(--eval-muted);
+  font-family: var(--font-sans);
+  font-size: 11px;
+}
+.lb-chart-point-halo {
+  fill: var(--eval-paper);
+}
+.lb-chart-hit {
+  fill: transparent;
+  pointer-events: all;
+}
+.lb-chart-model-label {
+  fill: var(--eval-ink);
+  font-family: var(--font-sans);
+  font-size: 11px;
+}
+.lb-chart-model:hover .lb-chart-point-halo,
+.lb-chart-model:focus-visible .lb-chart-point-halo {
+  stroke: var(--eval-muted);
+}
+.lb-chart-empty {
+  padding: 32px 0;
+  color: var(--eval-muted);
+  font-size: 13px;
+}
+@media (max-width: 600px) {
+  .lb-chart-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
