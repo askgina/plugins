@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   conversationNotices,
   conversationUrl,
@@ -80,6 +80,17 @@ export function ConversationView({
   conversation: Conversation;
   sha256: string;
 }) {
+  const transcriptId = useId();
+  const transcript = useRef<HTMLDivElement>(null);
+  const [fullHeight, setFullHeight] = useState(false);
+  function setAllExpanded(open: boolean) {
+    // These are native, individually toggleable disclosures. Apply the command
+    // on every click, including after someone has closed a section manually.
+    for (const section of transcript.current?.querySelectorAll("details") ?? []) {
+      section.open = open;
+    }
+    setFullHeight(open);
+  }
   const notices = conversationNotices(conversation);
   const toolNames = new Map<string, string>();
   for (const message of conversation.visibleMessages) {
@@ -90,7 +101,7 @@ export function ConversationView({
     }
   }
   return (
-    <div className="conversation-view">
+    <div className="conversation-view" data-expanded={fullHeight}>
       <p className="conversation-label">
         {conversation.visibleMessages.length} recorded messages · {conversation.rowId} · Attempt{" "}
         {conversation.repetition}
@@ -101,6 +112,24 @@ export function ConversationView({
           : "Partial transcript."}{" "}
         Capture completeness is separate from grading.
       </p>
+      <div className="conversation-controls" role="group" aria-label="Transcript controls">
+        <Button
+          variant="outline"
+          size="sm"
+          aria-controls={transcriptId}
+          onClick={() => setAllExpanded(true)}
+        >
+          Expand all
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          aria-controls={transcriptId}
+          onClick={() => setAllExpanded(false)}
+        >
+          Collapse all
+        </Button>
+      </div>
       {notices.length > 0 && (
         <ul className="conversation-notices">
           {notices.map((notice) => (
@@ -108,54 +137,56 @@ export function ConversationView({
           ))}
         </ul>
       )}
-      <details
-        className="conversation-output"
-        open={!conversation.visibleMessages.some((message) => message.role === "user")}
-      >
-        <summary>Recorded task input</summary>
-        {conversation.frozenUserTurns.map((turn, index) => (
-          <TranscriptText key={index} text={turn.content} />
-        ))}
-      </details>
-      {conversation.visibleMessages.length === 0 ? (
-        <p>No conversation messages were retained for this attempt.</p>
-      ) : (
-        <ol className="conversation-messages" aria-label="Recorded conversation">
-          {conversation.visibleMessages.map((message, index) => (
-            <li key={`${message.sequence}-${index}`} className="conversation-message">
-              <p className="conversation-speaker">
-                <span>
-                  {message.role === "user"
-                    ? "User"
-                    : message.role === "assistant"
-                      ? "Assistant"
-                      : "Tool"}
-                </span>
-                <span className="conversation-label">{index + 1}</span>
-              </p>
-              {message.content.map((block, blockIndex) => (
-                <ContentBlock key={blockIndex} block={block} toolNames={toolNames} />
-              ))}
-            </li>
+      <div id={transcriptId} ref={transcript}>
+        <details
+          className="conversation-output"
+          open={!conversation.visibleMessages.some((message) => message.role === "user")}
+        >
+          <summary>Recorded task input</summary>
+          {conversation.frozenUserTurns.map((turn, index) => (
+            <TranscriptText key={index} text={turn.content} />
           ))}
-        </ol>
-      )}
-      <details className="conversation-output">
-        <summary>Capture details</summary>
-        <p>Source: {conversation.visibleEvidenceSource}</p>
-        <p>
-          Verified SHA-256: <code className="conversation-hash">{sha256}</code>
-        </p>
-        {conversation.gaps.length > 0 && (
-          <ul>
-            {conversation.gaps.map((gap, index) => (
-              <li key={index}>
-                {gap.code} ({gap.scope})
+        </details>
+        {conversation.visibleMessages.length === 0 ? (
+          <p>No conversation messages were retained for this attempt.</p>
+        ) : (
+          <ol className="conversation-messages" aria-label="Recorded conversation">
+            {conversation.visibleMessages.map((message, index) => (
+              <li key={`${message.sequence}-${index}`} className="conversation-message">
+                <p className="conversation-speaker">
+                  <span>
+                    {message.role === "user"
+                      ? "User"
+                      : message.role === "assistant"
+                        ? "Assistant"
+                        : "Tool"}
+                  </span>
+                  <span className="conversation-label">{index + 1}</span>
+                </p>
+                {message.content.map((block, blockIndex) => (
+                  <ContentBlock key={blockIndex} block={block} toolNames={toolNames} />
+                ))}
               </li>
             ))}
-          </ul>
+          </ol>
         )}
-      </details>
+        <details className="conversation-output">
+          <summary>Capture details</summary>
+          <p>Source: {conversation.visibleEvidenceSource}</p>
+          <p>
+            Verified SHA-256: <code className="conversation-hash">{sha256}</code>
+          </p>
+          {conversation.gaps.length > 0 && (
+            <ul>
+              {conversation.gaps.map((gap, index) => (
+                <li key={index}>
+                  {gap.code} ({gap.scope})
+                </li>
+              ))}
+            </ul>
+          )}
+        </details>
+      </div>
     </div>
   );
 }

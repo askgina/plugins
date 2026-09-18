@@ -5,6 +5,12 @@
   min-width: 0;
   max-width: 100%;
 }
+.conversation-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
 .conversation-label {
   color: var(--eval-muted);
   font-size: 12px;
@@ -65,6 +71,10 @@
   padding: 12px;
   border-radius: 6px;
   background: var(--sand-2);
+}
+.conversation-view[data-expanded="true"] .conversation-output .conversation-text {
+  max-height: none;
+  overflow-y: visible;
 }
 .conversation-hash {
   overflow-wrap: anywhere;
