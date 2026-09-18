@@ -68,15 +68,19 @@ function placeScatterLabels(
 export function LeaderboardScatter({
   rows,
   initialMetric = "time",
+  compact = false,
 }: {
   rows: readonly LeaderboardModelRow[];
   initialMetric?: "time" | "cost";
+  compact?: boolean;
 }) {
   const [metric, setMetric] = useState<"time" | "cost">(initialMetric);
   const id = useId();
-  const width = 960;
-  const height = 380;
-  const margin = { top: 28, right: 170, bottom: 48, left: 62 };
+  const width = compact ? 360 : 960;
+  const height = compact ? 280 : 380;
+  const margin = compact
+    ? { top: 22, right: 16, bottom: 48, left: 48 }
+    : { top: 28, right: 170, bottom: 48, left: 62 };
   const plotWidth = width - margin.left - margin.right;
   const plotHeight = height - margin.top - margin.bottom;
   const label = metric === "time" ? "Average time" : "Estimated cost / task";
@@ -97,13 +101,15 @@ export function LeaderboardScatter({
   const xPosition = (value: number) => margin.left + ((value - xMin) / (xMax - xMin)) * plotWidth;
   const yPosition = (value: number) => margin.top + (1 - value) * plotHeight;
   const plotted = placeScatterLabels(
-    points.map((point) => {
+    points.map((point, index) => {
       const reasoning = Object.values(point.row.runs)[0]?.configuration.reasoning;
       return {
         ...point,
-        name: point.row.configurationLabel
-          ? `${point.row.model.name} · ${reasoning ?? point.row.configurationLabel}`
-          : point.row.model.name,
+        name: compact
+          ? String(index + 1)
+          : point.row.configurationLabel
+            ? `${point.row.model.name} · ${reasoning ?? point.row.configurationLabel}`
+            : point.row.model.name,
         x: xPosition(point.value),
         y: yPosition(point.score),
       };
@@ -139,11 +145,15 @@ export function LeaderboardScatter({
         <div
           className="lb-chart-wrap"
           role="region"
-          aria-label="Score and efficiency chart, scroll horizontally on small screens"
+          aria-label={
+            compact
+              ? "Score and efficiency chart"
+              : "Score and efficiency chart, scroll horizontally on small screens"
+          }
           tabIndex={0}
         >
           <svg
-            className="lb-scatterplot"
+            className={`lb-scatterplot${compact ? " lb-scatterplot-compact" : ""}`}
             viewBox={`0 0 ${width} ${height}`}
             role="group"
             aria-labelledby={`${id}-title ${id}-description`}
@@ -242,6 +252,21 @@ export function LeaderboardScatter({
         <p className="lb-chart-empty" role="status">
           No matching models have both an Overall score and {label.toLowerCase()} available.
         </p>
+      )}
+      {compact && points.length > 0 && (
+        <details className="lb-chart-legend">
+          <summary>{points.length} plotted settings: names and values</summary>
+          <ol>
+            {points.map((point) => (
+              <li key={point.row.rowId ?? point.row.model.id}>
+                <a href={`#/models/${point.row.model.id}`}>{rowLabel(point.row)}</a>
+                <span>
+                  {percent(point.score)} overall · {format(point.value)}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </details>
       )}
       {omitted.length > 0 && (
         <details className="results-footnote">

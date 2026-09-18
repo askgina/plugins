@@ -49,4 +49,19 @@ describe("scatter plot configuration rows", () => {
     );
     expect(html).not.toContain("<svg");
   });
+
+  test("the compact chart preserves plotted settings and exact values in its numbered legend", () => {
+    const html = renderToStaticMarkup(
+      createElement(LeaderboardScatter, {
+        rows: configurationLeaderboardRows(),
+        compact: true,
+      }),
+    );
+    expect(html).toContain('viewBox="0 0 360 280"');
+    expect(html.match(/class="lb-chart-model"/gu)).toHaveLength(13);
+    expect(html).toContain("13 plotted settings: names and values");
+    expect(html).toContain("Grok 4.6, low reasoning · OMP");
+    expect(html).toContain("65.7% overall · 30.3s");
+    expect(html).toContain("27 settings not plotted");
+  });
 });
