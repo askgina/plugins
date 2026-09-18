@@ -94,11 +94,21 @@ const fixture = (
         schemaVersion: "ask-gina-private-evidence.v1",
         private: true,
         rows: [row],
-        outputs: options.duplicate ? [entry, entry] : [entry],
+        outputs: options.duplicate === true ? [entry, entry] : [entry],
       }),
     );
     return { root, file: path.join(root, relative), sha256: entry.sha256 };
   });
+
+const withServices = <A, E>(
+  effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path | import("effect").Scope.Scope>,
+) =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const context = yield* Layer.build(services);
+      return yield* effect.pipe(Effect.provide(context));
+    }),
+  );
 
 describe("local conversation evidence", () => {
   it.effect("loads verified evidence, preserving capture gaps and message order", () =>
@@ -114,7 +124,7 @@ describe("local conversation evidence", () => {
       );
       assert.equal(result.conversation.completeness.transcriptCaptureComplete, false);
       assert.deepEqual(result.conversation.gaps, document.gaps);
-    }).pipe(Effect.scoped, Effect.provide(services)),
+    }).pipe(withServices),
   );
 
   it.effect("does not bind a different campaign, summary, configuration or repetition", () =>
@@ -134,7 +144,7 @@ describe("local conversation evidence", () => {
           (yield* readConversation(bundle.root, { ...reference, ...patch })).status,
           "unavailable",
         );
-    }).pipe(Effect.scoped, Effect.provide(services)),
+    }).pipe(withServices),
   );
 
   it.effect("rejects changed bytes and contradictory document identity", () =>
@@ -151,7 +161,7 @@ describe("local conversation evidence", () => {
         status: "unavailable",
         reason: "mismatch",
       });
-    }).pipe(Effect.scoped, Effect.provide(services)),
+    }).pipe(withServices),
   );
 
   it.effect("rejects malformed documents, ambiguous entries and path traversal", () =>
@@ -164,7 +174,7 @@ describe("local conversation evidence", () => {
         const bundle = yield* fixture(options);
         assert.equal((yield* readConversation(bundle.root, reference)).status, "unavailable");
       }
-    }).pipe(Effect.scoped, Effect.provide(services)),
+    }).pipe(withServices),
   );
 
   it.effect("rejects symlinks out of the bundle", () =>
@@ -181,7 +191,7 @@ describe("local conversation evidence", () => {
         status: "unavailable",
         reason: "invalid_bundle",
       });
-    }).pipe(Effect.scoped, Effect.provide(services)),
+    }).pipe(withServices),
   );
 
   it("only enables the endpoint in development and rejects remote or cross-origin reads", () => {

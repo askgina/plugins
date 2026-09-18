@@ -256,6 +256,25 @@ describe("Claude static public artifact boundary", () => {
   );
 
   it.layer(Layer.merge(BunFileSystem.layer, BunPath.layer))((it) => {
+    it.effect("rejects unreviewed transcript indexes before publishing chat content", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.makeTempDirectoryScoped();
+          yield* fs.makeDirectory(path.join(root, "src"));
+          yield* fs.makeDirectory(path.join(root, "public/transcripts"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join(root, "public/transcripts/index.json"),
+            encodeJson({ visibleMessages: [SENTINEL] }),
+          );
+          const failure = yield* Effect.flip(checkEvalPublicArtifacts(root));
+          assert.strictEqual(failure.reason, "unapproved_artifact");
+          assert.notInclude(failure.message, SENTINEL);
+        }),
+      ),
+    );
+
     it.effect("checks non-Claude sweep artifacts before allowing them into the bundle", () =>
       Effect.scoped(
         Effect.gen(function* () {

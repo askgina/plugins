@@ -16,6 +16,16 @@ import {
 } from "../packages/contracts/src/eval-results";
 import { isSafePublicEvalText } from "../packages/evals/src/sanitize";
 import { isUnknownRecord } from "../packages/evals/src/type-guards";
+import {
+  PUBLIC_TRANSCRIPTS_COUNT,
+  PUBLIC_TRANSCRIPTS_INDEX_SHA256,
+} from "../apps/evals/src/lib/public-transcript-manifest";
+import {
+  isPublicTranscript,
+  isPublicTranscriptIndex,
+  publicTranscriptPath,
+  type PublicTranscriptEntry,
+} from "../apps/evals/src/lib/public-transcript-schema";
 
 const WITHHELD = "withheld: privacy_review";
 const Count = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
@@ -313,6 +323,29 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
       (yield* path
         .fromFileUrl(new URL("../apps/evals/", import.meta.url))
         .pipe(Effect.mapError(() => fail("apps/evals", "unreadable_artifact"))));
+    const transcriptFiles = new Map<string, PublicTranscriptEntry>();
+    const transcriptIndex = "public/transcripts/index.json";
+    const hasTranscripts = yield* fs
+      .exists(path.join(root, "public/transcripts"))
+      .pipe(Effect.mapError(() => fail(transcriptIndex, "unreadable_artifact")));
+    if (appRoot === undefined && !hasTranscripts)
+      return yield* fail(transcriptIndex, "unreadable_artifact");
+    if (hasTranscripts) {
+      const bytes = yield* fs
+        .readFile(path.join(root, transcriptIndex))
+        .pipe(Effect.mapError(() => fail(transcriptIndex, "unreadable_artifact")));
+      if (createHash("sha256").update(bytes).digest("hex") !== PUBLIC_TRANSCRIPTS_INDEX_SHA256)
+        return yield* fail(transcriptIndex, "unapproved_artifact");
+      const index = yield* Effect.try(() => textDecoder.decode(bytes)).pipe(
+        Effect.flatMap(decodeArtifactJson),
+        Effect.mapError(() => fail(transcriptIndex, "invalid_json")),
+      );
+      if (!isPublicTranscriptIndex(index) || index.conversationCount !== PUBLIC_TRANSCRIPTS_COUNT)
+        return yield* fail(transcriptIndex, "unapproved_artifact");
+      for (const entry of index.files)
+        transcriptFiles.set(`public/transcripts/${entry.path}`, entry);
+    }
+    const seenTranscripts = new Set<string>();
     const visit = (relative: string): Effect.Effect<void, EvalPublicArtifactError> =>
       Effect.gen(function* () {
         const absolute = path.join(root, relative);
@@ -331,7 +364,11 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
           return;
         }
         if (info.type !== "File") return yield* fail(relative, "unsupported_entry");
-        if (!relative.toLowerCase().endsWith(".json")) return;
+        const publicTranscript = relative.startsWith("public/transcripts/");
+        if (!relative.toLowerCase().endsWith(".json")) {
+          if (publicTranscript) return yield* fail(relative, "unapproved_artifact");
+          return;
+        }
         const bytes = yield* fs
           .readFile(absolute)
           .pipe(Effect.mapError(() => fail(relative, "unreadable_artifact")));
@@ -339,6 +376,22 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
           Effect.flatMap(decodeArtifactJson),
           Effect.mapError(() => fail(relative, "invalid_json")),
         );
+        // Only the reviewed, immutable public projection can carry visible chat
+        // content. Raw/native evidence remains forbidden everywhere else.
+        if (publicTranscript) {
+          if (relative === transcriptIndex) return;
+          const entry = transcriptFiles.get(relative);
+          if (
+            entry === undefined ||
+            bytes.byteLength !== entry.bytes ||
+            createHash("sha256").update(bytes).digest("hex") !== entry.sha256 ||
+            !isPublicTranscript(input) ||
+            publicTranscriptPath(input.reference) !== entry.path
+          )
+            return yield* fail(relative, "unapproved_artifact");
+          seenTranscripts.add(relative);
+          return;
+        }
         const claudeBearing = /claude/iu.test(relative) || hasClaudeIdentity(input);
         const sweepArtifact = relative.startsWith("src/results/2026-09-16/reasoning-sweep/");
         if (claudeBearing || sweepArtifact) {
@@ -355,6 +408,8 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
       });
     yield* visit("src");
     yield* visit("public");
+    if (seenTranscripts.size !== transcriptFiles.size)
+      return yield* fail(transcriptIndex, "unreadable_artifact");
   });
 
 const services = Layer.merge(BunFileSystem.layer, BunPath.layer);

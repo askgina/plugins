@@ -423,7 +423,7 @@ export function LeaderboardPage({
                               >
                                 Evidence &amp; sources
                               </button>
-                              {import.meta.env.DEV && (
+                              {
                                 <button
                                   type="button"
                                   className="results-chat-trigger"
@@ -437,7 +437,7 @@ export function LeaderboardPage({
                                 >
                                   Chat
                                 </button>
-                              )}
+                              }
                             </div>
                           </div>
                         </div>
@@ -481,14 +481,14 @@ export function LeaderboardPage({
                           <div className="results-detail-body">
                             <h2>{label}: run details</h2>
                             {row.overallReason && <p>{row.overallReason}</p>}
-                            {import.meta.env.DEV && (
+                            {
                               <LeaderboardConversations
                                 panelId={`leaderboard-chat-${key}`}
                                 row={row}
                                 open={chatRows.has(key)}
                                 onOpenChange={(open) => setChatOpen(key, open)}
                               />
-                            )}
+                            }
                             <div className="results-coverage">
                               <CoverageNote label="Average time" metric={row.averageTime} />
                               <CoverageNote label="Estimated cost" metric={row.estimatedCost} />

@@ -66,7 +66,12 @@ export default defineConfig({
     },
   ],
   fmt: {
-    ignorePatterns: ["dist/**", "apps/*/dist/**", "apps/evals/src/results/**"],
+    ignorePatterns: [
+      "dist/**",
+      "apps/*/dist/**",
+      "apps/evals/src/results/**",
+      "apps/evals/public/transcripts/**",
+    ],
   },
   lint: {
     ...effectTsgoRecommended,

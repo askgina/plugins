@@ -7,18 +7,16 @@ import {
   type ConversationReference,
   type ConversationResponse,
 } from "../lib/conversations";
+import { loadPublicConversation } from "../lib/public-conversations";
 import { Button } from "./ui/button";
 import "../styles/conversation.css";
 
 const unavailableText = {
-  not_configured:
-    "Local conversations are not connected. Set EVAL_TRANSCRIPTS_DIR to the private evidence bundle and restart the evals server.",
-  not_found: "No retained conversation was found for this attempt in the connected bundle.",
-  mismatch:
-    "This conversation could not be verified against the selected attempt. Check that the evidence bundle matches these results.",
-  invalid_bundle:
-    "The evidence bundle could not be read or verified. Check the local bundle, then retry.",
-  forbidden: "Private conversations are available only from the local evals server.",
+  not_configured: "Public transcripts are not available for this campaign yet.",
+  not_found: "No public transcript is linked to this attempt.",
+  mismatch: "This transcript could not be verified against the selected attempt.",
+  invalid_bundle: "This transcript could not be read or verified. Please retry.",
+  forbidden: "This transcript is unavailable.",
 };
 
 function TranscriptText({ text }: { text: string }) {
@@ -112,6 +110,14 @@ export function ConversationView({
           : "Partial transcript."}{" "}
         Capture completeness is separate from grading.
       </p>
+      {conversation.publication && (
+        <p className="conversation-label">
+          Public transcript.{" "}
+          {Object.values(conversation.publication.redactions).some((count) => count > 0)
+            ? "Credentials, personal identifiers, local paths, or private account content are marked [redacted:…]. Message order is preserved."
+            : "No content required redaction."}
+        </p>
+      )}
       <div className="conversation-controls" role="group" aria-label="Transcript controls">
         <Button
           variant="outline"
@@ -199,12 +205,7 @@ function LoadedConversation({ reference }: { reference: ConversationReference })
   const url = conversationUrl(reference);
   useEffect(() => {
     const controller = new AbortController();
-    void window
-      .fetch(url, { signal: controller.signal, cache: "no-store", credentials: "same-origin" })
-      .then((response) => {
-        if (!response.ok) throw new Error("Conversation request failed");
-        return response.json() as Promise<ConversationResponse>;
-      })
+    void loadPublicConversation(reference, controller.signal)
       .then((result) => {
         if (!controller.signal.aborted) setState(result);
       })
@@ -212,7 +213,7 @@ function LoadedConversation({ reference }: { reference: ConversationReference })
         if (!controller.signal.aborted) setState({ status: "error" });
       });
     return () => controller.abort();
-  }, [url, retry]);
+  }, [url, retry, reference]);
   if (state.status === "loading")
     return (
       <p role="status" className="conversation-loading">
@@ -226,7 +227,7 @@ function LoadedConversation({ reference }: { reference: ConversationReference })
       <p role="status">
         {state.status === "unavailable"
           ? unavailableText[state.reason]
-          : "Could not load this conversation. Check that the local evals server is running, then retry."}
+          : "Could not load or verify this public transcript. Check your connection, then retry."}
       </p>
       <Button
         variant="outline"
@@ -253,12 +254,6 @@ export function ConversationPanel({
   if (!reference)
     return (
       <p className="conversation-label">A retained conversation is not linked to this attempt.</p>
-    );
-  if (!import.meta.env.DEV)
-    return (
-      <p className="conversation-label">
-        Private conversation evidence is available in the local evals viewer.
-      </p>
     );
   if (inline) return <LoadedConversation key={conversationUrl(reference)} reference={reference} />;
   return (

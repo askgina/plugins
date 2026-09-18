@@ -44,6 +44,11 @@ export interface Conversation {
     readonly finalAnswerPresent: boolean;
     readonly nativeVisibleEvidenceAvailable: boolean;
   };
+  readonly publication?: {
+    readonly kind: "public_redacted";
+    readonly sourceConversationSha256: string;
+    readonly redactions: Readonly<Record<string, number>>;
+  };
   readonly gaps: readonly { readonly code: string; readonly scope: string }[];
 }
 

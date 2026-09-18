@@ -1,7 +1,7 @@
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { createHash } from "node:crypto";
-import { Effect, FileSystem, Layer, Path, Schema } from "effect";
+import { Effect, FileSystem, Function, Layer, Path, Schema } from "effect";
 import { loadEnv, type Plugin } from "vite-plus";
 import {
   CONVERSATION_ENDPOINT,
@@ -99,7 +99,17 @@ const unavailable = (
 ): ConversationResponse => ({ status: "unavailable", reason });
 
 /** The caller supplies an identity, never a filesystem path. All reads stay inside the bundle. */
-export const readConversation = (directory: string, reference: ConversationReference) =>
+export const readConversation = Function.dual<
+  (
+    reference: ConversationReference,
+  ) => (
+    directory: string,
+  ) => Effect.Effect<ConversationResponse, never, FileSystem.FileSystem | Path.Path>,
+  (
+    directory: string,
+    reference: ConversationReference,
+  ) => Effect.Effect<ConversationResponse, never, FileSystem.FileSystem | Path.Path>
+>(2, (directory, reference) =>
   Effect.gen(function* () {
     const ref = yield* Schema.decodeUnknownEffect(ReferenceSchema)(reference);
     const fs = yield* FileSystem.FileSystem;
@@ -112,7 +122,7 @@ export const readConversation = (directory: string, reference: ConversationRefer
       .pipe(Effect.flatMap(Schema.decodeUnknownEffect(Schema.fromJsonString(ManifestSchema))));
     const rows = manifest.rows.filter((row) => row.rowId === ref.rowId);
     const row = rows[0];
-    if (rows.length !== 1 || !row) return unavailable("not_found");
+    if (rows.length !== 1 || row === undefined) return unavailable("not_found");
     if (
       row.sourceCommit !== ref.sourceCommit ||
       row.target !== ref.target ||
@@ -132,7 +142,7 @@ export const readConversation = (directory: string, reference: ConversationRefer
         entry.repetition === ref.repetition,
     );
     const entry = entries[0];
-    if (!entry) return unavailable("not_found");
+    if (entry === undefined) return unavailable("not_found");
     const expectedPath = `chats/${ref.rowId}/${ref.family}/${ref.repetition}-${ref.caseId}.json`;
     if (entries.length !== 1 || entry.path !== expectedPath) return unavailable("mismatch");
     const filePath = yield* fs.realPath(path.join(root, entry.path));
@@ -162,7 +172,8 @@ export const readConversation = (directory: string, reference: ConversationRefer
       conversation: document,
       sha256: entry.sha256,
     } satisfies ConversationResponse;
-  }).pipe(Effect.orElseSucceed(() => unavailable("invalid_bundle")));
+  }).pipe(Effect.orElseSucceed(() => unavailable("invalid_bundle"))),
+);
 
 const services = Layer.merge(BunFileSystem.layer, BunPath.layer);
 const encodeResponse = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
@@ -175,18 +186,25 @@ export function isLocalConversationRequest(input: {
   readonly fetchSite?: string;
 }): boolean {
   if (
-    !input.remoteAddress ||
+    input.remoteAddress === undefined ||
     !["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(input.remoteAddress)
   )
     return false;
-  if (!input.host || !/^(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/u.test(input.host)) return false;
+  if (input.host === undefined || !/^(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/u.test(input.host))
+    return false;
   if (
-    input.origin &&
+    input.origin !== undefined &&
+    input.origin.length > 0 &&
     input.origin !== `http://${input.host}` &&
     input.origin !== `https://${input.host}`
   )
     return false;
-  return !input.fetchSite || input.fetchSite === "same-origin" || input.fetchSite === "none";
+  return (
+    input.fetchSite === undefined ||
+    input.fetchSite.length === 0 ||
+    input.fetchSite === "same-origin" ||
+    input.fetchSite === "none"
+  );
 }
 
 export const evalConversationsPlugin = (directory?: string): Plugin => ({
@@ -222,7 +240,8 @@ export const evalConversationsPlugin = (directory?: string): Plugin => ({
         response.setHeader("Allow", "GET");
         return send(unavailable("forbidden"), 405);
       }
-      if (!directory) return send(unavailable("not_configured"));
+      if (directory === undefined || directory.length === 0)
+        return send(unavailable("not_configured"));
       const params = new URL(request.url!, "http://localhost").searchParams;
       const reference = {
         campaignId: params.get("campaignId") ?? "",
@@ -235,7 +254,17 @@ export const evalConversationsPlugin = (directory?: string): Plugin => ({
         catalogSha: params.get("catalogSha") ?? "",
         target: params.get("target") ?? "",
       };
-      void Effect.runPromise(readConversation(directory, reference).pipe(Effect.provide(services)))
+      const connectedDirectory = directory;
+      void Effect.runPromise(
+        Effect.scoped(
+          Effect.gen(function* () {
+            const context = yield* Layer.build(services);
+            return yield* readConversation(connectedDirectory, reference).pipe(
+              Effect.provide(context),
+            );
+          }),
+        ),
+      )
         .then((result) => send(result))
         .catch(() => send(unavailable("invalid_bundle"), 500));
     });
