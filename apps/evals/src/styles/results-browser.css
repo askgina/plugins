@@ -83,8 +83,12 @@
   font-size: 13px;
 }
 .results-search:focus-within {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 1px var(--ring);
+}
+/* The wrapper owns the focus indicator, including the search icon. */
+.eval-app .results-search input:focus-visible {
+  outline: none;
 }
 .results-scroll {
   overflow-x: auto;
