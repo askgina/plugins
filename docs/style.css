@@ -9,7 +9,7 @@ body:has(#content-area > .prose > h1:first-child) #table-of-contents-content li:
   display: none;
 }
 
-/* Direct setup shortcuts beneath the Connect Gina video. */
+/* Direct setup shortcuts above the Connect Gina video. */
 #content-area .gina-client-links {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));

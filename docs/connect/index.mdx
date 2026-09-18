@@ -3,14 +3,7 @@ title: "Connect Gina to your agent"
 description: "Bring Gina's market research and portfolio tools to the agent you already use."
 ---
 
-<iframe
-  className="w-full aspect-video rounded-xl"
-  src="https://www.youtube.com/embed/GvVQjeCrxZc"
-  title="Connect Gina video"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-  referrerPolicy="strict-origin-when-cross-origin"
-  allowFullScreen
-></iframe>
+## Choose your client
 
 <div className="gina-client-links" role="navigation" aria-label="Connect your agent">
   <a href="/connect/chatgpt">
@@ -26,7 +19,7 @@ description: "Bring Gina's market research and portfolio tools to the agent you 
     <span>Grok Bot</span>
   </a>
   <a href="/connect/hermes">
-    <img className="gina-client-logo-mono" src="/images/clients/hermes.svg" alt="Hermes Agent logo" width="36" height="36" noZoom />
+    <img src="/images/clients/hermes.png" alt="Hermes Agent logo" width="36" height="36" noZoom />
     <span>Hermes Agent</span>
   </a>
   <a href="/connect/openclaw">
@@ -39,11 +32,14 @@ description: "Bring Gina's market research and portfolio tools to the agent you 
   </a>
 </div>
 
-## Choose a client
-
-Select your agent above to open its setup guide, or find another client below.
-
-Start with a direct read-only connection. Your host must support remote MCP and the authentication method shown below. Access can depend on your host's plan or workspace policy.
+<iframe
+  className="w-full aspect-video rounded-xl"
+  src="https://www.youtube.com/embed/GvVQjeCrxZc"
+  title="Connect Gina video"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  referrerPolicy="strict-origin-when-cross-origin"
+  allowFullScreen
+></iframe>
 
 | Client                            | Setup route                                                    | Authentication                        | Skills and result UI                                        |
 | --------------------------------- | -------------------------------------------------------------- | ------------------------------------- | ----------------------------------------------------------- |
@@ -55,6 +51,8 @@ Start with a direct read-only connection. Your host must support remote MCP and 
 | [Hermes Agent](/connect/hermes)   | Remote MCP in `config.yaml`                                    | OAuth or manual token                 | Tools discovered on connection; Gina rendering unverified   |
 | [OpenClaw](/connect/openclaw)     | Native MCP settings; optional skill directories                | OAuth or manual token                 | Skills load separately from MCP                             |
 | [Others](/connect/other-clients)  | Cursor, Grok web, and other Streamable HTTP clients            | OAuth or Bearer token                 | Depends on the client                                       |
+
+Select your agent above to open its setup guide. Start with a direct read-only connection. Your host must support remote MCP and the authentication method listed in the table. Access can depend on your host's plan or workspace policy.
 
 ## Explore model evaluations
 

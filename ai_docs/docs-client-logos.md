@@ -6,7 +6,7 @@ The linked marks in `docs/connect/index.mdx` are served locally from `docs/image
 - Claude: existing [LobeHub Claude color mark](https://github.com/lobehub/lobe-icons/blob/master/packages/static-svg/icons/claude-color.svg), copied from the evals app.
 - Grok Bot: [LobeHub Grok mark](https://github.com/lobehub/lobe-icons/blob/master/packages/static-svg/icons/grok.svg).
 - Codex: [LobeHub Codex mark](https://github.com/lobehub/lobe-icons/blob/master/packages/static-svg/icons/codex.svg).
-- Hermes Agent: [caduceus favicon](https://github.com/NousResearch/hermes-agent/blob/main/website/static/img/favicon.svg) from the official Hermes Agent repository.
+- Hermes Agent: the PNG logo supplied by the product owner on September 18, 2026, copied without modifications.
 - OpenClaw: [SVG favicon](https://openclaw.ai/favicon.svg) used on the [official OpenClaw site](https://openclaw.ai/).
 
 The LobeHub MIT license is included at `docs/images/clients/LICENSE`. Monochrome marks are inverted in dark mode to preserve contrast; colored marks keep their original colors.
