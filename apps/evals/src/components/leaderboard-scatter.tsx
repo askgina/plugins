@@ -24,12 +24,10 @@ function placeScatterLabels(
   return plotted.map((point) => {
     const width = Math.max(22, point.name.length * 6.15);
     const fallback = { labelX: point.x + 9, labelY: point.y - 8, labelAnchor: "start" as const };
-    const candidates = [
-      fallback,
-      { labelX: point.x + 9, labelY: point.y + 14, labelAnchor: "start" as const },
-      { labelX: point.x - 9, labelY: point.y - 8, labelAnchor: "end" as const },
-      { labelX: point.x - 9, labelY: point.y + 14, labelAnchor: "end" as const },
-    ];
+    const candidates = [-8, 14, -25, 31, -42, 48, -59, 65, -76, 82].flatMap((offset) => [
+      { labelX: point.x + 9, labelY: point.y + offset, labelAnchor: "start" as const },
+      { labelX: point.x - 9, labelY: point.y + offset, labelAnchor: "end" as const },
+    ]);
     for (const candidate of candidates) {
       const left = candidate.labelAnchor === "end" ? candidate.labelX - width : candidate.labelX;
       const box = [left, candidate.labelY - 9, left + width, candidate.labelY + 3] as const;
@@ -66,13 +64,19 @@ function placeScatterLabels(
   });
 }
 
-/** Uses the same derived metrics and filtered model rows as the table. */
-export function LeaderboardScatter({ rows }: { rows: readonly LeaderboardModelRow[] }) {
-  const [metric, setMetric] = useState<"time" | "cost">("time");
+/** Plot every eligible configuration supplied, including earlier graded settings. */
+export function LeaderboardScatter({
+  rows,
+  initialMetric = "time",
+}: {
+  rows: readonly LeaderboardModelRow[];
+  initialMetric?: "time" | "cost";
+}) {
+  const [metric, setMetric] = useState<"time" | "cost">(initialMetric);
   const id = useId();
-  const width = 720;
-  const height = 310;
-  const margin = { top: 28, right: 100, bottom: 48, left: 62 };
+  const width = 960;
+  const height = 380;
+  const margin = { top: 28, right: 170, bottom: 48, left: 62 };
   const plotWidth = width - margin.left - margin.right;
   const plotHeight = height - margin.top - margin.bottom;
   const label = metric === "time" ? "Average time" : "Estimated cost / task";
@@ -118,6 +122,9 @@ export function LeaderboardScatter({ rows }: { rows: readonly LeaderboardModelRo
             Higher scores, {metric === "time" ? "less time" : "lower cost"}: look toward the top
             left.
           </p>
+          <p>
+            {points.length} of {rows.length} recorded settings · complete grading only
+          </p>
         </div>
         <div className="lb-chart-controls" role="group" aria-label="Scatter plot horizontal axis">
           <button type="button" aria-pressed={metric === "time"} onClick={() => setMetric("time")}>
@@ -143,9 +150,9 @@ export function LeaderboardScatter({ rows }: { rows: readonly LeaderboardModelRo
           >
             <title id={`${id}-title`}>Overall score versus {label.toLowerCase()}</title>
             <desc id={`${id}-description`}>
-              Each point is a model and reasoning setting from the table with both metrics
-              available. Model links include the setting and exact values and open its profile.
-              Scores use a zero to 100 percent scale.
+              Each point is a fully graded model and reasoning setting from the latest sweep. Model
+              links include the setting and exact values and open its profile. Scores use a zero to
+              100 percent scale.
             </desc>
             <g className="lb-chart-grid" aria-hidden="true">
               {[0, 0.25, 0.5, 0.75, 1].map((value) => (
@@ -201,6 +208,15 @@ export function LeaderboardScatter({ rows }: { rows: readonly LeaderboardModelRo
                 aria-label={`${rowLabel(point.row)}: ${percent(point.score)} overall, ${format(point.value)} ${label.toLowerCase()}. View model profile.`}
               >
                 <title>{`${rowLabel(point.row)}: ${percent(point.score)} overall, ${format(point.value)} ${label.toLowerCase()}`}</title>
+                {Math.abs(point.labelY - point.y) > 20 && (
+                  <line
+                    className="lb-chart-label-line"
+                    x1={point.x}
+                    y1={point.y}
+                    x2={point.labelX}
+                    y2={point.labelY - 4}
+                  />
+                )}
                 <circle className="lb-chart-hit" cx={point.x} cy={point.y} r="16" />
                 <circle className="lb-chart-point-halo" cx={point.x} cy={point.y} r="8" />
                 <circle
@@ -228,20 +244,23 @@ export function LeaderboardScatter({ rows }: { rows: readonly LeaderboardModelRo
         </p>
       )}
       {omitted.length > 0 && (
-        <p className="results-footnote">
-          Not plotted:{" "}
-          {omitted
-            .map(
-              (row) =>
-                `${rowLabel(row)} (${row.overall === null ? "Overall score unavailable" : `${label.toLowerCase()} unavailable`})`,
-            )
-            .join("; ")}
-          .
-        </p>
+        <details className="results-footnote">
+          <summary>{omitted.length} settings not plotted</summary>
+          <p>
+            {omitted
+              .map(
+                (row) =>
+                  `${rowLabel(row)} (${row.overall === null ? "Overall score unavailable" : `${label.toLowerCase()} unavailable`})`,
+              )
+              .join("; ")}
+            .
+          </p>
+        </details>
       )}
       <p className="results-footnote">
-        Uses the same scores and metrics as the table. Models used different clients; see run
-        details for measurement coverage.
+        Shows all fully graded settings in the latest sweep, including earlier reasoning levels.
+        Each point uses the same score and measurement rules as the table. Models used different
+        clients; see run details for coverage and cost sources.
       </p>
     </section>
   );

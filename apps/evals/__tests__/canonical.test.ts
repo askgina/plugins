@@ -326,7 +326,17 @@ describe("reasoning sweep runs", () => {
     const legacy = canonicalRuns.find((run) => run.runId === "sol-spot-1")!;
     expect(derivedCostPerTask(legacy).availability).toBe("available");
     for (const run of runs) {
-      expect(derivedCostPerTask(run).availability).not.toBe("available");
+      expect(run.pricing).toBeNull();
+      const cost = derivedCostPerTask(run);
+      if (run.recordedCostEstimate?.availability === "available" && run.counts.completed > 0) {
+        expect(cost).toMatchObject({
+          availability: "available",
+          basis: run.recordedCostEstimate.basis,
+          sampleCount: run.counts.completed,
+        });
+      } else {
+        expect(cost.availability).not.toBe("available");
+      }
     }
   });
 

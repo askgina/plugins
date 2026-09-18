@@ -74,6 +74,11 @@
 .lb-chart-point-halo {
   fill: var(--eval-paper);
 }
+.lb-chart-label-line {
+  stroke: var(--eval-muted);
+  stroke-width: 0.6;
+  opacity: 0.5;
+}
 .lb-chart-hit {
   fill: transparent;
   pointer-events: all;

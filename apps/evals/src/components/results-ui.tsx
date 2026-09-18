@@ -107,7 +107,9 @@ export function RunDetails({ run }: { run: CanonicalRun }) {
                 {dollars(cost.usdPerTask)} · {cost.sampleCount ?? "Unknown number of"}{" "}
                 {cost.population} attempts
                 <br />
-                {cost.priceSource} prices, {cost.priceAsOf}
+                {cost.basis === "token_rates"
+                  ? `${cost.priceSource} prices, ${cost.priceAsOf}`
+                  : `${cost.priceSource}, ${cost.priceAsOf}; not billed spend`}
               </>
             ) : (
               (cost.reason ?? cost.availability.replaceAll("_", " "))

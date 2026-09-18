@@ -27,6 +27,7 @@ import {
   type CanonicalPublication,
   type CanonicalRun,
   type CanonicalRunCounts,
+  type CostEstimateBasis,
   type DispatchCoverage,
   type EligibilityReason,
   type Evidence,
@@ -523,6 +524,7 @@ export function cohortsForFamily(family: PrototypeFamily): readonly CanonicalCoh
 
 export interface DerivedCostAvailable {
   readonly availability: "available";
+  readonly basis: CostEstimateBasis;
   readonly usdPerTask: number;
   /** null when the token metric is aggregate_only (sample count not retained). */
   readonly sampleCount: number | null;
@@ -540,12 +542,29 @@ const POPULATION_COUNT: Record<StatisticPopulation, (counts: CanonicalRunCounts)
 };
 
 /**
- * Estimated USD per task for a run: the token aggregate priced at the model's
- * published rate, divided by the number of tasks the statistic covers —
+ * Prefer reconciled client-recorded cost estimates, including cache charges.
+ * Legacy runs use the token aggregate priced at the model's published rate,
+ * divided by the number of tasks the statistic covers —
  * `sampleCount` when retained, the population count for `aggregate_only`.
  * Unavailable when token evidence is missing or the model has no pricing entry.
  */
 export function derivedCostPerTask(run: CanonicalRun): DerivedCost {
+  const recorded = run.recordedCostEstimate;
+  if (recorded !== undefined) {
+    if (recorded.availability !== "available") return recorded;
+    if (recorded.sampleCount <= 0) {
+      return { availability: "not_recorded", reason: "No completed attempts with cost records." };
+    }
+    return {
+      availability: "available",
+      basis: recorded.basis,
+      usdPerTask: recorded.usdTotal / recorded.sampleCount,
+      sampleCount: recorded.sampleCount,
+      population: recorded.population,
+      priceAsOf: recorded.recordedAt,
+      priceSource: recorded.source,
+    };
+  }
   const metric = run.metrics.tokenUsage;
   if (metric.availability !== "available" && metric.availability !== "aggregate_only") {
     return metric;
@@ -567,6 +586,7 @@ export function derivedCostPerTask(run: CanonicalRun): DerivedCost {
     1_000_000;
   return {
     availability: "available",
+    basis: "token_rates",
     usdPerTask: usdTotal / denominator,
     sampleCount: metric.availability === "available" ? metric.sampleCount : null,
     population: metric.population,
@@ -584,6 +604,7 @@ export type SummaryMetric =
       readonly value: number;
       readonly sampleCount: number;
       readonly excluded: number;
+      readonly detail?: string;
     }
   | { readonly availability: "unavailable"; readonly reason: string };
 export interface LeaderboardModelRow {
@@ -677,7 +698,16 @@ function pooledCost(runs: readonly CanonicalRun[]): SummaryMetric {
   let total = 0;
   let count = 0;
   let population: string | undefined;
+  const bases = new Set<string>();
   for (const run of runs) {
+    // An empty, fully reconciled completed population contributes no samples.
+    // Its unscored started attempts remain in the displayed exclusion count.
+    if (
+      run.recordedCostEstimate?.availability === "available" &&
+      run.recordedCostEstimate.sampleCount === 0 &&
+      run.counts.completed === 0
+    )
+      continue;
     const cost = derivedCostPerTask(run);
     if (cost.availability !== "available" && "reason" in cost && cost.reason) {
       return missingSummary(cost.reason);
@@ -694,6 +724,7 @@ function pooledCost(runs: readonly CanonicalRun[]): SummaryMetric {
     if (population !== undefined && population !== normalized)
       return missingSummary("Token records cover different attempt populations.");
     population = normalized;
+    bases.add(cost.basis);
     total += cost.usdPerTask * cost.sampleCount;
     count += cost.sampleCount;
   }
@@ -704,6 +735,11 @@ function pooledCost(runs: readonly CanonicalRun[]): SummaryMetric {
         value: total / count,
         sampleCount: count,
         excluded: runs.reduce((sum, run) => sum + run.counts.started, 0) - count,
+        detail: bases.has("native_estimate")
+          ? "Client-recorded estimate including cache usage; not billed spend."
+          : bases.has("catalogue_free_tier")
+            ? "Devin catalogue lists this model as Free; subscription charges excluded."
+            : "Estimate from recorded tokens and published token rates; not billed spend.",
       };
 }
 
@@ -756,8 +792,9 @@ export function unifiedLeaderboardRows(
         overallReason,
         averageTime:
           measurementReason === null ? pooledTime(fullRuns) : missingSummary(measurementReason),
-        estimatedCost:
-          measurementReason === null ? pooledCost(fullRuns) : missingSummary(measurementReason),
+        estimatedCost: compatibleSuiteRuns(fullRuns)
+          ? pooledCost(fullRuns)
+          : missingSummary("These runs have different benchmark settings."),
         coverageLabel: missing ? `${fullRuns.map((run) => run.family).join(" + ")} only` : "",
       };
     });

@@ -166,7 +166,8 @@ describe("unified leaderboard", () => {
     expect(missing.scores.Predictions).toBeNull();
     expect(missing.overall).toBeNull();
     expect(missing.averageTime.availability).toBe("unavailable");
-    expect(missing.estimatedCost.availability).toBe("unavailable");
+    expect(missing.estimatedCost).toMatchObject({ availability: "available", sampleCount: 9 });
+    expect(missing.coverageLabel).toBe("Spot + Perps only");
   });
 
   test("pools individual timings and token costs by their actual sample counts", () => {
@@ -182,6 +183,7 @@ describe("unified leaderboard", () => {
       value: 51 / 18,
       sampleCount: 18,
       excluded: 0,
+      detail: "Estimate from recorded tokens and published token rates; not billed spend.",
     });
     const runs = suite();
     const spot = runs[0]!;
@@ -204,6 +206,7 @@ describe("unified leaderboard", () => {
       value: 49 / 16,
       sampleCount: 16,
       excluded: 2,
+      detail: "Estimate from recorded tokens and published token rates; not billed spend.",
     });
   });
 
@@ -390,7 +393,10 @@ describe("unified leaderboard", () => {
       ),
     );
     const missing = rowFor([
-      fixtureRun("Spot", ["runtime_failure", "runtime_failure", "runtime_failure"]),
+      {
+        ...fixtureRun("Spot", ["runtime_failure", "runtime_failure", "runtime_failure"]),
+        pricing: null,
+      },
     ]);
     expect(rated.overall).toBe(0);
     for (const direction of ["asc", "desc"] as const) {

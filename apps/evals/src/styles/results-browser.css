@@ -1,6 +1,26 @@
 .results-page {
   padding-bottom: 64px;
 }
+.results-cost-value {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  white-space: nowrap;
+}
+.results-cost-value small {
+  font-size: 10px;
+  color: var(--eval-muted);
+}
+.results-outcome-value {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.results-outcome-value small {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--eval-muted);
+}
 .eval-hero.results-header {
   padding: 36px 0 28px;
 }

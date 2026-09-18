@@ -5,6 +5,17 @@ import { configurationLeaderboardRows, type LeaderboardModelRow } from "../src/c
 import { LeaderboardScatter } from "../src/components/leaderboard-scatter";
 
 describe("scatter plot configuration rows", () => {
+  test("plots all 13 fully graded sweep settings on both efficiency axes", () => {
+    const rows = configurationLeaderboardRows().filter(
+      (row) => row.campaignId === "reasoning-sweep-2026-09-16",
+    );
+    for (const initialMetric of ["time", "cost"] as const) {
+      const html = renderToStaticMarkup(createElement(LeaderboardScatter, { rows, initialMetric }));
+      expect(html.match(/class="lb-chart-model"/gu)).toHaveLength(13);
+      expect(html).toContain("22 settings not plotted");
+      expect(html).toContain("Grok 4.6, low reasoning");
+    }
+  });
   test("distinguishes settings and reports omitted settings of a plotted model", () => {
     const base = configurationLeaderboardRows().find((row) => row.overall !== null)!;
     const rows: LeaderboardModelRow[] = [

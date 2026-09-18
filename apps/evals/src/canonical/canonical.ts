@@ -28,6 +28,7 @@ import {
 } from "../results";
 import perpsAttemptsJson from "../results/2026-09-11/perps-predictions/perps/perps-openai-oauth-sol-20260911T152450Z.attempts.json";
 import type { ConversationReference } from "../lib/conversations";
+import { recordedSweepCost } from "../lib/recorded-costs";
 
 // ---------------------------------------------------------------------------
 // Vocabulary
@@ -286,6 +287,26 @@ export interface CanonicalRunCounts {
   readonly unscored?: number;
 }
 
+export type CostEstimateBasis =
+  | "native_estimate"
+  | "token_rates"
+  | "catalogue_token_rates"
+  | "published_api_rates"
+  | "catalogue_free_tier";
+
+/** An estimate from retained usage, kept separate from actual billing. */
+export type RecordedCostEstimate =
+  | {
+      readonly availability: "available";
+      readonly basis: CostEstimateBasis;
+      readonly usdTotal: number;
+      readonly sampleCount: number;
+      readonly population: StatisticPopulation;
+      readonly source: string;
+      readonly recordedAt: string;
+    }
+  | MetricUnavailable;
+
 export interface CanonicalRun {
   readonly runId: string;
   readonly origin: DataOrigin;
@@ -296,6 +317,7 @@ export interface CanonicalRun {
   readonly timeoutMs?: number;
   /** Undefined uses the legacy registry; null means this route has no verified price. */
   readonly pricing?: ModelPricing | null;
+  readonly recordedCostEstimate?: RecordedCostEstimate;
   readonly dispatchCoverage: DispatchCoverage;
   readonly gradingCoverage: GradingCoverage;
   readonly coveragePlan: {
@@ -2260,6 +2282,7 @@ function sweepFamilyRun(row: SweepRow, run: SweepRun): CanonicalRun {
     startedAt: row.startedAt,
     timeoutMs: row.timeoutMs,
     pricing: null,
+    recordedCostEstimate: recordedSweepCost(row, run),
     dispatchCoverage: run.dispatched === run.planned ? "complete" : "incomplete",
     gradingCoverage: run.graded === run.planned ? "complete" : "partial",
     coveragePlan: { planSource: "run_manifest", planSha256: null, statusSha256: null },

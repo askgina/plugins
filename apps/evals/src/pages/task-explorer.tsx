@@ -378,7 +378,14 @@ function TaskResult({
           {summary.passed}/{summary.started} <span>passed</span>
         </>
       ) : summary.status === "incomplete" ? (
-        "Incomplete results"
+        <span>
+          {summary.passed} passed ·{" "}
+          {summary.slots.filter((attempt) => attempt?.verdict === "fail").length} failed
+          <br />
+          {summary.slots.filter((attempt) => attempt?.execution === "timed_out").length} timed out ·{" "}
+          {summary.slots.filter((attempt) => attempt?.execution === "runtime_failure").length} run
+          errors
+        </span>
       ) : (
         "Results unavailable"
       )}

@@ -154,14 +154,29 @@ export function MethodologyPage() {
                 started attempts were excluded.
               </p>
               <p>
-                <strong>Estimated cost per task</strong> uses recorded input and output token totals
-                and the model’s published token prices, divided by the attempts covered by those
-                records. Here, a task means one attempt. It is an estimate, not a bill; token
-                records may exclude failed or timed-out attempts.
+                <strong>Estimated cost per task</strong> uses retained native usage and divides by
+                completed attempts with cost records. OMP supplies per-message USD estimates,
+                including cache reads and writes. Devin uses its retained model catalogue rates and
+                cached-token totals; that catalogue explicitly lists SWE-2 as Free. Muse uses{" "}
+                <a
+                  href="https://dev.meta.ai/docs/pricing-rate-limits"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Meta’s standard API rates
+                </a>{" "}
+                checked September 18: $1.25 per million uncached input tokens, $0.15 cached input,
+                and $4.25 output. These are API-equivalent estimates, not Muse subscription charges.
+                The records are matched to the published model, source summary, and attempt token
+                totals. Graded failures are included; timeouts and run errors are excluded. Older
+                runs use recorded tokens and their listed price source. No estimate is a billing
+                receipt.
               </p>
               <p>
-                Time and cost need data from all three categories. Open a model’s row to see sample
-                counts, exclusions, category timing percentiles, and pricing sources.
+                Overall scores and average time need data from all three categories. Cost may cover
+                a smaller recorded population, labelled with the available categories, such as Spot
+                only. Open a model’s row to see sample counts, exclusions, category timing
+                percentiles, and pricing sources.
               </p>
             </li>
           </ol>

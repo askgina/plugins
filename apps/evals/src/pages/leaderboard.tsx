@@ -2,6 +2,7 @@ import { Fragment, useState } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { LeaderboardScatter } from "../components/leaderboard-scatter";
 import { ModelAvatar, PageShell } from "../components/eval-ui";
+import type { CanonicalRun } from "../canonical/canonical";
 import {
   InfoPopover,
   ResultsHeader,
@@ -22,11 +23,23 @@ import {
   type SummaryMetric,
 } from "../canonical/selectors";
 
-const defaultRows = unifiedLeaderboardRows();
 const configurations = [...configurationLeaderboardRows()].sort((a, b) =>
   (Object.values(b.runs)[0]?.startedAt ?? "").localeCompare(
     Object.values(a.runs)[0]?.startedAt ?? "",
   ),
+);
+const latestCampaignConfigurations = configurations.filter(
+  (row) => row.campaignId === configurations[0]?.campaignId,
+);
+const defaultRows = unifiedLeaderboardRows().map(
+  (row) =>
+    configurations.find(
+      (configuration) =>
+        configuration.model.id === row.model.id &&
+        SCORED_FAMILIES.every(
+          (family) => configuration.runs[family]?.runId === row.runs[family]?.runId,
+        ),
+    ) ?? row,
 );
 
 const columns: readonly { metric: LeaderboardMetric; label: string; explanation: string }[] = [
@@ -64,22 +77,39 @@ const columns: readonly { metric: LeaderboardMetric; label: string; explanation:
     metric: "cost",
     label: "Est. cost / task",
     explanation:
-      "Recorded input and output tokens multiplied by the model’s published prices, divided by the attempts covered by those records across all three categories. A task here means one attempt. This is an estimate, not a bill.",
+      "Recorded token usage priced using OMP’s client estimates, Devin’s retained model catalogue, or Meta’s published API rates. Includes cache discounts. The denominator is completed attempts with cost records; exclusions are shown. SWE-2 is listed as Free by Devin. These are estimates, not bills or subscription charges.",
   },
 ];
 
 function SummaryValue({
   metric,
   format,
+  cost = false,
+  scope,
 }: {
   metric: SummaryMetric;
   format: (value: number) => string;
+  cost?: boolean;
+  scope?: string;
 }) {
   return metric.availability === "available" ? (
-    <>{format(metric.value)}</>
+    <span className={cost ? "results-cost-value" : undefined} title={metric.detail}>
+      {format(metric.value)}
+      {cost && metric.value === 0 && <small>Free model tier</small>}
+      {cost && scope && <small>{scope}</small>}
+      {cost && (
+        <small>
+          {metric.sampleCount} attempts · {metric.excluded} excluded
+        </small>
+      )}
+    </span>
   ) : (
     <span title={metric.reason} aria-label={`Unavailable: ${metric.reason}`}>
-      —
+      {cost
+        ? metric.reason.includes("not published")
+          ? "Not published"
+          : "Not recorded"
+        : "No timing"}
     </span>
   );
 }
@@ -89,9 +119,59 @@ function CoverageNote({ label, metric }: { label: string; metric: SummaryMetric 
     <p>
       <strong>{label}: </strong>
       {metric.availability === "available"
-        ? `${metric.sampleCount} attempts included; ${metric.excluded} started attempts excluded.`
+        ? `${metric.sampleCount} attempts included; ${metric.excluded} started attempts excluded. ${metric.detail ?? ""}`
         : metric.reason}
     </p>
+  );
+}
+
+function RecordedResult({
+  runs,
+  score,
+  href,
+  overall = false,
+}: {
+  runs: readonly CanonicalRun[];
+  score: number | null;
+  href?: string;
+  overall?: boolean;
+}) {
+  if (runs.length === 0) return <span>Not evaluated</span>;
+  const counts = recordedOutcomes(runs);
+  const value =
+    score !== null
+      ? percent(score)
+      : overall
+        ? `${counts.graded}/${counts.planned} graded`
+        : `${counts.passed} passed · ${counts.failed} failed`;
+  const interruptions = [
+    counts.timedOut > 0 ? `${counts.timedOut} timed out` : "",
+    counts.runtimeFailure > 0 ? `${counts.runtimeFailure} run errors` : "",
+    counts.pending > 0 ? `${counts.pending} pending` : "",
+    counts.unstarted > 0 ? `${counts.unstarted} not started` : "",
+    counts.unknown > 0 ? `${counts.unknown} unknown` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  return (
+    <div className="results-outcome-value">
+      {href ? (
+        <a className="results-score-link" href={href}>
+          {value}
+        </a>
+      ) : (
+        <span>{value}</span>
+      )}
+      <small>
+        {score !== null || overall
+          ? `${counts.passed} passed · ${counts.failed} failed`
+          : `${counts.graded}/${counts.planned} graded`}
+      </small>
+      {interruptions && <small>{interruptions}</small>}
+      {score === null && overall && (
+        <small>Not ranked · {runs.length < 3 ? "partial coverage" : "grading incomplete"}</small>
+      )}
+    </div>
   );
 }
 
@@ -131,6 +211,9 @@ export function LeaderboardPage({
     ),
     metric,
     direction,
+  );
+  const chartRows = (rows === defaultRows ? latestCampaignConfigurations : rows).filter((row) =>
+    `${row.model.name} ${row.model.provider}`.toLocaleLowerCase().includes(query),
   );
   function sort(next: LeaderboardMetric) {
     setMetric(next);
@@ -245,44 +328,31 @@ export function LeaderboardPage({
                       </div>
                     </th>
                     <td className="results-overall">
-                      {row.overall === null ? (
-                        <span
-                          aria-label={row.overallReason ?? "Unavailable"}
-                          title={row.overallReason ?? undefined}
-                        >
-                          —
-                        </span>
-                      ) : (
-                        percent(row.overall)
-                      )}
+                      <RecordedResult runs={Object.values(row.runs)} score={row.overall} overall />
                     </td>
                     {SCORED_FAMILIES.map((family) => (
                       <td key={family}>
-                        {row.scores[family] === null ? (
-                          <span
-                            title={
-                              row.runs[family]
-                                ? "Complete dispatch and grading required. Open run details for recorded outcomes."
-                                : "Not evaluated"
-                            }
-                          >
-                            —
-                          </span>
-                        ) : (
-                          <a
-                            className="results-score-link"
-                            href={`#/tasks?category=${family}&model=${row.model.id}&run=${encodeURIComponent(row.runs[family]!.runId)}`}
-                          >
-                            {percent(row.scores[family])}
-                          </a>
-                        )}
+                        <RecordedResult
+                          runs={row.runs[family] ? [row.runs[family]!] : []}
+                          score={row.scores[family]}
+                          href={
+                            row.runs[family]
+                              ? `#/tasks?category=${family}&model=${row.model.id}&run=${encodeURIComponent(row.runs[family]!.runId)}`
+                              : undefined
+                          }
+                        />
                       </td>
                     ))}
                     <td>
                       <SummaryValue metric={row.averageTime} format={seconds} />
                     </td>
                     <td>
-                      <SummaryValue metric={row.estimatedCost} format={dollars} />
+                      <SummaryValue
+                        metric={row.estimatedCost}
+                        format={dollars}
+                        cost
+                        scope={row.coverageLabel}
+                      />
                     </td>
                   </tr>
                   <tr
@@ -360,13 +430,14 @@ export function LeaderboardPage({
           </div>
         )}
         <p className="results-footnote">
-          Time covers completed attempts. Cost estimates cover recorded token usage; failed and
-          timed-out attempts may be excluded. Open a row for counts and sources.
+          Time and estimated token costs cover completed attempts, including graded failures.
+          Timeouts and run errors are excluded. Costs include cache discounts and are not billed
+          spend or subscription charges. Open a row for counts and sources.
         </p>
         <p className="results-footnote">
           These are small samples. Differences in scores do not establish statistical significance.
         </p>
-        <LeaderboardScatter rows={shown} />
+        <LeaderboardScatter rows={chartRows} />
       </div>
     </PageShell>
   );

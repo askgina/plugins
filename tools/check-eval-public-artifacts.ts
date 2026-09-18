@@ -183,6 +183,9 @@ const CLAUDE_ID = /(?:^|[/-])claude(?:[/-]|$)/iu;
 // Freeze the reviewed legacy projections, including their free-form source
 // metadata. New paths or changed bytes require a new explicit privacy review.
 const APPROVED_CLAUDE_ARTIFACTS: Readonly<Record<string, string>> = {
+  // Numeric-only costs; user explicitly approved public inclusion on 2026-09-18.
+  "src/results/2026-09-16/reasoning-sweep/native-cost-estimates.json":
+    "ce34869373a72390ca458c721f201ebcb14180e789be9f19095ca301063d8c6a",
   "src/results/2026-09-14/claude-comparison/ask-gina-claude-comparison.json":
     "acf6b70af1dafe75b305326555244e3798f02bcce390dfde4d2ffa299e8bd573",
   "src/results/2026-09-14/claude-comparison/fable/manifest.json":
