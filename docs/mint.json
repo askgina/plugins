@@ -28,6 +28,7 @@
       "group": "Start here",
       "pages": [
         "what-is-gina",
+        "evaluations",
         "product-guide/wallet-and-account",
         {
           "group": "Automations",
