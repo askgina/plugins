@@ -88,21 +88,43 @@ export function ModelAvatar({
   model: { name: string; mark: string; color: string; id?: string; provider?: string };
   size?: "sm" | "lg";
 }) {
-  const logo = providerLogos[model.provider?.toLowerCase() ?? ""];
+  const cognition = model.id === "swe-2";
+  const logo = cognition
+    ? "/images/model-logos/cognition-avatar-white.png"
+    : providerLogos[model.provider?.toLowerCase() ?? ""];
   const monochrome = model.provider?.toLowerCase() === "xai";
   return (
     <span
       className={`eval-avatar eval-avatar-${size} ${logo ? "eval-avatar-logo" : ""} ${monochrome ? "eval-avatar-monochrome" : ""} ${model.id ? `eval-avatar-${model.id}` : ""}`}
-      style={{
-        "--model-color": model.color,
-        ...(monochrome ? { "--model-logo": `url("${logo}")` } : {}),
-      } as CSSProperties}
+      style={
+        {
+          "--model-color": model.color,
+          ...(monochrome ? { "--model-logo": `url("${logo}")` } : {}),
+        } as CSSProperties
+      }
       aria-hidden="true"
     >
       {monochrome ? (
         <span className="eval-avatar-mask" />
       ) : logo ? (
-        <img src={logo} alt="" width={size === "lg" ? 38 : 24} height={size === "lg" ? 38 : 24} />
+        <>
+          <img
+            className={cognition ? "eval-avatar-image-light" : undefined}
+            src={logo}
+            alt=""
+            width={size === "lg" ? 38 : 24}
+            height={size === "lg" ? 38 : 24}
+          />
+          {cognition && (
+            <img
+              className="eval-avatar-image-dark"
+              src="/images/model-logos/cognition-avatar-black.png"
+              alt=""
+              width={size === "lg" ? 38 : 24}
+              height={size === "lg" ? 38 : 24}
+            />
+          )}
+        </>
       ) : (
         model.mark
       )}

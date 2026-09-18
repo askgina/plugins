@@ -231,6 +231,16 @@ body,
   height: 2px;
   background: var(--eval-red);
 }
+.dark {
+  --eval-avatar-light-display: none;
+  --eval-avatar-dark-display: block;
+}
+/* Eval pages keep a light surface even when the surrounding app is dark. */
+.light,
+.eval-app {
+  --eval-avatar-light-display: block;
+  --eval-avatar-dark-display: none;
+}
 .eval-avatar {
   display: inline-flex;
   align-items: center;
@@ -262,6 +272,17 @@ body,
   width: 80%;
   height: 80%;
   object-fit: contain;
+}
+.eval-avatar-logo .eval-avatar-image-light {
+  display: var(--eval-avatar-light-display, block);
+}
+.eval-avatar-logo .eval-avatar-image-dark {
+  display: var(--eval-avatar-dark-display, none);
+}
+.eval-avatar-swe-2 img {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
 }
 .eval-avatar.eval-avatar-monochrome {
   color: inherit;

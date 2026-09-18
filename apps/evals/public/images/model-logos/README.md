@@ -18,3 +18,14 @@ the mark stays dark on light surfaces and light on dark surfaces.
 retrieved September 18, 2026, under the same UXWing license. Its original colors
 and transparent background are preserved on both light and dark surfaces; no
 inversion or monochrome filter is applied.
+
+`cognition-avatar-white.png` and `cognition-avatar-black.png` are the original
+`COGNITION_AVATAR_SQUARE_WHITE.png` and `COGNITION_AVATAR_SQUARE_BLACK.png` from
+the [Cognition asset folder supplied for SWE-2](https://drive.google.com/drive/folders/1R92dIkAyaH9ijHuB6YEZ5FRazZtkWAge),
+retrieved September 18, 2026. They are Cognition brand assets, separate from the
+MIT-licensed LobeHub assets. Both PNGs are served unmodified. WHITE has a black
+mark on a white background and is used on light surfaces; BLACK has a white
+mark on a black background and is used on dark surfaces. The eval app explicitly
+retains the light variant on its light surface, even inside a dark app theme.
+This model-specific avatar identifies SWE-2; other models accessed through Devin
+retain their own provider marks.
