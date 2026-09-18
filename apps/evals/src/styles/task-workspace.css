@@ -406,6 +406,27 @@
 .task-workspace-footnote {
   margin-top: 16px;
 }
+@media (max-width: 1100px), (any-pointer: coarse) {
+  .task-workspace select,
+  .task-workspace-model-search input {
+    min-height: 44px;
+    font-size: 16px;
+  }
+  .task-workspace-page .results-search input {
+    min-height: 24px;
+    font-size: 16px;
+  }
+  .task-workspace-tabs button,
+  .task-workspace-attempt-navigation button,
+  .task-workspace-empty-models button,
+  .task-workspace .conversation-controls button {
+    min-height: 44px;
+  }
+  .task-workspace .conversation-output summary {
+    min-height: 44px;
+    padding: 11px 0;
+  }
+}
 @media (max-width: 1100px) {
   .task-workspace {
     grid-template-columns: minmax(280px, 1fr) minmax(0, 1.6fr);
@@ -477,11 +498,6 @@
     display: block;
     padding: 0 16px 20px;
   }
-  .task-workspace-model-search input,
-  .task-workspace select {
-    font-size: 16px;
-    min-height: 44px;
-  }
   .task-workspace-inspector-header {
     padding: 20px 16px 0;
   }
@@ -493,10 +509,7 @@
   }
   .task-workspace-tabs {
     justify-content: space-between;
-    gap: 12px;
-  }
-  .task-workspace-tabs button {
-    min-height: 44px;
+    gap: 8px;
   }
   .task-workspace-evidence {
     padding: 16px;
@@ -507,7 +520,6 @@
     padding: 8px 16px;
   }
   .task-workspace-attempt-navigation button {
-    min-height: 44px;
     gap: 6px;
   }
   .task-workspace-page .results-category-tabs {
@@ -517,5 +529,13 @@
   .task-workspace .results-facts > div {
     grid-template-columns: 1fr;
     gap: 2px;
+  }
+}
+@media (max-width: 380px) {
+  .task-workspace-inspector-header {
+    padding-inline: 12px;
+  }
+  .task-workspace .task-attempt {
+    padding-inline: 6px;
   }
 }
