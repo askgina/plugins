@@ -1,5 +1,6 @@
 import { Fragment, useState } from "react";
 import { ChevronDown, Search } from "lucide-react";
+import { LeaderboardScatter } from "../components/leaderboard-scatter";
 import { ModelAvatar, PageShell } from "../components/eval-ui";
 import { canonicalCampaigns, type CanonicalRun } from "../canonical/canonical";
 import {
@@ -416,6 +417,7 @@ export function LeaderboardPage({
         <p className="results-footnote">
           These are small samples. Differences in scores do not establish statistical significance.
         </p>
+        <LeaderboardScatter rows={shown} />
       </div>
     </PageShell>
   );
