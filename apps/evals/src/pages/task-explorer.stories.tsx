@@ -9,7 +9,7 @@ const meta = {
   component: TaskExplorerPage,
   render: (args) => (
     <TaskExplorerPage
-      key={`${args.initialFamily}:${args.initialCaseId}:${args.initialModelId}:${args.initialSearch}`}
+      key={`${args.initialFamily}:${args.initialCaseId}:${args.initialModelId}:${args.initialRunId}:${args.initialAttempt}:${args.initialView}:${args.initialSearch}`}
       {...args}
     />
   ),
@@ -22,7 +22,45 @@ export const Perps: Story = { args: { initialFamily: "Perps" } };
 export const Predictions: Story = { args: { initialFamily: "Predictions" } };
 export const PortfolioNoEvidence: Story = { args: { initialFamily: "Portfolio" } };
 export const Expanded: Story = {
-  args: { initialCaseId: "spot-token-metadata", initialModelId: "muse-spark" },
+  args: {
+    initialCaseId: "spot-token-metadata",
+    initialModelId: "astra",
+    initialRunId: "astra-high-spot-1",
+  },
+};
+export const RecordedAttempt: Story = {
+  args: {
+    initialCaseId: "perps-account",
+    initialModelId: "astra",
+    initialRunId: "astra-max-perps-1",
+    initialAttempt: 3,
+    initialView: "checks",
+  },
+};
+export const ManyModels: Story = {
+  decorators: [
+    (Story) => (
+      <>
+        <p className="eval-demo-label">Synthetic preview: 60 models</p>
+        <Story />
+      </>
+    ),
+  ],
+  args: {
+    rows: Array.from({ length: 60 }, (_, index) => {
+      const row = unifiedLeaderboardRows()[0]!;
+      return {
+        ...row,
+        model: {
+          ...row.model,
+          id: `preview-${index}`,
+          name: `Preview model ${String(index + 1).padStart(2, "0")}`,
+          origin: "synthetic" as const,
+        },
+        runs: {},
+      };
+    }),
+  },
 };
 export const UnavailableTiming: Story = {
   args: { initialCaseId: "predictions-multi-series-no-render", initialModelId: "gpt-sol" },

@@ -1,8 +1,8 @@
 // Data rules for the prototype pages — the single home for every derivation.
 //
 // Page components must not reimplement any of these rules:
-// - headline availability (passes/started only when dispatch coverage is
-//   complete; otherwise counts-only with the coverage reason)
+// - headline availability (passes/started only when dispatch and grading are
+//   complete; otherwise counts-only with the reason, without quality ranking)
 // - representative-run selection per model × family × configuration group
 // - eligibility-reason derivation + display text
 // - configuration grouping by exact pinnedSha256 (labels-only stands alone)
@@ -27,6 +27,7 @@ import {
   type CanonicalPublication,
   type CanonicalRun,
   type CanonicalRunCounts,
+  type CostEstimateBasis,
   type DispatchCoverage,
   type EligibilityReason,
   type Evidence,
@@ -120,16 +121,16 @@ export function resolveBaselineRun(run: CanonicalRun): CanonicalRun | undefined 
 }
 
 // ---------------------------------------------------------------------------
-// Headline — the only sort key is passes/started, and it exists only when
-// dispatch coverage is complete. Incomplete coverage => `incomplete_coverage`
-// (counts only). Unknown coverage => `coverage_unknown` (counts only).
+// Headline — passes/started is a quality sort key only when dispatch and grading
+// are complete. Dispatch reasons take precedence over incomplete grading;
+// otherwise show counts only, without treating unscored starts as failures.
 // ---------------------------------------------------------------------------
 
 export type Headline =
   | { readonly kind: "rate"; readonly passed: number; readonly started: number }
   | {
       readonly kind: "counts_only";
-      readonly reason: "incomplete_coverage" | "coverage_unknown";
+      readonly reason: "incomplete_coverage" | "coverage_unknown" | "incomplete_grading";
       readonly passed: number;
       readonly started: number;
     };
@@ -147,6 +148,14 @@ export function headlineFor(run: CanonicalRun): Headline {
     return {
       kind: "counts_only",
       reason: "coverage_unknown",
+      passed: run.counts.passed,
+      started: run.counts.started,
+    };
+  }
+  if (scoringCoverageFor(run) !== "complete") {
+    return {
+      kind: "counts_only",
+      reason: "incomplete_grading",
       passed: run.counts.passed,
       started: run.counts.started,
     };
@@ -247,6 +256,8 @@ const ELIGIBILITY_TEXT: Record<EligibilityReason, string> = {
   synthetic: "Synthetic demonstration row — no measured evidence",
   incomplete_coverage: "Dispatch coverage incomplete — showing counts, not a rate",
   coverage_unknown: "Dispatch coverage unknown — showing counts, not a rate",
+  incomplete_grading:
+    "Grading incomplete: unscored attempts are not quality failures; showing counts, not a rate",
   missing_pinned_configuration: "No pinned configuration declared",
   labels_only_configuration: "Labels-only configuration — cannot match a pinned configuration",
   different_evidence_category: "Different evidence category — not the same measure",
@@ -299,6 +310,12 @@ export function compareEligibility(
   if (left.dispatchCoverage === "unknown" || right.dispatchCoverage === "unknown") {
     reasons.push("coverage_unknown");
   }
+  if (
+    (left.dispatchCoverage === "complete" && scoringCoverageFor(left) !== "complete") ||
+    (right.dispatchCoverage === "complete" && scoringCoverageFor(right) !== "complete")
+  ) {
+    reasons.push("incomplete_grading");
+  }
   return {
     eligible: reasons.length === 0,
     reasons,
@@ -307,10 +324,10 @@ export function compareEligibility(
 }
 
 // ---------------------------------------------------------------------------
-// Representative runs — per model × family × configuration group, the newest
-// startedAt among non-withdrawn publications with complete dispatch coverage.
-// When no run in a group has a headline, the newest run is still the pick and
-// carries the coverage reason. Corrections never move the pick.
+// Representative runs: per model × family × configuration group, prefer
+// non-withdrawn publications with complete dispatch, then select the newest
+// startedAt. If none have complete dispatch, select the newest publication.
+// Grading completeness and quality never affect this pick; corrections do not either.
 // ---------------------------------------------------------------------------
 
 export interface RepresentativeRow {
@@ -320,7 +337,7 @@ export interface RepresentativeRow {
   /** Number of distinct configuration groups that produced candidates. */
   readonly configurationGroups: number;
   /** Present when the representative run has no headline rate. */
-  readonly coverageReason: "incomplete_coverage" | "coverage_unknown" | null;
+  readonly coverageReason: Extract<Headline, { kind: "counts_only" }>["reason"] | null;
 }
 
 function isPublished(run: CanonicalRun): boolean {
@@ -360,28 +377,23 @@ export function representativeRuns(family: PrototypeFamily): readonly Representa
     const measuredReps = groupReps.filter((run) => run.origin === "measured");
     const repPool = measuredReps.length > 0 ? measuredReps : groupReps;
     const pick = repPool.reduce((a, b) => (a.startedAt >= b.startedAt ? a : b));
+    const headline = headlineFor(pick);
     rows.push({
       modelId,
       family,
       run: pick,
       configurationGroups: groups.size,
-      coverageReason:
-        pick.dispatchCoverage === "incomplete"
-          ? "incomplete_coverage"
-          : pick.dispatchCoverage === "unknown"
-            ? "coverage_unknown"
-            : null,
+      coverageReason: headline.kind === "counts_only" ? headline.reason : null,
     });
   }
   return rows;
 }
 
-/** Newest-first run history for a model on a family (all config groups). */
-export function runHistoryFor(modelId: string, family: PrototypeFamily): readonly CanonicalRun[] {
+/** Newest-first run history for a model, optionally limited to a family (all config groups). */
+export function runHistoryFor(modelId: string, family?: PrototypeFamily): readonly CanonicalRun[] {
   return canonicalRuns
-    .filter((run) => run.modelId === modelId && run.family === family)
-    .slice()
-    .sort((a, b) => (a.startedAt >= b.startedAt ? -1 : 1));
+    .filter((run) => run.modelId === modelId && (family === undefined || run.family === family))
+    .sort((a, b) => (a.startedAt > b.startedAt ? -1 : a.startedAt < b.startedAt ? 1 : 0));
 }
 
 // ---------------------------------------------------------------------------
@@ -463,10 +475,22 @@ export function evidenceState(evidence: Evidence<unknown> | { availability: stri
   return evidence.availability;
 }
 
+/** Dispatch completion never implies that every planned attempt was graded. */
+export function scoringCoverageFor(run: {
+  readonly dispatchCoverage: DispatchCoverage;
+  readonly counts: Pick<CanonicalRunCounts, "planned" | "graded">;
+}): "complete" | "partial" | "none" | "unknown" {
+  if (run.counts.graded === 0) return "none";
+  if (run.dispatchCoverage === "unknown") return "unknown";
+  return run.dispatchCoverage === "complete" && run.counts.graded === run.counts.planned
+    ? "complete"
+    : "partial";
+}
+
 export function dispatchCoverageText(coverage: DispatchCoverage): string {
-  if (coverage === "complete") return "coverage complete";
-  if (coverage === "incomplete") return "coverage incomplete";
-  return "coverage unknown";
+  if (coverage === "complete") return "dispatch complete";
+  if (coverage === "incomplete") return "dispatch incomplete";
+  return "dispatch unknown";
 }
 
 // ---------------------------------------------------------------------------
@@ -500,6 +524,7 @@ export function cohortsForFamily(family: PrototypeFamily): readonly CanonicalCoh
 
 export interface DerivedCostAvailable {
   readonly availability: "available";
+  readonly basis: CostEstimateBasis;
   readonly usdPerTask: number;
   /** null when the token metric is aggregate_only (sample count not retained). */
   readonly sampleCount: number | null;
@@ -517,19 +542,36 @@ const POPULATION_COUNT: Record<StatisticPopulation, (counts: CanonicalRunCounts)
 };
 
 /**
- * Estimated USD per task for a run: the token aggregate priced at the model's
- * published rate, divided by the number of tasks the statistic covers —
+ * Prefer reconciled client-recorded cost estimates, including cache charges.
+ * Legacy runs use the token aggregate priced at the model's published rate,
+ * divided by the number of tasks the statistic covers —
  * `sampleCount` when retained, the population count for `aggregate_only`.
  * Unavailable when token evidence is missing or the model has no pricing entry.
  */
 export function derivedCostPerTask(run: CanonicalRun): DerivedCost {
+  const recorded = run.recordedCostEstimate;
+  if (recorded !== undefined) {
+    if (recorded.availability !== "available") return recorded;
+    if (recorded.sampleCount <= 0) {
+      return { availability: "not_recorded", reason: "No completed attempts with cost records." };
+    }
+    return {
+      availability: "available",
+      basis: recorded.basis,
+      usdPerTask: recorded.usdTotal / recorded.sampleCount,
+      sampleCount: recorded.sampleCount,
+      population: recorded.population,
+      priceAsOf: recorded.recordedAt,
+      priceSource: recorded.source,
+    };
+  }
   const metric = run.metrics.tokenUsage;
   if (metric.availability !== "available" && metric.availability !== "aggregate_only") {
     return metric;
   }
-  const pricing = MODEL_PRICING[run.modelId];
-  if (pricing === undefined) {
-    return { availability: "not_recorded", reason: "no published price for this model" };
+  const pricing = run.pricing === undefined ? MODEL_PRICING[run.modelId] : run.pricing;
+  if (pricing == null) {
+    return { availability: "not_recorded", reason: "no verified price for this model and route" };
   }
   const denominator =
     metric.availability === "available"
@@ -544,6 +586,7 @@ export function derivedCostPerTask(run: CanonicalRun): DerivedCost {
     1_000_000;
   return {
     availability: "available",
+    basis: "token_rates",
     usdPerTask: usdTotal / denominator,
     sampleCount: metric.availability === "available" ? metric.sampleCount : null,
     population: metric.population,
@@ -561,9 +604,13 @@ export type SummaryMetric =
       readonly value: number;
       readonly sampleCount: number;
       readonly excluded: number;
+      readonly detail?: string;
     }
   | { readonly availability: "unavailable"; readonly reason: string };
 export interface LeaderboardModelRow {
+  readonly rowId?: string;
+  readonly campaignId?: string;
+  readonly configurationLabel?: string;
   readonly model: CanonicalModel;
   readonly runs: Readonly<Partial<Record<PrototypeFamily, CanonicalRun>>>;
   readonly scores: Readonly<Record<ScoredFamily, number | null>>;
@@ -651,8 +698,20 @@ function pooledCost(runs: readonly CanonicalRun[]): SummaryMetric {
   let total = 0;
   let count = 0;
   let population: string | undefined;
+  const bases = new Set<string>();
   for (const run of runs) {
+    // An empty, fully reconciled completed population contributes no samples.
+    // Its unscored started attempts remain in the displayed exclusion count.
+    if (
+      run.recordedCostEstimate?.availability === "available" &&
+      run.recordedCostEstimate.sampleCount === 0 &&
+      run.counts.completed === 0
+    )
+      continue;
     const cost = derivedCostPerTask(run);
+    if (cost.availability !== "available" && "reason" in cost && cost.reason) {
+      return missingSummary(cost.reason);
+    }
     if (cost.availability !== "available" || cost.sampleCount === null)
       return missingSummary(
         "Cost requires token usage, prices, and a known sample count in every category.",
@@ -665,6 +724,7 @@ function pooledCost(runs: readonly CanonicalRun[]): SummaryMetric {
     if (population !== undefined && population !== normalized)
       return missingSummary("Token records cover different attempt populations.");
     population = normalized;
+    bases.add(cost.basis);
     total += cost.usdPerTask * cost.sampleCount;
     count += cost.sampleCount;
   }
@@ -675,6 +735,11 @@ function pooledCost(runs: readonly CanonicalRun[]): SummaryMetric {
         value: total / count,
         sampleCount: count,
         excluded: runs.reduce((sum, run) => sum + run.counts.started, 0) - count,
+        detail: bases.has("native_estimate")
+          ? "Client-recorded estimate including cache usage; not billed spend."
+          : bases.has("catalogue_free_tier")
+            ? "Devin catalogue lists this model as Free; subscription charges excluded."
+            : "Estimate from recorded tokens and published token rates; not billed spend.",
       };
 }
 
@@ -705,12 +770,23 @@ export function unifiedLeaderboardRows(
         : !compatibleSuiteRuns(fullRuns)
           ? "These runs have different benchmark settings."
           : SCORED_FAMILIES.some((family) => scores[family] === null)
-            ? "Complete coverage is needed in every category."
+            ? (fullRuns
+                .map(headlineFor)
+                .flatMap((headline) =>
+                  headline.kind === "counts_only" ? [eligibilityText(headline.reason)] : [],
+                )[0] ?? "Complete dispatch and grading are needed in every category.")
             : null;
       const overall =
         overallReason === null
           ? SCORED_FAMILIES.reduce((sum, family) => sum + scores[family]!, 0) /
             SCORED_FAMILIES.length
+          : null;
+      // Measurement availability is independent of whether execution produced
+      // enough graded attempts for a quality ranking.
+      const measurementReason = missing
+        ? "Results are needed in all three categories."
+        : !compatibleSuiteRuns(fullRuns)
+          ? "These runs have different benchmark settings."
           : null;
       return {
         model,
@@ -718,12 +794,119 @@ export function unifiedLeaderboardRows(
         scores,
         overall,
         overallReason,
-        averageTime: overallReason === null ? pooledTime(fullRuns) : missingSummary(overallReason),
-        estimatedCost:
-          overallReason === null ? pooledCost(fullRuns) : missingSummary(overallReason),
+        averageTime:
+          measurementReason === null ? pooledTime(fullRuns) : missingSummary(measurementReason),
+        estimatedCost: compatibleSuiteRuns(fullRuns)
+          ? pooledCost(fullRuns)
+          : missingSummary("These runs have different benchmark settings."),
         coverageLabel: missing ? `${fullRuns.map((run) => run.family).join(" + ")} only` : "",
       };
     });
+}
+
+/** Keep every measured configuration visible instead of replacing it with a later effort. */
+export function configurationLeaderboardRows(
+  sourceRuns: readonly CanonicalRun[] = canonicalRuns,
+  publications: readonly CanonicalPublication[] = canonicalPublications,
+  models: readonly CanonicalModel[] = canonicalModels,
+): readonly LeaderboardModelRow[] {
+  const current = new Set(publications.filter((p) => p.status === "current").map((p) => p.runId));
+  const groups = new Map<string, CanonicalRun[]>();
+  for (const run of sourceRuns) {
+    if (run.origin !== "measured" || !current.has(run.runId)) continue;
+    const key = JSON.stringify([
+      run.modelId,
+      run.campaignId,
+      run.cohort.target,
+      run.cohort.accountClass,
+      run.configuration.candidate,
+      run.configuration.reasoning,
+      run.cohort.suiteVersion,
+      run.cohort.fixtureVersion,
+      run.cohort.catalogSha,
+      run.cohort.repetitions,
+      run.cohort.evidenceCategory,
+    ]);
+    const group = groups.get(key) ?? [];
+    group.push(run);
+    groups.set(key, group);
+  }
+  return [...groups.values()].flatMap((group) => {
+    const first = group[0]!;
+    const client =
+      first.cohort.target === "omp_harness"
+        ? "OMP"
+        : first.cohort.target === "muse_cli"
+          ? "Muse"
+          : first.cohort.target === "devin_cli"
+            ? "Devin"
+            : first.cohort.target;
+    return unifiedLeaderboardRows(group, publications, models).map((row) => ({
+      ...row,
+      rowId: Object.values(row.runs)
+        .map((run) => run.runId)
+        .sort()
+        .join("+"),
+      campaignId: first.campaignId,
+      configurationLabel: `${first.configuration.reasoning ?? "Unspecified"} reasoning · ${client}`,
+    }));
+  });
+}
+
+/** Choose by grading coverage and date within the newest campaign, never by score. */
+export function defaultLeaderboardRows(
+  configurations: readonly LeaderboardModelRow[] = configurationLeaderboardRows(),
+): readonly LeaderboardModelRow[] {
+  const startedAt = (row: LeaderboardModelRow) =>
+    Object.values(row.runs)
+      .map((run) => run.startedAt)
+      .sort()[0] ?? "";
+  const groups = new Map<string, LeaderboardModelRow[]>();
+  for (const row of configurations) {
+    const group = groups.get(row.model.id) ?? [];
+    group.push(row);
+    groups.set(row.model.id, group);
+  }
+  return [...groups.values()].map((group) => {
+    const newestFirst = [...group].sort(
+      (a, b) =>
+        startedAt(b).localeCompare(startedAt(a)) || (a.rowId ?? "").localeCompare(b.rowId ?? ""),
+    );
+    const newest = newestFirst[0]!;
+    return (
+      newestFirst.find((row) => row.campaignId === newest.campaignId && row.overall !== null) ??
+      newest
+    );
+  });
+}
+
+export function recordedOutcomes(runs: readonly CanonicalRun[]) {
+  return runs.reduce(
+    (total, run) => ({
+      planned: total.planned + run.counts.planned,
+      started: total.started + run.counts.started,
+      graded: total.graded + run.counts.graded,
+      passed: total.passed + run.counts.passed,
+      failed: total.failed + run.counts.failed,
+      timedOut: total.timedOut + run.counts.timedOut,
+      runtimeFailure: total.runtimeFailure + run.counts.runtimeFailure,
+      pending: total.pending + run.counts.pending,
+      unstarted: total.unstarted + run.counts.unstarted,
+      unknown: total.unknown + run.counts.unknown,
+    }),
+    {
+      planned: 0,
+      started: 0,
+      graded: 0,
+      passed: 0,
+      failed: 0,
+      timedOut: 0,
+      runtimeFailure: 0,
+      pending: 0,
+      unstarted: 0,
+      unknown: 0,
+    },
+  );
 }
 
 export function sortLeaderboardRows(
@@ -781,15 +964,16 @@ export function summarizeTask(run: CanonicalRun | undefined, caseId: string): Ta
     { length: Math.max(run.cohort.repetitions, ...attempts.map((a) => a.repetition)) },
     (_, index) => attempts.find((attempt) => attempt.repetition === index + 1),
   );
+  const headline = headlineFor(run);
   const complete =
-    run.dispatchCoverage === "complete" &&
+    headline.kind === "rate" &&
     attempts.length === run.cohort.repetitions &&
     slots.length === run.cohort.repetitions &&
     slots.every(
       (attempt) =>
         attempt &&
-        ["completed", "timed_out", "runtime_failure"].includes(attempt.execution) &&
-        (attempt.execution !== "completed" || attempt.verdict !== "not_graded"),
+        attempt.execution === "completed" &&
+        (attempt.verdict === "pass" || attempt.verdict === "fail"),
     );
   return {
     status: complete ? "available" : "incomplete",
@@ -797,7 +981,11 @@ export function summarizeTask(run: CanonicalRun | undefined, caseId: string): Ta
     started: attempts.filter((attempt) => !["unstarted", "unknown"].includes(attempt.execution))
       .length,
     slots,
-    reason: complete ? null : "Some attempts or coverage records are missing.",
+    reason: complete
+      ? null
+      : headline.kind === "counts_only"
+        ? eligibilityText(headline.reason)
+        : "Some attempts or coverage records are missing.",
   };
 }
 

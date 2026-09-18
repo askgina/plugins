@@ -16,6 +16,19 @@ const WEBP_RIFF = [0x52, 0x49, 0x46, 0x46] as const;
 const WEBP_FOURCC = [0x57, 0x45, 0x42, 0x50] as const;
 
 export const PUBLIC_SOURCE_ASSETS: readonly PublicSourceAsset[] = [
+  // User-supplied Cognition avatars, verified for light and dark themes.
+  {
+    path: "apps/evals/public/images/model-logos/cognition-avatar-black.png",
+    sha256: "b1fb2f8df71414bd998dc964dd5554f46cb5ac773073457833e57afc5341a3c2",
+    bytes: 21810,
+    kind: "png",
+  },
+  {
+    path: "apps/evals/public/images/model-logos/cognition-avatar-white.png",
+    sha256: "ec8073d7c7a35036d2d7dfce43de9df2639d4739ff5547a2d57ca97b2f4714eb",
+    bytes: 20973,
+    kind: "png",
+  },
   {
     path: "apps/evals/public/fonts/NebulaSans-Book.woff2",
     sha256: "4d396c7c7f93b3f9d8e90d5a8c5e28b29266243946d4320783abc3628d9ef8df",

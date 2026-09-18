@@ -1,0 +1,6342 @@
+{
+  "attempt": 1,
+  "complete": true,
+  "completedAt": "2026-09-16T17:58:45.499Z",
+  "dispatched": 105,
+  "durationMs": 6737369,
+  "failed": 18,
+  "families": [
+    "spot",
+    "perps",
+    "predictions"
+  ],
+  "fingerprint": "3987f6ee9f186825552076d2e84a74617436a3897ff8acc0bd31b2ac843ec9ed",
+  "graded": 65,
+  "label": "GPT-5.6 Sol (high)",
+  "methodology": {
+    "auth": {
+      "ginaReadOnly": true,
+      "nativeLogin": true
+    },
+    "cleanChats": true,
+    "isolation": {
+      "freshConversation": true,
+      "sharedProviderCredentialProfile": true
+    },
+    "transcriptCaps": {
+      "finalAnswerRetained": true,
+      "overLimitToolResults": "omitted_whole",
+      "resultBytesRetained": true,
+      "toolResultLimitBytes": 65536
+    }
+  },
+  "model": "openai-codex/gpt-5.6-sol",
+  "nativeModel": "openai-codex/gpt-5.6-sol",
+  "passed": 47,
+  "planned": 105,
+  "provenance": {
+    "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
+    "cleanSource": true,
+    "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+    "hashes": {
+      "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+      "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+      "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+      "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
+    },
+    "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+    "nativeVersion": "omp/18.1.21",
+    "schedulerPolicy": {
+      "anthropic": 2,
+      "global": 6,
+      "openai-codex": 3,
+      "xai-oauth": 1
+    },
+    "schedulerSha256": "d475c61a0316e85799d0925fca46100b15a9b20689e2d3e2dd677f57b3b5d221",
+    "sourceKind": "git_checkout",
+    "sourceSnapshot": null
+  },
+  "provider": "openai-codex",
+  "reasoning": "high",
+  "repetitions": 3,
+  "route": "omp",
+  "rowId": "sol-high",
+  "runs": [
+    {
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 54,
+          "true": 0
+        },
+        "copied": 54,
+        "credentialInSession": {
+          "false": 54,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 54,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 0,
+          "true": 54
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 0,
+          "true": 54
+        },
+        "resolvedModelIsFallback": {
+          "false": 54,
+          "null": 0,
+          "true": 0
+        },
+        "sessionFiles": 54,
+        "thinkingLevels": {
+          "high": 54
+        },
+        "trialCount": 54
+      },
+      "attestations": [
+        {
+          "atifExported": null,
+          "caseId": "perps-account",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-positions",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-open-orders",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-portfolio",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-markets",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-single-price",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-multiple-prices",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-asset-data",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-search-hip3-markets",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-dexes",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-markets",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-price",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-trades",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-candles",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-order-book",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-preview-order-cost",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-create-table",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-create-and-query-table",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-account",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-positions",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-open-orders",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-portfolio",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-markets",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-single-price",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-multiple-prices",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-asset-data",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-search-hip3-markets",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-dexes",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-markets",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-price",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-trades",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-candles",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-order-book",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-preview-order-cost",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-create-table",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-create-and-query-table",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-account",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-positions",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-open-orders",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-portfolio",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-markets",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-single-price",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-multiple-prices",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-asset-data",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-search-hip3-markets",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-dexes",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-markets",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-price",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-trades",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-candles",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-order-book",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-preview-order-cost",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-create-table",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-create-and-query-table",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        }
+      ],
+      "caseIds": [
+        "perps-account",
+        "perps-positions",
+        "perps-open-orders",
+        "perps-portfolio",
+        "perps-markets",
+        "perps-single-price",
+        "perps-multiple-prices",
+        "perps-asset-data",
+        "perps-search-hip3-markets",
+        "perps-hip3-dexes",
+        "perps-hip3-markets",
+        "perps-hip3-price",
+        "perps-fetch-trades",
+        "perps-fetch-candles",
+        "perps-fetch-order-book",
+        "perps-preview-order-cost",
+        "perps-create-table",
+        "perps-create-and-query-table"
+      ],
+      "cases": [
+        {
+          "graded": 3,
+          "id": "perps-account",
+          "passed": 3,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 3,
+          "id": "perps-asset-data",
+          "passed": 3,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 1,
+          "id": "perps-create-and-query-table",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 2
+        },
+        {
+          "graded": 2,
+          "id": "perps-create-table",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 1
+        },
+        {
+          "graded": 3,
+          "id": "perps-fetch-candles",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 3,
+          "id": "perps-fetch-order-book",
+          "passed": 3,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 3,
+          "id": "perps-fetch-trades",
+          "passed": 3,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 3,
+          "id": "perps-hip3-dexes",
+          "passed": 3,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 3,
+          "id": "perps-hip3-markets",
+          "passed": 3,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 3,
+          "id": "perps-hip3-price",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 2,
+          "id": "perps-markets",
+          "passed": 2,
+          "pending": 0,
+          "unscored": 1
+        },
+        {
+          "graded": 3,
+          "id": "perps-multiple-prices",
+          "passed": 3,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 3,
+          "id": "perps-open-orders",
+          "passed": 3,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 3,
+          "id": "perps-portfolio",
+          "passed": 3,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 3,
+          "id": "perps-positions",
+          "passed": 3,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 3,
+          "id": "perps-preview-order-cost",
+          "passed": 3,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 2,
+          "id": "perps-search-hip3-markets",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 1
+        },
+        {
+          "graded": 3,
+          "id": "perps-single-price",
+          "passed": 2,
+          "pending": 0,
+          "unscored": 0
+        }
+      ],
+      "configuration": {
+        "candidate": "openai-codex-oauth-gpt-5.6-sol-high",
+        "pinnedSha256": "e9f389d09ccb0780c5493cfa2d1629daa61691f6d75f80def417bcd8e8c1f74f"
+      },
+      "dimensions": {
+        "arguments": {
+          "failed": 3,
+          "passed": 46,
+          "unscored": 5
+        },
+        "completion": {
+          "failed": 6,
+          "passed": 43,
+          "unscored": 5
+        },
+        "routing": {
+          "failed": 12,
+          "passed": 37,
+          "unscored": 5
+        },
+        "safety": {
+          "failed": 0,
+          "passed": 0,
+          "unscored": 54
+        },
+        "skill_activation": {
+          "failed": 0,
+          "passed": 0,
+          "unscored": 54
+        }
+      },
+      "dispatched": 54,
+      "failed": 12,
+      "family": "perps",
+      "graded": 49,
+      "latencyMs": {
+        "max": 117818,
+        "p50": 27658,
+        "p95": 95807
+      },
+      "missingSlots": [],
+      "passed": 37,
+      "planned": 54,
+      "runId": "sol-high-perps-20260916160628130",
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 12,
+            "graded": 49,
+            "passed": 37,
+            "pending": 0,
+            "planned": 54,
+            "terminal": 54,
+            "timeouts": 5,
+            "unscored": 5
+          },
+          "raw": {
+            "failed": 12,
+            "graded": 49,
+            "passed": 37,
+            "pending": 0,
+            "planned": 54,
+            "terminal": 54,
+            "timeouts": 5,
+            "unscored": 5
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "cfb26d100aa84f2d36e981b9c2f5aca31f6f393e46a7cca83c40f68f6a4f5cc5",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "terminal": 54,
+      "timeouts": 5,
+      "tokenUsage": {
+        "input": 912780,
+        "observations": 49,
+        "output": 42295,
+        "total": 955075
+      },
+      "trials": [
+        {
+          "caseId": "perps-account",
+          "dispatchedAt": "2026-09-16T16:13:08.649Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-account",
+            "duration_ms": 27073,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:13:08.649Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 17941,
+              "output_tokens": 498,
+              "total_tokens": 18439
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-account",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 27073,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 2362
+          },
+          "wallDurationMs": 27076
+        },
+        {
+          "caseId": "perps-positions",
+          "dispatchedAt": "2026-09-16T16:13:35.726Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-positions",
+            "duration_ms": 17989,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:13:35.727Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 2878,
+              "output_tokens": 75,
+              "total_tokens": 2953
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-positions",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 17989,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1045
+          },
+          "wallDurationMs": 17993
+        },
+        {
+          "caseId": "perps-open-orders",
+          "dispatchedAt": "2026-09-16T16:13:53.720Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-open-orders",
+            "duration_ms": 18460,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:13:53.721Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 17443,
+              "output_tokens": 120,
+              "total_tokens": 17563
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-open-orders",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 18460,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 863
+          },
+          "wallDurationMs": 18464
+        },
+        {
+          "caseId": "perps-portfolio",
+          "dispatchedAt": "2026-09-16T16:14:12.186Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-portfolio",
+            "duration_ms": 27674,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:14:12.187Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 21220,
+              "output_tokens": 633,
+              "total_tokens": 21853
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-portfolio",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 27674,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 12399
+          },
+          "wallDurationMs": 27679
+        },
+        {
+          "caseId": "perps-markets",
+          "dispatchedAt": "2026-09-16T16:14:39.866Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-markets",
+            "duration_ms": 71267,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:14:39.867Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 82136,
+              "output_tokens": 2883,
+              "total_tokens": 85019
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-markets",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 71267,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 209408
+          },
+          "wallDurationMs": 71273
+        },
+        {
+          "caseId": "perps-single-price",
+          "dispatchedAt": "2026-09-16T16:15:51.140Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-single-price",
+            "duration_ms": 25724,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:15:51.141Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 20728,
+              "output_tokens": 268,
+              "total_tokens": 20996
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-single-price",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 25724,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 2391
+          },
+          "wallDurationMs": 25728
+        },
+        {
+          "caseId": "perps-multiple-prices",
+          "dispatchedAt": "2026-09-16T16:16:16.870Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-multiple-prices",
+            "duration_ms": 17870,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:16:16.871Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 17379,
+              "output_tokens": 114,
+              "total_tokens": 17493
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-multiple-prices",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 17870,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 614
+          },
+          "wallDurationMs": 17875
+        },
+        {
+          "caseId": "perps-asset-data",
+          "dispatchedAt": "2026-09-16T16:16:34.746Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-asset-data",
+            "duration_ms": 25118,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:16:34.746Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 17587,
+              "output_tokens": 353,
+              "total_tokens": 17940
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-asset-data",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 25118,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1146
+          },
+          "wallDurationMs": 25121
+        },
+        {
+          "caseId": "perps-search-hip3-markets",
+          "dispatchedAt": "2026-09-16T16:16:59.868Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-search-hip3-markets",
+            "duration_ms": 75299,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:16:59.868Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 5465,
+              "output_tokens": 1313,
+              "total_tokens": 6778
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-search-hip3-markets",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 75299,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 7180
+          },
+          "wallDurationMs": 75303
+        },
+        {
+          "caseId": "perps-hip3-dexes",
+          "dispatchedAt": "2026-09-16T16:18:15.172Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-hip3-dexes",
+            "duration_ms": 23944,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:18:15.173Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 2839,
+              "output_tokens": 179,
+              "total_tokens": 3018
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-hip3-dexes",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 23944,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 683
+          },
+          "wallDurationMs": 23948
+        },
+        {
+          "caseId": "perps-hip3-markets",
+          "dispatchedAt": "2026-09-16T16:18:39.121Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-hip3-markets",
+            "duration_ms": 57070,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:18:39.122Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 56428,
+              "output_tokens": 1695,
+              "total_tokens": 58123
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-hip3-markets",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 57070,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 110818
+          },
+          "wallDurationMs": 57075
+        },
+        {
+          "caseId": "perps-hip3-price",
+          "dispatchedAt": "2026-09-16T16:19:36.198Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-hip3-price",
+            "duration_ms": 31656,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:19:36.199Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 4828,
+              "output_tokens": 445,
+              "total_tokens": 5273
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "case_id": "perps-hip3-price",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 31656,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 5827
+          },
+          "wallDurationMs": 31660
+        },
+        {
+          "caseId": "perps-fetch-trades",
+          "dispatchedAt": "2026-09-16T16:20:07.859Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-fetch-trades",
+            "duration_ms": 22824,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:20:07.860Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 24876,
+              "output_tokens": 466,
+              "total_tokens": 25342
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-fetch-trades",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 22824,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 17782
+          },
+          "wallDurationMs": 22829
+        },
+        {
+          "caseId": "perps-fetch-candles",
+          "dispatchedAt": "2026-09-16T16:20:30.690Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-fetch-candles",
+            "duration_ms": 95807,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:20:30.690Z",
+            "status": "failed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 34262,
+              "output_tokens": 2281,
+              "total_tokens": 36543
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-fetch-candles",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "latency_ms": 95807,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 139253
+          },
+          "wallDurationMs": 95812
+        },
+        {
+          "caseId": "perps-fetch-order-book",
+          "dispatchedAt": "2026-09-16T16:22:06.503Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-fetch-order-book",
+            "duration_ms": 29735,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:22:06.504Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 7818,
+              "output_tokens": 417,
+              "total_tokens": 8235
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-fetch-order-book",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 29735,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 13413
+          },
+          "wallDurationMs": 29740
+        },
+        {
+          "caseId": "perps-preview-order-cost",
+          "dispatchedAt": "2026-09-16T16:22:36.244Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-preview-order-cost",
+            "duration_ms": 25171,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:22:36.245Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 3013,
+              "output_tokens": 372,
+              "total_tokens": 3385
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-preview-order-cost",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 25171,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1412
+          },
+          "wallDurationMs": 25176
+        },
+        {
+          "caseId": "perps-create-table",
+          "dispatchedAt": "2026-09-16T16:23:02.130Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-create-table",
+            "duration_ms": 117818,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:23:02.133Z",
+            "status": "failed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 24961,
+              "output_tokens": 2118,
+              "total_tokens": 27079
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-create-table",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "latency_ms": 117818,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 2939
+          },
+          "wallDurationMs": 118406
+        },
+        {
+          "caseId": "perps-create-and-query-table",
+          "dispatchedAt": "2026-09-16T16:25:01.032Z",
+          "error": {
+            "reason": null,
+            "tag": "PluginEvalOmpHarnessTimeoutError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 121144
+        },
+        {
+          "caseId": "perps-account",
+          "dispatchedAt": "2026-09-16T16:27:02.178Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-account",
+            "duration_ms": 27883,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:27:02.180Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 17924,
+              "output_tokens": 492,
+              "total_tokens": 18416
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-account",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 27883,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 2362
+          },
+          "wallDurationMs": 27891
+        },
+        {
+          "caseId": "perps-positions",
+          "dispatchedAt": "2026-09-16T16:27:30.082Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-positions",
+            "duration_ms": 27098,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:27:30.082Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 5178,
+              "output_tokens": 75,
+              "total_tokens": 5253
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-positions",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 27098,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1045
+          },
+          "wallDurationMs": 27102
+        },
+        {
+          "caseId": "perps-open-orders",
+          "dispatchedAt": "2026-09-16T16:27:57.186Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-open-orders",
+            "duration_ms": 20168,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:27:57.186Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 17501,
+              "output_tokens": 146,
+              "total_tokens": 17647
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-open-orders",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 20168,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 863
+          },
+          "wallDurationMs": 20175
+        },
+        {
+          "caseId": "perps-portfolio",
+          "dispatchedAt": "2026-09-16T16:28:17.363Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-portfolio",
+            "duration_ms": 32154,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:28:17.365Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 6685,
+              "output_tokens": 688,
+              "total_tokens": 7373
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-portfolio",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 32154,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 12399
+          },
+          "wallDurationMs": 32163
+        },
+        {
+          "caseId": "perps-markets",
+          "dispatchedAt": "2026-09-16T16:28:49.529Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-markets",
+            "duration_ms": 84609,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:28:49.530Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 67568,
+              "output_tokens": 3523,
+              "total_tokens": 71091
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-markets",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 84609,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 209270
+          },
+          "wallDurationMs": 84593
+        },
+        {
+          "caseId": "perps-single-price",
+          "dispatchedAt": "2026-09-16T16:30:14.147Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-single-price",
+            "duration_ms": 24266,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:30:14.148Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 2897,
+              "output_tokens": 204,
+              "total_tokens": 3101
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-single-price",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 24266,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1052
+          },
+          "wallDurationMs": 24265
+        },
+        {
+          "caseId": "perps-multiple-prices",
+          "dispatchedAt": "2026-09-16T16:30:38.421Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-multiple-prices",
+            "duration_ms": 20988,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:30:38.424Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 3045,
+              "output_tokens": 111,
+              "total_tokens": 3156
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-multiple-prices",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 20988,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 614
+          },
+          "wallDurationMs": 20997
+        },
+        {
+          "caseId": "perps-asset-data",
+          "dispatchedAt": "2026-09-16T16:30:59.425Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-asset-data",
+            "duration_ms": 40094,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:30:59.428Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 5346,
+              "output_tokens": 375,
+              "total_tokens": 5721
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-asset-data",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 40094,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1251
+          },
+          "wallDurationMs": 40099
+        },
+        {
+          "caseId": "perps-search-hip3-markets",
+          "dispatchedAt": "2026-09-16T16:31:39.527Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-search-hip3-markets",
+            "duration_ms": 115811,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:31:39.528Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 48156,
+              "output_tokens": 3982,
+              "total_tokens": 52138
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-search-hip3-markets",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 115811,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 356867
+          },
+          "wallDurationMs": 115817
+        },
+        {
+          "caseId": "perps-hip3-dexes",
+          "dispatchedAt": "2026-09-16T16:33:35.347Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-hip3-dexes",
+            "duration_ms": 28710,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:33:35.348Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 5143,
+              "output_tokens": 188,
+              "total_tokens": 5331
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-hip3-dexes",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 28710,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 683
+          },
+          "wallDurationMs": 28714
+        },
+        {
+          "caseId": "perps-hip3-markets",
+          "dispatchedAt": "2026-09-16T16:34:04.063Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-hip3-markets",
+            "duration_ms": 66927,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:34:04.064Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 87241,
+              "output_tokens": 2042,
+              "total_tokens": 89283
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-hip3-markets",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 66927,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 110978
+          },
+          "wallDurationMs": 66933
+        },
+        {
+          "caseId": "perps-hip3-price",
+          "dispatchedAt": "2026-09-16T16:35:10.999Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-hip3-price",
+            "duration_ms": 24940,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:35:11.000Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 19422,
+              "output_tokens": 277,
+              "total_tokens": 19699
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "case_id": "perps-hip3-price",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 24940,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 5793
+          },
+          "wallDurationMs": 24947
+        },
+        {
+          "caseId": "perps-fetch-trades",
+          "dispatchedAt": "2026-09-16T16:35:35.949Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-fetch-trades",
+            "duration_ms": 22564,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:35:35.950Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 24884,
+              "output_tokens": 301,
+              "total_tokens": 25185
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-fetch-trades",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 22564,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 17782
+          },
+          "wallDurationMs": 22569
+        },
+        {
+          "caseId": "perps-fetch-candles",
+          "dispatchedAt": "2026-09-16T16:35:58.520Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-fetch-candles",
+            "duration_ms": 45125,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:35:58.521Z",
+            "status": "failed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 49119,
+              "output_tokens": 907,
+              "total_tokens": 50026
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-fetch-candles",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "latency_ms": 45125,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 87402
+          },
+          "wallDurationMs": 45131
+        },
+        {
+          "caseId": "perps-fetch-order-book",
+          "dispatchedAt": "2026-09-16T16:36:43.653Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-fetch-order-book",
+            "duration_ms": 21411,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:36:43.654Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 7800,
+              "output_tokens": 337,
+              "total_tokens": 8137
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-fetch-order-book",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 21411,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 13427
+          },
+          "wallDurationMs": 21416
+        },
+        {
+          "caseId": "perps-preview-order-cost",
+          "dispatchedAt": "2026-09-16T16:37:05.071Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-preview-order-cost",
+            "duration_ms": 27658,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:37:05.072Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 3010,
+              "output_tokens": 454,
+              "total_tokens": 3464
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-preview-order-cost",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 27658,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1370
+          },
+          "wallDurationMs": 27662
+        },
+        {
+          "caseId": "perps-create-table",
+          "dispatchedAt": "2026-09-16T16:37:33.502Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-create-table",
+            "duration_ms": 92496,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:37:33.506Z",
+            "status": "failed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 6399,
+              "output_tokens": 3387,
+              "total_tokens": 9786
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-create-table",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "latency_ms": 92496,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 2401
+          },
+          "wallDurationMs": 92815
+        },
+        {
+          "caseId": "perps-create-and-query-table",
+          "dispatchedAt": "2026-09-16T16:39:06.659Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-create-and-query-table",
+            "duration_ms": 89212,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:39:06.663Z",
+            "status": "failed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 5963,
+              "output_tokens": 2151,
+              "total_tokens": 8114
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-create-and-query-table",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "latency_ms": 89212,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 2939
+          },
+          "wallDurationMs": 89545
+        },
+        {
+          "caseId": "perps-account",
+          "dispatchedAt": "2026-09-16T16:40:36.207Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-account",
+            "duration_ms": 33875,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:40:36.208Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 3310,
+              "output_tokens": 437,
+              "total_tokens": 3747
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-account",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 33875,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 2362
+          },
+          "wallDurationMs": 33880
+        },
+        {
+          "caseId": "perps-positions",
+          "dispatchedAt": "2026-09-16T16:41:10.089Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-positions",
+            "duration_ms": 15725,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:41:10.090Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 2889,
+              "output_tokens": 78,
+              "total_tokens": 2967
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-positions",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 15725,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1045
+          },
+          "wallDurationMs": 15730
+        },
+        {
+          "caseId": "perps-open-orders",
+          "dispatchedAt": "2026-09-16T16:41:25.822Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-open-orders",
+            "duration_ms": 18166,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:41:25.822Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 2886,
+              "output_tokens": 139,
+              "total_tokens": 3025
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-open-orders",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 18166,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 863
+          },
+          "wallDurationMs": 18170
+        },
+        {
+          "caseId": "perps-portfolio",
+          "dispatchedAt": "2026-09-16T16:41:43.994Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-portfolio",
+            "duration_ms": 70380,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:41:43.995Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 6938,
+              "output_tokens": 755,
+              "total_tokens": 7693
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-portfolio",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 70380,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 12399
+          },
+          "wallDurationMs": 70385
+        },
+        {
+          "caseId": "perps-markets",
+          "dispatchedAt": "2026-09-16T16:42:54.382Z",
+          "error": {
+            "reason": null,
+            "tag": "PluginEvalOmpHarnessTimeoutError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 120543
+        },
+        {
+          "caseId": "perps-single-price",
+          "dispatchedAt": "2026-09-16T16:44:54.927Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-single-price",
+            "duration_ms": 17846,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:44:54.928Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 17475,
+              "output_tokens": 119,
+              "total_tokens": 17594
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-single-price",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 17846,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1052
+          },
+          "wallDurationMs": 17851
+        },
+        {
+          "caseId": "perps-multiple-prices",
+          "dispatchedAt": "2026-09-16T16:45:12.781Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-multiple-prices",
+            "duration_ms": 17789,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:45:12.782Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 2787,
+              "output_tokens": 114,
+              "total_tokens": 2901
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-multiple-prices",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 17789,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 614
+          },
+          "wallDurationMs": 17794
+        },
+        {
+          "caseId": "perps-asset-data",
+          "dispatchedAt": "2026-09-16T16:45:30.577Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-asset-data",
+            "duration_ms": 24990,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:45:30.578Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 17618,
+              "output_tokens": 407,
+              "total_tokens": 18025
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-asset-data",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 24990,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1251
+          },
+          "wallDurationMs": 24995
+        },
+        {
+          "caseId": "perps-search-hip3-markets",
+          "dispatchedAt": "2026-09-16T16:45:55.574Z",
+          "error": {
+            "reason": null,
+            "tag": "PluginEvalOmpHarnessTimeoutError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 120571
+        },
+        {
+          "caseId": "perps-hip3-dexes",
+          "dispatchedAt": "2026-09-16T16:47:56.149Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-hip3-dexes",
+            "duration_ms": 18242,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:47:56.150Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 2833,
+              "output_tokens": 174,
+              "total_tokens": 3007
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-hip3-dexes",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 18242,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 683
+          },
+          "wallDurationMs": 18247
+        },
+        {
+          "caseId": "perps-hip3-markets",
+          "dispatchedAt": "2026-09-16T16:48:14.398Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-hip3-markets",
+            "duration_ms": 66222,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:48:14.399Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 35167,
+              "output_tokens": 2482,
+              "total_tokens": 37649
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-hip3-markets",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 66222,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 110830
+          },
+          "wallDurationMs": 66227
+        },
+        {
+          "caseId": "perps-hip3-price",
+          "dispatchedAt": "2026-09-16T16:49:20.628Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-hip3-price",
+            "duration_ms": 27232,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:49:20.629Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 4860,
+              "output_tokens": 364,
+              "total_tokens": 5224
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "case_id": "perps-hip3-price",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 27232,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 5825
+          },
+          "wallDurationMs": 27238
+        },
+        {
+          "caseId": "perps-fetch-trades",
+          "dispatchedAt": "2026-09-16T16:49:47.868Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-fetch-trades",
+            "duration_ms": 24571,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:49:47.869Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 10281,
+              "output_tokens": 451,
+              "total_tokens": 10732
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-fetch-trades",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 24571,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 17782
+          },
+          "wallDurationMs": 24576
+        },
+        {
+          "caseId": "perps-fetch-candles",
+          "dispatchedAt": "2026-09-16T16:50:12.447Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-fetch-candles",
+            "duration_ms": 59223,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:50:12.448Z",
+            "status": "failed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 18270,
+              "output_tokens": 1453,
+              "total_tokens": 19723
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-fetch-candles",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "latency_ms": 59223,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 137879
+          },
+          "wallDurationMs": 59229
+        },
+        {
+          "caseId": "perps-fetch-order-book",
+          "dispatchedAt": "2026-09-16T16:51:11.679Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-fetch-order-book",
+            "duration_ms": 33226,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:51:11.679Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 8019,
+              "output_tokens": 911,
+              "total_tokens": 8930
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-fetch-order-book",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 33226,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 13421
+          },
+          "wallDurationMs": 33233
+        },
+        {
+          "caseId": "perps-preview-order-cost",
+          "dispatchedAt": "2026-09-16T16:51:44.914Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-preview-order-cost",
+            "duration_ms": 32870,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-perps-20260916160628130",
+            "started_at": "2026-09-16T16:51:44.915Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 34364,
+              "output_tokens": 541,
+              "total_tokens": 34905
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-preview-order-cost",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 32870,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1374
+          },
+          "wallDurationMs": 32875
+        },
+        {
+          "caseId": "perps-create-table",
+          "dispatchedAt": "2026-09-16T16:52:18.514Z",
+          "error": {
+            "reason": null,
+            "tag": "PluginEvalOmpHarnessTimeoutError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 121941
+        },
+        {
+          "caseId": "perps-create-and-query-table",
+          "dispatchedAt": "2026-09-16T16:54:20.778Z",
+          "error": {
+            "reason": null,
+            "tag": "PluginEvalOmpHarnessTimeoutError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 120901
+        }
+      ],
+      "unscored": 5
+    },
+    {
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 39,
+          "true": 0
+        },
+        "copied": 5,
+        "credentialInSession": {
+          "false": 39,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 39,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 34,
+          "true": 5
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 34,
+          "true": 5
+        },
+        "resolvedModelIsFallback": {
+          "false": 5,
+          "null": 34,
+          "true": 0
+        },
+        "sessionFiles": 5,
+        "thinkingLevels": {
+          "high": 5,
+          "null": 34
+        },
+        "trialCount": 39
+      },
+      "attestations": [
+        {
+          "atifExported": null,
+          "caseId": "predictions-focused-fact-search-only",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-broad-nba-search-only",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-broad-football-search-only",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-non-exact-no-render",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-sparse-history-no-render",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-multi-series-no-render",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-expiring-markets",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-series-market",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-orderbook",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-fetch-market-data",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-fetch-history-data",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-open-positions",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-order-history",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-focused-fact-search-only",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-broad-nba-search-only",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-broad-football-search-only",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-non-exact-no-render",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-sparse-history-no-render",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-multi-series-no-render",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-expiring-markets",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-series-market",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-orderbook",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-fetch-market-data",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-fetch-history-data",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-open-positions",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-order-history",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-focused-fact-search-only",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-broad-nba-search-only",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-broad-football-search-only",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-non-exact-no-render",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-sparse-history-no-render",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-multi-series-no-render",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-expiring-markets",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-series-market",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-orderbook",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-fetch-market-data",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-fetch-history-data",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-open-positions",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-order-history",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        }
+      ],
+      "caseIds": [
+        "predictions-focused-fact-search-only",
+        "predictions-broad-nba-search-only",
+        "predictions-broad-football-search-only",
+        "predictions-non-exact-no-render",
+        "predictions-sparse-history-no-render",
+        "predictions-multi-series-no-render",
+        "predictions-expiring-markets",
+        "predictions-series-market",
+        "predictions-orderbook",
+        "predictions-fetch-market-data",
+        "predictions-fetch-history-data",
+        "predictions-open-positions",
+        "predictions-order-history"
+      ],
+      "cases": [
+        {
+          "graded": 1,
+          "id": "predictions-broad-football-search-only",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 2
+        },
+        {
+          "graded": 1,
+          "id": "predictions-broad-nba-search-only",
+          "passed": 1,
+          "pending": 0,
+          "unscored": 2
+        },
+        {
+          "graded": 0,
+          "id": "predictions-expiring-markets",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-fetch-history-data",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-fetch-market-data",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 1,
+          "id": "predictions-focused-fact-search-only",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 2
+        },
+        {
+          "graded": 0,
+          "id": "predictions-multi-series-no-render",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 1,
+          "id": "predictions-non-exact-no-render",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 2
+        },
+        {
+          "graded": 0,
+          "id": "predictions-open-positions",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-order-history",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-orderbook",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-series-market",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-sparse-history-no-render",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        }
+      ],
+      "configuration": {
+        "candidate": "openai-codex-oauth-gpt-5.6-sol-high",
+        "pinnedSha256": "4b0c97ada27f301028ae8f7b7d981e7f1479eddc533e964a75602bd7b4e5522e"
+      },
+      "dimensions": {
+        "arguments": {
+          "failed": 0,
+          "passed": 4,
+          "unscored": 35
+        },
+        "completion": {
+          "failed": 0,
+          "passed": 4,
+          "unscored": 35
+        },
+        "routing": {
+          "failed": 3,
+          "passed": 1,
+          "unscored": 35
+        },
+        "safety": {
+          "failed": 0,
+          "passed": 0,
+          "unscored": 39
+        },
+        "skill_activation": {
+          "failed": 0,
+          "passed": 0,
+          "unscored": 39
+        }
+      },
+      "dispatched": 39,
+      "failed": 3,
+      "family": "predictions",
+      "graded": 4,
+      "latencyMs": {
+        "max": 50022,
+        "p50": 46136,
+        "p95": 50022
+      },
+      "missingSlots": [],
+      "passed": 1,
+      "planned": 39,
+      "runId": "sol-high-predictions-20260916160628130",
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 3,
+            "graded": 4,
+            "passed": 1,
+            "pending": 0,
+            "planned": 39,
+            "terminal": 39,
+            "timeouts": 2,
+            "unscored": 35
+          },
+          "raw": {
+            "failed": 3,
+            "graded": 4,
+            "passed": 1,
+            "pending": 0,
+            "planned": 39,
+            "terminal": 39,
+            "timeouts": 2,
+            "unscored": 35
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "cfb26d100aa84f2d36e981b9c2f5aca31f6f393e46a7cca83c40f68f6a4f5cc5",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "terminal": 39,
+      "timeouts": 2,
+      "tokenUsage": {
+        "input": 107438,
+        "observations": 4,
+        "output": 3346,
+        "total": 110784
+      },
+      "trials": [
+        {
+          "caseId": "predictions-focused-fact-search-only",
+          "dispatchedAt": "2026-09-16T16:56:21.685Z",
+          "error": null,
+          "observation": {
+            "case_id": "predictions-focused-fact-search-only",
+            "duration_ms": 46136,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-predictions-20260916160628130",
+            "started_at": "2026-09-16T16:56:21.686Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 50792,
+              "output_tokens": 834,
+              "total_tokens": 51626
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "predictions-focused-fact-search-only",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 46136,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 113324
+          },
+          "wallDurationMs": 46142
+        },
+        {
+          "caseId": "predictions-broad-nba-search-only",
+          "dispatchedAt": "2026-09-16T16:57:07.831Z",
+          "error": null,
+          "observation": {
+            "case_id": "predictions-broad-nba-search-only",
+            "duration_ms": 26144,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-predictions-20260916160628130",
+            "started_at": "2026-09-16T16:57:07.831Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 4244,
+              "output_tokens": 356,
+              "total_tokens": 4600
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "predictions-broad-nba-search-only",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 26144,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 5690
+          },
+          "wallDurationMs": 26150
+        },
+        {
+          "caseId": "predictions-broad-football-search-only",
+          "dispatchedAt": "2026-09-16T16:57:33.983Z",
+          "error": null,
+          "observation": {
+            "case_id": "predictions-broad-football-search-only",
+            "duration_ms": 48372,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-predictions-20260916160628130",
+            "started_at": "2026-09-16T16:57:33.984Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 34237,
+              "output_tokens": 1221,
+              "total_tokens": 35458
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "predictions-broad-football-search-only",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 48372,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 452791
+          },
+          "wallDurationMs": 48379
+        },
+        {
+          "caseId": "predictions-non-exact-no-render",
+          "dispatchedAt": "2026-09-16T16:58:22.365Z",
+          "error": null,
+          "observation": {
+            "case_id": "predictions-non-exact-no-render",
+            "duration_ms": 50022,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-predictions-20260916160628130",
+            "started_at": "2026-09-16T16:58:22.365Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 18165,
+              "output_tokens": 935,
+              "total_tokens": 19100
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "predictions-non-exact-no-render",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 50022,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 54483
+          },
+          "wallDurationMs": 50027
+        },
+        {
+          "caseId": "predictions-sparse-history-no-render",
+          "dispatchedAt": "2026-09-16T16:59:12.394Z",
+          "error": {
+            "reason": null,
+            "tag": "PluginEvalOmpHarnessTimeoutError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 78272
+        },
+        {
+          "caseId": "predictions-multi-series-no-render",
+          "dispatchedAt": "2026-09-16T17:04:23.430Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 3724
+        },
+        {
+          "caseId": "predictions-expiring-markets",
+          "dispatchedAt": "2026-09-16T17:04:27.154Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 7
+        },
+        {
+          "caseId": "predictions-series-market",
+          "dispatchedAt": "2026-09-16T17:04:27.165Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 7
+        },
+        {
+          "caseId": "predictions-orderbook",
+          "dispatchedAt": "2026-09-16T17:04:27.175Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 6
+        },
+        {
+          "caseId": "predictions-fetch-market-data",
+          "dispatchedAt": "2026-09-16T17:04:27.184Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 8
+        },
+        {
+          "caseId": "predictions-fetch-history-data",
+          "dispatchedAt": "2026-09-16T17:04:27.195Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-open-positions",
+          "dispatchedAt": "2026-09-16T17:04:27.203Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 16
+        },
+        {
+          "caseId": "predictions-order-history",
+          "dispatchedAt": "2026-09-16T17:04:27.223Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 6
+        },
+        {
+          "caseId": "predictions-focused-fact-search-only",
+          "dispatchedAt": "2026-09-16T17:04:27.234Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 10
+        },
+        {
+          "caseId": "predictions-broad-nba-search-only",
+          "dispatchedAt": "2026-09-16T17:04:27.248Z",
+          "error": {
+            "reason": null,
+            "tag": "PluginEvalOmpHarnessTimeoutError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 54329
+        },
+        {
+          "caseId": "predictions-broad-football-search-only",
+          "dispatchedAt": "2026-09-16T17:58:44.274Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 1019
+        },
+        {
+          "caseId": "predictions-non-exact-no-render",
+          "dispatchedAt": "2026-09-16T17:58:45.298Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 8
+        },
+        {
+          "caseId": "predictions-sparse-history-no-render",
+          "dispatchedAt": "2026-09-16T17:58:45.310Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 7
+        },
+        {
+          "caseId": "predictions-multi-series-no-render",
+          "dispatchedAt": "2026-09-16T17:58:45.319Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 6
+        },
+        {
+          "caseId": "predictions-expiring-markets",
+          "dispatchedAt": "2026-09-16T17:58:45.328Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-series-market",
+          "dispatchedAt": "2026-09-16T17:58:45.336Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-orderbook",
+          "dispatchedAt": "2026-09-16T17:58:45.344Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-fetch-market-data",
+          "dispatchedAt": "2026-09-16T17:58:45.352Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-fetch-history-data",
+          "dispatchedAt": "2026-09-16T17:58:45.360Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-open-positions",
+          "dispatchedAt": "2026-09-16T17:58:45.369Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-order-history",
+          "dispatchedAt": "2026-09-16T17:58:45.377Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-focused-fact-search-only",
+          "dispatchedAt": "2026-09-16T17:58:45.384Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 6
+        },
+        {
+          "caseId": "predictions-broad-nba-search-only",
+          "dispatchedAt": "2026-09-16T17:58:45.393Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 7
+        },
+        {
+          "caseId": "predictions-broad-football-search-only",
+          "dispatchedAt": "2026-09-16T17:58:45.403Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 6
+        },
+        {
+          "caseId": "predictions-non-exact-no-render",
+          "dispatchedAt": "2026-09-16T17:58:45.412Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 6
+        },
+        {
+          "caseId": "predictions-sparse-history-no-render",
+          "dispatchedAt": "2026-09-16T17:58:45.421Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 6
+        },
+        {
+          "caseId": "predictions-multi-series-no-render",
+          "dispatchedAt": "2026-09-16T17:58:45.429Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-expiring-markets",
+          "dispatchedAt": "2026-09-16T17:58:45.437Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-series-market",
+          "dispatchedAt": "2026-09-16T17:58:45.444Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 6
+        },
+        {
+          "caseId": "predictions-orderbook",
+          "dispatchedAt": "2026-09-16T17:58:45.456Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 8
+        },
+        {
+          "caseId": "predictions-fetch-market-data",
+          "dispatchedAt": "2026-09-16T17:58:45.466Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-fetch-history-data",
+          "dispatchedAt": "2026-09-16T17:58:45.474Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-open-positions",
+          "dispatchedAt": "2026-09-16T17:58:45.481Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-order-history",
+          "dispatchedAt": "2026-09-16T17:58:45.489Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 5
+        }
+      ],
+      "unscored": 35
+    },
+    {
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 12,
+          "true": 0
+        },
+        "copied": 12,
+        "credentialInSession": {
+          "false": 12,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 12,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 0,
+          "true": 12
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 0,
+          "true": 12
+        },
+        "resolvedModelIsFallback": {
+          "false": 12,
+          "null": 0,
+          "true": 0
+        },
+        "sessionFiles": 12,
+        "thinkingLevels": {
+          "high": 12
+        },
+        "trialCount": 12
+      },
+      "attestations": [
+        {
+          "atifExported": null,
+          "caseId": "spot-token-metadata",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-token-chart",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-simple-price",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-fetch-swap-history",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-token-metadata",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-token-chart",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-simple-price",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-fetch-swap-history",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-token-metadata",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-token-chart",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-simple-price",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-fetch-swap-history",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "high",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "high"
+        }
+      ],
+      "caseIds": [
+        "spot-token-metadata",
+        "spot-token-chart",
+        "spot-simple-price",
+        "spot-fetch-swap-history"
+      ],
+      "cases": [
+        {
+          "graded": 3,
+          "id": "spot-fetch-swap-history",
+          "passed": 1,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 3,
+          "id": "spot-simple-price",
+          "passed": 3,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 3,
+          "id": "spot-token-chart",
+          "passed": 3,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 3,
+          "id": "spot-token-metadata",
+          "passed": 2,
+          "pending": 0,
+          "unscored": 0
+        }
+      ],
+      "configuration": {
+        "candidate": "openai-codex-oauth-gpt-5.6-sol-high",
+        "pinnedSha256": "d893cf2921f37ec836f0aa180d07d459963b99be794a485a6f133ee90ffaaa70"
+      },
+      "dimensions": {
+        "arguments": {
+          "failed": 0,
+          "passed": 12,
+          "unscored": 0
+        },
+        "completion": {
+          "failed": 0,
+          "passed": 12,
+          "unscored": 0
+        },
+        "routing": {
+          "failed": 3,
+          "passed": 9,
+          "unscored": 0
+        },
+        "safety": {
+          "failed": 0,
+          "passed": 0,
+          "unscored": 12
+        },
+        "skill_activation": {
+          "failed": 0,
+          "passed": 0,
+          "unscored": 12
+        }
+      },
+      "dispatched": 12,
+      "failed": 3,
+      "family": "spot",
+      "graded": 12,
+      "latencyMs": {
+        "max": 75428,
+        "p50": 21814,
+        "p95": 75428
+      },
+      "missingSlots": [],
+      "passed": 9,
+      "planned": 12,
+      "runId": "sol-high-spot-20260916160628130",
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 3,
+            "graded": 12,
+            "passed": 9,
+            "pending": 0,
+            "planned": 12,
+            "terminal": 12,
+            "timeouts": 0,
+            "unscored": 0
+          },
+          "raw": {
+            "failed": 3,
+            "graded": 12,
+            "passed": 9,
+            "pending": 0,
+            "planned": 12,
+            "terminal": 12,
+            "timeouts": 0,
+            "unscored": 0
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "cfb26d100aa84f2d36e981b9c2f5aca31f6f393e46a7cca83c40f68f6a4f5cc5",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "terminal": 12,
+      "timeouts": 0,
+      "tokenUsage": {
+        "input": 353294,
+        "observations": 12,
+        "output": 6368,
+        "total": 359662
+      },
+      "trials": [
+        {
+          "caseId": "spot-token-metadata",
+          "dispatchedAt": "2026-09-16T16:06:30.775Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-token-metadata",
+            "duration_ms": 54518,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-spot-20260916160628130",
+            "started_at": "2026-09-16T16:06:30.777Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 26232,
+              "output_tokens": 1326,
+              "total_tokens": 27558
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-token-metadata",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 54518,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 10328
+          },
+          "wallDurationMs": 54525
+        },
+        {
+          "caseId": "spot-token-chart",
+          "dispatchedAt": "2026-09-16T16:07:25.301Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-token-chart",
+            "duration_ms": 21678,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-spot-20260916160628130",
+            "started_at": "2026-09-16T16:07:25.302Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 31294,
+              "output_tokens": 226,
+              "total_tokens": 31520
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-token-chart",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 21678,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 76567
+          },
+          "wallDurationMs": 21682
+        },
+        {
+          "caseId": "spot-simple-price",
+          "dispatchedAt": "2026-09-16T16:07:46.984Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-simple-price",
+            "duration_ms": 21814,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-spot-20260916160628130",
+            "started_at": "2026-09-16T16:07:46.985Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 16269,
+              "output_tokens": 108,
+              "total_tokens": 16377
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-simple-price",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 21814,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 994
+          },
+          "wallDurationMs": 21818
+        },
+        {
+          "caseId": "spot-fetch-swap-history",
+          "dispatchedAt": "2026-09-16T16:08:08.804Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-fetch-swap-history",
+            "duration_ms": 35320,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 1,
+            "run_id": "sol-high-spot-20260916160628130",
+            "started_at": "2026-09-16T16:08:08.804Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 33336,
+              "output_tokens": 864,
+              "total_tokens": 34200
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-fetch-swap-history",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 35320,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 123544
+          },
+          "wallDurationMs": 35326
+        },
+        {
+          "caseId": "spot-token-metadata",
+          "dispatchedAt": "2026-09-16T16:08:44.131Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-token-metadata",
+            "duration_ms": 75428,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-spot-20260916160628130",
+            "started_at": "2026-09-16T16:08:44.132Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 71298,
+              "output_tokens": 955,
+              "total_tokens": 72253
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-token-metadata",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 75428,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 5158
+          },
+          "wallDurationMs": 75434
+        },
+        {
+          "caseId": "spot-token-chart",
+          "dispatchedAt": "2026-09-16T16:09:59.566Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-token-chart",
+            "duration_ms": 18981,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-spot-20260916160628130",
+            "started_at": "2026-09-16T16:09:59.567Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 31274,
+              "output_tokens": 226,
+              "total_tokens": 31500
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-token-chart",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 18981,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 76574
+          },
+          "wallDurationMs": 18985
+        },
+        {
+          "caseId": "spot-simple-price",
+          "dispatchedAt": "2026-09-16T16:10:18.552Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-simple-price",
+            "duration_ms": 18622,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-spot-20260916160628130",
+            "started_at": "2026-09-16T16:10:18.553Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 1675,
+              "output_tokens": 107,
+              "total_tokens": 1782
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-simple-price",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 18622,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 994
+          },
+          "wallDurationMs": 18626
+        },
+        {
+          "caseId": "spot-fetch-swap-history",
+          "dispatchedAt": "2026-09-16T16:10:37.179Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-fetch-swap-history",
+            "duration_ms": 21001,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 2,
+            "run_id": "sol-high-spot-20260916160628130",
+            "started_at": "2026-09-16T16:10:37.180Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 16366,
+              "output_tokens": 213,
+              "total_tokens": 16579
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-fetch-swap-history",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 21001,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1176
+          },
+          "wallDurationMs": 21004
+        },
+        {
+          "caseId": "spot-token-metadata",
+          "dispatchedAt": "2026-09-16T16:10:58.185Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-token-metadata",
+            "duration_ms": 48296,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-spot-20260916160628130",
+            "started_at": "2026-09-16T16:10:58.186Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 23281,
+              "output_tokens": 1196,
+              "total_tokens": 24477
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-token-metadata",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 48296,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 5166
+          },
+          "wallDurationMs": 48301
+        },
+        {
+          "caseId": "spot-token-chart",
+          "dispatchedAt": "2026-09-16T16:11:46.486Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-token-chart",
+            "duration_ms": 20267,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-spot-20260916160628130",
+            "started_at": "2026-09-16T16:11:46.489Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 31287,
+              "output_tokens": 230,
+              "total_tokens": 31517
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-token-chart",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 20267,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 76574
+          },
+          "wallDurationMs": 20272
+        },
+        {
+          "caseId": "spot-simple-price",
+          "dispatchedAt": "2026-09-16T16:12:06.759Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-simple-price",
+            "duration_ms": 24829,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-spot-20260916160628130",
+            "started_at": "2026-09-16T16:12:06.760Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 16295,
+              "output_tokens": 122,
+              "total_tokens": 16417
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-simple-price",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 24829,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1016
+          },
+          "wallDurationMs": 24832
+        },
+        {
+          "caseId": "spot-fetch-swap-history",
+          "dispatchedAt": "2026-09-16T16:12:31.593Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-fetch-swap-history",
+            "duration_ms": 37048,
+            "model": "openai-codex/gpt-5.6-sol",
+            "repetition": 3,
+            "run_id": "sol-high-spot-20260916160628130",
+            "started_at": "2026-09-16T16:12:31.593Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 54687,
+              "output_tokens": 795,
+              "total_tokens": 55482
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-fetch-swap-history",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 37048,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 123544
+          },
+          "wallDurationMs": 37052
+        }
+      ],
+      "unscored": 0
+    }
+  ],
+  "runtimeClassification": {
+    "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+    "counts": {
+      "changed": 0,
+      "corrected": {
+        "failed": 18,
+        "graded": 65,
+        "passed": 47,
+        "pending": 0,
+        "planned": 105,
+        "terminal": 105,
+        "timeouts": 7,
+        "unscored": 40
+      },
+      "raw": {
+        "failed": 18,
+        "graded": 65,
+        "passed": 47,
+        "pending": 0,
+        "planned": 105,
+        "terminal": 105,
+        "timeouts": 7,
+        "unscored": 40
+      }
+    },
+    "derived": true,
+    "noAnswerRegrade": true,
+    "noOutcomeSelectiveRerun": true,
+    "observationFiles": "raw-unchanged",
+    "rawEvidenceUnchanged": true,
+    "receipt": "classification-receipt.json",
+    "receiptAvailability": "withheld",
+    "receiptSha256": "cfb26d100aa84f2d36e981b9c2f5aca31f6f393e46a7cca83c40f68f6a4f5cc5",
+    "schemaVersion": "ask-gina-runtime-classification.v1",
+    "scope": "post-run-runtime-classification"
+  },
+  "sourceCommit": "1ad5387698bb530e37cf2b9d45ede27f5c530e23",
+  "sourceSummarySha256": "cb244f795cca70709d67ac02ef2278ccae7bb34189b00d196307992ae7f607b0",
+  "startedAt": "2026-09-16T16:06:28.130Z",
+  "target": "omp_harness",
+  "timeoutMs": 120000,
+  "unscored": 40
+}

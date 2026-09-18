@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 import { Popover } from "@base-ui/react/popover";
 import { Info, X } from "lucide-react";
 import { canonicalCampaigns, type CanonicalRun } from "../canonical/canonical";
-import { LatencyValue } from "../canonical/components";
-import { derivedCostPerTask } from "../canonical/selectors";
+import { HeadlineValue, LatencyValue } from "../canonical/components";
+import { derivedCostPerTask, headlineFor } from "../canonical/selectors";
 import "../styles/results-browser.css";
 
 export const percent = (value: number) => `${(value * 100).toFixed(1)}%`;
@@ -59,6 +59,8 @@ export function ResultsHeader({
 export function RunDetails({ run }: { run: CanonicalRun }) {
   const campaign = canonicalCampaigns.find((entry) => entry.campaignId === run.campaignId);
   const cost = derivedCostPerTask(run);
+  const tokens = run.metrics.tokenUsage;
+  const timeout = run.timeoutMs ?? campaign?.timeoutMs;
   return (
     <section className="results-run-details" aria-label={`${run.family} run details`}>
       <h3>{run.family}</h3>
@@ -66,14 +68,21 @@ export function RunDetails({ run }: { run: CanonicalRun }) {
         <div>
           <dt>Passes</dt>
           <dd>
-            {run.counts.passed} of {run.counts.started} started attempts
+            <HeadlineValue headline={headlineFor(run)} />
           </dd>
         </div>
         <div>
-          <dt>Coverage</dt>
+          <dt>Dispatch</dt>
           <dd>
             {run.dispatchCoverage}; {run.counts.completed} completed, {run.counts.timedOut} timed
             out, {run.counts.runtimeFailure} run errors
+          </dd>
+        </div>
+        <div>
+          <dt>Grading</dt>
+          <dd>
+            {run.counts.graded}/{run.counts.planned} graded · {run.counts.passed} passed ·{" "}
+            {run.counts.failed} failed
           </dd>
         </div>
         <div>
@@ -82,7 +91,14 @@ export function RunDetails({ run }: { run: CanonicalRun }) {
         </div>
         <div>
           <dt>Client</dt>
-          <dd>{campaign?.harness ?? run.cohort.target}</dd>
+          <dd>{run.cohort.target}</dd>
+        </div>
+        <div>
+          <dt>Budget</dt>
+          <dd>
+            {timeout == null ? "Timeout not recorded" : `${timeout / 1000}s timeout`} ·{" "}
+            {run.cohort.repetitions} repetitions per task
+          </dd>
         </div>
         <div>
           <dt>Configuration</dt>
@@ -107,10 +123,30 @@ export function RunDetails({ run }: { run: CanonicalRun }) {
                 {dollars(cost.usdPerTask)} · {cost.sampleCount ?? "Unknown number of"}{" "}
                 {cost.population} attempts
                 <br />
-                {cost.priceSource} prices, {cost.priceAsOf}
+                {cost.basis === "token_rates"
+                  ? `${cost.priceSource} prices, ${cost.priceAsOf}`
+                  : `${cost.priceSource}, ${cost.priceAsOf}; not billed spend`}
               </>
             ) : (
               (cost.reason ?? cost.availability.replaceAll("_", " "))
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>Recorded tokens</dt>
+          <dd>
+            {tokens.availability === "available" || tokens.availability === "aggregate_only" ? (
+              <>
+                {tokens.inputTokens.toLocaleString()} input · {tokens.outputTokens.toLocaleString()}{" "}
+                output · {tokens.totalTokens.toLocaleString()} total
+                <br />
+                {tokens.availability === "available"
+                  ? tokens.sampleCount
+                  : "Unknown number of"}{" "}
+                {tokens.population} attempts
+              </>
+            ) : (
+              tokens.availability.replaceAll("_", " ")
             )}
           </dd>
         </div>
@@ -120,7 +156,38 @@ export function RunDetails({ run }: { run: CanonicalRun }) {
             <code>{run.runId}</code>
           </dd>
         </div>
+        <div>
+          <dt>Source commit</dt>
+          <dd>
+            <code>{run.provenance.sourceCommit ?? "Not recorded"}</code>
+          </dd>
+        </div>
+        <div>
+          <dt>Source artifact SHA-256</dt>
+          <dd>
+            <code>{run.provenance.sourceArtifactSha256 ?? "Not recorded"}</code>
+          </dd>
+        </div>
+        <div>
+          <dt>Suite / fixture</dt>
+          <dd>
+            {run.cohort.suiteId} v{run.cohort.suiteVersion} · fixture v{run.cohort.fixtureVersion}
+          </dd>
+        </div>
+        <div>
+          <dt>Tool catalogue SHA-256</dt>
+          <dd>
+            <code>{run.cohort.catalogSha ?? "Not recorded"}</code>
+          </dd>
+        </div>
       </dl>
+      {run.notes.length > 0 && (
+        <ul className="results-run-notes">
+          {run.notes.map((note) => (
+            <li key={note}>{note}</li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

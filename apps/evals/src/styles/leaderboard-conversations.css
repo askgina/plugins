@@ -1,0 +1,62 @@
+.results-chat-trigger {
+  margin-left: 12px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--eval-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.results-chat-trigger:hover {
+  color: var(--eval-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.results-chat-trigger:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+.leaderboard-conversations {
+  margin-bottom: 24px;
+}
+.leaderboard-conversations .task-model-picker {
+  display: inline-flex;
+  gap: 8px;
+  margin: 8px 16px 8px 0;
+}
+.leaderboard-conversations .task-attempts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 400px;
+  margin: 8px 0 12px;
+}
+.leaderboard-conversations .task-attempt {
+  min-width: 0;
+  padding: 8px 10px;
+}
+.leaderboard-chat-task select {
+  min-width: 0;
+  max-width: 100%;
+}
+.leaderboard-conversations .conversation-view {
+  margin-top: 12px;
+}
+.leaderboard-conversations .conversation-messages {
+  padding: 0;
+  list-style: none;
+}
+@media (max-width: 600px) {
+  .leaderboard-conversations .task-model-picker {
+    display: flex;
+    margin-right: 0;
+  }
+  .leaderboard-chat-task select {
+    flex: 1;
+  }
+  .leaderboard-conversations .task-model-picker label {
+    width: 58px;
+    flex-shrink: 0;
+  }
+}

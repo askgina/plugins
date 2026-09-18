@@ -1,0 +1,5152 @@
+{
+  "attempt": 1,
+  "complete": true,
+  "completedAt": "2026-09-17T00:49:38.936Z",
+  "dispatched": 105,
+  "durationMs": 7247575,
+  "failed": 6,
+  "families": [
+    "spot",
+    "perps",
+    "predictions"
+  ],
+  "fingerprint": "242802c562d0c64b2c5b214ac7067ac20a73c7b50f7dd3363074979550ab3dfa",
+  "graded": 31,
+  "label": "GPT-5.6 Terra (max)",
+  "methodology": {
+    "auth": {
+      "ginaReadOnly": true,
+      "nativeLogin": true
+    },
+    "cleanChats": true,
+    "isolation": {
+      "freshConversation": true,
+      "sharedProviderCredentialProfile": true
+    },
+    "transcriptCaps": {
+      "finalAnswerRetained": true,
+      "overLimitToolResults": "omitted_whole",
+      "resultBytesRetained": true,
+      "toolResultLimitBytes": 65536
+    }
+  },
+  "model": "openai-codex/gpt-5.6-terra",
+  "nativeModel": "openai-codex/gpt-5.6-terra",
+  "passed": 25,
+  "planned": 105,
+  "provenance": {
+    "catalogSha": "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e",
+    "cleanSource": true,
+    "driverSha256": "f6b8fd53fa5354de08052b86ba4c666dcfdbae9473ab1cb3683746023d9be2c8",
+    "hashes": {
+      "packages/evals/src/grading.ts": "36e922c7e2c92365375611c5483233e00d4bed354f3cfc9b0f00e0f0f129edf5",
+      "plugins/ask-gina/evals/model/v1/families/perps.yaml": "4280a7f1dffbca4ac1fd9c2a99fccecc6b8d21db522a778158c3c1b091b00eaf",
+      "plugins/ask-gina/evals/model/v1/families/predictions.yaml": "6ece24430c7e24b943d73f959e41d543545e9ae83f565f8c645fc3c18f5474b1",
+      "plugins/ask-gina/evals/model/v1/families/spot.yaml": "46fb94b127e086ea25f37820dc81a7453c1b111c99f694ab90d4f2b85f67770e"
+    },
+    "nativeExecutableSha256": "e99a06d5741f13a5e161c88617cde2f5a65d422b2eec0cf1a69aecd093b2462f",
+    "nativeVersion": "omp/18.1.21",
+    "schedulerPolicy": {
+      "anthropic": 2,
+      "global": 6,
+      "openai-codex": 3,
+      "xai-oauth": 1
+    },
+    "schedulerSha256": "d475c61a0316e85799d0925fca46100b15a9b20689e2d3e2dd677f57b3b5d221",
+    "sourceKind": "git_checkout",
+    "sourceSnapshot": null
+  },
+  "provider": "openai-codex",
+  "reasoning": "max",
+  "repetitions": 3,
+  "route": "omp",
+  "rowId": "terra-max",
+  "runs": [
+    {
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 54,
+          "true": 0
+        },
+        "copied": 27,
+        "credentialInSession": {
+          "false": 54,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 54,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 27,
+          "true": 27
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 27,
+          "true": 27
+        },
+        "resolvedModelIsFallback": {
+          "false": 27,
+          "null": 27,
+          "true": 0
+        },
+        "sessionFiles": 27,
+        "thinkingLevels": {
+          "max": 27,
+          "null": 27
+        },
+        "trialCount": 54
+      },
+      "attestations": [
+        {
+          "atifExported": null,
+          "caseId": "perps-account",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-positions",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-open-orders",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-portfolio",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-markets",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-single-price",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-multiple-prices",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-asset-data",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-search-hip3-markets",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-dexes",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-markets",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-price",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-trades",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-candles",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-order-book",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-preview-order-cost",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-create-table",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-create-and-query-table",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-account",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-positions",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-open-orders",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-portfolio",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-markets",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-single-price",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-multiple-prices",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-asset-data",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-search-hip3-markets",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-dexes",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-markets",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-price",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-trades",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-candles",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-order-book",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-preview-order-cost",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-create-table",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-create-and-query-table",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-account",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-positions",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-open-orders",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-portfolio",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-markets",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-single-price",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-multiple-prices",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-asset-data",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-search-hip3-markets",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-dexes",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-markets",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-hip3-price",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-trades",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-candles",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-fetch-order-book",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-preview-order-cost",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-create-table",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "perps-create-and-query-table",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        }
+      ],
+      "caseIds": [
+        "perps-account",
+        "perps-positions",
+        "perps-open-orders",
+        "perps-portfolio",
+        "perps-markets",
+        "perps-single-price",
+        "perps-multiple-prices",
+        "perps-asset-data",
+        "perps-search-hip3-markets",
+        "perps-hip3-dexes",
+        "perps-hip3-markets",
+        "perps-hip3-price",
+        "perps-fetch-trades",
+        "perps-fetch-candles",
+        "perps-fetch-order-book",
+        "perps-preview-order-cost",
+        "perps-create-table",
+        "perps-create-and-query-table"
+      ],
+      "cases": [
+        {
+          "graded": 2,
+          "id": "perps-account",
+          "passed": 2,
+          "pending": 0,
+          "unscored": 1
+        },
+        {
+          "graded": 2,
+          "id": "perps-asset-data",
+          "passed": 2,
+          "pending": 0,
+          "unscored": 1
+        },
+        {
+          "graded": 0,
+          "id": "perps-create-and-query-table",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "perps-create-table",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "perps-fetch-candles",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 1,
+          "id": "perps-fetch-order-book",
+          "passed": 1,
+          "pending": 0,
+          "unscored": 2
+        },
+        {
+          "graded": 1,
+          "id": "perps-fetch-trades",
+          "passed": 1,
+          "pending": 0,
+          "unscored": 2
+        },
+        {
+          "graded": 1,
+          "id": "perps-hip3-dexes",
+          "passed": 1,
+          "pending": 0,
+          "unscored": 2
+        },
+        {
+          "graded": 0,
+          "id": "perps-hip3-markets",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 1,
+          "id": "perps-hip3-price",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 2
+        },
+        {
+          "graded": 0,
+          "id": "perps-markets",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 2,
+          "id": "perps-multiple-prices",
+          "passed": 2,
+          "pending": 0,
+          "unscored": 1
+        },
+        {
+          "graded": 2,
+          "id": "perps-open-orders",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 1
+        },
+        {
+          "graded": 2,
+          "id": "perps-portfolio",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 1
+        },
+        {
+          "graded": 2,
+          "id": "perps-positions",
+          "passed": 2,
+          "pending": 0,
+          "unscored": 1
+        },
+        {
+          "graded": 1,
+          "id": "perps-preview-order-cost",
+          "passed": 1,
+          "pending": 0,
+          "unscored": 2
+        },
+        {
+          "graded": 0,
+          "id": "perps-search-hip3-markets",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 2,
+          "id": "perps-single-price",
+          "passed": 1,
+          "pending": 0,
+          "unscored": 1
+        }
+      ],
+      "configuration": {
+        "candidate": "openai-codex-oauth-gpt-5.6-terra-max",
+        "pinnedSha256": "5048a1217ee369e131805544ee3bffdffc215b5a9672a716169291d08b4a379e"
+      },
+      "dimensions": {
+        "arguments": {
+          "failed": 3,
+          "passed": 16,
+          "unscored": 35
+        },
+        "completion": {
+          "failed": 0,
+          "passed": 19,
+          "unscored": 35
+        },
+        "routing": {
+          "failed": 4,
+          "passed": 15,
+          "unscored": 35
+        },
+        "safety": {
+          "failed": 0,
+          "passed": 0,
+          "unscored": 54
+        },
+        "skill_activation": {
+          "failed": 0,
+          "passed": 0,
+          "unscored": 54
+        }
+      },
+      "dispatched": 54,
+      "failed": 6,
+      "family": "perps",
+      "graded": 19,
+      "latencyMs": {
+        "max": 118260,
+        "p50": 31015,
+        "p95": 118260
+      },
+      "missingSlots": [],
+      "passed": 13,
+      "planned": 54,
+      "runId": "terra-max-perps-20260916224851361",
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 6,
+            "graded": 19,
+            "passed": 13,
+            "pending": 0,
+            "planned": 54,
+            "terminal": 54,
+            "timeouts": 9,
+            "unscored": 35
+          },
+          "raw": {
+            "failed": 6,
+            "graded": 19,
+            "passed": 13,
+            "pending": 0,
+            "planned": 54,
+            "terminal": 54,
+            "timeouts": 9,
+            "unscored": 35
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "cfb26d100aa84f2d36e981b9c2f5aca31f6f393e46a7cca83c40f68f6a4f5cc5",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "terminal": 54,
+      "timeouts": 9,
+      "tokenUsage": {
+        "input": 154553,
+        "observations": 19,
+        "output": 20040,
+        "total": 174593
+      },
+      "trials": [
+        {
+          "caseId": "perps-account",
+          "dispatchedAt": "2026-09-16T22:55:54.190Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-account",
+            "duration_ms": 32653,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 1,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T22:55:54.190Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 19539,
+              "output_tokens": 915,
+              "total_tokens": 20454
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-account",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 32653,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 2362
+          },
+          "wallDurationMs": 32658
+        },
+        {
+          "caseId": "perps-positions",
+          "dispatchedAt": "2026-09-16T22:56:26.849Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-positions",
+            "duration_ms": 20167,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 1,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T22:56:26.850Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 5269,
+              "output_tokens": 122,
+              "total_tokens": 5391
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-positions",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 20167,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1045
+          },
+          "wallDurationMs": 20172
+        },
+        {
+          "caseId": "perps-open-orders",
+          "dispatchedAt": "2026-09-16T22:56:47.022Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-open-orders",
+            "duration_ms": 31015,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 1,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T22:56:47.023Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 17772,
+              "output_tokens": 1141,
+              "total_tokens": 18913
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-open-orders",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 31015,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 0
+          },
+          "wallDurationMs": 31019
+        },
+        {
+          "caseId": "perps-portfolio",
+          "dispatchedAt": "2026-09-16T22:57:18.042Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-portfolio",
+            "duration_ms": 48903,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 1,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T22:57:18.043Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 9289,
+              "output_tokens": 1944,
+              "total_tokens": 11233
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "case_id": "perps-portfolio",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 48903,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 12657
+          },
+          "wallDurationMs": 48907
+        },
+        {
+          "caseId": "perps-markets",
+          "dispatchedAt": "2026-09-16T22:58:06.951Z",
+          "error": {
+            "reason": null,
+            "tag": "PluginEvalOmpHarnessTimeoutError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 120594
+        },
+        {
+          "caseId": "perps-single-price",
+          "dispatchedAt": "2026-09-16T23:00:07.547Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-single-price",
+            "duration_ms": 32257,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 1,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T23:00:07.547Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 6464,
+              "output_tokens": 568,
+              "total_tokens": 7032
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-single-price",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 32257,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 2393
+          },
+          "wallDurationMs": 32261
+        },
+        {
+          "caseId": "perps-multiple-prices",
+          "dispatchedAt": "2026-09-16T23:00:39.809Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-multiple-prices",
+            "duration_ms": 18890,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 1,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T23:00:39.810Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 5165,
+              "output_tokens": 172,
+              "total_tokens": 5337
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-multiple-prices",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 18890,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 509
+          },
+          "wallDurationMs": 18894
+        },
+        {
+          "caseId": "perps-asset-data",
+          "dispatchedAt": "2026-09-16T23:00:58.705Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-asset-data",
+            "duration_ms": 19083,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 1,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T23:00:58.706Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 5441,
+              "output_tokens": 357,
+              "total_tokens": 5798
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-asset-data",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 19083,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1251
+          },
+          "wallDurationMs": 19087
+        },
+        {
+          "caseId": "perps-search-hip3-markets",
+          "dispatchedAt": "2026-09-16T23:01:17.794Z",
+          "error": {
+            "reason": null,
+            "tag": "PluginEvalOmpHarnessTimeoutError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 120575
+        },
+        {
+          "caseId": "perps-hip3-dexes",
+          "dispatchedAt": "2026-09-16T23:03:18.369Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-hip3-dexes",
+            "duration_ms": 17920,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 1,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T23:03:18.370Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 5205,
+              "output_tokens": 223,
+              "total_tokens": 5428
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-hip3-dexes",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 17920,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 683
+          },
+          "wallDurationMs": 17924
+        },
+        {
+          "caseId": "perps-hip3-markets",
+          "dispatchedAt": "2026-09-16T23:03:36.295Z",
+          "error": {
+            "reason": null,
+            "tag": "PluginEvalOmpHarnessTimeoutError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 120552
+        },
+        {
+          "caseId": "perps-hip3-price",
+          "dispatchedAt": "2026-09-16T23:05:36.848Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-hip3-price",
+            "duration_ms": 28383,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 1,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T23:05:36.848Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 7671,
+              "output_tokens": 612,
+              "total_tokens": 8283
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "case_id": "perps-hip3-price",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 28383,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 5795
+          },
+          "wallDurationMs": 28387
+        },
+        {
+          "caseId": "perps-fetch-trades",
+          "dispatchedAt": "2026-09-16T23:06:05.236Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-fetch-trades",
+            "duration_ms": 118260,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 1,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T23:06:05.237Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 12703,
+              "output_tokens": 5706,
+              "total_tokens": 18409
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-fetch-trades",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 118260,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 17782
+          },
+          "wallDurationMs": 118265
+        },
+        {
+          "caseId": "perps-fetch-candles",
+          "dispatchedAt": "2026-09-16T23:08:03.502Z",
+          "error": {
+            "reason": null,
+            "tag": "PluginEvalOmpHarnessTimeoutError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 120682
+        },
+        {
+          "caseId": "perps-fetch-order-book",
+          "dispatchedAt": "2026-09-16T23:10:04.185Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-fetch-order-book",
+            "duration_ms": 51180,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 1,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T23:10:04.185Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 10196,
+              "output_tokens": 2017,
+              "total_tokens": 12213
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-fetch-order-book",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 51180,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 13423
+          },
+          "wallDurationMs": 51186
+        },
+        {
+          "caseId": "perps-preview-order-cost",
+          "dispatchedAt": "2026-09-16T23:10:55.372Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-preview-order-cost",
+            "duration_ms": 31433,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 1,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T23:10:55.373Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 5783,
+              "output_tokens": 954,
+              "total_tokens": 6737
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-preview-order-cost",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 31433,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1362
+          },
+          "wallDurationMs": 31438
+        },
+        {
+          "caseId": "perps-create-table",
+          "dispatchedAt": "2026-09-16T23:13:26.801Z",
+          "error": {
+            "reason": null,
+            "tag": "PluginEvalOmpHarnessTimeoutError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 121439
+        },
+        {
+          "caseId": "perps-create-and-query-table",
+          "dispatchedAt": "2026-09-16T23:15:35.071Z",
+          "error": {
+            "reason": null,
+            "tag": "PluginEvalOmpHarnessTimeoutError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 120984
+        },
+        {
+          "caseId": "perps-account",
+          "dispatchedAt": "2026-09-16T23:17:36.077Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-account",
+            "duration_ms": 35330,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 2,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T23:17:36.079Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 5809,
+              "output_tokens": 968,
+              "total_tokens": 6777
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-account",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 35330,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 2362
+          },
+          "wallDurationMs": 35337
+        },
+        {
+          "caseId": "perps-positions",
+          "dispatchedAt": "2026-09-16T23:18:11.417Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-positions",
+            "duration_ms": 17560,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 2,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T23:18:11.417Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 5273,
+              "output_tokens": 203,
+              "total_tokens": 5476
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-positions",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 17560,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1045
+          },
+          "wallDurationMs": 17565
+        },
+        {
+          "caseId": "perps-open-orders",
+          "dispatchedAt": "2026-09-16T23:18:28.984Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-open-orders",
+            "duration_ms": 48975,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 2,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T23:18:28.985Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 7816,
+              "output_tokens": 1202,
+              "total_tokens": 9018
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-open-orders",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 48975,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "total_result_bytes": 2412
+          },
+          "wallDurationMs": 48980
+        },
+        {
+          "caseId": "perps-portfolio",
+          "dispatchedAt": "2026-09-16T23:19:17.967Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-portfolio",
+            "duration_ms": 45766,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 2,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T23:19:17.967Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 9284,
+              "output_tokens": 1770,
+              "total_tokens": 11054
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 0
+            },
+            "case_id": "perps-portfolio",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 45766,
+            "overall_pass": false,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 12657
+          },
+          "wallDurationMs": 45771
+        },
+        {
+          "caseId": "perps-markets",
+          "dispatchedAt": "2026-09-16T23:20:03.740Z",
+          "error": {
+            "reason": null,
+            "tag": "PluginEvalOmpHarnessTimeoutError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 120587
+        },
+        {
+          "caseId": "perps-single-price",
+          "dispatchedAt": "2026-09-16T23:22:04.328Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-single-price",
+            "duration_ms": 23840,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 2,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T23:22:04.330Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 5258,
+              "output_tokens": 264,
+              "total_tokens": 5522
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-single-price",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 23840,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1052
+          },
+          "wallDurationMs": 23848
+        },
+        {
+          "caseId": "perps-multiple-prices",
+          "dispatchedAt": "2026-09-16T23:22:28.179Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-multiple-prices",
+            "duration_ms": 18447,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 2,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T23:22:28.179Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 5188,
+              "output_tokens": 160,
+              "total_tokens": 5348
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-multiple-prices",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 18447,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 614
+          },
+          "wallDurationMs": 18451
+        },
+        {
+          "caseId": "perps-asset-data",
+          "dispatchedAt": "2026-09-16T23:22:46.632Z",
+          "error": null,
+          "observation": {
+            "case_id": "perps-asset-data",
+            "duration_ms": 26069,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 2,
+            "run_id": "terra-max-perps-20260916224851361",
+            "started_at": "2026-09-16T23:22:46.633Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 5428,
+              "output_tokens": 742,
+              "total_tokens": 6170
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "perps-asset-data",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 26069,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1251
+          },
+          "wallDurationMs": 26075
+        },
+        {
+          "caseId": "perps-search-hip3-markets",
+          "dispatchedAt": "2026-09-16T23:23:12.709Z",
+          "error": {
+            "reason": null,
+            "tag": "PluginEvalOmpHarnessTimeoutError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 112831
+        },
+        {
+          "caseId": "perps-hip3-dexes",
+          "dispatchedAt": "2026-09-16T23:55:01.482Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 27902
+        },
+        {
+          "caseId": "perps-hip3-markets",
+          "dispatchedAt": "2026-09-16T23:55:29.386Z",
+          "error": {
+            "reason": null,
+            "tag": "PluginEvalOmpHarnessTimeoutError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 23217
+        },
+        {
+          "caseId": "perps-hip3-price",
+          "dispatchedAt": "2026-09-17T00:49:08.726Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 1023
+        },
+        {
+          "caseId": "perps-fetch-trades",
+          "dispatchedAt": "2026-09-17T00:49:09.753Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 8
+        },
+        {
+          "caseId": "perps-fetch-candles",
+          "dispatchedAt": "2026-09-17T00:49:09.763Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 8
+        },
+        {
+          "caseId": "perps-fetch-order-book",
+          "dispatchedAt": "2026-09-17T00:49:09.774Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 7
+        },
+        {
+          "caseId": "perps-preview-order-cost",
+          "dispatchedAt": "2026-09-17T00:49:09.782Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 6
+        },
+        {
+          "caseId": "perps-create-table",
+          "dispatchedAt": "2026-09-17T00:49:32.925Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 354
+        },
+        {
+          "caseId": "perps-create-and-query-table",
+          "dispatchedAt": "2026-09-17T00:49:33.909Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 984
+        },
+        {
+          "caseId": "perps-account",
+          "dispatchedAt": "2026-09-17T00:49:34.897Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 13
+        },
+        {
+          "caseId": "perps-positions",
+          "dispatchedAt": "2026-09-17T00:49:34.912Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 8
+        },
+        {
+          "caseId": "perps-open-orders",
+          "dispatchedAt": "2026-09-17T00:49:34.922Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 7
+        },
+        {
+          "caseId": "perps-portfolio",
+          "dispatchedAt": "2026-09-17T00:49:34.931Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 7
+        },
+        {
+          "caseId": "perps-markets",
+          "dispatchedAt": "2026-09-17T00:49:34.940Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "perps-single-price",
+          "dispatchedAt": "2026-09-17T00:49:34.947Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "perps-multiple-prices",
+          "dispatchedAt": "2026-09-17T00:49:34.954Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "perps-asset-data",
+          "dispatchedAt": "2026-09-17T00:49:34.960Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 4
+        },
+        {
+          "caseId": "perps-search-hip3-markets",
+          "dispatchedAt": "2026-09-17T00:49:34.966Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "perps-hip3-dexes",
+          "dispatchedAt": "2026-09-17T00:49:34.973Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "perps-hip3-markets",
+          "dispatchedAt": "2026-09-17T00:49:34.979Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "perps-hip3-price",
+          "dispatchedAt": "2026-09-17T00:49:34.985Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 4
+        },
+        {
+          "caseId": "perps-fetch-trades",
+          "dispatchedAt": "2026-09-17T00:49:34.992Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "perps-fetch-candles",
+          "dispatchedAt": "2026-09-17T00:49:34.998Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "perps-fetch-order-book",
+          "dispatchedAt": "2026-09-17T00:49:35.004Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "perps-preview-order-cost",
+          "dispatchedAt": "2026-09-17T00:49:35.011Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 4
+        },
+        {
+          "caseId": "perps-create-table",
+          "dispatchedAt": "2026-09-17T00:49:35.850Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 784
+        },
+        {
+          "caseId": "perps-create-and-query-table",
+          "dispatchedAt": "2026-09-17T00:49:37.562Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 763
+        }
+      ],
+      "unscored": 35
+    },
+    {
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 39,
+          "true": 0
+        },
+        "copied": 0,
+        "credentialInSession": {
+          "false": 39,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 39,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 39,
+          "true": 0
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 39,
+          "true": 0
+        },
+        "resolvedModelIsFallback": {
+          "false": 0,
+          "null": 39,
+          "true": 0
+        },
+        "sessionFiles": 0,
+        "thinkingLevels": {
+          "null": 39
+        },
+        "trialCount": 39
+      },
+      "attestations": [
+        {
+          "atifExported": null,
+          "caseId": "predictions-focused-fact-search-only",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-broad-nba-search-only",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-broad-football-search-only",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-non-exact-no-render",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-sparse-history-no-render",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-multi-series-no-render",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-expiring-markets",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-series-market",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-orderbook",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-fetch-market-data",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-fetch-history-data",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-open-positions",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-order-history",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-focused-fact-search-only",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-broad-nba-search-only",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-broad-football-search-only",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-non-exact-no-render",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-sparse-history-no-render",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-multi-series-no-render",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-expiring-markets",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-series-market",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-orderbook",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-fetch-market-data",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-fetch-history-data",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-open-positions",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-order-history",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-focused-fact-search-only",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-broad-nba-search-only",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-broad-football-search-only",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-non-exact-no-render",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-sparse-history-no-render",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-multi-series-no-render",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-expiring-markets",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-series-market",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-orderbook",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-fetch-market-data",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-fetch-history-data",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-open-positions",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        },
+        {
+          "atifExported": null,
+          "caseId": "predictions-order-history",
+          "copied": 0,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": null,
+          "modelMatches": null,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": null,
+          "sessionFiles": 0,
+          "thinkingLevel": null
+        }
+      ],
+      "caseIds": [
+        "predictions-focused-fact-search-only",
+        "predictions-broad-nba-search-only",
+        "predictions-broad-football-search-only",
+        "predictions-non-exact-no-render",
+        "predictions-sparse-history-no-render",
+        "predictions-multi-series-no-render",
+        "predictions-expiring-markets",
+        "predictions-series-market",
+        "predictions-orderbook",
+        "predictions-fetch-market-data",
+        "predictions-fetch-history-data",
+        "predictions-open-positions",
+        "predictions-order-history"
+      ],
+      "cases": [
+        {
+          "graded": 0,
+          "id": "predictions-broad-football-search-only",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-broad-nba-search-only",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-expiring-markets",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-fetch-history-data",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-fetch-market-data",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-focused-fact-search-only",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-multi-series-no-render",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-non-exact-no-render",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-open-positions",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-order-history",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-orderbook",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-series-market",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        },
+        {
+          "graded": 0,
+          "id": "predictions-sparse-history-no-render",
+          "passed": 0,
+          "pending": 0,
+          "unscored": 3
+        }
+      ],
+      "configuration": {
+        "candidate": "openai-codex-oauth-gpt-5.6-terra-max",
+        "pinnedSha256": "45eafc9d9cb0b75f89b937765eeac9278eeaced7ca74855e6ea61978b8e88953"
+      },
+      "dimensions": {
+        "arguments": {
+          "failed": 0,
+          "passed": 0,
+          "unscored": 39
+        },
+        "completion": {
+          "failed": 0,
+          "passed": 0,
+          "unscored": 39
+        },
+        "routing": {
+          "failed": 0,
+          "passed": 0,
+          "unscored": 39
+        },
+        "safety": {
+          "failed": 0,
+          "passed": 0,
+          "unscored": 39
+        },
+        "skill_activation": {
+          "failed": 0,
+          "passed": 0,
+          "unscored": 39
+        }
+      },
+      "dispatched": 39,
+      "failed": 0,
+      "family": "predictions",
+      "graded": 0,
+      "latencyMs": {
+        "max": null,
+        "p50": null,
+        "p95": null
+      },
+      "missingSlots": [],
+      "passed": 0,
+      "planned": 39,
+      "runId": "terra-max-predictions-20260916224851361",
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 0,
+            "graded": 0,
+            "passed": 0,
+            "pending": 0,
+            "planned": 39,
+            "terminal": 39,
+            "timeouts": 0,
+            "unscored": 39
+          },
+          "raw": {
+            "failed": 0,
+            "graded": 0,
+            "passed": 0,
+            "pending": 0,
+            "planned": 39,
+            "terminal": 39,
+            "timeouts": 0,
+            "unscored": 39
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "cfb26d100aa84f2d36e981b9c2f5aca31f6f393e46a7cca83c40f68f6a4f5cc5",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "terminal": 39,
+      "timeouts": 0,
+      "tokenUsage": {
+        "input": null,
+        "observations": 0,
+        "output": null,
+        "total": null
+      },
+      "trials": [
+        {
+          "caseId": "predictions-focused-fact-search-only",
+          "dispatchedAt": "2026-09-17T00:49:38.336Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 10
+        },
+        {
+          "caseId": "predictions-broad-nba-search-only",
+          "dispatchedAt": "2026-09-17T00:49:38.348Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 8
+        },
+        {
+          "caseId": "predictions-broad-football-search-only",
+          "dispatchedAt": "2026-09-17T00:49:38.358Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 8
+        },
+        {
+          "caseId": "predictions-non-exact-no-render",
+          "dispatchedAt": "2026-09-17T00:49:38.369Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-sparse-history-no-render",
+          "dispatchedAt": "2026-09-17T00:49:38.377Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-multi-series-no-render",
+          "dispatchedAt": "2026-09-17T00:49:38.383Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-expiring-markets",
+          "dispatchedAt": "2026-09-17T00:49:38.390Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-series-market",
+          "dispatchedAt": "2026-09-17T00:49:38.396Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-orderbook",
+          "dispatchedAt": "2026-09-17T00:49:38.403Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 4
+        },
+        {
+          "caseId": "predictions-fetch-market-data",
+          "dispatchedAt": "2026-09-17T00:49:38.409Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-fetch-history-data",
+          "dispatchedAt": "2026-09-17T00:49:38.415Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-open-positions",
+          "dispatchedAt": "2026-09-17T00:49:38.421Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-order-history",
+          "dispatchedAt": "2026-09-17T00:49:38.428Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 1,
+          "score": null,
+          "wallDurationMs": 6
+        },
+        {
+          "caseId": "predictions-focused-fact-search-only",
+          "dispatchedAt": "2026-09-17T00:49:38.436Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-broad-nba-search-only",
+          "dispatchedAt": "2026-09-17T00:49:38.442Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-broad-football-search-only",
+          "dispatchedAt": "2026-09-17T00:49:38.449Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 4
+        },
+        {
+          "caseId": "predictions-non-exact-no-render",
+          "dispatchedAt": "2026-09-17T00:49:38.455Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 4
+        },
+        {
+          "caseId": "predictions-sparse-history-no-render",
+          "dispatchedAt": "2026-09-17T00:49:38.460Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-multi-series-no-render",
+          "dispatchedAt": "2026-09-17T00:49:38.467Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-expiring-markets",
+          "dispatchedAt": "2026-09-17T00:49:38.473Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 4
+        },
+        {
+          "caseId": "predictions-series-market",
+          "dispatchedAt": "2026-09-17T00:49:38.480Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-orderbook",
+          "dispatchedAt": "2026-09-17T00:49:38.486Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 8
+        },
+        {
+          "caseId": "predictions-fetch-market-data",
+          "dispatchedAt": "2026-09-17T00:49:38.496Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-fetch-history-data",
+          "dispatchedAt": "2026-09-17T00:49:38.503Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-open-positions",
+          "dispatchedAt": "2026-09-17T00:49:38.510Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-order-history",
+          "dispatchedAt": "2026-09-17T00:49:38.517Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 2,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-focused-fact-search-only",
+          "dispatchedAt": "2026-09-17T00:49:38.523Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-broad-nba-search-only",
+          "dispatchedAt": "2026-09-17T00:49:38.530Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 5
+        },
+        {
+          "caseId": "predictions-broad-football-search-only",
+          "dispatchedAt": "2026-09-17T00:49:38.537Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 7
+        },
+        {
+          "caseId": "predictions-non-exact-no-render",
+          "dispatchedAt": "2026-09-17T00:49:38.545Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 300
+        },
+        {
+          "caseId": "predictions-sparse-history-no-render",
+          "dispatchedAt": "2026-09-17T00:49:38.848Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 8
+        },
+        {
+          "caseId": "predictions-multi-series-no-render",
+          "dispatchedAt": "2026-09-17T00:49:38.858Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 6
+        },
+        {
+          "caseId": "predictions-expiring-markets",
+          "dispatchedAt": "2026-09-17T00:49:38.867Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 10
+        },
+        {
+          "caseId": "predictions-series-market",
+          "dispatchedAt": "2026-09-17T00:49:38.879Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 6
+        },
+        {
+          "caseId": "predictions-orderbook",
+          "dispatchedAt": "2026-09-17T00:49:38.888Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 7
+        },
+        {
+          "caseId": "predictions-fetch-market-data",
+          "dispatchedAt": "2026-09-17T00:49:38.897Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 6
+        },
+        {
+          "caseId": "predictions-fetch-history-data",
+          "dispatchedAt": "2026-09-17T00:49:38.905Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 8
+        },
+        {
+          "caseId": "predictions-open-positions",
+          "dispatchedAt": "2026-09-17T00:49:38.915Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 6
+        },
+        {
+          "caseId": "predictions-order-history",
+          "dispatchedAt": "2026-09-17T00:49:38.924Z",
+          "error": {
+            "reason": "withheld: privacy_review",
+            "tag": "PluginEvalOmpHarnessMcpError"
+          },
+          "observation": null,
+          "outcome": "runtime_failure",
+          "repetition": 3,
+          "score": null,
+          "wallDurationMs": 7
+        }
+      ],
+      "unscored": 39
+    },
+    {
+      "attestation": {
+        "atifExported": {
+          "false": 0,
+          "null": 12,
+          "true": 0
+        },
+        "copied": 12,
+        "credentialInSession": {
+          "false": 12,
+          "null": 0,
+          "true": 0
+        },
+        "effortOptionConfigured": {
+          "false": 0,
+          "null": 12,
+          "true": 0
+        },
+        "evidenceKinds": [
+          "runtime_configuration"
+        ],
+        "fallbackEvents": 0,
+        "levelMatches": {
+          "false": 0,
+          "null": 0,
+          "true": 12
+        },
+        "modelMatches": {
+          "false": 0,
+          "null": 0,
+          "true": 12
+        },
+        "resolvedModelIsFallback": {
+          "false": 12,
+          "null": 0,
+          "true": 0
+        },
+        "sessionFiles": 12,
+        "thinkingLevels": {
+          "max": 12
+        },
+        "trialCount": 12
+      },
+      "attestations": [
+        {
+          "atifExported": null,
+          "caseId": "spot-token-metadata",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-token-chart",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-simple-price",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-fetch-swap-history",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 1,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-token-metadata",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-token-chart",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-simple-price",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-fetch-swap-history",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 2,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-token-metadata",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-token-chart",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-simple-price",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        },
+        {
+          "atifExported": null,
+          "caseId": "spot-fetch-swap-history",
+          "copied": 1,
+          "credentialInSession": false,
+          "effortOptionConfigured": null,
+          "evidenceKind": "runtime_configuration",
+          "fallbackEvents": 0,
+          "levelMatches": true,
+          "modelMatches": true,
+          "nativeModelUids": [],
+          "repetition": 3,
+          "requestedModelUid": null,
+          "requestedReasoning": "max",
+          "resolvedModelIsFallback": false,
+          "sessionFiles": 1,
+          "thinkingLevel": "max"
+        }
+      ],
+      "caseIds": [
+        "spot-token-metadata",
+        "spot-token-chart",
+        "spot-simple-price",
+        "spot-fetch-swap-history"
+      ],
+      "cases": [
+        {
+          "graded": 3,
+          "id": "spot-fetch-swap-history",
+          "passed": 3,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 3,
+          "id": "spot-simple-price",
+          "passed": 3,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 3,
+          "id": "spot-token-chart",
+          "passed": 3,
+          "pending": 0,
+          "unscored": 0
+        },
+        {
+          "graded": 3,
+          "id": "spot-token-metadata",
+          "passed": 3,
+          "pending": 0,
+          "unscored": 0
+        }
+      ],
+      "configuration": {
+        "candidate": "openai-codex-oauth-gpt-5.6-terra-max",
+        "pinnedSha256": "53c4358b6dd8d26e7d87e3824eaaacaa305a0a3f5c850100fb8348958029e4de"
+      },
+      "dimensions": {
+        "arguments": {
+          "failed": 0,
+          "passed": 12,
+          "unscored": 0
+        },
+        "completion": {
+          "failed": 0,
+          "passed": 12,
+          "unscored": 0
+        },
+        "routing": {
+          "failed": 0,
+          "passed": 12,
+          "unscored": 0
+        },
+        "safety": {
+          "failed": 0,
+          "passed": 0,
+          "unscored": 12
+        },
+        "skill_activation": {
+          "failed": 0,
+          "passed": 0,
+          "unscored": 12
+        }
+      },
+      "dispatched": 12,
+      "failed": 0,
+      "family": "spot",
+      "graded": 12,
+      "latencyMs": {
+        "max": 86326,
+        "p50": 23154,
+        "p95": 86326
+      },
+      "missingSlots": [],
+      "passed": 12,
+      "planned": 12,
+      "runId": "terra-max-spot-20260916224851361",
+      "runtimeClassification": {
+        "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+        "counts": {
+          "changed": 0,
+          "corrected": {
+            "failed": 0,
+            "graded": 12,
+            "passed": 12,
+            "pending": 0,
+            "planned": 12,
+            "terminal": 12,
+            "timeouts": 0,
+            "unscored": 0
+          },
+          "raw": {
+            "failed": 0,
+            "graded": 12,
+            "passed": 12,
+            "pending": 0,
+            "planned": 12,
+            "terminal": 12,
+            "timeouts": 0,
+            "unscored": 0
+          }
+        },
+        "derived": true,
+        "noAnswerRegrade": true,
+        "noOutcomeSelectiveRerun": true,
+        "observationFiles": "raw-unchanged",
+        "rawEvidenceUnchanged": true,
+        "receipt": "classification-receipt.json",
+        "receiptAvailability": "withheld",
+        "receiptSha256": "cfb26d100aa84f2d36e981b9c2f5aca31f6f393e46a7cca83c40f68f6a4f5cc5",
+        "schemaVersion": "ask-gina-runtime-classification.v1",
+        "scope": "post-run-runtime-classification"
+      },
+      "terminal": 12,
+      "timeouts": 0,
+      "tokenUsage": {
+        "input": 206427,
+        "observations": 12,
+        "output": 12030,
+        "total": 218457
+      },
+      "trials": [
+        {
+          "caseId": "spot-token-metadata",
+          "dispatchedAt": "2026-09-16T22:49:01.631Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-token-metadata",
+            "duration_ms": 86326,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 1,
+            "run_id": "terra-max-spot-20260916224851361",
+            "started_at": "2026-09-16T22:49:01.634Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 38271,
+              "output_tokens": 3318,
+              "total_tokens": 41589
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-token-metadata",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 86326,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 2626
+          },
+          "wallDurationMs": 86334
+        },
+        {
+          "caseId": "spot-token-chart",
+          "dispatchedAt": "2026-09-16T22:50:27.966Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-token-chart",
+            "duration_ms": 23154,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 1,
+            "run_id": "terra-max-spot-20260916224851361",
+            "started_at": "2026-09-16T22:50:27.967Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 32716,
+              "output_tokens": 512,
+              "total_tokens": 33228
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-token-chart",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 23154,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 76570
+          },
+          "wallDurationMs": 23158
+        },
+        {
+          "caseId": "spot-simple-price",
+          "dispatchedAt": "2026-09-16T22:50:51.125Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-simple-price",
+            "duration_ms": 15481,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 1,
+            "run_id": "terra-max-spot-20260916224851361",
+            "started_at": "2026-09-16T22:50:51.126Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 17667,
+              "output_tokens": 210,
+              "total_tokens": 17877
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-simple-price",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 15481,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 994
+          },
+          "wallDurationMs": 15485
+        },
+        {
+          "caseId": "spot-fetch-swap-history",
+          "dispatchedAt": "2026-09-16T22:51:06.611Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-fetch-swap-history",
+            "duration_ms": 31775,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 1,
+            "run_id": "terra-max-spot-20260916224851361",
+            "started_at": "2026-09-16T22:51:06.612Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 17940,
+              "output_tokens": 808,
+              "total_tokens": 18748
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 1,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-fetch-swap-history",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 31775,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1176
+          },
+          "wallDurationMs": 31779
+        },
+        {
+          "caseId": "spot-token-metadata",
+          "dispatchedAt": "2026-09-16T22:51:38.391Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-token-metadata",
+            "duration_ms": 72513,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 2,
+            "run_id": "terra-max-spot-20260916224851361",
+            "started_at": "2026-09-16T22:51:38.392Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 31272,
+              "output_tokens": 3140,
+              "total_tokens": 34412
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-token-metadata",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 72513,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 2731
+          },
+          "wallDurationMs": 72517
+        },
+        {
+          "caseId": "spot-token-chart",
+          "dispatchedAt": "2026-09-16T22:52:50.909Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-token-chart",
+            "duration_ms": 27753,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 2,
+            "run_id": "terra-max-spot-20260916224851361",
+            "started_at": "2026-09-16T22:52:50.910Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 18864,
+              "output_tokens": 742,
+              "total_tokens": 19606
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-token-chart",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 27753,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 76570
+          },
+          "wallDurationMs": 27757
+        },
+        {
+          "caseId": "spot-simple-price",
+          "dispatchedAt": "2026-09-16T22:53:18.668Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-simple-price",
+            "duration_ms": 18316,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 2,
+            "run_id": "terra-max-spot-20260916224851361",
+            "started_at": "2026-09-16T22:53:18.669Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 3842,
+              "output_tokens": 207,
+              "total_tokens": 4049
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-simple-price",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 18316,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 994
+          },
+          "wallDurationMs": 18320
+        },
+        {
+          "caseId": "spot-fetch-swap-history",
+          "dispatchedAt": "2026-09-16T22:53:36.989Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-fetch-swap-history",
+            "duration_ms": 18558,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 2,
+            "run_id": "terra-max-spot-20260916224851361",
+            "started_at": "2026-09-16T22:53:36.989Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 4060,
+              "output_tokens": 299,
+              "total_tokens": 4359
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 2,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-fetch-swap-history",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 18558,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1176
+          },
+          "wallDurationMs": 18561
+        },
+        {
+          "caseId": "spot-token-metadata",
+          "dispatchedAt": "2026-09-16T22:53:55.551Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-token-metadata",
+            "duration_ms": 52428,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 3,
+            "run_id": "terra-max-spot-20260916224851361",
+            "started_at": "2026-09-16T22:53:55.551Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 15009,
+              "output_tokens": 1600,
+              "total_tokens": 16609
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-token-metadata",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 52428,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 5162
+          },
+          "wallDurationMs": 52432
+        },
+        {
+          "caseId": "spot-token-chart",
+          "dispatchedAt": "2026-09-16T22:54:47.984Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-token-chart",
+            "duration_ms": 25092,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 3,
+            "run_id": "terra-max-spot-20260916224851361",
+            "started_at": "2026-09-16T22:54:47.984Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 18888,
+              "output_tokens": 549,
+              "total_tokens": 19437
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-token-chart",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 25092,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 76570
+          },
+          "wallDurationMs": 25095
+        },
+        {
+          "caseId": "spot-simple-price",
+          "dispatchedAt": "2026-09-16T22:55:13.080Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-simple-price",
+            "duration_ms": 20638,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 3,
+            "run_id": "terra-max-spot-20260916224851361",
+            "started_at": "2026-09-16T22:55:13.081Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 3861,
+              "output_tokens": 221,
+              "total_tokens": 4082
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-simple-price",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 20638,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 992
+          },
+          "wallDurationMs": 20641
+        },
+        {
+          "caseId": "spot-fetch-swap-history",
+          "dispatchedAt": "2026-09-16T22:55:33.723Z",
+          "error": null,
+          "observation": {
+            "case_id": "spot-fetch-swap-history",
+            "duration_ms": 20460,
+            "model": "openai-codex/gpt-5.6-terra",
+            "repetition": 3,
+            "run_id": "terra-max-spot-20260916224851361",
+            "started_at": "2026-09-16T22:55:33.723Z",
+            "status": "completed",
+            "target": "omp_harness",
+            "token_usage": {
+              "input_tokens": 4037,
+              "output_tokens": 424,
+              "total_tokens": 4461
+            },
+            "version": 1
+          },
+          "outcome": "observed",
+          "repetition": 3,
+          "score": {
+            "arguments": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "case_id": "spot-fetch-swap-history",
+            "completion": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "latency_ms": 20460,
+            "overall_pass": true,
+            "routing": {
+              "details": [
+                "withheld: privacy_review"
+              ],
+              "score": 1
+            },
+            "total_result_bytes": 1176
+          },
+          "wallDurationMs": 20464
+        }
+      ],
+      "unscored": 0
+    }
+  ],
+  "runtimeClassification": {
+    "classifierSha256": "3624e1a6b576529c729840c20e2d98a8831454cb903f43812298d1562ac9f8f1",
+    "counts": {
+      "changed": 0,
+      "corrected": {
+        "failed": 6,
+        "graded": 31,
+        "passed": 25,
+        "pending": 0,
+        "planned": 105,
+        "terminal": 105,
+        "timeouts": 9,
+        "unscored": 74
+      },
+      "raw": {
+        "failed": 6,
+        "graded": 31,
+        "passed": 25,
+        "pending": 0,
+        "planned": 105,
+        "terminal": 105,
+        "timeouts": 9,
+        "unscored": 74
+      }
+    },
+    "derived": true,
+    "noAnswerRegrade": true,
+    "noOutcomeSelectiveRerun": true,
+    "observationFiles": "raw-unchanged",
+    "rawEvidenceUnchanged": true,
+    "receipt": "classification-receipt.json",
+    "receiptAvailability": "withheld",
+    "receiptSha256": "cfb26d100aa84f2d36e981b9c2f5aca31f6f393e46a7cca83c40f68f6a4f5cc5",
+    "schemaVersion": "ask-gina-runtime-classification.v1",
+    "scope": "post-run-runtime-classification"
+  },
+  "sourceCommit": "1ad5387698bb530e37cf2b9d45ede27f5c530e23",
+  "sourceSummarySha256": "1129b133f126a0c2cb059a83d8331353b6d356e62e72a3b722631f662afe2123",
+  "startedAt": "2026-09-16T22:48:51.361Z",
+  "target": "omp_harness",
+  "timeoutMs": 120000,
+  "unscored": 74
+}

@@ -9,6 +9,7 @@ import { HandoffPage } from "./pages/handoff";
 import { ComparePage } from "./canonical/pages/compare";
 import { matchPath, navigate, parseRoute, useHashRoute } from "./router";
 import { PROTOTYPE_FAMILIES } from "./canonical/canonical";
+import { taskRoute, type TaskView } from "./lib/task-workspace";
 
 interface RouteEntry {
   readonly pattern: string;
@@ -35,12 +36,14 @@ const ROUTES: readonly RouteEntry[] = [
         }
         initialModelId={query.get("model") ?? undefined}
         initialCaseId={query.get("task") ?? undefined}
-        onNavigate={(family, modelId, caseId) => {
-          const next = new URLSearchParams({ category: family });
-          if (modelId) next.set("model", modelId);
-          if (caseId) next.set("task", caseId);
-          navigate(`/tasks?${next.toString()}`);
-        }}
+        initialRunId={query.get("run") ?? undefined}
+        initialAttempt={query.has("attempt") ? Number(query.get("attempt")) : undefined}
+        initialView={
+          ["conversation", "checks", "run"].includes(query.get("view") ?? "")
+            ? (query.get("view") as TaskView)
+            : undefined
+        }
+        onNavigate={(selection) => navigate(taskRoute(selection))}
       />
     ),
   },

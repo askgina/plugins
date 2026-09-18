@@ -11,10 +11,21 @@ import {
   PUBLIC_EVAL_DECODE_OPTIONS,
   PublicEvalIdentifierSchema,
   PublicEvalModelSchema,
+  PublicEvalSha256Schema,
   PublicEvalTimestampSchema,
 } from "../packages/contracts/src/eval-results";
 import { isSafePublicEvalText } from "../packages/evals/src/sanitize";
 import { isUnknownRecord } from "../packages/evals/src/type-guards";
+import {
+  PUBLIC_TRANSCRIPTS_COUNT,
+  PUBLIC_TRANSCRIPTS_INDEX_SHA256,
+} from "../apps/evals/src/lib/public-transcript-manifest";
+import {
+  isPublicTranscript,
+  isPublicTranscriptIndex,
+  publicTranscriptPath,
+  type PublicTranscriptEntry,
+} from "../apps/evals/src/lib/public-transcript-schema";
 
 const WITHHELD = "withheld: privacy_review";
 const Count = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
@@ -36,7 +47,7 @@ const Observation = Schema.Struct({
   started_at: PublicEvalTimestampSchema,
   status: Schema.Literals(["completed", "failed"]),
   duration_ms: Count,
-  token_usage: TokenUsage,
+  token_usage: Schema.NullOr(TokenUsage),
 });
 const ScoreDimension = Schema.Struct({
   score: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })),
@@ -53,7 +64,19 @@ const Score = Schema.Struct({
   total_result_bytes: Count,
 });
 const TrialError = Schema.Struct({
-  tag: Schema.Literals(["PluginEvalOmpHarnessProcessError", "PluginEvalOmpHarnessTimeoutError"]),
+  tag: Schema.Literals([
+    "PluginEvalOmpHarnessProcessError",
+    "PluginEvalOmpHarnessTimeoutError",
+    "PluginEvalOmpHarnessSpawnError",
+    "PluginEvalOmpHarnessMcpError",
+    "PluginEvalMuseCliTimeoutError",
+    "PluginEvalMuseCliProcessError",
+    "PluginEvalMuseMcpError",
+    "PluginEvalDevinTimeoutError",
+    "PluginEvalDevinSpawnError",
+    "PluginEvalDevinMcpError",
+    "PluginEvalDevinProcessError",
+  ]),
   reason: Schema.NullOr(Schema.Literal(WITHHELD)),
 });
 const Trial = Schema.Struct({
@@ -75,6 +98,35 @@ const Dimensions = Schema.Struct({
   skill_activation: DimensionCounts,
 });
 
+const RuntimeClassificationCounts = Schema.Struct({
+  planned: Count,
+  terminal: Count,
+  graded: Count,
+  passed: Count,
+  failed: Count,
+  unscored: Count,
+  timeouts: Count,
+  pending: Count,
+});
+const RuntimeClassification = Schema.Struct({
+  schemaVersion: Schema.Literal("ask-gina-runtime-classification.v1"),
+  receipt: Schema.Literal("classification-receipt.json"),
+  receiptAvailability: Schema.Literal("withheld"),
+  receiptSha256: PublicEvalSha256Schema,
+  classifierSha256: PublicEvalSha256Schema,
+  derived: Schema.Literal(true),
+  scope: Schema.Literal("post-run-runtime-classification"),
+  noAnswerRegrade: Schema.Literal(true),
+  noOutcomeSelectiveRerun: Schema.Literal(true),
+  rawEvidenceUnchanged: Schema.Literal(true),
+  observationFiles: Schema.Literal("raw-unchanged"),
+  counts: Schema.Struct({
+    raw: RuntimeClassificationCounts,
+    corrected: RuntimeClassificationCounts,
+    changed: Count,
+  }),
+});
+
 // Schema.is is a type guard, not the exporter's excess-property decoder.
 // Decode strictly, discard the decoded value, and leave public bytes unchanged.
 const strictFields: Readonly<Record<string, (value: unknown) => Option.Option<unknown>>> = {
@@ -83,7 +135,11 @@ const strictFields: Readonly<Record<string, (value: unknown) => Option.Option<un
   score: Schema.decodeUnknownOption(Schema.NullOr(Score), PUBLIC_EVAL_DECODE_OPTIONS),
   error: Schema.decodeUnknownOption(Schema.NullOr(TrialError), PUBLIC_EVAL_DECODE_OPTIONS),
   dimensions: Schema.decodeUnknownOption(Dimensions, PUBLIC_EVAL_DECODE_OPTIONS),
-  token_usage: Schema.decodeUnknownOption(TokenUsage, PUBLIC_EVAL_DECODE_OPTIONS),
+  token_usage: Schema.decodeUnknownOption(Schema.NullOr(TokenUsage), PUBLIC_EVAL_DECODE_OPTIONS),
+  runtimeClassification: Schema.decodeUnknownOption(
+    Schema.NullOr(RuntimeClassification),
+    PUBLIC_EVAL_DECODE_OPTIONS,
+  ),
 };
 const RAW_FIELDS: Readonly<Record<string, true>> = {
   activatedskills: true,
@@ -130,12 +186,16 @@ const REASONING_LEVELS: Readonly<Record<string, true>> = {
   xhigh: true,
   max: true,
   auto: true,
+  none: true,
 };
 const DIGEST = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u;
 const CLAUDE_ID = /(?:^|[/-])claude(?:[/-]|$)/iu;
 // Freeze the reviewed legacy projections, including their free-form source
 // metadata. New paths or changed bytes require a new explicit privacy review.
 const APPROVED_CLAUDE_ARTIFACTS: Readonly<Record<string, string>> = {
+  // Numeric-only costs; user explicitly approved public inclusion on 2026-09-18.
+  "src/results/2026-09-16/reasoning-sweep/native-cost-estimates.json":
+    "ce34869373a72390ca458c721f201ebcb14180e789be9f19095ca301063d8c6a",
   "src/results/2026-09-14/claude-comparison/ask-gina-claude-comparison.json":
     "acf6b70af1dafe75b305326555244e3798f02bcce390dfde4d2ffa299e8bd573",
   "src/results/2026-09-14/claude-comparison/fable/manifest.json":
@@ -162,6 +222,28 @@ const APPROVED_CLAUDE_ARTIFACTS: Readonly<Record<string, string>> = {
     "678bb0a4a8bf78122bc47fa67d28a590eef97a2e41405bf6419112de4f658655",
   "src/results/2026-09-14/claude-comparison/verification.json":
     "2e94fc424fd8f5d113cc12eaf1652ed6543d752f1c0f0a8bdae6169cff49dabd",
+  "src/results/2026-09-16/reasoning-sweep/ask-gina-reasoning-sweep-claude.json":
+    "11ece4bed01869d5ffa527356f2ef238f6f7f5e4eb31e21a67587b405c7bf50e",
+  "src/results/2026-09-16/reasoning-sweep/reproduction/provenance.json":
+    "42c7b624e51243db81b3efd183f46391948285d3a5799c84a63d2dc731a67afd",
+  "src/results/2026-09-16/reasoning-sweep/verification.json":
+    "689cef4e22af910e1aa7ff76ff6dc837c16320fa993e9fd459d9ddffac595319",
+  "src/results/2026-09-16/reasoning-sweep/rows/fable-high.json":
+    "0d3f04d44dbf0e98bea6c5d7975505e39227f316b277b3f1509f4b4c91078218",
+  "src/results/2026-09-16/reasoning-sweep/rows/fable-low.json":
+    "b08aaa7655458f24443e655f9180fbe7ddb0aa95e2fde9814f818fd1211c7098",
+  "src/results/2026-09-16/reasoning-sweep/rows/fable-max.json":
+    "74c4b82bc921de30df0586eebe335f2ba6f79cc1dd5ebb64c25ebca2a650674b",
+  "src/results/2026-09-16/reasoning-sweep/rows/fable-medium.json":
+    "5591398e1c758018574b86f8f304ec51b07fc2a45eda23bdd8c188412906f2c8",
+  "src/results/2026-09-16/reasoning-sweep/rows/opus-high.json":
+    "fae1d2eefddcd092b63c8fa3e6d4b3330d5e0b0efdf8212145e38501ecd28873",
+  "src/results/2026-09-16/reasoning-sweep/rows/opus-low.json":
+    "a97890fb582e740437ec21edf5b9d156a9e8dd270a76f21b8355f86571e8053b",
+  "src/results/2026-09-16/reasoning-sweep/rows/opus-max.json":
+    "0b2f48588e105a01b997da02079e9454cd225659f89a1c7b12daa62d7700a8ba",
+  "src/results/2026-09-16/reasoning-sweep/rows/opus-medium.json":
+    "7e8c040a63aeb74248df73fd683deb0d0fb37f52fee58616b786a361c9aeb1d5",
 };
 const textDecoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const decodeArtifactJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
@@ -241,6 +323,29 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
       (yield* path
         .fromFileUrl(new URL("../apps/evals/", import.meta.url))
         .pipe(Effect.mapError(() => fail("apps/evals", "unreadable_artifact"))));
+    const transcriptFiles = new Map<string, PublicTranscriptEntry>();
+    const transcriptIndex = "public/transcripts/index.json";
+    const hasTranscripts = yield* fs
+      .exists(path.join(root, "public/transcripts"))
+      .pipe(Effect.mapError(() => fail(transcriptIndex, "unreadable_artifact")));
+    if (appRoot === undefined && !hasTranscripts)
+      return yield* fail(transcriptIndex, "unreadable_artifact");
+    if (hasTranscripts) {
+      const bytes = yield* fs
+        .readFile(path.join(root, transcriptIndex))
+        .pipe(Effect.mapError(() => fail(transcriptIndex, "unreadable_artifact")));
+      if (createHash("sha256").update(bytes).digest("hex") !== PUBLIC_TRANSCRIPTS_INDEX_SHA256)
+        return yield* fail(transcriptIndex, "unapproved_artifact");
+      const index = yield* Effect.try(() => textDecoder.decode(bytes)).pipe(
+        Effect.flatMap(decodeArtifactJson),
+        Effect.mapError(() => fail(transcriptIndex, "invalid_json")),
+      );
+      if (!isPublicTranscriptIndex(index) || index.conversationCount !== PUBLIC_TRANSCRIPTS_COUNT)
+        return yield* fail(transcriptIndex, "unapproved_artifact");
+      for (const entry of index.files)
+        transcriptFiles.set(`public/transcripts/${entry.path}`, entry);
+    }
+    const seenTranscripts = new Set<string>();
     const visit = (relative: string): Effect.Effect<void, EvalPublicArtifactError> =>
       Effect.gen(function* () {
         const absolute = path.join(root, relative);
@@ -259,7 +364,11 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
           return;
         }
         if (info.type !== "File") return yield* fail(relative, "unsupported_entry");
-        if (!relative.toLowerCase().endsWith(".json")) return;
+        const publicTranscript = relative.startsWith("public/transcripts/");
+        if (!relative.toLowerCase().endsWith(".json")) {
+          if (publicTranscript) return yield* fail(relative, "unapproved_artifact");
+          return;
+        }
         const bytes = yield* fs
           .readFile(absolute)
           .pipe(Effect.mapError(() => fail(relative, "unreadable_artifact")));
@@ -267,8 +376,28 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
           Effect.flatMap(decodeArtifactJson),
           Effect.mapError(() => fail(relative, "invalid_json")),
         );
-        if (/claude/iu.test(relative) || hasClaudeIdentity(input)) {
+        // Only the reviewed, immutable public projection can carry visible chat
+        // content. Raw/native evidence remains forbidden everywhere else.
+        if (publicTranscript) {
+          if (relative === transcriptIndex) return;
+          const entry = transcriptFiles.get(relative);
+          if (
+            entry === undefined ||
+            bytes.byteLength !== entry.bytes ||
+            createHash("sha256").update(bytes).digest("hex") !== entry.sha256 ||
+            !isPublicTranscript(input) ||
+            publicTranscriptPath(input.reference) !== entry.path
+          )
+            return yield* fail(relative, "unapproved_artifact");
+          seenTranscripts.add(relative);
+          return;
+        }
+        const claudeBearing = /claude/iu.test(relative) || hasClaudeIdentity(input);
+        const sweepArtifact = relative.startsWith("src/results/2026-09-16/reasoning-sweep/");
+        if (claudeBearing || sweepArtifact) {
           yield* validateClaudePublicArtifact(input, relative);
+        }
+        if (claudeBearing) {
           if (
             !Object.hasOwn(APPROVED_CLAUDE_ARTIFACTS, relative) ||
             createHash("sha256").update(bytes).digest("hex") !== APPROVED_CLAUDE_ARTIFACTS[relative]
@@ -279,6 +408,8 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
       });
     yield* visit("src");
     yield* visit("public");
+    if (seenTranscripts.size !== transcriptFiles.size)
+      return yield* fail(transcriptIndex, "unreadable_artifact");
   });
 
 const services = Layer.merge(BunFileSystem.layer, BunPath.layer);

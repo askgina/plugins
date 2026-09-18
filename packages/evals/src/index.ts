@@ -207,6 +207,7 @@ export {
 export {
   ALLOWED_SYNTHETIC_FIXTURE_PROMPTS,
   findPublicTextViolations,
+  findPublicCredentialViolations,
   HermeticEvalSanitizationError,
   isSafePublicEvalText,
   SanitizedEvalAggregateSchema,

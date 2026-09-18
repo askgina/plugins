@@ -220,19 +220,9 @@ const isCanonicalBasicCredential = (value: string): boolean => {
   }
 };
 
-/**
- * Enumerates value-free public-text policy violations. It deliberately returns
- * only categories and offsets so callers can reject text without persisting a secret.
- */
-export const findPublicTextViolations = (text: string): readonly PublicTextViolation[] => {
-  if (
-    ALLOWED_SYNTHETIC_FIXTURE_PROMPTS.includes(
-      text as (typeof ALLOWED_SYNTHETIC_FIXTURE_PROMPTS)[number],
-    )
-  ) {
-    return [];
-  }
-
+/** The credential rules used by the generic source boundary, without computing
+ * unrelated path/assignment findings that that boundary already discards. */
+export const findPublicCredentialViolations = (text: string): readonly PublicTextViolation[] => {
   const violations: PublicTextViolation[] = [];
   addPatternViolations(violations, "github-token", text, GITHUB_TOKEN);
   addPatternViolations(violations, "provider-api-key", text, PROVIDER_API_KEY);
@@ -247,6 +237,26 @@ export const findPublicTextViolations = (text: string): readonly PublicTextViola
   addPatternViolations(violations, "basic-credential", text, BASIC_CREDENTIAL, (match) =>
     isCanonicalBasicCredential(match[1] ?? ""),
   );
+  addPatternViolations(violations, "uri-userinfo", text, URI_USERINFO);
+  addPatternViolations(violations, "private-key", text, PRIVATE_KEY_BLOCK);
+  return violations.sort(
+    (left, right) => left.index - right.index || left.kind.localeCompare(right.kind),
+  );
+};
+
+/**
+ * Enumerates value-free public-text policy violations. It deliberately returns
+ * only categories and offsets so callers can reject text without persisting a secret.
+ */
+export const findPublicTextViolations = (text: string): readonly PublicTextViolation[] => {
+  if (
+    ALLOWED_SYNTHETIC_FIXTURE_PROMPTS.includes(
+      text as (typeof ALLOWED_SYNTHETIC_FIXTURE_PROMPTS)[number],
+    )
+  ) {
+    return [];
+  }
+  const violations = [...findPublicCredentialViolations(text)];
   addPatternViolations(
     violations,
     "header-credential",
@@ -262,8 +272,6 @@ export const findPublicTextViolations = (text: string): readonly PublicTextViola
     (match) => !isExplicitSyntheticHeaderCredential(match, match[1] ?? match[2] ?? match[3] ?? ""),
   );
   addPatternViolations(violations, "host-absolute-path", text, FILE_ABSOLUTE_URI);
-  addPatternViolations(violations, "uri-userinfo", text, URI_USERINFO);
-  addPatternViolations(violations, "private-key", text, PRIVATE_KEY_BLOCK);
   addPatternViolations(violations, "host-absolute-path", text, POSIX_ABSOLUTE_PATH, (match) => {
     const prefix = text.slice(0, match.index);
     return !/[A-Za-z][A-Za-z0-9+.-]*:[^\s]*$/u.test(prefix) && text[match.index - 1] !== "/";

@@ -10,6 +10,7 @@ import type { ReactNode } from "react";
 import type {
   CanonicalAttempt,
   CheckOutcome,
+  CanonicalRun,
   DispatchCoverage,
   Evidence,
   ExecutionStatus,
@@ -20,7 +21,9 @@ import type {
 } from "./canonical";
 import {
   dispatchCoverageText,
+  eligibilityText,
   gradedOnlyLabel,
+  scoringCoverageFor,
   type GradedOnlyRate,
   type Headline,
 } from "./selectors";
@@ -102,22 +105,25 @@ export function ExecutionChip({
   return <span className="eval-demo-label">{label}</span>;
 }
 
-export function CoverageChip({ coverage }: { coverage: DispatchCoverage }) {
+export function CoverageChip({ run }: { run: Pick<CanonicalRun, "counts" | "dispatchCoverage"> }) {
+  const coverage = scoringCoverageFor(run);
+  const dispatch = dispatchCoverageText(run.dispatchCoverage);
   if (coverage === "complete") {
     return (
-      <span className="eval-score eval-score-positive">
-        <strong>coverage complete</strong>
+      <span className="eval-score eval-score-positive" title={dispatch}>
+        <strong>Fully scored</strong>
       </span>
     );
   }
-  if (coverage === "incomplete") {
-    return (
-      <span className="eval-score eval-score-negative">
-        <strong>coverage incomplete</strong>
-      </span>
-    );
-  }
-  return <span className="eval-demo-label">coverage unknown</span>;
+  return (
+    <span className="eval-demo-label" title={dispatch}>
+      {coverage === "none"
+        ? "Not scored"
+        : coverage === "partial"
+          ? "Partially scored"
+          : "Scoring coverage unknown"}
+    </span>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -255,7 +261,7 @@ export function OutcomeMatrixCell({ attempt }: { attempt: CanonicalAttempt | und
 // Headline + graded-only rate
 // ---------------------------------------------------------------------------
 
-/** passes/started when coverage is complete; counts + reason otherwise. */
+/** passes/started when dispatch and grading are complete; counts + reason otherwise. */
 export function HeadlineValue({ headline }: { headline: Headline }) {
   if (headline.kind === "rate") {
     return (
@@ -265,16 +271,27 @@ export function HeadlineValue({ headline }: { headline: Headline }) {
     );
   }
   return (
-    <span className="eval-compare-row">
+    <span className="eval-headline-stack">
       <span className="lb-count">
-        {headline.passed}/{headline.started}
+        {headline.passed} passed · {headline.started} started
       </span>
-      <AvailabilityMark
-        availability={headline.reason === "incomplete_coverage" ? "not_retained" : "not_recorded"}
-        reason={
-          headline.reason === "incomplete_coverage" ? "incomplete coverage" : "coverage unknown"
-        }
-      />
+      {headline.reason === "incomplete_grading" ? (
+        <span className="eval-muted" title={eligibilityText(headline.reason)}>
+          Incomplete grading · counts only · not ranked
+        </span>
+      ) : (
+        <>
+          <AvailabilityMark
+            availability={
+              headline.reason === "incomplete_coverage" ? "not_retained" : "not_recorded"
+            }
+            reason={
+              headline.reason === "incomplete_coverage" ? "incomplete coverage" : "coverage unknown"
+            }
+          />
+          <span className="eval-muted">Counts only · not ranked</span>
+        </>
+      )}
     </span>
   );
 }

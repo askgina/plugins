@@ -1,5 +1,6 @@
 import { type CSSProperties, type ReactNode } from "react";
 import { X } from "lucide-react";
+import { reasoningSweepPublication } from "../results";
 import { Button } from "./ui/button";
 import { DialogRoot, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 
@@ -35,7 +36,20 @@ export function PageShell({
       <header className="eval-header">
         <a className="eval-wordmark" href="#/leaderboard" aria-label="Ask Gina home">
           <img src="/favicon.svg" width={40} height={40} alt="" />
-          <strong>Ask Gina</strong>
+          <img
+            className="eval-wordmark-light"
+            src="/images/brand/typography-full-blackOnNone-v2.svg"
+            width={104}
+            height={30}
+            alt=""
+          />
+          <img
+            className="eval-wordmark-dark"
+            src="/images/brand/typography-full-whiteOnNone-v2.svg"
+            width={104}
+            height={30}
+            alt=""
+          />
         </a>
         <nav className="eval-nav" aria-label="Main navigation">
           {navigation.map((item) => (
@@ -50,6 +64,16 @@ export function PageShell({
         </nav>
       </header>
       <main id="eval-main" className="eval-main" tabIndex={-1}>
+        {(reasoningSweepPublication.publishedRows < reasoningSweepPublication.plannedRows ||
+          reasoningSweepPublication.publishedSlots < reasoningSweepPublication.plannedSlots) && (
+          <p className="eval-container eval-muted" role="status">
+            <strong>Partial sweep.</strong> {reasoningSweepPublication.publishedRows}/
+            {reasoningSweepPublication.plannedRows} reasoning rows and{" "}
+            {reasoningSweepPublication.publishedSlots}/{reasoningSweepPublication.plannedSlots}{" "}
+            planned slots published. Remaining rows are not included yet; runtime failures may
+            remain unscored.
+          </p>
+        )}
         {children}
       </main>
       <footer className="eval-footer">
@@ -66,6 +90,8 @@ const providerLogos: Readonly<Record<string, string>> = {
   anthropic: "/images/model-logos/claude.svg",
   muse: "/images/model-logos/meta.svg",
   meta: "/images/model-logos/meta.svg",
+  xai: "/images/model-logos/grok.svg",
+  google: "/images/model-logos/gemini.svg",
 };
 
 export function ModelAvatar({
@@ -75,15 +101,43 @@ export function ModelAvatar({
   model: { name: string; mark: string; color: string; id?: string; provider?: string };
   size?: "sm" | "lg";
 }) {
-  const logo = providerLogos[model.provider?.toLowerCase() ?? ""];
+  const cognition = model.id === "swe-2";
+  const logo = cognition
+    ? "/images/model-logos/cognition-avatar-white.png"
+    : providerLogos[model.provider?.toLowerCase() ?? ""];
+  const monochrome = model.provider?.toLowerCase() === "xai";
   return (
     <span
-      className={`eval-avatar eval-avatar-${size} ${logo ? "eval-avatar-logo" : ""} ${model.id ? `eval-avatar-${model.id}` : ""}`}
-      style={{ "--model-color": model.color } as CSSProperties}
+      className={`eval-avatar eval-avatar-${size} ${logo ? "eval-avatar-logo" : ""} ${monochrome ? "eval-avatar-monochrome" : ""} ${model.id ? `eval-avatar-${model.id}` : ""}`}
+      style={
+        {
+          "--model-color": model.color,
+          ...(monochrome ? { "--model-logo": `url("${logo}")` } : {}),
+        } as CSSProperties
+      }
       aria-hidden="true"
     >
-      {logo ? (
-        <img src={logo} alt="" width={size === "lg" ? 38 : 24} height={size === "lg" ? 38 : 24} />
+      {monochrome ? (
+        <span className="eval-avatar-mask" />
+      ) : logo ? (
+        <>
+          <img
+            className={cognition ? "eval-avatar-image-light" : undefined}
+            src={logo}
+            alt=""
+            width={size === "lg" ? 38 : 24}
+            height={size === "lg" ? 38 : 24}
+          />
+          {cognition && (
+            <img
+              className="eval-avatar-image-dark"
+              src="/images/model-logos/cognition-avatar-black.png"
+              alt=""
+              width={size === "lg" ? 38 : 24}
+              height={size === "lg" ? 38 : 24}
+            />
+          )}
+        </>
       ) : (
         model.mark
       )}

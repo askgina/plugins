@@ -60,6 +60,37 @@
   height: auto;
   margin: 0 auto;
 }
+.lb-scatterplot-compact {
+  min-width: 0;
+}
+.lb-chart-legend {
+  font-size: 12px;
+  color: var(--eval-muted);
+}
+.lb-chart-legend summary {
+  min-height: 44px;
+  padding: 12px 0;
+  cursor: pointer;
+}
+.lb-chart-legend ol {
+  margin: 0;
+  padding-left: 24px;
+}
+.lb-chart-legend li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--eval-line);
+}
+.lb-chart-legend a {
+  display: inline-block;
+  min-height: 44px;
+  padding-top: 12px;
+  color: var(--eval-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.lb-chart-legend span {
+  display: block;
+}
 .lb-chart-grid line {
   stroke: var(--eval-line);
   stroke-width: 1;
@@ -73,6 +104,11 @@
 }
 .lb-chart-point-halo {
   fill: var(--eval-paper);
+}
+.lb-chart-label-line {
+  stroke: var(--eval-muted);
+  stroke-width: 0.6;
+  opacity: 0.5;
 }
 .lb-chart-hit {
   fill: transparent;

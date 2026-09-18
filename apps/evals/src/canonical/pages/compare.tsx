@@ -35,10 +35,12 @@ import {
   getWithdrawnRun,
   headlineFor,
   resolveBaselineRun,
+  scoringCoverageFor,
 } from "../selectors";
 import {
   AvailabilityMark,
   CoverageChip,
+  CoverageLabel,
   ExecutionChip,
   HeadlineValue,
   LatencyValue,
@@ -104,6 +106,16 @@ function reasonContext(
       return `applies to ${sides
         .map((run) => `${sideName(run, left)} (${run.dispatchCoverage} coverage)`)
         .join(", ")}`;
+    }
+    case "incomplete_grading": {
+      const sides = [left, right].flatMap((run, index) =>
+        scoringCoverageFor(run) === "complete"
+          ? []
+          : [
+              `${index === 0 ? "left" : "right"} (${run.counts.graded}/${run.counts.started} graded/started)`,
+            ],
+      );
+      return `applies to ${sides.join(", ")}`;
     }
     case "synthetic": {
       const sides = [left, right].filter((run) => run.origin === "synthetic");
@@ -175,8 +187,8 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
           <OriginTag origin={run.origin} />
         </div>
         <div className="eval-compare-chip-row">
-          <CoverageChip coverage={run.dispatchCoverage} />
-          <span className="eval-compare-condition">grading {run.gradingCoverage}</span>
+          <CoverageChip run={run} />
+          <span className="eval-compare-condition">dispatch {run.dispatchCoverage}</span>
           <span className="eval-compare-condition">checks {run.checkSource}</span>
           <span className="eval-compare-condition">{run.caseBinding}</span>
           {run.withheldFields.map((field) => (
@@ -338,19 +350,19 @@ function CoveragePanel({ left, right }: { left: CanonicalRun; right: CanonicalRu
             <tr>
               <th scope="row">dispatch coverage</th>
               <td>
-                <CoverageChip coverage={left.dispatchCoverage} />
+                <CoverageLabel coverage={left.dispatchCoverage} />
               </td>
               <td>
-                <CoverageChip coverage={right.dispatchCoverage} />
+                <CoverageLabel coverage={right.dispatchCoverage} />
               </td>
             </tr>
             <tr>
-              <th scope="row">grading coverage</th>
+              <th scope="row">scoring coverage</th>
               <td>
-                <span className="eval-compare-condition">{left.gradingCoverage}</span>
+                <CoverageChip run={left} />
               </td>
               <td>
-                <span className="eval-compare-condition">{right.gradingCoverage}</span>
+                <CoverageChip run={right} />
               </td>
             </tr>
             {COUNT_ROWS.map((row) => (

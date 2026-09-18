@@ -21,7 +21,16 @@ export function MethodologyPage() {
     runs.some((run) => run.campaignId === campaign.campaignId),
   );
   const repetitions = [...new Set(runs.map((run) => run.cohort.repetitions))];
-  const timeouts = [...new Set(campaigns.map((campaign) => campaign.timeoutMs / 1000))];
+  const timeouts = [
+    ...new Set(
+      runs.flatMap((run) => {
+        const timeout =
+          run.timeoutMs ??
+          campaigns.find((campaign) => campaign.campaignId === run.campaignId)?.timeoutMs;
+        return timeout == null ? [] : [timeout / 1000];
+      }),
+    ),
+  ].sort((a, b) => a - b);
   return (
     <PageShell active="methodology">
       <div className="eval-container results-page">
@@ -63,16 +72,18 @@ export function MethodologyPage() {
                 <summary>Clients, settings, and run dates</summary>
                 <div>
                   <p>
-                    Muse runs through its native client. OpenAI and Anthropic models run through the
-                    OMP harness. The leaderboard shows them together, but these results reflect the
-                    model and its client setup, not an isolated model-only comparison.
+                    Runs use the OMP harness, native Muse, or native Devin. The leaderboard shows
+                    them together, but these results reflect the model and its client setup, not an
+                    isolated model-only comparison.
                   </p>
                   {campaigns.map((campaign) => (
                     <div className="method-record" key={campaign.campaignId}>
                       <h3>{campaign.harness}</h3>
                       <p>
                         {campaign.date} · {campaign.repetitions} attempts per task ·{" "}
-                        {campaign.timeoutMs / 1000}s timeout
+                        {campaign.timeoutMs === null
+                          ? "route-specific timeouts"
+                          : `${campaign.timeoutMs / 1000}s timeout`}
                       </p>
                       <ul>
                         {runs
@@ -119,9 +130,16 @@ export function MethodologyPage() {
                 full precision; the table displays one decimal place.
               </p>
               <p>
-                Timeouts and run errors count as started attempts but not passes. We show a category
-                percentage only when dispatch coverage is complete. If any category is missing or
-                incomplete, Overall is unavailable. An unavailable value is never treated as zero.
+                Timeouts and run errors count as started attempts but remain unscored. We show a
+                category percentage only when dispatch and grading are complete. Otherwise, the
+                results are counts-only and excluded from quality rankings. If any category is
+                missing or incompletely graded, Overall is unavailable. An unavailable value is
+                never treated as zero. The leaderboard shows every recorded model, reasoning
+                setting, and campaign as a separate row. Complete and incomplete results remain
+                visible together; campaign and grading filters narrow the view explicitly. Each row
+                retains its category outcomes, timing and cost sample counts, timeout budget,
+                repetitions, source hashes, and links to individual attempts. Sorting does not make
+                different clients, reasoning settings, or time budgets equivalent.
               </p>
               <p>
                 Sorting describes these observed results. It does not establish statistical
@@ -134,17 +152,34 @@ export function MethodologyPage() {
                 <strong>Average time</strong> is the sum of completed-attempt durations divided by
                 the number of completed attempts across all three categories. It excludes timeouts
                 and run errors. If any completed attempt lacks a timing, we leave the full-suite
-                mean unavailable instead of averaging medians.
+                mean unavailable instead of averaging medians. Incomplete grading does not hide
+                retained timings: expanded run details show the measured sample count and how many
+                started attempts were excluded.
               </p>
               <p>
-                <strong>Estimated cost per task</strong> uses recorded input and output token totals
-                and the model’s published token prices, divided by the attempts covered by those
-                records. Here, a task means one attempt. It is an estimate, not a bill; token
-                records may exclude failed or timed-out attempts.
+                <strong>Estimated cost per task</strong> uses retained native usage and divides by
+                completed attempts with cost records. OMP supplies per-message USD estimates,
+                including cache reads and writes. Devin uses its retained model catalogue rates and
+                cached-token totals; that catalogue explicitly lists SWE-2 as Free. Muse uses{" "}
+                <a
+                  href="https://dev.meta.ai/docs/pricing-rate-limits"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Meta’s standard API rates
+                </a>{" "}
+                checked September 18: $1.25 per million uncached input tokens, $0.15 cached input,
+                and $4.25 output. These are API-equivalent estimates, not Muse subscription charges.
+                The records are matched to the published model, source summary, and attempt token
+                totals. Graded failures are included; timeouts and run errors are excluded. Older
+                runs use recorded tokens and their listed price source. No estimate is a billing
+                receipt.
               </p>
               <p>
-                Time and cost need data from all three categories. Open a model’s row to see sample
-                counts, exclusions, category timing percentiles, and pricing sources.
+                Overall scores and average time need data from all three categories. Cost may cover
+                a smaller recorded population, labelled with the available categories, such as Spot
+                only. Open a model’s row to see sample counts, exclusions, category timing
+                percentiles, and pricing sources.
               </p>
             </li>
           </ol>
@@ -158,7 +193,8 @@ export function MethodologyPage() {
                       {campaign.date}: {campaign.harness}
                     </h2>
                     <p>
-                      Source commit: <code>{campaign.sourceCommit}</code>
+                      Source commit:{" "}
+                      <code>{campaign.sourceCommit ?? "Recorded per route and run"}</code>
                     </p>
                     {campaign.executableSourceCommit && (
                       <p>

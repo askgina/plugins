@@ -304,7 +304,6 @@
   }
 
   html {
-    min-width: 320px;
     background: var(--background);
     font-family: var(--font-sans);
     text-rendering: optimizeLegibility;

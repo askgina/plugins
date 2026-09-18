@@ -1,6 +1,26 @@
 .results-page {
   padding-bottom: 64px;
 }
+.results-cost-value {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  white-space: nowrap;
+}
+.results-cost-value small {
+  font-size: 10px;
+  color: var(--eval-muted);
+}
+.results-outcome-value {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.results-outcome-value small {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--eval-muted);
+}
 .eval-hero.results-header {
   padding: 36px 0 28px;
 }
@@ -63,8 +83,12 @@
   font-size: 13px;
 }
 .results-search:focus-within {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 1px var(--ring);
+}
+/* The wrapper owns the focus indicator, including the search icon. */
+.eval-app .results-search input:focus-visible {
+  outline: none;
 }
 .results-scroll {
   overflow-x: auto;
@@ -137,6 +161,51 @@
   color: var(--eval-muted);
   font-weight: 400;
   margin-top: 3px;
+}
+.results-model .results-configuration-label {
+  font-weight: 600;
+  color: var(--eval-ink);
+}
+.results-row-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+.results-row-actions .results-chat-trigger {
+  margin-left: 0;
+}
+.results-eligibility {
+  max-width: 200px;
+  white-space: normal;
+}
+.results-filter-bar {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.results-filter-bar label {
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+}
+.results-filter-bar select {
+  max-width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--eval-line);
+  border-radius: 5px;
+  color: var(--eval-ink);
+  background: var(--eval-paper);
+}
+.results-filter-summary {
+  margin: 0 0 2px auto;
+  font-size: 12px;
+}
+.results-filter-summary span {
+  display: block;
+  margin-top: 4px;
+  color: var(--eval-muted);
 }
 .results-model a:hover,
 .results-score-link:hover {

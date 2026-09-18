@@ -50,7 +50,10 @@ import {
 const DEFAULT_TIMEOUT_MS = 120_000;
 const MAX_MCP_TOOL_PAGES = 32;
 const MAX_MCP_CLOSE_WAIT_MS = 1_000;
-const MAX_SESSION_DESTROY_WAIT_MS = 8_000;
+// Session teardown competes with the trial deadline, never with a fixed 8 s
+// budget: under concurrent rows `omp acp` can take >8 s to exit, and a
+// completed generation must not be discarded as generation-failed for that.
+const MAX_SESSION_DESTROY_WAIT_MS = 30_000;
 const MAX_TRANSCRIPT_CALLBACK_WAIT_MS = 5_000;
 const OMP_TRANSCRIPT_TOOL_EXECUTION_FAILED = "[tool execution failed]";
 const OMP_TRANSCRIPT_TOOL_OUTPUT_DENIED = "[tool output denied]";

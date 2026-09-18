@@ -1,0 +1,381 @@
+.conversation-panel {
+  margin-top: 12px;
+}
+.conversation-view {
+  min-width: 0;
+  max-width: 100%;
+  color: var(--eval-ink);
+}
+.conversation-heading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 16px 0 4px;
+}
+.conversation-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.conversation-title span {
+  display: inline-block;
+  margin-left: 12px;
+  color: var(--eval-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.conversation-capture {
+  padding: 3px 8px;
+  border: 1px solid var(--eval-line);
+  border-radius: 5px;
+  color: var(--eval-muted);
+  font-size: 11px;
+}
+.conversation-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 860px;
+  margin: 10px 0 14px;
+}
+.conversation-format {
+  display: flex;
+  margin-left: auto;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 7px;
+  background: var(--sand-3);
+}
+.conversation-format button[aria-pressed="true"] {
+  background: var(--sand-1);
+  color: var(--sand-12);
+  box-shadow: 0 1px 3px color-mix(in oklch, var(--sand-12) 10%, transparent);
+}
+.conversation-label {
+  color: var(--eval-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.conversation-notices {
+  border: 1px solid var(--eval-line);
+  border-radius: 8px;
+  background: var(--sand-2);
+  padding: 8px 12px 8px 28px;
+  font-size: 13px;
+  line-height: 1.55;
+  max-width: 75ch;
+  margin-bottom: 8px;
+}
+.conversation-messages {
+  padding: 0;
+  margin: 14px 0;
+  list-style: none;
+}
+.conversation-view .conversation-message {
+  margin: 0;
+  padding: 12px 0 14px;
+  border-top: 1px solid var(--eval-line);
+  min-width: 0;
+  max-width: 860px;
+}
+.conversation-speaker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  max-width: none;
+}
+.conversation-speaker > .conversation-label {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+}
+.conversation-role-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  color: var(--sand-11);
+  background: var(--sand-3);
+}
+.conversation-model-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.conversation-speaker .eval-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+}
+.conversation-body > :first-child {
+  margin-top: 0;
+}
+.conversation-body > :last-child {
+  margin-bottom: 0;
+}
+.conversation-body {
+  padding-left: 32px;
+  min-width: 0;
+}
+.conversation-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 8px 0;
+}
+.conversation-code,
+.conversation-markdown pre {
+  font-family: var(--font-mono);
+  padding: 10px 12px;
+  border: 1px solid var(--eval-line);
+  border-radius: 8px;
+  background: var(--sand-2);
+  color: var(--sand-12);
+  max-height: 32rem;
+  overflow: auto;
+  tab-size: 2;
+}
+.conversation-code code {
+  font: inherit;
+}
+.conversation-code [data-token="key"] {
+  color: var(--brown-11);
+}
+.conversation-code [data-token="string"] {
+  color: var(--green-11);
+}
+.conversation-code [data-token="value"] {
+  color: var(--blue-11);
+}
+.conversation-markdown {
+  max-width: 75ch;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.conversation-markdown > :first-child {
+  margin-top: 0;
+}
+.conversation-markdown > :last-child {
+  margin-bottom: 0;
+}
+.conversation-markdown p {
+  margin: 0 0 8px;
+}
+.conversation-markdown :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+  margin: 18px 0 8px;
+  color: var(--eval-ink);
+}
+.conversation-markdown h1 {
+  font-size: 22px;
+}
+.conversation-markdown h2 {
+  font-size: 19px;
+}
+.conversation-markdown h3 {
+  font-size: 17px;
+}
+.conversation-markdown :is(h4, h5, h6) {
+  font-size: 14px;
+}
+.conversation-markdown :is(ul, ol) {
+  padding-left: 22px;
+  margin: 8px 0 10px;
+}
+.conversation-markdown ul {
+  list-style: disc;
+}
+.conversation-markdown ol {
+  list-style: decimal;
+}
+.conversation-view .conversation-markdown li {
+  margin: 2px 0;
+  padding-left: 3px;
+}
+.conversation-markdown li::marker {
+  color: var(--eval-muted);
+}
+.conversation-markdown li > :is(ul, ol) {
+  margin: 2px 0;
+}
+.conversation-markdown li > p {
+  margin: 0;
+}
+.conversation-markdown strong {
+  color: var(--eval-ink);
+  font-weight: 600;
+}
+.conversation-view .conversation-markdown a {
+  color: var(--brown-11);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in oklch, var(--brown-11) 35%, transparent);
+}
+.conversation-view .conversation-markdown a:hover {
+  text-decoration-color: currentColor;
+}
+.conversation-markdown :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--sand-3);
+  color: var(--sand-12);
+}
+.conversation-markdown pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 10px 0;
+}
+.conversation-markdown pre code {
+  font: inherit;
+}
+.conversation-markdown blockquote {
+  padding: 10px 12px;
+  margin: 10px 0;
+  border: 1px solid var(--eval-line);
+  border-radius: 6px;
+  color: var(--eval-muted);
+  background: var(--sand-2);
+}
+.conversation-markdown blockquote > :last-child {
+  margin-bottom: 0;
+}
+.conversation-markdown hr {
+  border: 0;
+  border-top: 1px solid var(--eval-line);
+  margin: 14px 0;
+}
+.conversation-table {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 10px 0;
+  border: 1px solid var(--eval-line);
+  border-radius: 8px;
+}
+.conversation-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.conversation-table table :is(th, td) {
+  padding: 7px 10px;
+  border: 0;
+  border-bottom: 1px solid var(--eval-line);
+  background: transparent;
+  text-align: left;
+  vertical-align: top;
+  white-space: normal;
+  min-width: 110px;
+}
+.conversation-table table th {
+  background: var(--sand-3);
+  font-weight: 600;
+}
+.conversation-table table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.conversation-markdown .contains-task-list {
+  list-style: none;
+  padding-left: 0;
+}
+.conversation-markdown .task-list-item input {
+  margin-right: 8px;
+}
+.conversation-output {
+  margin: 8px 0;
+  min-width: 0;
+}
+.conversation-output summary {
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--sand-11);
+}
+.conversation-output summary code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--eval-ink);
+}
+.conversation-output summary:hover {
+  color: var(--eval-ink);
+}
+.conversation-output[open] > summary {
+  margin-bottom: 8px;
+}
+.conversation-output summary:focus-visible,
+.conversation-markdown a:focus-visible,
+.conversation-table:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+}
+.conversation-long-message > .conversation-markdown {
+  max-height: 32rem;
+  overflow-y: auto;
+}
+.conversation-view[data-expanded="true"]
+  :is(
+    .conversation-code,
+    .conversation-markdown pre,
+    .conversation-long-message > .conversation-markdown
+  ) {
+  max-height: none;
+  overflow-y: visible;
+}
+.conversation-hash {
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.conversation-loading {
+  min-height: 5rem;
+  color: var(--eval-muted);
+}
+@media (max-width: 600px) {
+  .conversation-body {
+    padding-left: 0;
+  }
+  .conversation-title span {
+    display: block;
+    margin-left: 0;
+    margin-top: 4px;
+  }
+  .conversation-heading {
+    align-items: center;
+    justify-content: space-between;
+  }
+  .conversation-format {
+    margin-left: 0;
+  }
+  .conversation-controls {
+    gap: 6px;
+  }
+  .conversation-controls button {
+    min-height: 44px;
+  }
+  .conversation-markdown {
+    font-size: 14px;
+  }
+  .conversation-code,
+  .conversation-markdown pre {
+    padding: 12px;
+  }
+}

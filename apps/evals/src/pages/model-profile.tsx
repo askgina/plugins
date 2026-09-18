@@ -20,7 +20,6 @@ import {
   publicationFor,
   resolveBaselineRun,
   runHistoryFor,
-  runsForModel,
   type DerivedCost,
   type OutcomeMatrixRow,
 } from "../canonical/selectors";
@@ -51,6 +50,8 @@ import gpt55SpotReportUrl from "../results/2026-09-11/spot-comparison/comparison
 import solReportUrl from "../results/2026-09-11/perps-predictions/report/ask-gina-perps-predictions-evals-2026-09-11.json?url";
 import museReportUrl from "../results/2026-09-14/muse-spark-1.3/report/ask-gina-muse-spark-1.3-evals-2026-09-14.json?url";
 import claudeComparisonUrl from "../results/2026-09-14/claude-comparison/ask-gina-claude-comparison.json?url";
+import reasoningSweepUrl from "../results/2026-09-16/reasoning-sweep/ask-gina-reasoning-sweep.json?url";
+import reasoningSweepClaudeUrl from "../results/2026-09-16/reasoning-sweep/ask-gina-reasoning-sweep-claude.json?url";
 
 interface BundledArtifact {
   readonly url: string;
@@ -58,32 +59,62 @@ interface BundledArtifact {
   readonly description: string;
 }
 
-const MODEL_ARTIFACTS: Readonly<Record<string, BundledArtifact>> = {
-  "gpt-5.5": {
-    url: gpt55SpotReportUrl,
-    filename: "ask-gina-spot-comparison-2026-09-11.json",
-    description: "Spot comparison report (2026-09-11)",
-  },
-  "gpt-sol": {
-    url: solReportUrl,
-    filename: "ask-gina-perps-predictions-evals-2026-09-11.json",
-    description: "Perps & predictions evaluation report (2026-09-11)",
-  },
-  "muse-spark": {
-    url: museReportUrl,
-    filename: "ask-gina-muse-spark-1.3-evals-2026-09-14.json",
-    description: "Muse Spark 1.3 full campaign report (2026-09-14)",
-  },
-  "claude-fable": {
-    url: claudeComparisonUrl,
-    filename: "ask-gina-claude-comparison-2026-09-14.json",
-    description: "Claude comparison evaluation report (2026-09-14)",
-  },
-  "claude-opus": {
-    url: claudeComparisonUrl,
-    filename: "ask-gina-claude-comparison-2026-09-14.json",
-    description: "Claude comparison evaluation report (2026-09-14)",
-  },
+const REASONING_SWEEP_ARTIFACT: BundledArtifact = {
+  url: reasoningSweepUrl,
+  filename: "ask-gina-reasoning-sweep-2026-09-16.json",
+  description: "Reasoning sweep (2026-09-16)",
+};
+const REASONING_SWEEP_CLAUDE_ARTIFACT: BundledArtifact = {
+  url: reasoningSweepClaudeUrl,
+  filename: "ask-gina-reasoning-sweep-claude-2026-09-16.json",
+  description: "Claude reasoning sweep (2026-09-16)",
+};
+
+const MODEL_ARTIFACTS: Readonly<Record<string, readonly BundledArtifact[]>> = {
+  "gpt-5.5": [
+    {
+      url: gpt55SpotReportUrl,
+      filename: "ask-gina-spot-comparison-2026-09-11.json",
+      description: "Spot comparison (2026-09-11)",
+    },
+  ],
+  "gpt-sol": [
+    {
+      url: solReportUrl,
+      filename: "ask-gina-perps-predictions-evals-2026-09-11.json",
+      description: "Perps and predictions (2026-09-11)",
+    },
+    REASONING_SWEEP_ARTIFACT,
+  ],
+  "muse-spark": [
+    {
+      url: museReportUrl,
+      filename: "ask-gina-muse-spark-1.3-evals-2026-09-14.json",
+      description: "Muse campaign (2026-09-14)",
+    },
+    REASONING_SWEEP_ARTIFACT,
+  ],
+  "claude-fable": [
+    {
+      url: claudeComparisonUrl,
+      filename: "ask-gina-claude-comparison-2026-09-14.json",
+      description: "Claude comparison (2026-09-14)",
+    },
+    REASONING_SWEEP_CLAUDE_ARTIFACT,
+  ],
+  "claude-opus": [
+    {
+      url: claudeComparisonUrl,
+      filename: "ask-gina-claude-comparison-2026-09-14.json",
+      description: "Claude comparison (2026-09-14)",
+    },
+    REASONING_SWEEP_CLAUDE_ARTIFACT,
+  ],
+  "gpt-terra": [REASONING_SWEEP_ARTIFACT],
+  astra: [REASONING_SWEEP_ARTIFACT],
+  grok: [REASONING_SWEEP_ARTIFACT],
+  gemini: [REASONING_SWEEP_ARTIFACT],
+  "swe-2": [REASONING_SWEEP_ARTIFACT],
 };
 
 export interface ModelProfilePageProps {
@@ -166,79 +197,99 @@ function FamilyMetricCards({
   if (cards.length === 0) return null;
 
   return (
-    <section className="model-profile-metrics" aria-label="Summary metrics by task family">
-      {cards.map(({ family, representative }) => {
-        if (!representative) return null;
-        const headline = headlineFor(representative);
-        const unscored = representative.counts.started - representative.counts.graded;
-        return (
-          <article className="model-profile-metric" key={family}>
-            <div className="model-profile-metric-header">
-              <span className="model-profile-metric-label">{family}</span>
-              <CoverageChip coverage={representative.dispatchCoverage} />
-            </div>
-            <div className="model-profile-metric-headline">
-              <strong>
-                <HeadlineValue headline={headline} />
-              </strong>
-              <span className="eval-muted">passes / started</span>
-            </div>
-            <dl className="model-profile-metric-details">
-              <div className="model-profile-metric-row">
-                <dt className="eval-muted">Latency:</dt>
-                <dd>
-                  <LatencyValue metric={representative.metrics.latencyMs} />
-                </dd>
+    <>
+      <p className="eval-muted">Latest recorded run per family, not an overall or best score.</p>
+      <section className="model-profile-metrics" aria-label="Latest recorded run per task family">
+        {cards.map(({ family, representative }) => {
+          if (!representative) return null;
+          const headline = headlineFor(representative);
+          const unscored = representative.counts.started - representative.counts.graded;
+          const timeoutMs =
+            representative.timeoutMs ??
+            canonicalCampaigns.find((campaign) => campaign.campaignId === representative.campaignId)
+              ?.timeoutMs;
+          return (
+            <article className="model-profile-metric" key={family}>
+              <div className="model-profile-metric-header">
+                <span className="model-profile-metric-label">{family}</span>
+                <CoverageChip run={representative} />
               </div>
-              <div className="model-profile-metric-row">
-                <dt className="eval-muted">Tokens:</dt>
-                <dd>
-                  <TokenUsageValue metric={representative.metrics.tokenUsage} />
-                </dd>
+              <p className="model-profile-metric-unscored">
+                Reasoning {representative.configuration.reasoning ?? "not recorded"} ·{" "}
+                <code>{representative.cohort.target}</code> ·{" "}
+                {timeoutMs === null || timeoutMs === undefined
+                  ? "timeout not recorded"
+                  : `${timeoutMs / 1000}s timeout`}
+              </p>
+              <div className="model-profile-metric-headline">
+                <strong>
+                  <HeadlineValue headline={headline} />
+                </strong>
+                {headline.kind === "rate" && <span className="eval-muted">passes / started</span>}
               </div>
-            </dl>
-            <div className="model-profile-metric-unscored">
-              {unscored > 0 ? (
-                <span>
-                  {unscored} unscored (
-                  {[
-                    representative.counts.timedOut > 0
-                      ? `${representative.counts.timedOut} timed out`
-                      : null,
-                    representative.counts.runtimeFailure > 0
-                      ? `${representative.counts.runtimeFailure} runtime failure`
-                      : null,
-                    representative.counts.pending > 0
-                      ? `${representative.counts.pending} pending`
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
-                  )
-                </span>
-              ) : (
-                <span className="eval-muted">All started attempts graded</span>
-              )}
-            </div>
-            <button
-              type="button"
-              className="eval-text-link"
-              style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                textAlign: "left",
-                font: "inherit",
-              }}
-              onClick={() => onSelectRun(representative.runId)}
-            >
-              Inspect run <code>{representative.runId}</code> →
-            </button>
-          </article>
-        );
-      })}
-    </section>
+              <dl className="model-profile-metric-details">
+                <div className="model-profile-metric-row">
+                  <dt className="eval-muted">Graded / planned:</dt>
+                  <dd>
+                    {representative.counts.graded} / {representative.counts.planned}
+                  </dd>
+                </div>
+                <div className="model-profile-metric-row">
+                  <dt className="eval-muted">Latency:</dt>
+                  <dd>
+                    <LatencyValue metric={representative.metrics.latencyMs} />
+                  </dd>
+                </div>
+                <div className="model-profile-metric-row">
+                  <dt className="eval-muted">Tokens:</dt>
+                  <dd>
+                    <TokenUsageValue metric={representative.metrics.tokenUsage} />
+                  </dd>
+                </div>
+              </dl>
+              <div className="model-profile-metric-unscored">
+                {unscored > 0 ? (
+                  <span>
+                    {unscored} unscored (
+                    {[
+                      representative.counts.timedOut > 0
+                        ? `${representative.counts.timedOut} timed out`
+                        : null,
+                      representative.counts.runtimeFailure > 0
+                        ? `${representative.counts.runtimeFailure} runtime failure`
+                        : null,
+                      representative.counts.pending > 0
+                        ? `${representative.counts.pending} pending`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                    )
+                  </span>
+                ) : (
+                  <span className="eval-muted">All started attempts graded</span>
+                )}
+              </div>
+              <button
+                type="button"
+                className="eval-text-link"
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                  textAlign: "left",
+                  font: "inherit",
+                }}
+                onClick={() => onSelectRun(representative.runId)}
+              >
+                Inspect run <code>{representative.runId}</code> →
+              </button>
+            </article>
+          );
+        })}
+      </section>
+    </>
   );
 }
 
@@ -439,8 +490,8 @@ function RunDetail({ run }: { run: CanonicalRun }) {
       {/* State chips */}
       <div className="model-profile-detail-section">
         <div className="model-profile-detail-chips">
-          <CoverageChip coverage={run.dispatchCoverage} />
-          <span className="eval-demo-label">grading {run.gradingCoverage}</span>
+          <CoverageChip run={run} />
+          <span className="eval-demo-label">dispatch {run.dispatchCoverage}</span>
           <span className="eval-demo-label">checks {run.checkSource}</span>
           <span className="eval-demo-label">{run.caseBinding}</span>
           <OriginTag origin={run.origin} />
@@ -459,7 +510,7 @@ function RunDetail({ run }: { run: CanonicalRun }) {
         <h4 className="model-profile-detail-heading">Headline & grading</h4>
         <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "baseline" }}>
           <div>
-            <span className="eval-muted">Passes over started: </span>
+            <span className="eval-muted">Headline: </span>
             <strong>
               <HeadlineValue headline={headlineFor(run)} />
             </strong>
@@ -500,6 +551,12 @@ function RunDetail({ run }: { run: CanonicalRun }) {
             <span className="model-profile-count-label">graded</span>
             <span className="model-profile-count-value">{run.counts.graded}</span>
           </div>
+          {run.counts.unscored !== undefined && (
+            <div className="model-profile-count-cell">
+              <span className="model-profile-count-label">unscored</span>
+              <span className="model-profile-count-value">{run.counts.unscored}</span>
+            </div>
+          )}
           <div className="model-profile-count-cell">
             <span className="model-profile-count-label">timed out</span>
             <span className="model-profile-count-value">{run.counts.timedOut}</span>
@@ -665,6 +722,12 @@ function RunDetail({ run }: { run: CanonicalRun }) {
             <dt>Cohort</dt>
             <dd>{cohortLabel(run.cohort)}</dd>
           </div>
+          {run.timeoutMs !== undefined && (
+            <div>
+              <dt>Trial timeout</dt>
+              <dd>{run.timeoutMs / 1000}s</dd>
+            </div>
+          )}
           <div>
             <dt>Source label</dt>
             <dd>{run.provenance.sourceLabel}</dd>
@@ -679,7 +742,11 @@ function RunDetail({ run }: { run: CanonicalRun }) {
           )}
           {run.provenance.sourceCommit && (
             <div>
-              <dt>Source commit</dt>
+              <dt>
+                {run.provenance.sourceKind === "extracted_snapshot"
+                  ? "Snapshot source reference"
+                  : "Source commit"}
+              </dt>
               <dd>
                 <code>{run.provenance.sourceCommit}</code>
               </dd>
@@ -751,7 +818,7 @@ function RunHistoryPanel({
               <th scope="col">Family</th>
               <th scope="col">Date</th>
               <th scope="col">Headline</th>
-              <th scope="col">Coverage</th>
+              <th scope="col">Scoring</th>
               <th scope="col">Configuration</th>
               <th scope="col">Publication</th>
             </tr>
@@ -795,7 +862,7 @@ function RunHistoryPanel({
                     <HeadlineValue headline={headline} />
                   </td>
                   <td>
-                    <CoverageChip coverage={run.dispatchCoverage} />
+                    <CoverageChip run={run} />
                   </td>
                   <td>
                     {run.configuration.availability === "pinned" ? (
@@ -870,7 +937,9 @@ function CampaignsPanel({ campaigns }: { campaigns: readonly CanonicalCampaign[]
             <dt>{campaign.campaignId}</dt>
             <dd>
               {campaign.date} · {campaign.harness} · {campaign.repetitions} reps ·{" "}
-              {campaign.timeoutMs / 1000}s timeout
+              {campaign.timeoutMs === null
+                ? "route-specific timeouts"
+                : `${campaign.timeoutMs / 1000}s timeout`}
               {campaign.sourceCommit && (
                 <>
                   {" "}
@@ -925,6 +994,10 @@ const MODEL_ID_ALIASES: Readonly<Record<string, string>> = {
   "claude-opus-5": "claude-opus",
   "gpt-5-5": "gpt-5.5",
   "gpt-5-6-sol": "gpt-sol",
+  "gpt-5-6-terra": "gpt-terra",
+  "gpt-6-astra": "astra",
+  "grok-4-6": "grok",
+  "gemini-3-8-flash": "gemini",
 };
 
 export function ModelProfilePage({
@@ -979,9 +1052,24 @@ export function ModelProfilePage({
 
   // Filter runs by origin: synthetic runs are excluded from app pages (decision 9).
   // They remain reachable when includeSynthetic is true (Storybook).
-  const runs = runsForModel(model.id).filter(
+  const runs = runHistoryFor(model.id).filter(
     (run) => includeSynthetic || run.origin === "measured",
   );
+  const museSweepCounts =
+    model.id === "muse-spark"
+      ? runs.reduce(
+          (sum, run) => {
+            if (run.campaignId !== "reasoning-sweep-2026-09-16") return sum;
+            sum.planned += run.counts.planned;
+            sum.graded += run.counts.graded;
+            sum.passed += run.counts.passed;
+            sum.failed += run.counts.failed;
+            sum.unscored += run.counts.timedOut + run.counts.runtimeFailure;
+            return sum;
+          },
+          { planned: 0, graded: 0, passed: 0, failed: 0, unscored: 0 },
+        )
+      : null;
 
   const modelWithdrawn = withdrawnRuns.filter(
     (w) => w.modelId === model.id && (includeSynthetic || w.origin === "measured"),
@@ -990,7 +1078,7 @@ export function ModelProfilePage({
   const campaignIds = [...new Set(runs.map((run) => run.campaignId))];
   const campaigns = canonicalCampaigns.filter((c) => campaignIds.includes(c.campaignId));
 
-  const artifact = MODEL_ARTIFACTS[model.id];
+  const artifacts = MODEL_ARTIFACTS[model.id] ?? [];
 
   const handleSelectRun = (runId: string) => {
     setExpandedRunId(runId);
@@ -1041,20 +1129,35 @@ export function ModelProfilePage({
                 : "Canonical evaluation profile"}
               . Small live samples; measures tool routing, arguments, completion and safety.
             </p>
+            {museSweepCounts !== null && museSweepCounts.planned > 0 && (
+              <p className="eval-description" role="note">
+                <strong>Quota-limited Muse scoring.</strong> {museSweepCounts.graded} of{" "}
+                {museSweepCounts.planned} planned sweep trials were graded: {museSweepCounts.passed}{" "}
+                passed, {museSweepCounts.failed} failed and {museSweepCounts.unscored} remain
+                unscored. Complete dispatch is not complete grading. Sequential cases leave
+                different graded case mixes across reasoning levels. Do not rank or compare their
+                graded-only pass percentages. The quota scope is not established.
+              </p>
+            )}
           </div>
 
           <div className="model-profile-actions">
-            {artifact ? (
-              <Button asChild className="model-profile-download-button" variant="secondary">
+            {artifacts.map((artifact) => (
+              <Button
+                asChild
+                className="model-profile-download-button"
+                variant="secondary"
+                key={artifact.filename}
+              >
                 <a
                   href={artifact.url}
                   download={artifact.filename}
                   title={`Download bundled JSON artifact (${artifact.description})`}
                 >
-                  <Download size={15} aria-hidden="true" /> Download results
+                  <Download size={15} aria-hidden="true" /> Download {artifact.description}
                 </a>
               </Button>
-            ) : null}
+            ))}
             <a className="eval-text-link" href="#/methodology">
               View methodology <ArrowUpRight size={14} aria-hidden="true" />
             </a>

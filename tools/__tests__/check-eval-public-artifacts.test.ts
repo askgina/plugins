@@ -103,6 +103,8 @@ const report = {
 
 const unsafeTrials = [
   { ...trial, observation: { ...observation, final_answer: SENTINEL } },
+  { ...trial, attestation: { requestedReasoning: "high" } },
+  { ...trial, observation: { ...observation, token_usage: null, final_answer: SENTINEL } },
   {
     ...trial,
     observation: { ...observation, tool_calls: [{ arguments: { query: SENTINEL } }] },
@@ -151,6 +153,90 @@ describe("Claude static public artifact boundary", () => {
       }),
   );
 
+  it.effect(
+    "accepts unavailable token evidence and exact route failure tags without weakening trials",
+    () =>
+      Effect.gen(function* () {
+        const withoutUsage = {
+          ...trial,
+          observation: { ...observation, token_usage: null },
+        };
+        yield* validateClaudePublicArtifact({ trials: [withoutUsage] }, "sweep.json");
+        assert.isNull(withoutUsage.observation.token_usage);
+        for (const tag of [
+          "PluginEvalOmpHarnessSpawnError",
+          "PluginEvalMuseCliProcessError",
+          "PluginEvalDevinTimeoutError",
+          "PluginEvalDevinProcessError",
+        ]) {
+          yield* validateClaudePublicArtifact(
+            {
+              trials: [
+                {
+                  ...trial,
+                  outcome: "runtime_failure",
+                  observation: null,
+                  score: null,
+                  error: { tag, reason: WITHHELD },
+                },
+              ],
+            },
+            "sweep.json",
+          );
+        }
+      }),
+  );
+
+  it.effect("admits numeric post-run classification evidence without admitting raw payloads", () =>
+    Effect.gen(function* () {
+      const counts = {
+        planned: 3,
+        terminal: 2,
+        graded: 2,
+        passed: 1,
+        failed: 1,
+        unscored: 0,
+        timeouts: 0,
+        pending: 1,
+      };
+      const runtimeClassification = {
+        schemaVersion: "ask-gina-runtime-classification.v1",
+        receipt: "classification-receipt.json",
+        receiptAvailability: "withheld",
+        receiptSha256: "a".repeat(64),
+        classifierSha256: "b".repeat(64),
+        derived: true,
+        scope: "post-run-runtime-classification",
+        noAnswerRegrade: true,
+        noOutcomeSelectiveRerun: true,
+        rawEvidenceUnchanged: true,
+        observationFiles: "raw-unchanged",
+        counts: {
+          raw: counts,
+          corrected: { ...counts, graded: 1, failed: 0, unscored: 1 },
+          changed: 1,
+        },
+      };
+      yield* validateClaudePublicArtifact({ runtimeClassification }, "sweep.json");
+      const failure = yield* Effect.flip(
+        validateClaudePublicArtifact(
+          {
+            runtimeClassification: {
+              ...runtimeClassification,
+              counts: {
+                ...runtimeClassification.counts,
+                raw: { ...counts, final_answer: SENTINEL },
+              },
+            },
+          },
+          "sweep.json",
+        ),
+      );
+      assert.strictEqual(failure.reason, "private_payload");
+      assert.notInclude(encodeJson(failure), SENTINEL);
+    }),
+  );
+
   it.effect("rejects provider payloads at every trial boundary without echoing their values", () =>
     Effect.gen(function* () {
       for (const unsafe of unsafeTrials) {
@@ -170,6 +256,50 @@ describe("Claude static public artifact boundary", () => {
   );
 
   it.layer(Layer.merge(BunFileSystem.layer, BunPath.layer))((it) => {
+    it.effect("rejects unreviewed transcript indexes before publishing chat content", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.makeTempDirectoryScoped();
+          yield* fs.makeDirectory(path.join(root, "src"));
+          yield* fs.makeDirectory(path.join(root, "public/transcripts"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join(root, "public/transcripts/index.json"),
+            encodeJson({ visibleMessages: [SENTINEL] }),
+          );
+          const failure = yield* Effect.flip(checkEvalPublicArtifacts(root));
+          assert.strictEqual(failure.reason, "unapproved_artifact");
+          assert.notInclude(failure.message, SENTINEL);
+        }),
+      ),
+    );
+
+    it.effect("checks non-Claude sweep artifacts before allowing them into the bundle", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "eval-public-sweep-" });
+          const directory = "src/results/2026-09-16/reasoning-sweep";
+          yield* fs.makeDirectory(path.join(root, directory), { recursive: true });
+          yield* fs.makeDirectory(path.join(root, "public"));
+          const filename = path.join(directory, "ask-gina-reasoning-sweep.json");
+          yield* fs.writeFileString(
+            path.join(root, filename),
+            encodeJson({
+              model: "openai-codex/synthetic",
+              final_answer: SENTINEL,
+            }),
+          );
+          const failure = yield* Effect.flip(checkEvalPublicArtifacts(root));
+          assert.strictEqual(failure.reason, "private_payload");
+          assert.strictEqual(failure.file, filename);
+          assert.notInclude(encodeJson(failure), SENTINEL);
+        }),
+      ),
+    );
+
     it.effect("finds renamed family duplicates in source and directly copied public assets", () =>
       Effect.scoped(
         Effect.gen(function* () {
