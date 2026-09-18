@@ -516,7 +516,11 @@ export function TaskExplorerPage({
                         Attempt {repetition} · {attemptLabel(attempt)} ·{" "}
                         <EvidenceValue evidence={attempt.durationMs} renderValue={seconds} />
                       </p>
-                      <ConversationPanel reference={attempt.conversation} inline />
+                      <ConversationPanel
+                        reference={attempt.conversation}
+                        model={row?.model}
+                        inline
+                      />
                     </>
                   )
                 ) : (

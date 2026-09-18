@@ -3,6 +3,7 @@ import type { CanonicalAttempt, CanonicalRun, PrototypeFamily } from "../canonic
 import {
   SCORED_FAMILIES,
   caseDefinitionsForFamily,
+  getModel,
   summarizeTask,
   type LeaderboardModelRow,
 } from "../canonical/selectors";
@@ -67,7 +68,7 @@ function RunConversationPicker({ run }: { run: CanonicalRun }) {
       {summary.slots.length === 0 ? (
         <p role="status">Individual attempts were not retained for this run.</p>
       ) : (
-        <ConversationPanel reference={attempt?.conversation} inline />
+        <ConversationPanel reference={attempt?.conversation} model={getModel(run.modelId)} inline />
       )}
     </>
   );

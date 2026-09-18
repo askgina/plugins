@@ -1,4 +1,8 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { UserRound, Terminal } from "lucide-react";
+import type { CanonicalModel } from "../canonical/canonical";
+import { ModelAvatar } from "./eval-ui";
+import { TranscriptContent } from "./transcript-content";
 import {
   conversationNotices,
   conversationUrl,
@@ -19,12 +23,12 @@ const unavailableText = {
   forbidden: "This transcript is unavailable.",
 };
 
-function TranscriptText({ text }: { text: string }) {
-  if (text.length <= 1600) return <pre className="conversation-text">{text}</pre>;
+function TranscriptText({ text, source }: { text: string; source: boolean }) {
+  if (text.length <= 1600) return <TranscriptContent text={text} source={source} />;
   return (
-    <details className="conversation-output">
+    <details className="conversation-output conversation-long-message">
       <summary>Show message ({text.length.toLocaleString()} characters)</summary>
-      <pre className="conversation-text">{text}</pre>
+      <TranscriptContent text={text} source={source} />
     </details>
   );
 }
@@ -32,11 +36,14 @@ function TranscriptText({ text }: { text: string }) {
 function ContentBlock({
   block,
   toolNames,
+  source,
 }: {
   block: ConversationBlock;
+  source: boolean;
   toolNames: ReadonlyMap<string, string>;
 }) {
-  if (block.type === "text") return block.text ? <TranscriptText text={block.text} /> : null;
+  if (block.type === "text")
+    return block.text ? <TranscriptText text={block.text} source={source} /> : null;
   if (block.type === "toolCall") {
     return (
       <details className="conversation-output">
@@ -44,11 +51,15 @@ function ContentBlock({
           Tool call: <code>{block.name}</code>
         </summary>
         <p className="conversation-label">Arguments</p>
-        <pre className="conversation-text">
-          {typeof block.arguments === "string"
-            ? block.arguments
-            : JSON.stringify(block.arguments, null, 2)}
-        </pre>
+        <TranscriptContent
+          text={
+            typeof block.arguments === "string"
+              ? block.arguments
+              : (JSON.stringify(block.arguments, null, 2) ?? "")
+          }
+          source={source}
+          data
+        />
       </details>
     );
   }
@@ -66,7 +77,7 @@ function ContentBlock({
         )}
         {block.isError ? " (error)" : ""}
       </summary>
-      <pre className="conversation-text">{block.text}</pre>
+      <TranscriptContent text={block.text ?? ""} source={source} data />
     </details>
   );
 }
@@ -74,13 +85,16 @@ function ContentBlock({
 export function ConversationView({
   conversation,
   sha256,
+  model,
 }: {
   conversation: Conversation;
   sha256: string;
+  model?: CanonicalModel;
 }) {
   const transcriptId = useId();
   const transcript = useRef<HTMLDivElement>(null);
   const [fullHeight, setFullHeight] = useState(false);
+  const [source, setSource] = useState(false);
   function setAllExpanded(open: boolean) {
     // These are native, individually toggleable disclosures. Apply the command
     // on every click, including after someone has closed a section manually.
@@ -100,21 +114,24 @@ export function ConversationView({
   }
   return (
     <div className="conversation-view" data-expanded={fullHeight}>
-      <p className="conversation-label">
-        {conversation.visibleMessages.length} recorded messages · {conversation.rowId} · Attempt{" "}
-        {conversation.repetition}
-      </p>
-      <p className="conversation-label">
-        {conversation.completeness.transcriptCaptureComplete
-          ? "Transcript capture complete."
-          : "Partial transcript."}{" "}
-        Capture completeness is separate from grading.
-      </p>
+      <div className="conversation-heading">
+        <p className="conversation-title">
+          Conversation{" "}
+          <span>
+            {conversation.visibleMessages.length} messages · Attempt {conversation.repetition}
+          </span>
+        </p>
+        <span className="conversation-capture">
+          {conversation.completeness.transcriptCaptureComplete
+            ? "Capture complete"
+            : "Partial transcript"}
+        </span>
+      </div>
       {conversation.publication && (
         <p className="conversation-label">
           Public transcript.{" "}
           {Object.values(conversation.publication.redactions).some((count) => count > 0)
-            ? "Credentials, personal identifiers, local paths, or private account content are marked [redacted:…]. Message order is preserved."
+            ? "Redactions are marked inline."
             : "No content required redaction."}
         </p>
       )}
@@ -135,6 +152,14 @@ export function ConversationView({
         >
           Collapse all
         </Button>
+        <div className="conversation-format" role="group" aria-label="Transcript format">
+          <Button variant="ghost" size="sm" aria-pressed={!source} onClick={() => setSource(false)}>
+            Formatted
+          </Button>
+          <Button variant="ghost" size="sm" aria-pressed={source} onClick={() => setSource(true)}>
+            Source
+          </Button>
+        </div>
       </div>
       {notices.length > 0 && (
         <ul className="conversation-notices">
@@ -150,7 +175,7 @@ export function ConversationView({
         >
           <summary>Recorded task input</summary>
           {conversation.frozenUserTurns.map((turn, index) => (
-            <TranscriptText key={index} text={turn.content} />
+            <TranscriptText key={index} text={turn.content} source={source} />
           ))}
         </details>
         {conversation.visibleMessages.length === 0 ? (
@@ -158,8 +183,28 @@ export function ConversationView({
         ) : (
           <ol className="conversation-messages" aria-label="Recorded conversation">
             {conversation.visibleMessages.map((message, index) => (
-              <li key={`${message.sequence}-${index}`} className="conversation-message">
+              <li
+                key={`${message.sequence}-${index}`}
+                className="conversation-message"
+                data-role={message.role}
+              >
                 <p className="conversation-speaker">
+                  {message.role === "assistant" && model ? (
+                    <span className="conversation-model-icon" title={model.name}>
+                      <ModelAvatar model={model} />
+                      <span className="sr-only">{model.name}</span>
+                    </span>
+                  ) : (
+                    <span className="conversation-role-icon" aria-hidden="true">
+                      {message.role === "user" ? (
+                        <UserRound size={14} />
+                      ) : message.role === "assistant" ? (
+                        "A"
+                      ) : (
+                        <Terminal size={14} />
+                      )}
+                    </span>
+                  )}
                   <span>
                     {message.role === "user"
                       ? "User"
@@ -169,16 +214,37 @@ export function ConversationView({
                   </span>
                   <span className="conversation-label">{index + 1}</span>
                 </p>
-                {message.content.map((block, blockIndex) => (
-                  <ContentBlock key={blockIndex} block={block} toolNames={toolNames} />
-                ))}
+                <div className="conversation-body">
+                  {message.content.map((block, blockIndex) => (
+                    <ContentBlock
+                      key={blockIndex}
+                      block={block}
+                      toolNames={toolNames}
+                      source={source}
+                    />
+                  ))}
+                </div>
               </li>
             ))}
           </ol>
         )}
         <details className="conversation-output">
           <summary>Capture details</summary>
-          <p>Source: {conversation.visibleEvidenceSource}</p>
+          <p>
+            {conversation.completeness.transcriptCaptureComplete
+              ? "Transcript capture complete."
+              : "Partial transcript."}{" "}
+            Capture completeness is separate from grading.
+          </p>
+          {conversation.publication && (
+            <p>
+              Credentials, personal identifiers, local paths, or private account content are marked
+              [redacted:…]. Message order is preserved.
+            </p>
+          )}
+          <p>
+            {conversation.rowId} · Source: {conversation.visibleEvidenceSource}
+          </p>
           <p>
             Verified SHA-256: <code className="conversation-hash">{sha256}</code>
           </p>
@@ -199,7 +265,13 @@ export function ConversationView({
 
 type LoadState = { readonly status: "loading" | "error" } | ConversationResponse;
 
-function LoadedConversation({ reference }: { reference: ConversationReference }) {
+function LoadedConversation({
+  reference,
+  model,
+}: {
+  reference: ConversationReference;
+  model?: CanonicalModel;
+}) {
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const [retry, setRetry] = useState(0);
   const url = conversationUrl(reference);
@@ -221,7 +293,9 @@ function LoadedConversation({ reference }: { reference: ConversationReference })
       </p>
     );
   if (state.status === "available")
-    return <ConversationView conversation={state.conversation} sha256={state.sha256} />;
+    return (
+      <ConversationView conversation={state.conversation} sha256={state.sha256} model={model} />
+    );
   return (
     <div>
       <p role="status">
@@ -245,9 +319,11 @@ function LoadedConversation({ reference }: { reference: ConversationReference })
 
 export function ConversationPanel({
   reference,
+  model,
   inline = false,
 }: {
   reference?: ConversationReference;
+  model: CanonicalModel | undefined;
   inline?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -255,7 +331,10 @@ export function ConversationPanel({
     return (
       <p className="conversation-label">A retained conversation is not linked to this attempt.</p>
     );
-  if (inline) return <LoadedConversation key={conversationUrl(reference)} reference={reference} />;
+  if (inline)
+    return (
+      <LoadedConversation key={conversationUrl(reference)} reference={reference} model={model} />
+    );
   return (
     <details
       className="results-accordion conversation-panel"
@@ -263,7 +342,13 @@ export function ConversationPanel({
     >
       <summary>Conversation</summary>
       <div>
-        {open && <LoadedConversation key={conversationUrl(reference)} reference={reference} />}
+        {open && (
+          <LoadedConversation
+            key={conversationUrl(reference)}
+            reference={reference}
+            model={model}
+          />
+        )}
       </div>
     </details>
   );
