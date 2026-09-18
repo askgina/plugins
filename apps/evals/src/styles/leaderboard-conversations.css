@@ -1,0 +1,39 @@
+.results-chat-trigger {
+  margin-left: 12px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--eval-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.results-chat-trigger:hover {
+  color: var(--eval-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.results-chat-trigger:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+.leaderboard-conversations {
+  margin-bottom: 24px;
+}
+.leaderboard-chat-task select {
+  min-width: 0;
+  max-width: 100%;
+}
+.leaderboard-conversations .conversation-view {
+  margin-top: 20px;
+}
+.leaderboard-conversations .conversation-messages {
+  padding: 0;
+  list-style: none;
+}
+@media (max-width: 600px) {
+  .leaderboard-chat-task {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

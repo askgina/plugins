@@ -11,9 +11,12 @@ the private bundle's `manifest.json` and `chats/`, then run `bun run evals:dev`.
 Local environment files are ignored by Git. Do not use a `VITE_` prefix for this
 setting or put the private bundle under `src/` or `public/`.
 
-Open Tasks, choose a task and model, select an attempt, then expand Conversation.
-Only that conversation is fetched. Closing it or changing attempts cancels the
-pending request. Messages remain in captured order; tool arguments and results
+On the leaderboard, click **Chat** beside a model to open its transcript inline.
+Choose a category, task, and attempt without leaving the leaderboard. The row's
+**Recorded setting** selector switches the reasoning configuration for the viewer.
+The Tasks page also exposes the same viewer under each attempt's Conversation panel.
+Only the selected conversation is fetched. Closing the viewer or model row, or
+changing attempts, cancels the pending request. Messages remain in captured order; tool arguments and results
 expand inline. Retained text is rendered as text, without executing HTML or
 loading embedded resources. Capture gaps, model-observed truncation, missing
 supporting files, and missing final answers are distinct from grading.

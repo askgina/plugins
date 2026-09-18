@@ -1,6 +1,7 @@
 import { Fragment, useState } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { LeaderboardScatter } from "../components/leaderboard-scatter";
+import { LeaderboardConversations } from "../components/leaderboard-conversations";
 import { ModelAvatar, PageShell } from "../components/eval-ui";
 import type { CanonicalRun } from "../canonical/canonical";
 import {
@@ -194,6 +195,16 @@ export function LeaderboardPage({
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(
     new Set(initialExpandedModel ? [initialExpandedModel] : []),
   );
+  const [chatModels, setChatModels] = useState<ReadonlySet<string>>(new Set());
+  function setChatOpen(id: string, open: boolean) {
+    setChatModels((current) => {
+      if (current.has(id) === open) return current;
+      const next = new Set(current);
+      if (open) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }
   const query = search.trim().toLocaleLowerCase();
   const activeRows = rows.map(
     (row) =>
@@ -322,6 +333,23 @@ export function LeaderboardPage({
                         <ModelAvatar model={row.model} />
                         <div>
                           <a href={`#/models/${row.model.id}`}>{row.model.name}</a>
+                          {import.meta.env.DEV && (
+                            <button
+                              type="button"
+                              className="results-chat-trigger"
+                              aria-label={`Chat transcripts for ${row.model.name}`}
+                              aria-expanded={
+                                expanded.has(row.model.id) && chatModels.has(row.model.id)
+                              }
+                              aria-controls={`leaderboard-chat-${row.model.id}`}
+                              onClick={() => {
+                                setExpanded((current) => new Set([...current, row.model.id]));
+                                setChatOpen(row.model.id, true);
+                              }}
+                            >
+                              Chat
+                            </button>
+                          )}
                           {row.configurationLabel && <small>{row.configurationLabel}</small>}
                           {row.coverageLabel && <small>{row.coverageLabel}</small>}
                         </div>
@@ -391,6 +419,16 @@ export function LeaderboardPage({
                           </div>
                         )}
                         {row.overallReason && <p>{row.overallReason}</p>}
+                        {import.meta.env.DEV && expanded.has(row.model.id) && (
+                          <LeaderboardConversations
+                            key={Object.values(row.runs)
+                              .map((run) => run.runId)
+                              .join("+")}
+                            row={row}
+                            open={chatModels.has(row.model.id)}
+                            onOpenChange={(open) => setChatOpen(row.model.id, open)}
+                          />
+                        )}
                         <div className="results-coverage">
                           <p>
                             {recordedOutcomes(Object.values(row.runs)).graded} /{" "}

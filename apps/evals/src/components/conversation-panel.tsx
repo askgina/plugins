@@ -211,7 +211,13 @@ function LoadedConversation({ reference }: { reference: ConversationReference })
   );
 }
 
-export function ConversationPanel({ reference }: { reference?: ConversationReference }) {
+export function ConversationPanel({
+  reference,
+  inline = false,
+}: {
+  reference?: ConversationReference;
+  inline?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   if (!reference)
     return (
@@ -223,6 +229,7 @@ export function ConversationPanel({ reference }: { reference?: ConversationRefer
         Private conversation evidence is available in the local evals viewer.
       </p>
     );
+  if (inline) return <LoadedConversation key={conversationUrl(reference)} reference={reference} />;
   return (
     <details
       className="results-accordion conversation-panel"
