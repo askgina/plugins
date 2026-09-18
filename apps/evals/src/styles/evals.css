@@ -60,7 +60,8 @@ body,
 }
 .eval-wordmark :is(.eval-wordmark-light, .eval-wordmark-dark) {
   width: auto;
-  height: 30px;
+  /* Match the visible beret artwork inside its padded 40px canvas. */
+  height: 26px;
 }
 .eval-wordmark-light {
   display: var(--eval-wordmark-light-display, block);
@@ -488,9 +489,6 @@ body,
     flex-wrap: wrap;
     padding: 18px 22px 0;
     gap: 16px;
-  }
-  .eval-wordmark :is(.eval-wordmark-light, .eval-wordmark-dark) {
-    height: 28px;
   }
   .eval-nav {
     order: 3;
