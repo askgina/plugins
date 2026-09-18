@@ -8,3 +8,56 @@
 body:has(#content-area > .prose > h1:first-child) #table-of-contents-content li:first-child {
   display: none;
 }
+
+/* Direct setup shortcuts beneath the Connect Gina video. */
+#content-area .gina-client-links {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 1.5rem 0 2.5rem;
+}
+
+#content-area .gina-client-links a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  min-height: 6rem;
+  padding: 0.75rem 0.25rem;
+  border: 0;
+  border-radius: 0.75rem;
+  color: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+}
+
+#content-area .gina-client-links a:hover {
+  background: rgb(154 98 64 / 8%);
+}
+
+#content-area .gina-client-links a:focus-visible {
+  outline: 2px solid #9a6240;
+  outline-offset: 3px;
+}
+
+#content-area .gina-client-links img {
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: 0;
+  border-radius: 0;
+  object-fit: contain;
+}
+
+.dark #content-area .gina-client-logo-mono {
+  filter: invert(1);
+}
+
+@media (max-width: 640px) {
+  #content-area .gina-client-links {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

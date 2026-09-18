@@ -1,6 +1,6 @@
 ---
-title: "Connect Gina"
-description: "Choose a client and connect the read-only research tools."
+title: "Connect Gina to your agent"
+description: "Bring Gina's market research and portfolio tools to the agent you already use."
 ---
 
 <iframe
@@ -12,6 +12,37 @@ description: "Choose a client and connect the read-only research tools."
   allowFullScreen
 ></iframe>
 
+<div className="gina-client-links" role="navigation" aria-label="Connect your agent">
+  <a href="/connect/chatgpt">
+    <img className="gina-client-logo-mono" src="/images/clients/chatgpt.svg" alt="ChatGPT logo" width="36" height="36" noZoom />
+    <span>ChatGPT</span>
+  </a>
+  <a href="/connect/claude">
+    <img src="/images/clients/claude.svg" alt="Claude logo" width="36" height="36" noZoom />
+    <span>Claude</span>
+  </a>
+  <a href="/connect/grok-bot">
+    <img className="gina-client-logo-mono" src="/images/clients/grok.svg" alt="Grok Bot logo" width="36" height="36" noZoom />
+    <span>Grok Bot</span>
+  </a>
+  <a href="/connect/hermes">
+    <img className="gina-client-logo-mono" src="/images/clients/hermes.svg" alt="Hermes Agent logo" width="36" height="36" noZoom />
+    <span>Hermes Agent</span>
+  </a>
+  <a href="/connect/openclaw">
+    <img src="/images/clients/openclaw.svg" alt="OpenClaw logo" width="36" height="36" noZoom />
+    <span>OpenClaw</span>
+  </a>
+  <a href="/connect/codex">
+    <img className="gina-client-logo-mono" src="/images/clients/codex.svg" alt="Codex logo" width="36" height="36" noZoom />
+    <span>Codex</span>
+  </a>
+</div>
+
+## Choose a client
+
+Select your agent above to open its setup guide, or find another client below.
+
 Start with a direct read-only connection. Your host must support remote MCP and the authentication method shown below. Access can depend on your host's plan or workspace policy.
 
 | Client                            | Setup route                                                    | Authentication                        | Skills and result UI                                        |
@@ -21,7 +52,7 @@ Start with a direct read-only connection. Your host must support remote MCP and 
 | [Codex](/connect/codex)           | Remote MCP configuration                                       | OAuth                                 | Skills can be installed separately                          |
 | [Grok Bot](/connect/grok-bot)     | Plugins marketplace; Ask Gina listing unverified               | Browser authentication when requested | Plugin tools and packaged skills                            |
 | [Perplexity](/connect/perplexity) | Custom remote connector                                        | OAuth                                 | Direct tools; Gina-specific rendering unverified            |
-| [Hermes](/connect/hermes)         | Remote MCP in `config.yaml`                                    | OAuth or manual token                 | Tools discovered on connection; Gina rendering unverified   |
+| [Hermes Agent](/connect/hermes)   | Remote MCP in `config.yaml`                                    | OAuth or manual token                 | Tools discovered on connection; Gina rendering unverified   |
 | [OpenClaw](/connect/openclaw)     | Native MCP settings; optional skill directories                | OAuth or manual token                 | Skills load separately from MCP                             |
 | [Others](/connect/other-clients)  | Cursor, Grok web, and other Streamable HTTP clients            | OAuth or Bearer token                 | Depends on the client                                       |
 
