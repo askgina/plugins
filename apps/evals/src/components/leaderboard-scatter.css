@@ -52,11 +52,16 @@
   margin-top: 14px;
   overflow-x: auto;
 }
+.lb-chart-canvas {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
 .lb-scatterplot {
   display: block;
   width: 100%;
   min-width: 560px;
-  max-width: 960px;
   height: auto;
   margin: 0 auto;
 }
@@ -97,13 +102,35 @@
   vector-effect: non-scaling-stroke;
 }
 .lb-chart-grid text,
-.lb-chart-axis-label {
+.lb-chart-axis-label,
+.lb-chart-range {
   fill: var(--eval-muted);
   font-family: var(--font-sans);
   font-size: 11px;
 }
+.lb-chart-grid-vertical {
+  opacity: 0.5;
+}
+.lb-chart-range {
+  font-size: 10px;
+}
+.lb-chart-series line {
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.75;
+}
+.lb-chart-guide {
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.45;
+  pointer-events: none;
+}
 .lb-chart-point-halo {
   fill: var(--eval-paper);
+  stroke-opacity: 0;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
 }
 .lb-chart-label-line {
   stroke: var(--eval-muted);
@@ -114,14 +141,61 @@
   fill: transparent;
   pointer-events: all;
 }
+.lb-chart-model {
+  cursor: pointer;
+}
+.lb-chart-family-label {
+  pointer-events: none;
+}
 .lb-chart-model-label {
-  fill: var(--eval-ink);
   font-family: var(--font-sans);
   font-size: 11px;
+  paint-order: stroke;
+  stroke: var(--eval-paper);
+  stroke-width: 4px;
+  stroke-linejoin: round;
 }
-.lb-chart-model:hover .lb-chart-point-halo,
+.lb-scatterplot-compact .lb-chart-model-label {
+  font-size: 10px;
+}
+.lb-chart-model[aria-pressed="true"] .lb-chart-point-halo,
 .lb-chart-model:focus-visible .lb-chart-point-halo {
-  stroke: var(--eval-muted);
+  stroke-opacity: 1;
+}
+.lb-chart-detail {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 236px;
+  max-width: calc(100% - 16px);
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--eval-line);
+  border-radius: 3px;
+  background: var(--eval-paper);
+  color: var(--eval-ink);
+  font-size: 12px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+.lb-chart-detail a {
+  width: fit-content;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+.lb-chart-detail a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.lb-chart-detail a:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.lb-chart-detail-effort {
+  text-transform: capitalize;
 }
 .lb-chart-empty {
   padding: 32px 0;
