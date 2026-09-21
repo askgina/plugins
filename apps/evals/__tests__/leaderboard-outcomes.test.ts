@@ -17,9 +17,9 @@ test("retains visible outcomes when a later configuration has incomplete grading
   expect(html).toContain("run=astra-max-perps-1");
 });
 
-test("the page supplies all eligible sweep settings to the chart", () => {
+test("the page supplies all eligible original and recovery settings to the chart", () => {
   const html = renderToStaticMarkup(createElement(LeaderboardPage));
-  expect(html.match(/class="lb-chart-model"/gu)).toHaveLength(13);
+  expect(html.match(/class="lb-chart-model"/gu)).toHaveLength(21);
   expect(html).toContain("GPT-6 Astra, low reasoning");
   expect(html).toContain("GPT-6 Astra, high reasoning");
 });

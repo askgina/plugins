@@ -184,13 +184,14 @@ describe("default leaderboard settings", () => {
     expect(defaultLeaderboardRows([])).toEqual([]);
   });
 
-  test("uses retained Astra high results and preserves all incomplete settings", () => {
+  test("uses the completed Astra recovery and preserves original incomplete settings", () => {
     const configurations = configurationLeaderboardRows();
     const defaults = defaultLeaderboardRows(configurations);
     const astra = defaults.find((row) => row.model.id === "astra")!;
     const gemini = defaults.find((row) => row.model.id === "gemini")!;
-    expect(astra.runs.Spot?.configuration.reasoning).toBe("high");
-    expect(astra.overall).toBeCloseTo(0.6396011396);
+    expect(astra.runs.Spot?.configuration.reasoning).toBe("max");
+    expect(astra.campaignId).toBe("recovery-2026-09-21");
+    expect(astra.overall).toBeCloseTo(0.56932573599);
     expect(gemini.runs.Spot?.configuration.reasoning).toBe("high");
     expect(gemini.overall).toBeCloseTo(0.2331433998);
     expect(

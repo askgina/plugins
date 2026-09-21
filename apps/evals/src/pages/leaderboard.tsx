@@ -41,7 +41,11 @@ export function LeaderboardPage({
   rows?: readonly LeaderboardModelRow[];
 }) {
   const [search, setSearch] = useState(initialSearch);
-  const [campaign, setCampaign] = useState("all");
+  const [campaign, setCampaign] = useState(() =>
+    typeof window === "undefined"
+      ? "all"
+      : (new URLSearchParams(window.location.hash.split("?")[1]).get("campaign") ?? "all"),
+  );
   const [grading, setGrading] = useState("all");
   const [metric, setMetric] = useState<LeaderboardMetric>("overall");
   const [direction, setDirection] = useState<"asc" | "desc">("desc");
@@ -112,6 +116,11 @@ export function LeaderboardPage({
           <p className="results-context">
             Every recorded setting has its own row, including incomplete runs and earlier campaigns.
             Scores measure tool-use conformance; answer quality was not evaluated.
+          </p>
+          <p className="results-context">
+            Recovery results are included as a separate campaign. 100% graded means every trial has
+            a verdict, not a 100% pass rate. Recovery budgets vary from 120–600s; original runs
+            remain available below.
           </p>
         </ResultsHeader>
         <div className="results-toolbar">
@@ -216,14 +225,14 @@ export function LeaderboardPage({
                 const first = runs[0];
                 const timeouts = [
                   ...new Set(
-                    runs
-                      .map(
-                        (run) =>
-                          run.timeoutMs ??
-                          canonicalCampaigns.find((entry) => entry.campaignId === run.campaignId)
-                            ?.timeoutMs,
-                      )
-                      .filter((value) => value != null),
+                    runs.flatMap((run) => {
+                      if (run.recovery) return [...run.recovery.timeoutBudgetsMs];
+                      const timeout =
+                        run.timeoutMs ??
+                        canonicalCampaigns.find((entry) => entry.campaignId === run.campaignId)
+                          ?.timeoutMs;
+                      return timeout == null ? [] : [timeout];
+                    }),
                   ),
                 ];
                 return (
@@ -253,7 +262,12 @@ export function LeaderboardPage({
                             <small>
                               {first?.startedAt.slice(0, 10)} ·{" "}
                               {timeouts.length
-                                ? `${timeouts.map((value) => value! / 1000).join(" / ")}s timeout`
+                                ? `${timeouts
+                                    .map((value) => value! / 1000)
+                                    .sort((a, b) => a - b)
+                                    .join(
+                                      " / ",
+                                    )}s ${first?.recovery ? "recorded budgets" : "timeout"}`
                                 : "Timeout not recorded"}{" "}
                               · {first?.cohort.repetitions} reps
                             </small>

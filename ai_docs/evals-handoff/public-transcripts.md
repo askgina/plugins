@@ -49,3 +49,19 @@ To regenerate, run the exporter with `--source`, `--public-results`, `--output`
 before copying it into the public directory or updating the pinned index hash.
 Never commit the known-secret file or retained private bundle. Generated JSON is
 excluded from formatting because its exact bytes are pinned.
+
+## September 21 recovery publication
+
+The recovery campaign adds 689 public captures for selected VM executions and
+closed retries, bringing the combined index to 4,364 documents. Original
+transcript bytes remain unchanged. New captures include 520 complete transcripts
+and 169 with explicit capture/execution gaps. The chat reader's Execution history
+selector exposes each retained retry and its time budget. Full visible messages
+are available on the deployed web app with the existing formatted/Source and
+Expand all controls.
+
+`tools/project-eval-recovery.py` verifies the immutable VM snapshot and projects
+only public fields using the same redactor. Numeric result artifacts must pass
+the existing strict schemas and an additional frozen hash allowlist. See
+[the recovery publication record](reviews/recovery-publication-2026-09-21.md)
+for selection policy, counts, costs, privacy checks, and reproduction details.

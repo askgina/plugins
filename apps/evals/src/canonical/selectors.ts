@@ -508,7 +508,7 @@ const FAMILY_BY_SUITE_ID: Record<string, PrototypeFamily> = {
 /** Human-readable cohort identity: family · target · account · reps · evidence. */
 export function cohortLabel(cohort: CanonicalCohort): string {
   const family = FAMILY_BY_SUITE_ID[cohort.suiteId] ?? cohort.suiteId;
-  return `${family} · ${cohort.target} · ${cohort.accountClass} · ${cohort.repetitions} reps · ${cohort.evidenceCategory}`;
+  return `${family} · ${cohort.target} · ${cohort.accountClass} · ${cohort.repetitions} reps · ${cohort.evidenceCategory}${cohort.recoveryProtocol ? " · Recovery (120–600s)" : ""}`;
 }
 
 /** Every cohort declared for a family's suite (empty for unmeasured families). */
@@ -660,6 +660,7 @@ function compatibleSuiteRuns(runs: readonly CanonicalRun[]): boolean {
         run.cohort.accountClass === first.cohort.accountClass &&
         run.cohort.repetitions === first.cohort.repetitions &&
         run.cohort.evidenceCategory === "conformance" &&
+        run.cohort.recoveryProtocol === first.cohort.recoveryProtocol &&
         run.configuration.reasoning === first.configuration.reasoning &&
         run.configuration.candidate === first.configuration.candidate,
     )
@@ -848,7 +849,7 @@ export function configurationLeaderboardRows(
         .sort()
         .join("+"),
       campaignId: first.campaignId,
-      configurationLabel: `${first.configuration.reasoning ?? "Unspecified"} reasoning · ${client}`,
+      configurationLabel: `${first.configuration.reasoning ?? "Unspecified"} reasoning · ${client}${first.recovery ? " · Recovery (120–600s)" : ""}`,
     }));
   });
 }

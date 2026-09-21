@@ -1,6 +1,9 @@
 import type { Conversation, ConversationReference } from "./conversations";
 
 export const PUBLIC_TRANSCRIPT_CAMPAIGN = "reasoning-sweep-2026-09-16";
+export const PUBLIC_RECOVERY_CAMPAIGN = "recovery-2026-09-21";
+const supportedCampaign = (value: unknown) =>
+  value === PUBLIC_TRANSCRIPT_CAMPAIGN || value === PUBLIC_RECOVERY_CAMPAIGN;
 const digest = /^[a-f0-9]{64}$/u;
 const identifier = /^[a-z0-9][a-z0-9-]{0,150}$/u;
 const record = (value: unknown): value is Record<string, unknown> =>
@@ -48,7 +51,7 @@ export interface PublicTranscript {
 
 export function publicTranscriptPath(reference: ConversationReference): string | undefined {
   if (
-    reference.campaignId !== PUBLIC_TRANSCRIPT_CAMPAIGN ||
+    !supportedCampaign(reference.campaignId) ||
     ![reference.rowId, reference.family, reference.caseId].every(id) ||
     !count(reference.repetition) ||
     reference.repetition === 0
@@ -70,7 +73,8 @@ export function isPublicTranscriptIndex(value: unknown): value is PublicTranscri
       "files",
     ]) ||
     value.schemaVersion !== "ask-gina-public-conversations.v1" ||
-    value.campaignId !== PUBLIC_TRANSCRIPT_CAMPAIGN ||
+    (value.campaignId !== "eval-campaigns-2026-09-21" &&
+      value.campaignId !== PUBLIC_TRANSCRIPT_CAMPAIGN) ||
     !hash(value.sourceManifestSha256) ||
     !hash(value.exporterSha256) ||
     !redactions(value.redactions) ||
@@ -121,7 +125,7 @@ export function isPublicTranscript(value: unknown): value is PublicTranscript {
       "catalogSha",
       "target",
     ]) ||
-    r.campaignId !== PUBLIC_TRANSCRIPT_CAMPAIGN ||
+    !supportedCampaign(r.campaignId) ||
     !id(r.rowId) ||
     !id(r.caseId) ||
     typeof r.family !== "string" ||

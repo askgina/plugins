@@ -19,7 +19,9 @@ const asPoint = (row: LeaderboardModelRow, index: number): ScatterPoint => ({
 });
 
 describe("research chart comparisons", () => {
-  const eligible = configurationLeaderboardRows().filter((row) => row.overall !== null);
+  const eligible = configurationLeaderboardRows().filter(
+    (row) => row.overall !== null && row.campaignId !== "recovery-2026-09-21",
+  );
   const astra = eligible.filter((row) => row.model.name === "GPT-6 Astra");
 
   test("connects the six existing model series in reasoning order without changing eligible results", () => {
@@ -138,10 +140,10 @@ describe("scatter plot configuration rows", () => {
       }),
     );
     expect(html).toContain('viewBox="0 0 360 280"');
-    expect(html.match(/class="lb-chart-model"/gu)).toHaveLength(13);
-    expect(html).toContain("13 plotted settings: names and values");
+    expect(html.match(/class="lb-chart-model"/gu)).toHaveLength(21);
+    expect(html).toContain("21 plotted settings: names and values");
     expect(html).toContain("Grok 4.6, low reasoning · OMP");
     expect(html).toContain("65.7% overall · 30.3s");
-    expect(html).toContain("27 settings not plotted");
+    expect(html).toContain("30 settings not plotted");
   });
 });

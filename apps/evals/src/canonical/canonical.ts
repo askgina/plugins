@@ -29,6 +29,7 @@ import {
 import perpsAttemptsJson from "../results/2026-09-11/perps-predictions/perps/perps-openai-oauth-sol-20260911T152450Z.attempts.json";
 import type { ConversationReference } from "../lib/conversations";
 import { recordedSweepCost } from "../lib/recorded-costs";
+import recoveryResults from "../results/2026-09-21/recovery/results.json";
 
 // ---------------------------------------------------------------------------
 // Vocabulary
@@ -230,6 +231,7 @@ export interface CanonicalCaseDefinition {
 
 /** Machine-readable comparison key — equal keys are required for comparison. */
 export interface CanonicalCohort {
+  readonly recoveryProtocol?: string;
   readonly cohortId: string;
   readonly suiteId: string;
   readonly suiteVersion: number;
@@ -252,6 +254,11 @@ export interface CanonicalConfiguration {
 }
 
 export interface CanonicalAttempt {
+  readonly recovery?: {
+    readonly timeoutMs: number;
+    readonly budgetCohort: string;
+    readonly history: readonly RecoveryExecution[];
+  };
   readonly conversation?: ConversationReference;
   readonly caseId: string;
   readonly repetition: number;
@@ -269,6 +276,15 @@ export interface CanonicalAttempt {
   readonly tokenUsage: Evidence<CanonicalTokenUsage>;
   readonly answer: Evidence<string>;
   readonly toolCalls: Evidence<readonly { name: string; error: boolean }[]>;
+}
+
+export interface RecoveryExecution {
+  readonly outcome: string;
+  readonly timeoutMs: number;
+  readonly completedAt: string;
+  readonly terminalSha256: string;
+  readonly selected: boolean;
+  readonly conversation: ConversationReference;
 }
 
 export interface CanonicalRunCounts {
@@ -308,6 +324,13 @@ export type RecordedCostEstimate =
   | MetricUnavailable;
 
 export interface CanonicalRun {
+  readonly recovery?: {
+    readonly capturedAt: string;
+    readonly timeoutBudgetsMs: readonly number[];
+    readonly baseline: number;
+    readonly sameBudget: number;
+    readonly extendedBudget: number;
+  };
   readonly runId: string;
   readonly origin: DataOrigin;
   readonly modelId: string;
@@ -679,6 +702,14 @@ const SWEEP_COHORTS: Readonly<
   },
 };
 
+function recoveryCohort(source: CanonicalCohort): CanonicalCohort {
+  return {
+    ...source,
+    cohortId: source.cohortId + ":recovery-2026-09-21",
+    recoveryProtocol: "failed-step-recovery-120-300-600-v1",
+  };
+}
+
 const meridianSpotCohort = cohort({
   suiteId: SUITE_IDS.Spot,
   catalogSha: "b3f5c9e1a2d48f6b7c0e9a1b3c5d7e9f0a2b4c6d8e0f2a4b6c8d0e2f4a6b8c0d2",
@@ -697,6 +728,14 @@ export const canonicalCohorts: readonly CanonicalCohort[] = [
   devinPerpsCohort,
   devinPredictionsCohort,
   meridianSpotCohort,
+  ...[
+    ompSpotCohort,
+    ompPerpsCohort,
+    ompPredictionsCohort,
+    museSpotCohort,
+    musePerpsCohort,
+    musePredictionsCohort,
+  ].map(recoveryCohort),
 ];
 
 // ---------------------------------------------------------------------------
@@ -828,6 +867,22 @@ const solSpotLabelsOnlyConfiguration: CanonicalConfiguration = {
 // ---------------------------------------------------------------------------
 
 export const canonicalCampaigns: readonly CanonicalCampaign[] = [
+  {
+    campaignId: "recovery-2026-09-21",
+    date: "2026-09-21",
+    harness: "Astra, Muse and Grok · execution recovery",
+    repetitions: 3,
+    timeoutMs: null,
+    sourceCommit: null,
+    limitations: [
+      "Snapshot at " + recoveryResults.capturedAt + ". Grok is still incomplete.",
+      "Existing grades are preserved. Only execution gaps are retried; the first completed grade is final.",
+      "Recovery combines retained trials and retries with 120s, 300s or 600s budgets. It is separate from the original fixed-budget sweep.",
+      "100% graded means every trial has a pass or fail verdict; it does not mean every trial passed.",
+      "Costs cover selected graded attempts, including cache usage. Failed execution retries and subscription charges are excluded.",
+    ],
+    origin: "measured",
+  },
   {
     campaignId: "omp-2026-09-11",
     date: perpsPredictionsReport.date,
@@ -2383,6 +2438,74 @@ function sweepFamilyRun(row: SweepRow, run: SweepRun): CanonicalRun {
   };
 }
 
+interface RecoveryRun extends SweepRun {
+  readonly timeoutBudgetsMs: readonly number[];
+  readonly budgetCounts: Readonly<Record<string, number | undefined>>;
+  readonly executions: readonly {
+    readonly caseId: string;
+    readonly repetition: number;
+    readonly conversation: ConversationReference;
+    readonly timeoutMs: number;
+    readonly budgetCohort: string;
+    readonly history: readonly RecoveryExecution[];
+  }[];
+}
+
+function recoveryFamilyRun(row: SweepRow, source: RecoveryRun): CanonicalRun {
+  const base = sweepFamilyRun(row, source);
+  const attempts = source.trials.map((trial) => {
+    const execution = source.executions.find(
+      (entry) => entry.caseId === trial.caseId && entry.repetition === trial.repetition,
+    );
+    if (!execution) throw new Error("Missing recovery execution metadata");
+    return {
+      ...projectedTrialToCanonical(trial),
+      conversation: execution.conversation,
+      recovery: {
+        timeoutMs: execution.timeoutMs,
+        budgetCohort: execution.budgetCohort,
+        history: execution.history,
+      },
+    };
+  });
+  return {
+    ...base,
+    campaignId: "recovery-2026-09-21",
+    recovery: {
+      capturedAt: recoveryResults.capturedAt,
+      timeoutBudgetsMs: source.timeoutBudgetsMs,
+      baseline: source.budgetCounts["retained-baseline"] ?? 0,
+      sameBudget: source.budgetCounts["same-budget-completion"] ?? 0,
+      extendedBudget: source.budgetCounts["extended-budget-completion"] ?? 0,
+    },
+    cohort: recoveryCohort(base.cohort),
+    recordedCostEstimate: recordedSweepCost(row, source, recoveryResults.costs),
+    attempts: available(attempts),
+    dimensions: available(dimensionsFromAttempts(attempts)),
+    coveragePlan: {
+      planSource: "run_manifest",
+      planSha256: recoveryResults.sourceManifestSha256,
+      statusSha256: recoveryResults.sourceManifestSha256,
+    },
+    provenance: {
+      ...base.provenance,
+      sourceLabel: "Recovery snapshot: first graded result per planned slot",
+    },
+    notes: [
+      "Recovery snapshot at " +
+        recoveryResults.capturedAt +
+        ". Original sweep records remain available separately.",
+      "Existing grades, including failures, are final. Only execution gaps are retried; the first completed grade is selected.",
+      "Mixed 120s/300s/600s budgets and retries are not equivalent to a fresh fixed-budget benchmark. Per-trial budgets and execution history are available in Chat.",
+      "100% graded means every trial has a verdict, not that every trial passed. Scores measure tool-use conformance, not answer quality.",
+      "Cost and timing cover selected graded attempts; failed execution retries are excluded. Costs are token estimates, not subscription invoices.",
+      row.target === "muse_cli"
+        ? "Muse effort is adapter-requested. Native export excludes hidden reasoning and internal prompt context."
+        : "Model and thinking settings are retained in native OMP evidence; provider-applied effort is not attested.",
+    ],
+  };
+}
+
 // --- Synthetic rows (all labelled synthetic) ---------------------------------
 
 function syntheticAttempt(input: {
@@ -2765,6 +2888,7 @@ export const canonicalRuns: readonly CanonicalRun[] = [
     ),
   ),
   ...reasoningSweepRows.flatMap((row) => row.runs.map((run) => sweepFamilyRun(row, run))),
+  ...recoveryResults.models.flatMap((row) => row.runs.map((run) => recoveryFamilyRun(row, run))),
   solSpot2,
   solSpotIncomplete,
   solSpotUnknown,
@@ -2940,9 +3064,11 @@ export const canonicalPublications: readonly CanonicalPublication[] = [
       ? correctedPublication(run)
       : resultPublication(
           run,
-          run.campaignId === SWEEP_CAMPAIGN_ID
-            ? reasoningSweep.generatedAt
-            : "2026-09-14T18:00:00.000Z",
+          run.campaignId === "recovery-2026-09-21"
+            ? recoveryResults.capturedAt
+            : run.campaignId === SWEEP_CAMPAIGN_ID
+              ? reasoningSweep.generatedAt
+              : "2026-09-14T18:00:00.000Z",
         ),
   ),
   ...withdrawnRuns.map(withdrawnPublication),

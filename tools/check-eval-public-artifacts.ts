@@ -246,6 +246,12 @@ const APPROVED_CLAUDE_ARTIFACTS: Readonly<Record<string, string>> = {
     "7e8c040a63aeb74248df73fd683deb0d0fb37f52fee58616b786a361c9aeb1d5",
 };
 const textDecoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+const APPROVED_RECOVERY_ARTIFACTS: Readonly<Record<string, string>> = {
+  "src/results/2026-09-21/recovery/results.json":
+    "ee45efee5273f04f46146e2e0886afff7008b325211ccefb467b748e8d93eecc",
+  "src/results/2026-09-21/recovery/snapshot.json":
+    "a4e5b8a350e822d687e8cd85f7db64bdfb70c2776f11cf96e56a1a3d87ccf5fe",
+};
 const decodeArtifactJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
 
 /** Fixed diagnostics never include provider values or schema issue excerpts. */
@@ -394,7 +400,15 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
         }
         const claudeBearing = /claude/iu.test(relative) || hasClaudeIdentity(input);
         const sweepArtifact = relative.startsWith("src/results/2026-09-16/reasoning-sweep/");
-        if (claudeBearing || sweepArtifact) {
+        const recoveryArtifact = relative.startsWith("src/results/2026-09-21/recovery/");
+        if (
+          recoveryArtifact &&
+          (!Object.hasOwn(APPROVED_RECOVERY_ARTIFACTS, relative) ||
+            createHash("sha256").update(bytes).digest("hex") !==
+              APPROVED_RECOVERY_ARTIFACTS[relative])
+        )
+          return yield* fail(relative, "unapproved_artifact");
+        if (claudeBearing || sweepArtifact || recoveryArtifact) {
           yield* validateClaudePublicArtifact(input, relative);
         }
         if (claudeBearing) {

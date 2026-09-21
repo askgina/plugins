@@ -38,6 +38,16 @@ export function AttemptChecks({ attempt }: { attempt: CanonicalAttempt }) {
         )}
       />
       <dl className="results-facts">
+        {attempt.recovery && (
+          <div>
+            <dt>Recovery execution</dt>
+            <dd>
+              {attempt.recovery.timeoutMs / 1000}s budget ·{" "}
+              {attempt.recovery.budgetCohort.replaceAll("-", " ")} ·{" "}
+              {Math.max(1, attempt.recovery.history.length)} recorded executions
+            </dd>
+          </div>
+        )}
         <div>
           <dt>Failure reasons</dt>
           <dd>

@@ -96,8 +96,12 @@ export function RunDetails({ run }: { run: CanonicalRun }) {
         <div>
           <dt>Budget</dt>
           <dd>
-            {timeout == null ? "Timeout not recorded" : `${timeout / 1000}s timeout`} ·{" "}
-            {run.cohort.repetitions} repetitions per task
+            {run.recovery
+              ? `${run.recovery.timeoutBudgetsMs.map((ms) => ms / 1000).join(" / ")}s recorded budgets`
+              : timeout == null
+                ? "Timeout not recorded"
+                : `${timeout / 1000}s timeout`}{" "}
+            · {run.cohort.repetitions} repetitions per task
           </dd>
         </div>
         <div>
