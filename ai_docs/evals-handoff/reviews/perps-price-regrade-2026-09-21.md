@@ -4,6 +4,49 @@
 model with retained public evidence. It reviews both previous passes and failures.
 No inference was rerun, model output edited, or desired ranking encoded.
 
+## Price-assertion hardening (`perps-price-evidence-v2`)
+
+The second revision fixes the answer parser's demonstrated false positives and
+false negatives. It accepts asset names such as Bitcoin, USD/USDC before or after
+the number, ordinary prose assertions, and coin/metric or field/value tables.
+Assertions retain their own coin, metric, polarity and explicit venue. A denied
+correct price cannot satisfy the task; a denied wrong price followed by a correct
+assertion can. Contradictory prices in subsequent sentences or lines, including
+explicit price follow-ups without the ticker, fail. Explicit venue declarations
+also apply when they appear below the quote.
+
+Timestamps, volume, funding, unrelated oracle values, venue disclaimers and
+suggested trading levels do not become mark-price assertions merely because they
+contain numbers. Rounding still uses half a unit at the displayed precision.
+Unsupported scaled/scientific prices and ambiguous price cells fail with a
+manual-review diagnostic rather than being accepted through a matching prefix.
+
+This remains a bounded deterministic parser, not a general semantic judge. It
+does not resolve arbitrary pronouns or infer that a later correction retracts an
+earlier affirmative claim; contradictory affirmative prices fail conservatively.
+Unseen wording can still require review. The separate native-grader/evidence-replay
+gap described below is unchanged.
+
+All 382 retained campaign-row attempts were replayed with the same evidence and
+skip population. No price-grounding outcomes or verdicts changed from v1, so this
+patch does not change the leaderboard rankings. The receipt is versioned and now
+hashes the extracted claim parser too. Original results, transcripts, timing and
+costs remain byte-for-byte unchanged; the v1 receipt remains in Git history.
+The search receipt changes only its shared grading-revision source fingerprint.
+
+Regression cases exercise the audit counterexamples and additional alias,
+currency, negation, uncertainty, venue, sign, numeric-format, table and HIP-3
+context cases. The all-provider replay is a compatibility check, not an
+independent validation set or evidence of general model quality.
+
+V2 verification: 58 focused price/search/revision tests pass, along with lint,
+root and eval-app typechecks, formatting, import checks, both receipt replays and
+the public-artifact guard. The broader eval package/app suite has 392 passing and
+16 failing tests on this macOS host. The same 16 failures reproduce against clean
+main (`6d8746c`): two Codex executable-descriptor tests, thirteen OMP harness tests,
+and one case-sensitive publication-path test. Tests use the configured Bun runner
+and a canonical `/private/tmp` temporary directory.
+
 ## Contract
 
 - `perps-single-price` requests the canonical BTC mark. Accept a markets or

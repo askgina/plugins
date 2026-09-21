@@ -3,7 +3,7 @@ import perpsReceipt from "../results/2026-09-21/regrade/perps-receipt.json";
 import receipt from "../results/2026-09-21/regrade/receipt.json";
 import type { CanonicalAttempt, CheckOutcome, GradingVerdict } from "../canonical/canonical";
 
-export const PERPS_GRADING_POLICY = "perps-price-evidence-v1";
+export const PERPS_GRADING_POLICY = "perps-price-evidence-v2";
 export const SEARCH_GRADING_POLICY = "bounded-prediction-search-v1";
 
 export interface GradingRevisionEntry {
