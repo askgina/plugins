@@ -61,11 +61,13 @@ export function useHashRoute(): string {
       const nextRoute = window.location.hash.slice(1);
       if (nextRoute === "eval-main") return;
       setRoute(nextRoute || DEFAULT_ROUTE);
-      // Task selections update the URL without throwing the reviewer back to the hero.
-      const withinTasks =
-        parseRoute(previousRoute).path === "/tasks" && parseRoute(nextRoute).path === "/tasks";
+      // Updating selections should not throw the reviewer back to the page heading.
+      const previousPath = parseRoute(previousRoute).path;
+      const nextPath = parseRoute(nextRoute).path;
+      const withinSelections =
+        previousPath === nextPath && ["/tasks", "/compare"].includes(nextPath);
       previousRoute = nextRoute || DEFAULT_ROUTE;
-      if (!withinTasks) window.scrollTo({ top: 0, behavior: "auto" });
+      if (!withinSelections) window.scrollTo({ top: 0, behavior: "auto" });
     };
     window.addEventListener("hashchange", handleRoute);
     return () => window.removeEventListener("hashchange", handleRoute);
