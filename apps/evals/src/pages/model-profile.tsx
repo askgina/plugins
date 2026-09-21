@@ -21,6 +21,8 @@ import {
   headlineFor,
   outcomeMatrixFor,
   publicationFor,
+  recordedBudgetLabel,
+  recordedOutcomes,
   resolveBaselineRun,
   runHistoryFor,
   type DerivedCost,
@@ -42,6 +44,7 @@ import {
 } from "../canonical/components";
 import { CheckDimensionPanel } from "../components/check-dimension-radar";
 import { ModelAvatar, PageShell, Panel } from "../components/eval-ui";
+import { ModelSettingResults } from "../components/model-setting-results";
 import { Button } from "../components/ui/button";
 import "./model-profile.css";
 
@@ -198,19 +201,28 @@ function FamilyMetricCards({
   }, [modelId, includeSynthetic]);
 
   if (cards.length === 0) return null;
+  const levels = [
+    ...new Set(
+      cards.map(({ representative }) => representative?.configuration.reasoning ?? "unspecified"),
+    ),
+  ];
 
   return (
     <>
-      <p className="eval-muted">Latest recorded run per family, not an overall or best score.</p>
+      <div className="model-profile-section-heading">
+        <h2>
+          Latest recorded {levels.length === 1 ? `${levels[0]} reasoning` : "category results"}
+        </h2>
+        <p className="eval-muted">
+          A closer look at the newest category runs. Compare every reasoning level in the table
+          below.
+        </p>
+      </div>
       <section className="model-profile-metrics" aria-label="Latest recorded run per task family">
         {cards.map(({ family, representative }) => {
           if (!representative) return null;
           const headline = headlineFor(representative);
           const unscored = representative.counts.started - representative.counts.graded;
-          const timeoutMs =
-            representative.timeoutMs ??
-            canonicalCampaigns.find((campaign) => campaign.campaignId === representative.campaignId)
-              ?.timeoutMs;
           return (
             <article className="model-profile-metric" key={family}>
               <div className="model-profile-metric-header">
@@ -220,9 +232,7 @@ function FamilyMetricCards({
               <p className="model-profile-metric-unscored">
                 Reasoning {representative.configuration.reasoning ?? "not recorded"} ·{" "}
                 {clientDisplayName(representative.cohort.target)} ·{" "}
-                {timeoutMs === null || timeoutMs === undefined
-                  ? "timeout not recorded"
-                  : `${timeoutMs / 1000}s timeout`}
+                {recordedBudgetLabel([representative])}
               </p>
               <div className="model-profile-metric-headline">
                 <strong>
@@ -335,8 +345,8 @@ function ConfigurationGroupsPanel({
 
   return (
     <Panel
-      title="Configuration groups"
-      description="Runs are grouped by exact pinnedSha256 identity. Labels-only configurations stand alone and cannot match a pinned group."
+      title="Recorded configurations"
+      description="Exact configuration fingerprints for reproducing individual runs. Different fingerprints can belong to the same reasoning level."
     >
       <div className="model-profile-config-groups">
         {groups.map((group) => (
@@ -725,12 +735,10 @@ function RunDetail({ run }: { run: CanonicalRun }) {
             <dt>Cohort</dt>
             <dd>{cohortLabel(run.cohort)}</dd>
           </div>
-          {run.timeoutMs !== undefined && (
-            <div>
-              <dt>Trial timeout</dt>
-              <dd>{run.timeoutMs / 1000}s</dd>
-            </div>
-          )}
+          <div>
+            <dt>Attempt budgets</dt>
+            <dd>{recordedBudgetLabel([run])}</dd>
+          </div>
           <div>
             <dt>Source label</dt>
             <dd>{run.provenance.sourceLabel}</dd>
@@ -810,7 +818,7 @@ function RunHistoryPanel({
     <Panel
       className="model-profile-history-panel"
       title="Run history"
-      description="All evaluations for this model, ordered newest first. Click any row to expand attempt counts, per-case outcomes, and provenance."
+      description="All recorded runs, including earlier incomplete attempts. These are historical records, not additional reasoning levels. Expand a row for task outcomes and sources."
     >
       <div className="model-profile-table-scroll">
         <table className="eval-table model-profile-table">
@@ -927,62 +935,119 @@ function RunHistoryPanel({
 // Campaigns & limitations panel
 // ---------------------------------------------------------------------------
 
-function CampaignsPanel({ campaigns }: { campaigns: readonly CanonicalCampaign[] }) {
+function CampaignsPanel({
+  campaigns,
+  runs,
+}: {
+  campaigns: readonly CanonicalCampaign[];
+  runs: readonly CanonicalRun[];
+}) {
   if (campaigns.length === 0) return null;
   return (
     <Panel
+      className="model-profile-campaigns"
       title="Campaigns & limitations"
-      description="Harness versions, execution dates, and known review limitations."
+      description="When these results were recorded, what is complete, and how to interpret the comparison."
     >
-      <dl className="model-profile-run-details">
-        {campaigns.map((campaign) => (
-          <div key={campaign.campaignId}>
-            <dt>{campaignDisplayLabel(campaign.campaignId)}</dt>
-            <dd>
-              {campaign.date} · {campaign.harness} · {campaign.repetitions} reps ·{" "}
-              {campaign.timeoutMs === null
-                ? "route-specific timeouts"
-                : `${campaign.timeoutMs / 1000}s timeout`}
-              {campaign.sourceCommit && (
-                <>
-                  {" "}
-                  · commit <code>{campaign.sourceCommit.slice(0, 7)}</code>
-                </>
-              )}
-            </dd>
-          </div>
-        ))}
-      </dl>
-      {campaigns.some((c) => c.limitations.length > 0) && (
-        <div style={{ padding: "0 20px 18px" }}>
-          <span className="eval-muted">Limitations:</span>
-          <ul style={{ margin: "4px 0 0", paddingLeft: "18px" }}>
-            {campaigns
-              .flatMap((c) => c.limitations)
-              .map((limitation, index) => (
-                <li key={index}>{limitation}</li>
-              ))}
-          </ul>
-        </div>
-      )}
-      {campaigns.some((c) => c.prUrl) && (
-        <div style={{ padding: "0 20px 18px" }}>
-          {campaigns
-            .filter((c) => c.prUrl)
-            .map((c) => (
-              <a
-                key={c.campaignId}
-                className="eval-text-link model-profile-run-link"
-                href={c.prUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {c.prLabel ?? "Open GitHub PR"} ({campaignDisplayLabel(c.campaignId)}){" "}
-                <ArrowUpRight size={14} aria-hidden="true" />
-              </a>
-            ))}
-        </div>
-      )}
+      <div className="model-profile-campaign-list">
+        {campaigns.map((campaign) => {
+          const campaignRuns = runs.filter((run) => run.campaignId === campaign.campaignId);
+          const counts = recordedOutcomes(campaignRuns);
+          const levels = [
+            ...new Set(campaignRuns.map((run) => run.configuration.reasoning ?? "unspecified")),
+          ];
+          const clients = [
+            ...new Set(campaignRuns.map((run) => clientDisplayName(run.cohort.target))),
+          ];
+          return (
+            <article className="model-profile-campaign" key={campaign.campaignId}>
+              <div className="model-profile-campaign-heading">
+                <h3>
+                  <time dateTime={campaign.date}>{campaign.date}</time>
+                </h3>
+                <span>
+                  {counts.graded}/{counts.planned} graded
+                </span>
+              </div>
+              <p>
+                {clients.join(" / ")} · {campaign.repetitions} repetitions per task ·{" "}
+                {recordedBudgetLabel(campaignRuns)}
+              </p>
+              <p>Reasoning: {levels.join(", ")}</p>
+              <p className="model-profile-campaign-outcomes">
+                {counts.passed} passed · {counts.failed} failed
+                {counts.planned > counts.graded && ` · ${counts.planned - counts.graded} ungraded`}
+                {counts.timedOut > 0 && ` · ${counts.timedOut} timed out`}
+                {counts.runtimeFailure > 0 && ` · ${counts.runtimeFailure} run errors`}
+              </p>
+              <details className="model-profile-campaign-sources">
+                <summary>Full campaign notes &amp; sources</summary>
+                <dl className="model-profile-run-details">
+                  <div>
+                    <dt>Campaign identifier</dt>
+                    <dd>
+                      <code>{campaign.campaignId}</code>
+                    </dd>
+                  </div>
+                  {campaign.sourceCommit && (
+                    <div>
+                      <dt>Source commit</dt>
+                      <dd>
+                        <code>{campaign.sourceCommit}</code>
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+                <ul>
+                  {campaign.limitations.map((limitation) => (
+                    <li key={limitation}>{limitation}</li>
+                  ))}
+                </ul>
+                {campaign.prUrl && (
+                  <a
+                    className="eval-text-link"
+                    href={campaign.prUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {campaign.prLabel ?? "View source PR"}{" "}
+                    <ArrowUpRight size={14} aria-hidden="true" />
+                  </a>
+                )}
+              </details>
+            </article>
+          );
+        })}
+      </div>
+      <div className="model-profile-limitations">
+        <h3>How to read these results</h3>
+        <ul>
+          <li>
+            <strong>Graded does not mean passed.</strong> Each graded attempt has a pass or fail
+            verdict. Timeouts and run errors remain ungraded; incomplete settings do not receive an
+            Overall score.
+          </li>
+          <li>
+            <strong>These are small, live samples.</strong> Results reflect the model, client,
+            recorded budget and backend conditions. Reasoning labels describe requested settings,
+            not independently verified provider behaviour.
+          </li>
+          <li>
+            <strong>The score measures task checks.</strong> These cover tool use and completion,
+            with answer-grounding checks on the reviewed price tasks. They do not establish general
+            answer quality.
+          </li>
+          <li>
+            <strong>Costs and timings have exclusions.</strong> Summary metrics cover the selected
+            completed attempts with records, excluding failed execution retries and subscription
+            charges. Earlier and later campaigns can share attempts; their totals should not be
+            added together.
+          </li>
+        </ul>
+        <a className="eval-text-link" href="#/methodology">
+          Read the full methodology <ArrowUpRight size={14} aria-hidden="true" />
+        </a>
+      </div>
     </Panel>
   );
 }
@@ -1130,52 +1195,37 @@ export function ModelProfilePage({
               {campaigns.length > 0
                 ? campaigns.map((c) => `${c.harness} (${c.date}, ${c.repetitions} reps)`).join("; ")
                 : "Canonical evaluation profile"}
-              . Small live samples; measures tool routing, arguments, completion and safety.
+              . Compare reasoning levels below, then inspect individual tasks and their evidence.
             </p>
             {museSweepCounts !== null && museSweepCounts.planned > 0 && (
               <p className="eval-description" role="note">
-                <strong>Quota-limited Muse scoring.</strong> {museSweepCounts.graded} of{" "}
+                <strong>Earlier sweep, 16 September.</strong> {museSweepCounts.graded} of{" "}
                 {museSweepCounts.planned} planned sweep trials were graded: {museSweepCounts.passed}{" "}
                 passed, {museSweepCounts.failed} failed and {museSweepCounts.unscored} remain
-                unscored. Complete dispatch is not complete grading. Sequential cases leave
-                different graded case mixes across reasoning levels. Do not rank or compare their
-                graded-only pass percentages. The quota scope is not established.
+                unscored in that original campaign. The results below include later recorded
+                attempts; the earlier runs remain in history.
               </p>
             )}
           </div>
 
           <div className="model-profile-actions">
-            {artifacts.map((artifact) => (
-              <Button
-                asChild
-                className="model-profile-download-button"
-                variant="secondary"
-                key={artifact.filename}
-              >
-                <a
-                  href={artifact.url}
-                  download={artifact.filename}
-                  title={`Download bundled JSON artifact (${artifact.description})`}
-                >
-                  <Download size={15} aria-hidden="true" /> Download {artifact.description}
-                </a>
-              </Button>
-            ))}
+            <Button asChild className="model-profile-download-button" variant="secondary">
+              <a href="/transcripts/index.json" download="askgina-transcript-index.json">
+                <Download size={15} aria-hidden="true" /> Transcript index
+              </a>
+            </Button>
             <a className="eval-text-link" href="#/methodology">
               View methodology <ArrowUpRight size={14} aria-hidden="true" />
             </a>
           </div>
         </section>
 
-        {/* Metric cards per family */}
         <FamilyMetricCards
           modelId={model.id}
           includeSynthetic={includeSynthetic}
           onSelectRun={handleSelectRun}
         />
-
-        {/* Configuration groups */}
-        <ConfigurationGroupsPanel runs={runs} onSelectRun={handleSelectRun} />
+        {model.origin !== "synthetic" && <ModelSettingResults modelId={model.id} />}
 
         {/* Run history table with expandable rows */}
         <RunHistoryPanel
@@ -1185,8 +1235,25 @@ export function ModelProfilePage({
           onToggleRun={handleToggleRun}
         />
 
+        <details className="model-profile-provenance">
+          <summary>Configuration fingerprints &amp; original downloads</summary>
+          <ConfigurationGroupsPanel runs={runs} onSelectRun={handleSelectRun} />
+          <div className="model-profile-original-downloads">
+            {artifacts.map((artifact) => (
+              <a
+                className="eval-text-link"
+                key={artifact.filename}
+                href={artifact.url}
+                download={artifact.filename}
+              >
+                Original {artifact.description} JSON
+              </a>
+            ))}
+          </div>
+        </details>
+
         {/* Campaigns & limitations */}
-        <CampaignsPanel campaigns={campaigns} />
+        <CampaignsPanel campaigns={campaigns} runs={runs} />
       </div>
     </PageShell>
   );

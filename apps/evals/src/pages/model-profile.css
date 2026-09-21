@@ -12,6 +12,147 @@
   margin: 0;
 }
 
+.model-profile-results {
+  margin-bottom: 24px;
+}
+
+.model-profile-section-heading h2 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.model-profile-section-heading p {
+  margin: 0 0 16px;
+  font-size: 13px;
+}
+
+.model-profile-campaign-list,
+.model-profile-limitations {
+  padding: 0 20px 20px;
+}
+
+.model-profile-campaign {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--eval-line);
+}
+
+.model-profile-campaign-heading {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.model-profile-campaign h3,
+.model-profile-limitations h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.model-profile-campaign p {
+  margin: 6px 0;
+  font-size: 13px;
+  color: var(--eval-muted);
+}
+
+.model-profile-campaign-heading span,
+.model-profile-campaign-sources,
+.model-profile-limitations {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.model-profile-campaign-sources {
+  margin-top: 12px;
+}
+
+.model-profile-campaign-sources summary {
+  cursor: pointer;
+  color: var(--eval-link);
+}
+
+.model-profile-campaign-sources ul,
+.model-profile-limitations ul {
+  padding-left: 20px;
+  max-width: 75ch;
+}
+
+.model-profile-campaign-sources li,
+.model-profile-limitations li {
+  margin: 8px 0;
+}
+
+.model-profile-results-note {
+  margin: 0;
+  padding: 0 20px 12px;
+  color: var(--eval-muted);
+  font-size: 13px;
+  max-width: 75ch;
+}
+
+.model-profile-results-table {
+  min-width: 1080px;
+}
+
+.model-profile-results-table th:first-child {
+  min-width: 190px;
+}
+
+.model-profile-results-table td {
+  min-width: 130px;
+  white-space: nowrap;
+}
+
+.model-profile-scroll-hint {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .model-profile-scroll-hint {
+    display: block;
+    padding: 0 20px;
+    margin: 0 0 8px;
+    color: var(--eval-muted);
+    font-size: 12px;
+  }
+}
+
+.model-profile-setting-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.model-profile-results-table th small {
+  display: block;
+  font-size: 11px;
+  color: var(--eval-muted);
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.model-profile-provenance {
+  margin: 24px 0;
+  border-top: 1px solid var(--eval-line);
+}
+
+.model-profile-provenance > summary {
+  padding: 16px 0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.model-profile-original-downloads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 16px;
+}
+
 .model-profile-hero {
   position: relative;
   display: grid;
