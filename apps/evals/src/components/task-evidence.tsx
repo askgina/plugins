@@ -7,6 +7,7 @@ import {
 import { CheckMark, EvidenceValue } from "../canonical/components";
 import { RunDetails, seconds } from "./results-ui";
 import { attemptLabel } from "../lib/task-workspace";
+import { runDisplayLabel } from "../canonical/selectors";
 
 const checkNames = {
   routing: "Tool selection",
@@ -22,6 +23,16 @@ export function AttemptChecks({ attempt }: { attempt: CanonicalAttempt }) {
       <h4>
         Attempt {attempt.repetition}: {attemptLabel(attempt)}
       </h4>
+      {attempt.gradingRevision && (
+        <p>
+          {attempt.gradingRevision.kind === "provider_error"
+            ? "Corrected execution status: the provider rejected this request before a valid answer. This attempt is ungraded."
+            : attempt.gradingRevision.kind === "perps_price"
+              ? `Regraded under the price-evidence rule. Original verdict: ${attempt.gradingRevision.previousVerdict}; original tool selection: ${attempt.gradingRevision.previousChecks.routing}; original arguments: ${attempt.gradingRevision.previousChecks.arguments}. Restrictions, completion and skill checks are unchanged.`
+              : `Regraded under the bounded-search rule. Original verdict: ${attempt.gradingRevision.previousVerdict}; original tool selection: ${attempt.gradingRevision.previousChecks.routing}. Other checks are unchanged.`}{" "}
+          <a href="#/methodology">Grading policy ↗</a>
+        </p>
+      )}
       <EvidenceValue
         evidence={attempt.checks}
         renderValue={(checks) => (
@@ -34,10 +45,29 @@ export function AttemptChecks({ attempt }: { attempt: CanonicalAttempt }) {
                 </dd>
               </div>
             ))}
+            {attempt.gradingRevision?.priceGrounding && (
+              <div>
+                <dt>Price grounding</dt>
+                <dd>
+                  <CheckMark outcome={attempt.gradingRevision.priceGrounding.outcome} />
+                  <p>{attempt.gradingRevision.priceGrounding.detail}</p>
+                </dd>
+              </div>
+            )}
           </dl>
         )}
       />
       <dl className="results-facts">
+        {attempt.recovery && (
+          <div>
+            <dt>Execution</dt>
+            <dd>
+              {attempt.recovery.timeoutMs / 1000}s budget ·{" "}
+              {attempt.recovery.budgetCohort.replaceAll("-", " ")} ·{" "}
+              {Math.max(1, attempt.recovery.history.length)} recorded executions
+            </dd>
+          </div>
+        )}
         <div>
           <dt>Failure reasons</dt>
           <dd>
@@ -174,7 +204,7 @@ export function TaskRunEvidence({ run }: { run: CanonicalRun }) {
         <div>
           <dt>Run identifier</dt>
           <dd>
-            <code>{run.runId}</code>
+            <code>{runDisplayLabel(run.runId)}</code>
           </dd>
         </div>
         <div>

@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 import { expect, test } from "vitest";
 import { LeaderboardPage } from "../src/pages/leaderboard";
-import { configurationLeaderboardRows } from "../src/canonical/selectors";
+import { configurationLeaderboardRows, deduplicateEvidenceRows } from "../src/canonical/selectors";
 
 test("retains visible outcomes when a later configuration has incomplete grading", () => {
   const row = configurationLeaderboardRows().find(
@@ -17,15 +17,15 @@ test("retains visible outcomes when a later configuration has incomplete grading
   expect(html).toContain("run=astra-max-perps-1");
 });
 
-test("the page supplies all eligible sweep settings to the chart", () => {
+test("the page supplies all eligible original and recovery settings to the chart", () => {
   const html = renderToStaticMarkup(createElement(LeaderboardPage));
-  expect(html.match(/class="lb-chart-model"/gu)).toHaveLength(13);
+  expect(html.match(/class="lb-chart-model"/gu)).toHaveLength(19);
   expect(html).toContain("GPT-6 Astra, low reasoning");
   expect(html).toContain("GPT-6 Astra, high reasoning");
 });
 
 test("shows every recorded model setting in its own row", () => {
-  const configurations = configurationLeaderboardRows();
+  const configurations = deduplicateEvidenceRows(configurationLeaderboardRows());
   const html = renderToStaticMarkup(createElement(LeaderboardPage));
   expect(html.match(/<tr data-configuration=/gu)).toHaveLength(configurations.length);
   for (const row of configurations) {
@@ -34,14 +34,15 @@ test("shows every recorded model setting in its own row", () => {
   expect(new Set(configurations.map((row) => row.model.id)).size).toBe(10);
   expect(html).toContain("Every recorded setting has its own row");
   expect(html).not.toContain("Recorded setting</label>");
+  expect(html).not.toMatch(/\bOMP\b/u);
 });
 
 test("Fable low, medium, high and incomplete max are visible without a setting switch", () => {
   const html = renderToStaticMarkup(createElement(LeaderboardPage));
   for (const [reasoning, result] of [
-    ["low", "57.4%"],
-    ["medium", "58.9%"],
-    ["high", "55.5%"],
+    ["low", "56.1%"],
+    ["medium", "59.7%"],
+    ["high", "58.4%"],
     ["max", "75/105 graded"],
   ]) {
     const row = html.match(
@@ -49,7 +50,7 @@ test("Fable low, medium, high and incomplete max are visible without a setting s
     )?.[0];
     expect(row).toBeDefined();
     expect(row).toContain(result);
-    expect(row).toContain(`${reasoning} reasoning · OMP`);
+    expect(row).toContain(`${reasoning} reasoning`);
     expect(row).toContain("120s timeout");
     expect(row).toMatch(/\$[0-9]+\.[0-9]{3}/u);
   }

@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, expect, test, vi } from "vitest";
-import { configurationLeaderboardRows } from "../src/canonical/selectors";
+import { configurationLeaderboardRows, deduplicateEvidenceRows } from "../src/canonical/selectors";
 import { LeaderboardMobile } from "../src/components/leaderboard-mobile";
 
 const rows = configurationLeaderboardRows();
@@ -42,9 +42,10 @@ test("incomplete mobile results retain execution errors and never turn into a ra
 test("grouping retains every recorded setting without inventing a combined model score", () => {
   const html = render("#/leaderboard?group=models");
   expect(html.match(/class="lb-mobile-group-trigger"/gu)).toHaveLength(10);
-  expect(html.match(/data-mobile-configuration=/gu)).toHaveLength(rows.length);
+  const distinct = deduplicateEvidenceRows(rows);
+  expect(html.match(/data-mobile-configuration=/gu)).toHaveLength(distinct.length);
   expect(html).toContain("No settings are combined into a model score");
-  for (const row of rows) expect(html).toContain(`data-mobile-configuration="${row.rowId}"`);
+  for (const row of distinct) expect(html).toContain(`data-mobile-configuration="${row.rowId}"`);
 });
 
 test("invalid view parameters recover to usable defaults and empty filters can be cleared", () => {

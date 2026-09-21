@@ -1,4 +1,6 @@
 import { PageShell } from "../components/eval-ui";
+import gradingReceiptUrl from "../results/2026-09-21/regrade/receipt.json?url";
+import perpsReceiptUrl from "../results/2026-09-21/regrade/perps-receipt.json?url";
 import { ResultsHeader, RunDetails } from "../components/results-ui";
 import {
   CATALOG_LABEL,
@@ -40,8 +42,9 @@ export function MethodologyPage() {
         />
         <div className="method-content">
           <p className="method-limits">
-            These results measure tool use and task completion. They do not measure final-answer
-            accuracy or trading returns. Samples are small, and models used different clients.
+            These results measure tool use and task completion, with retained-price grounding for
+            three revised Perps tasks. General answer quality and trading returns are not evaluated.
+            Samples are small, and models used different clients.
           </p>
           <ol className="method-steps">
             <li>
@@ -72,9 +75,9 @@ export function MethodologyPage() {
                 <summary>Clients, settings, and run dates</summary>
                 <div>
                   <p>
-                    Runs use the OMP harness, native Muse, or native Devin. The leaderboard shows
-                    them together, but these results reflect the model and its client setup, not an
-                    isolated model-only comparison.
+                    Runs use several clients, including native Muse and native Devin. The
+                    leaderboard shows them together, but these results reflect the model and its
+                    client setup, not an isolated model-only comparison.
                   </p>
                   {campaigns.map((campaign) => (
                     <div className="method-record" key={campaign.campaignId}>
@@ -110,8 +113,38 @@ export function MethodologyPage() {
               </p>
               <p>
                 Some tasks require one tool call; others require calls in a particular order. The
-                task’s grading criteria explain those requirements. Final-answer accuracy is not
-                scored. <a href="#/tasks">See task-specific rules ↗</a>
+                task’s grading criteria explain those requirements. Three revised Perps price tasks
+                also check quoted prices against retained tool results. Other final-answer accuracy
+                is not scored. <a href="#/tasks">See task-specific rules ↗</a>
+              </p>
+              <p>
+                The perps-price-evidence-v1 revision requires actual mark-price evidence for BTC and
+                BTC/ETH/SOL mark requests. A midpoint alone does not satisfy them. HIP-3 quotes
+                require a successful xyz markets lookup confirming CL; a price read may occur before
+                or after that lookup. The replay checks coin, venue, metric and quoted values,
+                allowing rounding to displayed precision. It reviews existing passes and failures
+                equally across models, preserving original records and all other checks. Complete
+                visible market objects in truncated output can support a grade; omitted values
+                cannot. Of 450 recorded slots, 382 have replayable completed evidence, 32 have
+                incomplete executions and 36 older completed records lack public transcripts. Those
+                68 records retain their original status. This is a narrow price check, not a general
+                answer-quality evaluation.{" "}
+                <a href={perpsReceiptUrl} download>
+                  Download the price grading revision ↗
+                </a>
+              </p>
+              <p>
+                Prediction-market discovery permits one to three distinct, nonempty searches using
+                the required search tool, with the original request as the first query. The
+                bounded-prediction-search-v1 revision applies this routing rule consistently to
+                retained 16 and 21 September attempts across all models. Argument, restriction, and
+                completion checks retain their recorded outcomes. Search relevance, whether a
+                follow-up was necessary, and answer accuracy are not scored by this routing check.
+                Original grades and transcripts are preserved; changed attempts show the original
+                verdict in Checks. Provider errors remain ungraded.{" "}
+                <a href={gradingReceiptUrl} download>
+                  Download the grading revision ↗
+                </a>
               </p>
             </li>
             <li>
@@ -135,11 +168,12 @@ export function MethodologyPage() {
                 results are counts-only and excluded from quality rankings. If any category is
                 missing or incompletely graded, Overall is unavailable. An unavailable value is
                 never treated as zero. The leaderboard shows every recorded model, reasoning
-                setting, and campaign as a separate row. Complete and incomplete results remain
-                visible together; campaign and grading filters narrow the view explicitly. Each row
-                retains its category outcomes, timing and cost sample counts, timeout budget,
-                repetitions, source hashes, and links to individual attempts. Sorting does not make
-                different clients, reasoning settings, or time budgets equivalent.
+                setting, and campaign as a separate row; identical attempts reused across campaigns
+                appear once. Complete and incomplete results remain visible together; campaign and
+                grading filters narrow the view explicitly. Each row retains its category outcomes,
+                timing and cost sample counts, timeout budget, repetitions, source hashes, and links
+                to individual attempts. Sorting does not make different clients, reasoning settings,
+                or time budgets equivalent.
               </p>
               <p>
                 Sorting describes these observed results. It does not establish statistical
@@ -158,9 +192,10 @@ export function MethodologyPage() {
               </p>
               <p>
                 <strong>Estimated cost per task</strong> uses retained native usage and divides by
-                completed attempts with cost records. OMP supplies per-message USD estimates,
-                including cache reads and writes. Devin uses its retained model catalogue rates and
-                cached-token totals; that catalogue explicitly lists SWE-2 as Free. Muse uses{" "}
+                completed attempts with cost records. Native sessions retain per-message USD
+                estimates, including cache reads and writes. Devin uses its retained model catalogue
+                rates and cached-token totals; that catalogue explicitly lists SWE-2 as Free. Muse
+                uses{" "}
                 <a
                   href="https://dev.meta.ai/docs/pricing-rate-limits"
                   target="_blank"

@@ -2,6 +2,8 @@ import { Fragment, useEffect, useId, useState, useSyncExternalStore } from "reac
 import { ArrowDown, ArrowUp, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 import {
   benchmarkSummary,
+  campaignDisplayLabel,
+  deduplicateEvidenceRows,
   recordedOutcomes,
   SCORED_FAMILIES,
   sortLeaderboardRows,
@@ -146,17 +148,19 @@ export function LeaderboardMobile({
   const campaigns = [...new Set(rows.map((row) => row.campaignId).filter(Boolean))];
   const query = state.search.trim().toLocaleLowerCase();
   const shown = sortLeaderboardRows(
-    rows.filter((row) => {
-      const counts = recordedOutcomes(Object.values(row.runs));
-      const complete = counts.planned > 0 && counts.graded === counts.planned;
-      return (
-        `${row.model.name} ${row.model.provider} ${row.configurationLabel ?? ""} ${row.campaignId ?? ""}`
-          .toLocaleLowerCase()
-          .includes(query) &&
-        (state.campaign === "all" || row.campaignId === state.campaign) &&
-        (state.grading === "all" || (state.grading === "complete" ? complete : !complete))
-      );
-    }),
+    deduplicateEvidenceRows(
+      rows.filter((row) => {
+        const counts = recordedOutcomes(Object.values(row.runs));
+        const complete = counts.planned > 0 && counts.graded === counts.planned;
+        return (
+          `${row.model.name} ${row.model.provider} ${row.configurationLabel ?? ""} ${row.campaignId ?? ""}`
+            .toLocaleLowerCase()
+            .includes(query) &&
+          (state.campaign === "all" || row.campaignId === state.campaign) &&
+          (state.grading === "all" || (state.grading === "complete" ? complete : !complete))
+        );
+      }),
+    ),
     state.metric,
     state.direction,
   );
@@ -164,7 +168,7 @@ export function LeaderboardMobile({
   for (const row of shown) groups.set(row.model.id, [...(groups.get(row.model.id) ?? []), row]);
   const totals = recordedOutcomes(shown.flatMap((row) => Object.values(row.runs)));
   const hasFilters = Boolean(query || state.campaign !== "all" || state.grading !== "all");
-  const scope = `${state.campaign === "all" ? "All campaigns" : state.campaign} · ${state.grading === "all" ? "All results" : state.grading === "complete" ? "Fully graded" : "Incomplete grading"}`;
+  const scope = `${state.campaign === "all" ? "All campaigns" : campaignDisplayLabel(state.campaign)} · ${state.grading === "all" ? "All results" : state.grading === "complete" ? "Fully graded" : "Incomplete grading"}`;
 
   useEffect(() => {
     // Keep mobile exploration shareable without changing desktop navigation or
@@ -241,15 +245,17 @@ export function LeaderboardMobile({
   return (
     <div className="eval-container results-page leaderboard-mobile">
       <ResultsHeader title="Gina Model Leaderboard" description={benchmarkSummary(rows)}>
-        <p className="lb-mobile-caveat">Tool-use conformance, not answer quality.</p>
+        <p className="lb-mobile-caveat">
+          Tool-use conformance with price grounding on three Perps tasks.
+        </p>
         <div className="lb-mobile-methodology">
           <a href="#/methodology">Methodology ↗</a>
           <InfoPopover label="Comparison conditions">
             <p>
               Every recorded setting is retained, including incomplete runs and earlier campaigns.
-              Clients, reasoning controls, and time budgets vary. Overall weights Spot, Perps, and
-              Predictions equally. Small score differences do not establish statistical
-              significance.
+              Identical attempts reused across campaigns appear once. Clients, reasoning controls,
+              and time budgets vary. Overall weights Spot, Perps, and Predictions equally. Small
+              score differences do not establish statistical significance.
             </p>
             <a href="#/handoff">Data and exports ↗</a>
           </InfoPopover>
@@ -295,7 +301,7 @@ export function LeaderboardMobile({
             <option value="all">All campaigns</option>
             {campaigns.map((campaign) => (
               <option key={campaign} value={campaign}>
-                {campaign}
+                {campaignDisplayLabel(campaign)}
               </option>
             ))}
           </select>

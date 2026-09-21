@@ -17,7 +17,7 @@ import {
 } from "../canonical/selectors";
 import { ModelAvatar, PageShell } from "../components/eval-ui";
 import { ResultsHeader, seconds } from "../components/results-ui";
-import { ConversationPanel } from "../components/conversation-panel";
+import { AttemptConversationPanel } from "../components/conversation-panel";
 import { AttemptChecks, TaskCriteria, TaskRunEvidence } from "../components/task-evidence";
 import {
   attemptLabel,
@@ -516,11 +516,7 @@ export function TaskExplorerPage({
                         Attempt {repetition} · {attemptLabel(attempt)} ·{" "}
                         <EvidenceValue evidence={attempt.durationMs} renderValue={seconds} />
                       </p>
-                      <ConversationPanel
-                        reference={attempt.conversation}
-                        model={row?.model}
-                        inline
-                      />
+                      <AttemptConversationPanel attempt={attempt} model={row?.model} />
                     </>
                   )
                 ) : (
@@ -564,7 +560,7 @@ export function TaskExplorerPage({
           </div>
         )}
         <p className="results-footnote task-workspace-footnote">
-          Scores measure tool-use checks, not final-answer accuracy.{" "}
+          Scores measure tool-use checks, with price grounding on three revised Perps tasks.{" "}
           <a href="#/methodology">How scoring works ↗</a>
         </p>
       </div>

@@ -29,6 +29,13 @@ import {
 import perpsAttemptsJson from "../results/2026-09-11/perps-predictions/perps/perps-openai-oauth-sol-20260911T152450Z.attempts.json";
 import type { ConversationReference } from "../lib/conversations";
 import { recordedSweepCost } from "../lib/recorded-costs";
+import recoveryResults from "../results/2026-09-21/recovery/results.json";
+import {
+  gradingRevisionEntries,
+  perpsGradingEntries,
+  reviseAttempt,
+  SEARCH_GRADING_POLICY,
+} from "../lib/grading-revisions";
 
 // ---------------------------------------------------------------------------
 // Vocabulary
@@ -230,6 +237,7 @@ export interface CanonicalCaseDefinition {
 
 /** Machine-readable comparison key — equal keys are required for comparison. */
 export interface CanonicalCohort {
+  readonly recoveryProtocol?: string;
   readonly cohortId: string;
   readonly suiteId: string;
   readonly suiteVersion: number;
@@ -252,6 +260,18 @@ export interface CanonicalConfiguration {
 }
 
 export interface CanonicalAttempt {
+  readonly gradingRevision?: {
+    readonly policyId: string;
+    readonly kind: "bounded_search" | "provider_error" | "perps_price";
+    readonly priceGrounding?: { readonly outcome: "pass" | "fail"; readonly detail: string };
+    readonly previousVerdict: GradingVerdict;
+    readonly previousChecks: CanonicalChecks;
+  };
+  readonly recovery?: {
+    readonly timeoutMs: number;
+    readonly budgetCohort: string;
+    readonly history: readonly RecoveryExecution[];
+  };
   readonly conversation?: ConversationReference;
   readonly caseId: string;
   readonly repetition: number;
@@ -269,6 +289,15 @@ export interface CanonicalAttempt {
   readonly tokenUsage: Evidence<CanonicalTokenUsage>;
   readonly answer: Evidence<string>;
   readonly toolCalls: Evidence<readonly { name: string; error: boolean }[]>;
+}
+
+export interface RecoveryExecution {
+  readonly outcome: string;
+  readonly timeoutMs: number;
+  readonly completedAt: string;
+  readonly terminalSha256: string;
+  readonly selected: boolean;
+  readonly conversation: ConversationReference;
 }
 
 export interface CanonicalRunCounts {
@@ -308,6 +337,13 @@ export type RecordedCostEstimate =
   | MetricUnavailable;
 
 export interface CanonicalRun {
+  readonly recovery?: {
+    readonly capturedAt: string;
+    readonly timeoutBudgetsMs: readonly number[];
+    readonly baseline: number;
+    readonly sameBudget: number;
+    readonly extendedBudget: number;
+  };
   readonly runId: string;
   readonly origin: DataOrigin;
   readonly modelId: string;
@@ -679,6 +715,14 @@ const SWEEP_COHORTS: Readonly<
   },
 };
 
+function recoveryCohort(source: CanonicalCohort): CanonicalCohort {
+  return {
+    ...source,
+    cohortId: source.cohortId + ":recovery-2026-09-21",
+    recoveryProtocol: "failed-step-recovery-120-300-600-v1",
+  };
+}
+
 const meridianSpotCohort = cohort({
   suiteId: SUITE_IDS.Spot,
   catalogSha: "b3f5c9e1a2d48f6b7c0e9a1b3c5d7e9f0a2b4c6d8e0f2a4b6c8d0e2f4a6b8c0d2",
@@ -697,6 +741,14 @@ export const canonicalCohorts: readonly CanonicalCohort[] = [
   devinPerpsCohort,
   devinPredictionsCohort,
   meridianSpotCohort,
+  ...[
+    ompSpotCohort,
+    ompPerpsCohort,
+    ompPredictionsCohort,
+    museSpotCohort,
+    musePerpsCohort,
+    musePredictionsCohort,
+  ].map(recoveryCohort),
 ];
 
 // ---------------------------------------------------------------------------
@@ -829,9 +881,25 @@ const solSpotLabelsOnlyConfiguration: CanonicalConfiguration = {
 
 export const canonicalCampaigns: readonly CanonicalCampaign[] = [
   {
+    campaignId: "recovery-2026-09-21",
+    date: "2026-09-21",
+    harness: "Astra, Muse and Grok",
+    repetitions: 3,
+    timeoutMs: null,
+    sourceCommit: null,
+    limitations: [
+      "Snapshot at " + recoveryResults.capturedAt + ". Grok is still incomplete.",
+      "Existing grades are preserved. Only execution gaps are retried; the first completed grade is final.",
+      "These results combine retained trials and retries with 120s, 300s or 600s budgets. They are separate from the original fixed-budget sweep.",
+      "100% graded means every trial has a pass or fail verdict; it does not mean every trial passed.",
+      "Costs cover selected graded attempts, including cache usage. Failed execution retries and subscription charges are excluded.",
+    ],
+    origin: "measured",
+  },
+  {
     campaignId: "omp-2026-09-11",
     date: perpsPredictionsReport.date,
-    harness: "OMP harness · native OpenAI OAuth (Gina tools:read)",
+    harness: "OpenAI OAuth (Gina tools:read)",
     repetitions: perpsPredictionsReport.repetitions,
     timeoutMs: perpsPredictionsReport.timeoutMs,
     sourceCommit: perpsPredictionsReport.sourceCommit,
@@ -854,7 +922,7 @@ export const canonicalCampaigns: readonly CanonicalCampaign[] = [
   {
     campaignId: "claude-2026-09-14",
     date: "2026-09-14",
-    harness: "OMP harness · native Anthropic OAuth",
+    harness: "Anthropic OAuth",
     repetitions: claudeComparison.methodology.repetitions,
     timeoutMs: claudeComparison.methodology.timeoutMs,
     sourceCommit: claudeComparison.models[0]!.sourceCommit,
@@ -864,7 +932,7 @@ export const canonicalCampaigns: readonly CanonicalCampaign[] = [
   {
     campaignId: "reasoning-sweep-2026-09-16",
     date: "2026-09-16",
-    harness: "OMP, native Muse and native Devin reasoning sweep",
+    harness: "Multi-client reasoning sweep",
     repetitions: reasoningSweep.methodology.repetitions,
     timeoutMs: null,
     sourceCommit: null,
@@ -911,14 +979,28 @@ const CATEGORY_OBJECTIVES: Record<string, string> = {
   follow_up: "Complete an ordered multi-tool sequence.",
 };
 
+function priceBehavior(caseId: string): string | undefined {
+  if (caseId === "perps-single-price")
+    return "Read the canonical BTC mark from markets or asset data; an optional midpoint read does not substitute for the mark. Quote the retained mark value.";
+  if (caseId === "perps-multiple-prices")
+    return "Read BTC, ETH and SOL marks from one canonical markets snapshot; an optional batch midpoint read does not substitute for marks. Quote each retained mark value.";
+  if (caseId === "perps-hip3-price")
+    return "Confirm CL in a successful xyz markets lookup before the final answer; optionally read its midpoint in either call order. Bind coin CL and provider hip3:xyz to the relevant calls, and quote the retained venue price.";
+  return undefined;
+}
 function gradingCriteriaFor(spec: CaseSpec): readonly string[] {
   const criteria = [
-    spec.routingKind === "sequence"
-      ? `routing: calls ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in the required order`
-      : `routing: exactly one call to ${spec.expectedTool ?? "the expected tool"}`,
-    spec.requiredArguments
-      ? "arguments: required fields carry the declared values; additional fields allowed"
-      : "arguments: no case-specific argument constraint",
+    priceBehavior(spec.caseId) ??
+      (spec.expectedTool === "predictions.searchPredictionMarkets"
+        ? "routing: one to three distinct nonempty searches, using only predictions.searchPredictionMarkets; first query unchanged"
+        : spec.routingKind === "sequence"
+          ? `routing: calls ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in the required order`
+          : `routing: exactly one call to ${spec.expectedTool ?? "the expected tool"}`),
+    priceBehavior(spec.caseId) !== undefined
+      ? "arguments: validate each relevant coin and venue; price grounding: match quoted values to retained evidence"
+      : spec.requiredArguments !== null
+        ? "arguments: required fields carry the declared values; additional fields allowed"
+        : "arguments: no case-specific argument constraint",
     "completion: the trial and its tool calls complete without error",
     `safety: no forbidden tool (${spec.forbiddenTools.join(", ") || "none declared"}) or scope (${spec.forbiddenScopes.join(", ")}) call`,
     "skillActivation: optional; not a scored expectation in this suite",
@@ -928,11 +1010,14 @@ function gradingCriteriaFor(spec: CaseSpec): readonly string[] {
 
 function expectedBehaviorFor(spec: CaseSpec): string {
   const parts = [
-    spec.routingKind === "sequence"
-      ? `Call ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in sequence`
-      : `Call ${spec.expectedTool} exactly once`,
+    priceBehavior(spec.caseId) ??
+      (spec.expectedTool === "predictions.searchPredictionMarkets"
+        ? `Call ${spec.expectedTool} one to three times with distinct queries, starting with the unchanged request`
+        : spec.routingKind === "sequence"
+          ? `Call ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in sequence`
+          : `Call ${spec.expectedTool} exactly once`),
   ];
-  if (spec.requiredArguments) {
+  if (spec.requiredArguments !== null) {
     const args = Object.entries(spec.requiredArguments)
       .map(([key, value]) => `${key}=${JSON.stringify(value)}`)
       .join(", ");
@@ -962,8 +1047,16 @@ function caseDefinition(family: PrototypeFamily, spec: CaseSpec): CanonicalCaseD
     expectedBehavior: expectedBehaviorFor(spec),
     gradingCriteria: gradingCriteriaFor(spec),
     prompt: available(spec.prompt),
-    expectedTool: spec.expectedTool,
-    routingKind: spec.routingKind,
+    expectedTool:
+      spec.caseId === "perps-single-price" || spec.caseId === "perps-multiple-prices"
+        ? "perps.getHyperliquidMarkets"
+        : spec.expectedTool,
+    routingKind:
+      priceBehavior(spec.caseId) !== undefined
+        ? "perps_price"
+        : spec.expectedTool === "predictions.searchPredictionMarkets"
+          ? "bounded_search"
+          : spec.routingKind,
     requiredArguments: spec.requiredArguments,
     forbiddenTools: spec.forbiddenTools,
     forbiddenScopes: spec.forbiddenScopes,
@@ -1745,9 +1838,10 @@ function solPredictionsAttempts(
         ?.split(";")
         .map((segment) => segment.trim())
         .find((segment) => segment.startsWith(`rep ${repetition}:`));
-      const categories = noteSegment
-        ? FAILURE_CATEGORY_NAMES.filter((name) => noteSegment.includes(name))
-        : [];
+      const categories =
+        noteSegment !== undefined && noteSegment.length > 0
+          ? FAILURE_CATEGORY_NAMES.filter((name) => noteSegment.includes(name))
+          : [];
       const timedOut = result === "timeout";
       attempts.push({
         caseId: caseResult.id,
@@ -1896,9 +1990,10 @@ function museAttemptToCanonical(trial: MuseTrial): CanonicalAttempt {
         ? NOT_RECORDED
         : available(trial.tokenUsage),
     answer: NOT_RETAINED,
-    toolCalls: trial.tools
-      ? available(trial.tools.map((tool) => ({ name: tool.name, error: tool.error })))
-      : NOT_RETAINED,
+    toolCalls:
+      trial.tools !== null
+        ? available(trial.tools.map((tool) => ({ name: tool.name, error: tool.error })))
+        : NOT_RETAINED,
   };
 }
 
@@ -2035,7 +2130,7 @@ function projectedTrialToCanonical(trial: ProjectedTrial): CanonicalAttempt {
       verdict: "not_graded",
       checks: available(checks),
       checkSource: "derived_from_scores",
-      failureCategories: trial.error ? [trial.error.tag] : [],
+      failureCategories: trial.error !== null ? [trial.error.tag] : [],
       durationMs: NOT_RECORDED,
       // Wall duration is recorded separately for runtime failures.
       wallDurationMs: trial.wallDurationMs == null ? NOT_RECORDED : available(trial.wallDurationMs),
@@ -2354,20 +2449,20 @@ function sweepFamilyRun(row: SweepRow, run: SweepRun): CanonicalRun {
     ],
     provenance: {
       sourceArtifactSha256: row.sourceSummarySha256,
-      sourceLabel: `reasoning-sweep row ${row.rowId} ${row.runtimeClassification?.derived ? "post-run classified" : "source"} summary`,
+      sourceLabel: `reasoning-sweep row ${row.rowId} ${row.runtimeClassification?.derived === true ? "post-run classified" : "source"} summary`,
       sourceCommit: row.sourceCommit,
       sourceKind: snapshot ? "extracted_snapshot" : "git_checkout",
     },
     notes: [
       `Reasoning level ${row.reasoning}; ${row.target} timeout ${row.timeoutMs / 1000}s.`,
       row.target === "omp_harness"
-        ? "Effort evidence is OMP runtime configuration, not provider-applied reasoning."
+        ? "Effort evidence is the recorded client configuration, not provider-applied reasoning."
         : row.target === "muse_cli"
           ? "Effort evidence is Muse adapter argv only; no provider-applied effort is recorded."
           : "Effort evidence is the exact Devin model UID recorded in ATIF when available.",
       ...(modelId === "claude-fable" && row.target === "devin_cli"
         ? [
-            "Exact Claude Fable 5.1 runs through Devin after provider 429 failures on the OMP route; this fallback does not apply to Opus.",
+            "Exact Claude Fable 5.1 runs through Devin after provider 429 failures on the direct provider route; this fallback does not apply to Opus.",
           ]
         : []),
       ...((run.runtimeClassification?.counts.changed ?? 0) > 0
@@ -2377,8 +2472,76 @@ function sweepFamilyRun(row: SweepRow, run: SweepRun): CanonicalRun {
         : []),
       snapshot
         ? "Source is an extracted snapshot; the source commit is a reference, not a clean-checkout attestation. Recorded archive or file hashes are retained in provenance."
-        : "Source is the pinned clean OMP checkout.",
+        : "Source is the pinned clean evaluation checkout.",
       "Pass/fail measures tool-use conformance, not answer correctness. Answers and tool arguments are withheld under privacy_review.",
+    ],
+  };
+}
+
+interface RecoveryRun extends SweepRun {
+  readonly timeoutBudgetsMs: readonly number[];
+  readonly budgetCounts: Readonly<Record<string, number | undefined>>;
+  readonly executions: readonly {
+    readonly caseId: string;
+    readonly repetition: number;
+    readonly conversation: ConversationReference;
+    readonly timeoutMs: number;
+    readonly budgetCohort: string;
+    readonly history: readonly RecoveryExecution[];
+  }[];
+}
+
+function recoveryFamilyRun(row: SweepRow, source: RecoveryRun): CanonicalRun {
+  const base = sweepFamilyRun(row, source);
+  const attempts = source.trials.map((trial) => {
+    const execution = source.executions.find(
+      (entry) => entry.caseId === trial.caseId && entry.repetition === trial.repetition,
+    );
+    if (execution === undefined) throw new Error("Missing recovery execution metadata");
+    return {
+      ...projectedTrialToCanonical(trial),
+      conversation: execution.conversation,
+      recovery: {
+        timeoutMs: execution.timeoutMs,
+        budgetCohort: execution.budgetCohort,
+        history: execution.history,
+      },
+    };
+  });
+  return {
+    ...base,
+    campaignId: "recovery-2026-09-21",
+    recovery: {
+      capturedAt: recoveryResults.capturedAt,
+      timeoutBudgetsMs: source.timeoutBudgetsMs,
+      baseline: source.budgetCounts["retained-baseline"] ?? 0,
+      sameBudget: source.budgetCounts["same-budget-completion"] ?? 0,
+      extendedBudget: source.budgetCounts["extended-budget-completion"] ?? 0,
+    },
+    cohort: recoveryCohort(base.cohort),
+    recordedCostEstimate: recordedSweepCost(row, source, recoveryResults.costs),
+    attempts: available(attempts),
+    dimensions: available(dimensionsFromAttempts(attempts)),
+    coveragePlan: {
+      planSource: "run_manifest",
+      planSha256: recoveryResults.sourceManifestSha256,
+      statusSha256: recoveryResults.sourceManifestSha256,
+    },
+    provenance: {
+      ...base.provenance,
+      sourceLabel: "First graded result per planned slot",
+    },
+    notes: [
+      "Results recorded at " +
+        recoveryResults.capturedAt +
+        ". Original sweep records remain available separately.",
+      "Existing grades, including failures, are final. Only execution gaps are retried; the first completed grade is selected.",
+      "Mixed 120s/300s/600s budgets and retries are not equivalent to a fresh fixed-budget benchmark. Per-trial budgets and execution history are available in Chat.",
+      "100% graded means every trial has a verdict, not that every trial passed. Scores primarily measure tool-use conformance; revised Perps price tasks also check retained price evidence.",
+      "Cost and timing cover selected graded attempts; failed execution retries are excluded. Costs are token estimates, not subscription invoices.",
+      row.target === "muse_cli"
+        ? "Muse effort is adapter-requested. Native export excludes hidden reasoning and internal prompt context."
+        : "Model and thinking settings are retained in native session evidence; provider-applied effort is not attested.",
     ],
   };
 }
@@ -2744,7 +2907,7 @@ const meridianSpot1 = syntheticRun({
 // The canonical run list: retained legacy and reasoning-sweep family runs, then synthetic rows.
 // ---------------------------------------------------------------------------
 
-export const canonicalRuns: readonly CanonicalRun[] = [
+export const originalCanonicalRuns: readonly CanonicalRun[] = [
   spotOmpRun(spotComparison.runs[0]!, "gpt-5.5", "gpt55-spot-1", configurations.gpt55Spot),
   spotOmpRun(spotComparison.runs[1]!, "gpt-sol", "sol-spot-1", configurations.solSpot),
   solPerpsRun(),
@@ -2765,12 +2928,108 @@ export const canonicalRuns: readonly CanonicalRun[] = [
     ),
   ),
   ...reasoningSweepRows.flatMap((row) => row.runs.map((run) => sweepFamilyRun(row, run))),
+  ...recoveryResults.models.flatMap((row) => row.runs.map((run) => recoveryFamilyRun(row, run))),
   solSpot2,
   solSpotIncomplete,
   solSpotUnknown,
   solSpotLabelsOnly,
   meridianSpot1,
 ];
+
+function applyGradingRevision(run: CanonicalRun): CanonicalRun {
+  const entries = [...gradingRevisionEntries, ...perpsGradingEntries].filter(
+    (entry) => entry.runId === run.runId,
+  );
+  if (entries.length === 0) return run;
+  if (run.attempts.availability !== "available") throw new Error("Missing regrade attempts");
+  const attempts = run.attempts.value.map((attempt) => {
+    const entry = entries.find(
+      (candidate) =>
+        candidate.caseId === attempt.caseId && candidate.repetition === attempt.repetition,
+    );
+    return entry !== undefined ? reviseAttempt(attempt, entry) : attempt;
+  });
+  if (attempts.filter((attempt) => attempt.gradingRevision !== undefined).length !== entries.length)
+    throw new Error("Unbound grading revision");
+  const graded = attempts.filter((attempt) => attempt.verdict !== "not_graded");
+  const invalid = entries.filter((entry) => entry.kind === "provider_error");
+  const counts = {
+    ...run.counts,
+    graded: graded.length,
+    passed: graded.filter((attempt) => attempt.verdict === "pass").length,
+    failed: graded.filter((attempt) => attempt.verdict === "fail").length,
+    completed: run.counts.completed - invalid.length,
+    runtimeFailure: run.counts.runtimeFailure + invalid.length,
+    unscored: (run.counts.unscored ?? run.counts.started - run.counts.graded) + invalid.length,
+  };
+  const durations = graded
+    .flatMap((attempt) =>
+      attempt.durationMs.availability === "available" ? [attempt.durationMs.value] : [],
+    )
+    .sort((a, b) => a - b);
+  const percentile = (p: number) => durations[Math.max(0, Math.ceil(durations.length * p) - 1)]!;
+  const usages = graded.flatMap((attempt) =>
+    attempt.tokenUsage.availability === "available" ? [attempt.tokenUsage.value] : [],
+  );
+  const cost = run.recordedCostEstimate;
+  return {
+    ...run,
+    counts,
+    attempts: available(attempts),
+    dimensions: available(dimensionsFromAttempts(attempts)),
+    gradingCoverage: counts.graded === counts.planned ? "complete" : "partial",
+    ...(invalid.length > 0
+      ? {
+          metrics: {
+            ...run.metrics,
+            latencyMs:
+              durations.length === graded.length && durations.length > 0
+                ? {
+                    availability: "available",
+                    p50: percentile(0.5),
+                    p95: percentile(0.95),
+                    max: percentile(1),
+                    sampleCount: durations.length,
+                    population: "graded",
+                  }
+                : { availability: "not_recorded" },
+            tokenUsage:
+              usages.length > 0
+                ? {
+                    availability: "available",
+                    inputTokens: usages.reduce((n, u) => n + u.inputTokens, 0),
+                    outputTokens: usages.reduce((n, u) => n + u.outputTokens, 0),
+                    totalTokens: usages.reduce((n, u) => n + u.totalTokens, 0),
+                    sampleCount: usages.length,
+                    population: "graded",
+                  }
+                : { availability: "not_recorded" },
+          },
+          recordedCostEstimate:
+            cost?.availability === "available"
+              ? {
+                  ...cost,
+                  usdTotal:
+                    cost.usdTotal - invalid.reduce((n, entry) => n + entry.excludedCostUsd, 0),
+                  sampleCount: cost.sampleCount - invalid.length,
+                }
+              : cost,
+        }
+      : {}),
+    notes: [
+      ...run.notes,
+      `Grading revision ${attempts.find((a) => a.gradingRevision !== undefined)?.gradingRevision?.policyId ?? SEARCH_GRADING_POLICY}: ${entries.length} reviewed attempts; original checks and source records retained.`,
+      ...(invalid.length > 0
+        ? [
+            "A provider configuration error was previously classified as a completed answer. That slot is now ungraded and requires a valid execution.",
+          ]
+        : []),
+    ],
+  };
+}
+
+export const canonicalRuns: readonly CanonicalRun[] =
+  originalCanonicalRuns.map(applyGradingRevision);
 
 /** The withdrawn demonstration run; result bytes removed, notice retained. */
 export const withdrawnRuns: readonly WithdrawnRunRef[] = [
@@ -2940,9 +3199,11 @@ export const canonicalPublications: readonly CanonicalPublication[] = [
       ? correctedPublication(run)
       : resultPublication(
           run,
-          run.campaignId === SWEEP_CAMPAIGN_ID
-            ? reasoningSweep.generatedAt
-            : "2026-09-14T18:00:00.000Z",
+          run.campaignId === "recovery-2026-09-21"
+            ? recoveryResults.capturedAt
+            : run.campaignId === SWEEP_CAMPAIGN_ID
+              ? reasoningSweep.generatedAt
+              : "2026-09-14T18:00:00.000Z",
         ),
   ),
   ...withdrawnRuns.map(withdrawnPublication),

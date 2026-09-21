@@ -11,6 +11,7 @@
 //   are baselineRunId references, not second runs)
 // - family/case lookup
 
+import { clientDisplayName, settingDisplayName } from "../lib/client-labels";
 import {
   canonicalCaseDefinitions,
   canonicalCohorts,
@@ -53,6 +54,17 @@ const caseById = new Map(
 
 export function getRun(runId: string): CanonicalRun | undefined {
   return runById.get(runId);
+}
+
+/** Public labels are separate from the immutable evidence identifiers. */
+export function campaignDisplayLabel(campaignId: string | undefined): string {
+  return campaignId === "recovery-2026-09-21" ? "21 Sep 2026" : (campaignId ?? "Unknown campaign");
+}
+
+export function runDisplayLabel(runId: string): string {
+  const run = getRun(runId);
+  if (!run?.recovery) return runId;
+  return `${getModel(run.modelId)?.name ?? run.modelId} · ${run.configuration.reasoning ?? "Unspecified"} · ${run.family}`;
 }
 
 export function getWithdrawnRun(runId: string): WithdrawnRunRef | undefined {
@@ -508,7 +520,7 @@ const FAMILY_BY_SUITE_ID: Record<string, PrototypeFamily> = {
 /** Human-readable cohort identity: family · target · account · reps · evidence. */
 export function cohortLabel(cohort: CanonicalCohort): string {
   const family = FAMILY_BY_SUITE_ID[cohort.suiteId] ?? cohort.suiteId;
-  return `${family} · ${cohort.target} · ${cohort.accountClass} · ${cohort.repetitions} reps · ${cohort.evidenceCategory}`;
+  return `${family} · ${clientDisplayName(cohort.target)} · ${cohort.accountClass} · ${cohort.repetitions} reps · ${cohort.evidenceCategory}${cohort.recoveryProtocol ? " · 120–600s budgets" : ""}`;
 }
 
 /** Every cohort declared for a family's suite (empty for unmeasured families). */
@@ -660,6 +672,7 @@ function compatibleSuiteRuns(runs: readonly CanonicalRun[]): boolean {
         run.cohort.accountClass === first.cohort.accountClass &&
         run.cohort.repetitions === first.cohort.repetitions &&
         run.cohort.evidenceCategory === "conformance" &&
+        run.cohort.recoveryProtocol === first.cohort.recoveryProtocol &&
         run.configuration.reasoning === first.configuration.reasoning &&
         run.configuration.candidate === first.configuration.candidate,
     )
@@ -833,14 +846,6 @@ export function configurationLeaderboardRows(
   }
   return [...groups.values()].flatMap((group) => {
     const first = group[0]!;
-    const client =
-      first.cohort.target === "omp_harness"
-        ? "OMP"
-        : first.cohort.target === "muse_cli"
-          ? "Muse"
-          : first.cohort.target === "devin_cli"
-            ? "Devin"
-            : first.cohort.target;
     return unifiedLeaderboardRows(group, publications, models).map((row) => ({
       ...row,
       rowId: Object.values(row.runs)
@@ -848,8 +853,68 @@ export function configurationLeaderboardRows(
         .sort()
         .join("+"),
       campaignId: first.campaignId,
-      configurationLabel: `${first.configuration.reasoning ?? "Unspecified"} reasoning · ${client}`,
+      configurationLabel: settingDisplayName(first.configuration.reasoning, first.cohort.target),
     }));
+  });
+}
+
+/** Collapse campaign copies only when every selected attempt has the same source identity. */
+export function deduplicateEvidenceRows(
+  rows: readonly LeaderboardModelRow[],
+): readonly LeaderboardModelRow[] {
+  const signature = (row: LeaderboardModelRow): string | null => {
+    const runs = Object.values(row.runs).sort((a, b) => a.family.localeCompare(b.family));
+    if (
+      !runs.length ||
+      runs.some(
+        (run) =>
+          run.attempts.availability !== "available" ||
+          run.attempts.value.length !== run.counts.planned ||
+          run.counts.graded !== run.counts.planned,
+      )
+    )
+      return null;
+    const identities: string[] = [];
+    for (const run of runs) {
+      if (run.attempts.availability !== "available") return null;
+      for (const attempt of run.attempts.value) {
+        const ref = attempt.conversation;
+        if (!ref) return null;
+        identities.push(
+          [
+            run.family,
+            run.configuration.reasoning,
+            run.cohort.target,
+            ref.rowId,
+            ref.sourceSummarySha256,
+            ref.sourceCommit,
+            ref.catalogSha,
+            attempt.caseId,
+            attempt.repetition,
+            attempt.execution,
+            attempt.verdict,
+          ].join("/"),
+        );
+      }
+    }
+    return `${row.model.id}:${identities.sort().join("|")}`;
+  };
+  const preferred = new Map<string, LeaderboardModelRow>();
+  for (const row of rows) {
+    const key = signature(row);
+    if (!key) continue;
+    const previous = preferred.get(key);
+    // An imported baseline should not replace its original campaign entry.
+    if (
+      !previous ||
+      (Object.values(previous.runs).some((run) => run.recovery) &&
+        Object.values(row.runs).every((run) => !run.recovery))
+    )
+      preferred.set(key, row);
+  }
+  return rows.filter((row) => {
+    const key = signature(row);
+    return !key || preferred.get(key) === row;
   });
 }
 

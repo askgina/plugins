@@ -169,6 +169,9 @@ describe("hermetic eval replay", () => {
         const suite = yield* loadPluginEvalSuite(paths.liveSuite);
         const expectedTools = suite.cases.flatMap((evalCase) => {
           switch (evalCase.expected.routing.kind) {
+            case "perps_price":
+              return ["perps.getHyperliquidMarkets"];
+            case "bounded_search":
             case "exact":
               return [evalCase.expected.routing.tool];
             case "one_of":

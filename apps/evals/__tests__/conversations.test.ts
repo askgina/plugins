@@ -45,6 +45,7 @@ const conversation: Conversation = {
 describe("attempt conversations", () => {
   test("binds all sweep attempts uniquely without attaching transcripts to older runs", () => {
     const refs = canonicalRuns.flatMap((run) => {
+      if (run.recovery) return []; // Recovery references and retries have their own integrity audit.
       if (run.attempts.availability !== "available") return [];
       return run.attempts.value.flatMap((attempt) => {
         if (run.campaignId !== "reasoning-sweep-2026-09-16") {

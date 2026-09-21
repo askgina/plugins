@@ -232,7 +232,9 @@ export const findPublicCredentialViolations = (text: string): readonly PublicTex
     "bearer-credential",
     text,
     BEARER_CREDENTIAL,
-    (match) => !isExplicitSyntheticCredential(match[1] ?? ""),
+    // A literal printf string placeholder contains no credential. Keep scanning
+    // longer values beginning with the same characters.
+    (match) => match[1] !== "%s" && !isExplicitSyntheticCredential(match[1] ?? ""),
   );
   addPatternViolations(violations, "basic-credential", text, BASIC_CREDENTIAL, (match) =>
     isCanonicalBasicCredential(match[1] ?? ""),

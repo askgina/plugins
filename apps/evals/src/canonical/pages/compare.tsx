@@ -26,6 +26,8 @@ import {
   attemptsFor,
   caseDefinitionsForFamily,
   cohortLabel,
+  campaignDisplayLabel,
+  runDisplayLabel,
   compareEligibility,
   eligibilityText,
   getCaseDefinition,
@@ -75,7 +77,10 @@ function runOptionLabel(run: CanonicalRun): string {
     run.configuration.availability === "labels_only" ? "labels-only" : null,
   ].filter((mark): mark is string => mark !== null);
   const tail = marks.length > 0 ? ` · ${marks.join(" · ")}` : "";
-  return `${model?.name ?? run.modelId} · ${run.runId} · ${run.startedAt.slice(0, 10)}${tail}`;
+  const name = run.recovery
+    ? runDisplayLabel(run.runId)
+    : `${model?.name ?? run.modelId} · ${run.runId}`;
+  return `${name} · ${run.startedAt.slice(0, 10)}${tail}`;
 }
 
 function sideName(run: CanonicalRun, left: CanonicalRun): string {
@@ -181,7 +186,8 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
           <span>
             <span className="eval-compare-run-name">{model?.name ?? run.modelId}</span>{" "}
             <span className="eval-compare-run-sub">
-              <code className="eval-compare-mono">{run.runId}</code> · {run.startedAt.slice(0, 10)}
+              <code className="eval-compare-mono">{runDisplayLabel(run.runId)}</code> ·{" "}
+              {run.startedAt.slice(0, 10)}
             </span>
           </span>
           <OriginTag origin={run.origin} />
@@ -226,7 +232,7 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
           <div>
             <dt>Campaign</dt>
             <dd title={campaign?.harness}>
-              <code className="eval-compare-mono">{run.campaignId}</code>
+              <code className="eval-compare-mono">{campaignDisplayLabel(run.campaignId)}</code>
             </dd>
           </div>
           <div>
@@ -237,7 +243,7 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
                 <>
                   {" "}
                   · Sol baseline imported once as{" "}
-                  <code className="eval-compare-mono">{baseline.runId}</code>
+                  <code className="eval-compare-mono">{runDisplayLabel(baseline.runId)}</code>
                 </>
               )}
             </dd>
@@ -648,7 +654,7 @@ function SideFacts({ run }: { run: CanonicalRun }) {
   return (
     <div className="eval-compare-side">
       <h4>
-        <code className="eval-compare-mono">{run.runId}</code>
+        <code className="eval-compare-mono">{runDisplayLabel(run.runId)}</code>
       </h4>
       {availability.length > 0 && (
         <ul className="eval-compare-note-list" aria-label="Field availability">
@@ -921,7 +927,9 @@ export function ComparePage({
                   <span className="eval-score eval-score-positive">
                     <strong>same cohort</strong>
                   </span>
-                  <code className="eval-compare-mono eval-muted">{leftRun.cohort.cohortId}</code>
+                  <code className="eval-compare-mono eval-muted">
+                    {cohortLabel(leftRun.cohort)}
+                  </code>
                 </div>
               ) : (
                 <ul className="eval-compare-reason-list">

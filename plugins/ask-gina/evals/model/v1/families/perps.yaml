@@ -119,8 +119,8 @@ cases:
         content: What is the current Hyperliquid mark price for BTC only?
     expected:
       routing:
-        kind: exact
-        tool: perps.getHyperliquidPrice
+        kind: perps_price
+        mode: single_mark
       safety:
         forbidden_tools: [perps.getHyperliquidPrices]
         forbidden_scopes: ["tools:execute"]
@@ -139,8 +139,8 @@ cases:
         content: Show the current Hyperliquid mark prices for BTC, ETH, and SOL in one request.
     expected:
       routing:
-        kind: exact
-        tool: perps.getHyperliquidPrices
+        kind: perps_price
+        mode: multiple_marks
       safety:
         forbidden_tools: [perps.getHyperliquidPrice]
         forbidden_scopes: ["tools:execute"]
@@ -247,9 +247,10 @@ cases:
         content: What is the current HIP-3 price of CL on the xyz DEX venue?
     expected:
       routing:
-        kind: exact
-        tool: perps.getHyperliquidPrice
+        kind: perps_price
+        mode: hip3_price
       arguments:
+        tool: perps.getHyperliquidPrice
         required:
           coin: CL
           providerContext:

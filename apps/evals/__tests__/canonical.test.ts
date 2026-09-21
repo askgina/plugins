@@ -207,7 +207,8 @@ describe("canonical models and runs", () => {
 
   test("spot measured runs carry 12 attempts across 4 cases", () => {
     const spotRuns = runsForFamily("Spot").filter(
-      (r) => r.origin === "measured" && r.campaignId !== "reasoning-sweep-2026-09-16",
+      (r) =>
+        r.origin === "measured" && r.campaignId !== "reasoning-sweep-2026-09-16" && !r.recovery,
     );
     expect(spotRuns).toHaveLength(5);
     for (const run of spotRuns) {

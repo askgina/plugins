@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
+import { clientDisplayName } from "../lib/client-labels";
 import { Popover } from "@base-ui/react/popover";
 import { Info, X } from "lucide-react";
 import { canonicalCampaigns, type CanonicalRun } from "../canonical/canonical";
 import { HeadlineValue, LatencyValue } from "../canonical/components";
-import { derivedCostPerTask, headlineFor } from "../canonical/selectors";
+import { derivedCostPerTask, headlineFor, runDisplayLabel } from "../canonical/selectors";
 import "../styles/results-browser.css";
 
 export const percent = (value: number) => `${(value * 100).toFixed(1)}%`;
@@ -91,13 +92,17 @@ export function RunDetails({ run }: { run: CanonicalRun }) {
         </div>
         <div>
           <dt>Client</dt>
-          <dd>{run.cohort.target}</dd>
+          <dd>{clientDisplayName(run.cohort.target)}</dd>
         </div>
         <div>
           <dt>Budget</dt>
           <dd>
-            {timeout == null ? "Timeout not recorded" : `${timeout / 1000}s timeout`} ·{" "}
-            {run.cohort.repetitions} repetitions per task
+            {run.recovery
+              ? `${run.recovery.timeoutBudgetsMs.map((ms) => ms / 1000).join(" / ")}s recorded budgets`
+              : timeout == null
+                ? "Timeout not recorded"
+                : `${timeout / 1000}s timeout`}{" "}
+            · {run.cohort.repetitions} repetitions per task
           </dd>
         </div>
         <div>
@@ -153,7 +158,7 @@ export function RunDetails({ run }: { run: CanonicalRun }) {
         <div>
           <dt>Source run</dt>
           <dd>
-            <code>{run.runId}</code>
+            <code>{runDisplayLabel(run.runId)}</code>
           </dd>
         </div>
         <div>

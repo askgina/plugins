@@ -70,7 +70,7 @@ test("links to a different model's run fall back to the selected model's evidenc
     }),
   );
   expect(html).not.toContain("<code>sol-spot-1</code>");
-  expect(html).toMatch(/<code>astra-[^<]+-spot-1<\/code>/u);
+  expect(html).toContain("<code>GPT-6 Astra · max · Spot</code>");
 });
 
 test("a missing attempt link never silently displays another attempt's transcript", () => {

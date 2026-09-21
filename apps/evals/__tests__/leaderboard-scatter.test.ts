@@ -19,7 +19,9 @@ const asPoint = (row: LeaderboardModelRow, index: number): ScatterPoint => ({
 });
 
 describe("research chart comparisons", () => {
-  const eligible = configurationLeaderboardRows().filter((row) => row.overall !== null);
+  const eligible = configurationLeaderboardRows().filter(
+    (row) => row.overall !== null && row.campaignId !== "recovery-2026-09-21",
+  );
   const astra = eligible.filter((row) => row.model.name === "GPT-6 Astra");
 
   test("connects the six existing model series in reasoning order without changing eligible results", () => {
@@ -73,7 +75,7 @@ describe("research chart comparisons", () => {
       true,
     );
     expect(domain.min).toBeCloseTo(0.2);
-    expect(domain.max).toBeCloseTo(0.7);
+    expect(domain.max).toBeCloseTo(0.9);
     for (const values of [[0], [1], [0.64, 0.64], [0, 1]]) {
       const range = scatterDomain(values, true);
       expect(range.min).toBeLessThanOrEqual(Math.min(...values));
@@ -102,24 +104,24 @@ describe("scatter plot configuration rows", () => {
       {
         ...base,
         rowId: "setting-low",
-        configurationLabel: "low reasoning · OMP",
+        configurationLabel: "low reasoning",
         overall: 0.5,
         averageTime: { availability: "available", value: 1000, sampleCount: 105, excluded: 0 },
       },
       {
         ...base,
         rowId: "setting-high",
-        configurationLabel: "high reasoning · OMP",
+        configurationLabel: "high reasoning",
         overall: 0.7,
         averageTime: { availability: "available", value: 2000, sampleCount: 105, excluded: 0 },
       },
-      { ...base, rowId: "setting-max", configurationLabel: "max reasoning · OMP", overall: null },
+      { ...base, rowId: "setting-max", configurationLabel: "max reasoning", overall: null },
     ];
     const html = renderToStaticMarkup(createElement(LeaderboardScatter, { rows }));
     expect(html.match(/class="lb-chart-model"/gu)).toHaveLength(2);
-    expect(html).toContain(`${base.model.name}, low reasoning · OMP: 50.0% overall`);
-    expect(html).toContain(`${base.model.name}, high reasoning · OMP: 70.0% overall`);
-    expect(html).toContain(`${base.model.name}, max reasoning · OMP (Overall score unavailable)`);
+    expect(html).toContain(`${base.model.name}, low reasoning: 50.0% overall`);
+    expect(html).toContain(`${base.model.name}, high reasoning: 70.0% overall`);
+    expect(html).toContain(`${base.model.name}, max reasoning (Overall score unavailable)`);
   });
 
   test("renders the unavailable state when no rows can be plotted", () => {
@@ -138,10 +140,10 @@ describe("scatter plot configuration rows", () => {
       }),
     );
     expect(html).toContain('viewBox="0 0 360 280"');
-    expect(html.match(/class="lb-chart-model"/gu)).toHaveLength(13);
-    expect(html).toContain("13 plotted settings: names and values");
-    expect(html).toContain("Grok 4.6, low reasoning · OMP");
-    expect(html).toContain("65.7% overall · 30.3s");
-    expect(html).toContain("27 settings not plotted");
+    expect(html.match(/class="lb-chart-model"/gu)).toHaveLength(20);
+    expect(html).toContain("20 plotted settings: names and values");
+    expect(html).toContain("Grok 4.6, low reasoning");
+    expect(html).toContain("79.3% overall · 30.3s");
+    expect(html).toContain("31 settings not plotted");
   });
 });

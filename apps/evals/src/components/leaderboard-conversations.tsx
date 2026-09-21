@@ -7,7 +7,7 @@ import {
   summarizeTask,
   type LeaderboardModelRow,
 } from "../canonical/selectors";
-import { ConversationPanel } from "./conversation-panel";
+import { AttemptConversationPanel } from "./conversation-panel";
 import "../styles/leaderboard-conversations.css";
 
 function attemptLabel(attempt: CanonicalAttempt | undefined): string {
@@ -68,7 +68,7 @@ function RunConversationPicker({ run }: { run: CanonicalRun }) {
       {summary.slots.length === 0 ? (
         <p role="status">Individual attempts were not retained for this run.</p>
       ) : (
-        <ConversationPanel reference={attempt?.conversation} model={getModel(run.modelId)} inline />
+        <AttemptConversationPanel attempt={attempt} model={getModel(run.modelId)} />
       )}
     </>
   );

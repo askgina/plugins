@@ -6,6 +6,7 @@ import {
   headlineFor,
   modelsByReleaseDate,
   runHistoryFor,
+  runDisplayLabel,
   runsForModel,
 } from "../canonical/selectors";
 import { AvailabilityMark, CoverageChip, HeadlineValue } from "../canonical/components";
@@ -138,7 +139,7 @@ function ModelCard({ model }: { model: CanonicalModel }) {
                   <a
                     className="model-index-family-link"
                     href={`#/models/${model.id}?run=${latest.runId}`}
-                    title={`Inspect ${latest.runId}`}
+                    title={`Inspect ${runDisplayLabel(latest.runId)}`}
                   >
                     View run <ArrowUpRight size={12} aria-hidden="true" />
                   </a>

@@ -246,6 +246,18 @@ const APPROVED_CLAUDE_ARTIFACTS: Readonly<Record<string, string>> = {
     "7e8c040a63aeb74248df73fd683deb0d0fb37f52fee58616b786a361c9aeb1d5",
 };
 const textDecoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+const APPROVED_RECOVERY_ARTIFACTS: Readonly<Record<string, string>> = {
+  "src/results/2026-09-21/recovery/results.json":
+    "ee45efee5273f04f46146e2e0886afff7008b325211ccefb467b748e8d93eecc",
+  "src/results/2026-09-21/recovery/snapshot.json":
+    "a4e5b8a350e822d687e8cd85f7db64bdfb70c2776f11cf96e56a1a3d87ccf5fe",
+};
+// Numeric checks, public identifiers and evidence hashes only. Original result
+// and transcript bytes stay pinned separately above.
+const APPROVED_REGRADE_RECEIPT_SHA256 =
+  "fe468267f8c9fc15b13b23f0afdac8db0c8a3178c4a63848108e27e5386a7521";
+const APPROVED_PERPS_REGRADE_RECEIPT_SHA256 =
+  "985a30958804f5ca65fd192a7574fb9d00aa391e64ba226d9a4c73a5aee56fa1";
 const decodeArtifactJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
 
 /** Fixed diagnostics never include provider values or schema issue excerpts. */
@@ -392,9 +404,30 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
           seenTranscripts.add(relative);
           return;
         }
+        if (relative.startsWith("src/results/2026-09-21/regrade/")) {
+          if (
+            createHash("sha256").update(bytes).digest("hex") !==
+            (relative === "src/results/2026-09-21/regrade/receipt.json"
+              ? APPROVED_REGRADE_RECEIPT_SHA256
+              : relative === "src/results/2026-09-21/regrade/perps-receipt.json"
+                ? APPROVED_PERPS_REGRADE_RECEIPT_SHA256
+                : undefined)
+          ) {
+            return yield* fail(relative, "unapproved_artifact");
+          }
+          return;
+        }
         const claudeBearing = /claude/iu.test(relative) || hasClaudeIdentity(input);
         const sweepArtifact = relative.startsWith("src/results/2026-09-16/reasoning-sweep/");
-        if (claudeBearing || sweepArtifact) {
+        const recoveryArtifact = relative.startsWith("src/results/2026-09-21/recovery/");
+        if (
+          recoveryArtifact &&
+          (!Object.hasOwn(APPROVED_RECOVERY_ARTIFACTS, relative) ||
+            createHash("sha256").update(bytes).digest("hex") !==
+              APPROVED_RECOVERY_ARTIFACTS[relative])
+        )
+          return yield* fail(relative, "unapproved_artifact");
+        if (claudeBearing || sweepArtifact || recoveryArtifact) {
           yield* validateClaudePublicArtifact(input, relative);
         }
         if (claudeBearing) {

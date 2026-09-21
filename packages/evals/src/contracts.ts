@@ -39,6 +39,12 @@ const ExactRoutingExpectationSchema = Schema.Struct({
   tool: Schema.NonEmptyString,
 });
 
+const BoundedSearchRoutingExpectationSchema = Schema.Struct({
+  kind: Schema.Literal("bounded_search"),
+  tool: Schema.NonEmptyString,
+  max_calls: PositiveIntSchema,
+});
+
 const OneOfRoutingExpectationSchema = Schema.Struct({
   kind: Schema.Literal("one_of"),
   tools: NonEmptyStringArraySchema,
@@ -55,6 +61,11 @@ const NoToolRoutingExpectationSchema = Schema.Struct({
 
 export const PluginEvalRoutingExpectationSchema = Schema.Union([
   ExactRoutingExpectationSchema,
+  BoundedSearchRoutingExpectationSchema,
+  Schema.Struct({
+    kind: Schema.Literal("perps_price"),
+    mode: Schema.Literals(["single_mark", "multiple_marks", "hip3_price"]),
+  }),
   OneOfRoutingExpectationSchema,
   SequenceRoutingExpectationSchema,
   NoToolRoutingExpectationSchema,

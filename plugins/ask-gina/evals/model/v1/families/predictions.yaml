@@ -17,8 +17,9 @@ cases:
         content: What are the current odds in the 2027 NBA champion market?
     expected:
       routing:
-        kind: exact
+        kind: bounded_search
         tool: predictions.searchPredictionMarkets
+        max_calls: 3
       arguments:
         tool: predictions.searchPredictionMarkets
         required:
@@ -42,8 +43,9 @@ cases:
         content: Search Polymarket for active NBA prediction markets.
     expected:
       routing:
-        kind: exact
+        kind: bounded_search
         tool: predictions.searchPredictionMarkets
+        max_calls: 3
       arguments:
         tool: predictions.searchPredictionMarkets
         required:
@@ -67,8 +69,9 @@ cases:
         content: Find active football prediction markets.
     expected:
       routing:
-        kind: exact
+        kind: bounded_search
         tool: predictions.searchPredictionMarkets
+        max_calls: 3
       arguments:
         tool: predictions.searchPredictionMarkets
         required:
@@ -92,8 +95,9 @@ cases:
         content: What markets are there about the next US election?
     expected:
       routing:
-        kind: exact
+        kind: bounded_search
         tool: predictions.searchPredictionMarkets
+        max_calls: 3
       arguments:
         tool: predictions.searchPredictionMarkets
         required:
@@ -117,8 +121,9 @@ cases:
         content: Find the thinly traded market about a lunar landing before 2030 and summarize what data is available.
     expected:
       routing:
-        kind: exact
+        kind: bounded_search
         tool: predictions.searchPredictionMarkets
+        max_calls: 3
       arguments:
         tool: predictions.searchPredictionMarkets
         required:
@@ -142,8 +147,9 @@ cases:
         content: Find current recurring BTC up-or-down prediction markets across the available timeframes.
     expected:
       routing:
-        kind: exact
+        kind: bounded_search
         tool: predictions.searchPredictionMarkets
+        max_calls: 3
       arguments:
         tool: predictions.searchPredictionMarkets
         required:
@@ -167,8 +173,9 @@ cases:
         content: Which prediction markets expire in the next 24 hours? Use the expiry window rather than a keyword search.
     expected:
       routing:
-        kind: exact
+        kind: bounded_search
         tool: predictions.searchPredictionMarkets
+        max_calls: 3
       arguments:
         tool: predictions.searchPredictionMarkets
         required:
@@ -192,8 +199,9 @@ cases:
         content: Find the current recurring BTC 15-minute up-or-down prediction market series. This is a recurring timeframe, not a date-specific market search.
     expected:
       routing:
-        kind: exact
+        kind: bounded_search
         tool: predictions.searchPredictionMarkets
+        max_calls: 3
       arguments:
         tool: predictions.searchPredictionMarkets
         required:

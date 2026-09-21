@@ -17,7 +17,9 @@ import { InfoPopover, ResultsHeader, RunDetails, dollars, seconds } from "../com
 import {
   SCORED_FAMILIES,
   benchmarkSummary,
+  campaignDisplayLabel,
   configurationLeaderboardRows,
+  deduplicateEvidenceRows,
   recordedOutcomes,
   sortLeaderboardRows,
   type LeaderboardMetric,
@@ -41,7 +43,11 @@ export function LeaderboardPage({
   rows?: readonly LeaderboardModelRow[];
 }) {
   const [search, setSearch] = useState(initialSearch);
-  const [campaign, setCampaign] = useState("all");
+  const [campaign, setCampaign] = useState(() =>
+    typeof window === "undefined"
+      ? "all"
+      : (new URLSearchParams(window.location.hash.split("?")[1]).get("campaign") ?? "all"),
+  );
   const [grading, setGrading] = useState("all");
   const [metric, setMetric] = useState<LeaderboardMetric>("overall");
   const [direction, setDirection] = useState<"asc" | "desc">("desc");
@@ -60,17 +66,19 @@ export function LeaderboardPage({
   const query = search.trim().toLocaleLowerCase();
   const campaigns = [...new Set(rows.map((row) => row.campaignId).filter(Boolean))];
   const shown = sortLeaderboardRows(
-    rows.filter((row) => {
-      const counts = recordedOutcomes(Object.values(row.runs));
-      const complete = counts.planned > 0 && counts.graded === counts.planned;
-      return (
-        `${row.model.name} ${row.model.provider} ${row.configurationLabel ?? ""} ${row.campaignId ?? ""}`
-          .toLocaleLowerCase()
-          .includes(query) &&
-        (campaign === "all" || row.campaignId === campaign) &&
-        (grading === "all" || (grading === "complete" ? complete : !complete))
-      );
-    }),
+    deduplicateEvidenceRows(
+      rows.filter((row) => {
+        const counts = recordedOutcomes(Object.values(row.runs));
+        const complete = counts.planned > 0 && counts.graded === counts.planned;
+        return (
+          `${row.model.name} ${row.model.provider} ${row.configurationLabel ?? ""} ${row.campaignId ?? ""}`
+            .toLocaleLowerCase()
+            .includes(query) &&
+          (campaign === "all" || row.campaignId === campaign) &&
+          (grading === "all" || (grading === "complete" ? complete : !complete))
+        );
+      }),
+    ),
     metric,
     direction,
   );
@@ -111,7 +119,12 @@ export function LeaderboardPage({
           <p className="results-context">{benchmarkSummary(rows)}</p>
           <p className="results-context">
             Every recorded setting has its own row, including incomplete runs and earlier campaigns.
-            Scores measure tool-use conformance; answer quality was not evaluated.
+            Identical attempts reused across campaigns appear once. Scores measure tool-use
+            conformance, with retained-price grounding for three Perps tasks. Other answer quality
+            was not evaluated.
+          </p>
+          <p className="results-context">
+            100% graded means every trial has a verdict. Each row shows its recorded time budgets.
           </p>
         </ResultsHeader>
         <div className="results-toolbar">
@@ -141,7 +154,7 @@ export function LeaderboardPage({
               <option value="all">All recorded campaigns</option>
               {campaigns.map((id) => (
                 <option key={id} value={id}>
-                  {id}
+                  {campaignDisplayLabel(id)}
                 </option>
               ))}
             </select>
@@ -216,14 +229,14 @@ export function LeaderboardPage({
                 const first = runs[0];
                 const timeouts = [
                   ...new Set(
-                    runs
-                      .map(
-                        (run) =>
-                          run.timeoutMs ??
-                          canonicalCampaigns.find((entry) => entry.campaignId === run.campaignId)
-                            ?.timeoutMs,
-                      )
-                      .filter((value) => value != null),
+                    runs.flatMap((run) => {
+                      if (run.recovery) return [...run.recovery.timeoutBudgetsMs];
+                      const timeout =
+                        run.timeoutMs ??
+                        canonicalCampaigns.find((entry) => entry.campaignId === run.campaignId)
+                          ?.timeoutMs;
+                      return timeout == null ? [] : [timeout];
+                    }),
                   ),
                 ];
                 return (
@@ -253,11 +266,15 @@ export function LeaderboardPage({
                             <small>
                               {first?.startedAt.slice(0, 10)} ·{" "}
                               {timeouts.length
-                                ? `${timeouts.map((value) => value! / 1000).join(" / ")}s timeout`
+                                ? `${timeouts
+                                    .map((value) => value! / 1000)
+                                    .sort((a, b) => a - b)
+                                    .join(
+                                      " / ",
+                                    )}s ${first?.recovery ? "recorded budgets" : "timeout"}`
                                 : "Timeout not recorded"}{" "}
                               · {first?.cohort.repetitions} reps
                             </small>
-                            <small>{row.campaignId}</small>
                             {row.coverageLabel && <small>{row.coverageLabel}</small>}
                             <div className="results-row-actions">
                               <button

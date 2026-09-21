@@ -75,7 +75,10 @@ export function LeaderboardScatter({
   const activeKey = hoveredKey ?? focusedKey ?? pinnedKey;
   const active = plotted.find((point) => point.key === activeKey);
   const activeRun = active && Object.values(active.row.runs)[0];
-  const activeClient = active?.row.configurationLabel?.split(" · ").at(-1);
+  const activeClient =
+    activeRun?.cohort.target === "omp_harness"
+      ? undefined
+      : active?.row.configurationLabel?.split(" · ").at(-1);
   const omitted = rows.filter((row) => !points.some((point) => point.row === row));
   const hasPoints = points.length > 0;
   useEffect(() => {

@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { UserRound, Terminal } from "lucide-react";
-import type { CanonicalModel } from "../canonical/canonical";
+import type { CanonicalAttempt, CanonicalModel } from "../canonical/canonical";
 import { ModelAvatar } from "./eval-ui";
 import { TranscriptContent } from "./transcript-content";
 import {
@@ -351,5 +351,75 @@ export function ConversationPanel({
         )}
       </div>
     </details>
+  );
+}
+
+function RecoveryConversation({
+  attempt,
+  model,
+}: {
+  attempt: CanonicalAttempt;
+  model: CanonicalModel | undefined;
+}) {
+  const id = useId();
+  const [execution, setExecution] = useState("selected");
+  const history = attempt.recovery?.history ?? [];
+  const selected = history.find((entry) => entry.terminalSha256 === execution);
+  const reference = selected?.conversation ?? attempt.conversation;
+  return (
+    <>
+      {attempt.recovery && (
+        <div className="task-model-picker">
+          <label htmlFor={`${id}-execution`}>Execution history</label>
+          <select
+            id={`${id}-execution`}
+            value={execution}
+            onChange={(event) => setExecution(event.target.value)}
+          >
+            <option value="selected">
+              Selected result · {attempt.recovery.timeoutMs / 1000}s ·{" "}
+              {attempt.verdict === "not_graded"
+                ? "Ungraded"
+                : attempt.verdict === "pass"
+                  ? "Passed"
+                  : "Failed"}
+            </option>
+            {history.map((entry, index) => (
+              <option key={entry.terminalSha256} value={entry.terminalSha256}>
+                Execution {index + 1} · {entry.timeoutMs / 1000}s ·{" "}
+                {entry.outcome === "completed" ? "Graded" : "Execution failure"}
+                {entry.selected ? " · selected" : ""}
+              </option>
+            ))}
+          </select>
+          <p className="conversation-label">
+            {attempt.recovery.budgetCohort.replaceAll("-", " ")}. First completed grade retained;
+            failed executions remain available here. Hidden reasoning is excluded.
+          </p>
+        </div>
+      )}
+      <ConversationPanel reference={reference} model={model} inline />
+    </>
+  );
+}
+
+export function AttemptConversationPanel({
+  attempt,
+  model,
+}: {
+  attempt: CanonicalAttempt | undefined;
+  model: CanonicalModel | undefined;
+}) {
+  if (!attempt) return <ConversationPanel model={model} inline />;
+  return (
+    <RecoveryConversation
+      key={
+        attempt.conversation
+          ? conversationUrl(attempt.conversation)
+          : `${attempt.caseId}-${attempt.repetition}`
+      }
+      attempt={attempt}
+      model={model}
+    />
   );
 }
