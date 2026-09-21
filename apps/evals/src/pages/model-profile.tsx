@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { clientDisplayName } from "../lib/client-labels";
 import { ArrowUpRight, ChevronDown, ChevronRight, Download } from "lucide-react";
 import {
@@ -840,59 +840,78 @@ function RunHistoryPanel({
               const publication = publicationFor(run);
               const headline = headlineFor(run);
               return (
-                <tr
-                  key={run.runId}
-                  className={`model-profile-history-row ${
-                    isExpanded ? "model-profile-history-row-expanded" : ""
-                  }`}
-                  onClick={() => onToggleRun(run.runId)}
-                >
-                  <td>
-                    <button
-                      type="button"
-                      className="model-profile-expand-toggle"
-                      aria-label={isExpanded ? "Collapse run details" : "Expand run details"}
-                      aria-expanded={isExpanded}
-                    >
-                      {isExpanded ? (
-                        <ChevronDown size={12} aria-hidden="true" />
+                <Fragment key={run.runId}>
+                  <tr
+                    id={`run-row-${run.runId}`}
+                    className={`model-profile-history-row ${
+                      isExpanded ? "model-profile-history-row-expanded" : ""
+                    }`}
+                    onClick={() => onToggleRun(run.runId)}
+                  >
+                    <td>
+                      <button
+                        type="button"
+                        className="model-profile-expand-toggle"
+                        aria-label={`${isExpanded ? "Collapse" : "Expand"} run details for ${runDisplayLabel(run.runId)}`}
+                        aria-expanded={isExpanded}
+                        aria-controls={`run-details-${run.runId}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onToggleRun(run.runId);
+                        }}
+                      >
+                        {isExpanded ? (
+                          <ChevronDown size={12} aria-hidden="true" />
+                        ) : (
+                          <ChevronRight size={12} aria-hidden="true" />
+                        )}
+                      </button>
+                    </td>
+                    <th scope="row">
+                      <div className="model-profile-run-id-cell">
+                        <code>{runDisplayLabel(run.runId)}</code>
+                        <OriginTag origin={run.origin} />
+                      </div>
+                    </th>
+                    <td>{run.family}</td>
+                    <td>{run.startedAt.slice(0, 10)}</td>
+                    <td>
+                      <HeadlineValue headline={headline} />
+                    </td>
+                    <td>
+                      <CoverageChip run={run} />
+                    </td>
+                    <td>
+                      {run.configuration.availability === "pinned" ? (
+                        <code>pin {shortSha(run.configuration.pinnedSha256)}</code>
                       ) : (
-                        <ChevronRight size={12} aria-hidden="true" />
+                        <AvailabilityMark availability="not_recorded" reason="labels-only" />
                       )}
-                    </button>
-                  </td>
-                  <th scope="row">
-                    <div className="model-profile-run-id-cell">
-                      <code>{runDisplayLabel(run.runId)}</code>
-                      <OriginTag origin={run.origin} />
-                    </div>
-                  </th>
-                  <td>{run.family}</td>
-                  <td>{run.startedAt.slice(0, 10)}</td>
-                  <td>
-                    <HeadlineValue headline={headline} />
-                  </td>
-                  <td>
-                    <CoverageChip run={run} />
-                  </td>
-                  <td>
-                    {run.configuration.availability === "pinned" ? (
-                      <code>pin {shortSha(run.configuration.pinnedSha256)}</code>
-                    ) : (
-                      <AvailabilityMark availability="not_recorded" reason="labels-only" />
-                    )}
-                  </td>
-                  <td>
-                    {publication ? (
-                      <span>
-                        rev {publication.revisions.length}
-                        {publication.status === "withdrawn" && " · withdrawn"}
-                      </span>
-                    ) : (
-                      <span className="eval-muted">—</span>
-                    )}
-                  </td>
-                </tr>
+                    </td>
+                    <td>
+                      {publication ? (
+                        <span>
+                          rev {publication.revisions.length}
+                          {publication.status === "withdrawn" && " · withdrawn"}
+                        </span>
+                      ) : (
+                        <span className="eval-muted">—</span>
+                      )}
+                    </td>
+                  </tr>
+                  {isExpanded && (
+                    <tr>
+                      <td colSpan={8} className="model-profile-detail-cell">
+                        <section
+                          id={`run-details-${run.runId}`}
+                          aria-label={`Run details for ${runDisplayLabel(run.runId)}`}
+                        >
+                          <RunDetail run={run} />
+                        </section>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               );
             })}
             {/* Withdrawn demonstration rows */}
@@ -919,14 +938,6 @@ function RunHistoryPanel({
           </tbody>
         </table>
       </div>
-
-      {/* Expanded detail row container */}
-      {expandedRunId &&
-        (() => {
-          const run = runs.find((r) => r.runId === expandedRunId);
-          if (!run) return null;
-          return <RunDetail run={run} />;
-        })()}
     </Panel>
   );
 }
@@ -1150,9 +1161,12 @@ export function ModelProfilePage({
 
   const handleSelectRun = (runId: string) => {
     setExpandedRunId(runId);
-    // Smooth scroll down to the history section
-    const el = document.querySelector(".model-profile-history-panel");
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Let the selected row render before bringing its inline details into view.
+    requestAnimationFrame(() => {
+      document
+        .getElementById(`run-row-${runId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   const handleToggleRun = (runId: string) => {

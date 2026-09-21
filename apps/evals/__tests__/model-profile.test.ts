@@ -9,6 +9,26 @@ import {
 import { ModelSettingResults } from "../src/components/model-setting-results";
 import { ModelProfilePage } from "../src/pages/model-profile";
 
+test("expanded run details appear immediately after their history row", () => {
+  const runId = "recovery-astra-max-perps-1";
+  const html = renderToStaticMarkup(
+    createElement(ModelProfilePage, {
+      modelId: "astra",
+      initialRunId: runId,
+    }),
+  );
+  const row = html.slice(html.indexOf(`id="run-row-${runId}"`));
+  expect(row).toMatch(/^id="run-row-[^]*?aria-expanded="true"/u);
+  expect(row).toContain(`aria-controls="run-details-${runId}"`);
+  expect(row).toMatch(
+    new RegExp(`</tr><tr><td colSpan="8"[^>]*><section id="run-details-${runId}"`),
+  );
+  expect(row.indexOf(`id="run-details-${runId}"`)).toBeLessThan(
+    row.indexOf('id="run-row-recovery-astra-max-predictions-1"'),
+  );
+  expect(html.match(/class="model-profile-run-detail"/gu)).toHaveLength(1);
+});
+
 test("Astra overview includes every effort and selects the latest whole setting without mixing campaigns", () => {
   const rows = modelProfileRows("astra");
   expect(rows.map((row) => Object.values(row.runs)[0]!.configuration.reasoning)).toEqual([
