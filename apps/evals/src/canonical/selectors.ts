@@ -55,6 +55,17 @@ export function getRun(runId: string): CanonicalRun | undefined {
   return runById.get(runId);
 }
 
+/** Public labels are separate from the immutable evidence identifiers. */
+export function campaignDisplayLabel(campaignId: string | undefined): string {
+  return campaignId === "recovery-2026-09-21" ? "21 Sep 2026" : (campaignId ?? "Unknown campaign");
+}
+
+export function runDisplayLabel(runId: string): string {
+  const run = getRun(runId);
+  if (!run?.recovery) return runId;
+  return `${getModel(run.modelId)?.name ?? run.modelId} · ${run.configuration.reasoning ?? "Unspecified"} · ${run.family}`;
+}
+
 export function getWithdrawnRun(runId: string): WithdrawnRunRef | undefined {
   return withdrawnById.get(runId);
 }
@@ -508,7 +519,7 @@ const FAMILY_BY_SUITE_ID: Record<string, PrototypeFamily> = {
 /** Human-readable cohort identity: family · target · account · reps · evidence. */
 export function cohortLabel(cohort: CanonicalCohort): string {
   const family = FAMILY_BY_SUITE_ID[cohort.suiteId] ?? cohort.suiteId;
-  return `${family} · ${cohort.target} · ${cohort.accountClass} · ${cohort.repetitions} reps · ${cohort.evidenceCategory}${cohort.recoveryProtocol ? " · Recovery (120–600s)" : ""}`;
+  return `${family} · ${cohort.target} · ${cohort.accountClass} · ${cohort.repetitions} reps · ${cohort.evidenceCategory}${cohort.recoveryProtocol ? " · 120–600s budgets" : ""}`;
 }
 
 /** Every cohort declared for a family's suite (empty for unmeasured families). */
@@ -849,7 +860,7 @@ export function configurationLeaderboardRows(
         .sort()
         .join("+"),
       campaignId: first.campaignId,
-      configurationLabel: `${first.configuration.reasoning ?? "Unspecified"} reasoning · ${client}${first.recovery ? " · Recovery (120–600s)" : ""}`,
+      configurationLabel: `${first.configuration.reasoning ?? "Unspecified"} reasoning · ${client}`,
     }));
   });
 }

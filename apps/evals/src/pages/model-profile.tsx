@@ -11,6 +11,8 @@ import {
 } from "../canonical/canonical";
 import {
   cohortLabel,
+  campaignDisplayLabel,
+  runDisplayLabel,
   configurationGroupKey,
   derivedCostPerTask,
   getModel,
@@ -283,7 +285,7 @@ function FamilyMetricCards({
                 }}
                 onClick={() => onSelectRun(representative.runId)}
               >
-                Inspect run <code>{representative.runId}</code> →
+                Inspect run <code>{runDisplayLabel(representative.runId)}</code> →
               </button>
             </article>
           );
@@ -366,7 +368,7 @@ function ConfigurationGroupsPanel({
                   size="sm"
                   onClick={() => onSelectRun(run.runId)}
                 >
-                  {run.family} · <code>{run.runId}</code> ({run.startedAt.slice(0, 10)})
+                  <code>{runDisplayLabel(run.runId)}</code> ({run.startedAt.slice(0, 10)})
                 </Button>
               ))}
             </div>
@@ -650,7 +652,7 @@ function RunDetail({ run }: { run: CanonicalRun }) {
 
       <CheckDimensionPanel
         fill
-        series={[{ key: "run", label: run.runId, dimensions: run.dimensions }]}
+        series={[{ key: "run", label: runDisplayLabel(run.runId), dimensions: run.dimensions }]}
       />
 
       {/* Per-check outcome matrix */}
@@ -703,15 +705,15 @@ function RunDetail({ run }: { run: CanonicalRun }) {
         <h4 className="model-profile-detail-heading">Provenance & publication</h4>
         <dl className="model-profile-run-details">
           <div>
-            <dt>Run id</dt>
+            <dt>Recorded run</dt>
             <dd>
-              <code>{run.runId}</code>
+              <code>{runDisplayLabel(run.runId)}</code>
             </dd>
           </div>
           <div>
-            <dt>Campaign id</dt>
+            <dt>Campaign</dt>
             <dd>
-              <code>{run.campaignId}</code>
+              <code>{campaignDisplayLabel(run.campaignId)}</code>
             </dd>
           </div>
           <div>
@@ -756,7 +758,7 @@ function RunDetail({ run }: { run: CanonicalRun }) {
             <div>
               <dt>Embedded baseline</dt>
               <dd>
-                Resolves to canonical run <code>{baseline.runId}</code>
+                Resolves to canonical run <code>{runDisplayLabel(baseline.runId)}</code>
               </dd>
             </div>
           )}
@@ -852,7 +854,7 @@ function RunHistoryPanel({
                   </td>
                   <th scope="row">
                     <div className="model-profile-run-id-cell">
-                      <code>{run.runId}</code>
+                      <code>{runDisplayLabel(run.runId)}</code>
                       <OriginTag origin={run.origin} />
                     </div>
                   </th>
@@ -890,7 +892,7 @@ function RunHistoryPanel({
                 <td></td>
                 <th scope="row">
                   <div className="model-profile-run-id-cell">
-                    <code>{item.runId}</code>
+                    <code>{runDisplayLabel(item.runId)}</code>
                     <OriginTag origin={item.origin} />
                     <span className="eval-demo-label">withdrawn</span>
                   </div>
@@ -934,7 +936,7 @@ function CampaignsPanel({ campaigns }: { campaigns: readonly CanonicalCampaign[]
       <dl className="model-profile-run-details">
         {campaigns.map((campaign) => (
           <div key={campaign.campaignId}>
-            <dt>{campaign.campaignId}</dt>
+            <dt>{campaignDisplayLabel(campaign.campaignId)}</dt>
             <dd>
               {campaign.date} · {campaign.harness} · {campaign.repetitions} reps ·{" "}
               {campaign.timeoutMs === null
@@ -974,7 +976,7 @@ function CampaignsPanel({ campaigns }: { campaigns: readonly CanonicalCampaign[]
                 target="_blank"
                 rel="noreferrer"
               >
-                {c.prLabel ?? "Open GitHub PR"} ({c.campaignId}){" "}
+                {c.prLabel ?? "Open GitHub PR"} ({campaignDisplayLabel(c.campaignId)}){" "}
                 <ArrowUpRight size={14} aria-hidden="true" />
               </a>
             ))}

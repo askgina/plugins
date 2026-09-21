@@ -870,14 +870,14 @@ export const canonicalCampaigns: readonly CanonicalCampaign[] = [
   {
     campaignId: "recovery-2026-09-21",
     date: "2026-09-21",
-    harness: "Astra, Muse and Grok · execution recovery",
+    harness: "Astra, Muse and Grok",
     repetitions: 3,
     timeoutMs: null,
     sourceCommit: null,
     limitations: [
       "Snapshot at " + recoveryResults.capturedAt + ". Grok is still incomplete.",
       "Existing grades are preserved. Only execution gaps are retried; the first completed grade is final.",
-      "Recovery combines retained trials and retries with 120s, 300s or 600s budgets. It is separate from the original fixed-budget sweep.",
+      "These results combine retained trials and retries with 120s, 300s or 600s budgets. They are separate from the original fixed-budget sweep.",
       "100% graded means every trial has a pass or fail verdict; it does not mean every trial passed.",
       "Costs cover selected graded attempts, including cache usage. Failed execution retries and subscription charges are excluded.",
     ],
@@ -2489,10 +2489,10 @@ function recoveryFamilyRun(row: SweepRow, source: RecoveryRun): CanonicalRun {
     },
     provenance: {
       ...base.provenance,
-      sourceLabel: "Recovery snapshot: first graded result per planned slot",
+      sourceLabel: "First graded result per planned slot",
     },
     notes: [
-      "Recovery snapshot at " +
+      "Results recorded at " +
         recoveryResults.capturedAt +
         ". Original sweep records remain available separately.",
       "Existing grades, including failures, are final. Only execution gaps are retried; the first completed grade is selected.",

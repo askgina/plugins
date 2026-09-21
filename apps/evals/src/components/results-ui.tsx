@@ -3,7 +3,7 @@ import { Popover } from "@base-ui/react/popover";
 import { Info, X } from "lucide-react";
 import { canonicalCampaigns, type CanonicalRun } from "../canonical/canonical";
 import { HeadlineValue, LatencyValue } from "../canonical/components";
-import { derivedCostPerTask, headlineFor } from "../canonical/selectors";
+import { derivedCostPerTask, headlineFor, runDisplayLabel } from "../canonical/selectors";
 import "../styles/results-browser.css";
 
 export const percent = (value: number) => `${(value * 100).toFixed(1)}%`;
@@ -157,7 +157,7 @@ export function RunDetails({ run }: { run: CanonicalRun }) {
         <div>
           <dt>Source run</dt>
           <dd>
-            <code>{run.runId}</code>
+            <code>{runDisplayLabel(run.runId)}</code>
           </dd>
         </div>
         <div>

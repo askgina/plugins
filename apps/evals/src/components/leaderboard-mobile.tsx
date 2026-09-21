@@ -2,6 +2,7 @@ import { Fragment, useEffect, useId, useState, useSyncExternalStore } from "reac
 import { ArrowDown, ArrowUp, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 import {
   benchmarkSummary,
+  campaignDisplayLabel,
   recordedOutcomes,
   SCORED_FAMILIES,
   sortLeaderboardRows,
@@ -164,7 +165,7 @@ export function LeaderboardMobile({
   for (const row of shown) groups.set(row.model.id, [...(groups.get(row.model.id) ?? []), row]);
   const totals = recordedOutcomes(shown.flatMap((row) => Object.values(row.runs)));
   const hasFilters = Boolean(query || state.campaign !== "all" || state.grading !== "all");
-  const scope = `${state.campaign === "all" ? "All campaigns" : state.campaign} · ${state.grading === "all" ? "All results" : state.grading === "complete" ? "Fully graded" : "Incomplete grading"}`;
+  const scope = `${state.campaign === "all" ? "All campaigns" : campaignDisplayLabel(state.campaign)} · ${state.grading === "all" ? "All results" : state.grading === "complete" ? "Fully graded" : "Incomplete grading"}`;
 
   useEffect(() => {
     // Keep mobile exploration shareable without changing desktop navigation or
@@ -295,7 +296,7 @@ export function LeaderboardMobile({
             <option value="all">All campaigns</option>
             {campaigns.map((campaign) => (
               <option key={campaign} value={campaign}>
-                {campaign}
+                {campaignDisplayLabel(campaign)}
               </option>
             ))}
           </select>

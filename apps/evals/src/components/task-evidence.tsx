@@ -7,6 +7,7 @@ import {
 import { CheckMark, EvidenceValue } from "../canonical/components";
 import { RunDetails, seconds } from "./results-ui";
 import { attemptLabel } from "../lib/task-workspace";
+import { runDisplayLabel } from "../canonical/selectors";
 
 const checkNames = {
   routing: "Tool selection",
@@ -40,7 +41,7 @@ export function AttemptChecks({ attempt }: { attempt: CanonicalAttempt }) {
       <dl className="results-facts">
         {attempt.recovery && (
           <div>
-            <dt>Recovery execution</dt>
+            <dt>Execution</dt>
             <dd>
               {attempt.recovery.timeoutMs / 1000}s budget ·{" "}
               {attempt.recovery.budgetCohort.replaceAll("-", " ")} ·{" "}
@@ -184,7 +185,7 @@ export function TaskRunEvidence({ run }: { run: CanonicalRun }) {
         <div>
           <dt>Run identifier</dt>
           <dd>
-            <code>{run.runId}</code>
+            <code>{runDisplayLabel(run.runId)}</code>
           </dd>
         </div>
         <div>

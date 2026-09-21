@@ -17,6 +17,7 @@ import { InfoPopover, ResultsHeader, RunDetails, dollars, seconds } from "../com
 import {
   SCORED_FAMILIES,
   benchmarkSummary,
+  campaignDisplayLabel,
   configurationLeaderboardRows,
   recordedOutcomes,
   sortLeaderboardRows,
@@ -118,9 +119,7 @@ export function LeaderboardPage({
             Scores measure tool-use conformance; answer quality was not evaluated.
           </p>
           <p className="results-context">
-            Recovery results are included as a separate campaign. 100% graded means every trial has
-            a verdict, not a 100% pass rate. Recovery budgets vary from 120–600s; original runs
-            remain available below.
+            100% graded means every trial has a verdict. Each row shows its recorded time budgets.
           </p>
         </ResultsHeader>
         <div className="results-toolbar">
@@ -150,7 +149,7 @@ export function LeaderboardPage({
               <option value="all">All recorded campaigns</option>
               {campaigns.map((id) => (
                 <option key={id} value={id}>
-                  {id}
+                  {campaignDisplayLabel(id)}
                 </option>
               ))}
             </select>
@@ -271,7 +270,6 @@ export function LeaderboardPage({
                                 : "Timeout not recorded"}{" "}
                               · {first?.cohort.repetitions} reps
                             </small>
-                            <small>{row.campaignId}</small>
                             {row.coverageLabel && <small>{row.coverageLabel}</small>}
                             <div className="results-row-actions">
                               <button
