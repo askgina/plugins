@@ -996,9 +996,9 @@ function gradingCriteriaFor(spec: CaseSpec): readonly string[] {
         : spec.routingKind === "sequence"
           ? `routing: calls ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in the required order`
           : `routing: exactly one call to ${spec.expectedTool ?? "the expected tool"}`),
-    priceBehavior(spec.caseId)
+    priceBehavior(spec.caseId) !== undefined
       ? "arguments: validate each relevant coin and venue; price grounding: match quoted values to retained evidence"
-      : spec.requiredArguments
+      : spec.requiredArguments !== null
         ? "arguments: required fields carry the declared values; additional fields allowed"
         : "arguments: no case-specific argument constraint",
     "completion: the trial and its tool calls complete without error",
@@ -1017,7 +1017,7 @@ function expectedBehaviorFor(spec: CaseSpec): string {
           ? `Call ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in sequence`
           : `Call ${spec.expectedTool} exactly once`),
   ];
-  if (spec.requiredArguments) {
+  if (spec.requiredArguments !== null) {
     const args = Object.entries(spec.requiredArguments)
       .map(([key, value]) => `${key}=${JSON.stringify(value)}`)
       .join(", ");
@@ -1051,11 +1051,12 @@ function caseDefinition(family: PrototypeFamily, spec: CaseSpec): CanonicalCaseD
       spec.caseId === "perps-single-price" || spec.caseId === "perps-multiple-prices"
         ? "perps.getHyperliquidMarkets"
         : spec.expectedTool,
-    routingKind: priceBehavior(spec.caseId)
-      ? "perps_price"
-      : spec.expectedTool === "predictions.searchPredictionMarkets"
-        ? "bounded_search"
-        : spec.routingKind,
+    routingKind:
+      priceBehavior(spec.caseId) !== undefined
+        ? "perps_price"
+        : spec.expectedTool === "predictions.searchPredictionMarkets"
+          ? "bounded_search"
+          : spec.routingKind,
     requiredArguments: spec.requiredArguments,
     forbiddenTools: spec.forbiddenTools,
     forbiddenScopes: spec.forbiddenScopes,
@@ -1837,9 +1838,10 @@ function solPredictionsAttempts(
         ?.split(";")
         .map((segment) => segment.trim())
         .find((segment) => segment.startsWith(`rep ${repetition}:`));
-      const categories = noteSegment
-        ? FAILURE_CATEGORY_NAMES.filter((name) => noteSegment.includes(name))
-        : [];
+      const categories =
+        noteSegment !== undefined && noteSegment.length > 0
+          ? FAILURE_CATEGORY_NAMES.filter((name) => noteSegment.includes(name))
+          : [];
       const timedOut = result === "timeout";
       attempts.push({
         caseId: caseResult.id,
@@ -1988,9 +1990,10 @@ function museAttemptToCanonical(trial: MuseTrial): CanonicalAttempt {
         ? NOT_RECORDED
         : available(trial.tokenUsage),
     answer: NOT_RETAINED,
-    toolCalls: trial.tools
-      ? available(trial.tools.map((tool) => ({ name: tool.name, error: tool.error })))
-      : NOT_RETAINED,
+    toolCalls:
+      trial.tools !== null
+        ? available(trial.tools.map((tool) => ({ name: tool.name, error: tool.error })))
+        : NOT_RETAINED,
   };
 }
 
@@ -2127,7 +2130,7 @@ function projectedTrialToCanonical(trial: ProjectedTrial): CanonicalAttempt {
       verdict: "not_graded",
       checks: available(checks),
       checkSource: "derived_from_scores",
-      failureCategories: trial.error ? [trial.error.tag] : [],
+      failureCategories: trial.error !== null ? [trial.error.tag] : [],
       durationMs: NOT_RECORDED,
       // Wall duration is recorded separately for runtime failures.
       wallDurationMs: trial.wallDurationMs == null ? NOT_RECORDED : available(trial.wallDurationMs),
@@ -2446,7 +2449,7 @@ function sweepFamilyRun(row: SweepRow, run: SweepRun): CanonicalRun {
     ],
     provenance: {
       sourceArtifactSha256: row.sourceSummarySha256,
-      sourceLabel: `reasoning-sweep row ${row.rowId} ${row.runtimeClassification?.derived ? "post-run classified" : "source"} summary`,
+      sourceLabel: `reasoning-sweep row ${row.rowId} ${row.runtimeClassification?.derived === true ? "post-run classified" : "source"} summary`,
       sourceCommit: row.sourceCommit,
       sourceKind: snapshot ? "extracted_snapshot" : "git_checkout",
     },
@@ -2494,7 +2497,7 @@ function recoveryFamilyRun(row: SweepRow, source: RecoveryRun): CanonicalRun {
     const execution = source.executions.find(
       (entry) => entry.caseId === trial.caseId && entry.repetition === trial.repetition,
     );
-    if (!execution) throw new Error("Missing recovery execution metadata");
+    if (execution === undefined) throw new Error("Missing recovery execution metadata");
     return {
       ...projectedTrialToCanonical(trial),
       conversation: execution.conversation,
@@ -2937,16 +2940,16 @@ function applyGradingRevision(run: CanonicalRun): CanonicalRun {
   const entries = [...gradingRevisionEntries, ...perpsGradingEntries].filter(
     (entry) => entry.runId === run.runId,
   );
-  if (!entries.length) return run;
+  if (entries.length === 0) return run;
   if (run.attempts.availability !== "available") throw new Error("Missing regrade attempts");
   const attempts = run.attempts.value.map((attempt) => {
     const entry = entries.find(
       (candidate) =>
         candidate.caseId === attempt.caseId && candidate.repetition === attempt.repetition,
     );
-    return entry ? reviseAttempt(attempt, entry) : attempt;
+    return entry !== undefined ? reviseAttempt(attempt, entry) : attempt;
   });
-  if (attempts.filter((attempt) => attempt.gradingRevision).length !== entries.length)
+  if (attempts.filter((attempt) => attempt.gradingRevision !== undefined).length !== entries.length)
     throw new Error("Unbound grading revision");
   const graded = attempts.filter((attempt) => attempt.verdict !== "not_graded");
   const invalid = entries.filter((entry) => entry.kind === "provider_error");
@@ -2975,12 +2978,12 @@ function applyGradingRevision(run: CanonicalRun): CanonicalRun {
     attempts: available(attempts),
     dimensions: available(dimensionsFromAttempts(attempts)),
     gradingCoverage: counts.graded === counts.planned ? "complete" : "partial",
-    ...(invalid.length
+    ...(invalid.length > 0
       ? {
           metrics: {
             ...run.metrics,
             latencyMs:
-              durations.length === graded.length && durations.length
+              durations.length === graded.length && durations.length > 0
                 ? {
                     availability: "available",
                     p50: percentile(0.5),
@@ -2990,16 +2993,17 @@ function applyGradingRevision(run: CanonicalRun): CanonicalRun {
                     population: "graded",
                   }
                 : { availability: "not_recorded" },
-            tokenUsage: usages.length
-              ? {
-                  availability: "available",
-                  inputTokens: usages.reduce((n, u) => n + u.inputTokens, 0),
-                  outputTokens: usages.reduce((n, u) => n + u.outputTokens, 0),
-                  totalTokens: usages.reduce((n, u) => n + u.totalTokens, 0),
-                  sampleCount: usages.length,
-                  population: "graded",
-                }
-              : { availability: "not_recorded" },
+            tokenUsage:
+              usages.length > 0
+                ? {
+                    availability: "available",
+                    inputTokens: usages.reduce((n, u) => n + u.inputTokens, 0),
+                    outputTokens: usages.reduce((n, u) => n + u.outputTokens, 0),
+                    totalTokens: usages.reduce((n, u) => n + u.totalTokens, 0),
+                    sampleCount: usages.length,
+                    population: "graded",
+                  }
+                : { availability: "not_recorded" },
           },
           recordedCostEstimate:
             cost?.availability === "available"
@@ -3014,8 +3018,8 @@ function applyGradingRevision(run: CanonicalRun): CanonicalRun {
       : {}),
     notes: [
       ...run.notes,
-      `Grading revision ${attempts.find((a) => a.gradingRevision)?.gradingRevision?.policyId ?? SEARCH_GRADING_POLICY}: ${entries.length} reviewed attempts; original checks and source records retained.`,
-      ...(invalid.length
+      `Grading revision ${attempts.find((a) => a.gradingRevision !== undefined)?.gradingRevision?.policyId ?? SEARCH_GRADING_POLICY}: ${entries.length} reviewed attempts; original checks and source records retained.`,
+      ...(invalid.length > 0
         ? [
             "A provider configuration error was previously classified as a completed answer. That slot is now ungraded and requires a valid execution.",
           ]

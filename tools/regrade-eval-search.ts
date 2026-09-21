@@ -76,10 +76,10 @@ const main = Effect.gen(function* () {
       const evalCase = cases.get(attempt.caseId);
       if (attempt.execution !== "completed" || evalCase?.expected.routing.kind !== "bounded_search")
         continue;
-      if (attempt.checks.availability !== "available" || !attempt.conversation)
+      if (attempt.checks.availability !== "available" || attempt.conversation === undefined)
         throw new Error("Missing original grading evidence");
       const path = publicTranscriptPath(attempt.conversation);
-      if (!path) throw new Error("Missing transcript binding");
+      if (path === undefined || path.length === 0) throw new Error("Missing transcript binding");
       const bytes = yield* fs.readFile(root + "apps/evals/public/transcripts/" + path);
       const transcriptSha256 = hash(bytes);
       const indexed = transcriptFiles.get(path);
@@ -127,7 +127,7 @@ const main = Effect.gen(function* () {
         "06f55ad41d38b8212f3d53ff2e385d06cc6cf3f7476f93e57e29224a77c7628f";
       if (
         providerError &&
-        (calls.length ||
+        (calls.length > 0 ||
           run.runId !== "recovery-astra-xhigh-predictions-1" ||
           attempt.repetition !== 2 ||
           attempt.caseId !== "predictions-multi-series-no-render")
@@ -190,4 +190,11 @@ const main = Effect.gen(function* () {
   );
 });
 
-BunRuntime.runMain(main.pipe(Effect.provide(Layer.merge(BunFileSystem.layer, BunPath.layer))));
+BunRuntime.runMain(
+  Effect.scoped(
+    Effect.gen(function* () {
+      const context = yield* Layer.build(Layer.merge(BunFileSystem.layer, BunPath.layer));
+      return yield* main.pipe(Effect.provide(context));
+    }),
+  ),
+);

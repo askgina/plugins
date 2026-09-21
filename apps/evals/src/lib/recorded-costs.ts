@@ -1,3 +1,4 @@
+import { Function } from "effect";
 import projection from "../results/2026-09-16/reasoning-sweep/native-cost-estimates.json";
 import type { CostEstimateBasis, RecordedCostEstimate } from "../canonical/canonical";
 
@@ -43,58 +44,62 @@ const sourceFor: Readonly<Record<string, string>> = {
 };
 
 /** Bind the numeric-only projection to the exact published source and population. */
-export function recordedSweepCost(
-  row: {
-    readonly rowId: string;
-    readonly model: string;
-    readonly target: string;
-    readonly sourceSummarySha256: string;
-  },
-  run: { readonly family: string; readonly graded: number },
-  records: readonly NativeCostRecord[] = publishedNativeCosts,
-): RecordedCostEstimate {
-  if (records.length === 0) {
-    return { availability: "withheld", reason: "Cost estimates are not published." };
-  }
-  const matches = records.filter(
-    (entry) => entry.rowId === row.rowId && entry.family === run.family,
-  );
-  const entry = matches[0];
-  const explicitFreeTier =
-    entry?.method === "catalogue_free_tier" &&
-    entry.target === "devin_cli" &&
-    entry.rateSource === "devin_models_catalogue" &&
-    entry.rateSourceSha256 !== null &&
-    entry.rateCard?.inputUsdPerMillion === 0 &&
-    entry.rateCard.cachedInputUsdPerMillion === 0 &&
-    entry.rateCard.outputUsdPerMillion === 0;
-  if (
-    matches.length !== 1 ||
-    entry === undefined ||
-    entry.sourceSummarySha256 !== row.sourceSummarySha256 ||
-    entry.model !== row.model ||
-    entry.target !== row.target ||
-    entry.population !== "completed" ||
-    !Object.hasOwn(basisFor, entry.method) ||
-    entry.sampleCount !== run.graded ||
-    !Number.isInteger(entry.sampleCount) ||
-    entry.sampleCount < 0 ||
-    !Number.isFinite(entry.usdTotal) ||
-    entry.usdTotal < 0 ||
-    (entry.sampleCount === 0 ? entry.usdTotal !== 0 : entry.usdTotal === 0 && !explicitFreeTier)
-  ) {
+type CostRow = {
+  readonly rowId: string;
+  readonly model: string;
+  readonly target: string;
+  readonly sourceSummarySha256: string;
+};
+type CostRun = { readonly family: string; readonly graded: number };
+export const recordedSweepCost = Function.dual<
+  (run: CostRun, records?: readonly NativeCostRecord[]) => (row: CostRow) => RecordedCostEstimate,
+  (row: CostRow, run: CostRun, records?: readonly NativeCostRecord[]) => RecordedCostEstimate
+>(
+  (args) => typeof args[0] === "object" && args[0] !== null && "rowId" in args[0],
+  (row, run, records = publishedNativeCosts) => {
+    if (records.length === 0) {
+      return { availability: "withheld", reason: "Cost estimates are not published." };
+    }
+    const matches = records.filter(
+      (entry) => entry.rowId === row.rowId && entry.family === run.family,
+    );
+    const entry = matches[0];
+    const explicitFreeTier =
+      entry?.method === "catalogue_free_tier" &&
+      entry.target === "devin_cli" &&
+      entry.rateSource === "devin_models_catalogue" &&
+      entry.rateSourceSha256 !== null &&
+      entry.rateCard?.inputUsdPerMillion === 0 &&
+      entry.rateCard.cachedInputUsdPerMillion === 0 &&
+      entry.rateCard.outputUsdPerMillion === 0;
+    if (
+      matches.length !== 1 ||
+      entry === undefined ||
+      entry.sourceSummarySha256 !== row.sourceSummarySha256 ||
+      entry.model !== row.model ||
+      entry.target !== row.target ||
+      entry.population !== "completed" ||
+      !Object.hasOwn(basisFor, entry.method) ||
+      entry.sampleCount !== run.graded ||
+      !Number.isInteger(entry.sampleCount) ||
+      entry.sampleCount < 0 ||
+      !Number.isFinite(entry.usdTotal) ||
+      entry.usdTotal < 0 ||
+      (entry.sampleCount === 0 ? entry.usdTotal !== 0 : entry.usdTotal === 0 && !explicitFreeTier)
+    ) {
+      return {
+        availability: "not_recorded",
+        reason: "Retained cost evidence does not match this run and its completed attempts.",
+      };
+    }
     return {
-      availability: "not_recorded",
-      reason: "Retained cost evidence does not match this run and its completed attempts.",
+      availability: "available",
+      basis: basisFor[entry.method]!,
+      usdTotal: entry.usdTotal,
+      sampleCount: entry.sampleCount,
+      population: "completed",
+      source: sourceFor[entry.method]!,
+      recordedAt: entry.priceAsOf,
     };
-  }
-  return {
-    availability: "available",
-    basis: basisFor[entry.method]!,
-    usdTotal: entry.usdTotal,
-    sampleCount: entry.sampleCount,
-    population: "completed",
-    source: sourceFor[entry.method]!,
-    recordedAt: entry.priceAsOf,
-  };
-}
+  },
+);

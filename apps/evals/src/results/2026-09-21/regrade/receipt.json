@@ -20,7 +20,7 @@
     },
     {
       "path": "packages/evals/src/bounded-search.ts",
-      "sha256": "521066060d261e912a8423b79a1f8a80ddfe622080731cddf6f8801834f6a695"
+      "sha256": "ab51a86656b09b44e74097367cd7194a3ffb6f2a47587735e531ce2a6ea28e6c"
     },
     {
       "path": "packages/evals/src/grading.ts",
@@ -28,11 +28,11 @@
     },
     {
       "path": "apps/evals/src/canonical/canonical.ts",
-      "sha256": "11c081c041a4250a96276f5893a0553185f866b07cbff092536eb68c875dba79"
+      "sha256": "4d2f07e7f3552c02dedeeb40b44ff9bf59e8dfe01f19dfac55c2bdfd70792777"
     },
     {
       "path": "apps/evals/src/lib/grading-revisions.ts",
-      "sha256": "54e7c519720186e15cf0d696f533418c0eab54ebd5d7a54805c64ec1589a738f"
+      "sha256": "7560fa99d89d8e463e4aa81d62c736c2ec67cbaa5653a1d1e4d83c9df388899a"
     },
     {
       "path": "plugins/ask-gina/evals/model/v1/families/predictions.yaml",
@@ -40,7 +40,7 @@
     },
     {
       "path": "tools/regrade-eval-search.ts",
-      "sha256": "b5eaae6f990007ba397c1a85318a0c6837a81fd16e76a494116477b632fcc489"
+      "sha256": "4bbe5bacba1a5262515765526aeae9336995d41ec36612cb002e5ed306814952"
     }
   ],
   "reviewedAttempts": 841,

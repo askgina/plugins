@@ -1,3 +1,4 @@
+import { Function } from "effect";
 /** Versioned price-task contract. No model or score targets belong here. */
 export type PerpsPriceMode = "single_mark" | "multiple_marks" | "hip3_price";
 export const MARKETS = "perps.getHyperliquidMarkets";
@@ -26,7 +27,12 @@ const dimension = (ok: boolean, detail: string) => ({
   details: [detail],
 });
 
-export function gradePerpsPriceCalls(calls: readonly PriceCall[], mode: PerpsPriceMode) {
+type PriceDimension = ReturnType<typeof dimension>;
+type PriceCallGrade = { readonly routing: PriceDimension; readonly arguments: PriceDimension };
+export const gradePerpsPriceCalls = Function.dual<
+  (mode: PerpsPriceMode) => (calls: readonly PriceCall[]) => PriceCallGrade,
+  (calls: readonly PriceCall[], mode: PerpsPriceMode) => PriceCallGrade
+>(2, (calls, mode) => {
   const allowed = priceTools(mode);
   const names = calls.map((c) => c.name);
   const sourcePresent =
@@ -71,14 +77,17 @@ export function gradePerpsPriceCalls(calls: readonly PriceCall[], mode: PerpsPri
       "Bind coin and venue constraints to each relevant call, including the confirmation lookup.",
     ),
   };
-}
+});
 
 /** Decode only known MCP result envelopes, never arbitrary nested message text. */
-export function pricePayload(value: unknown, depth = 0): Record<string, unknown> | undefined {
+export function pricePayload(value: unknown): Record<string, unknown> | undefined {
+  return decodePricePayload(value, 0);
+}
+function decodePricePayload(value: unknown, depth: number): Record<string, unknown> | undefined {
   if (depth > 8) return undefined;
   if (typeof value === "string") {
     try {
-      return pricePayload(JSON.parse(value), depth + 1);
+      return decodePricePayload(JSON.parse(value), depth + 1);
     } catch {
       // Native head/tail truncation retains complete leading market objects.
       // Decode only the first text block's visible head; never join across the
@@ -105,7 +114,7 @@ export function pricePayload(value: unknown, depth = 0): Record<string, unknown>
       if (typeof text !== "string" || !/^\s*\{\s*"success"\s*:\s*true\s*,/.test(text))
         return undefined;
       const arrayStart = /"markets"\s*:\s*\[/.exec(text);
-      if (!arrayStart) return undefined;
+      if (arrayStart === null) return undefined;
       const markets: unknown[] = [];
       let begin = -1,
         nesting = 0,
@@ -130,36 +139,36 @@ export function pricePayload(value: unknown, depth = 0): Record<string, unknown>
           }
         } else if (c === "]" && nesting === 0) break;
       }
-      return markets.length ? { success: true, markets } : undefined;
+      return markets.length > 0 ? { success: true, markets } : undefined;
     }
   }
   const v = object(value);
-  if (!v || v["isError"] === true || v["success"] === false) return undefined;
+  if (v === undefined || v["isError"] === true || v["success"] === false) return undefined;
   const structured = object(v["structuredContent"]);
-  if (structured?.["payload"] !== undefined) return pricePayload(structured["payload"], depth + 1);
+  if (structured?.["payload"] !== undefined)
+    return decodePricePayload(structured["payload"], depth + 1);
   if (v["success"] === true) return v;
   for (const key of ["result", "output", "content"]) {
     const nested = v[key];
     if (Array.isArray(nested)) {
       for (const block of nested) {
         const text = object(block)?.["text"];
-        const payload = pricePayload(text, depth + 1);
-        if (payload) return payload;
+        const payload = decodePricePayload(text, depth + 1);
+        if (payload !== undefined) return payload;
       }
     } else if (nested !== undefined) {
-      const payload = pricePayload(nested, depth + 1);
-      if (payload) return payload;
+      const payload = decodePricePayload(nested, depth + 1);
+      if (payload !== undefined) return payload;
     }
   }
   return undefined;
 }
 
 /** Conservative numeric grounding for the three audited price tasks, not general answer quality. */
-export function checkPriceAnswer(
-  calls: readonly PriceCall[],
-  mode: PerpsPriceMode,
-  answer: string,
-) {
+export const checkPriceAnswer = Function.dual<
+  (mode: PerpsPriceMode, answer: string) => (calls: readonly PriceCall[]) => PriceDimension,
+  (calls: readonly PriceCall[], mode: PerpsPriceMode, answer: string) => PriceDimension
+>(3, (calls, mode, answer) => {
   const coins =
     mode === "multiple_marks" ? ["BTC", "ETH", "SOL"] : mode === "single_mark" ? ["BTC"] : ["CL"];
   const venue = mode === "hip3_price" ? "hip3:xyz" : "hyperliquid";
@@ -167,9 +176,11 @@ export function checkPriceAnswer(
   let confirmed = false;
   for (const call of calls) {
     const payload = pricePayload(call.result);
-    if (!payload) continue;
+    if (payload === undefined) continue;
     if (call.name === MARKETS && Array.isArray(payload["markets"])) {
-      const markets = payload["markets"].flatMap((v) => (object(v) ? [object(v)!] : []));
+      const markets = payload["markets"].flatMap((v) =>
+        object(v) !== undefined ? [object(v)!] : [],
+      );
       const matching = markets
         .map((m): Record<string, unknown> => ({
           ...m,
@@ -208,14 +219,14 @@ export function checkPriceAnswer(
   }
   if (mode === "hip3_price" && !confirmed)
     return dimension(false, "No successful venue-scoped markets result confirms CL on xyz.");
-  if (!answer.trim()) return dimension(false, "No retained final answer.");
+  if (answer.trim().length === 0) return dimension(false, "No retained final answer.");
   const clean = answer.replace(/[*`_]/g, "");
   const lines = clean.split(/\n/);
   const metricOf = (text: string): "mark" | "mid" | "oracle" | undefined => {
     const word = [...text.matchAll(/\b(mark|mid(?:point)?|oracle)(?:s|\s+prices?)?\b/gi)]
       .at(-1)?.[1]
       ?.toLowerCase();
-    return word?.startsWith("mid")
+    return word?.startsWith("mid") === true
       ? "mid"
       : word === "mark" || word === "oracle"
         ? word
@@ -234,25 +245,30 @@ export function checkPriceAnswer(
           .map((c) => c.trim())
       : [];
     const mentioned = coins.filter((coin) => new RegExp(`\\b${coin}\\b`, "i").test(line));
-    if (cells.length && !mentioned.length && cells.some((c) => metricOf(c))) {
+    if (
+      cells.length > 0 &&
+      mentioned.length === 0 &&
+      cells.some((c) => metricOf(c) !== undefined)
+    ) {
       tableMetrics = cells.map(metricOf);
       continue;
     }
-    if (cells.length && tableMetrics.length === cells.length && mentioned.length === 1) {
+    if (cells.length > 0 && tableMetrics.length === cells.length && mentioned.length === 1) {
       cells.forEach((cell, i) => {
         const metric = tableMetrics[i];
         if (metric !== "mark" && metric !== "mid") return;
         const token = cell.match(/^(?:\$\s*)?(\d+(?:,\d{3})*(?:\.\d+)?)(?:\s+(?:USD|USDC))?$/)?.[1];
-        if (token) claims.push({ coin: mentioned[0]!, metric, token });
+        if (token !== undefined && token.length > 0)
+          claims.push({ coin: mentioned[0]!, metric, token });
       });
       continue;
     }
-    if (cells.length) continue;
-    if (!line.trim()) {
+    if (cells.length > 0) continue;
+    if (line.trim().length === 0) {
       tableMetrics = [];
       continue;
     }
-    if (!/\d/.test(line) && !/\bnot\b/i.test(line) && metricOf(line))
+    if (!/\d/.test(line) && !/\bnot\b/i.test(line) && metricOf(line) !== undefined)
       sectionMetric = metricOf(line);
     const coin =
       mentioned.length === 1
@@ -260,9 +276,9 @@ export function checkPriceAnswer(
         : coins.length === 1 && mentioned.length === 0
           ? coins[0]
           : undefined;
-    if (!coin) continue;
+    if (coin === undefined || coin.length === 0) continue;
     if (
-      !mentioned.length &&
+      mentioned.length === 0 &&
       !/^\s*[-•]?\s*(?:mark(?:\s+price)?|mid(?:point)?(?:\s+price)?|price)\s*[:=]/i.test(line)
     )
       continue;
@@ -298,7 +314,7 @@ export function checkPriceAnswer(
     const evidence = snapshots.filter(
       (s) => s.coin === coin && (mode === "hip3_price" || s.metric === "mark"),
     );
-    if (!evidence.length)
+    if (evidence.length === 0)
       return dimension(
         false,
         `No retained ${mode === "hip3_price" ? "venue price" : "mark"} evidence for ${coin}.`,
@@ -307,7 +323,7 @@ export function checkPriceAnswer(
       (c) => c.coin === coin && (mode === "hip3_price" || c.metric === "mark"),
     );
     if (
-      !quoted.length ||
+      quoted.length === 0 ||
       !quoted.every((c) => {
         const token = c.token.replaceAll(",", "");
         const decimalPlaces = token.split(".")[1]?.length ?? 0;
@@ -326,4 +342,4 @@ export function checkPriceAnswer(
     true,
     "Requested coin/metric/venue values match the retained results, allowing rounding to the displayed precision.",
   );
-}
+});

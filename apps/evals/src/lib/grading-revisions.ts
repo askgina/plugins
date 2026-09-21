@@ -1,3 +1,4 @@
+import { Function } from "effect";
 import perpsReceipt from "../results/2026-09-21/regrade/perps-receipt.json";
 import receipt from "../results/2026-09-21/regrade/receipt.json";
 import type { CanonicalAttempt, CheckOutcome, GradingVerdict } from "../canonical/canonical";
@@ -28,10 +29,10 @@ export const gradingRevisionEntries: readonly GradingRevisionEntry[] =
 export const perpsGradingEntries: readonly GradingRevisionEntry[] =
   perpsReceipt.entries as readonly GradingRevisionEntry[];
 
-export function reviseAttempt(
-  attempt: CanonicalAttempt,
-  entry: GradingRevisionEntry,
-): CanonicalAttempt {
+export const reviseAttempt = Function.dual<
+  (entry: GradingRevisionEntry) => (attempt: CanonicalAttempt) => CanonicalAttempt,
+  (attempt: CanonicalAttempt, entry: GradingRevisionEntry) => CanonicalAttempt
+>(2, (attempt, entry) => {
   if (
     attempt.execution !== "completed" ||
     attempt.checks.availability !== "available" ||
@@ -40,13 +41,13 @@ export function reviseAttempt(
     attempt.checks.value.routing !== entry.previousRouting ||
     (entry.kind === "perps_price" &&
       (attempt.checks.value.arguments !== entry.previousArguments ||
-        !entry.priceGrounding ||
-        !entry.arguments))
+        entry.priceGrounding === undefined ||
+        entry.arguments === undefined))
   )
     throw new Error("Grading revision does not match its original evidence");
   const revision = {
     policyId: entry.kind === "perps_price" ? PERPS_GRADING_POLICY : SEARCH_GRADING_POLICY,
-    ...(entry.priceGrounding ? { priceGrounding: entry.priceGrounding } : {}),
+    ...(entry.priceGrounding !== undefined ? { priceGrounding: entry.priceGrounding } : {}),
     kind: entry.kind,
     previousVerdict: attempt.verdict,
     previousChecks: attempt.checks.value,
@@ -85,7 +86,7 @@ export function reviseAttempt(
       value: {
         ...attempt.checks.value,
         routing: entry.routing,
-        ...(entry.arguments ? { arguments: entry.arguments } : {}),
+        ...(entry.arguments !== undefined ? { arguments: entry.arguments } : {}),
       },
     },
     failureCategories: [
@@ -99,4 +100,4 @@ export function reviseAttempt(
       ...(entry.routing === "fail" ? ["routing_mismatch"] : []),
     ],
   };
-}
+});

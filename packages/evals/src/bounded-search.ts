@@ -1,11 +1,12 @@
+import { Function } from "effect";
 import type { PluginEvalDimensionScore, PluginEvalToolCall } from "./contracts";
 
 /** Routing only: relevance, answer grounding and retry necessity are not scored. */
-export function gradeBoundedSearchCalls(
-  calls: readonly Pick<PluginEvalToolCall, "name" | "arguments">[],
-  tool: string,
-  maxCalls: number,
-): PluginEvalDimensionScore {
+type SearchCalls = readonly Pick<PluginEvalToolCall, "name" | "arguments">[];
+export const gradeBoundedSearchCalls = Function.dual<
+  (tool: string, maxCalls: number) => (calls: SearchCalls) => PluginEvalDimensionScore,
+  (calls: SearchCalls, tool: string, maxCalls: number) => PluginEvalDimensionScore
+>(3, (calls, tool, maxCalls) => {
   const queries = calls.map((call) => call.arguments["query"]);
   const valid =
     calls.length >= 1 &&
@@ -23,4 +24,4 @@ export function gradeBoundedSearchCalls(
         : `expected 1–${maxCalls} distinct nonempty queries using only ${tool}`,
     ],
   };
-}
+});

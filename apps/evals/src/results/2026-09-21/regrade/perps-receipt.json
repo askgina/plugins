@@ -20,7 +20,7 @@
     },
     {
       "path": "packages/evals/src/perps-price.ts",
-      "sha256": "ffd02a8a0b70903d68d72ee7f3d78bd80f937aa619b8f8e880719d2a269ed9a8"
+      "sha256": "896e5b13c12bd9e672650d810c9ff1e66da514150d29dc9ef17cca3ee6270497"
     },
     {
       "path": "packages/evals/src/grading.ts",
@@ -28,11 +28,11 @@
     },
     {
       "path": "apps/evals/src/canonical/canonical.ts",
-      "sha256": "11c081c041a4250a96276f5893a0553185f866b07cbff092536eb68c875dba79"
+      "sha256": "4d2f07e7f3552c02dedeeb40b44ff9bf59e8dfe01f19dfac55c2bdfd70792777"
     },
     {
       "path": "apps/evals/src/lib/grading-revisions.ts",
-      "sha256": "54e7c519720186e15cf0d696f533418c0eab54ebd5d7a54805c64ec1589a738f"
+      "sha256": "7560fa99d89d8e463e4aa81d62c736c2ec67cbaa5653a1d1e4d83c9df388899a"
     },
     {
       "path": "plugins/ask-gina/evals/model/v1/families/perps.yaml",
@@ -40,7 +40,7 @@
     },
     {
       "path": "tools/regrade-eval-perps.ts",
-      "sha256": "476629d3265c916a8fd0a4e001e7378990c64d6e23a643558ed14b4eb3d8da06"
+      "sha256": "7aa9751803faa49e516cbc067e14a4305e5af6b6696edffa361aeef8756b8266"
     }
   ],
   "reviewedAttempts": 382,

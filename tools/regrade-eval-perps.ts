@@ -98,8 +98,9 @@ const main = Effect.gen(function* () {
         skip("execution_incomplete");
         continue;
       }
-      const path = attempt.conversation && publicTranscriptPath(attempt.conversation);
-      if (!path || attempt.checks.availability !== "available") {
+      const path =
+        attempt.conversation === undefined ? undefined : publicTranscriptPath(attempt.conversation);
+      if (path === undefined || path.length === 0 || attempt.checks.availability !== "available") {
         skip("retained_evidence_unavailable");
         continue;
       }
@@ -167,7 +168,7 @@ const main = Effect.gen(function* () {
             throw new Error("Invalid tool-call identity");
           calls.push({ name: canonicalName(name), arguments: args, id: callId });
         }
-        if (text.length) {
+        if (text.length > 0) {
           answer = text.join("\n");
           answerSequence = message.sequence;
         }
@@ -176,7 +177,8 @@ const main = Effect.gen(function* () {
         const result = results.get(c.id);
         return {
           ...c,
-          result: result && result.sequence < answerSequence ? result.value : undefined,
+          result:
+            result !== undefined && result.sequence < answerSequence ? result.value : undefined,
         };
       });
       const graded = gradePerpsPriceCalls(evidenceCalls, evalCase.expected.routing.mode);
@@ -229,4 +231,11 @@ const main = Effect.gen(function* () {
     `Reviewed ${entries.length}; skipped ${skipped.length}; fail→pass ${entries.filter((e) => e.previousVerdict === "fail" && e.verdict === "pass").length}; pass→fail ${entries.filter((e) => e.previousVerdict === "pass" && e.verdict === "fail").length}.`,
   );
 });
-BunRuntime.runMain(main.pipe(Effect.provide(Layer.merge(BunFileSystem.layer, BunPath.layer))));
+BunRuntime.runMain(
+  Effect.scoped(
+    Effect.gen(function* () {
+      const context = yield* Layer.build(Layer.merge(BunFileSystem.layer, BunPath.layer));
+      return yield* main.pipe(Effect.provide(context));
+    }),
+  ),
+);
