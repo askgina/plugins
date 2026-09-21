@@ -56,6 +56,20 @@ const failureReasons = (input: unknown, provenance = expected) =>
   });
 
 describe("public eval text detection", () => {
+  it("allows a literal printf bearer placeholder while detecting longer values", () => {
+    const placeholder = ["Bearer", "%s"].join(" ");
+    const command = `printf '${placeholder}' "$TOKEN"`;
+    for (const text of [command, JSON.stringify({ text: command })]) {
+      assert.deepStrictEqual(findPublicCredentialViolations(text), []);
+    }
+    for (const value of ["%secret123", "%s-real-value", "abc123-secret-value"]) {
+      const text = ["Bearer", value].join(" ");
+      assert.deepStrictEqual(findPublicCredentialViolations(text), [
+        { kind: "bearer-credential", index: 0 },
+      ]);
+    }
+  });
+
   it("keeps all seven source-boundary credential rules and their original offsets", () => {
     const samples = [
       ["sk", "-proj-0123456789abcdefghijklmnop"].join(""),
