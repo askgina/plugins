@@ -1,4 +1,5 @@
 import { Data, Effect, FileSystem, Function, Path, Schema } from "effect";
+import { priceTools } from "./perps-price";
 import { parse as parseYaml } from "yaml";
 
 import { type PluginEvalCase, type PluginEvalSuite, PluginEvalSuiteSchema } from "./contracts";
@@ -38,6 +39,8 @@ const parseSuiteYaml = (
 
 const expectedTools = (evalCase: PluginEvalCase): readonly string[] => {
   switch (evalCase.expected.routing.kind) {
+    case "perps_price":
+      return priceTools(evalCase.expected.routing.mode);
     case "bounded_search":
     case "exact":
       return [evalCase.expected.routing.tool];

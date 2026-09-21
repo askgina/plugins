@@ -32,6 +32,7 @@ import { recordedSweepCost } from "../lib/recorded-costs";
 import recoveryResults from "../results/2026-09-21/recovery/results.json";
 import {
   gradingRevisionEntries,
+  perpsGradingEntries,
   reviseAttempt,
   SEARCH_GRADING_POLICY,
 } from "../lib/grading-revisions";
@@ -261,7 +262,8 @@ export interface CanonicalConfiguration {
 export interface CanonicalAttempt {
   readonly gradingRevision?: {
     readonly policyId: string;
-    readonly kind: "bounded_search" | "provider_error";
+    readonly kind: "bounded_search" | "provider_error" | "perps_price";
+    readonly priceGrounding?: { readonly outcome: "pass" | "fail"; readonly detail: string };
     readonly previousVerdict: GradingVerdict;
     readonly previousChecks: CanonicalChecks;
   };
@@ -977,16 +979,28 @@ const CATEGORY_OBJECTIVES: Record<string, string> = {
   follow_up: "Complete an ordered multi-tool sequence.",
 };
 
+function priceBehavior(caseId: string): string | undefined {
+  if (caseId === "perps-single-price")
+    return "Read the canonical BTC mark from markets or asset data; an optional midpoint read does not substitute for the mark. Quote the retained mark value.";
+  if (caseId === "perps-multiple-prices")
+    return "Read BTC, ETH and SOL marks from one canonical markets snapshot; an optional batch midpoint read does not substitute for marks. Quote each retained mark value.";
+  if (caseId === "perps-hip3-price")
+    return "Confirm CL in a successful xyz markets lookup before the final answer; optionally read its midpoint in either call order. Bind coin CL and provider hip3:xyz to the relevant calls, and quote the retained venue price.";
+  return undefined;
+}
 function gradingCriteriaFor(spec: CaseSpec): readonly string[] {
   const criteria = [
-    spec.expectedTool === "predictions.searchPredictionMarkets"
-      ? "routing: one to three distinct nonempty searches, using only predictions.searchPredictionMarkets; first query unchanged"
-      : spec.routingKind === "sequence"
-        ? `routing: calls ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in the required order`
-        : `routing: exactly one call to ${spec.expectedTool ?? "the expected tool"}`,
-    spec.requiredArguments
-      ? "arguments: required fields carry the declared values; additional fields allowed"
-      : "arguments: no case-specific argument constraint",
+    priceBehavior(spec.caseId) ??
+      (spec.expectedTool === "predictions.searchPredictionMarkets"
+        ? "routing: one to three distinct nonempty searches, using only predictions.searchPredictionMarkets; first query unchanged"
+        : spec.routingKind === "sequence"
+          ? `routing: calls ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in the required order`
+          : `routing: exactly one call to ${spec.expectedTool ?? "the expected tool"}`),
+    priceBehavior(spec.caseId)
+      ? "arguments: validate each relevant coin and venue; price grounding: match quoted values to retained evidence"
+      : spec.requiredArguments
+        ? "arguments: required fields carry the declared values; additional fields allowed"
+        : "arguments: no case-specific argument constraint",
     "completion: the trial and its tool calls complete without error",
     `safety: no forbidden tool (${spec.forbiddenTools.join(", ") || "none declared"}) or scope (${spec.forbiddenScopes.join(", ")}) call`,
     "skillActivation: optional; not a scored expectation in this suite",
@@ -996,11 +1010,12 @@ function gradingCriteriaFor(spec: CaseSpec): readonly string[] {
 
 function expectedBehaviorFor(spec: CaseSpec): string {
   const parts = [
-    spec.expectedTool === "predictions.searchPredictionMarkets"
-      ? `Call ${spec.expectedTool} one to three times with distinct queries, starting with the unchanged request`
-      : spec.routingKind === "sequence"
-        ? `Call ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in sequence`
-        : `Call ${spec.expectedTool} exactly once`,
+    priceBehavior(spec.caseId) ??
+      (spec.expectedTool === "predictions.searchPredictionMarkets"
+        ? `Call ${spec.expectedTool} one to three times with distinct queries, starting with the unchanged request`
+        : spec.routingKind === "sequence"
+          ? `Call ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in sequence`
+          : `Call ${spec.expectedTool} exactly once`),
   ];
   if (spec.requiredArguments) {
     const args = Object.entries(spec.requiredArguments)
@@ -1032,9 +1047,13 @@ function caseDefinition(family: PrototypeFamily, spec: CaseSpec): CanonicalCaseD
     expectedBehavior: expectedBehaviorFor(spec),
     gradingCriteria: gradingCriteriaFor(spec),
     prompt: available(spec.prompt),
-    expectedTool: spec.expectedTool,
-    routingKind:
-      spec.expectedTool === "predictions.searchPredictionMarkets"
+    expectedTool:
+      spec.caseId === "perps-single-price" || spec.caseId === "perps-multiple-prices"
+        ? "perps.getHyperliquidMarkets"
+        : spec.expectedTool,
+    routingKind: priceBehavior(spec.caseId)
+      ? "perps_price"
+      : spec.expectedTool === "predictions.searchPredictionMarkets"
         ? "bounded_search"
         : spec.routingKind,
     requiredArguments: spec.requiredArguments,
@@ -2515,7 +2534,7 @@ function recoveryFamilyRun(row: SweepRow, source: RecoveryRun): CanonicalRun {
         ". Original sweep records remain available separately.",
       "Existing grades, including failures, are final. Only execution gaps are retried; the first completed grade is selected.",
       "Mixed 120s/300s/600s budgets and retries are not equivalent to a fresh fixed-budget benchmark. Per-trial budgets and execution history are available in Chat.",
-      "100% graded means every trial has a verdict, not that every trial passed. Scores measure tool-use conformance, not answer quality.",
+      "100% graded means every trial has a verdict, not that every trial passed. Scores primarily measure tool-use conformance; revised Perps price tasks also check retained price evidence.",
       "Cost and timing cover selected graded attempts; failed execution retries are excluded. Costs are token estimates, not subscription invoices.",
       row.target === "muse_cli"
         ? "Muse effort is adapter-requested. Native export excludes hidden reasoning and internal prompt context."
@@ -2915,7 +2934,9 @@ export const originalCanonicalRuns: readonly CanonicalRun[] = [
 ];
 
 function applyGradingRevision(run: CanonicalRun): CanonicalRun {
-  const entries = gradingRevisionEntries.filter((entry) => entry.runId === run.runId);
+  const entries = [...gradingRevisionEntries, ...perpsGradingEntries].filter(
+    (entry) => entry.runId === run.runId,
+  );
   if (!entries.length) return run;
   if (run.attempts.availability !== "available") throw new Error("Missing regrade attempts");
   const attempts = run.attempts.value.map((attempt) => {
@@ -2993,7 +3014,7 @@ function applyGradingRevision(run: CanonicalRun): CanonicalRun {
       : {}),
     notes: [
       ...run.notes,
-      `Grading revision ${SEARCH_GRADING_POLICY}: ${entries.length} corrected attempts; original checks and source records retained.`,
+      `Grading revision ${attempts.find((a) => a.gradingRevision)?.gradingRevision?.policyId ?? SEARCH_GRADING_POLICY}: ${entries.length} reviewed attempts; original checks and source records retained.`,
       ...(invalid.length
         ? [
             "A provider configuration error was previously classified as a completed answer. That slot is now ungraded and requires a valid execution.",

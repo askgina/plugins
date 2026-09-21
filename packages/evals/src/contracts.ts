@@ -62,6 +62,10 @@ const NoToolRoutingExpectationSchema = Schema.Struct({
 export const PluginEvalRoutingExpectationSchema = Schema.Union([
   ExactRoutingExpectationSchema,
   BoundedSearchRoutingExpectationSchema,
+  Schema.Struct({
+    kind: Schema.Literal("perps_price"),
+    mode: Schema.Literals(["single_mark", "multiple_marks", "hip3_price"]),
+  }),
   OneOfRoutingExpectationSchema,
   SequenceRoutingExpectationSchema,
   NoToolRoutingExpectationSchema,

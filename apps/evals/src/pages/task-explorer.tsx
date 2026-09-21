@@ -560,7 +560,7 @@ export function TaskExplorerPage({
           </div>
         )}
         <p className="results-footnote task-workspace-footnote">
-          Scores measure tool-use checks, not final-answer accuracy.{" "}
+          Scores measure tool-use checks, with price grounding on three revised Perps tasks.{" "}
           <a href="#/methodology">How scoring works ↗</a>
         </p>
       </div>

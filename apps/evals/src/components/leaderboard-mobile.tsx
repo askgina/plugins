@@ -245,7 +245,9 @@ export function LeaderboardMobile({
   return (
     <div className="eval-container results-page leaderboard-mobile">
       <ResultsHeader title="Gina Model Leaderboard" description={benchmarkSummary(rows)}>
-        <p className="lb-mobile-caveat">Tool-use conformance, not answer quality.</p>
+        <p className="lb-mobile-caveat">
+          Tool-use conformance with price grounding on three Perps tasks.
+        </p>
         <div className="lb-mobile-methodology">
           <a href="#/methodology">Methodology ↗</a>
           <InfoPopover label="Comparison conditions">

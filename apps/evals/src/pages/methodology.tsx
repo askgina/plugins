@@ -1,5 +1,6 @@
 import { PageShell } from "../components/eval-ui";
 import gradingReceiptUrl from "../results/2026-09-21/regrade/receipt.json?url";
+import perpsReceiptUrl from "../results/2026-09-21/regrade/perps-receipt.json?url";
 import { ResultsHeader, RunDetails } from "../components/results-ui";
 import {
   CATALOG_LABEL,
@@ -41,8 +42,9 @@ export function MethodologyPage() {
         />
         <div className="method-content">
           <p className="method-limits">
-            These results measure tool use and task completion. They do not measure final-answer
-            accuracy or trading returns. Samples are small, and models used different clients.
+            These results measure tool use and task completion, with retained-price grounding for
+            three revised Perps tasks. General answer quality and trading returns are not evaluated.
+            Samples are small, and models used different clients.
           </p>
           <ol className="method-steps">
             <li>
@@ -111,8 +113,25 @@ export function MethodologyPage() {
               </p>
               <p>
                 Some tasks require one tool call; others require calls in a particular order. The
-                task’s grading criteria explain those requirements. Final-answer accuracy is not
-                scored. <a href="#/tasks">See task-specific rules ↗</a>
+                task’s grading criteria explain those requirements. Three revised Perps price tasks
+                also check quoted prices against retained tool results. Other final-answer accuracy
+                is not scored. <a href="#/tasks">See task-specific rules ↗</a>
+              </p>
+              <p>
+                The perps-price-evidence-v1 revision requires actual mark-price evidence for BTC and
+                BTC/ETH/SOL mark requests. A midpoint alone does not satisfy them. HIP-3 quotes
+                require a successful xyz markets lookup confirming CL; a price read may occur before
+                or after that lookup. The replay checks coin, venue, metric and quoted values,
+                allowing rounding to displayed precision. It reviews existing passes and failures
+                equally across models, preserving original records and all other checks. Complete
+                visible market objects in truncated output can support a grade; omitted values
+                cannot. Of 450 recorded slots, 382 have replayable completed evidence, 32 have
+                incomplete executions and 36 older completed records lack public transcripts. Those
+                68 records retain their original status. This is a narrow price check, not a general
+                answer-quality evaluation.{" "}
+                <a href={perpsReceiptUrl} download>
+                  Download the price grading revision ↗
+                </a>
               </p>
               <p>
                 Prediction-market discovery permits one to three distinct, nonempty searches using

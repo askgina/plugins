@@ -1,4 +1,5 @@
 import { Data, Effect, Function, Schema } from "effect";
+import { gradePerpsPriceCalls } from "./perps-price";
 import { gradeBoundedSearchCalls } from "./bounded-search";
 
 import type {
@@ -87,6 +88,8 @@ const gradeRouting = (
   const routing = evalCase.expected.routing;
 
   switch (routing.kind) {
+    case "perps_price":
+      return gradePerpsPriceCalls(observation.tool_calls, routing.mode).routing;
     case "bounded_search":
       return gradeBoundedSearchCalls(observation.tool_calls, routing.tool, routing.max_calls);
     case "exact":
@@ -129,6 +132,8 @@ const gradeArguments = (
   evalCase: PluginEvalCase,
   observation: PluginEvalObservation,
 ): PluginEvalDimensionScore => {
+  if (evalCase.expected.routing.kind === "perps_price")
+    return gradePerpsPriceCalls(observation.tool_calls, evalCase.expected.routing.mode).arguments;
   const expectation = evalCase.expected.arguments;
   if (expectation === undefined) return pass("case has no argument constraint");
 

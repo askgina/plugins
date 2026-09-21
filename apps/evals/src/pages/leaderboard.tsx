@@ -120,7 +120,8 @@ export function LeaderboardPage({
           <p className="results-context">
             Every recorded setting has its own row, including incomplete runs and earlier campaigns.
             Identical attempts reused across campaigns appear once. Scores measure tool-use
-            conformance; answer quality was not evaluated.
+            conformance, with retained-price grounding for three Perps tasks. Other answer quality
+            was not evaluated.
           </p>
           <p className="results-context">
             100% graded means every trial has a verdict. Each row shows its recorded time budgets.

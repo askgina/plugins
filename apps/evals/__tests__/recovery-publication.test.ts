@@ -34,8 +34,8 @@ describe("recovery publication", () => {
 
   test("regraded Astra retains real failures and incomplete settings are not ranked", () => {
     const astra = runs.filter((run) => run.modelId === "astra");
-    expect(astra.reduce((n, run) => n + run.counts.passed, 0)).toBe(148);
-    expect(astra.reduce((n, run) => n + run.counts.failed, 0)).toBe(61);
+    expect(astra.reduce((n, run) => n + run.counts.passed, 0)).toBe(166);
+    expect(astra.reduce((n, run) => n + run.counts.failed, 0)).toBe(43);
     expect(astra.reduce((n, run) => n + run.counts.runtimeFailure, 0)).toBe(1);
     for (const row of rows) {
       if (

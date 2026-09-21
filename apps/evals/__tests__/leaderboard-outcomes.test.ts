@@ -40,9 +40,9 @@ test("shows every recorded model setting in its own row", () => {
 test("Fable low, medium, high and incomplete max are visible without a setting switch", () => {
   const html = renderToStaticMarkup(createElement(LeaderboardPage));
   for (const [reasoning, result] of [
-    ["low", "61.7%"],
-    ["medium", "64.1%"],
-    ["high", "61.5%"],
+    ["low", "56.1%"],
+    ["medium", "59.7%"],
+    ["high", "58.4%"],
     ["max", "75/105 graded"],
   ]) {
     const row = html.match(

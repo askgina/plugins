@@ -24,15 +24,15 @@
     },
     {
       "path": "packages/evals/src/grading.ts",
-      "sha256": "7c799ec934d829e1187c03fc797676ee38a2fede50f0fb1e647bf3eadbd2fdaf"
+      "sha256": "920fde4b4d7c08233b22bad9e32f4ac6651db0ff74cd21438bbc4fb935b53d44"
     },
     {
       "path": "apps/evals/src/canonical/canonical.ts",
-      "sha256": "c8cbd0f3c7eeaed3bd06891e8d8798d6b1f119a6dcb4f78f97afa67a711090fa"
+      "sha256": "11c081c041a4250a96276f5893a0553185f866b07cbff092536eb68c875dba79"
     },
     {
       "path": "apps/evals/src/lib/grading-revisions.ts",
-      "sha256": "b03b561ad02afc60ae8b6b0eadb08f06d0a77c5b09b2116eb1c234e233f57bde"
+      "sha256": "54e7c519720186e15cf0d696f533418c0eab54ebd5d7a54805c64ec1589a738f"
     },
     {
       "path": "plugins/ask-gina/evals/model/v1/families/predictions.yaml",

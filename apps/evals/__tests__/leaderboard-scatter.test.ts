@@ -143,7 +143,7 @@ describe("scatter plot configuration rows", () => {
     expect(html.match(/class="lb-chart-model"/gu)).toHaveLength(20);
     expect(html).toContain("20 plotted settings: names and values");
     expect(html).toContain("Grok 4.6, low reasoning");
-    expect(html).toContain("83.7% overall · 30.3s");
+    expect(html).toContain("79.3% overall · 30.3s");
     expect(html).toContain("31 settings not plotted");
   });
 });

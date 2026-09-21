@@ -1,5 +1,10 @@
 # Why the current ranking is not a model-quality ranking
 
+**Update:** The mark-price and HIP-3 defects described below are now corrected by
+[perps-price-evidence-v1](./perps-price-regrade-2026-09-21.md). This document records
+the pre-correction audit. Its examples of passes/failures refer to the preserved
+original grades. General answer-quality and service-failure issues remain open.
+
 This is a retained-evidence audit, not another score revision or a claim that a
 particular model must win. Search routing has been revised separately. The Perps
 and answer-quality issues below still need an explicit, model-independent rubric.

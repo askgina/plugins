@@ -92,9 +92,9 @@ describe("versioned search regrade", () => {
   test("applies the same rule across models while withholding incomplete rankings", () => {
     const rows = configurationLeaderboardRows();
     for (const [id, label, campaign, score] of [
-      ["astra", "high", "reasoning-sweep-2026-09-16", 0.8105413105413106],
-      ["astra", "max", "recovery-2026-09-21", 0.7488129154795821],
-      ["grok", "low", "reasoning-sweep-2026-09-16", (12 / 12 + 40 / 54 + 30 / 39) / 3],
+      ["astra", "high", "reasoning-sweep-2026-09-16", (12 / 12 + 42 / 54 + 32 / 39) / 3],
+      ["astra", "max", "recovery-2026-09-21", (10 / 12 + 41 / 54 + 32 / 39) / 3],
+      ["grok", "low", "reasoning-sweep-2026-09-16", (12 / 12 + 33 / 54 + 30 / 39) / 3],
     ] as const) {
       expect(
         rows.find(

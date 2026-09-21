@@ -1,3 +1,4 @@
+import { priceTools } from "./perps-price";
 import {
   catalogSha,
   isGinaReadToolName,
@@ -87,11 +88,13 @@ export const preflightLiveEvalSuite = (
   const hasOutOfCatalogTool = suite.cases.some((evalCase) => {
     const { routing } = evalCase.expected;
     const hasOutOfCatalogRoutingTool =
-      routing.kind === "exact" || routing.kind === "bounded_search"
-        ? !isGinaReadToolName(routing.tool)
-        : routing.kind === "one_of" || routing.kind === "sequence"
-          ? routing.tools.some((tool) => !isGinaReadToolName(tool))
-          : false;
+      routing.kind === "perps_price"
+        ? priceTools(routing.mode).some((tool) => !isGinaReadToolName(tool))
+        : routing.kind === "exact" || routing.kind === "bounded_search"
+          ? !isGinaReadToolName(routing.tool)
+          : routing.kind === "one_of" || routing.kind === "sequence"
+            ? routing.tools.some((tool) => !isGinaReadToolName(tool))
+            : false;
     return (
       hasOutOfCatalogRoutingTool ||
       (evalCase.expected.arguments?.tool !== undefined &&

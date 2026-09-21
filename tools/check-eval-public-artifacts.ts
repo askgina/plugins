@@ -255,7 +255,9 @@ const APPROVED_RECOVERY_ARTIFACTS: Readonly<Record<string, string>> = {
 // Numeric checks, public identifiers and evidence hashes only. Original result
 // and transcript bytes stay pinned separately above.
 const APPROVED_REGRADE_RECEIPT_SHA256 =
-  "3ba5e76ce5366724281b6395b5cb39d052dffb1775a9f28a142f24b032ad4a26";
+  "958a0a6af3a1b8af48990a422dbca9a194e00c75aa1d613d307e13ea6264fcc7";
+const APPROVED_PERPS_REGRADE_RECEIPT_SHA256 =
+  "5858653b6e87c3eab3817adcf8543a419ddc62c6453e9d2166969666e7fdef79";
 const decodeArtifactJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
 
 /** Fixed diagnostics never include provider values or schema issue excerpts. */
@@ -404,8 +406,12 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
         }
         if (relative.startsWith("src/results/2026-09-21/regrade/")) {
           if (
-            relative !== "src/results/2026-09-21/regrade/receipt.json" ||
-            createHash("sha256").update(bytes).digest("hex") !== APPROVED_REGRADE_RECEIPT_SHA256
+            createHash("sha256").update(bytes).digest("hex") !==
+            (relative === "src/results/2026-09-21/regrade/receipt.json"
+              ? APPROVED_REGRADE_RECEIPT_SHA256
+              : relative === "src/results/2026-09-21/regrade/perps-receipt.json"
+                ? APPROVED_PERPS_REGRADE_RECEIPT_SHA256
+                : undefined)
           ) {
             return yield* fail(relative, "unapproved_artifact");
           }

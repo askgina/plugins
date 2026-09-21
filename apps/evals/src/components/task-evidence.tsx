@@ -27,7 +27,9 @@ export function AttemptChecks({ attempt }: { attempt: CanonicalAttempt }) {
         <p>
           {attempt.gradingRevision.kind === "provider_error"
             ? "Corrected execution status: the provider rejected this request before a valid answer. This attempt is ungraded."
-            : `Regraded under the bounded-search rule. Original verdict: ${attempt.gradingRevision.previousVerdict}; original tool selection: ${attempt.gradingRevision.previousChecks.routing}. Other checks are unchanged.`}{" "}
+            : attempt.gradingRevision.kind === "perps_price"
+              ? `Regraded under the price-evidence rule. Original verdict: ${attempt.gradingRevision.previousVerdict}; original tool selection: ${attempt.gradingRevision.previousChecks.routing}; original arguments: ${attempt.gradingRevision.previousChecks.arguments}. Restrictions, completion and skill checks are unchanged.`
+              : `Regraded under the bounded-search rule. Original verdict: ${attempt.gradingRevision.previousVerdict}; original tool selection: ${attempt.gradingRevision.previousChecks.routing}. Other checks are unchanged.`}{" "}
           <a href="#/methodology">Grading policy ↗</a>
         </p>
       )}
@@ -43,6 +45,15 @@ export function AttemptChecks({ attempt }: { attempt: CanonicalAttempt }) {
                 </dd>
               </div>
             ))}
+            {attempt.gradingRevision?.priceGrounding && (
+              <div>
+                <dt>Price grounding</dt>
+                <dd>
+                  <CheckMark outcome={attempt.gradingRevision.priceGrounding.outcome} />
+                  <p>{attempt.gradingRevision.priceGrounding.detail}</p>
+                </dd>
+              </div>
+            )}
           </dl>
         )}
       />
