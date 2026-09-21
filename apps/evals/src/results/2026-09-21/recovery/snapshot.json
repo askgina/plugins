@@ -1,0 +1,187 @@
+{
+  "schemaVersion": "ask-gina-recovery-snapshot.v1",
+  "capturedAt": "2026-09-21T09:55:28.213536+00:00",
+  "sourceManifestSha256": "8d249e9a51ee4ca3d41c172756facedfc457b4a164c20284895a699d0d4e4297",
+  "providers": [
+    {
+      "provider": "astra",
+      "state": "complete",
+      "planned": 210,
+      "graded": 210,
+      "passed": 108,
+      "failed": 102,
+      "ungraded": 0,
+      "pending": 0,
+      "baselineGraded": 181,
+      "sameBudgetRecovered": 17,
+      "extendedBudgetRecovered": 12,
+      "rows": {
+        "xhigh": {
+          "planned": 105,
+          "graded": 105,
+          "passed": 55,
+          "failed": 50,
+          "ungraded": 0,
+          "pending": 0,
+          "baselineGraded": 102,
+          "sameBudgetRecovered": 0,
+          "extendedBudgetRecovered": 3
+        },
+        "max": {
+          "planned": 105,
+          "graded": 105,
+          "passed": 53,
+          "failed": 52,
+          "ungraded": 0,
+          "pending": 0,
+          "baselineGraded": 79,
+          "sameBudgetRecovered": 17,
+          "extendedBudgetRecovered": 9
+        }
+      },
+      "sourceStatusSha256": "e7f286ad77abccba2328d04aabb5e2acc103af4c36b2a01b3ea564aa5cf74956"
+    },
+    {
+      "provider": "muse",
+      "state": "complete",
+      "planned": 525,
+      "graded": 525,
+      "passed": 296,
+      "failed": 229,
+      "ungraded": 0,
+      "pending": 0,
+      "baselineGraded": 316,
+      "sameBudgetRecovered": 196,
+      "extendedBudgetRecovered": 13,
+      "rows": {
+        "minimal": {
+          "planned": 105,
+          "graded": 105,
+          "passed": 59,
+          "failed": 46,
+          "ungraded": 0,
+          "pending": 0,
+          "baselineGraded": 85,
+          "sameBudgetRecovered": 20,
+          "extendedBudgetRecovered": 0
+        },
+        "low": {
+          "planned": 105,
+          "graded": 105,
+          "passed": 59,
+          "failed": 46,
+          "ungraded": 0,
+          "pending": 0,
+          "baselineGraded": 77,
+          "sameBudgetRecovered": 28,
+          "extendedBudgetRecovered": 0
+        },
+        "medium": {
+          "planned": 105,
+          "graded": 105,
+          "passed": 58,
+          "failed": 47,
+          "ungraded": 0,
+          "pending": 0,
+          "baselineGraded": 59,
+          "sameBudgetRecovered": 45,
+          "extendedBudgetRecovered": 1
+        },
+        "high": {
+          "planned": 105,
+          "graded": 105,
+          "passed": 59,
+          "failed": 46,
+          "ungraded": 0,
+          "pending": 0,
+          "baselineGraded": 50,
+          "sameBudgetRecovered": 52,
+          "extendedBudgetRecovered": 3
+        },
+        "max": {
+          "planned": 105,
+          "graded": 105,
+          "passed": 61,
+          "failed": 44,
+          "ungraded": 0,
+          "pending": 0,
+          "baselineGraded": 45,
+          "sameBudgetRecovered": 51,
+          "extendedBudgetRecovered": 9
+        }
+      },
+      "sourceStatusSha256": "18164886aed7edd9e243ef0d0faa5362de8f7d211671ce6006aff7cfc0018022"
+    },
+    {
+      "provider": "grok",
+      "state": "running",
+      "planned": 420,
+      "graded": 383,
+      "passed": 239,
+      "failed": 144,
+      "ungraded": 37,
+      "pending": 0,
+      "baselineGraded": 282,
+      "sameBudgetRecovered": 80,
+      "extendedBudgetRecovered": 21,
+      "rows": {
+        "low": {
+          "planned": 105,
+          "graded": 105,
+          "passed": 61,
+          "failed": 44,
+          "ungraded": 0,
+          "pending": 0,
+          "baselineGraded": 105,
+          "sameBudgetRecovered": 0,
+          "extendedBudgetRecovered": 0
+        },
+        "medium": {
+          "planned": 105,
+          "graded": 98,
+          "passed": 61,
+          "failed": 37,
+          "ungraded": 7,
+          "pending": 0,
+          "baselineGraded": 93,
+          "sameBudgetRecovered": 0,
+          "extendedBudgetRecovered": 5
+        },
+        "high": {
+          "planned": 105,
+          "graded": 90,
+          "passed": 60,
+          "failed": 30,
+          "ungraded": 15,
+          "pending": 0,
+          "baselineGraded": 46,
+          "sameBudgetRecovered": 36,
+          "extendedBudgetRecovered": 8
+        },
+        "xhigh": {
+          "planned": 105,
+          "graded": 90,
+          "passed": 57,
+          "failed": 33,
+          "ungraded": 15,
+          "pending": 0,
+          "baselineGraded": 38,
+          "sameBudgetRecovered": 44,
+          "extendedBudgetRecovered": 8
+        }
+      },
+      "sourceStatusSha256": "df6a8f1c1209ddfb4bb5c1b6a09319e6d745fa94ac71a4a4ea5dcaeef762c1ed"
+    }
+  ],
+  "methodology": {
+    "selection": "Preserve completed grades; first completed grade wins when retrying execution gaps.",
+    "timeoutTiersMs": [
+      120000,
+      300000,
+      600000
+    ],
+    "comparison": "Recovery results are separate from the original sweep. Mixed timeout budgets and execution retries are not equivalent to a fresh fixed-budget benchmark.",
+    "costBasis": "Token estimates, not OAuth or subscription invoices.",
+    "astraScope": "xhigh and max; low, medium and high remain in the original published sweep."
+  }
+}
