@@ -23,6 +23,14 @@ export function AttemptChecks({ attempt }: { attempt: CanonicalAttempt }) {
       <h4>
         Attempt {attempt.repetition}: {attemptLabel(attempt)}
       </h4>
+      {attempt.gradingRevision && (
+        <p>
+          {attempt.gradingRevision.kind === "provider_error"
+            ? "Corrected execution status: the provider rejected this request before a valid answer. This attempt is ungraded."
+            : `Regraded under the bounded-search rule. Original verdict: ${attempt.gradingRevision.previousVerdict}; original tool selection: ${attempt.gradingRevision.previousChecks.routing}. Other checks are unchanged.`}{" "}
+          <a href="#/methodology">Grading policy ↗</a>
+        </p>
+      )}
       <EvidenceValue
         evidence={attempt.checks}
         renderValue={(checks) => (

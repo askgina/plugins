@@ -1,4 +1,5 @@
 import { Data, Effect, Function, Schema } from "effect";
+import { gradeBoundedSearchCalls } from "./bounded-search";
 
 import type {
   PluginEvalCase,
@@ -86,6 +87,8 @@ const gradeRouting = (
   const routing = evalCase.expected.routing;
 
   switch (routing.kind) {
+    case "bounded_search":
+      return gradeBoundedSearchCalls(observation.tool_calls, routing.tool, routing.max_calls);
     case "exact":
       return actual.length === 1 && actual[0] === routing.tool
         ? pass(`selected ${routing.tool}`)

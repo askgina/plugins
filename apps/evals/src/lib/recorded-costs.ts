@@ -35,7 +35,7 @@ const basisFor: Readonly<Record<string, CostEstimateBasis>> = {
   catalogue_free_tier: "catalogue_free_tier",
 };
 const sourceFor: Readonly<Record<string, string>> = {
-  recorded_client_estimate: "OMP native session cost estimates; includes cache reads and writes",
+  recorded_client_estimate: "Native session cost estimates; includes cache reads and writes",
   catalogue_token_rates: "Devin retained model catalogue rates; includes cache discounts",
   published_api_rates:
     "Meta standard API rates; includes cache discounts; excludes subscription charges",

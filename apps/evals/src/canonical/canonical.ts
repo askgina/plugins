@@ -30,6 +30,11 @@ import perpsAttemptsJson from "../results/2026-09-11/perps-predictions/perps/per
 import type { ConversationReference } from "../lib/conversations";
 import { recordedSweepCost } from "../lib/recorded-costs";
 import recoveryResults from "../results/2026-09-21/recovery/results.json";
+import {
+  gradingRevisionEntries,
+  reviseAttempt,
+  SEARCH_GRADING_POLICY,
+} from "../lib/grading-revisions";
 
 // ---------------------------------------------------------------------------
 // Vocabulary
@@ -254,6 +259,12 @@ export interface CanonicalConfiguration {
 }
 
 export interface CanonicalAttempt {
+  readonly gradingRevision?: {
+    readonly policyId: string;
+    readonly kind: "bounded_search" | "provider_error";
+    readonly previousVerdict: GradingVerdict;
+    readonly previousChecks: CanonicalChecks;
+  };
   readonly recovery?: {
     readonly timeoutMs: number;
     readonly budgetCohort: string;
@@ -886,7 +897,7 @@ export const canonicalCampaigns: readonly CanonicalCampaign[] = [
   {
     campaignId: "omp-2026-09-11",
     date: perpsPredictionsReport.date,
-    harness: "OMP harness · native OpenAI OAuth (Gina tools:read)",
+    harness: "OpenAI OAuth (Gina tools:read)",
     repetitions: perpsPredictionsReport.repetitions,
     timeoutMs: perpsPredictionsReport.timeoutMs,
     sourceCommit: perpsPredictionsReport.sourceCommit,
@@ -909,7 +920,7 @@ export const canonicalCampaigns: readonly CanonicalCampaign[] = [
   {
     campaignId: "claude-2026-09-14",
     date: "2026-09-14",
-    harness: "OMP harness · native Anthropic OAuth",
+    harness: "Anthropic OAuth",
     repetitions: claudeComparison.methodology.repetitions,
     timeoutMs: claudeComparison.methodology.timeoutMs,
     sourceCommit: claudeComparison.models[0]!.sourceCommit,
@@ -919,7 +930,7 @@ export const canonicalCampaigns: readonly CanonicalCampaign[] = [
   {
     campaignId: "reasoning-sweep-2026-09-16",
     date: "2026-09-16",
-    harness: "OMP, native Muse and native Devin reasoning sweep",
+    harness: "Multi-client reasoning sweep",
     repetitions: reasoningSweep.methodology.repetitions,
     timeoutMs: null,
     sourceCommit: null,
@@ -968,9 +979,11 @@ const CATEGORY_OBJECTIVES: Record<string, string> = {
 
 function gradingCriteriaFor(spec: CaseSpec): readonly string[] {
   const criteria = [
-    spec.routingKind === "sequence"
-      ? `routing: calls ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in the required order`
-      : `routing: exactly one call to ${spec.expectedTool ?? "the expected tool"}`,
+    spec.expectedTool === "predictions.searchPredictionMarkets"
+      ? "routing: one to three distinct nonempty searches, using only predictions.searchPredictionMarkets; first query unchanged"
+      : spec.routingKind === "sequence"
+        ? `routing: calls ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in the required order`
+        : `routing: exactly one call to ${spec.expectedTool ?? "the expected tool"}`,
     spec.requiredArguments
       ? "arguments: required fields carry the declared values; additional fields allowed"
       : "arguments: no case-specific argument constraint",
@@ -983,9 +996,11 @@ function gradingCriteriaFor(spec: CaseSpec): readonly string[] {
 
 function expectedBehaviorFor(spec: CaseSpec): string {
   const parts = [
-    spec.routingKind === "sequence"
-      ? `Call ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in sequence`
-      : `Call ${spec.expectedTool} exactly once`,
+    spec.expectedTool === "predictions.searchPredictionMarkets"
+      ? `Call ${spec.expectedTool} one to three times with distinct queries, starting with the unchanged request`
+      : spec.routingKind === "sequence"
+        ? `Call ${spec.expectedSequence?.join(" then ") ?? "the declared tools"} in sequence`
+        : `Call ${spec.expectedTool} exactly once`,
   ];
   if (spec.requiredArguments) {
     const args = Object.entries(spec.requiredArguments)
@@ -1018,7 +1033,10 @@ function caseDefinition(family: PrototypeFamily, spec: CaseSpec): CanonicalCaseD
     gradingCriteria: gradingCriteriaFor(spec),
     prompt: available(spec.prompt),
     expectedTool: spec.expectedTool,
-    routingKind: spec.routingKind,
+    routingKind:
+      spec.expectedTool === "predictions.searchPredictionMarkets"
+        ? "bounded_search"
+        : spec.routingKind,
     requiredArguments: spec.requiredArguments,
     forbiddenTools: spec.forbiddenTools,
     forbiddenScopes: spec.forbiddenScopes,
@@ -2416,13 +2434,13 @@ function sweepFamilyRun(row: SweepRow, run: SweepRun): CanonicalRun {
     notes: [
       `Reasoning level ${row.reasoning}; ${row.target} timeout ${row.timeoutMs / 1000}s.`,
       row.target === "omp_harness"
-        ? "Effort evidence is OMP runtime configuration, not provider-applied reasoning."
+        ? "Effort evidence is the recorded client configuration, not provider-applied reasoning."
         : row.target === "muse_cli"
           ? "Effort evidence is Muse adapter argv only; no provider-applied effort is recorded."
           : "Effort evidence is the exact Devin model UID recorded in ATIF when available.",
       ...(modelId === "claude-fable" && row.target === "devin_cli"
         ? [
-            "Exact Claude Fable 5.1 runs through Devin after provider 429 failures on the OMP route; this fallback does not apply to Opus.",
+            "Exact Claude Fable 5.1 runs through Devin after provider 429 failures on the direct provider route; this fallback does not apply to Opus.",
           ]
         : []),
       ...((run.runtimeClassification?.counts.changed ?? 0) > 0
@@ -2432,7 +2450,7 @@ function sweepFamilyRun(row: SweepRow, run: SweepRun): CanonicalRun {
         : []),
       snapshot
         ? "Source is an extracted snapshot; the source commit is a reference, not a clean-checkout attestation. Recorded archive or file hashes are retained in provenance."
-        : "Source is the pinned clean OMP checkout.",
+        : "Source is the pinned clean evaluation checkout.",
       "Pass/fail measures tool-use conformance, not answer correctness. Answers and tool arguments are withheld under privacy_review.",
     ],
   };
@@ -2501,7 +2519,7 @@ function recoveryFamilyRun(row: SweepRow, source: RecoveryRun): CanonicalRun {
       "Cost and timing cover selected graded attempts; failed execution retries are excluded. Costs are token estimates, not subscription invoices.",
       row.target === "muse_cli"
         ? "Muse effort is adapter-requested. Native export excludes hidden reasoning and internal prompt context."
-        : "Model and thinking settings are retained in native OMP evidence; provider-applied effort is not attested.",
+        : "Model and thinking settings are retained in native session evidence; provider-applied effort is not attested.",
     ],
   };
 }
@@ -2867,7 +2885,7 @@ const meridianSpot1 = syntheticRun({
 // The canonical run list: retained legacy and reasoning-sweep family runs, then synthetic rows.
 // ---------------------------------------------------------------------------
 
-export const canonicalRuns: readonly CanonicalRun[] = [
+export const originalCanonicalRuns: readonly CanonicalRun[] = [
   spotOmpRun(spotComparison.runs[0]!, "gpt-5.5", "gpt55-spot-1", configurations.gpt55Spot),
   spotOmpRun(spotComparison.runs[1]!, "gpt-sol", "sol-spot-1", configurations.solSpot),
   solPerpsRun(),
@@ -2895,6 +2913,98 @@ export const canonicalRuns: readonly CanonicalRun[] = [
   solSpotLabelsOnly,
   meridianSpot1,
 ];
+
+function applyGradingRevision(run: CanonicalRun): CanonicalRun {
+  const entries = gradingRevisionEntries.filter((entry) => entry.runId === run.runId);
+  if (!entries.length) return run;
+  if (run.attempts.availability !== "available") throw new Error("Missing regrade attempts");
+  const attempts = run.attempts.value.map((attempt) => {
+    const entry = entries.find(
+      (candidate) =>
+        candidate.caseId === attempt.caseId && candidate.repetition === attempt.repetition,
+    );
+    return entry ? reviseAttempt(attempt, entry) : attempt;
+  });
+  if (attempts.filter((attempt) => attempt.gradingRevision).length !== entries.length)
+    throw new Error("Unbound grading revision");
+  const graded = attempts.filter((attempt) => attempt.verdict !== "not_graded");
+  const invalid = entries.filter((entry) => entry.kind === "provider_error");
+  const counts = {
+    ...run.counts,
+    graded: graded.length,
+    passed: graded.filter((attempt) => attempt.verdict === "pass").length,
+    failed: graded.filter((attempt) => attempt.verdict === "fail").length,
+    completed: run.counts.completed - invalid.length,
+    runtimeFailure: run.counts.runtimeFailure + invalid.length,
+    unscored: (run.counts.unscored ?? run.counts.started - run.counts.graded) + invalid.length,
+  };
+  const durations = graded
+    .flatMap((attempt) =>
+      attempt.durationMs.availability === "available" ? [attempt.durationMs.value] : [],
+    )
+    .sort((a, b) => a - b);
+  const percentile = (p: number) => durations[Math.max(0, Math.ceil(durations.length * p) - 1)]!;
+  const usages = graded.flatMap((attempt) =>
+    attempt.tokenUsage.availability === "available" ? [attempt.tokenUsage.value] : [],
+  );
+  const cost = run.recordedCostEstimate;
+  return {
+    ...run,
+    counts,
+    attempts: available(attempts),
+    dimensions: available(dimensionsFromAttempts(attempts)),
+    gradingCoverage: counts.graded === counts.planned ? "complete" : "partial",
+    ...(invalid.length
+      ? {
+          metrics: {
+            ...run.metrics,
+            latencyMs:
+              durations.length === graded.length && durations.length
+                ? {
+                    availability: "available",
+                    p50: percentile(0.5),
+                    p95: percentile(0.95),
+                    max: percentile(1),
+                    sampleCount: durations.length,
+                    population: "graded",
+                  }
+                : { availability: "not_recorded" },
+            tokenUsage: usages.length
+              ? {
+                  availability: "available",
+                  inputTokens: usages.reduce((n, u) => n + u.inputTokens, 0),
+                  outputTokens: usages.reduce((n, u) => n + u.outputTokens, 0),
+                  totalTokens: usages.reduce((n, u) => n + u.totalTokens, 0),
+                  sampleCount: usages.length,
+                  population: "graded",
+                }
+              : { availability: "not_recorded" },
+          },
+          recordedCostEstimate:
+            cost?.availability === "available"
+              ? {
+                  ...cost,
+                  usdTotal:
+                    cost.usdTotal - invalid.reduce((n, entry) => n + entry.excludedCostUsd, 0),
+                  sampleCount: cost.sampleCount - invalid.length,
+                }
+              : cost,
+        }
+      : {}),
+    notes: [
+      ...run.notes,
+      `Grading revision ${SEARCH_GRADING_POLICY}: ${entries.length} corrected attempts; original checks and source records retained.`,
+      ...(invalid.length
+        ? [
+            "A provider configuration error was previously classified as a completed answer. That slot is now ungraded and requires a valid execution.",
+          ]
+        : []),
+    ],
+  };
+}
+
+export const canonicalRuns: readonly CanonicalRun[] =
+  originalCanonicalRuns.map(applyGradingRevision);
 
 /** The withdrawn demonstration run; result bytes removed, notice retained. */
 export const withdrawnRuns: readonly WithdrawnRunRef[] = [

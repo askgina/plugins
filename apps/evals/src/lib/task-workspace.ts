@@ -1,5 +1,6 @@
 import type { CanonicalAttempt, CanonicalRun, PrototypeFamily } from "../canonical/canonical";
 import type { LeaderboardModelRow } from "../canonical/selectors";
+import { settingDisplayName } from "./client-labels";
 
 export type TaskView = "conversation" | "checks" | "run";
 
@@ -54,8 +55,5 @@ export function attemptLabel(attempt: CanonicalAttempt | undefined): string {
 }
 
 export function taskSettingLabel(run: CanonicalRun): string {
-  const client =
-    { omp_harness: "OMP", muse_cli: "Muse", devin_cli: "Devin" }[run.cohort.target] ??
-    run.cohort.target;
-  return `${run.configuration.reasoning ?? "Unspecified"} reasoning · ${client}`;
+  return settingDisplayName(run.configuration.reasoning, run.cohort.target);
 }

@@ -156,6 +156,7 @@ export default defineConfig({
       quality: {
         command: [
           "bun run evals:check-public",
+          "bun run evals:check-grading",
           "vp check .",
           "node_modules/.bin/tsc --noEmit -p tsconfig.json",
           "bun run check:typescript-imports",

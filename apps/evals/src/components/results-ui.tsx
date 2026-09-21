@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { clientDisplayName } from "../lib/client-labels";
 import { Popover } from "@base-ui/react/popover";
 import { Info, X } from "lucide-react";
 import { canonicalCampaigns, type CanonicalRun } from "../canonical/canonical";
@@ -91,7 +92,7 @@ export function RunDetails({ run }: { run: CanonicalRun }) {
         </div>
         <div>
           <dt>Client</dt>
-          <dd>{run.cohort.target}</dd>
+          <dd>{clientDisplayName(run.cohort.target)}</dd>
         </div>
         <div>
           <dt>Budget</dt>

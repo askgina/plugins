@@ -1028,7 +1028,10 @@ describe("live eval CLI subprocess", () => {
           const preload = path.join(root, "block-fetch.mjs");
           const callsPath = path.join(root, "fetch-calls");
           const liveCli = path.join(process.cwd(), "packages/evals/src/bin/live.ts");
-          const executablePath = yield* fs.realPath("/bin/echo");
+          // Use a native executable supported on the current platform. macOS
+          // /bin/echo is a universal binary rejected by the existing attestor,
+          // which otherwise makes the control fail before reaching mocked MCP.
+          const executablePath = yield* fs.realPath(process.execPath);
           const executableBytes = yield* fs.readFile(executablePath);
           const environment = { PATH: pathValue, HOME: root, GIT_CONFIG_NOSYSTEM: "1" };
           yield* fs.makeDirectory(cwd);

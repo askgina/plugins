@@ -252,6 +252,10 @@ const APPROVED_RECOVERY_ARTIFACTS: Readonly<Record<string, string>> = {
   "src/results/2026-09-21/recovery/snapshot.json":
     "a4e5b8a350e822d687e8cd85f7db64bdfb70c2776f11cf96e56a1a3d87ccf5fe",
 };
+// Numeric checks, public identifiers and evidence hashes only. Original result
+// and transcript bytes stay pinned separately above.
+const APPROVED_REGRADE_RECEIPT_SHA256 =
+  "3ba5e76ce5366724281b6395b5cb39d052dffb1775a9f28a142f24b032ad4a26";
 const decodeArtifactJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
 
 /** Fixed diagnostics never include provider values or schema issue excerpts. */
@@ -396,6 +400,15 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
           )
             return yield* fail(relative, "unapproved_artifact");
           seenTranscripts.add(relative);
+          return;
+        }
+        if (relative.startsWith("src/results/2026-09-21/regrade/")) {
+          if (
+            relative !== "src/results/2026-09-21/regrade/receipt.json" ||
+            createHash("sha256").update(bytes).digest("hex") !== APPROVED_REGRADE_RECEIPT_SHA256
+          ) {
+            return yield* fail(relative, "unapproved_artifact");
+          }
           return;
         }
         const claudeBearing = /claude/iu.test(relative) || hasClaudeIdentity(input);

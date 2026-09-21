@@ -53,7 +53,7 @@ export const columns: readonly { metric: LeaderboardMetric; label: string; expla
       metric: "cost",
       label: "Est. cost / task",
       explanation:
-        "Recorded token usage priced using OMP’s client estimates, Devin’s retained model catalogue, or Meta’s published API rates. Includes cache discounts. The denominator is completed attempts with cost records; exclusions are shown. SWE-2 is listed as Free by Devin. These are estimates, not bills or subscription charges.",
+        "Recorded token usage priced using recorded client estimates, Devin’s retained model catalogue, or Meta’s published API rates. Includes cache discounts. The denominator is completed attempts with cost records; exclusions are shown. SWE-2 is listed as Free by Devin. These are estimates, not bills or subscription charges.",
     },
   ];
 

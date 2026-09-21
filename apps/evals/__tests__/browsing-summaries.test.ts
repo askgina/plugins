@@ -191,9 +191,9 @@ describe("default leaderboard settings", () => {
     const gemini = defaults.find((row) => row.model.id === "gemini")!;
     expect(astra.runs.Spot?.configuration.reasoning).toBe("max");
     expect(astra.campaignId).toBe("recovery-2026-09-21");
-    expect(astra.overall).toBeCloseTo(0.56932573599);
+    expect(astra.overall).toBeCloseTo(0.74881291548);
     expect(gemini.runs.Spot?.configuration.reasoning).toBe("high");
-    expect(gemini.overall).toBeCloseTo(0.2331433998);
+    expect(gemini.overall).toBeCloseTo(0.2929724596);
     expect(
       configurations.find((row) => row.runs.Spot?.runId === "astra-max-spot-1")?.overall,
     ).toBeNull();

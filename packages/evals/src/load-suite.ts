@@ -38,6 +38,7 @@ const parseSuiteYaml = (
 
 const expectedTools = (evalCase: PluginEvalCase): readonly string[] => {
   switch (evalCase.expected.routing.kind) {
+    case "bounded_search":
     case "exact":
       return [evalCase.expected.routing.tool];
     case "one_of":

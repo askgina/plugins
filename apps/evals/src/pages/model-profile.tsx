@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { clientDisplayName } from "../lib/client-labels";
 import { ArrowUpRight, ChevronDown, ChevronRight, Download } from "lucide-react";
 import {
   canonicalCampaigns,
@@ -218,7 +219,7 @@ function FamilyMetricCards({
               </div>
               <p className="model-profile-metric-unscored">
                 Reasoning {representative.configuration.reasoning ?? "not recorded"} ·{" "}
-                <code>{representative.cohort.target}</code> ·{" "}
+                {clientDisplayName(representative.cohort.target)} ·{" "}
                 {timeoutMs === null || timeoutMs === undefined
                   ? "timeout not recorded"
                   : `${timeoutMs / 1000}s timeout`}

@@ -19,6 +19,7 @@ import {
   benchmarkSummary,
   campaignDisplayLabel,
   configurationLeaderboardRows,
+  deduplicateEvidenceRows,
   recordedOutcomes,
   sortLeaderboardRows,
   type LeaderboardMetric,
@@ -65,17 +66,19 @@ export function LeaderboardPage({
   const query = search.trim().toLocaleLowerCase();
   const campaigns = [...new Set(rows.map((row) => row.campaignId).filter(Boolean))];
   const shown = sortLeaderboardRows(
-    rows.filter((row) => {
-      const counts = recordedOutcomes(Object.values(row.runs));
-      const complete = counts.planned > 0 && counts.graded === counts.planned;
-      return (
-        `${row.model.name} ${row.model.provider} ${row.configurationLabel ?? ""} ${row.campaignId ?? ""}`
-          .toLocaleLowerCase()
-          .includes(query) &&
-        (campaign === "all" || row.campaignId === campaign) &&
-        (grading === "all" || (grading === "complete" ? complete : !complete))
-      );
-    }),
+    deduplicateEvidenceRows(
+      rows.filter((row) => {
+        const counts = recordedOutcomes(Object.values(row.runs));
+        const complete = counts.planned > 0 && counts.graded === counts.planned;
+        return (
+          `${row.model.name} ${row.model.provider} ${row.configurationLabel ?? ""} ${row.campaignId ?? ""}`
+            .toLocaleLowerCase()
+            .includes(query) &&
+          (campaign === "all" || row.campaignId === campaign) &&
+          (grading === "all" || (grading === "complete" ? complete : !complete))
+        );
+      }),
+    ),
     metric,
     direction,
   );
@@ -116,7 +119,8 @@ export function LeaderboardPage({
           <p className="results-context">{benchmarkSummary(rows)}</p>
           <p className="results-context">
             Every recorded setting has its own row, including incomplete runs and earlier campaigns.
-            Scores measure tool-use conformance; answer quality was not evaluated.
+            Identical attempts reused across campaigns appear once. Scores measure tool-use
+            conformance; answer quality was not evaluated.
           </p>
           <p className="results-context">
             100% graded means every trial has a verdict. Each row shows its recorded time budgets.

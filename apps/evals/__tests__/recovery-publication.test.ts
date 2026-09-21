@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { Effect, FileSystem, Schema } from "effect";
 import { createHash } from "node:crypto";
-import { canonicalRuns } from "../src/canonical/canonical";
+import { canonicalRuns, originalCanonicalRuns } from "../src/canonical/canonical";
 import { configurationLeaderboardRows, sameCohort } from "../src/canonical/selectors";
 import { isPublicTranscript, publicTranscriptPath } from "../src/lib/public-transcript-schema";
 import recovery from "../src/results/2026-09-21/recovery/results.json";
@@ -13,6 +13,7 @@ const runs = canonicalRuns.filter((run) => run.campaignId === recovery.campaignI
 
 describe("recovery publication", () => {
   test("reconciles every setting to the frozen VM snapshot without changing original runs", () => {
+    const runs = originalCanonicalRuns.filter((run) => run.campaignId === recovery.campaignId);
     expect(rows).toHaveLength(11);
     expect(runs.reduce((n, run) => n + run.counts.planned, 0)).toBe(1155);
     expect(runs.reduce((n, run) => n + run.counts.graded, 0)).toBe(1118);
@@ -31,12 +32,16 @@ describe("recovery publication", () => {
     ).toHaveLength(105);
   });
 
-  test("fully graded Astra retains failures and partial Grok is not ranked", () => {
+  test("regraded Astra retains real failures and incomplete settings are not ranked", () => {
     const astra = runs.filter((run) => run.modelId === "astra");
-    expect(astra.reduce((n, run) => n + run.counts.passed, 0)).toBe(108);
-    expect(astra.reduce((n, run) => n + run.counts.failed, 0)).toBe(102);
+    expect(astra.reduce((n, run) => n + run.counts.passed, 0)).toBe(148);
+    expect(astra.reduce((n, run) => n + run.counts.failed, 0)).toBe(61);
+    expect(astra.reduce((n, run) => n + run.counts.runtimeFailure, 0)).toBe(1);
     for (const row of rows) {
-      if (row.model.id === "grok" && !row.configurationLabel?.startsWith("low ")) {
+      if (
+        (row.model.id === "grok" && !row.configurationLabel?.startsWith("low ")) ||
+        (row.model.id === "astra" && row.configurationLabel?.startsWith("xhigh "))
+      ) {
         expect(row.overall).toBeNull();
       } else {
         expect(row.overall).not.toBeNull();

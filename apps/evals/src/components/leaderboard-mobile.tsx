@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, ChevronDown, Search, SlidersHorizontal, X } from "l
 import {
   benchmarkSummary,
   campaignDisplayLabel,
+  deduplicateEvidenceRows,
   recordedOutcomes,
   SCORED_FAMILIES,
   sortLeaderboardRows,
@@ -147,17 +148,19 @@ export function LeaderboardMobile({
   const campaigns = [...new Set(rows.map((row) => row.campaignId).filter(Boolean))];
   const query = state.search.trim().toLocaleLowerCase();
   const shown = sortLeaderboardRows(
-    rows.filter((row) => {
-      const counts = recordedOutcomes(Object.values(row.runs));
-      const complete = counts.planned > 0 && counts.graded === counts.planned;
-      return (
-        `${row.model.name} ${row.model.provider} ${row.configurationLabel ?? ""} ${row.campaignId ?? ""}`
-          .toLocaleLowerCase()
-          .includes(query) &&
-        (state.campaign === "all" || row.campaignId === state.campaign) &&
-        (state.grading === "all" || (state.grading === "complete" ? complete : !complete))
-      );
-    }),
+    deduplicateEvidenceRows(
+      rows.filter((row) => {
+        const counts = recordedOutcomes(Object.values(row.runs));
+        const complete = counts.planned > 0 && counts.graded === counts.planned;
+        return (
+          `${row.model.name} ${row.model.provider} ${row.configurationLabel ?? ""} ${row.campaignId ?? ""}`
+            .toLocaleLowerCase()
+            .includes(query) &&
+          (state.campaign === "all" || row.campaignId === state.campaign) &&
+          (state.grading === "all" || (state.grading === "complete" ? complete : !complete))
+        );
+      }),
+    ),
     state.metric,
     state.direction,
   );
@@ -248,9 +251,9 @@ export function LeaderboardMobile({
           <InfoPopover label="Comparison conditions">
             <p>
               Every recorded setting is retained, including incomplete runs and earlier campaigns.
-              Clients, reasoning controls, and time budgets vary. Overall weights Spot, Perps, and
-              Predictions equally. Small score differences do not establish statistical
-              significance.
+              Identical attempts reused across campaigns appear once. Clients, reasoning controls,
+              and time budgets vary. Overall weights Spot, Perps, and Predictions equally. Small
+              score differences do not establish statistical significance.
             </p>
             <a href="#/handoff">Data and exports ↗</a>
           </InfoPopover>
