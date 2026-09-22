@@ -1,0 +1,2940 @@
+{
+  "schemaVersion": "ask-gina-grok47-recovery-snapshot.v1",
+  "campaignId": "grok47-low-recovery-20260922",
+  "capturedAt": "2026-09-22T12:42:24.022Z",
+  "sourceCommit": "8e67c7cdd6dacabc108ff20ea112a7b985cab2a3",
+  "baselineResultsSha256": "88d508cc4fa4b0a0c74e725bbabed8c50744ccd1ee91465666e845fca9cf91ef",
+  "selectedLevel": "low",
+  "recoveryCounts": {
+    "planned": 9,
+    "graded": 5,
+    "passed": 2,
+    "failed": 3,
+    "ungraded": 4,
+    "pending": 0
+  },
+  "files": [
+    {
+      "path": "parent/config.json",
+      "sha256": "5480453e262b9cf68577d90e90177df0c995d41a934a6ff00b32bf01a2fe724e",
+      "bytes": 33126
+    },
+    {
+      "path": "parent/plan.json",
+      "sha256": "9df4849bbbf97115880bd22ef9d1dd742ac81979bb4588134452a47eec589427",
+      "bytes": 73455
+    },
+    {
+      "path": "parent/policy.json",
+      "sha256": "d4f1e7e7e668d63db8e8b543c3170a8b7d5ccad8b84308a3412f865a064d8f37",
+      "bytes": 1022
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-account/dispatch.json",
+      "sha256": "7822bf4e042fb3d37dc34c814628fae85fe22c4de14ee6666230eceaec71afc5",
+      "bytes": 66820
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-account/native-1.json",
+      "sha256": "03ebe7bdf238cbc559a3094a0a2b410e6c73b0ea46a66ec5a66b58ae8b7576b0",
+      "bytes": 45076
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-account/request.json",
+      "sha256": "8a763b7d76b104a9e1f93ea8d93817b2ac914546af247410cc5b761d24ebd3e2",
+      "bytes": 301
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-account/terminal.json",
+      "sha256": "971ae8a0d38aa509169d8a7cd6625087a3f1989d25ba597f7f576a1aace1bed5",
+      "bytes": 3852
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-account/transcript.json",
+      "sha256": "cdc15b7894fb1041d829883b5913750294bf176701193d152c3efc639d79c9a0",
+      "bytes": 37571
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-asset-data/dispatch.json",
+      "sha256": "b2234e6e081e79cb7f66ca1d6e4a2a39706f9fedb57650d93178473d2d3b3e0f",
+      "bytes": 72706
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-asset-data/native-1.json",
+      "sha256": "053eb43a43808fb4f94c4767ce7b1a5899aeccd203e0682aa54afdaa28b11565",
+      "bytes": 41775
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-asset-data/request.json",
+      "sha256": "a92663f345f2dabe9a814f6148263f0be3e7e08761f270777a40c5abc667620f",
+      "bytes": 307
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-asset-data/terminal.json",
+      "sha256": "2c296c64b3af58f43c8859357aa798b5f39835080ba054260975cfc5afb2ec27",
+      "bytes": 3597
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-asset-data/transcript.json",
+      "sha256": "baffeef291f436f8194ddf4fe8496407dd1ce94a1e18fd28d76ed1dd6aa84bd4",
+      "bytes": 33390
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-create-and-query-table/dispatch.json",
+      "sha256": "6a76a1cfb8d24b5d4cc55f397968930e44981fcc2035289a6abadaf3b49248bb",
+      "bytes": 81130
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-create-and-query-table/native-1.json",
+      "sha256": "ec87eaeefb9acc1716d997465c101384175683062e8bfba8e52ee1b3b155629e",
+      "bytes": 396673
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-create-and-query-table/request.json",
+      "sha256": "a4cc9f6618728409a1d9d6eabbdb7070aa948a333b6f4b8a366a4667861fc58f",
+      "bytes": 331
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-create-and-query-table/terminal.json",
+      "sha256": "b40957c10c3c8b617b5e0d8dfc21e55876961f9a65b6ff8282759a0e2d9dfdb6",
+      "bytes": 935
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-create-and-query-table/transcript.json",
+      "sha256": "5101eaea1f6ac648b9f0c2a272a49858cc69aeea9dd5b3d191744828b78160c0",
+      "bytes": 220655
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-create-table/dispatch.json",
+      "sha256": "eeb638e9da8720e532b722993529b3e176b3955a873178e95bc68c1d38c54744",
+      "bytes": 80270
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-create-table/native-1.json",
+      "sha256": "b37096454a753b86b4d7eda47edca78dd1d14909a0631387748e6656c5905ad9",
+      "bytes": 137456
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-create-table/request.json",
+      "sha256": "4ad123c594a6cc69a55162e9df4cbfc0dab2b38ed3966530a298042794d10372",
+      "bytes": 311
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-create-table/terminal.json",
+      "sha256": "e1bbfb4c901f387ac7e0b4350a04eb5e3daddba4497a9b0b7b7d4aeb599c9aa6",
+      "bytes": 915
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-create-table/transcript.json",
+      "sha256": "1715558882d081e45b28e476c0ae7d28f20c7a8edd2d066feb7cb6e2b5702589",
+      "bytes": 98742
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-fetch-candles/dispatch.json",
+      "sha256": "46e069a8dd6063c5c4cd6dd80b715a53bec966a5d039bb9ff5ad1199efb67499",
+      "bytes": 77752
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-fetch-candles/native-1.json",
+      "sha256": "253159d8209354996aaf4a174597b7aa8fd6f208f71b644e474004e1e9a8f1af",
+      "bytes": 156484
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-fetch-candles/request.json",
+      "sha256": "2fcdfe70b0f9bfc3426646158eed72705dea47be06c6116e77ef9c62c27f1344",
+      "bytes": 313
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-fetch-candles/terminal.json",
+      "sha256": "c204ee2aa3b5f60f5c6c5fab157f6ba341eec633c83bfbc08b7d6ac114d7c58b",
+      "bytes": 5950
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-fetch-candles/transcript.json",
+      "sha256": "e6a01250d42544a14c6a554e160434f3016c0e267b3ab06be666ac9d7580d4f3",
+      "bytes": 113840
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-fetch-order-book/dispatch.json",
+      "sha256": "a7dc57e6b8bf6eab2e30eff5cba8aef3c7c5041ae9f85bdd377969037cdca6f3",
+      "bytes": 78598
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-fetch-order-book/native-1.json",
+      "sha256": "becd84fb820b7c6414d5d277bc10587e7587ee48f0a326ce00ec8410e8fbfa45",
+      "bytes": 74034
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-fetch-order-book/request.json",
+      "sha256": "759a23f164b36106496c2641e00089a18902b31ed6e74cdea0ebb62c6bc8e301",
+      "bytes": 319
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-fetch-order-book/terminal.json",
+      "sha256": "477a2ad5296581dfa4b9e6947dfd334ca213d74e6023a524b20756fef840de82",
+      "bytes": 5073
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-fetch-order-book/transcript.json",
+      "sha256": "90096a7eef1cf19f52eefd8d5e12336db117e0a5f0f822f994fe5723bc03c58e",
+      "bytes": 82349
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-fetch-trades/dispatch.json",
+      "sha256": "6598fccd883b9fe788f37da6900eb97a36db51a58a28089aa19d67ca5f7e6885",
+      "bytes": 76910
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-fetch-trades/native-1.json",
+      "sha256": "fd3a66f6a7ce12d66c075c3766e5136818adb2e2c75976c99063ec4c40546109",
+      "bytes": 91730
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-fetch-trades/request.json",
+      "sha256": "78de18cea42776dd82393ed2b699f63d946dd11e12647fe062da15299735a024",
+      "bytes": 311
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-fetch-trades/terminal.json",
+      "sha256": "bfd45d963611eb05659bc33b5148b7b7bf7589bd4a24336970da41521bff42f1",
+      "bytes": 8325
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-fetch-trades/transcript.json",
+      "sha256": "8e7caf7b50cfa8c7a27058d13f9a2b662047b7bf8edd1925c616f65f735d75ac",
+      "bytes": 98388
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-hip3-dexes/dispatch.json",
+      "sha256": "2309ac230629be2bbaccfb09644b20eafdee8ff12646dfa959e832c17d06195d",
+      "bytes": 74386
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-hip3-dexes/native-1.json",
+      "sha256": "652f89ce0586a140d572140333b0db8a5761ad2b0fc5316d11ffe812e95e2940",
+      "bytes": 40727
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-hip3-dexes/request.json",
+      "sha256": "52713bb0ece4b6896cf475c662c49b6d61551a292ff78dea09804551ef11d095",
+      "bytes": 307
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-hip3-dexes/terminal.json",
+      "sha256": "99742e91b4bf7e80a2f2b297c84a1bbf71166585fce90c5abbf5086bb744e360",
+      "bytes": 3510
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-hip3-dexes/transcript.json",
+      "sha256": "ca68d62e8dffc2b5cef589be46e9a5f80e0bf7d7afb17f1f26433c598db7d999",
+      "bytes": 31136
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-hip3-markets/dispatch.json",
+      "sha256": "633ef45c6da08b301518a7c4fb89155e9479659cf805b7126495ac1662fc7e0d",
+      "bytes": 75230
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-hip3-markets/native-1.json",
+      "sha256": "5d8b957723285c742d45fdf0e1b1485770e991aa1dbf24d9248269c4f1480a70",
+      "bytes": 360339
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-hip3-markets/request.json",
+      "sha256": "aa0ec549d93a38e5b3205ffdc1318ccd1222614cd24ef2460a7596a44aacad91",
+      "bytes": 311
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-hip3-markets/terminal.json",
+      "sha256": "1697e8f709bbce10b8f696bcb37802850384c54a5b0ba8d29b137e58848d9153",
+      "bytes": 4504
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-hip3-markets/transcript.json",
+      "sha256": "c897953a2f68bfac0489100dff551879ec2bfdd498c066e28d291b4a9c765d3a",
+      "bytes": 77951
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-hip3-price/dispatch.json",
+      "sha256": "ac4c26d0eaebb705dbdc58dd2910dc87215d41ab431eaf89e58deebc9c9baa37",
+      "bytes": 76066
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-hip3-price/native-1.json",
+      "sha256": "ecad898c2fa4dd8bcc633d8f05ec4c793621d76350eb23da5812e52386d5ea46",
+      "bytes": 40438
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-hip3-price/request.json",
+      "sha256": "15db1249a8efd68a5616b780f8d9d59b484605a9fc46112a97e98fcca579936c",
+      "bytes": 307
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-hip3-price/terminal.json",
+      "sha256": "efd8e2d81bdc563e9bb8af41a0d02639bf66d28042341b773b8a18346e904141",
+      "bytes": 3794
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-hip3-price/transcript.json",
+      "sha256": "c9647aed25e13f2a40cc45882e7e0da1fee6a044548b4c30d2dda997cbcaab17",
+      "bytes": 32638
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-markets/dispatch.json",
+      "sha256": "2aec6771155d47c0c2016dbf967a3145161e60dfbf8ebf4e8a1d0b69e9f686f4",
+      "bytes": 70180
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-markets/native-1.json",
+      "sha256": "6dd8a9ccade2e4c40a8a868d40d412d7c63fc3dea7de1338a58efbf2b74866f8",
+      "bytes": 458010
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-markets/request.json",
+      "sha256": "90a7ec53f2bdd3f28543bc275b2c3d49436f2eaaaefeffa091cbc057ccc20363",
+      "bytes": 301
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-markets/terminal.json",
+      "sha256": "06953135e2a84f620d8020656484a523c4588e49358fb82bc33fe75a0e6f2721",
+      "bytes": 4912
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-markets/transcript.json",
+      "sha256": "f48486c2d346e541838257f9406561762224796b590e32c2bf125fae2b45d218",
+      "bytes": 78018
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-multiple-prices/dispatch.json",
+      "sha256": "3aaf659e9f30ed78cd44758b666f741827262f37e2e4c5f164bc54d376811aba",
+      "bytes": 71876
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-multiple-prices/native-1.json",
+      "sha256": "db577f039ec7261b8fffdbe15505ec31ae7f2676964c509fccf795622fd03c97",
+      "bytes": 41514
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-multiple-prices/request.json",
+      "sha256": "d819a5fdb26174b9450922052b9916d0b33df62d0ee4c8dfdad96f02d2365c0a",
+      "bytes": 317
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-multiple-prices/terminal.json",
+      "sha256": "61bc159ec2589e69e72038171a121470bc2cd5c366ae44c2a989773c227c8710",
+      "bytes": 3729
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-multiple-prices/transcript.json",
+      "sha256": "5087cc2795f18d6164af3e316d0bd7e84557efbff360c57460f02f1743ef6057",
+      "bytes": 30937
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-open-orders/dispatch.json",
+      "sha256": "2b07629a7e891189cc861f47dcc5d5401ed8f3e02d87025e81a83f2bffe2b82f",
+      "bytes": 68508
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-open-orders/native-1.json",
+      "sha256": "900860c0eabe4205a96d0a6d2b369d3c85e36e60cfa6b0ee8cc5e62c128e50bc",
+      "bytes": 45553
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-open-orders/request.json",
+      "sha256": "3ee405e437775bb0ebe39d2ffd527a3ef9ef5470a0437d3ccc8919fcfa018c6b",
+      "bytes": 309
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-open-orders/terminal.json",
+      "sha256": "dd5a03fe7dd3ead85c3e96d4a98398fbf80ee8cf87c66482d24c319c9eabfc0c",
+      "bytes": 3357
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-open-orders/transcript.json",
+      "sha256": "cfcc8bfb63d68ff4a1e58dc5cf418a96cb615f44d339cc2cdc3e9825425bc1dd",
+      "bytes": 31561
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-portfolio/dispatch.json",
+      "sha256": "7fe0591b7799a3c0e6b8ff7bcba7da6b71df84f8b33926cbfeaecd2ed7ad144f",
+      "bytes": 69344
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-portfolio/native-1.json",
+      "sha256": "3784661da95d98bc0c29ae2ee389befe407a07c5be25209d8277e2f4dec378e4",
+      "bytes": 70006
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-portfolio/request.json",
+      "sha256": "1e7b96b3a711d347b63c1b03bd9c8c8ffe1df4c5588dc86666f4b212b9f8fa06",
+      "bytes": 305
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-portfolio/terminal.json",
+      "sha256": "896164e918f6dec1f7bb16566ff827569d813fde7e8864b026a3d648e91408d0",
+      "bytes": 3727
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-portfolio/transcript.json",
+      "sha256": "684636ed384641031d766c80fbd1d24a51dba1aa08e5e32db8e66483cbe565cd",
+      "bytes": 75952
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-positions/dispatch.json",
+      "sha256": "ab09a8023954c37d9d360f6460732b6ba02618504183f07a2b348c3eadf4d9c2",
+      "bytes": 67664
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-positions/native-1.json",
+      "sha256": "212d592693e9d779f13700787936186577a961818ffeb109b16531d625072c7a",
+      "bytes": 39722
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-positions/request.json",
+      "sha256": "818366b6f49d7065ed23d56967ed0448af3d2f5ccf07c2b6d2262041b14c596e",
+      "bytes": 305
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-positions/terminal.json",
+      "sha256": "947a5241025ce5b0b0f4bc6a4edf241df955c2a89ae1ff1e214decf08399adb9",
+      "bytes": 3406
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-positions/transcript.json",
+      "sha256": "38c3925c0e05885d012dfc3439dcc14fdacb19efb435c8161e7b683469105379",
+      "bytes": 32541
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-preview-order-cost/dispatch.json",
+      "sha256": "a6b0f82c1cfe654de5b518bca00993637a48aaf600483aa487fa810e386dceaf",
+      "bytes": 79442
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-preview-order-cost/native-1.json",
+      "sha256": "9c283c3b2d3788caa0ccc251b17c39cc278bcbbba28951c83248558288d5f647",
+      "bytes": 44400
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-preview-order-cost/request.json",
+      "sha256": "7ea95afaa8f494a3639b088b4df9aa9eae8e9213ac476406f72fdbf6168bdba0",
+      "bytes": 323
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-preview-order-cost/terminal.json",
+      "sha256": "4ac09e988b20d8f9c38d147305585e7c5814a8227e107cd889d0d1e4fada287a",
+      "bytes": 4500
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-preview-order-cost/transcript.json",
+      "sha256": "5c0031ab57a569490db43501d703169e64e06319a6cdf2dd4a906da6bcd02213",
+      "bytes": 34672
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-search-hip3-markets/dispatch.json",
+      "sha256": "42bd3f811a5c68436aabd43d82ec3478f3bff09e2d1d9e8671d03c8e5d3ca5da",
+      "bytes": 73564
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-search-hip3-markets/native-1.json",
+      "sha256": "a2d7fcd22ab406946f498c7f052bab094316d6742dda46ea8569e1300d23170f",
+      "bytes": 179147
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-search-hip3-markets/request.json",
+      "sha256": "b190bddbaa6a21d0439cfa0fd964dcb262d0aaa39a738ac605f35c934036958b",
+      "bytes": 325
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-search-hip3-markets/terminal.json",
+      "sha256": "ed6011c9fe7bb63df542bec9441620300a0f76e77d591b288a536ff561cd9c48",
+      "bytes": 10374
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-search-hip3-markets/transcript.json",
+      "sha256": "4151deac28108092ef78242098966fe017e2ec8ac4bae17abc124970db764e6c",
+      "bytes": 202665
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-single-price/dispatch.json",
+      "sha256": "f48574a88ce628731e1f82f5a5f269835b1dd486a3329a31656a0188a2066a58",
+      "bytes": 71030
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-single-price/native-1.json",
+      "sha256": "5d7d8e0893d77f06cf1e63b62d3d85efe47a336f6bbbfafae05838a283b8f368",
+      "bytes": 41065
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-single-price/request.json",
+      "sha256": "f7c2d28e2d6cd2073d8840b1dfd55a393a3e493645a384b2a91e35cc2d95adc6",
+      "bytes": 311
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-single-price/terminal.json",
+      "sha256": "63d4a771b68faac4e43e426db078352d196779186dad3731b78cff66e9339036",
+      "bytes": 3660
+    },
+    {
+      "path": "parent/results/run/low/perps/1-perps-single-price/transcript.json",
+      "sha256": "3cb03f39848c929c0ee9e92fc84a21a367cc2892b42ef40863428a163f449777",
+      "bytes": 32833
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-account/dispatch.json",
+      "sha256": "167d1cc79d0f8ffdd19ef77890941726e8803e870b2f082bd4f59df0cfb1a025",
+      "bytes": 96220
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-account/native-1.json",
+      "sha256": "f0ec14ca306fdda02b66aa7d2fad44d1228aa4cec7922192511d3f4a3bc8f360",
+      "bytes": 45406
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-account/request.json",
+      "sha256": "3da3553a0142117d08f1baf46773778206e09d6745e22b227f6f268837a5cea6",
+      "bytes": 301
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-account/terminal.json",
+      "sha256": "239c4edda1ea6e2de9d2c50a153670f5d035be0a83bdf8d54dc7e4b09130d262",
+      "bytes": 3858
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-account/transcript.json",
+      "sha256": "482cf1299fd438e4e5b62f5dac460f7186d6e3cc91ab6c56f2f5c487a9777b47",
+      "bytes": 37577
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-asset-data/dispatch.json",
+      "sha256": "2a27273d6d6f669af8662138c8d0df1d0db1d8cb257e3ebe4b8915761771cc3d",
+      "bytes": 102106
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-asset-data/native-1.json",
+      "sha256": "d7c061f468e47020a22b06f020460415e39be10f6d559fcedc2fba3f5b6f4671",
+      "bytes": 41931
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-asset-data/request.json",
+      "sha256": "43793e8cd4c95e542dfbb7369d0936a3e730c18545072c8fe7833fc067e9a7e4",
+      "bytes": 307
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-asset-data/terminal.json",
+      "sha256": "fa7ff8d7a6863efb86ff528aee6fd510680cbdfad17fcbe60e9cb6d4033fdd1a",
+      "bytes": 3540
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-asset-data/transcript.json",
+      "sha256": "3ad7cbcd906f032969ea5e9b382d14a49180fd40f5b3ac1dfc18de0791aaf0b2",
+      "bytes": 33331
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-create-and-query-table/dispatch.json",
+      "sha256": "76323202aa465564420eb10acdf690c6e6c4308b6fc2a0bbaa12530802e78980",
+      "bytes": 110530
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-create-and-query-table/native-1.json",
+      "sha256": "ca0ca94e8bb6fd1443962b5384ea5168ce6c4ce82d9e5339f6e966b073bbf3b5",
+      "bytes": 383631
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-create-and-query-table/request.json",
+      "sha256": "31255c8a2e677af59c49d9253055ad3838a93f617b804f4c0534df8268ef00aa",
+      "bytes": 331
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-create-and-query-table/terminal.json",
+      "sha256": "ac62f8c14122ef57a80d3537e0a3eff448ac185f93e3cdfe9f0b47f960a561bf",
+      "bytes": 935
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-create-and-query-table/transcript.json",
+      "sha256": "338dd845c385f6d3580093740a84283edbd058d28f4aee1e1967927ee3e28071",
+      "bytes": 141751
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-create-table/dispatch.json",
+      "sha256": "7dd2691312561f88f73a3375896d1c33f55f586f28d1e00f751d0a741a2eb2ca",
+      "bytes": 109670
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-create-table/native-1.json",
+      "sha256": "f245991322ba0b24f9bec0d78de47f11fd2cf126bbeec20d0c1cac605046024b",
+      "bytes": 252484
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-create-table/request.json",
+      "sha256": "5c40222323f6b64d785797dcac19f6304e369031ce83e0186208f4d07f708307",
+      "bytes": 311
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-create-table/terminal.json",
+      "sha256": "456aa8b5e3ba1d64b75352f9eecea86cf0c2377f435b290b704acc1b8bcbafbd",
+      "bytes": 915
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-create-table/transcript.json",
+      "sha256": "d4c982ff18e546f6db83b410b3340667a2656eaae4cff9a9605865229c95c4fe",
+      "bytes": 173654
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-fetch-candles/dispatch.json",
+      "sha256": "eeab5e82d8ca593dc9707bd6b78a7a212e044b5aae96cecc2b4457c1dc4e3a2d",
+      "bytes": 107152
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-fetch-candles/native-1.json",
+      "sha256": "db33d82e99fd6895ca53b47a131b63fb32ed640cd024a4c16e68bc7027a61333",
+      "bytes": 144089
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-fetch-candles/request.json",
+      "sha256": "ac3ad1ad9c3e76cb2cea029e525798f162db2d47237718aa0ec730f3d7885988",
+      "bytes": 313
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-fetch-candles/terminal.json",
+      "sha256": "8a11e063358c44bab4d63d4925eac8fa250ee2d14e3c50a773ebf881dd67f54b",
+      "bytes": 5758
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-fetch-candles/transcript.json",
+      "sha256": "222bd788b975e77255e401fb751424af46055e6ee1bbc294b36844759caca596",
+      "bytes": 110004
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-fetch-order-book/dispatch.json",
+      "sha256": "95e137ff97dfbd074f102caaaaadaf9f686a54c27c31b19a86f5ed5268323df4",
+      "bytes": 107998
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-fetch-order-book/native-1.json",
+      "sha256": "af0deb3e680305899502851da626d74a1d554dab5fff7550572e7ea1aec39df2",
+      "bytes": 74298
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-fetch-order-book/request.json",
+      "sha256": "d662828270b2ff0fb34e6af67ba29f56044ff9af05ee206ee7f2d2b4e5750362",
+      "bytes": 319
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-fetch-order-book/terminal.json",
+      "sha256": "e2c54bcf1305466c19a433cc87671a517de776739614b2fcf7d48609009a1601",
+      "bytes": 4919
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-fetch-order-book/transcript.json",
+      "sha256": "60d15582693c16fd69c36a6914792e85e139b1704f8fc0efc54ded4de5c90032",
+      "bytes": 82255
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-fetch-trades/dispatch.json",
+      "sha256": "49957973f13634b1f8ee5ab31a4afa696d63287e5a1012ba9248d25e50b530a5",
+      "bytes": 106310
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-fetch-trades/native-1.json",
+      "sha256": "bc139f18549d6c3410f992755ea585d69092acca47bf663636b65859c17e37ea",
+      "bytes": 91747
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-fetch-trades/request.json",
+      "sha256": "fb7b6d06bc466272773307a3a513653fe1d8ccb6e04a516034fdfca3f0211414",
+      "bytes": 311
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-fetch-trades/terminal.json",
+      "sha256": "b5c8f3e9af41cf70f898854dd1a6c00487aded4456bf1066cf15e7b993554307",
+      "bytes": 8390
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-fetch-trades/transcript.json",
+      "sha256": "fa6577464dc77a21c5f4feabf42b2a2d94dca8c9df67bd9dabe3fa421066f37b",
+      "bytes": 98453
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-hip3-dexes/dispatch.json",
+      "sha256": "9c94bd6dd4c35398876593e3fea10dd0fa73fa02c5e8b30a4c021ff9d977b8d1",
+      "bytes": 103786
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-hip3-dexes/native-1.json",
+      "sha256": "3a02bd475aa6229ef1c030c3c876f0a9eb8da2da09914a94bcbea84e2745249d",
+      "bytes": 41285
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-hip3-dexes/request.json",
+      "sha256": "4bfaec3ab231fc358971a1dad4ee075a7483111c2fb521185dd1d19a7387818a",
+      "bytes": 307
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-hip3-dexes/terminal.json",
+      "sha256": "28583ccdf362acfe6129a995c29c5a50e66953017bba16356c63f78b8091eb73",
+      "bytes": 3591
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-hip3-dexes/transcript.json",
+      "sha256": "3cb59c933aeacd837180e46113ee2bb55bbf4c272807de2b2d0ff45ccd5ee9d0",
+      "bytes": 31219
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-hip3-markets/dispatch.json",
+      "sha256": "02a0fc146425a262181eba65d0508afc841995f12a3bdb4dd1992427ef742aed",
+      "bytes": 104630
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-hip3-markets/native-1.json",
+      "sha256": "7e799864b6798009e6d4d4e645a30cd328f54a482d4f12b53bd83274b28782cb",
+      "bytes": 360898
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-hip3-markets/request.json",
+      "sha256": "767db8472bceec57a525863c0036cd0da45d895b63fc04719676cb9942bf63f8",
+      "bytes": 311
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-hip3-markets/terminal.json",
+      "sha256": "283bf5f3c4847e246b7f76890eefd2f92ac466acbf2ee5a6e804a271254324c0",
+      "bytes": 4619
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-hip3-markets/transcript.json",
+      "sha256": "353b96871e8f10ee071bd2a9c29b2b5fce4368525a64a7b722ea169ea2024e84",
+      "bytes": 78079
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-hip3-price/dispatch.json",
+      "sha256": "08b277b638c064b81ead1af20c3013a7d09bb00352f9813841ac680517e0c5a0",
+      "bytes": 105466
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-hip3-price/native-1.json",
+      "sha256": "7e7a32d726f7d73b8102b0fd8065793d6eb02d7ab407a70c258db7627b00f4b3",
+      "bytes": 40271
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-hip3-price/request.json",
+      "sha256": "afb84b674cddb2121ad131b8bef19f98c1d97d87b9b4d25818fe234ae81088b4",
+      "bytes": 307
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-hip3-price/terminal.json",
+      "sha256": "c60c336d9d850b53e0a6e964d8fc33bea65216d69e8458bc0eee428205b819d9",
+      "bytes": 3823
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-hip3-price/transcript.json",
+      "sha256": "1b85a23c4e8f81227241572f8ccd9c111603a173c043303d51f72207ae692617",
+      "bytes": 32667
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-markets/dispatch.json",
+      "sha256": "388bd8cfc8f72cae3b99af2379e36b3a5b97cd1746a7720bf77eaa9f98403330",
+      "bytes": 99580
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-markets/native-1.json",
+      "sha256": "eab1aee1d2c2265a99f7829b2ffb4e6e0d7c0822901d7c3b6aee5057d499a0b2",
+      "bytes": 464781
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-markets/request.json",
+      "sha256": "5845ad33cae3d122f649fe8ce13e932eec94e1f56a140a8ef798b60352436211",
+      "bytes": 301
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-markets/terminal.json",
+      "sha256": "752f9f17ceca8c062e72e90dd585df6c044a9eac6b7b6a3a0ce536f2d5e2471a",
+      "bytes": 4837
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-markets/transcript.json",
+      "sha256": "7f17ed554a2515d2f6b1888ec67e652194072f760ade37f9fd89a92570afc78d",
+      "bytes": 77934
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-multiple-prices/dispatch.json",
+      "sha256": "1f5a0e7f14da2fcbdff4cf0ba0c514b2639e0b25468c6a3f3821dc29255c9e73",
+      "bytes": 101276
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-multiple-prices/native-1.json",
+      "sha256": "086dacbbaca3222d97e98ae773888a040e493a3f474eaa5714786ef895be530e",
+      "bytes": 43125
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-multiple-prices/request.json",
+      "sha256": "d1211001629b2b7b1f1cc2d165b3e6bda4fa1ca85bc1ba6b2fb9ab5cdafecace",
+      "bytes": 317
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-multiple-prices/terminal.json",
+      "sha256": "089508a4eccfe488e4654a71ba79af3f56a20b352f2c3bdf15402ccc2494c995",
+      "bytes": 3786
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-multiple-prices/transcript.json",
+      "sha256": "d24de15935910593b530f10a5422deaa8f5503c5479f0884294a21f4c358551a",
+      "bytes": 30994
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-open-orders/dispatch.json",
+      "sha256": "ae243bf9084ffb2b1dfd57e08e0c621ba9a64ab22386c1aeb0a0cfd5136a098a",
+      "bytes": 97908
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-open-orders/native-1.json",
+      "sha256": "470361d29b6756af0adde8bd4ab6f67153938aad3103df7e9061c6317a2f24ce",
+      "bytes": 41832
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-open-orders/request.json",
+      "sha256": "e5e5d4c1e3f0256aeda859bb65a5d33877b090224a2ef9008ff8a77ede1e8d13",
+      "bytes": 309
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-open-orders/terminal.json",
+      "sha256": "3bed8b5cedb6d875a46b3b485bd79a473ff7f73061d4fe400b84c932b2cbc008",
+      "bytes": 3333
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-open-orders/transcript.json",
+      "sha256": "58f4471e3971d41b7cb35c15ce376b74f8dfd7781049ee6171f1c1a55f8bdd52",
+      "bytes": 31536
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-portfolio/dispatch.json",
+      "sha256": "3a7d1f0ed194149bc9341320b07b0d0e815fe12b3aa1f7cc622a6cd7b085a93f",
+      "bytes": 98744
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-portfolio/native-1.json",
+      "sha256": "9b1d7668a39fc2be9a405fc97e908683165f4b4e254d164e211a11ce154c9785",
+      "bytes": 76747
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-portfolio/request.json",
+      "sha256": "72afdf25b2c383d92348595e4c37ce4587d2e41a1cf4bd29543eccc7151f649d",
+      "bytes": 305
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-portfolio/terminal.json",
+      "sha256": "2435cca261305044a38023f1ebabebef7a32281fdc07fc28e3931a3b06f35e8b",
+      "bytes": 3787
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-portfolio/transcript.json",
+      "sha256": "acb80311aaeecf6ab9aaf2d531cb7a189aa5315e8ca92fc70e692083546c5ae1",
+      "bytes": 76439
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-positions/dispatch.json",
+      "sha256": "0257227e137a1a2f877d70a8cfbe409e99f2c166dfbd684a3801e47c656f2f5e",
+      "bytes": 97064
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-positions/native-1.json",
+      "sha256": "851cc2575b2149cebc089ff49f8c8ed6b1f2a021a801f241bd3564b1c48b28b7",
+      "bytes": 39235
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-positions/request.json",
+      "sha256": "3421441fb03ade49bf182985d8f27262a65d75b02d1775e0f016a2da53b7fa52",
+      "bytes": 305
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-positions/terminal.json",
+      "sha256": "76598c39a21c69cd46aef3a6809ba0565b57da600948eb2ea11b935333dbbfa0",
+      "bytes": 3346
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-positions/transcript.json",
+      "sha256": "bd37bff5d63d585ca4435eb107bf575fe38e8b6ca3d024a7d898facc00984571",
+      "bytes": 32481
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-preview-order-cost/dispatch.json",
+      "sha256": "e377a6b519cc3b25191f417f38340a2ce5974f21bfa51422cf57941ae912c6d8",
+      "bytes": 108842
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-preview-order-cost/native-1.json",
+      "sha256": "8f67323a1bbf3f2acca23f08ec84c37a6f860a1edd140cce9ecb7007d29495ab",
+      "bytes": 43027
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-preview-order-cost/request.json",
+      "sha256": "653cef8b389f02579855626a1b59858b1dcf6990777f43b3feb1aaef0b2534ab",
+      "bytes": 323
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-preview-order-cost/terminal.json",
+      "sha256": "8bd437ed03ebc262e4bc1f8306fa6b9e411695f87a060c866975c0674ab81704",
+      "bytes": 4135
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-preview-order-cost/transcript.json",
+      "sha256": "9d910ade7c1a8343d41e4cd3085470bd1d5e95a6a95a31d1de9f064ddee47f4d",
+      "bytes": 34337
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-search-hip3-markets/dispatch.json",
+      "sha256": "fd34c502a39b5732365f57b3e271bb9a1b12bbac3e4f122a3819994739306785",
+      "bytes": 102964
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-search-hip3-markets/native-1.json",
+      "sha256": "5686119c79a0035b5219dee7d77fa6a4c7a7ea0f9098fe14be05118d2b1fa33b",
+      "bytes": 150264
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-search-hip3-markets/request.json",
+      "sha256": "553cb93cd24c3793518f995dc2768b8b754fe4cd09b5f035e1ea6d1000a78caf",
+      "bytes": 325
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-search-hip3-markets/terminal.json",
+      "sha256": "fbc9efed51bc9bff01c93a49261757c9790a631e178ee6e51de9ac6bc764916f",
+      "bytes": 9082
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-search-hip3-markets/transcript.json",
+      "sha256": "de90c980c5bd2bea47bd8a83e698faf8699df97012ef4b645f6ee7544e316dcf",
+      "bytes": 169193
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-single-price/dispatch.json",
+      "sha256": "cf80d61a389c2353edde3a51350654e5622c0000bb593281e78b056baf011400",
+      "bytes": 100430
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-single-price/native-1.json",
+      "sha256": "7c3267565b5494ac1f5ac0f59b69f886574c0fa75d2ed079c1d64b7f73a0116e",
+      "bytes": 43773
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-single-price/request.json",
+      "sha256": "c2c1ebc93d89a3114f9b2989c689be26c5538aea8e43f74fea90a5465d8dd8d7",
+      "bytes": 311
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-single-price/terminal.json",
+      "sha256": "6333f46098bfdeb6b5afe6738fcdd2a19a2a5bac0b63593b80e0886e7a9c7c6e",
+      "bytes": 3662
+    },
+    {
+      "path": "parent/results/run/low/perps/2-perps-single-price/transcript.json",
+      "sha256": "8ad4287c5a0efa94ed76c1bca4a3d164575baf712b531b5108061fc99e2bff00",
+      "bytes": 33232
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-account/dispatch.json",
+      "sha256": "34655c3f6e5800c036ccdd2c44573fefcd96917207d97370f4e5284581d432d9",
+      "bytes": 125620
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-account/native-1.json",
+      "sha256": "997f274ec0ccb72332202acfa19341767d3025c9bc2ee72f13aa9bfd3976945e",
+      "bytes": 45355
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-account/request.json",
+      "sha256": "56cc3206c14ccdfb0a2bab500fc34074f96210bd1654a84d594321b6c5c7474f",
+      "bytes": 301
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-account/terminal.json",
+      "sha256": "1e06dc0b88dec51a10be3df45b5a3a2300ba01e74f15193d271a3f28bde77cc3",
+      "bytes": 3730
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-account/transcript.json",
+      "sha256": "839d67e1554ea1de197ad023d063ad880842ac9b9566d23e6459d2976254f633",
+      "bytes": 37022
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-asset-data/dispatch.json",
+      "sha256": "c3204bda2480f01c8074876b7a1821a7b016923dd5a4d3b9fd361cf720127682",
+      "bytes": 131506
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-asset-data/native-1.json",
+      "sha256": "099794364d8daf81a3207ba910ab1495df07b4c110438da7b8fc37439fe78cd2",
+      "bytes": 41775
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-asset-data/request.json",
+      "sha256": "d350abb16c1fda80e36063a6e0dd393816d4e3e0fb1b6b1f037771e0453dc19a",
+      "bytes": 307
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-asset-data/terminal.json",
+      "sha256": "7b0212c0cd84f8f471ca169ba1b7c1fb47a11cce63dbb01f7faac1c32e779208",
+      "bytes": 3567
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-asset-data/transcript.json",
+      "sha256": "8c08d35dceea9121ce586f14558030ad9b06bf1513631c13cba9d35413727a51",
+      "bytes": 33358
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-create-and-query-table/dispatch.json",
+      "sha256": "6de4a20790f4063f95c25d92fb267544c7db3e617f830a2d87cbd82715aab592",
+      "bytes": 139930
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-create-and-query-table/native-1.json",
+      "sha256": "dbcd18f483131ebf73cf285652a8031823c6e609e673303b44ae0cc51daaf495",
+      "bytes": 217953
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-create-and-query-table/request.json",
+      "sha256": "abf7537cd7b16cf64f0dbcb6fd61c90350d0de14a1bf3eaa05bf88977b571ab6",
+      "bytes": 331
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-create-and-query-table/terminal.json",
+      "sha256": "8cfadb7b68361de8da2ad9140b7f8990df051ab3d5f83884390d0d35ac9b8462",
+      "bytes": 935
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-create-and-query-table/transcript.json",
+      "sha256": "75b15ee338bdee883be15d09dfe6eb993e1d6bd9094f5913e79ad210a54063ab",
+      "bytes": 153144
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-create-table/dispatch.json",
+      "sha256": "516d071aef0fc4a5bb22c78093d68baded1750c0571655d4656ba4912cba0ac3",
+      "bytes": 139070
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-create-table/native-1.json",
+      "sha256": "37d62518db34210e17f6bd581bf97740461d1e9197c6898b24bf1e091cb55b7d",
+      "bytes": 364433
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-create-table/request.json",
+      "sha256": "d25ecd703cb6d71a23a17bd9a315a2670abee5386801e51d4bbe1e30e3a3f801",
+      "bytes": 311
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-create-table/terminal.json",
+      "sha256": "e73dba68607596b810f1964173fba9edf7d7f4dc9abfdf29bcc916e327060c95",
+      "bytes": 915
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-create-table/transcript.json",
+      "sha256": "d6f536119ed4dc77436ebe806c57dcc990219f4164392d63403f575d8797f248",
+      "bytes": 152031
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-fetch-candles/dispatch.json",
+      "sha256": "1624f29f36f2b430e55c270c3f21e740674ee0f983e2cc65942bf668acb43446",
+      "bytes": 136552
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-fetch-candles/native-1.json",
+      "sha256": "49e42ce03d11df7e5a61870b7098850899cebe8027985de474b615f24be71e25",
+      "bytes": 106064
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-fetch-candles/request.json",
+      "sha256": "15382dc7bbc0de777eed4c0388837c47cf21e6ad11c927af39da87ef1f4248db",
+      "bytes": 313
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-fetch-candles/terminal.json",
+      "sha256": "0079e262541bd7d1817a934c23a21cefaeb205fc8d4b1ea8fb4f015bd9f1d947",
+      "bytes": 5572
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-fetch-candles/transcript.json",
+      "sha256": "9355224cfcb486b934df731900f70ca4f843741991e94278e758b96610db42ee",
+      "bytes": 83914
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-fetch-order-book/dispatch.json",
+      "sha256": "faf6f9f4ab7bb228718f55fa22cabcf3d63eadf9f4561b54ed9972679acc9a88",
+      "bytes": 137398
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-fetch-order-book/native-1.json",
+      "sha256": "5992cc49d54f8b6a505497fa406155eaa0caaf9013e398b4ffe480ae9222da41",
+      "bytes": 75460
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-fetch-order-book/request.json",
+      "sha256": "0b7e7e3d86384af604c2d59df0cd0b6ec6df45fa4b6c5875fdcfb93520ae78fe",
+      "bytes": 319
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-fetch-order-book/terminal.json",
+      "sha256": "4f85f313280b5c38bc3e3fd733de4b68fe1353c086ae5c721a87c7564607a4b3",
+      "bytes": 5003
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-fetch-order-book/transcript.json",
+      "sha256": "9dd924aedbc609a378bb19ea62829ebc4db2f0478c775bba83f36dc425e7621a",
+      "bytes": 82268
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-fetch-trades/dispatch.json",
+      "sha256": "c921d52d1672d98361dad8a60b9e4431e74c1beb4f62a1dc2cbfcc4ba1792ea4",
+      "bytes": 135710
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-fetch-trades/native-1.json",
+      "sha256": "337f04318714f424c049e70ce2f3dcef437858ac8700e7de0b0c8b3cea55e7f9",
+      "bytes": 91925
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-fetch-trades/request.json",
+      "sha256": "20fc6e5b7bb1be8464bde6fe3dc15d71e7d2d5a7bc8b5cb7e37450120c164a64",
+      "bytes": 311
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-fetch-trades/terminal.json",
+      "sha256": "76554871ee7876c4cf63c93fe18a7f720dc84d022027550862eff7585b9626ca",
+      "bytes": 8326
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-fetch-trades/transcript.json",
+      "sha256": "27110642c10c71160201303de27de355f6d5d7aa7d1b3f405441003c1114918a",
+      "bytes": 98389
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-hip3-dexes/dispatch.json",
+      "sha256": "01c3eb47deaf981491fdea4b2684f222910319f577496643f6ab38077df0fa0d",
+      "bytes": 133186
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-hip3-dexes/native-1.json",
+      "sha256": "557b49bd9bf8f409e76cd4e185b407edec7d19be5cf19aee728f0f4733c7b95a",
+      "bytes": 39422
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-hip3-dexes/request.json",
+      "sha256": "dd31ff6326d829c45faaeed3c35ad538668f3affca2875b25f925d1f16afbbcb",
+      "bytes": 307
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-hip3-dexes/terminal.json",
+      "sha256": "041890f8cabebb668207c3d987dea9f8629e0c206799a7931e5160379f00e7dd",
+      "bytes": 3488
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-hip3-dexes/transcript.json",
+      "sha256": "b1f2672e1204e4ff6604a4e57780a8b60a57d6d5fe3dc2304a6134bf8544b530",
+      "bytes": 31114
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-hip3-markets/dispatch.json",
+      "sha256": "cf5a01a6be93f22b04b32da393a9685eda1899a037ea26f7f74b768e325e87c6",
+      "bytes": 134030
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-hip3-markets/native-1.json",
+      "sha256": "4ff3b09a16361b17e877fb5ecb86bdd636a12496214ca143ddcd944862e76867",
+      "bytes": 360577
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-hip3-markets/request.json",
+      "sha256": "d386dc61f460b2e64e16315011e2a64353716c012ca3bb3b47db3d648d083c65",
+      "bytes": 311
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-hip3-markets/terminal.json",
+      "sha256": "8412ee56eccba73f67057be01ba9a56438b58a546be006e9a0df6984fdf3c84a",
+      "bytes": 4566
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-hip3-markets/transcript.json",
+      "sha256": "dafc6eb1ac07c1035d185965f6f249ae17152f962cd00ad606e8c9996559e6ce",
+      "bytes": 78026
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-hip3-price/dispatch.json",
+      "sha256": "f0cc93deca6b70122af7034415d633e8477173c2f4f8266557ca1be56be5c2cd",
+      "bytes": 134866
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-hip3-price/native-1.json",
+      "sha256": "ddd5d97ca26c835c8bca2c1c73f0fec96374a5d14ac3c319afe028b68fbf58d7",
+      "bytes": 40237
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-hip3-price/request.json",
+      "sha256": "1b4d1378a656c9cc1753d9fe4970e9a7fc0098696fd2816782234abc60b6894e",
+      "bytes": 307
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-hip3-price/terminal.json",
+      "sha256": "8246b78bbdc7ba129f65786f7b16bd46a5017e5b16f8ca4536ba62b300138809",
+      "bytes": 3778
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-hip3-price/transcript.json",
+      "sha256": "f1daa12aac96aebd46215722efb0b1754924710d092951fe289c87933030033b",
+      "bytes": 32622
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-markets/dispatch.json",
+      "sha256": "ba5249706d8a4e574245eb105ab5b7f3c86e559645d734bec6b24e2c853a47f6",
+      "bytes": 128980
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-markets/native-1.json",
+      "sha256": "14e6a513fde6ca5bc3cda9fbfd994bc9c4cc93b403e3a170f87b553eadf819c7",
+      "bytes": 462126
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-markets/request.json",
+      "sha256": "e6d1fbdcf89e664d1805f0f1afc106c7bb6d23f486a71fc5379cc7832bf92549",
+      "bytes": 301
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-markets/terminal.json",
+      "sha256": "955f6fecf651d3f392d8937262acb812e97d57c7f7f02a88158c3b10a1e6fe61",
+      "bytes": 4870
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-markets/transcript.json",
+      "sha256": "b3cc058651672476f705ade1e070dd9f1bf0851d0334457716f32b04313e4f81",
+      "bytes": 77963
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-multiple-prices/dispatch.json",
+      "sha256": "06f852e708785142bb956ac14dcea4cb66753a4fa9661e7b6dc7cefb14f6ca15",
+      "bytes": 130676
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-multiple-prices/native-1.json",
+      "sha256": "7e74e0888d79c4b8ed556a97edcf32332e24ebbbb29fa4073ee4303168b3a479",
+      "bytes": 43158
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-multiple-prices/request.json",
+      "sha256": "470adbd399b6695503d88fe4598b532bf2c8c0aa7984d5e8f566daa48cefe17a",
+      "bytes": 317
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-multiple-prices/terminal.json",
+      "sha256": "6e83f3d6696508633c6479c210a66628eebe7598e104aa24e79586dc73300ba4",
+      "bytes": 3762
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-multiple-prices/transcript.json",
+      "sha256": "15c5f2031b3ba5984ae5f16553112a1c5275d9b0e348cc2026d4582c83ff2a20",
+      "bytes": 30968
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-open-orders/dispatch.json",
+      "sha256": "b7a6593f45c78230dc8481b8981773c0781999eacdae90d36d5ac75c7b6dfc06",
+      "bytes": 127308
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-open-orders/native-1.json",
+      "sha256": "213db3b1fae1546aa25d02de1bae573a6bdb1b4ff9193e2b170776008b2bc003",
+      "bytes": 2610
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-open-orders/request.json",
+      "sha256": "da379067f25c0ffc8de124fa426b9541d24bc67c314ccbfef37f91a27bcf8d46",
+      "bytes": 309
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-open-orders/terminal.json",
+      "sha256": "ef4964c710c32da7f83f6b28e4a9e28ac8a1e6b5918653d083cc8d34113b91ea",
+      "bytes": 912
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-open-orders/transcript.json",
+      "sha256": "5a2529f08d4144135e373690179a5110a09f8026943cc5d005a3dc413792aaf2",
+      "bytes": 398
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-portfolio/dispatch.json",
+      "sha256": "901230b7e0b5ab39654c9afcb2197fd73ca971035d0c8d4aa338f19de0e62326",
+      "bytes": 128144
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-portfolio/native-1.json",
+      "sha256": "d4e06fce3f63ed426cb3bcbb7d389fc404193c8bf872944d375a8c89869055bf",
+      "bytes": 68737
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-portfolio/request.json",
+      "sha256": "8b9d0bcb743be951cb6b16a5d43bed186aeb16aacc31cb2fb5743e975ec59a52",
+      "bytes": 305
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-portfolio/terminal.json",
+      "sha256": "213efbfc13a08e1c60e46d303d7305ce788cc826e135fed17c39517879a4c1a1",
+      "bytes": 3661
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-portfolio/transcript.json",
+      "sha256": "47c7d345e73db54aadcb89302c094544a60855b0d6042dc8b3d7251425c45e3b",
+      "bytes": 76312
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-positions/dispatch.json",
+      "sha256": "bac4c993fba5c76a29f96d96b9d27e9256d61cfca71e8ab6c7b2e5f1d66dc5e7",
+      "bytes": 126464
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-positions/native-1.json",
+      "sha256": "350f65f3c3ecaedaadf8ca0b968912c41175e8522ac41371e57ce0394147bf28",
+      "bytes": 39801
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-positions/request.json",
+      "sha256": "1cf7247dba23d0313738898ecb0e5ae794f03886a9b12c821b42105a19eb7af2",
+      "bytes": 305
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-positions/terminal.json",
+      "sha256": "5c11814d3e65c378773ba6bd8d2f4622defa052441c1944605339c48410ccb4c",
+      "bytes": 3364
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-positions/transcript.json",
+      "sha256": "ec5995a68d09b048690bd372dc2df81a844ab254111357eb7715d75b033f1b0c",
+      "bytes": 32499
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-preview-order-cost/dispatch.json",
+      "sha256": "98f1cd87fc8979372ddba91db75132120597482543e654f23a38b3d2b93ad0ce",
+      "bytes": 138242
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-preview-order-cost/native-1.json",
+      "sha256": "6571462a4cef3a0beed6d9aeea2e4a2d35cc571e79fa9d30a185ffd32c726f5a",
+      "bytes": 43248
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-preview-order-cost/request.json",
+      "sha256": "74cd226a99c93874968d296ad1b66117f6954fbc4b973a7fca0c399bf664d93a",
+      "bytes": 323
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-preview-order-cost/terminal.json",
+      "sha256": "79fb0704bb5c64e86961a5b22c4cc25d492df641aa9887478a8c1738f5c624b5",
+      "bytes": 4159
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-preview-order-cost/transcript.json",
+      "sha256": "8e5cfcd98b9cf823c6d4950fb8a0ffadff41f5d7392153b34e43aabdeb9c6c85",
+      "bytes": 34313
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-search-hip3-markets/dispatch.json",
+      "sha256": "fbe35d42d3f4e00ebc04ac9f957ef88cdf3235130355961be444e920669a613d",
+      "bytes": 132364
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-search-hip3-markets/native-1.json",
+      "sha256": "2bf9594b1f2028cd2388f06fbeb680791b56a0fa18a801a54d35a3054a02a2cf",
+      "bytes": 178727
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-search-hip3-markets/request.json",
+      "sha256": "bdb9690a074e24ffc255f4c8d4f6edd9bda7ea28debfea90de5a21e773b71542",
+      "bytes": 325
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-search-hip3-markets/terminal.json",
+      "sha256": "6c397bc6a4bb80268eded59634aeea3ea37e23fd289986a8401f848254f44f51",
+      "bytes": 8110
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-search-hip3-markets/transcript.json",
+      "sha256": "605195e484980e9fe6739901423ab1b32377966cbc430510907d312bb28afe37",
+      "bytes": 187888
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-single-price/dispatch.json",
+      "sha256": "148dd7525d57ad6a43c690bf80e149fc3ae633bc92e6f2c2fb2a0f422fcf3609",
+      "bytes": 129830
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-single-price/native-1.json",
+      "sha256": "c7f1e86c1e116c92d6ea8e06a050f5aa506691c99a4266106e8796118422b977",
+      "bytes": 41726
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-single-price/request.json",
+      "sha256": "9f8bd197ce73b38740774ab1bafdf81f4ca7fa8aac21bdde0217df01f1dd179b",
+      "bytes": 311
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-single-price/terminal.json",
+      "sha256": "e7fcbc5cc8d3f4479c97b58c948eee80a8f18531b7e56f79f7174021059cfa4a",
+      "bytes": 3679
+    },
+    {
+      "path": "parent/results/run/low/perps/3-perps-single-price/transcript.json",
+      "sha256": "80db2b05198fb832a7e5c6652f9b7402a22894bb485d709261a40f8e5b8e4a1d",
+      "bytes": 33002
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-broad-football-search-only/dispatch.json",
+      "sha256": "067facc72983114dd302e6fb377ef6be369e0359505114940ab06f52816e35e5",
+      "bytes": 83688
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-broad-football-search-only/native-1.json",
+      "sha256": "d7a4fb80498dae1ff68eb330ec611c6d66217e61299fc96af9aec95571501f32",
+      "bytes": 95265
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-broad-football-search-only/request.json",
+      "sha256": "e4b5fd71405cf10b47eeceafbeef48c8a92ea941ebde1fd3088518dbf1d164b0",
+      "bytes": 369
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-broad-football-search-only/terminal.json",
+      "sha256": "82fd256756b0febc9320725a5adf36ff47750111b95004305a69e34d2549a319",
+      "bytes": 4685
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-broad-football-search-only/transcript.json",
+      "sha256": "2951c41e06bef2cc1df41c1d9ffae29de8fc010fd273cecf176814813895d0ed",
+      "bytes": 156642
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-broad-nba-search-only/dispatch.json",
+      "sha256": "2b012ade0cb47d8129ad1cbcb4c9ea76e1e39bca374a87fde565d225f15d6074",
+      "bytes": 82838
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-broad-nba-search-only/native-1.json",
+      "sha256": "051a99aa563b7d96f57b449eb22348bd2c85b6f123888969b76d4b4be71c99f7",
+      "bytes": 170816
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-broad-nba-search-only/request.json",
+      "sha256": "c708ba5c1d2ca4292ee80e070ad2cd72635c3289d735077402c055cd1ac32aae",
+      "bytes": 359
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-broad-nba-search-only/terminal.json",
+      "sha256": "f7b4aec6a2a677bda44ddfc1956e116bbef250518666d96d31b8106a49ffaf64",
+      "bytes": 5461
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-broad-nba-search-only/transcript.json",
+      "sha256": "61cbfc2f2fd7dd582e14244fa020b3e724942e02f132352abc06d7add78e1295",
+      "bytes": 232772
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-expiring-markets/dispatch.json",
+      "sha256": "9040a475ad5479774030361716ece4d26c3809da96112e1d7bcc54692d849bc1",
+      "bytes": 87028
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-expiring-markets/native-1.json",
+      "sha256": "b0ec06f30bba5e9920413f5d0c492d7a1f00c35dcaaaf8784e16b62dfc78a2fa",
+      "bytes": 131295
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-expiring-markets/request.json",
+      "sha256": "81e7b0b71e7f6da159edcde64ccb81f41bd2513a9c93e9e2e37e3c3e0b0d5172",
+      "bytes": 349
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-expiring-markets/terminal.json",
+      "sha256": "a6777ee5fccd563666302be08f541d166d3d115f0603998ec56f65c889062f75",
+      "bytes": 5607
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-expiring-markets/transcript.json",
+      "sha256": "cc0c981028c3ea1c5045d6ac84508ed550712575496d9d3976eee0d1c6713590",
+      "bytes": 76239
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-fetch-history-data/dispatch.json",
+      "sha256": "983f41106778652fdcbc8cb3cd6f9c899241c672d384fe334a5272ee1bfeec4d",
+      "bytes": 90392
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-fetch-history-data/native-1.json",
+      "sha256": "ffbddd8e328837c79ab9937138d6c92498170896fc79c30a57c59579b18bf4d7",
+      "bytes": 97081
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-fetch-history-data/request.json",
+      "sha256": "cd34ae5cf765269f4caf5fbebe51abca3a8d8e6edd357c6febe844626f898bc2",
+      "bytes": 353
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-fetch-history-data/terminal.json",
+      "sha256": "90693d9f46d19b493226e6a4b426f3c72f8ad53916568072bf7a324f715edbb9",
+      "bytes": 5376
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-fetch-history-data/transcript.json",
+      "sha256": "aaacebdec5e2737f1a45f03fdf121a9ae160e9cabb03cd675b72b4a241e11fb7",
+      "bytes": 72053
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-fetch-market-data/dispatch.json",
+      "sha256": "6b251b979ddeb007b7e8dfe4dab51bb913fc05cfcbe31ef1a449220f331792c4",
+      "bytes": 89550
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-fetch-market-data/native-1.json",
+      "sha256": "0da4ae097987af86d215f8145b957da3782c57ed216ebf80fa291471bfb16f55",
+      "bytes": 81235
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-fetch-market-data/request.json",
+      "sha256": "8fb96f57baa685d0e2a7299700a4d6177af6d47e0e6d113da419395a133d0a6d",
+      "bytes": 351
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-fetch-market-data/terminal.json",
+      "sha256": "bc7ddbf0d7e2a15e594a519fc6a7e871dae2d2dfb5a9bc493ae4d1cc707112b3",
+      "bytes": 3975
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-fetch-market-data/transcript.json",
+      "sha256": "651e17b1debce9fd8328efafe79cb0abefd32309f5c463803eff1cf7888fd025",
+      "bytes": 69091
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-focused-fact-search-only/dispatch.json",
+      "sha256": "573fbee266280d9bdf39f70f56abb6c103c01e45fd24277ff971cb70eb541d39",
+      "bytes": 82004
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-focused-fact-search-only/native-1.json",
+      "sha256": "3f16fe99c967e7818f08137adeabb7a3640b01f1f61e0768c1807f0c2a6e8345",
+      "bytes": 81986
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-focused-fact-search-only/request.json",
+      "sha256": "9ec675ab276f12703d3537c03d54e37b33a17dc96e59fac95c52d9579d06bbac",
+      "bytes": 365
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-focused-fact-search-only/terminal.json",
+      "sha256": "2be2f2f09a4c8d6ac3f27ab61296a9f93ffef999447337a6db78a99ccfc63db3",
+      "bytes": 4674
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-focused-fact-search-only/transcript.json",
+      "sha256": "1fe30a6503908b83f2c92a46a99ce8b2b201cc6c5ebd1359484c5c014bfe30b9",
+      "bytes": 143358
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-multi-series-no-render/dispatch.json",
+      "sha256": "3f08a1b6ab8aee0c82a01ab41ebd4fad3e4c7ab94f49d282a06403cd293e68b3",
+      "bytes": 86200
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-multi-series-no-render/native-1.json",
+      "sha256": "e3acb2264d6024dc8b890e6ee2f5749fe816b27d5056bcf3fc470c3756e88cf0",
+      "bytes": 155981
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-multi-series-no-render/request.json",
+      "sha256": "2b5e4a879e609d825f2bc56752a082d181b54c14cb84d25ed0853302c4e8e921",
+      "bytes": 361
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-multi-series-no-render/terminal.json",
+      "sha256": "bd0ea558313dd9245b66033aab57ef30317d9af93769d19b78166985c3a4335b",
+      "bytes": 4791
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-multi-series-no-render/transcript.json",
+      "sha256": "da9c90ec75ac21353ecb65d443f9249d70bebec22667618a649899e7c3dbdbba",
+      "bytes": 127106
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-non-exact-no-render/dispatch.json",
+      "sha256": "75fcb9a41dc6d8446511d9a36fbb7adc96fb9a7d00e2d782caa3c84b2d0711bc",
+      "bytes": 84514
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-non-exact-no-render/native-1.json",
+      "sha256": "7780089d0884b8cb6a6862e48290510c5ad0df325145319353df4219425caadf",
+      "bytes": 136886
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-non-exact-no-render/request.json",
+      "sha256": "f8f3d368ab9b44a53eb1edc17067390b2c41a1d2e26ff015062ab8dae60cb1f3",
+      "bytes": 355
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-non-exact-no-render/terminal.json",
+      "sha256": "f45afab4095ec061ec48d4e82d9b7ffff7ff4c022955c06e891515f0eef18b96",
+      "bytes": 4672
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-non-exact-no-render/transcript.json",
+      "sha256": "53a5bc4afbee3d6386f76fba496cb37c04c1cf61268c15b1e99e5293fffa7e4e",
+      "bytes": 172128
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-open-positions/dispatch.json",
+      "sha256": "ce102b82f63fc44c0d8817d778f9698ff645cd91536cd16cba0421d1224d7acc",
+      "bytes": 91224
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-open-positions/native-1.json",
+      "sha256": "958fc6922ecc941d95a2ca93166699a202e0f44ca90da9b1d8851adf20fb9c8b",
+      "bytes": 47024
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-open-positions/request.json",
+      "sha256": "a2e4e4c5f18cd73304933f831b2ae64472f4d2fa55d900ef7d2cfea999aa2c02",
+      "bytes": 345
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-open-positions/terminal.json",
+      "sha256": "1525370b2739c9355330c6b23e3677bf6a2206766e0c2c79ef568c77010a7def",
+      "bytes": 3820
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-open-positions/transcript.json",
+      "sha256": "8866e9812b4902b2e1c7fba1f451054c42fa18ceb348930a0c082c2c797e6a28",
+      "bytes": 45145
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-order-history/dispatch.json",
+      "sha256": "606665b91d0a7df725f1f6781c840733602cf5827017c013e30e869d95e88667",
+      "bytes": 92062
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-order-history/native-1.json",
+      "sha256": "cff146b70d01e3d1906a8f9c60f5c9c647ac78396b7f197d51912d27618e9347",
+      "bytes": 35387
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-order-history/request.json",
+      "sha256": "69ebdc88445f3196d4a5cd3b42be6e80c803b7b4d98b8add051a5843e2ef8fe5",
+      "bytes": 343
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-order-history/terminal.json",
+      "sha256": "d35a343e2e9d81aab62e21bc344bc4ea2945325fb21cb4f128e6d5f225af5d04",
+      "bytes": 3629
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-order-history/transcript.json",
+      "sha256": "a7043cde89f359f52d19761566f9d109dce2be4896fb62f95783f8a19625ee4f",
+      "bytes": 25533
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-orderbook/dispatch.json",
+      "sha256": "17916ee5f933c5bc518883e44a7a33648297ce627a47d422a5a4c8110fd239d9",
+      "bytes": 88694
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-orderbook/native-1.json",
+      "sha256": "e1b586f12880373ed6ba95da92af0c0fa1e36c0c09e052a844a95cbf380a0d3f",
+      "bytes": 34829
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-orderbook/request.json",
+      "sha256": "22520fdd68eddef50b395e6217a6a9f85dc7c32bf9ca060378ab7d57836c0f59",
+      "bytes": 335
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-orderbook/terminal.json",
+      "sha256": "5aae29376eb67940a2745a1c69f8644c900308ce34c7a474db961f9e5a33c4ef",
+      "bytes": 3582
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-orderbook/transcript.json",
+      "sha256": "705fff03eb74312b8d12ef999eeaba90821e791bc510bb963e5b96ba4a0a68c2",
+      "bytes": 25203
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-series-market/dispatch.json",
+      "sha256": "6fb6ba450f1373a059eb3e9ad48661b6ca90cf4760a1a90526d5e4612bc9d440",
+      "bytes": 87862
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-series-market/native-1.json",
+      "sha256": "2a82bcc2c22bf3511cf21f287aff1e8c7e3009d614b5fda324d2194bb89ab7b7",
+      "bytes": 118175
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-series-market/request.json",
+      "sha256": "eba3222f4ad517dc71ff91af04712c5cdfb6667dcb64f40fa5cb17fc8c80f80e",
+      "bytes": 343
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-series-market/terminal.json",
+      "sha256": "e7ce74485f3295074edf3b4f8c5cf64535392c7b233b9dee302c637442ef0dc1",
+      "bytes": 4565
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-series-market/transcript.json",
+      "sha256": "fa9ead27e0cf37161f9c123c61e805d4eb2cda06432dff9c53586c959ca8d80d",
+      "bytes": 197566
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-sparse-history-no-render/dispatch.json",
+      "sha256": "25313f3a6e9edd5ac20964106d99d2fb7ed7e62b83f53be37e4803e861f22af2",
+      "bytes": 85364
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-sparse-history-no-render/native-1.json",
+      "sha256": "63ed6b9f38e793c7885454bcb7614060e7ce27e7aa60d604410fbbd3e3a74d45",
+      "bytes": 139278
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-sparse-history-no-render/request.json",
+      "sha256": "c4a1279bf3f3c23a867177a7dee7a3faf5c14a9b507342671b1fbbddc6c75f8f",
+      "bytes": 365
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-sparse-history-no-render/terminal.json",
+      "sha256": "4062206f17c2396bcc9345769eb3bca52aacf1319cfbbbf69a900af7e9a85b97",
+      "bytes": 5326
+    },
+    {
+      "path": "parent/results/run/low/predictions/1-predictions-sparse-history-no-render/transcript.json",
+      "sha256": "c5a2caa07975aa9fcd6fa79c4f928e3025cd0448a3e3c63155d3412af4c9a418",
+      "bytes": 173482
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-broad-football-search-only/dispatch.json",
+      "sha256": "3a75fc6c2c6e061eae593ac53052a2351010a52a1d66f82322ce877b8a1cce09",
+      "bytes": 113088
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-broad-football-search-only/native-1.json",
+      "sha256": "197cebe2fa2767f2e6555709481a348a14a0babeadc1af27b8719dc3592183a1",
+      "bytes": 54836
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-broad-football-search-only/request.json",
+      "sha256": "ce37e77a5e38a2cc9566e97aa9e53c5940bc7bdc43344f9c5e4dee6c34ced782",
+      "bytes": 369
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-broad-football-search-only/terminal.json",
+      "sha256": "7d402aa10551095dc9a085d39c56b3760fc2ba6907a7667c0f4cf3a6acf38b78",
+      "bytes": 4337
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-broad-football-search-only/transcript.json",
+      "sha256": "9f39d75ca1ce4297018b9c4e94e2595ca26d993e3ef27471868306fa3ba18c9b",
+      "bytes": 48799
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-broad-nba-search-only/dispatch.json",
+      "sha256": "cadbc5b08117e065800c0585dd268931569bf934827e3404074d6e42d4e86f0f",
+      "bytes": 112238
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-broad-nba-search-only/native-1.json",
+      "sha256": "83d573e689113478fc4f0de3d17e98f136eed78e06c9915b710d804fc958d7a0",
+      "bytes": 311260
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-broad-nba-search-only/request.json",
+      "sha256": "417083559d170f328084f3d772862b03d8bb0158753abf3596d8be56a7dc3168",
+      "bytes": 359
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-broad-nba-search-only/terminal.json",
+      "sha256": "00623d211bcecee8c38b6ecf955811d43adcf3188639cd42c04c7bab862b4bb6",
+      "bytes": 5423
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-broad-nba-search-only/transcript.json",
+      "sha256": "3d5a2b674a525fd07adf57b6c10e8de33878596f9305efd04125ebb4263428c8",
+      "bytes": 114841
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-expiring-markets/dispatch.json",
+      "sha256": "4941bcc359f877e7ed1277b6dd95eacf36c7fa3cff0648d28f69555dcb57b6d3",
+      "bytes": 116428
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-expiring-markets/native-1.json",
+      "sha256": "1c8db5e44007cb6258f7ac7224c506224ad647e88959361d8538d692d0cd2bc8",
+      "bytes": 133084
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-expiring-markets/request.json",
+      "sha256": "12d074cff29ac3ba4a7a3922f3af11480d739497de4ee598c6aee6c8ae604caa",
+      "bytes": 349
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-expiring-markets/terminal.json",
+      "sha256": "91ca9ec9e635d2f8e8387f81ab653531c2c48bd707b8989e98146424c7873ee8",
+      "bytes": 4276
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-expiring-markets/transcript.json",
+      "sha256": "747ed00bd77b619ab6447b7fbf33f5a0faf6fd863102b51a88cf42861e7cfb18",
+      "bytes": 79113
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-fetch-history-data/dispatch.json",
+      "sha256": "c75601d46e5b68642143c60c5bd2be7a03045717c922d043e63fc453985c9df1",
+      "bytes": 119792
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-fetch-history-data/native-1.json",
+      "sha256": "9b08b7bbfcc8f349b21b7c576c93f2d883651b8974181241fe7952097b3636a7",
+      "bytes": 232543
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-fetch-history-data/request.json",
+      "sha256": "686b7caadfced30355537e29d5e76518cf25527f79d811ab38b3d6dd084d0015",
+      "bytes": 353
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-fetch-history-data/terminal.json",
+      "sha256": "6098c833009b202a4f8e340a4e8f7ef6c7085f4502cba98308b17e95ab9fc0ea",
+      "bytes": 11186
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-fetch-history-data/transcript.json",
+      "sha256": "17f710325b66057a0d3e5ef1ce39f5d108363ef63bf7f6a96e7f03f9a229a355",
+      "bytes": 78383
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-fetch-market-data/dispatch.json",
+      "sha256": "2313e2981657f77513d620e201e6e51fe719d5c96ac897767cfc8eb1ee8c2429",
+      "bytes": 118950
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-fetch-market-data/native-1.json",
+      "sha256": "68109cb8cfee96dc21352b3c3410f8b4a8437224b45727499355076c74a317e7",
+      "bytes": 85919
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-fetch-market-data/request.json",
+      "sha256": "ac307d69782f0b113edbed10604655cd3b5f2ec113c2aca337db8b9f7e9aa6d6",
+      "bytes": 351
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-fetch-market-data/terminal.json",
+      "sha256": "97e0b01074c72aab2bb2d2603ea7b62443a992e1c3b3e616ccbe0c87351af2cf",
+      "bytes": 4779
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-fetch-market-data/transcript.json",
+      "sha256": "67febabe0d2bab0548a89690fc6790ccb7f2be73fb5a8522af1ba2caeb9b6fb3",
+      "bytes": 70126
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-focused-fact-search-only/dispatch.json",
+      "sha256": "c3b2f3cfba6736cd885fc6199356918f23384dbf76d63a1496e4577a7b6564e6",
+      "bytes": 111404
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-focused-fact-search-only/native-1.json",
+      "sha256": "c883a44ddade5871d09cfeba41a7bf66f90638fb3673f6a93df1e84e3695cc74",
+      "bytes": 169262
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-focused-fact-search-only/request.json",
+      "sha256": "88f76d9c986bdf038bc84b0e3dc691512cca65f189a50da3d1fad056dd584572",
+      "bytes": 365
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-focused-fact-search-only/terminal.json",
+      "sha256": "3ec78488db248f6fd083bcfc057e15f3e0affe058fbdb57da552a17271eb335e",
+      "bytes": 5036
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-focused-fact-search-only/transcript.json",
+      "sha256": "1d6f7fd9b0ee32c045ba4a8b73a13da84d0814f038447ada0f3b6a27617435e3",
+      "bytes": 192895
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-multi-series-no-render/dispatch.json",
+      "sha256": "5862f1076a69ba527f07b25f5e7a44e8df54a1156f8512a5867c23f4cb051481",
+      "bytes": 115600
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-multi-series-no-render/native-1.json",
+      "sha256": "4757f46c7d4dc36f3eb5bdf32870115a2a9665dac80c9895d7e85a5362c955cf",
+      "bytes": 146751
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-multi-series-no-render/request.json",
+      "sha256": "a623dbb98ae5665cd5585af2c985d320b5a5751bbcc7526cdb2b4432ecc6d502",
+      "bytes": 361
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-multi-series-no-render/terminal.json",
+      "sha256": "099d6a5961b92a9f3a85ff48e20d9978ea796f7f1e2978fd6411b9e5e4bc8bf3",
+      "bytes": 4649
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-multi-series-no-render/transcript.json",
+      "sha256": "5ae222b7c300c463017c6225e001d4ff31b8186aafc8672a1188291d929bec1f",
+      "bytes": 179272
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-non-exact-no-render/dispatch.json",
+      "sha256": "88ad082d17edb63bf406694f7ccf3bbfa94941186baeb37d5419c98fd485b41c",
+      "bytes": 113914
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-non-exact-no-render/native-1.json",
+      "sha256": "e48b13579508053651a855eac25ac4c3888b4f473b4c1ed8686a5abac1c3b5b6",
+      "bytes": 502609
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-non-exact-no-render/request.json",
+      "sha256": "2415f218d7a96f1b3315bdda83489e979b80059d7c437455548d4cd7c2d7ffb6",
+      "bytes": 355
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-non-exact-no-render/terminal.json",
+      "sha256": "9a37325e8a800f186914a815471cfe1ac57157077e33fca80c4e5b0f7e7a5dec",
+      "bytes": 5220
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-non-exact-no-render/transcript.json",
+      "sha256": "5ade627d7eb1bfcb200294e5fccb5bf73e37f33d67016fbbf141ff274ac81798",
+      "bytes": 173833
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-open-positions/dispatch.json",
+      "sha256": "2486f3db711e3ac8ee507b14b7765df75818b2b95879d2d443af0576d01fa93e",
+      "bytes": 120624
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-open-positions/native-1.json",
+      "sha256": "d09302e5f7b9d310dc2db5254eb9b52b2d505c6fb968fb959077a4befb97d5ff",
+      "bytes": 48532
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-open-positions/request.json",
+      "sha256": "fa5a0d9c02b3a354fd15036c7084b4422b98204fb8811af1766c3fef9d8fe2d2",
+      "bytes": 345
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-open-positions/terminal.json",
+      "sha256": "e8ee8ba89d67c1387d2ec82481c90c9ee286a17612c48b4d017f5cedcc66b0f8",
+      "bytes": 4380
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-open-positions/transcript.json",
+      "sha256": "baf9c5b98e63ac96a970fe8792dd12c6b8a49880d46872aa309654bb5d5f1139",
+      "bytes": 45654
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-order-history/dispatch.json",
+      "sha256": "7632d998ab557347a49685d65fcb7bf0adf16c0de0498d4987a71f65212da45a",
+      "bytes": 121462
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-order-history/native-1.json",
+      "sha256": "3967298eeec405d6b5c9e13cd26752810c8025fac9fbed77c2e68d0ec243f2da",
+      "bytes": 35630
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-order-history/request.json",
+      "sha256": "a25a96f101bca90bfd25c9219aec7df9c0a5c8603dfb0dc9f3823bbb30230414",
+      "bytes": 343
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-order-history/terminal.json",
+      "sha256": "17760e87bb4f7def553e2bec0a0aa9fb1f44b4b138d11bd2aa0e6d8b5187c12e",
+      "bytes": 3401
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-order-history/transcript.json",
+      "sha256": "4ac3079023b3acf977a71a9680258f6d35e1f678267f84b83fc19f8982bb68cc",
+      "bytes": 25317
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-orderbook/dispatch.json",
+      "sha256": "417db36a5e98649cbc8d0eeb8ab1be6c77e198a213f733c3e3ce76743ae7bc56",
+      "bytes": 118094
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-orderbook/native-1.json",
+      "sha256": "69649d5110d654596e2317fb6396739a97635cb81c3edf57843ea0803febcc7e",
+      "bytes": 10262
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-orderbook/request.json",
+      "sha256": "a81209f6226369ac7389b4996063a9d2dfe5b9302e02d34565007159dbf2dc3c",
+      "bytes": 335
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-orderbook/terminal.json",
+      "sha256": "78260f8eaa37132179854c77de03b969e52f734afa1d78fa72351c1601507569",
+      "bytes": 3575
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-orderbook/transcript.json",
+      "sha256": "36959b0255c7b8d771667836dcfe5345ac367ee6a3fabcd59f4929de1c57fdbb",
+      "bytes": 3597
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-series-market/dispatch.json",
+      "sha256": "3257d7ab9cea49c9263be9e89feb3be930f7d8a7f899b17b60f19fc9cc25f11a",
+      "bytes": 117262
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-series-market/native-1.json",
+      "sha256": "301afc56df93aa2cb10fb91342e68ab8bbff4bc8610da9f1d8779cf356055a1b",
+      "bytes": 152404
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-series-market/request.json",
+      "sha256": "6661fa98c51450bf3836dca53c0c3915ee2390d59e3d1c1e6695d9f2b24e6d85",
+      "bytes": 343
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-series-market/terminal.json",
+      "sha256": "42bfdb712dd80fd5a3b52b3c63becf800ffc939fd14b82bb4eb603189aae1e87",
+      "bytes": 4634
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-series-market/transcript.json",
+      "sha256": "5e7397807e1bea8a3c45f8a361f62b35ce848f2ecbcfd81e930bdd9109a4a0a4",
+      "bytes": 249284
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-sparse-history-no-render/dispatch.json",
+      "sha256": "a896bdc5fa88bacc273339dd1b492b686281d7632a312eadf3b62df66c4404e6",
+      "bytes": 114764
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-sparse-history-no-render/native-1.json",
+      "sha256": "a5beb49b3b1a38d96dfbd6c51f919e22ee8beec4c029cafad350baa8b74c50f2",
+      "bytes": 2725
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-sparse-history-no-render/request.json",
+      "sha256": "582ca701b12a3cab35f12a2809604e7dea7c8e6efc30b8807a118dd45b68fe0d",
+      "bytes": 365
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-sparse-history-no-render/terminal.json",
+      "sha256": "72997185c7f9e2295402851b4ba3c1eb57353de841115f6dd9bcaf8393f1da03",
+      "bytes": 2663
+    },
+    {
+      "path": "parent/results/run/low/predictions/2-predictions-sparse-history-no-render/transcript.json",
+      "sha256": "b2fc2addd85c84f7809e918b0fb820eac181dd1feffa9a36eec2d187b149a5a7",
+      "bytes": 616
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-broad-football-search-only/dispatch.json",
+      "sha256": "19ecd62a0cdc72362b54383e64fd6d07c8105b23ebe710ca1f0dcd811f6c4d20",
+      "bytes": 142488
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-broad-football-search-only/native-1.json",
+      "sha256": "75207bf8100ee785ca3e56bd34977a29088cc579d1901284d660fda6425a5528",
+      "bytes": 135991
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-broad-football-search-only/request.json",
+      "sha256": "6ce6eac803dee2e525daea3bf6f678600884b887b9e87fb507cf5549f6fda767",
+      "bytes": 369
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-broad-football-search-only/terminal.json",
+      "sha256": "e6c8305bb2d58b8dbb585bab8939e6acb863301f04e0d62a2d154e44d289a676",
+      "bytes": 5100
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-broad-football-search-only/transcript.json",
+      "sha256": "4485e9814bd435637f6a2ddba9fa5b8cd2b8eeadcd867e0769df95dce1e7cd19",
+      "bytes": 145809
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-broad-nba-search-only/dispatch.json",
+      "sha256": "e384e1f417134107f32578db7ca31d2297ab14d736a871af65d34605bd278b2a",
+      "bytes": 141638
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-broad-nba-search-only/native-1.json",
+      "sha256": "8bb75e102f4e90c0c3d362981b5ffaa91c738ad3155fce9d4ff58fba1f753e22",
+      "bytes": 312300
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-broad-nba-search-only/request.json",
+      "sha256": "649944ab32ad55f4eb8626022b19e6801e6505fe2f75f173983ac2fd96ebf9ed",
+      "bytes": 359
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-broad-nba-search-only/terminal.json",
+      "sha256": "4dd28f587ab4ae6669ca70a504a3cc6cd51dc1c06008ccfbb2618dfde1159dfd",
+      "bytes": 5839
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-broad-nba-search-only/transcript.json",
+      "sha256": "87aeddd9398b313352f9f6133752426feaf4b8e0fc0689ad878d9d3ea963cfb2",
+      "bytes": 115320
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-expiring-markets/dispatch.json",
+      "sha256": "59ebfdfb9efecc26b90255af4d5968af1897bde776cbf1d6867848657af54a8c",
+      "bytes": 145828
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-expiring-markets/native-1.json",
+      "sha256": "851c12a0fd1400691f28cd0876e508fbbe2f56e2ed16bc18c8175b10783de7cb",
+      "bytes": 134636
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-expiring-markets/request.json",
+      "sha256": "8e060906b2ace006410280e33cb6d5e00195c430a723dd0502e1e7276c9408d6",
+      "bytes": 349
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-expiring-markets/terminal.json",
+      "sha256": "58a0e97f5ab3f4f8142f0d240e9fef6180424475da3a2b8a0b197550759a35fd",
+      "bytes": 4869
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-expiring-markets/transcript.json",
+      "sha256": "4d32f1f5dec70d0a51e5a427e5d17ba9eae077b2e3cb913898973f31e5ed1083",
+      "bytes": 79707
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-fetch-history-data/dispatch.json",
+      "sha256": "3c3d852579550b85d3a2b88ee910772efb9cbac58a5371ca851954516da737cb",
+      "bytes": 149192
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-fetch-history-data/native-1.json",
+      "sha256": "6468b1d4f70df4908a604d912779128c71a764f7c06286648dde05554f6608c7",
+      "bytes": 229087
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-fetch-history-data/request.json",
+      "sha256": "3514bd2d1ee0a6b169f933ea611dd53a70ff0ddf0647d61b158420a83a83398e",
+      "bytes": 353
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-fetch-history-data/terminal.json",
+      "sha256": "b05029bb55988f281ae37919d6a23d0dba4289c493d9fa70a4f7b17e3a192a16",
+      "bytes": 10573
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-fetch-history-data/transcript.json",
+      "sha256": "765f8232ba84432b4566078677afe8720ab343c70b393b9d11472239eb08eec8",
+      "bytes": 77769
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-fetch-market-data/dispatch.json",
+      "sha256": "161e7e3c77f4dc707b26deb52d75cf5a55319f7bcd2dec2ae8844e058a90e004",
+      "bytes": 148350
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-fetch-market-data/native-1.json",
+      "sha256": "375cf69f5f4a8ce835a68a6e12bae1c7c604bddf1a1dd3cf80a0780ea98d408f",
+      "bytes": 82003
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-fetch-market-data/request.json",
+      "sha256": "c47bbfea0c2b8e8cf98a5f5a299efac7c639c5f109790612a6aadfe258dce87d",
+      "bytes": 351
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-fetch-market-data/terminal.json",
+      "sha256": "1acb580d6dce0ce091de881eac75927da9107ea79954c45f716fb0365cb097a3",
+      "bytes": 4454
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-fetch-market-data/transcript.json",
+      "sha256": "977553ef6e9e132f430398b50e65334455e2b4cf8407e3b7700e97847ca4dd79",
+      "bytes": 69889
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-focused-fact-search-only/dispatch.json",
+      "sha256": "e3cfec46eb2201bda4f17aaf0dbb9981b1991a059060f54031b977c66c66275a",
+      "bytes": 140804
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-focused-fact-search-only/native-1.json",
+      "sha256": "f28817f2835dcbb5a9bc99691dab51cdb8d3be10625c58da6a54cf9809fcb8fb",
+      "bytes": 167669
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-focused-fact-search-only/request.json",
+      "sha256": "d8de7773b4426762751a84e128442f50f194acc9905ecdd3364206c0af3fd15f",
+      "bytes": 365
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-focused-fact-search-only/terminal.json",
+      "sha256": "7b4c6aa6c145694c43a91521ab157a63908e9534f1dc97c7c95222b66d46c6b8",
+      "bytes": 5085
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-focused-fact-search-only/transcript.json",
+      "sha256": "32fe7c85a8e87230e2944a12cccde8f084613e84b3ef50274b651e52b22334cf",
+      "bytes": 192073
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-multi-series-no-render/dispatch.json",
+      "sha256": "169b333812ec9539a18d187e3ed319b3576feab906973a7e0fb4f178ccab8838",
+      "bytes": 145000
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-multi-series-no-render/native-1.json",
+      "sha256": "350096948a4a2704d4735174b9becb6436ce0c925d4c2f591e9eb3d8fba00822",
+      "bytes": 230874
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-multi-series-no-render/request.json",
+      "sha256": "45d9151b938a6e6038873a5f5ce92217184d7cfc61ed36dcd760aa9949afaab1",
+      "bytes": 361
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-multi-series-no-render/terminal.json",
+      "sha256": "721e1a5c2ac531f69ca4396cf4c000dd737b5bea15a579e50e17336de44e954e",
+      "bytes": 6628
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-multi-series-no-render/transcript.json",
+      "sha256": "36d6b85b626623ffd18d0cd8bae49d9062ccada66383ebae9b3280d5825ed68f",
+      "bytes": 241127
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-non-exact-no-render/dispatch.json",
+      "sha256": "28aeb481f73023ec95da42398391d56843b72b52d754915d998303e2e13c8956",
+      "bytes": 143314
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-non-exact-no-render/native-1.json",
+      "sha256": "2373a03f890bd8cc9522a7febe0c244e27b8709e447041660230fb42c3b53835",
+      "bytes": 159431
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-non-exact-no-render/request.json",
+      "sha256": "eaf4a46bcc17b60c8b212f240b006ac375215eb93f0128ed47f0f488500e4b09",
+      "bytes": 355
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-non-exact-no-render/terminal.json",
+      "sha256": "c341bc1b17ab14df40bfbdccbb92629037c5c51635090e65b8b546cdc279ecc3",
+      "bytes": 5552
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-non-exact-no-render/transcript.json",
+      "sha256": "450973bbc7a2ef93096e2377ec4352ec69b621e1d8ff2ba286f76c576a9ed5ed",
+      "bytes": 173465
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-open-positions/dispatch.json",
+      "sha256": "046382843240adca5f88d4ccab4a8d1d3c0cb7e9135c0b5e52c68d7a46460920",
+      "bytes": 150024
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-open-positions/native-1.json",
+      "sha256": "04cd3935c8f9bdeb45a6ac6b23695953cf59c413aac5c1f0885af96280b740bb",
+      "bytes": 46273
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-open-positions/request.json",
+      "sha256": "eb9afdadcf7a72252ee3e5c6c2d53a8daabdfc4c6c7a358a906a25aae9ed6916",
+      "bytes": 345
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-open-positions/terminal.json",
+      "sha256": "074ae0eba1cd43e0411638e4076f267fd6fde75cbc96bc33d876645e4ff04361",
+      "bytes": 3609
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-open-positions/transcript.json",
+      "sha256": "3018c14b3cf4b9d8402b82597c4c13912eaa0383a9cf8ec85f9ba26792cf7cfa",
+      "bytes": 44883
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-order-history/dispatch.json",
+      "sha256": "b19a81e350311ded2b4b7e2555ba2fd0abe4656d11627781ac73ef7252db6dab",
+      "bytes": 150862
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-order-history/native-1.json",
+      "sha256": "305e314ec393c152a1e3d35939e45603bbc6c6dda2774b3a3524bca6f2b5f8f8",
+      "bytes": 35313
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-order-history/request.json",
+      "sha256": "869ea87e0b746dd0699ee1febff049caef9538b0af4bd8c2e22b60fc312a2917",
+      "bytes": 343
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-order-history/terminal.json",
+      "sha256": "f4c508b707fca0cfccec43137411e2d48b1d21da321acd4b5e72e84702a0b163",
+      "bytes": 3624
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-order-history/transcript.json",
+      "sha256": "3e3591a26889a2800e0166c8f47cb16b4377e9ff2b5d7c7310fc0fac8676ebf8",
+      "bytes": 25528
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-orderbook/dispatch.json",
+      "sha256": "a58a60de28d1cc2250c67a30764eba89679a6131e5cd96d2484c8255c7a1852c",
+      "bytes": 147494
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-orderbook/native-1.json",
+      "sha256": "15cef705f03198830e424c06e9a988d5ccdea5aa7ed1ed4021ffa92caebe1920",
+      "bytes": 10168
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-orderbook/request.json",
+      "sha256": "734f561cb03928f20878ee0a419d0b316a99a4dcf9119a4bcbfd3dabddaca077",
+      "bytes": 335
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-orderbook/terminal.json",
+      "sha256": "8b3f7b55363f2d542540a5e0e61074271f80b0677aec2f126ec12be2d0b7de61",
+      "bytes": 3459
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-orderbook/transcript.json",
+      "sha256": "3e42eea04682217ac69a9576111d3ed738c98ba2f402f4343a8fd2de6cc1578d",
+      "bytes": 3485
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-series-market/dispatch.json",
+      "sha256": "7f537bb6973d4b25eef9392d3704c4c0f5165f9b5192bffd76f54731ab5753f5",
+      "bytes": 146662
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-series-market/native-1.json",
+      "sha256": "ed7f33de214c6f7bb304cbb468439f32c49fb51d7d6f732c113916b12793f3c5",
+      "bytes": 152341
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-series-market/request.json",
+      "sha256": "134dd35089d297cb767cc5895201eefa388849015f474614fc89c9091862c043",
+      "bytes": 343
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-series-market/terminal.json",
+      "sha256": "2a01265e9f7a9138a67524f4fc90fc2ddc032bed681d1d71000b9973a924135c",
+      "bytes": 4608
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-series-market/transcript.json",
+      "sha256": "123a5516443aa7776cff9d9a040889b7bd876c50e0bc86744a02c39dd3a5ad7f",
+      "bytes": 249113
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-sparse-history-no-render/dispatch.json",
+      "sha256": "ceee1bfc0a6ee4325fa69d0b59f816f885ff2748b02f0032239063bfbc64cacc",
+      "bytes": 144164
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-sparse-history-no-render/native-1.json",
+      "sha256": "94a06e6f42f7351ec626a5bf032b5e1ffe9583a5d3283818c40ea0570a234188",
+      "bytes": 140380
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-sparse-history-no-render/request.json",
+      "sha256": "c1c787558fa1c9dd04fa8e3b347f30f44d0fbf794e037a95d3ad5808406e6cd9",
+      "bytes": 365
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-sparse-history-no-render/terminal.json",
+      "sha256": "e47dfe610ea93d6915d249bfaa45d4c99381fa69d11c71d64c56cc72e69c36b3",
+      "bytes": 5449
+    },
+    {
+      "path": "parent/results/run/low/predictions/3-predictions-sparse-history-no-render/transcript.json",
+      "sha256": "17526c68651c4582dd5df89345c6951e03bb23007cbc18cf48143a7dcc939ccb",
+      "bytes": 174955
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-fetch-swap-history/dispatch.json",
+      "sha256": "bc3b57a8b1bb6cf78898e45be028cb5b9d3f14e20d5992a92e6d0e7f945ccfca",
+      "bytes": 65997
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-fetch-swap-history/native-1.json",
+      "sha256": "d00d1434659c55d24011740001cf8b9ebabeaefd55c596fcb4eaf364484fa56c",
+      "bytes": 24994
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-fetch-swap-history/request.json",
+      "sha256": "b5644eee60faa9da8a92466630b6efd34db18ff8ef3eb4a95f69305f39c5aed9",
+      "bytes": 318
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-fetch-swap-history/terminal.json",
+      "sha256": "da2bece3f52135f8c2f4fccd7f71e1b32bdb4263c30b1551618c29f178949f95",
+      "bytes": 3603
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-fetch-swap-history/transcript.json",
+      "sha256": "0000366f9a596847d5f3670f13ce81155254ed9ca321c2535f1bc05ed1755781",
+      "bytes": 16651
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-simple-price/dispatch.json",
+      "sha256": "24982e27b1f4cbc6f6ccf709b563b5ba6cab5a6062854f23a44da611d8d6587a",
+      "bytes": 65145
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-simple-price/native-1.json",
+      "sha256": "4c69307dfcaa260a608b8717c7017a4ea1ff4669fea2524b35d856724c45a52f",
+      "bytes": 22776
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-simple-price/request.json",
+      "sha256": "0e856c330836e163c074a969727040f417aca153b6ce876f3768ae9646f4895d",
+      "bytes": 306
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-simple-price/terminal.json",
+      "sha256": "94187281d289ef5b2244568a11c9e676a50cb87bd95d5e906134fb34dc6a5166",
+      "bytes": 3390
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-simple-price/transcript.json",
+      "sha256": "82415b0f5c6a5cc110575acb6dd0a625b0e174b3092899241709c8b2fa0d6fc7",
+      "bytes": 15737
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-token-chart/dispatch.json",
+      "sha256": "fa417e4a3e1b13e701910a802a8a19cea9fe2aeb6497e07f9b3fa35e9f2d59e8",
+      "bytes": 64303
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-token-chart/native-1.json",
+      "sha256": "e9423f3a89b07455c0326228ebcec5ce89307c0bcc316a1ecbf1a5fd7bd68182",
+      "bytes": 67846
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-token-chart/request.json",
+      "sha256": "1dc862c3ec24dc587d0efaf4a3067fd943a9cde38d21cdebf86e19a7426ac1ef",
+      "bytes": 304
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-token-chart/terminal.json",
+      "sha256": "234629ad984a37d61c6adfe91d4ac2f5a10abc3393ac8358b4140ed3cbf30727",
+      "bytes": 3476
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-token-chart/transcript.json",
+      "sha256": "a5ef43b2af2459e93c32d70e0519b01974bad7246610a2cc064376d3315eaef6",
+      "bytes": 57783
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-token-metadata/dispatch.json",
+      "sha256": "85bdede31e9f78488c4bb62f8d64b71b0160aa825c083c1896dc6375034ad09e",
+      "bytes": 63469
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-token-metadata/native-1.json",
+      "sha256": "421a0dc0ef07859fef7b075487af22a597ac8b170f4754d96ed104f5a53f2cfe",
+      "bytes": 36186
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-token-metadata/request.json",
+      "sha256": "b27f99d2b2073412a1e1b43fc635a18e5d509d0d9269eb9aaf15d6e4bc67f57d",
+      "bytes": 310
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-token-metadata/terminal.json",
+      "sha256": "ce33e7bbfc0b77679406bbe226b81af7ef383ba2c5420f66389f56cf71bb2fc2",
+      "bytes": 3857
+    },
+    {
+      "path": "parent/results/run/low/spot/1-spot-token-metadata/transcript.json",
+      "sha256": "ac6ae7a2fa136f743576bea0347b9acb6d116ff42062a5c9df9b4128cf5e3792",
+      "bytes": 19727
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-fetch-swap-history/dispatch.json",
+      "sha256": "ed9ee60bf7eefad211c81b7fb474bc11e141e50337605402496a3c3c69e06922",
+      "bytes": 95397
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-fetch-swap-history/native-1.json",
+      "sha256": "c1c092c4406a393d110fdc1d627fd88cbc0ae48cf913729c54c4aed46c4857de",
+      "bytes": 207600
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-fetch-swap-history/request.json",
+      "sha256": "1cefdf40388af96fafc14c7a78b4ea8d320fae78330e81971eabc9952a096796",
+      "bytes": 318
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-fetch-swap-history/terminal.json",
+      "sha256": "ae7d5eff1eab98cd42a54b0f18d7b55eff423945bc4e27ca37b7e44b7a27b445",
+      "bytes": 6106
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-fetch-swap-history/transcript.json",
+      "sha256": "be65f6a1d69eb9c76398d9d469f57f9a0e90b415237903a7dd1cbb7a66699b50",
+      "bytes": 68072
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-simple-price/dispatch.json",
+      "sha256": "422d3bdec280f31315dd7c9eb5a6e962026bdac6c077d4f48107a6408f0e3e15",
+      "bytes": 94545
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-simple-price/native-1.json",
+      "sha256": "ff4a555e059c1792bd717e5a72ff2ef04ecc8e3d7bc77383e9891af695391b9c",
+      "bytes": 22650
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-simple-price/request.json",
+      "sha256": "fb335a5bf0588041e4353f65092f44b4c03975c7890eb2fb9306d3c36ea9b076",
+      "bytes": 306
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-simple-price/terminal.json",
+      "sha256": "a6920373b070852ccc34591867c2fac7bee3a1c5630e2473b9726e0c95797b88",
+      "bytes": 3345
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-simple-price/transcript.json",
+      "sha256": "c900d6048090a466dcf8d6c6e74593382ef3595395e37f1eb8e20f3170de505b",
+      "bytes": 15657
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-token-chart/dispatch.json",
+      "sha256": "d437bd7544d11513c967b717fe2cd0cf430239709433477a8264c4b43190feb0",
+      "bytes": 93703
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-token-chart/native-1.json",
+      "sha256": "00d08d7fed2ed0dc79ad8236adeac998925048a2b8576780edc18a66d1f3c4eb",
+      "bytes": 68185
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-token-chart/request.json",
+      "sha256": "51a431b12a6ec01d04f1657b54e3d539910e90e1743cd8ea275cb2ca08876173",
+      "bytes": 304
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-token-chart/terminal.json",
+      "sha256": "505852fc83627b261a9df5621b0dff277b5953e0a34ba3670957e0782a183c63",
+      "bytes": 3509
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-token-chart/transcript.json",
+      "sha256": "74acdfd3f6e8e9c4088bc77193c43b776327d6c7597e54498ac35c5ca5064040",
+      "bytes": 57816
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-token-metadata/dispatch.json",
+      "sha256": "20cfd8ab9f1bdc03a2f40dd2077489710c530294b9ffef2a2cb8ae13ce260ac2",
+      "bytes": 92869
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-token-metadata/native-1.json",
+      "sha256": "c4f4d5ca20929299249ed518b0aee96d0a18ebc9c2e011018fa0235cb7b68948",
+      "bytes": 35366
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-token-metadata/request.json",
+      "sha256": "97ef4fa0a90a859d3add2b8ce202470684e2c6b9bacc9798d07b7f4415ed8e47",
+      "bytes": 310
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-token-metadata/terminal.json",
+      "sha256": "3158a2e61eca7c83af55d31f90c1d355b019c0a14b0a121e0ce362f5f6dc4a79",
+      "bytes": 3796
+    },
+    {
+      "path": "parent/results/run/low/spot/2-spot-token-metadata/transcript.json",
+      "sha256": "d41441193b249732dc045a1030de1094b7fcb839fd9592914fd0e52782b9df35",
+      "bytes": 19656
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-fetch-swap-history/dispatch.json",
+      "sha256": "e61591bbd2665e0588f9c7febce1d58f1053bab3235cc74977c868ddd119570a",
+      "bytes": 124797
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-fetch-swap-history/native-1.json",
+      "sha256": "26279f15f4014fec94c8a65c0151f540b34b90d58ac9bbf672aa04d8c6f0b71b",
+      "bytes": 25233
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-fetch-swap-history/request.json",
+      "sha256": "7f12b4924e63990b7d53be1cf42d48847817ff269748a3542899c991b8699d2f",
+      "bytes": 318
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-fetch-swap-history/terminal.json",
+      "sha256": "827b8b406f46b022c40e2a1ea58a73df6fa4abf36a21f4debb1693968abbea40",
+      "bytes": 3572
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-fetch-swap-history/transcript.json",
+      "sha256": "d6086427de05d0ec9f97c94e9e068d12a50e4e19a85ac6e6786bee89c45d7781",
+      "bytes": 16620
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-simple-price/dispatch.json",
+      "sha256": "9daaf596733aecaf1329a2e06af9ad5dfd2123df6ba1717a73d98271995efa33",
+      "bytes": 123945
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-simple-price/native-1.json",
+      "sha256": "2aa0f5ba5346d596d75cead4290490a84ce5cd0be94d7e49f0f9bfa9291fc68c",
+      "bytes": 22885
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-simple-price/request.json",
+      "sha256": "d03b05686499f974799848821a27ca6b9c649f2c36e69aa69c56fa1065e8d1a1",
+      "bytes": 306
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-simple-price/terminal.json",
+      "sha256": "4eb2687acc847a258d57372fe1039ec2d4889ea6a345f7709f5e087593f3b6d3",
+      "bytes": 3351
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-simple-price/transcript.json",
+      "sha256": "aafd4b2b785b89354d10fd3a0f60374b5326ebb0f1f1a8aa7d6a7307edcad815",
+      "bytes": 15663
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-token-chart/dispatch.json",
+      "sha256": "997d73fe6dcebecba22aff3deb28d5cce695150ea651a2b010f2262747b829d1",
+      "bytes": 123103
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-token-chart/native-1.json",
+      "sha256": "7cb5a7babed446b7017675b28a438a197d41793247f1d43c5c3af4eb72e92df7",
+      "bytes": 68302
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-token-chart/request.json",
+      "sha256": "85efe8902f60d94ce70c8e7549311b3d43aab70e4a82d0f7131c76370b07815d",
+      "bytes": 304
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-token-chart/terminal.json",
+      "sha256": "c5bcebb53a13c206c229db67e9ede48ace8cd506f574ba6b0cc907d06433301a",
+      "bytes": 3576
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-token-chart/transcript.json",
+      "sha256": "94f233f5001816823a1131766134141657761bc5b4be2e5b59ca735a80fb6ad1",
+      "bytes": 57855
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-token-metadata/dispatch.json",
+      "sha256": "cbc1ee2a9c2a07e7e1958a91327179741a2da16111887d522da736eae14c5cdc",
+      "bytes": 122269
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-token-metadata/native-1.json",
+      "sha256": "7d126808ebcbff6c900c2e36b65b2c01c17b2b9e3632b48e9a3c8c751e1ae0c1",
+      "bytes": 34615
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-token-metadata/request.json",
+      "sha256": "5606c621f31da62e9177b1c1b5d827d0d9f9c45b248323346dece5551eb4dbcf",
+      "bytes": 310
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-token-metadata/terminal.json",
+      "sha256": "8a39b933fa460910c26c3db0f9ad36a5e14eee1dbae12fc9a7e9377b511f3370",
+      "bytes": 3833
+    },
+    {
+      "path": "parent/results/run/low/spot/3-spot-token-metadata/transcript.json",
+      "sha256": "de6e1a55096c1489ee48a57c641462017beca56b3e149d9b0b5da5d4ac8b6735",
+      "bytes": 19693
+    },
+    {
+      "path": "parent/results/run/manifest.json",
+      "sha256": "80e3a89047c60190da6d5f5dfd1d075fed298f22b49db81f896b8c8c26150a3d",
+      "bytes": 79639
+    },
+    {
+      "path": "recovery/classification-change-v1.json",
+      "sha256": "4a95f021fc8cea89feb9534f001f284dc7e7a187c1e9420dc5832c25050049a1",
+      "bytes": 1293
+    },
+    {
+      "path": "recovery/config.json",
+      "sha256": "5b7dd41cfd45afdfa2a1fe4e6ff91e463bbc7c498d85c904b5017d447035bcbf",
+      "bytes": 33590
+    },
+    {
+      "path": "recovery/low-first-20260922.json",
+      "sha256": "c1528d32600a857c96c7dfa2af41d17f8aee9e43b156cb8f529aa2a59a821e30",
+      "bytes": 4257
+    },
+    {
+      "path": "recovery/parent-bindings.json",
+      "sha256": "0b73e1c64370aa978a311479d9435db5040183ea85fcc073e2259cf78f65f264",
+      "bytes": 72686
+    },
+    {
+      "path": "recovery/plan.json",
+      "sha256": "6ada62ab849a26c47470edf457c6325c325af1d205e23cbff0e771b4876effae",
+      "bytes": 25042
+    },
+    {
+      "path": "recovery/policy.json",
+      "sha256": "46e1b539c587b05f6e630c78359c53cfdcd4c72ca02ead329c45b3c910ca079e",
+      "bytes": 1234
+    },
+    {
+      "path": "recovery/results/run/low/perps/1-perps-create-and-query-table/dispatch.json",
+      "sha256": "b858e5af479d8c64153197b7f9624426a3d8b71b19db68fe5feb62b7356dd638",
+      "bytes": 154563
+    },
+    {
+      "path": "recovery/results/run/low/perps/1-perps-create-and-query-table/native-1.json",
+      "sha256": "af28e0de5c5afae4b9e53d73d041fd51d7f0db5c121ed8e50aab5a4e055df2a3",
+      "bytes": 239261
+    },
+    {
+      "path": "recovery/results/run/low/perps/1-perps-create-and-query-table/request.json",
+      "sha256": "80998fb4d9135a8f7ca42e64d5e4ee33bb895b37c5afde7ef199f2fe3e931bb3",
+      "bytes": 474
+    },
+    {
+      "path": "recovery/results/run/low/perps/1-perps-create-and-query-table/terminal.json",
+      "sha256": "600dfbdd0fb437e06b11fe8f1bae9498b550b74bd4c6ee5844a73b5590af79b7",
+      "bytes": 9960
+    },
+    {
+      "path": "recovery/results/run/low/perps/1-perps-create-and-query-table/transcript.json",
+      "sha256": "c1f636bcb62a2d7465831ca4e9f60a6b458376de388dd890b74c4bc6c887b916",
+      "bytes": 165626
+    },
+    {
+      "path": "recovery/results/run/low/perps/1-perps-create-table/dispatch.json",
+      "sha256": "2e70756dba8c7cd5e2515149ce030a3252ebab7bf874316d4d5b49d7d16b215c",
+      "bytes": 153703
+    },
+    {
+      "path": "recovery/results/run/low/perps/1-perps-create-table/native-1.json",
+      "sha256": "7326915c1fd3f8d3dac0e943c665b04e5801586109f0bc06dd0b4cbd8fb3562e",
+      "bytes": 731735
+    },
+    {
+      "path": "recovery/results/run/low/perps/1-perps-create-table/request.json",
+      "sha256": "6946cb68576332c6e4e5a42d49e2b2d7abae2806931a73a015c3c28578ed071e",
+      "bytes": 454
+    },
+    {
+      "path": "recovery/results/run/low/perps/1-perps-create-table/terminal.json",
+      "sha256": "cdebaa4834a1afbe742d41f53effd6bcc39d91701363e114a87736a895ef3277",
+      "bytes": 10620
+    },
+    {
+      "path": "recovery/results/run/low/perps/1-perps-create-table/transcript.json",
+      "sha256": "eb07a75fc5159ad490a81612dc53765463f7fd8a84cb439a4b1c51889f523ba1",
+      "bytes": 102348
+    },
+    {
+      "path": "recovery/results/run/low/perps/2-perps-create-and-query-table/dispatch.json",
+      "sha256": "ebf3c0444ef4d795034f083468c046c1439956d62c845858d7b8345ae8b25d10",
+      "bytes": 155823
+    },
+    {
+      "path": "recovery/results/run/low/perps/2-perps-create-and-query-table/native-1.json",
+      "sha256": "067ed4c728139e3054ee9cc4709e92debf07b9d77c6cf80ad4c8cafa6f63ff1b",
+      "bytes": 1001161
+    },
+    {
+      "path": "recovery/results/run/low/perps/2-perps-create-and-query-table/request.json",
+      "sha256": "afaa493731f0df56b191efab43f86573d01d52ae2b338a07d0ff3190819a0926",
+      "bytes": 474
+    },
+    {
+      "path": "recovery/results/run/low/perps/2-perps-create-and-query-table/terminal.json",
+      "sha256": "d749004ecf15aa7d5d3757239959b8da943dcfa950631ef367298876553d96b3",
+      "bytes": 17888
+    },
+    {
+      "path": "recovery/results/run/low/perps/2-perps-create-and-query-table/transcript.json",
+      "sha256": "454593a73c5769688c6993535408eb001daff7c28ff526c886f9f35d5123a085",
+      "bytes": 197978
+    },
+    {
+      "path": "recovery/results/run/low/perps/2-perps-create-table/dispatch.json",
+      "sha256": "f7e0dfae06cc1be57a8e8c03417989ab01eec062526420d7168fadbc0a2d0dbf",
+      "bytes": 155593
+    },
+    {
+      "path": "recovery/results/run/low/perps/2-perps-create-table/native-1.json",
+      "sha256": "4d72742906ee44dadb80aa49fb0b82dc019599162efb7ed66d6db16993fb6a1e",
+      "bytes": 494411
+    },
+    {
+      "path": "recovery/results/run/low/perps/2-perps-create-table/request.json",
+      "sha256": "cabebab8be3efdf531e5ba8de0ffd16e7b5d0755eb2217a7616a97f2537030c6",
+      "bytes": 454
+    },
+    {
+      "path": "recovery/results/run/low/perps/2-perps-create-table/terminal.json",
+      "sha256": "80cb3df85d1e3ae58e617b1138cda08d9f0e0b9e2bb25740190bb8c3382bc7d5",
+      "bytes": 12068
+    },
+    {
+      "path": "recovery/results/run/low/perps/2-perps-create-table/transcript.json",
+      "sha256": "3afc59b77b509b51a814b0bcb0766de4041f28c5c8a39fd6b074851d27f8bcef",
+      "bytes": 267161
+    },
+    {
+      "path": "recovery/results/run/low/perps/3-perps-create-and-query-table/dispatch.json",
+      "sha256": "803feb2f6ddafd43333f11dcb94bf4a16d6ef2cad21fdb64f3f0ca8b5588d9f7",
+      "bytes": 156663
+    },
+    {
+      "path": "recovery/results/run/low/perps/3-perps-create-and-query-table/native-1.json",
+      "sha256": "8a384eb6726472575943f8c2f459d40bb0c98410cd2b30c354aaa944f41b9d35",
+      "bytes": 404183
+    },
+    {
+      "path": "recovery/results/run/low/perps/3-perps-create-and-query-table/request.json",
+      "sha256": "5c5c9b8d2cb7ff3d43c39fd736c384d98a5662fe97a3020e2b985aff45c6858a",
+      "bytes": 474
+    },
+    {
+      "path": "recovery/results/run/low/perps/3-perps-create-and-query-table/terminal.json",
+      "sha256": "9707cbdecd9a8cca9f44a1bb2e00e243a167cad00970c805c4858ad5aacbe1e6",
+      "bytes": 10767
+    },
+    {
+      "path": "recovery/results/run/low/perps/3-perps-create-and-query-table/transcript.json",
+      "sha256": "aef48ef54edd425019dbd9933dcb7b699c1c43e0782bc545914115131b939675",
+      "bytes": 200003
+    },
+    {
+      "path": "recovery/results/run/low/perps/3-perps-create-table/dispatch.json",
+      "sha256": "21c22e073b334cf9cfda4aadfb06da6879945565f5d903eed4627c3244d1344e",
+      "bytes": 156433
+    },
+    {
+      "path": "recovery/results/run/low/perps/3-perps-create-table/native-1.json",
+      "sha256": "265d59f5da1b78100a7f1776400ed2009c88eede1eaeb2662ca2a3faee9a9349",
+      "bytes": 1079040
+    },
+    {
+      "path": "recovery/results/run/low/perps/3-perps-create-table/request.json",
+      "sha256": "00a2c46065bccf250061deccdafea93bef1e5dbb3364565633e28272c68862cc",
+      "bytes": 454
+    },
+    {
+      "path": "recovery/results/run/low/perps/3-perps-create-table/terminal.json",
+      "sha256": "ebf45078a1525a44065780dc123d25c811f2f37946ab18bb4a74de6d77ea8428",
+      "bytes": 10442
+    },
+    {
+      "path": "recovery/results/run/low/perps/3-perps-create-table/transcript.json",
+      "sha256": "0d82ca4d09c2122f1656ee080765fce2405d30f1bec221ce65c33fd4a8245684",
+      "bytes": 536210
+    },
+    {
+      "path": "recovery/results/run/low/perps/3-perps-open-orders/dispatch.json",
+      "sha256": "844331aada4863b1e7d8d85623bdf09e3da8438374cbeee209cb5cc7f64360e7",
+      "bytes": 156221
+    },
+    {
+      "path": "recovery/results/run/low/perps/3-perps-open-orders/native-1.json",
+      "sha256": "d318d901a721befac3f7101be1e4ab07a0f8393d14136a6b61409295b24287c3",
+      "bytes": 41950
+    },
+    {
+      "path": "recovery/results/run/low/perps/3-perps-open-orders/request.json",
+      "sha256": "6a6974dfa960a125bba19ebeb206a22b917ace4784e88df0585b39c68c269f5f",
+      "bytes": 452
+    },
+    {
+      "path": "recovery/results/run/low/perps/3-perps-open-orders/terminal.json",
+      "sha256": "1abdd742486c2e1a6bd3365e48d0be65ea27c008dfb35d5fcdf46449aee5c52e",
+      "bytes": 3499
+    },
+    {
+      "path": "recovery/results/run/low/perps/3-perps-open-orders/transcript.json",
+      "sha256": "f56f50740321f904b6b1d00a30a7085ae7533bd14b3272f8f965ff4fd04038d6",
+      "bytes": 31559
+    },
+    {
+      "path": "recovery/results/run/low/predictions/2-predictions-sparse-history-no-render/dispatch.json",
+      "sha256": "70ef39191a02f21c48387e73dd955e4b1fbe5b8454291deb12a73d445ce5e66d",
+      "bytes": 156067
+    },
+    {
+      "path": "recovery/results/run/low/predictions/2-predictions-sparse-history-no-render/native-1.json",
+      "sha256": "3af4dff841add94bf686d283526af5b6f9f8cf03f3af364cdfaadbdd33b33443",
+      "bytes": 118897
+    },
+    {
+      "path": "recovery/results/run/low/predictions/2-predictions-sparse-history-no-render/request.json",
+      "sha256": "34ce169e3c4e28aeeab2de0108f91057cef37c8b598f2ca9197499982fabf903",
+      "bytes": 508
+    },
+    {
+      "path": "recovery/results/run/low/predictions/2-predictions-sparse-history-no-render/terminal.json",
+      "sha256": "0f5e76abd2f1e705aae77df0bfca239871afc511963ebdb8b7be4a960146d359",
+      "bytes": 5106
+    },
+    {
+      "path": "recovery/results/run/low/predictions/2-predictions-sparse-history-no-render/transcript.json",
+      "sha256": "f2a5f15ac71781a96824a5338196198575d2e9a39ef17bfd334280046ba06d57",
+      "bytes": 143257
+    },
+    {
+      "path": "recovery/results/run/low/predictions/3-predictions-multi-series-no-render/dispatch.json",
+      "sha256": "4c2dfd1295139c54325748225053023701189ad70438b9b850ab9c9db3f5dc4e",
+      "bytes": 156903
+    },
+    {
+      "path": "recovery/results/run/low/predictions/3-predictions-multi-series-no-render/native-1.json",
+      "sha256": "5690cc92cc498ad0a4c222f79e38c618e9e258eb6cc31ce6dabf66f5439dbb78",
+      "bytes": 156734
+    },
+    {
+      "path": "recovery/results/run/low/predictions/3-predictions-multi-series-no-render/request.json",
+      "sha256": "eee898cad4759f7eadcb5f8388dd04fae7cb6d4cedf84dd070e6a39dffa1dfe8",
+      "bytes": 504
+    },
+    {
+      "path": "recovery/results/run/low/predictions/3-predictions-multi-series-no-render/terminal.json",
+      "sha256": "37745e679b40559664d9d055c57f6881d29dcdd00c2a1909d77c0d396ca62c86",
+      "bytes": 4917
+    },
+    {
+      "path": "recovery/results/run/low/predictions/3-predictions-multi-series-no-render/transcript.json",
+      "sha256": "59afad487194a574d6239184d3329e55601fffd818557ed2caa4358be6d936d5",
+      "bytes": 190152
+    },
+    {
+      "path": "recovery/results/run/manifest.json",
+      "sha256": "45967c6387b19a5ce325e5cd65c7e59cfb51f1f15976f8345e9c04c58d8768e2",
+      "bytes": 26777
+    },
+    {
+      "path": "recovery/results/run/progress.json",
+      "sha256": "a2cf7318084210af4f36dc689382e63ea50248089e65ce1f53dbe85aea7a74c3",
+      "bytes": 1195
+    },
+    {
+      "path": "recovery/supervision-policy-v2.json",
+      "sha256": "56697d96562e0281860be51785d6de33a525414602a684f8b067b9ac6881ca8d",
+      "bytes": 1491
+    },
+    {
+      "path": "recovery/timeout-change-720s.json",
+      "sha256": "9f144d026ec6efa5010e6a0a5cd8c21213c048599d71b33a6ba25d6350001ae5",
+      "bytes": 1144
+    }
+  ],
+  "exporterSha256": "a9f6ec69dc354eb0453496d46c6993010e459f8335267e660241c018b7e426d7",
+  "projectionHelperSha256": "ddad8ad33af0901e476528ace154771a0d14292e6bb9ca04f58d6dee6fe879db"
+}

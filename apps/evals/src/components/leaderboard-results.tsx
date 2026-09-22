@@ -1,5 +1,6 @@
 import type { CanonicalRun } from "../canonical/canonical";
 import {
+  processingProgress,
   recordedOutcomes,
   type LeaderboardMetric,
   type LeaderboardModelRow,
@@ -23,25 +24,25 @@ export const columns: readonly { metric: LeaderboardMetric; label: string; expla
       metric: "overall",
       label: "Overall",
       explanation:
-        "The average of Spot, Perps, and Predictions pass rates, with each category contributing one third. Requires complete dispatch and grading in all three categories.",
+        "End-to-end success: average the Spot, Perps and Predictions scores equally. Each category divides verified passes by all planned trials. Timeouts, execution errors and terminal ungraded trials earn zero credit. Every planned trial must finish processing before a score is shown.",
     },
     {
       metric: "Spot",
       label: "Spot",
       explanation:
-        "Passed attempts divided by started attempts on spot-market tasks. Shown only with complete dispatch and grading. Timeouts and run errors remain unscored.",
+        "Verified passes divided by all planned spot-market trials. Timeouts, execution errors and terminal ungraded trials earn zero credit. Unfinished runs have no score.",
     },
     {
       metric: "Perps",
       label: "Perps",
       explanation:
-        "Passed attempts divided by started attempts on perpetual-futures tasks. Shown only with complete dispatch and grading. Timeouts and run errors remain unscored.",
+        "Verified passes divided by all planned perpetual-futures trials. Timeouts, execution errors and terminal ungraded trials earn zero credit. Unfinished runs have no score.",
     },
     {
       metric: "Predictions",
       label: "Predictions",
       explanation:
-        "Passed attempts divided by started attempts on prediction-market tasks. Shown only with complete dispatch and grading. Timeouts and run errors remain unscored.",
+        "Verified passes divided by all planned prediction-market trials. Timeouts, execution errors and terminal ungraded trials earn zero credit. Unfinished runs have no score.",
     },
     {
       metric: "time",
@@ -114,11 +115,13 @@ export function RecordedResult({
 }) {
   if (runs.length === 0) return <span>Not evaluated</span>;
   const counts = recordedOutcomes(runs);
+  const progress = processingProgress(runs);
+  const hasRate = score !== null;
   const value =
     score !== null
       ? percent(score)
       : overall
-        ? `${counts.graded}/${counts.planned} graded`
+        ? "Score unavailable"
         : `${counts.passed} passed · ${counts.failed} failed`;
   const interruptions = [
     counts.timedOut > 0 ? `${counts.timedOut} timed out` : "",
@@ -138,16 +141,18 @@ export function RecordedResult({
       ) : (
         <span>{value}</span>
       )}
-      <small>
-        {score !== null || overall
+      {hasRate && counts.graded < counts.planned && (
+        <small>{`${counts.planned - counts.graded} ungraded · zero credit`}</small>
+      )}
+      {overall && (
+        <small>{`${progress.complete ? "Completed · " : ""}${progress.processed}/${progress.planned} processed`}</small>
+      )}
+      <small className={hasRate || overall ? "results-pass-fail" : undefined}>
+        {hasRate || overall
           ? `${counts.passed} passed · ${counts.failed} failed`
           : `${counts.graded}/${counts.planned} graded`}
       </small>
-      {score !== null && (
-        <small>
-          {counts.graded}/{counts.planned} graded
-        </small>
-      )}
+      {(hasRate || overall) && <small>{`${counts.graded}/${counts.planned} graded`}</small>}
       {interruptions && <small>{interruptions}</small>}
       {score === null && overall && (
         <small className="results-eligibility">
@@ -155,7 +160,7 @@ export function RecordedResult({
           {runs.length < 3
             ? "partial coverage"
             : counts.graded < counts.planned
-              ? "grading incomplete"
+              ? `${counts.planned - counts.graded} ungraded`
               : (reason ?? "not eligible")}
         </small>
       )}

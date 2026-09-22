@@ -1,4 +1,4 @@
-import { configurationLeaderboardRows } from "../src/canonical/selectors";
+import { configurationLeaderboardRows, scoringCoverageFor } from "../src/canonical/selectors";
 import { describe, expect, test } from "vitest";
 import { canonicalRuns, originalCanonicalRuns } from "../src/canonical/canonical";
 import {
@@ -9,9 +9,37 @@ import {
 import receipt from "../src/results/2026-09-21/regrade/perps-receipt.json";
 
 describe("versioned Perps price regrade", () => {
-  test("every ranked setting has all nine price-task attempts reviewed", () => {
-    for (const row of configurationLeaderboardRows().filter((r) => r.overall !== null)) {
+  test("every fully graded setting has all nine price-task attempts reviewed", () => {
+    for (const row of configurationLeaderboardRows().filter(
+      (r) =>
+        r.overall !== null &&
+        Object.values(r.runs).every((run) => scoringCoverageFor(run) === "complete"),
+    )) {
       expect(perpsGradingEntries.filter((e) => e.runId === row.runs.Perps?.runId)).toHaveLength(9);
+    }
+  });
+  test("scoring execution errors does not give credit to failed price checks", () => {
+    const reviewedCampaigns = new Set([
+      "reasoning-sweep-2026-09-16",
+      "recovery-2026-09-21",
+      "grok47-20260921",
+      "grok47-low-recovery-20260922",
+    ]);
+    const priceCases = new Set(["perps-single-price", "perps-multiple-prices", "perps-hip3-price"]);
+    for (const row of configurationLeaderboardRows().filter(
+      (r) => r.overall !== null && reviewedCampaigns.has(r.campaignId ?? ""),
+    )) {
+      const run = row.runs.Perps!;
+      expect(run.attempts.availability).toBe("available");
+      if (run.attempts.availability !== "available") continue;
+      for (const attempt of run.attempts.value.filter((a) => priceCases.has(a.caseId))) {
+        if (attempt.execution !== "completed") expect(attempt.verdict).toBe("not_graded");
+        if (attempt.verdict === "pass") {
+          expect(
+            attempt.priceGrounding?.outcome ?? attempt.gradingRevision?.priceGrounding?.outcome,
+          ).toBe("pass");
+        }
+      }
     }
   });
   test("binds every review and preserves other checks, costs, timing, and original transcript identities", () => {

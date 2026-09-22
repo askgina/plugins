@@ -23,7 +23,7 @@ Avoid winner-first benchmark marketing, unexplained aggregate scores, and rankin
 ## Design Principles
 
 - Evidence before conclusions: show coverage, configuration, route, and limitations alongside results.
-- Keep execution, grading, and conformance outcomes distinct. Incompletely graded runs remain counts-only and are excluded from quality rankings.
+- Headline percentages measure end-to-end success: verified passes divided by all planned trials, averaged equally across categories. Terminal execution errors and timeouts earn zero credit without being relabeled as graded failures. Pending, unstarted and unknown trials keep scores unavailable. Keep grades and execution counts distinct, and preserve stricter grading requirements for controlled comparisons and efficiency charts whose timing/cost samples omit errors.
 - Preserve recorded history. Latest means latest recorded, not the most favorable result.
 - Keep uncertainty visible. Unknown pricing, missing evidence, and incomplete publication must not become invented values.
 - Respect the public/private boundary. Public projections remain sanitized; private visible-chat evidence is separate.

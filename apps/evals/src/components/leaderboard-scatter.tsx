@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import type { LeaderboardModelRow } from "../canonical/selectors";
+import { scoringCoverageFor, type LeaderboardModelRow } from "../canonical/selectors";
 import { dollars, percent, seconds } from "./results-ui";
 import {
   scatterDomain,
@@ -11,6 +11,8 @@ import "./leaderboard-scatter.css";
 
 const rowLabel = (row: LeaderboardModelRow) =>
   row.configurationLabel ? `${row.model.name}, ${row.configurationLabel}` : row.model.name;
+const fullyGraded = (row: LeaderboardModelRow) =>
+  Object.values(row.runs).every((run) => scoringCoverageFor(run) === "complete");
 
 /** Plot every eligible configuration supplied, including earlier graded settings. */
 export function LeaderboardScatter({
@@ -42,7 +44,7 @@ export function LeaderboardScatter({
   const format = metric === "time" ? seconds : dollars;
   const points = rows.flatMap((row) => {
     const value = metric === "time" ? row.averageTime : row.estimatedCost;
-    return row.overall !== null && value.availability === "available"
+    return row.overall !== null && fullyGraded(row) && value.availability === "available"
       ? [{ row, value: value.value, score: row.overall }]
       : [];
   });
@@ -408,7 +410,7 @@ export function LeaderboardScatter({
             {omitted
               .map(
                 (row) =>
-                  `${rowLabel(row)} (${row.overall === null ? "Overall score unavailable" : `${label.toLowerCase()} unavailable`})`,
+                  `${rowLabel(row)} (${row.overall === null ? "Overall score unavailable" : !fullyGraded(row) ? "Incomplete grading; timing and cost exclude execution errors" : `${label.toLowerCase()} unavailable`})`,
               )
               .join("; ")}
             .

@@ -32,21 +32,19 @@ describe("recovery publication", () => {
     ).toHaveLength(105);
   });
 
-  test("regraded Astra retains real failures and incomplete settings are not ranked", () => {
+  test("recovery scores penalize errors consistently while preserving the recorded grades", () => {
     const astra = runs.filter((run) => run.modelId === "astra");
     expect(astra.reduce((n, run) => n + run.counts.passed, 0)).toBe(166);
     expect(astra.reduce((n, run) => n + run.counts.failed, 0)).toBe(43);
     expect(astra.reduce((n, run) => n + run.counts.runtimeFailure, 0)).toBe(1);
     for (const row of rows) {
-      if (
-        (row.model.id === "grok" && !row.configurationLabel?.startsWith("low ")) ||
-        (row.model.id === "astra" && row.configurationLabel?.startsWith("xhigh "))
-      ) {
-        expect(row.overall).toBeNull();
-      } else {
-        expect(row.overall).not.toBeNull();
-        expect(row.overall).toBeLessThan(1);
-      }
+      expect(row.overall).toBeCloseTo(
+        Object.values(row.runs).reduce(
+          (sum, run) => sum + run.counts.passed / run.counts.planned,
+          0,
+        ) / 3,
+      );
+      expect(row.overall).toBeLessThan(1);
       expect(row.estimatedCost.availability).toBe("available");
       expect(row.averageTime.availability).toBe("available");
     }
@@ -96,6 +94,7 @@ describe("recovery publication", () => {
               attempt.conversation!,
               ...(attempt.recovery?.history.map((entry) => entry.conversation) ?? []),
             ]) {
+              if (!ref) throw new Error("Expected the older recovery's published conversation");
               const path = publicTranscriptPath(ref)!;
               if (seen.has(path)) continue;
               seen.add(path);

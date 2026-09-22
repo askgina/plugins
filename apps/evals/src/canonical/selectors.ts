@@ -59,6 +59,7 @@ export function getRun(runId: string): CanonicalRun | undefined {
 
 /** Public labels are separate from the immutable evidence identifiers. */
 export function campaignDisplayLabel(campaignId: string | undefined): string {
+  if (campaignId === "grok47-low-recovery-20260922") return "Grok 4.7 Low recovery · 22 Sep 2026";
   if (campaignId === "grok47-20260921") return "Grok 4.7 · 22 Sep 2026";
   return campaignId === "recovery-2026-09-21" ? "21 Sep 2026" : (campaignId ?? "Unknown campaign");
 }
@@ -135,9 +136,10 @@ export function resolveBaselineRun(run: CanonicalRun): CanonicalRun | undefined 
 }
 
 // ---------------------------------------------------------------------------
-// Headline — passes/started is a quality sort key only when dispatch and grading
+// Conformance headline — passes/started is a quality sort key only when dispatch and grading
 // are complete. Dispatch reasons take precedence over incomplete grading;
 // otherwise show counts only, without treating unscored starts as failures.
+// The leaderboard's separate end-to-end metric includes terminal execution errors.
 // ---------------------------------------------------------------------------
 
 export type Headline =
@@ -522,7 +524,13 @@ const FAMILY_BY_SUITE_ID: Record<string, PrototypeFamily> = {
 /** Human-readable cohort identity: family · target · account · reps · evidence. */
 export function cohortLabel(cohort: CanonicalCohort): string {
   const family = FAMILY_BY_SUITE_ID[cohort.suiteId] ?? cohort.suiteId;
-  return `${family} · ${clientDisplayName(cohort.target)} · ${cohort.accountClass} · ${cohort.repetitions} reps · ${cohort.evidenceCategory}${cohort.recoveryProtocol ? " · 120–600s budgets" : ""}`;
+  const budgets =
+    cohort.recoveryProtocol === "grok47-failed-step-recovery-120-720-v1"
+      ? " · 120–720s budgets"
+      : cohort.recoveryProtocol
+        ? " · 120–600s budgets"
+        : "";
+  return `${family} · ${clientDisplayName(cohort.target)} · ${cohort.accountClass} · ${cohort.repetitions} reps · ${cohort.evidenceCategory}${budgets}`;
 }
 
 /** Every cohort declared for a family's suite (empty for unmeasured families). */
@@ -774,8 +782,7 @@ export function unifiedLeaderboardRows(
       const scores = Object.fromEntries(
         SCORED_FAMILIES.map((family) => {
           const run = runs[family];
-          const key = run ? headlineSortKey(run) : -1;
-          return [family, key < 0 ? null : key];
+          return [family, run ? endToEndSuccessRate(run) : null];
         }),
       ) as Record<ScoredFamily, number | null>;
       const fullRuns = SCORED_FAMILIES.flatMap((family) => (runs[family] ? [runs[family]!] : []));
@@ -785,19 +792,15 @@ export function unifiedLeaderboardRows(
         : !compatibleSuiteRuns(fullRuns)
           ? "These runs have different benchmark settings."
           : SCORED_FAMILIES.some((family) => scores[family] === null)
-            ? (fullRuns
-                .map(headlineFor)
-                .flatMap((headline) =>
-                  headline.kind === "counts_only" ? [eligibilityText(headline.reason)] : [],
-                )[0] ?? "Complete dispatch and grading are needed in every category.")
+            ? "Every planned trial must finish processing in each category."
             : null;
       const overall =
         overallReason === null
           ? SCORED_FAMILIES.reduce((sum, family) => sum + scores[family]!, 0) /
             SCORED_FAMILIES.length
           : null;
-      // Measurement availability is independent of whether execution produced
-      // enough graded attempts for a quality ranking.
+      // Measurement availability is independent of end-to-end scoring;
+      // timing and cost disclose excluded executions separately.
       const measurementReason = missing
         ? "Results are needed in all three categories."
         : !compatibleSuiteRuns(fullRuns)
@@ -1048,10 +1051,49 @@ export function defaultLeaderboardRows(
     );
     const newest = newestFirst[0]!;
     return (
-      newestFirst.find((row) => row.campaignId === newest.campaignId && row.overall !== null) ??
-      newest
+      newestFirst.find(
+        (row) =>
+          row.campaignId === newest.campaignId &&
+          row.overall !== null &&
+          Object.values(row.runs).every((run) => scoringCoverageFor(run) === "complete"),
+      ) ?? newest
     );
   });
+}
+
+/** Terminal execution includes errors and timeouts; grading is a separate state. */
+export function processingProgress(runs: readonly CanonicalRun[]) {
+  const processed = (counts: CanonicalRunCounts) =>
+    counts.completed + counts.timedOut + counts.runtimeFailure;
+  return {
+    planned: runs.reduce((total, run) => total + run.counts.planned, 0),
+    processed: runs.reduce((total, run) => total + processed(run.counts), 0),
+    complete:
+      runs.length > 0 &&
+      runs.every(
+        ({ counts }) =>
+          counts.planned > 0 &&
+          counts.started === counts.planned &&
+          processed(counts) === counts.planned &&
+          counts.pending === 0 &&
+          counts.unstarted === 0 &&
+          counts.unknown === 0,
+      ),
+  };
+}
+
+export const LEADERBOARD_SCORE_POLICY = "end-to-end-success-v1";
+
+/** Every planned slot remains in the denominator. Terminal non-passes earn zero credit. */
+export function endToEndSuccessRate(run: CanonicalRun): number | null {
+  if (
+    run.dispatchCoverage !== "complete" ||
+    !processingProgress([run]).complete ||
+    run.counts.graded > run.counts.completed ||
+    run.counts.passed + run.counts.failed !== run.counts.graded
+  )
+    return null;
+  return run.counts.passed / run.counts.planned;
 }
 
 export function recordedOutcomes(runs: readonly CanonicalRun[]) {

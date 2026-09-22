@@ -399,7 +399,7 @@ function RecoveryConversation({
   const [execution, setExecution] = useState("selected");
   const history = attempt.recovery?.history ?? [];
   const selected = history.find((entry) => entry.terminalSha256 === execution);
-  const reference = selected?.conversation ?? attempt.conversation;
+  const reference = selected ? selected.conversation : attempt.conversation;
   return (
     <>
       {attempt.recovery && (
@@ -428,7 +428,9 @@ function RecoveryConversation({
           </select>
           <p className="conversation-label">
             {attempt.recovery.budgetCohort.replaceAll("-", " ")}. First completed grade retained;
-            failed executions remain available here. Hidden reasoning is excluded.
+            {history.some((entry) => entry.conversation) || attempt.conversation
+              ? " failed executions remain available here. Hidden reasoning is excluded."
+              : " execution budgets and outcomes are recorded. Conversations are withheld."}
           </p>
         </div>
       )}

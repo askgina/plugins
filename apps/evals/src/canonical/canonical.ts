@@ -31,6 +31,7 @@ import type { ConversationReference } from "../lib/conversations";
 import { recordedSweepCost } from "../lib/recorded-costs";
 import recoveryResults from "../results/2026-09-21/recovery/results.json";
 import grok47Results from "../results/2026-09-22/grok-4.7/results.json";
+import grok47LowRecovery from "../results/2026-09-22/grok-4.7/low-recovery.json";
 import {
   gradingRevisionEntries,
   perpsGradingEntries,
@@ -303,7 +304,7 @@ export interface RecoveryExecution {
   readonly completedAt: string;
   readonly terminalSha256: string;
   readonly selected: boolean;
-  readonly conversation: ConversationReference;
+  readonly conversation?: ConversationReference;
 }
 
 export interface CanonicalRunCounts {
@@ -738,6 +739,14 @@ function recoveryCohort(source: CanonicalCohort): CanonicalCohort {
   };
 }
 
+function grok47RecoveryCohort(source: CanonicalCohort): CanonicalCohort {
+  return {
+    ...source,
+    cohortId: source.cohortId + ":" + grok47LowRecovery.campaignId,
+    recoveryProtocol: grok47LowRecovery.methodology.recoveryProtocol,
+  };
+}
+
 const meridianSpotCohort = cohort({
   suiteId: SUITE_IDS.Spot,
   catalogSha: "b3f5c9e1a2d48f6b7c0e9a1b3c5d7e9f0a2b4c6d8e0f2a4b6c8d0e2f4a6b8c0d2",
@@ -764,6 +773,7 @@ export const canonicalCohorts: readonly CanonicalCohort[] = [
     musePerpsCohort,
     musePredictionsCohort,
   ].map(recoveryCohort),
+  ...[ompSpotCohort, ompPerpsCohort, ompPredictionsCohort].map(grok47RecoveryCohort),
 ];
 
 // ---------------------------------------------------------------------------
@@ -895,6 +905,22 @@ const solSpotLabelsOnlyConfiguration: CanonicalConfiguration = {
 // ---------------------------------------------------------------------------
 
 export const canonicalCampaigns: readonly CanonicalCampaign[] = [
+  {
+    campaignId: grok47LowRecovery.campaignId,
+    date: "2026-09-22",
+    harness: "Grok 4.7 Low · completed recovery",
+    repetitions: 3,
+    timeoutMs: null,
+    sourceCommit: grok47LowRecovery.sourceCommit,
+    limitations: [
+      "Low recovery is finished: all nine selected gaps were retried with a 720-second limit; five received grades and four had execution errors.",
+      "The 105-slot Low result retains 96 original slots and selects nine recovery attempts: 92 graded, 70 passed, 22 failed, 13 ungraded.",
+      "Original grades remain final. Mixed 120-second and 720-second budgets are separate from the fresh fixed-budget campaign.",
+      "Only Low is included in this recovery publication. Other thinking levels continue on the VM.",
+      "Pricing is unknown. Private conversations remain withheld; numeric execution history and evidence hashes are published.",
+    ],
+    origin: "measured",
+  },
   {
     campaignId: grok47Results.campaignId,
     date: "2026-09-22",
@@ -2572,6 +2598,69 @@ function freshGrokFamilyRun(row: SweepRow, source: FreshGrokRun): CanonicalRun {
   };
 }
 
+interface GrokRecoveryRun extends FreshGrokRun {
+  readonly timeoutBudgetsMs: readonly number[];
+  readonly budgetCounts: Readonly<Record<string, number | undefined>>;
+  readonly executions: readonly {
+    readonly caseId: string;
+    readonly repetition: number;
+    readonly timeoutMs: number;
+    readonly budgetCohort: string;
+    readonly history: readonly RecoveryExecution[];
+  }[];
+}
+
+function grok47RecoveryFamilyRun(row: SweepRow, source: GrokRecoveryRun): CanonicalRun {
+  const base = freshGrokFamilyRun(row, source);
+  if (base.attempts.availability !== "available") throw new Error("Missing Grok recovery attempts");
+  const attempts = base.attempts.value.map((attempt): CanonicalAttempt => {
+    const execution = source.executions.find(
+      (entry) => entry.caseId === attempt.caseId && entry.repetition === attempt.repetition,
+    );
+    if (execution === undefined) throw new Error("Missing Grok recovery execution history");
+    return {
+      ...attempt,
+      recovery: {
+        timeoutMs: execution.timeoutMs,
+        budgetCohort: execution.budgetCohort,
+        history: execution.history,
+      },
+    };
+  });
+  return {
+    ...base,
+    campaignId: grok47LowRecovery.campaignId,
+    recovery: {
+      capturedAt: grok47LowRecovery.capturedAt,
+      timeoutBudgetsMs: source.timeoutBudgetsMs,
+      baseline: source.budgetCounts["retained-baseline"] ?? 0,
+      sameBudget: 0,
+      extendedBudget: source.budgetCounts["extended-budget-completion"] ?? 0,
+    },
+    cohort: grok47RecoveryCohort(base.cohort),
+    attempts: available(attempts),
+    coveragePlan: {
+      planSource: "run_manifest",
+      planSha256: grok47LowRecovery.sourcePlanSha256,
+      statusSha256: grok47LowRecovery.sourceStatusSha256,
+    },
+    provenance: {
+      ...base.provenance,
+      sourceLabel: "Completed Grok 4.7 Low recovery · original grades retained",
+    },
+    notes: [
+      "Low recovery finished " +
+        grok47LowRecovery.capturedAt +
+        ". All nine selected recovery attempts finished; five are graded and four have execution errors.",
+      "The complete 105-slot Low view has 92 graded trials (70 passed, 22 failed) and 13 ungraded execution failures. It remains unranked.",
+      "96 original slots retain their 120-second measurements. Nine recovery slots record one additional 720-second attempt each. This is a mixed-budget recovery cohort.",
+      "Existing grades are never replaced. Original and recovery execution outcomes, budgets and terminal hashes are retained in the numeric export.",
+      "Perps price checks are retained from the original campaign. Other tasks use the unchanged native tool-use grader.",
+      "Timing and tokens describe selected graded attempts. Pricing is unknown. Conversations and tool payloads remain withheld.",
+    ],
+  };
+}
+
 interface RecoveryRun extends SweepRun {
   readonly timeoutBudgetsMs: readonly number[];
   readonly budgetCounts: Readonly<Record<string, number | undefined>>;
@@ -3024,6 +3113,9 @@ export const originalCanonicalRuns: readonly CanonicalRun[] = [
   ...reasoningSweepRows.flatMap((row) => row.runs.map((run) => sweepFamilyRun(row, run))),
   ...recoveryResults.models.flatMap((row) => row.runs.map((run) => recoveryFamilyRun(row, run))),
   ...grok47Results.models.flatMap((row) => row.runs.map((run) => freshGrokFamilyRun(row, run))),
+  ...grok47LowRecovery.models.flatMap((row) =>
+    row.runs.map((run) => grok47RecoveryFamilyRun(row, run)),
+  ),
   solSpot2,
   solSpotIncomplete,
   solSpotUnknown,
@@ -3294,13 +3386,15 @@ export const canonicalPublications: readonly CanonicalPublication[] = [
       ? correctedPublication(run)
       : resultPublication(
           run,
-          run.campaignId === grok47Results.campaignId
-            ? grok47Results.generatedAt
-            : run.campaignId === "recovery-2026-09-21"
-              ? recoveryResults.capturedAt
-              : run.campaignId === SWEEP_CAMPAIGN_ID
-                ? reasoningSweep.generatedAt
-                : "2026-09-14T18:00:00.000Z",
+          run.campaignId === grok47LowRecovery.campaignId
+            ? grok47LowRecovery.capturedAt
+            : run.campaignId === grok47Results.campaignId
+              ? grok47Results.generatedAt
+              : run.campaignId === "recovery-2026-09-21"
+                ? recoveryResults.capturedAt
+                : run.campaignId === SWEEP_CAMPAIGN_ID
+                  ? reasoningSweep.generatedAt
+                  : "2026-09-14T18:00:00.000Z",
         ),
   ),
   ...withdrawnRuns.map(withdrawnPublication),

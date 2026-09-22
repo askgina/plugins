@@ -29,6 +29,7 @@ import {
   getPublication,
   getRun,
   getWithdrawnRun,
+  endToEndSuccessRate,
   headlineFor,
   resolveBaselineRun,
   scoringCoverageFor,
@@ -195,8 +196,8 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
   const model = getModel(run.modelId);
   const campaign = canonicalCampaigns.find((entry) => entry.campaignId === run.campaignId);
   const baseline = resolveBaselineRun(run);
-  const headline = headlineFor(run);
   const cost = derivedCostPerTask(run);
+  const headline = headlineFor(run);
   return (
     <Panel title={title}>
       <div className="eval-compare-run-card">
@@ -216,15 +217,8 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
           {recordedBudgetLabel([run])}
         </p>
         <div className="eval-compare-result">
-          <span className="eval-compare-field-label">{run.family} pass rate</span>
-          <RecordedResult
-            runs={[run]}
-            score={
-              headline.kind === "rate" && headline.started > 0
-                ? headline.passed / headline.started
-                : null
-            }
-          />
+          <span className="eval-compare-field-label">{run.family} end-to-end success</span>
+          <RecordedResult runs={[run]} score={endToEndSuccessRate(run)} />
           {headline.kind === "counts_only" && (
             <p className="eval-muted">{comparisonReason(headline.reason, run, run)}</p>
           )}

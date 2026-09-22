@@ -1,7 +1,11 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
-import { configurationLeaderboardRows, type LeaderboardModelRow } from "../src/canonical/selectors";
+import {
+  configurationLeaderboardRows,
+  scoringCoverageFor,
+  type LeaderboardModelRow,
+} from "../src/canonical/selectors";
 import { LeaderboardScatter } from "../src/components/leaderboard-scatter";
 import {
   scatterDomain,
@@ -18,9 +22,12 @@ const asPoint = (row: LeaderboardModelRow, index: number): ScatterPoint => ({
   y: 0,
 });
 
+const fullyGraded = (row: LeaderboardModelRow) =>
+  Object.values(row.runs).every((run) => scoringCoverageFor(run) === "complete");
+
 describe("research chart comparisons", () => {
   const eligible = configurationLeaderboardRows().filter(
-    (row) => row.overall !== null && row.campaignId !== "recovery-2026-09-21",
+    (row) => row.overall !== null && fullyGraded(row) && row.campaignId !== "recovery-2026-09-21",
   );
   const astra = eligible.filter((row) => row.model.name === "GPT-6 Astra");
 
@@ -99,7 +106,9 @@ describe("scatter plot configuration rows", () => {
     }
   });
   test("distinguishes settings and reports omitted settings of a plotted model", () => {
-    const base = configurationLeaderboardRows().find((row) => row.overall !== null)!;
+    const base = configurationLeaderboardRows().find(
+      (row) => row.overall !== null && fullyGraded(row),
+    )!;
     const rows: LeaderboardModelRow[] = [
       {
         ...base,
@@ -144,6 +153,6 @@ describe("scatter plot configuration rows", () => {
     expect(html).toContain("20 plotted settings: names and values");
     expect(html).toContain("Grok 4.6, low reasoning");
     expect(html).toContain("79.3% overall · 30.3s");
-    expect(html).toContain("35 settings not plotted");
+    expect(html).toContain("36 settings not plotted");
   });
 });

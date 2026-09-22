@@ -12,6 +12,7 @@ import {
 } from "../canonical/canonical";
 import {
   SCORED_FAMILIES,
+  LEADERBOARD_SCORE_POLICY,
   caseDefinitionsForFamily,
   getModel,
   measuredRepresentativeRuns,
@@ -151,7 +152,7 @@ export function MethodologyPage() {
               <h2>Calculate the scores</h2>
               <div className="method-formulas">
                 <p>
-                  <strong>Category score</strong> = passed attempts ÷ started attempts × 100
+                  <strong>Category score</strong> = verified passes ÷ all planned trials × 100
                 </p>
                 <p>
                   <strong>Overall</strong> = (Spot score + Perps score + Predictions score) ÷ 3
@@ -163,17 +164,19 @@ export function MethodologyPage() {
                 full precision; the table displays one decimal place.
               </p>
               <p>
-                Timeouts and run errors count as started attempts but remain unscored. We show a
-                category percentage only when dispatch and grading are complete. Otherwise, the
-                results are counts-only and excluded from quality rankings. If any category is
-                missing or incompletely graded, Overall is unavailable. An unavailable value is
-                never treated as zero. The leaderboard shows every recorded model, reasoning
-                setting, and campaign as a separate row; identical attempts reused across campaigns
-                appear once. Complete and incomplete results remain visible together; campaign and
-                grading filters narrow the view explicitly. Each row retains its category outcomes,
-                timing and cost sample counts, timeout budget, repetitions, source hashes, and links
-                to individual attempts. Sorting does not make different clients, reasoning settings,
-                or time budgets equivalent.
+                Scoring policy <code>{LEADERBOARD_SCORE_POLICY}</code> measures end-to-end success.
+                Every planned trial stays in the denominator. Timeouts, execution errors and other
+                terminal trials without a passing verdict earn zero credit. Their execution status
+                remains separate from graded failures; no missing verdict is fabricated. A category
+                score requires every planned trial to finish processing. Pending, unstarted or
+                unknown outcomes keep its score unavailable. Overall requires all three compatible
+                categories. Fully graded scores are unchanged. The leaderboard shows every recorded
+                model, reasoning setting, and campaign as a separate row; identical attempts reused
+                across campaigns appear once. Complete and incomplete results remain visible
+                together; campaign and grading filters narrow the view explicitly. Each row retains
+                its category outcomes, timing and cost sample counts, timeout budget, repetitions,
+                source hashes, and links to individual attempts. Sorting does not make different
+                clients, reasoning settings, or time budgets equivalent.
               </p>
               <p>
                 Sorting describes these observed results. It does not establish statistical

@@ -126,8 +126,10 @@ export function LeaderboardPage({
             evaluated.
           </p>
           <p className="results-context">
-            Recovery rows include retries and show their recorded time budgets. 100% graded means
-            every trial has a verdict, not that every trial passed.
+            Recovery rows include retries and show their recorded time budgets. Completed means
+            every trial finished processing, including execution errors. Graded counts trials with a
+            pass or fail verdict. Scores measure end-to-end success across all planned trials.
+            Timeouts and execution errors earn zero credit and stay in the denominator.
           </p>
         </ResultsHeader>
         <div className="results-toolbar">
