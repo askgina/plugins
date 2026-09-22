@@ -1082,7 +1082,7 @@ export function processingProgress(runs: readonly CanonicalRun[]) {
   };
 }
 
-/** Display-only, conditional on retained grades. Never used to rank or compare runs. */
+/** Conditional on retained grades; supports display sorting, never comparison eligibility. */
 export function gradedOnlyScore(runs: readonly CanonicalRun[], overall = false): number | null {
   if (!processingProgress(runs).complete) return null;
   if (
@@ -1148,12 +1148,13 @@ export function sortLeaderboardRows(
   direction: "asc" | "desc" = "desc",
 ): LeaderboardModelRow[] {
   const value = (row: LeaderboardModelRow): number | null => {
-    if (metric === "overall") return row.overall;
+    if (metric === "overall") return row.overall ?? gradedOnlyScore(Object.values(row.runs), true);
     if (metric === "time" || metric === "cost") {
       const summary = metric === "time" ? row.averageTime : row.estimatedCost;
       return summary.availability === "available" ? summary.value : null;
     }
-    return row.scores[metric];
+    const run = row.runs[metric];
+    return row.scores[metric] ?? gradedOnlyScore(run ? [run] : []);
   };
   return [...rows].sort((a, b) => {
     const av = value(a);

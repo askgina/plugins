@@ -17,7 +17,21 @@ test("provisional Overall averages graded category rates and leaves the ranking 
   expect(low.overall).toBeNull();
   const astra = modelProfileRows("astra").find((row) => row.overall !== null)!;
   expect(sortLeaderboardRows([low, astra])[0]).toBe(astra);
-  expect(sortLeaderboardRows([low, astra], "overall", "asc")[0]).toBe(astra);
+  expect(sortLeaderboardRows([low, astra], "overall", "asc")[0]).toBe(low);
+});
+
+test("percentage ordering interleaves provisional and fully graded results in both directions", () => {
+  const high = modelProfileRows("grok-4-7").find(
+    (row) => row.runs.Spot?.configuration.reasoning === "high",
+  )!;
+  const astra = modelProfileRows("astra").find(
+    (row) => row.runs.Spot?.configuration.reasoning === "max",
+  )!;
+  expect(sortLeaderboardRows([low, astra, high])).toEqual([high, astra, low]);
+  expect(sortLeaderboardRows([low, astra, high], "overall", "asc")).toEqual([low, astra, high]);
+  expect(sortLeaderboardRows([low, astra], "Perps")).toEqual([low, astra]);
+  expect(sortLeaderboardRows([low, astra], "Perps", "asc")).toEqual([astra, low]);
+  expect(high.overall).toBeNull();
 });
 
 test("fully graded Astra keeps its final percentage without a provisional label", () => {

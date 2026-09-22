@@ -129,7 +129,8 @@ export function LeaderboardPage({
             Recovery rows include retries and show their recorded time budgets. Completed means
             every trial finished processing, including execution errors. Graded counts trials with a
             pass or fail verdict. Graded-only percentages exclude ungraded trials and remain
-            provisional and unranked.
+            provisional. Sorting uses the displayed percentage; choose Fully graded to compare
+            complete results.
           </p>
         </ResultsHeader>
         <div className="results-toolbar">

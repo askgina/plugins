@@ -23,7 +23,7 @@ Avoid winner-first benchmark marketing, unexplained aggregate scores, and rankin
 ## Design Principles
 
 - Evidence before conclusions: show coverage, configuration, route, and limitations alongside results.
-- Keep execution, grading, and conformance outcomes distinct. Finished runs may show explicitly labeled provisional graded-only percentages alongside coverage; these exclude ungraded trials and stay out of quality rankings and comparison charts.
+- Keep execution, grading, and conformance outcomes distinct. Finished runs may show explicitly labeled provisional graded-only percentages alongside coverage. Sort tables by displayed values, including provisional percentages; keep ungraded exclusions visible and retain full-grading requirements for comparison eligibility and efficiency charts.
 - Preserve recorded history. Latest means latest recorded, not the most favorable result.
 - Keep uncertainty visible. Unknown pricing, missing evidence, and incomplete publication must not become invented values.
 - Respect the public/private boundary. Public projections remain sanitized; private visible-chat evidence is separate.

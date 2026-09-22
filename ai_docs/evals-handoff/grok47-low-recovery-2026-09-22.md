@@ -24,8 +24,9 @@ because 13 slots have no grade; cost remains unknown.
 The result cell shows a provisional graded-only percentage, with execution
 completion on its own line. Low's 79.3% is the equally weighted average of
 11/12 Spot, 36/47 Perps and 23/33 Predictions grades. The 13 ungraded slots are
-excluded from this conditional display rate, which is never used for sorting,
-quality rankings, comparison eligibility or efficiency charts. Fully graded
+excluded from this conditional display rate. Tables sort by the displayed
+percentage, including provisional results, while comparison eligibility and
+efficiency charts still require complete grading. Fully graded
 settings keep their existing scores. A provisional Overall requires grades in
 all three compatible categories and finished processing in every selected slot.
 

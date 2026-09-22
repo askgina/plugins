@@ -25,7 +25,7 @@ export const columns: readonly { metric: LeaderboardMetric; label: string; expla
       metric: "overall",
       label: "Overall",
       explanation:
-        "The average of Spot, Perps, and Predictions pass rates, with each category contributing one third. Ranked scores require complete dispatch and grading. Graded-only percentages use available verdicts in each category, exclude ungraded trials, and remain provisional and unranked.",
+        "The average of Spot, Perps, and Predictions pass rates, with each category contributing one third. Sorting uses the displayed percentage. Graded-only percentages use available verdicts in each category, exclude ungraded trials, and remain provisional. Fully graded scores are required for comparisons and efficiency charts.",
     },
     {
       metric: "Spot",
