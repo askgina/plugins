@@ -60,6 +60,8 @@ import reasoningSweepUrl from "../results/2026-09-16/reasoning-sweep/ask-gina-re
 import reasoningSweepClaudeUrl from "../results/2026-09-16/reasoning-sweep/ask-gina-reasoning-sweep-claude.json?url";
 import grok47ResultsUrl from "../results/2026-09-22/grok-4.7/results.json?url";
 import grok47SnapshotUrl from "../results/2026-09-22/grok-4.7/snapshot.json?url";
+import grok47LowRecoveryUrl from "../results/2026-09-22/grok-4.7/low-recovery.json?url";
+import grok47LowRecoverySnapshotUrl from "../results/2026-09-22/grok-4.7/low-recovery-snapshot.json?url";
 
 interface BundledArtifact {
   readonly url: string;
@@ -122,6 +124,16 @@ const MODEL_ARTIFACTS: Readonly<Record<string, readonly BundledArtifact[]>> = {
   astra: [REASONING_SWEEP_ARTIFACT],
   grok: [REASONING_SWEEP_ARTIFACT],
   "grok-4-7": [
+    {
+      url: grok47LowRecoveryUrl,
+      filename: "grok-4.7-low-recovery-2026-09-22.json",
+      description: "Grok 4.7 Low completed recovery · 92/105 graded",
+    },
+    {
+      url: grok47LowRecoverySnapshotUrl,
+      filename: "grok-4.7-low-recovery-snapshot-2026-09-22.json",
+      description: "Low recovery evidence hashes and coverage",
+    },
     {
       url: grok47ResultsUrl,
       filename: "grok-4.7-results-2026-09-22.json",

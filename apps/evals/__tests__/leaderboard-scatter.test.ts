@@ -144,6 +144,6 @@ describe("scatter plot configuration rows", () => {
     expect(html).toContain("20 plotted settings: names and values");
     expect(html).toContain("Grok 4.6, low reasoning");
     expect(html).toContain("79.3% overall · 30.3s");
-    expect(html).toContain("35 settings not plotted");
+    expect(html).toContain("36 settings not plotted");
   });
 });

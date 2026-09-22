@@ -96,6 +96,7 @@ describe("recovery publication", () => {
               attempt.conversation!,
               ...(attempt.recovery?.history.map((entry) => entry.conversation) ?? []),
             ]) {
+              if (!ref) throw new Error("Expected the older recovery's published conversation");
               const path = publicTranscriptPath(ref)!;
               if (seen.has(path)) continue;
               seen.add(path);

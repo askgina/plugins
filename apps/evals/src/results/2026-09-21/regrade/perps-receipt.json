@@ -32,7 +32,7 @@
     },
     {
       "path": "apps/evals/src/canonical/canonical.ts",
-      "sha256": "98bc1fb99d9aa01956a01cce9f82719bc251aff3200431e30bdc34698cf1e026"
+      "sha256": "615304bd4470f6797c4173995b3d36b7ba98cf32eff2eb2fb4519abb0281743e"
     },
     {
       "path": "apps/evals/src/lib/grading-revisions.ts",

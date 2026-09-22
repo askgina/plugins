@@ -62,8 +62,8 @@ test("grading filters do not bring superseded campaigns back into the latest vie
 
 test("mobile history can be shared and restores earlier campaigns", () => {
   const html = render("#/leaderboard?campaign=all");
-  expect(html.match(/data-mobile-configuration=/gu)).toHaveLength(54);
-  expect(html).toContain("54 records");
+  expect(html.match(/data-mobile-configuration=/gu)).toHaveLength(55);
+  expect(html).toContain("55 records");
   expect(html).toContain('data-mobile-configuration="astra-max-');
   expect(html).toContain('data-mobile-configuration="recovery-astra-max-');
 });

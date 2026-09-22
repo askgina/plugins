@@ -59,6 +59,7 @@ export function getRun(runId: string): CanonicalRun | undefined {
 
 /** Public labels are separate from the immutable evidence identifiers. */
 export function campaignDisplayLabel(campaignId: string | undefined): string {
+  if (campaignId === "grok47-low-recovery-20260922") return "Grok 4.7 Low recovery · 22 Sep 2026";
   if (campaignId === "grok47-20260921") return "Grok 4.7 · 22 Sep 2026";
   return campaignId === "recovery-2026-09-21" ? "21 Sep 2026" : (campaignId ?? "Unknown campaign");
 }
@@ -522,7 +523,13 @@ const FAMILY_BY_SUITE_ID: Record<string, PrototypeFamily> = {
 /** Human-readable cohort identity: family · target · account · reps · evidence. */
 export function cohortLabel(cohort: CanonicalCohort): string {
   const family = FAMILY_BY_SUITE_ID[cohort.suiteId] ?? cohort.suiteId;
-  return `${family} · ${clientDisplayName(cohort.target)} · ${cohort.accountClass} · ${cohort.repetitions} reps · ${cohort.evidenceCategory}${cohort.recoveryProtocol ? " · 120–600s budgets" : ""}`;
+  const budgets =
+    cohort.recoveryProtocol === "grok47-failed-step-recovery-120-720-v1"
+      ? " · 120–720s budgets"
+      : cohort.recoveryProtocol
+        ? " · 120–600s budgets"
+        : "";
+  return `${family} · ${clientDisplayName(cohort.target)} · ${cohort.accountClass} · ${cohort.repetitions} reps · ${cohort.evidenceCategory}${budgets}`;
 }
 
 /** Every cohort declared for a family's suite (empty for unmeasured families). */

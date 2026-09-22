@@ -13,7 +13,7 @@ import results from "../src/results/2026-09-22/grok-4.7/results.json";
 import snapshot from "../src/results/2026-09-22/grok-4.7/snapshot.json";
 
 const runs = canonicalRuns.filter((run) => run.campaignId === results.campaignId);
-const rows = configurationLeaderboardRows().filter((row) => row.model.id === "grok-4-7");
+const rows = configurationLeaderboardRows().filter((row) => row.campaignId === results.campaignId);
 const attempts = runs.flatMap((run) =>
   run.attempts.availability === "available" ? run.attempts.value : [],
 );

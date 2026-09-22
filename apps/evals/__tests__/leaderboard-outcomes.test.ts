@@ -43,8 +43,8 @@ test("shows the latest campaign for each model setting by default", () => {
 test("desktop history retains older results behind the campaign selector", () => {
   vi.stubGlobal("window", { location: { hash: "#/leaderboard?campaign=all" } });
   const html = renderToStaticMarkup(createElement(LeaderboardPage));
-  expect(html.match(/<tr data-configuration=/gu)).toHaveLength(54);
-  expect(html).toContain("54 records");
+  expect(html.match(/<tr data-configuration=/gu)).toHaveLength(55);
+  expect(html).toContain("55 records");
   expect(html).toContain('data-configuration="astra-max-');
   expect(html).toContain('data-configuration="recovery-astra-max-');
 });
