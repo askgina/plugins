@@ -9,10 +9,13 @@ import { publishedNativeCosts, recordedSweepCost } from "../src/lib/recorded-cos
 import projection from "../src/results/2026-09-16/reasoning-sweep/native-cost-estimates.json";
 
 describe("retained native cost estimates", () => {
-  test("every displayed model has a cost while partial-suite coverage remains explicit", () => {
+  test("retains known model costs and leaves unknown Grok 4.7 pricing unavailable", () => {
     const rows = unifiedLeaderboardRows();
-    expect(rows).toHaveLength(10);
-    expect(rows.every((row) => row.estimatedCost.availability === "available")).toBe(true);
+    expect(rows).toHaveLength(11);
+    expect(rows.filter((row) => row.estimatedCost.availability === "available")).toHaveLength(10);
+    expect(rows.find((row) => row.model.id === "grok-4-7")?.estimatedCost.availability).toBe(
+      "unavailable",
+    );
     const partial = rows.find((row) => row.model.id === "gpt-5.5")!;
     expect(partial.overall).toBeNull();
     expect(partial.coverageLabel).toBe("Spot only");

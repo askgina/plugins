@@ -18,6 +18,7 @@ const checkNames = {
 };
 
 export function AttemptChecks({ attempt }: { attempt: CanonicalAttempt }) {
+  const priceGrounding = attempt.priceGrounding ?? attempt.gradingRevision?.priceGrounding;
   return (
     <div className="task-attempt-details">
       <h4>
@@ -45,12 +46,12 @@ export function AttemptChecks({ attempt }: { attempt: CanonicalAttempt }) {
                 </dd>
               </div>
             ))}
-            {attempt.gradingRevision?.priceGrounding && (
+            {priceGrounding && (
               <div>
                 <dt>Price grounding</dt>
                 <dd>
-                  <CheckMark outcome={attempt.gradingRevision.priceGrounding.outcome} />
-                  <p>{attempt.gradingRevision.priceGrounding.detail}</p>
+                  <CheckMark outcome={priceGrounding.outcome} />
+                  <p>{priceGrounding.detail}</p>
                 </dd>
               </div>
             )}

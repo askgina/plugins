@@ -30,6 +30,7 @@ import perpsAttemptsJson from "../results/2026-09-11/perps-predictions/perps/per
 import type { ConversationReference } from "../lib/conversations";
 import { recordedSweepCost } from "../lib/recorded-costs";
 import recoveryResults from "../results/2026-09-21/recovery/results.json";
+import grok47Results from "../results/2026-09-22/grok-4.7/results.json";
 import {
   gradingRevisionEntries,
   perpsGradingEntries,
@@ -260,6 +261,11 @@ export interface CanonicalConfiguration {
 }
 
 export interface CanonicalAttempt {
+  readonly priceGrounding?: {
+    readonly policyId: string;
+    readonly outcome: "pass" | "fail";
+    readonly detail: string;
+  };
   readonly gradingRevision?: {
     readonly policyId: string;
     readonly kind: "bounded_search" | "provider_error" | "perps_price";
@@ -563,6 +569,15 @@ export const canonicalModels: readonly CanonicalModel[] = [
     name: "Grok 4.6",
     provider: "xAI",
     providerModel: "xai-oauth/grok-4.6",
+    mark: "◎",
+    color: "#3a3a3a",
+    origin: "measured",
+  },
+  {
+    id: "grok-4-7",
+    name: "Grok 4.7",
+    provider: "xAI",
+    providerModel: "xai-oauth/grok-4.7",
     mark: "◎",
     color: "#3a3a3a",
     origin: "measured",
@@ -880,6 +895,23 @@ const solSpotLabelsOnlyConfiguration: CanonicalConfiguration = {
 // ---------------------------------------------------------------------------
 
 export const canonicalCampaigns: readonly CanonicalCampaign[] = [
+  {
+    campaignId: grok47Results.campaignId,
+    date: "2026-09-22",
+    harness: "Grok 4.7 · native client",
+    repetitions: 3,
+    timeoutMs: 120000,
+    sourceCommit: grok47Results.sourceCommit,
+    limitations: [
+      "All 420 planned trials were attempted once: 314 graded and 106 execution failures (67 timeouts, 39 process errors).",
+      "Low, medium, high and xhigh each have 105 planned trials. Incomplete grading prevents an overall quality ranking.",
+      "Every attempt used a 120-second limit. Automatic supervision resumed pending work without repeating model attempts.",
+      "The native grader is combined with perps-price-evidence-v2 on the three price tasks. Other tasks measure tool-use conformance.",
+      "Thinking levels are requested and recorded by the client; provider-internal compute is not attested.",
+      "Pricing is unknown. Native zero-dollar placeholders are not published as free inference. Private conversations are withheld.",
+    ],
+    origin: "measured",
+  },
   {
     campaignId: "recovery-2026-09-21",
     date: "2026-09-21",
@@ -2478,6 +2510,68 @@ function sweepFamilyRun(row: SweepRow, run: SweepRun): CanonicalRun {
   };
 }
 
+interface FreshGrokRun extends SweepRun {
+  readonly priceChecks: readonly {
+    readonly caseId: string;
+    readonly repetition: number;
+    readonly policyId: string;
+    readonly outcome: string;
+    readonly nativeVerdict: string;
+  }[];
+}
+
+function freshGrokFamilyRun(row: SweepRow, source: FreshGrokRun): CanonicalRun {
+  const base = sweepFamilyRun(row, source);
+  const attempts = source.trials.map((trial): CanonicalAttempt => {
+    const attempt = projectedTrialToCanonical(trial);
+    const price = source.priceChecks.find(
+      (check) => check.caseId === trial.caseId && check.repetition === trial.repetition,
+    );
+    if (price === undefined) return attempt;
+    if (price.outcome !== "pass" && price.outcome !== "fail") {
+      throw new Error("Invalid fresh price-evidence outcome");
+    }
+    return {
+      ...attempt,
+      priceGrounding: {
+        policyId: price.policyId,
+        outcome: price.outcome,
+        detail: `Recorded during this trial under ${price.policyId}. Native tool-use verdict: ${price.nativeVerdict}.`,
+      },
+      failureCategories: [
+        ...attempt.failureCategories,
+        ...(price.outcome === "fail" ? ["price_grounding_mismatch"] : []),
+      ],
+    };
+  });
+  return {
+    ...base,
+    campaignId: grok47Results.campaignId,
+    recordedCostEstimate: { availability: "not_recorded" },
+    attempts: available(attempts),
+    dimensions: available(dimensionsFromAttempts(attempts)),
+    coveragePlan: {
+      planSource: "run_manifest",
+      planSha256: grok47Results.sourcePlanSha256,
+      statusSha256: grok47Results.sourceStatusSha256,
+    },
+    provenance: {
+      ...base.provenance,
+      sourceLabel: "Fresh Grok 4.7 VM campaign · one recorded attempt per planned slot",
+    },
+    notes: [
+      "Finished " +
+        grok47Results.generatedAt +
+        ". Each setting has 105 planned trials across 35 tasks and three repetitions.",
+      "Every model attempt had the same 120-second limit. Execution failures remain ungraded; no model attempts were retried or replaced.",
+      "Perps price verdicts require both native tool-use checks and perps-price-evidence-v2. Other tasks use the native tool-use grader.",
+      "The requested Grok 4.7 model and thinking level were verified in native session records for every graded trial. Provider-applied compute is not attested.",
+      "Timing and tokens describe graded attempts. Pricing is unknown; zero-dollar runtime placeholders are not cost measurements.",
+      "Only numeric evidence and provenance hashes are published. Private transcripts and tool results remain withheld.",
+    ],
+  };
+}
+
 interface RecoveryRun extends SweepRun {
   readonly timeoutBudgetsMs: readonly number[];
   readonly budgetCounts: Readonly<Record<string, number | undefined>>;
@@ -2929,6 +3023,7 @@ export const originalCanonicalRuns: readonly CanonicalRun[] = [
   ),
   ...reasoningSweepRows.flatMap((row) => row.runs.map((run) => sweepFamilyRun(row, run))),
   ...recoveryResults.models.flatMap((row) => row.runs.map((run) => recoveryFamilyRun(row, run))),
+  ...grok47Results.models.flatMap((row) => row.runs.map((run) => freshGrokFamilyRun(row, run))),
   solSpot2,
   solSpotIncomplete,
   solSpotUnknown,
@@ -3199,11 +3294,13 @@ export const canonicalPublications: readonly CanonicalPublication[] = [
       ? correctedPublication(run)
       : resultPublication(
           run,
-          run.campaignId === "recovery-2026-09-21"
-            ? recoveryResults.capturedAt
-            : run.campaignId === SWEEP_CAMPAIGN_ID
-              ? reasoningSweep.generatedAt
-              : "2026-09-14T18:00:00.000Z",
+          run.campaignId === grok47Results.campaignId
+            ? grok47Results.generatedAt
+            : run.campaignId === "recovery-2026-09-21"
+              ? recoveryResults.capturedAt
+              : run.campaignId === SWEEP_CAMPAIGN_ID
+                ? reasoningSweep.generatedAt
+                : "2026-09-14T18:00:00.000Z",
         ),
   ),
   ...withdrawnRuns.map(withdrawnPublication),

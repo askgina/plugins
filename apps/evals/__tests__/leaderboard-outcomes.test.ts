@@ -31,7 +31,7 @@ test("shows every recorded model setting in its own row", () => {
   for (const row of configurations) {
     expect(html).toContain(`data-configuration="${row.rowId}"`);
   }
-  expect(new Set(configurations.map((row) => row.model.id)).size).toBe(10);
+  expect(new Set(configurations.map((row) => row.model.id)).size).toBe(11);
   expect(html).toContain("Every recorded setting has its own row");
   expect(html).not.toContain("Recorded setting</label>");
   expect(html).not.toMatch(/\bOMP\b/u);

@@ -341,6 +341,18 @@ describe("Claude static public artifact boundary", () => {
             yield* fs.makeDirectory(path.join(root, "public"));
             const changedArtifacts = [
               {
+                file: "src/results/2026-09-22/grok-4.7/results.json",
+                value: { model: "xai-oauth/grok-4.7", providerText: SENTINEL },
+              },
+              {
+                file: "src/results/2026-09-22/grok-4.7/unreviewed.json",
+                value: { model: "xai-oauth/grok-4.7", planned: 420 },
+              },
+              {
+                file: "src/results/2026-09-22/grok-4.7/raw.txt",
+                value: { content: SENTINEL },
+              },
+              {
                 file: "src/results/2026-09-14/claude-comparison/ask-gina-claude-comparison.json",
                 value: { ...report, providerText: SENTINEL },
               },

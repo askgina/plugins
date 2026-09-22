@@ -58,6 +58,8 @@ import museReportUrl from "../results/2026-09-14/muse-spark-1.3/report/ask-gina-
 import claudeComparisonUrl from "../results/2026-09-14/claude-comparison/ask-gina-claude-comparison.json?url";
 import reasoningSweepUrl from "../results/2026-09-16/reasoning-sweep/ask-gina-reasoning-sweep.json?url";
 import reasoningSweepClaudeUrl from "../results/2026-09-16/reasoning-sweep/ask-gina-reasoning-sweep-claude.json?url";
+import grok47ResultsUrl from "../results/2026-09-22/grok-4.7/results.json?url";
+import grok47SnapshotUrl from "../results/2026-09-22/grok-4.7/snapshot.json?url";
 
 interface BundledArtifact {
   readonly url: string;
@@ -119,6 +121,18 @@ const MODEL_ARTIFACTS: Readonly<Record<string, readonly BundledArtifact[]>> = {
   "gpt-terra": [REASONING_SWEEP_ARTIFACT],
   astra: [REASONING_SWEEP_ARTIFACT],
   grok: [REASONING_SWEEP_ARTIFACT],
+  "grok-4-7": [
+    {
+      url: grok47ResultsUrl,
+      filename: "grok-4.7-results-2026-09-22.json",
+      description: "Grok 4.7 numeric results (2026-09-22)",
+    },
+    {
+      url: grok47SnapshotUrl,
+      filename: "grok-4.7-snapshot-2026-09-22.json",
+      description: "Grok 4.7 evidence hashes and coverage (2026-09-22)",
+    },
+  ],
   gemini: [REASONING_SWEEP_ARTIFACT],
   "swe-2": [REASONING_SWEEP_ARTIFACT],
 };

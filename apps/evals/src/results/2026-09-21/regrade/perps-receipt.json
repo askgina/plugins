@@ -32,7 +32,7 @@
     },
     {
       "path": "apps/evals/src/canonical/canonical.ts",
-      "sha256": "4d2f07e7f3552c02dedeeb40b44ff9bf59e8dfe01f19dfac55c2bdfd70792777"
+      "sha256": "98bc1fb99d9aa01956a01cce9f82719bc251aff3200431e30bdc34698cf1e026"
     },
     {
       "path": "apps/evals/src/lib/grading-revisions.ts",
@@ -44,7 +44,7 @@
     },
     {
       "path": "tools/regrade-eval-perps.ts",
-      "sha256": "047ac4293ecb27f528c839b7948727897a7f1a622d736abdbd39cbc26de3fed7"
+      "sha256": "e08ffa91826595037fdc1027e0618a46b4c98acc9cd43b65c672daadd850be24"
     }
   ],
   "reviewedAttempts": 382,
