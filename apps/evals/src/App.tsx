@@ -69,7 +69,7 @@ export default function App() {
     document.title = `${matched?.entry.title ?? "Not found"} · Ask Gina Evals`;
   }, [matched]);
   return (
-    <Fragment key={parsed.path === "/tasks" ? parsed.path : route}>
+    <Fragment key={["/tasks", "/compare"].includes(parsed.path) ? parsed.path : route}>
       {matched ? (
         matched.entry.render(matched.params, parsed.query)
       ) : (

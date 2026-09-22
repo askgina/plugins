@@ -33,6 +33,7 @@ const sourcePaths = [
   "apps/evals/src/results/2026-09-21/recovery/results.json",
   "apps/evals/public/transcripts/index.json",
   "packages/evals/src/perps-price.ts",
+  "packages/evals/src/price-claims.ts",
   "packages/evals/src/grading.ts",
   "apps/evals/src/canonical/canonical.ts",
   "apps/evals/src/lib/grading-revisions.ts",

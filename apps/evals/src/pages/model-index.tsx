@@ -1,66 +1,34 @@
 import { useMemo } from "react";
 import { ArrowUpRight } from "lucide-react";
-import { MEASURED_FAMILIES, type CanonicalModel, type CanonicalRun } from "../canonical/canonical";
+import type { CanonicalModel } from "../canonical/canonical";
 import {
-  configurationGroupKey,
-  headlineFor,
+  configurationLeaderboardRows,
+  modelProfileRows,
   modelsByReleaseDate,
-  runHistoryFor,
-  runDisplayLabel,
-  runsForModel,
+  recordedOutcomes,
+  type LeaderboardModelRow,
 } from "../canonical/selectors";
-import { AvailabilityMark, CoverageChip, HeadlineValue } from "../canonical/components";
 import { ModelAvatar, PageShell } from "../components/eval-ui";
+import { rowKey } from "../components/leaderboard-results";
+import { percent } from "../components/results-ui";
 import { Button } from "../components/ui/button";
 import "./model-index.css";
 
-function shortSha(sha: string | null | undefined): string | null {
-  return sha === null || sha === undefined ? null : `${sha.slice(0, 12)}…`;
-}
+const dateFormat = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
 
-interface ConfigGroupSummary {
-  readonly key: string;
-  readonly isPinned: boolean;
-  readonly pinnedSha256: string | null;
-  readonly candidate: string;
-  readonly reasoning: string | null;
-  readonly runCount: number;
-}
-
-function ModelCard({ model }: { model: CanonicalModel }) {
-  const modelRuns = useMemo(() => {
-    return runsForModel(model.id).filter((r) => r.origin === "measured");
-  }, [model.id]);
-
-  const configGroups: readonly ConfigGroupSummary[] = useMemo(() => {
-    const map = new Map<string, CanonicalRun[]>();
-    for (const run of modelRuns) {
-      const key = configurationGroupKey(run);
-      const list = map.get(key) ?? [];
-      list.push(run);
-      map.set(key, list);
-    }
-    return [...map.entries()].map(([key, runs]) => {
-      const first = runs[0]!;
-      return {
-        key,
-        isPinned: first.configuration.availability === "pinned",
-        pinnedSha256: first.configuration.pinnedSha256,
-        candidate: first.configuration.candidate,
-        reasoning: first.configuration.reasoning,
-        runCount: runs.length,
-      };
-    });
-  }, [modelRuns]);
-
-  const familySummaries = useMemo(() => {
-    return MEASURED_FAMILIES.map((family) => {
-      const runs = runHistoryFor(model.id, family).filter((r) => r.origin === "measured");
-      const latest = runs[0];
-      return { family, latest };
-    }).filter((entry) => entry.latest !== undefined);
-  }, [model.id]);
-
+function ModelCard({
+  model,
+  rows,
+}: {
+  model: CanonicalModel;
+  rows: readonly LeaderboardModelRow[];
+}) {
+  const scored = rows.filter((row) => row.overall !== null).length;
   return (
     <article className="model-index-card" aria-labelledby={`model-card-title-${model.id}`}>
       <header className="model-index-card-header">
@@ -69,20 +37,13 @@ function ModelCard({ model }: { model: CanonicalModel }) {
           <h2 id={`model-card-title-${model.id}`}>
             <a href={`#/models/${model.id}`}>{model.name}</a>
           </h2>
-          <p className="model-index-card-provider">
-            {model.provider} · <code>{model.providerModel}</code>
-          </p>
+          <p className="model-index-card-provider">{model.provider}</p>
           {model.release && (
             <p className="model-index-card-provider">
               <a href={model.release.source} target="_blank" rel="noreferrer">
                 Released{" "}
                 <time dateTime={model.release.date}>
-                  {new Intl.DateTimeFormat("en-GB", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                    timeZone: "UTC",
-                  }).format(Date.parse(model.release.date))}
+                  {dateFormat.format(Date.parse(model.release.date))}
                 </time>
               </a>
             </p>
@@ -90,70 +51,60 @@ function ModelCard({ model }: { model: CanonicalModel }) {
         </div>
       </header>
 
-      {/* Configuration groups */}
-      <div>
-        <h3 className="model-index-section-title">Configuration groups ({configGroups.length})</h3>
-        <div className="model-index-configs">
-          {configGroups.map((group) => (
-            <div className="model-index-config-item" key={group.key}>
-              <div className="model-index-config-pin">
-                <span>
-                  {group.isPinned ? (
-                    <>
-                      <span>pin </span>
-                      <code>{shortSha(group.pinnedSha256)}</code>
-                    </>
-                  ) : (
-                    <AvailabilityMark
-                      availability="not_recorded"
-                      reason="labels-only configuration"
-                    />
-                  )}
-                </span>
-                <span className="eval-muted">
-                  {group.runCount} run{group.runCount === 1 ? "" : "s"}
-                </span>
-              </div>
-              <div className="model-index-config-meta">
-                candidate <code>{group.candidate}</code>
-                {group.reasoning && ` · reasoning ${group.reasoning}`}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Per-family latest runs */}
-      <div>
-        <h3 className="model-index-section-title">Latest family evaluations</h3>
-        <div className="model-index-families">
-          {familySummaries.map(({ family, latest }) => {
-            if (!latest) return null;
-            const headline = headlineFor(latest);
-            return (
-              <div className="model-index-family-item" key={family}>
-                <span className="model-index-family-name">{family}</span>
-                <div className="model-index-family-stat">
-                  <HeadlineValue headline={headline} />
-                  <CoverageChip run={latest} />
-                  <a
-                    className="model-index-family-link"
-                    href={`#/models/${model.id}?run=${latest.runId}`}
-                    title={`Inspect ${runDisplayLabel(latest.runId)}`}
-                  >
-                    View run <ArrowUpRight size={12} aria-hidden="true" />
-                  </a>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      <div className="model-index-results">
+        <p className="model-index-summary">
+          {rows.length} recorded setting{rows.length === 1 ? "" : "s"} · {scored} with Overall
+          scores
+        </p>
+        <table className="model-index-settings" aria-label={`${model.name} recorded results`}>
+          <thead>
+            <tr>
+              <th scope="col">Recorded setting</th>
+              <th scope="col">Overall</th>
+              <th scope="col">Graded</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const runs = Object.values(row.runs);
+              const counts = recordedOutcomes(runs);
+              const first = runs[0]!;
+              const reason = row.coverageLabel
+                ? row.coverageLabel
+                : counts.graded < counts.planned
+                  ? "Grading incomplete"
+                  : (row.overallReason ?? "Insufficient evidence");
+              return (
+                <tr key={rowKey(row)} data-setting={first.configuration.reasoning}>
+                  <th scope="row">
+                    <span>{row.configurationLabel}</span>
+                    <time dateTime={first.startedAt}>
+                      {dateFormat.format(Date.parse(first.startedAt))}
+                    </time>
+                    {row.overall === null && (
+                      <small className="model-index-incomplete">{reason}</small>
+                    )}
+                  </th>
+                  <td className={row.overall === null ? "model-index-unranked" : undefined}>
+                    {row.overall === null ? "Unranked" : percent(row.overall)}
+                  </td>
+                  <td>
+                    {counts.graded}/{counts.planned}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
       <footer className="model-index-card-footer">
         <Button asChild variant="secondary" size="sm">
-          <a href={`#/models/${model.id}`}>
-            View full profile <ArrowUpRight size={14} aria-hidden="true" />
+          <a
+            href={`#/models/${model.id}`}
+            aria-label={`View ${model.name} results and transcripts`}
+          >
+            Results &amp; transcripts <ArrowUpRight size={14} aria-hidden="true" />
           </a>
         </Button>
       </footer>
@@ -163,11 +114,12 @@ function ModelCard({ model }: { model: CanonicalModel }) {
 
 export function ModelIndexPage() {
   const models = useMemo(() => modelsByReleaseDate(), []);
+  const rows = useMemo(() => configurationLeaderboardRows(), []);
 
   return (
     <PageShell
       active="models"
-      footerNote="Evaluated models across Gina financial task families. Conformance results from bundled campaign artifacts."
+      footerNote="Recorded results across Spot, Perps, and Predictions. Full run history and evidence are available in each model profile."
     >
       <div className="eval-container model-index-page">
         <section className="eval-hero model-index-hero" aria-labelledby="model-index-title">
@@ -177,20 +129,32 @@ export function ModelIndexPage() {
             <span aria-hidden="true">/</span>
             <span aria-current="page">Models</span>
           </nav>
-          <p className="eval-eyebrow">Model directory · Canonical evaluation harness</p>
+          <p className="eval-eyebrow">Model directory</p>
           <h1 className="eval-title" id="model-index-title">
             Models<span>.</span>
           </h1>
           <p className="eval-description">
-            Evaluated model configurations across Spot, Perps, and Predictions task families. Each
-            card summarizes declared configuration groups and links directly to the latest
-            conformance runs. Ordered by release date, newest first.
+            Browse tested reasoning levels, grading progress, and full results for every model. Open
+            a profile for category scores, costs, run history, and chat transcripts.
           </p>
         </section>
 
+        <div className="model-index-guide">
+          <div className="model-index-order">
+            <p>{models.length} models · Newest releases first</p>
+            <a href="#/leaderboard">
+              Compare scores <ArrowUpRight size={14} aria-hidden="true" />
+            </a>
+          </div>
+          <p>
+            Latest results for each recorded configuration. Repeated reasoning levels have separate
+            configurations, dated below. Overall requires complete grading in Spot, Perps, and
+            Predictions; graded counts include passes and failures.
+          </p>
+        </div>
         <section className="model-index-grid" aria-label="Evaluated models">
           {models.map((model) => (
-            <ModelCard key={model.id} model={model} />
+            <ModelCard key={model.id} model={model} rows={modelProfileRows(model.id, rows)} />
           ))}
         </section>
       </div>

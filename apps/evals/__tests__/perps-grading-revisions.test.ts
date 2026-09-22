@@ -1,7 +1,11 @@
 import { configurationLeaderboardRows } from "../src/canonical/selectors";
 import { describe, expect, test } from "vitest";
 import { canonicalRuns, originalCanonicalRuns } from "../src/canonical/canonical";
-import { perpsGradingEntries, reviseAttempt } from "../src/lib/grading-revisions";
+import {
+  PERPS_GRADING_POLICY,
+  perpsGradingEntries,
+  reviseAttempt,
+} from "../src/lib/grading-revisions";
 import receipt from "../src/results/2026-09-21/regrade/perps-receipt.json";
 
 describe("versioned Perps price regrade", () => {
@@ -11,6 +15,10 @@ describe("versioned Perps price regrade", () => {
     }
   });
   test("binds every review and preserves other checks, costs, timing, and original transcript identities", () => {
+    expect(receipt.policyId).toBe(PERPS_GRADING_POLICY);
+    expect(
+      receipt.inputs.some((input) => input.path === "packages/evals/src/price-claims.ts"),
+    ).toBe(true);
     expect(receipt.reviewedAttempts).toBe(382);
     expect(receipt.skipped.filter((e) => e.reason === "execution_incomplete")).toHaveLength(32);
     expect(
@@ -45,6 +53,7 @@ describe("versioned Perps price regrade", () => {
       if (before.checks.availability !== "available" || after.checks.availability !== "available")
         throw new Error("Missing checks");
       expect(after.gradingRevision?.previousChecks).toEqual(before.checks.value);
+      expect(after.gradingRevision?.policyId).toBe(PERPS_GRADING_POLICY);
       for (const dimension of ["safety", "completion", "skillActivation"] as const) {
         expect(after.checks.value[dimension]).toBe(before.checks.value[dimension]);
         if (before.checks.value[dimension] === "fail") expect(after.verdict).toBe("fail");

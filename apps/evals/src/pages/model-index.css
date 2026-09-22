@@ -14,14 +14,49 @@
 .model-index-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  align-items: start;
   gap: 20px;
+  margin-top: 20px;
+}
+
+.model-index-guide {
   margin-top: 24px;
+  color: var(--eval-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.model-index-guide p {
+  margin: 0;
+  max-width: 92ch;
+}
+
+.model-index-order {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 20px;
+  margin-bottom: 8px;
+  color: var(--eval-ink);
+  font-weight: 500;
+}
+
+.model-index-order a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--eval-ink);
+  text-decoration: none;
+}
+
+.model-index-order a:hover {
+  text-decoration: underline;
 }
 
 .model-index-card {
-  background: var(--eval-surface);
+  background: var(--eval-paper);
   border: 1px solid var(--eval-line);
-  border-radius: var(--eval-radius);
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -30,7 +65,7 @@
 }
 
 .model-index-card:hover {
-  border-color: #bbb;
+  border-color: var(--eval-muted);
 }
 
 .model-index-card-header {
@@ -51,7 +86,7 @@
   font-size: 20px;
   font-weight: 600;
   margin: 0;
-  color: var(--eval-foreground);
+  color: var(--eval-ink);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -63,109 +98,87 @@
 }
 
 .model-index-card-title-wrap a:hover {
-  color: var(--eval-link);
+  color: var(--eval-ink);
   text-decoration: underline;
 }
 
 .model-index-card-provider {
   font-size: 13px;
-  color: #6e6e6e;
+  color: var(--eval-muted);
   margin: 0;
 }
 
-.model-index-card-provider code {
-  font-size: 11px;
-}
-
-.model-index-section-title {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #777;
-  margin: 0 0 8px;
-}
-
-.model-index-configs {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.model-index-config-item {
-  background: #fafaf9;
-  border: 1px solid var(--eval-line);
-  border-radius: 4px;
-  padding: 8px 10px;
+.model-index-summary {
+  margin: 0 0 12px;
   font-size: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  color: var(--eval-muted);
 }
 
-.model-index-config-pin {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  font-weight: 500;
-}
-
-.model-index-config-meta {
-  font-size: 11px;
-  color: #6e6e6e;
-}
-
-.model-index-families {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.model-index-family-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid #f0f0ee;
+.model-index-settings {
+  width: 100%;
+  border-collapse: collapse;
   font-size: 13px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
 }
 
-.model-index-family-item:last-child {
-  border-bottom: none;
+.model-index-settings th,
+.model-index-settings td {
+  padding: 10px 0;
+  text-align: right;
+  vertical-align: top;
+  border-bottom: 1px solid var(--eval-line);
 }
 
-.model-index-family-name {
+.model-index-settings th:first-child {
+  text-align: left;
+}
+
+.model-index-settings td {
+  white-space: nowrap;
+  padding-left: 10px;
+}
+
+.model-index-settings thead th {
+  color: var(--eval-muted);
+  font-size: 11px;
   font-weight: 500;
-  color: #333;
+  padding-top: 0;
 }
 
-.model-index-family-stat {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.model-index-settings tbody th {
+  font-weight: 500;
 }
 
-.model-index-family-link {
+.model-index-settings td:nth-child(2) {
+  font-weight: 500;
+}
+
+.model-index-settings time,
+.model-index-settings small {
+  display: block;
+  color: var(--eval-muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.model-index-settings .model-index-incomplete {
+  color: var(--eval-ink);
+}
+
+.model-index-unranked {
+  color: var(--eval-muted);
   font-size: 12px;
-  color: var(--eval-link);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
 }
 
-.model-index-family-link:hover {
-  text-decoration: underline;
+.model-index-settings tbody tr:last-child > * {
+  border-bottom: 0;
 }
 
 .model-index-card-footer {
   margin-top: auto;
-  padding-top: 12px;
-  border-top: 1px solid var(--eval-line);
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 
 @media (max-width: 760px) {

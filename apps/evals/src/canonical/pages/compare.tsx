@@ -1,12 +1,3 @@
-// `#/compare?left=<runId>&right=<runId>` — side-by-side run comparison.
-//
-// Run pickers are grouped by cohort (suite + harness target + account class +
-// repetitions + evidence category) and can be narrowed with the scope select.
-// Eligibility comes from `compareEligibility` in ../selectors: equal cohorts and
-// pinned configurations are required, while differing checkSource / reasoning /
-// pins are surfaced as visible condition differences, not blocks. Blocked pairs
-// explain their reason codes and never render deltas.
-
 import { useMemo } from "react";
 import { ArrowLeftRight, RotateCcw } from "lucide-react";
 import { CheckDimensionPanel } from "../../components/check-dimension-radar";
@@ -15,8 +6,9 @@ import { navigate, useHashRoute } from "../../router";
 import {
   canonicalCampaigns,
   canonicalRuns,
+  MEASURED_FAMILIES,
+  type PrototypeFamily,
   type CanonicalAttempt,
-  type CanonicalCohort,
   type CanonicalRun,
   type EligibilityReason,
   type Evidence,
@@ -30,6 +22,8 @@ import {
   runDisplayLabel,
   compareEligibility,
   eligibilityText,
+  derivedCostPerTask,
+  recordedBudgetLabel,
   getCaseDefinition,
   getModel,
   getPublication,
@@ -44,15 +38,16 @@ import {
   CoverageChip,
   CoverageLabel,
   ExecutionChip,
-  HeadlineValue,
   LatencyValue,
   OriginTag,
   TokenUsageValue,
   VerdictChip,
 } from "../components";
+import { RecordedResult } from "../../components/leaderboard-results";
+import { dollars } from "../../components/results-ui";
+import { clientDisplayName, settingDisplayName } from "../../lib/client-labels";
+import { preferredCompareRun } from "../compare-selection";
 import "./compare.css";
-
-const ALL_COHORTS = "all";
 
 const numberFormatter = new Intl.NumberFormat("en-US");
 
@@ -60,27 +55,48 @@ function shortSha(sha: string | null | undefined): string | null {
   return sha === null || sha === undefined ? null : `${sha.slice(0, 12)}…`;
 }
 
-function comparePath(left: string | undefined, right: string | undefined, cohort: string): string {
+function comparePath(
+  left: string | undefined,
+  right: string | undefined,
+  category: string,
+): string {
   const params = new URLSearchParams();
   if (left !== undefined) params.set("left", left);
   if (right !== undefined) params.set("right", right);
-  if (cohort !== ALL_COHORTS) params.set("cohort", cohort);
+  params.set("category", category);
   const query = params.toString();
   return `/compare${query === "" ? "" : `?${query}`}`;
 }
 
 function runOptionLabel(run: CanonicalRun): string {
-  const model = getModel(run.modelId);
-  const marks = [
-    run.origin === "synthetic" ? "synthetic" : null,
-    run.dispatchCoverage !== "complete" ? `coverage ${run.dispatchCoverage}` : null,
-    run.configuration.availability === "labels_only" ? "labels-only" : null,
-  ].filter((mark): mark is string => mark !== null);
-  const tail = marks.length > 0 ? ` · ${marks.join(" · ")}` : "";
-  const name = run.recovery
-    ? runDisplayLabel(run.runId)
-    : `${model?.name ?? run.modelId} · ${run.runId}`;
-  return `${name} · ${run.startedAt.slice(0, 10)}${tail}`;
+  const status = run.origin === "synthetic" ? " · demo" : "";
+  return `${settingDisplayName(run.configuration.reasoning, run.cohort.target)} · ${run.startedAt.slice(0, 10)} · ${run.counts.graded}/${run.counts.planned} graded${status}`;
+}
+
+function comparisonReason(
+  reason: EligibilityReason,
+  left: CanonicalRun,
+  right: CanonicalRun,
+): string {
+  if (reason === "outside_selected_cohort") {
+    if (left.family !== right.family)
+      return `These recordings cover different categories: ${left.family} and ${right.family}. Choose one category above.`;
+    if (left.cohort.target !== right.cohort.target)
+      return `The clients differ: ${clientDisplayName(left.cohort.target)} and ${clientDisplayName(right.cohort.target)}. Their test conditions do not match.`;
+    if (left.cohort.recoveryProtocol !== right.cohort.recoveryProtocol)
+      return "These recordings used different timeout and retry rules. Choose recordings with matching test conditions.";
+    return "These recordings come from different test setups. The task version, access, repetitions and execution rules must match for a direct comparison.";
+  }
+  if (reason === "incomplete_grading")
+    return "Some attempts are still ungraded. Timeouts and run errors are not counted as failed answers.";
+  if (reason === "incomplete_coverage")
+    return "Some planned attempts were not run. Complete coverage is needed to compare pass rates.";
+  if (reason === "coverage_unknown") return "We cannot verify that every planned attempt was run.";
+  if (reason === "labels_only_configuration" || reason === "missing_pinned_configuration")
+    return "The exact model configuration was not recorded for one or both runs.";
+  if (reason === "different_evidence_category")
+    return "These recordings measure different things, so their scores cannot be directly compared.";
+  return eligibilityText(reason);
 }
 
 function sideName(run: CanonicalRun, left: CanonicalRun): string {
@@ -140,7 +156,7 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
     return (
       <Panel title={title}>
         <div className="eval-compare-run-card">
-          <p className="eval-muted">No run selected yet — pick one above.</p>
+          <p className="eval-muted">Choose a model above to see its recorded results.</p>
         </div>
       </Panel>
     );
@@ -154,7 +170,8 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
           {withdrawn === undefined ? (
             <>
               <p className="eval-muted">
-                <code className="eval-compare-mono">{runId}</code> is not a canonical run id.
+                <code className="eval-compare-mono">{runId}</code> was not found. Choose an
+                available recording above.
               </p>
             </>
           ) : (
@@ -178,6 +195,8 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
   const model = getModel(run.modelId);
   const campaign = canonicalCampaigns.find((entry) => entry.campaignId === run.campaignId);
   const baseline = resolveBaselineRun(run);
+  const headline = headlineFor(run);
+  const cost = derivedCostPerTask(run);
   return (
     <Panel title={title}>
       <div className="eval-compare-run-card">
@@ -186,69 +205,110 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
           <span>
             <span className="eval-compare-run-name">{model?.name ?? run.modelId}</span>{" "}
             <span className="eval-compare-run-sub">
-              <code className="eval-compare-mono">{runDisplayLabel(run.runId)}</code> ·{" "}
-              {run.startedAt.slice(0, 10)}
+              {settingDisplayName(run.configuration.reasoning, run.cohort.target)}
             </span>
           </span>
-          <OriginTag origin={run.origin} />
+          {run.origin === "synthetic" && <OriginTag origin={run.origin} />}
         </div>
-        <div className="eval-compare-chip-row">
-          <CoverageChip run={run} />
-          <span className="eval-compare-condition">dispatch {run.dispatchCoverage}</span>
-          <span className="eval-compare-condition">checks {run.checkSource}</span>
-          <span className="eval-compare-condition">{run.caseBinding}</span>
-          {run.withheldFields.map((field) => (
-            <AvailabilityMark
-              key={field.field}
-              availability="withheld"
-              reason={`${field.field} · ${field.reason}`}
-            />
-          ))}
+        <p className="eval-compare-recording">
+          {run.family} · {run.startedAt.slice(0, 10)} · {run.cohort.repetitions} repetitions
+          <br />
+          {recordedBudgetLabel([run])}
+        </p>
+        <div className="eval-compare-result">
+          <span className="eval-compare-field-label">{run.family} pass rate</span>
+          <RecordedResult
+            runs={[run]}
+            score={
+              headline.kind === "rate" && headline.started > 0
+                ? headline.passed / headline.started
+                : null
+            }
+          />
+          {headline.kind === "counts_only" && (
+            <p className="eval-muted">{comparisonReason(headline.reason, run, run)}</p>
+          )}
         </div>
-        <dl className="eval-compare-kv">
-          <div>
-            <dt>Headline</dt>
-            <dd>
-              <HeadlineValue headline={headlineFor(run)} />
-            </dd>
+        <p className="eval-compare-cost">
+          Est. cost / task:{" "}
+          <strong>
+            {cost.availability === "available" ? dollars(cost.usdPerTask) : "Not recorded"}
+          </strong>
+          {cost.availability === "available" && (
+            <small>
+              {cost.sampleCount ?? "Unknown number of"} {cost.population} attempts ·{" "}
+              {cost.sampleCount === null
+                ? "exclusions unknown"
+                : `${Math.max(0, run.counts.started - cost.sampleCount)} excluded`}
+            </small>
+          )}
+          {cost.availability === "available" && cost.basis === "catalogue_free_tier" && (
+            <small>Free model tier</small>
+          )}
+        </p>
+        <a
+          className="eval-compare-task-link"
+          href={`#/tasks?category=${run.family}&model=${run.modelId}&run=${encodeURIComponent(run.runId)}&view=conversation`}
+        >
+          Browse tasks &amp; transcripts →
+        </a>
+        <details className="eval-compare-run-evidence">
+          <summary>Run conditions &amp; sources</summary>
+          <div className="eval-compare-chip-row">
+            <CoverageChip run={run} />
+            <span className="eval-compare-condition">dispatch {run.dispatchCoverage}</span>
+            <span className="eval-compare-condition">checks {run.checkSource}</span>
+            <span className="eval-compare-condition">{run.caseBinding}</span>
+            {run.withheldFields.map((field) => (
+              <AvailabilityMark
+                key={field.field}
+                availability="withheld"
+                reason={`${field.field} · ${field.reason}`}
+              />
+            ))}
           </div>
-          <div>
-            <dt>Configuration</dt>
-            <dd>
-              {run.configuration.availability === "pinned" ? (
-                <code className="eval-compare-mono">
-                  pin {shortSha(run.configuration.pinnedSha256)}
-                </code>
-              ) : (
-                <AvailabilityMark availability="not_recorded" reason="labels-only configuration" />
-              )}{" "}
-              {run.configuration.candidate} · reasoning {run.configuration.reasoning ?? "unset"}
-            </dd>
-          </div>
-          <div>
-            <dt>Cohort</dt>
-            <dd>{cohortLabel(run.cohort)}</dd>
-          </div>
-          <div>
-            <dt>Campaign</dt>
-            <dd title={campaign?.harness}>
-              <code className="eval-compare-mono">{campaignDisplayLabel(run.campaignId)}</code>
-            </dd>
-          </div>
-          <div>
-            <dt>Source</dt>
-            <dd>
-              {run.provenance.sourceLabel}
-              {baseline !== undefined && (
-                <>
-                  {" "}
-                  · Sol baseline imported once as{" "}
-                  <code className="eval-compare-mono">{runDisplayLabel(baseline.runId)}</code>
-                </>
-              )}
-            </dd>
-          </div>
-        </dl>
+          <dl className="eval-compare-kv">
+            <div>
+              <dt>Configuration</dt>
+              <dd>
+                {run.configuration.availability === "pinned" ? (
+                  <code className="eval-compare-mono">
+                    pin {shortSha(run.configuration.pinnedSha256)}
+                  </code>
+                ) : (
+                  <AvailabilityMark
+                    availability="not_recorded"
+                    reason="labels-only configuration"
+                  />
+                )}{" "}
+                {run.configuration.candidate} · reasoning {run.configuration.reasoning ?? "unset"}
+              </dd>
+            </div>
+            <div>
+              <dt>Cohort</dt>
+              <dd>{cohortLabel(run.cohort)}</dd>
+            </div>
+            <div>
+              <dt>Campaign</dt>
+              <dd title={campaign?.harness}>
+                <code className="eval-compare-mono">{campaignDisplayLabel(run.campaignId)}</code>
+              </dd>
+            </div>
+            <div>
+              <dt>Source</dt>
+              <dd>
+                {run.provenance.sourceLabel}
+                {baseline !== undefined && (
+                  <>
+                    {" "}
+                    · Sol baseline imported once as{" "}
+                    <code className="eval-compare-mono">{runDisplayLabel(baseline.runId)}</code>
+                  </>
+                )}
+              </dd>
+            </div>
+          </dl>
+        </details>
       </div>
     </Panel>
   );
@@ -283,55 +343,25 @@ function runtimeFailureNote(run: CanonicalRun): string | null {
     .join("; ");
 }
 
-function HeadlinePanel({ left, right }: { left: CanonicalRun; right: CanonicalRun }) {
-  const leftModel = getModel(left.modelId);
-  const rightModel = getModel(right.modelId);
-  const leftHeadline = headlineFor(left);
-  const rightHeadline = headlineFor(right);
-  const delta = left.counts.passed - right.counts.passed;
-  const sameDenominator =
-    left.counts.started === right.counts.started &&
-    leftHeadline.kind === "rate" &&
-    rightHeadline.kind === "rate";
+function DifferenceSummary({ left, right }: { left: CanonicalRun; right: CanonicalRun }) {
+  if (left.runId === right.runId)
+    return (
+      <p className="eval-compare-status">
+        The same recording is selected twice. Choose another setting to compare results.
+      </p>
+    );
+  if (left.counts.started === 0 || right.counts.started === 0) return null;
+  const difference =
+    100 * (left.counts.passed / left.counts.started - right.counts.passed / right.counts.started);
+  const higher = difference > 0 ? left : right;
   return (
-    <Panel
-      title="Headline"
-      description="Passes over started — the only ordering key — for each run. The delta is a pass-count difference over equal denominators, never an averaged rate."
-    >
-      <div className="eval-compare-headline-grid">
-        <div className="eval-compare-headline-cell">
-          <span className="eval-compare-run-name">{leftModel?.name ?? left.modelId}</span>
-          <span className="eval-compare-headline-value">
-            <HeadlineValue headline={leftHeadline} />
-          </span>
-          <span className="eval-muted">passes / started</span>
-        </div>
-        <div className="eval-compare-delta" aria-label="Pass difference">
-          {sameDenominator ? (
-            <>
-              <span>
-                Δ {delta === 0 ? "±0" : delta > 0 ? `+${delta}` : delta} pass
-                {Math.abs(delta) === 1 ? "" : "es"}
-              </span>
-              <span className="eval-muted">
-                of {numberFormatter.format(left.counts.started)} started each
-              </span>
-            </>
-          ) : (
-            <span className="eval-muted">
-              denominators differ ({left.counts.started} vs {right.counts.started} started)
-            </span>
-          )}
-        </div>
-        <div className="eval-compare-headline-cell eval-compare-headline-cell-right">
-          <span className="eval-compare-run-name">{rightModel?.name ?? right.modelId}</span>
-          <span className="eval-compare-headline-value">
-            <HeadlineValue headline={rightHeadline} />
-          </span>
-          <span className="eval-muted">passes / started</span>
-        </div>
-      </div>
-    </Panel>
+    <p className="eval-compare-status" role="status">
+      <strong>Matching test conditions.</strong>{" "}
+      {difference === 0
+        ? "Both recordings have the same pass rate."
+        : `${getModel(higher.modelId)?.name ?? higher.modelId} (${higher.configuration.reasoning ?? "unspecified"} reasoning) is ${Math.abs(difference).toFixed(1)} percentage points higher on ${left.family} in these recordings.`}
+      <span>Descriptive results from these runs; not a claim of statistical significance.</span>
+    </p>
   );
 }
 
@@ -348,8 +378,8 @@ function CoveragePanel({ left, right }: { left: CanonicalRun; right: CanonicalRu
           <thead>
             <tr>
               <th scope="col">Count</th>
-              <th scope="col">Left</th>
-              <th scope="col">Right</th>
+              <th scope="col">Model A</th>
+              <th scope="col">Model B</th>
             </tr>
           </thead>
           <tbody>
@@ -397,7 +427,6 @@ const UNAVAILABLE_METRIC_ROWS: readonly {
   pick: (run: CanonicalRun) => MetricUnavailable;
 }[] = [
   { label: "answer accuracy", pick: (run) => run.metrics.answerAccuracy },
-  { label: "USD cost", pick: (run) => run.metrics.usdCost },
   { label: "uncertainty", pick: (run) => run.metrics.uncertainty },
 ];
 
@@ -412,8 +441,8 @@ function MetricsPanel({ left, right }: { left: CanonicalRun; right: CanonicalRun
           <thead>
             <tr>
               <th scope="col">Metric</th>
-              <th scope="col">Left</th>
-              <th scope="col">Right</th>
+              <th scope="col">Model A</th>
+              <th scope="col">Model B</th>
             </tr>
           </thead>
           <tbody>
@@ -434,6 +463,27 @@ function MetricsPanel({ left, right }: { left: CanonicalRun; right: CanonicalRun
               <td>
                 <TokenUsageValue metric={right.metrics.tokenUsage} />
               </td>
+            </tr>
+            <tr>
+              <th scope="row">Est. cost / task</th>
+              {[left, right].map((run, index) => {
+                const cost = derivedCostPerTask(run);
+                return (
+                  <td key={index}>
+                    {cost.availability === "available" ? (
+                      <>
+                        {dollars(cost.usdPerTask)}
+                        <div className="eval-muted">
+                          {cost.sampleCount ?? "Unknown number of"} {cost.population} attempts
+                        </div>
+                        <div className="eval-muted">{cost.priceSource}; not billed spend</div>
+                      </>
+                    ) : (
+                      <AvailabilityMark availability={cost.availability} reason={cost.reason} />
+                    )}
+                  </td>
+                );
+              })}
             </tr>
             {UNAVAILABLE_METRIC_ROWS.map((row) => (
               <tr key={row.label}>
@@ -561,16 +611,16 @@ function OutcomePanel({ left, right }: { left: CanonicalRun; right: CanonicalRun
   const rightModel = getModel(right.modelId);
   return (
     <Panel
-      title="Per-case outcomes"
-      description="One row per case, repetition slots aligned across both runs. Missing slots render as —."
+      title="Task outcomes"
+      description="Each task shows its recorded repetitions side by side. Ungraded attempts keep their timeout or error status."
     >
       <div className="eval-compare-table-wrap">
         <table className="eval-table eval-compare-table">
           <thead>
             <tr>
               <th scope="col">Case</th>
-              <th scope="col">Left — {leftModel?.name ?? left.modelId}</th>
-              <th scope="col">Right — {rightModel?.name ?? right.modelId}</th>
+              <th scope="col">Model A · {leftModel?.name ?? left.modelId}</th>
+              <th scope="col">Model B · {rightModel?.name ?? right.modelId}</th>
             </tr>
           </thead>
           <tbody>
@@ -696,7 +746,7 @@ function SideFacts({ run }: { run: CanonicalRun }) {
           {currentRevision?.supersedes
             ? ` (r${currentRevision.revision} ${currentRevision.supersedes.reason})`
             : ""}
-          {" · review: synthetic preview"}
+          {run.origin === "synthetic" ? " · synthetic preview" : ""}
         </span>
       )}
     </div>
@@ -710,8 +760,6 @@ function SideFacts({ run }: { run: CanonicalRun }) {
 export function ComparePage({
   left,
   right,
-  // Decision 9: synthetic runs never appear in the app's pickers — they exist
-  // for Storybook state demos only, so stories pass includeSynthetic.
   includeSynthetic = false,
 }: {
   left?: string;
@@ -719,252 +767,239 @@ export function ComparePage({
   includeSynthetic?: boolean;
 }) {
   const route = useHashRoute();
-  const scope = new URLSearchParams(route.split("?")[1] ?? "").get("cohort") ?? ALL_COHORTS;
-  const cohortsInUse = useMemo(() => {
-    const groups = new Map<string, { cohort: CanonicalCohort; runs: CanonicalRun[] }>();
-    for (const run of canonicalRuns) {
-      if (!includeSynthetic && run.origin !== "measured") continue;
-      const group = groups.get(run.cohort.cohortId) ?? { cohort: run.cohort, runs: [] };
-      group.runs.push(run);
-      groups.set(run.cohort.cohortId, group);
-    }
-    return [...groups.values()];
-  }, [includeSynthetic]);
-
-  const scopedGroups =
-    scope === ALL_COHORTS ? cohortsInUse : cohortsInUse.filter((g) => g.cohort.cohortId === scope);
-
   const leftRun = left === undefined ? undefined : getRun(left);
   const rightRun = right === undefined ? undefined : getRun(right);
-  const eligibility =
-    leftRun !== undefined && rightRun !== undefined
-      ? compareEligibility(leftRun, rightRun)
-      : undefined;
-  const conditions = [
-    ...(eligibility?.conditions ?? []),
-    ...(leftRun !== undefined && leftRun.runId === rightRun?.runId
-      ? ["same run selected on both sides"]
-      : []),
+  const requestedCategory = new URLSearchParams(route.split("?")[1] ?? "").get("category");
+  const categories: readonly PrototypeFamily[] = [
+    ...new Set<PrototypeFamily>([
+      ...MEASURED_FAMILIES,
+      ...(leftRun ? [leftRun.family] : []),
+      ...(rightRun ? [rightRun.family] : []),
+    ]),
   ];
+  const category =
+    categories.find((family) => family === requestedCategory) ??
+    leftRun?.family ??
+    rightRun?.family ??
+    "Perps";
+  const runs = useMemo(
+    () => canonicalRuns.filter((run) => includeSynthetic || run.origin === "measured"),
+    [includeSynthetic],
+  );
+  const familyRuns = runs.filter((run) => run.family === category);
+  const modelIds = [
+    ...new Set([
+      ...familyRuns.map((run) => run.modelId),
+      ...(leftRun ? [leftRun.modelId] : []),
+      ...(rightRun ? [rightRun.modelId] : []),
+    ]),
+  ].sort((a, b) => (getModel(a)?.name ?? a).localeCompare(getModel(b)?.name ?? b));
+  const eligibility = leftRun && rightRun ? compareEligibility(leftRun, rightRun) : undefined;
 
-  const picker = (side: "left" | "right", value: string | undefined) => (
-    <div className="eval-compare-field">
-      <label className="eval-compare-field-label" htmlFor={`eval-compare-${side}-picker`}>
-        {side === "left" ? "Left run" : "Right run"}
-      </label>
-      <select
-        id={`eval-compare-${side}-picker`}
-        className="eval-compare-select"
-        value={value ?? ""}
-        onChange={(event) => {
-          const selected = event.currentTarget.value || undefined;
-          if (side === "left") navigate(comparePath(selected, right, scope));
-          else navigate(comparePath(left, selected, scope));
-        }}
-      >
-        <option value="">Select a run…</option>
-        {scopedGroups.map((group) => (
-          <optgroup key={group.cohort.cohortId} label={cohortLabel(group.cohort)}>
-            {group.runs.map((run) => (
-              <option key={run.runId} value={run.runId}>
-                {runOptionLabel(run)}
+  const selectRun = (side: "left" | "right", runId: string | undefined) => {
+    navigate(
+      comparePath(side === "left" ? runId : left, side === "right" ? runId : right, category),
+    );
+  };
+  const changeCategory = (family: PrototypeFamily) => {
+    const nextLeft = leftRun
+      ? preferredCompareRun(
+          runs,
+          leftRun.modelId,
+          family,
+          undefined,
+          leftRun.configuration.reasoning,
+        )
+      : undefined;
+    const nextRight = rightRun
+      ? preferredCompareRun(
+          runs,
+          rightRun.modelId,
+          family,
+          nextLeft,
+          rightRun.configuration.reasoning,
+        )
+      : undefined;
+    navigate(comparePath(nextLeft?.runId, nextRight?.runId, family));
+  };
+  const picker = (side: "left" | "right", selected: CanonicalRun | undefined) => {
+    const other = side === "left" ? rightRun : leftRun;
+    const options = familyRuns
+      .filter((run) => run.modelId === selected?.modelId)
+      .sort((a, b) => b.startedAt.localeCompare(a.startedAt) || a.runId.localeCompare(b.runId));
+    if (selected && !options.some((run) => run.runId === selected.runId)) options.unshift(selected);
+    const label = side === "left" ? "Model A" : "Model B";
+    return (
+      <div className="eval-compare-model-picker">
+        <div className="eval-compare-field">
+          <label className="eval-compare-field-label" htmlFor={`eval-compare-${side}-model`}>
+            {label}
+          </label>
+          <select
+            id={`eval-compare-${side}-model`}
+            className="eval-compare-select"
+            value={selected?.modelId ?? ""}
+            onChange={(event) =>
+              selectRun(
+                side,
+                preferredCompareRun(runs, event.currentTarget.value, category, other)?.runId,
+              )
+            }
+          >
+            <option value="">Choose a model…</option>
+            {modelIds.map((modelId) => (
+              <option
+                key={modelId}
+                value={modelId}
+                disabled={!familyRuns.some((run) => run.modelId === modelId)}
+              >
+                {getModel(modelId)?.name ?? modelId}
               </option>
             ))}
-          </optgroup>
-        ))}
-      </select>
-    </div>
-  );
+          </select>
+        </div>
+        <div className="eval-compare-field">
+          <label className="eval-compare-field-label" htmlFor={`eval-compare-${side}-picker`}>
+            {label} reasoning &amp; recording
+          </label>
+          <select
+            id={`eval-compare-${side}-picker`}
+            className="eval-compare-select"
+            value={selected?.runId ?? ""}
+            disabled={!selected}
+            onChange={(event) => selectRun(side, event.currentTarget.value || undefined)}
+          >
+            {!selected && <option value="">Choose a model first</option>}
+            {options.map((run) => (
+              <option key={run.runId} value={run.runId}>
+                {runOptionLabel(run)} · {recordedBudgetLabel([run])}
+                {run.family !== category ? ` · ${run.family}` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <PageShell
       active="compare"
-      footerNote="Run comparison over the canonical eval dataset; measured rows only."
+      footerNote="Compare recorded category results. See each model profile for Overall scores and full run history."
     >
       <div className="eval-container eval-compare-page">
         <section className="eval-hero" aria-labelledby="compare-title">
-          <p className="eval-eyebrow">Canonical eval browsing · Run comparison</p>
+          <img className="eval-hero-art" src="/images/hero-watercolor-landscape.webp" alt="" />
+          <p className="eval-eyebrow">Side-by-side results</p>
           <h1 className="eval-title" id="compare-title">
-            Compare runs<span className="eval-dot">.</span>
+            Compare models<span className="eval-dot">.</span>
           </h1>
           <p className="eval-description">
-            Two runs side by side inside a shared cohort. Eligible pairs show headline, coverage,
-            metrics and per-case outcomes with condition differences surfaced; ineligible pairs
-            explain the reason codes and stay disabled.
+            Choose a task category, then two models and their reasoning settings. Compare pass
+            rates, individual task outcomes, and recorded costs.
           </p>
         </section>
 
         <Panel
-          title="Pick two runs"
-          description="Runs are grouped by cohort (suite, harness target, account class, repetitions, evidence category). Use the scope to narrow the list; picks outside the same cohort show their blocking reason."
+          title="Choose what to compare"
+          description="You can compare different models or two reasoning levels of the same model. All recorded runs remain available."
         >
-          <div className="eval-compare-scope">
-            <label className="eval-compare-field-label" htmlFor="eval-compare-cohort-scope">
-              Cohort scope
-            </label>
-            <select
-              id="eval-compare-cohort-scope"
-              className="eval-compare-select"
-              value={scope}
-              onChange={(event) => navigate(comparePath(left, right, event.currentTarget.value))}
-            >
-              <option value={ALL_COHORTS}>
-                All cohorts — cross-cohort picks show why they block
-              </option>
-              {cohortsInUse.map((group) => (
-                <option key={group.cohort.cohortId} value={group.cohort.cohortId}>
-                  {cohortLabel(group.cohort)} · {group.runs.length} runs
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="eval-compare-pickers">
-            {picker("left", left)}
+          <div className="eval-compare-toolbar">
+            <div className="eval-compare-field">
+              <label className="eval-compare-field-label" htmlFor="eval-compare-category">
+                Task category
+              </label>
+              <select
+                id="eval-compare-category"
+                className="eval-compare-select"
+                value={category}
+                onChange={(event) => changeCategory(event.currentTarget.value as PrototypeFamily)}
+              >
+                {categories.map((family) => {
+                  const missing = [leftRun, rightRun].find(
+                    (run) =>
+                      run &&
+                      !runs.some(
+                        (candidate) =>
+                          candidate.modelId === run.modelId && candidate.family === family,
+                      ),
+                  );
+                  return (
+                    <option key={family} value={family} disabled={Boolean(missing)}>
+                      {family}
+                      {missing
+                        ? ` (no recordings for ${getModel(missing.modelId)?.name ?? missing.modelId})`
+                        : ""}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
             <div className="eval-compare-picker-actions">
               <button
                 type="button"
                 className="eval-compare-button"
-                aria-label="Swap left and right runs"
-                onClick={() => navigate(comparePath(right, left, scope))}
+                disabled={!left && !right}
+                aria-label="Swap models and settings"
+                onClick={() => navigate(comparePath(right, left, category))}
               >
                 <ArrowLeftRight size={13} aria-hidden="true" /> Swap
               </button>
               <button
                 type="button"
                 className="eval-compare-button"
-                aria-label="Clear both run selections"
-                onClick={() => navigate(comparePath(undefined, undefined, scope))}
+                disabled={!left && !right}
+                aria-label="Clear comparison"
+                onClick={() => navigate(comparePath(undefined, undefined, category))}
               >
                 <RotateCcw size={13} aria-hidden="true" /> Clear
               </button>
             </div>
-            {picker("right", right)}
           </div>
-          <div className="eval-compare-examples">
-            <span className="eval-muted">Try a pair:</span>
-            <ul>
-              {includeSynthetic && (
-                <li>
-                  <a className="eval-text-link" href="#/compare?left=sol-spot-1&right=sol-spot-2">
-                    sol-spot-1 vs sol-spot-2
-                  </a>{" "}
-                  — same model, eligible; reasoning medium vs high is a visible condition difference
-                </li>
-              )}
-              <li>
-                <a className="eval-text-link" href="#/compare?left=gpt55-spot-1&right=fable-spot-1">
-                  gpt55-spot-1 vs fable-spot-1
-                </a>{" "}
-                — cross-model, eligible; checkSource native vs derived_from_scores is a condition,
-                not a block
-              </li>
-              {includeSynthetic && (
-                <li>
-                  <a
-                    className="eval-text-link"
-                    href="#/compare?left=sol-spot-1&right=sol-spot-labels-only"
-                  >
-                    sol-spot-1 vs sol-spot-labels-only
-                  </a>{" "}
-                  — blocked: labels_only_configuration
-                </li>
-              )}
-              <li>
-                <a className="eval-text-link" href="#/compare?left=muse-spot-1&right=fable-spot-1">
-                  muse-spot-1 vs fable-spot-1
-                </a>{" "}
-                — blocked: outside_selected_cohort (muse_cli vs omp_harness, same evidence category)
-              </li>
-              {includeSynthetic && (
-                <li>
-                  <a
-                    className="eval-text-link"
-                    href="#/compare?left=sol-spot-1&right=meridian-spot-1"
-                  >
-                    sol-spot-1 vs meridian-spot-1
-                  </a>{" "}
-                  — blocked: different_evidence_category (conformance vs answer_quality)
-                </li>
-              )}
-              {includeSynthetic && (
-                <li>
-                  <a
-                    className="eval-text-link"
-                    href="#/compare?left=sol-spot-1&right=sol-spot-incomplete"
-                  >
-                    sol-spot-1 vs sol-spot-incomplete
-                  </a>{" "}
-                  — blocked: incomplete_coverage
-                </li>
-              )}
-            </ul>
+          <div className="eval-compare-pickers">
+            {picker("left", leftRun)}
+            {picker("right", rightRun)}
           </div>
+          {!left && !right && (
+            <div className="eval-compare-examples">
+              <span>Start with Perps:</span>
+              <a href="#/compare?category=Perps&left=astra-high-perps-1&right=grok-low-perps-1">
+                Astra high vs Grok low
+              </a>
+              <a href="#/compare?category=Perps&left=astra-high-perps-1&right=astra-medium-perps-1">
+                Astra high vs medium
+              </a>
+            </div>
+          )}
         </Panel>
 
-        <div className="eval-two-column eval-compare-section">
-          <RunSummaryCard title="Left run" runId={left} />
-          <RunSummaryCard title="Right run" runId={right} />
-        </div>
-
-        {eligibility !== undefined && leftRun !== undefined && rightRun !== undefined && (
-          <Panel
-            title={eligibility.eligible ? "Eligible comparison" : "Comparison unavailable"}
-            description={
-              eligibility.eligible
-                ? "Same cohort — suite, fixture, catalog, target, account class, repetitions and evidence category all match."
-                : "This pair is ineligible. Deltas and the per-case comparison stay disabled; the blocking reason codes are explained below."
-            }
-          >
-            <div
-              className={
-                eligibility.eligible
-                  ? "eval-compare-verdict"
-                  : "eval-compare-verdict eval-compare-verdict-blocked"
-              }
-            >
-              {eligibility.eligible ? (
-                <div className="eval-compare-chip-row">
-                  <span className="eval-score eval-score-positive">
-                    <strong>same cohort</strong>
-                  </span>
-                  <code className="eval-compare-mono eval-muted">
-                    {cohortLabel(leftRun.cohort)}
-                  </code>
-                </div>
-              ) : (
-                <ul className="eval-compare-reason-list">
-                  {eligibility.reasons.map((reason) => (
-                    <li className="eval-compare-reason" key={reason}>
-                      <span className="eval-compare-chip-row">
-                        <span className="eval-compare-condition">{reason}</span>
-                        <span>{eligibilityText(reason)}</span>
-                      </span>
-                      {reasonContext(reason, leftRun, rightRun) !== null && (
-                        <span className="eval-muted">
-                          {reasonContext(reason, leftRun, rightRun)}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {conditions.length > 0 && (
-                <ul className="eval-compare-conditions" aria-label="Condition differences">
-                  {conditions.map((condition) => (
-                    <li className="eval-compare-condition" key={condition}>
-                      {condition}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </Panel>
+        {(left !== undefined || right !== undefined) && (
+          <div className="eval-two-column eval-compare-section">
+            <RunSummaryCard title="Model A" runId={left} />
+            <RunSummaryCard title="Model B" runId={right} />
+          </div>
         )}
+        {leftRun &&
+          rightRun &&
+          eligibility &&
+          (eligibility.eligible ? (
+            <DifferenceSummary left={leftRun} right={rightRun} />
+          ) : (
+            <section className="eval-compare-status" aria-labelledby="compare-unavailable-title">
+              <h2 id="compare-unavailable-title">Results shown separately</h2>
+              <p>A direct score difference and task comparison are unavailable for this pair.</p>
+              <ul>
+                {eligibility.reasons.map((reason) => (
+                  <li key={reason}>{comparisonReason(reason, leftRun, rightRun)}</li>
+                ))}
+              </ul>
+            </section>
+          ))}
 
-        {eligibility?.eligible === true && leftRun !== undefined && rightRun !== undefined && (
+        {eligibility?.eligible && leftRun && rightRun && (
           <>
             <div className="eval-compare-section">
-              <HeadlinePanel left={leftRun} right={rightRun} />
+              <OutcomePanel left={leftRun} right={rightRun} />
             </div>
             <div className="eval-compare-section">
               <CheckDimensionPanel
@@ -972,35 +1007,62 @@ export function ComparePage({
                 series={[
                   {
                     key: "left",
-                    label: getModel(leftRun.modelId)?.name ?? leftRun.modelId,
+                    label: `${getModel(leftRun.modelId)?.name ?? leftRun.modelId} · ${leftRun.configuration.reasoning ?? "unspecified"}`,
                     dimensions: leftRun.dimensions,
                   },
                   {
                     key: "right",
-                    label: getModel(rightRun.modelId)?.name ?? rightRun.modelId,
+                    label: `${getModel(rightRun.modelId)?.name ?? rightRun.modelId} · ${rightRun.configuration.reasoning ?? "unspecified"}`,
                     dimensions: rightRun.dimensions,
                   },
                 ]}
               />
             </div>
-            <div className="eval-compare-section">
-              <CoveragePanel left={leftRun} right={rightRun} />
-            </div>
-            <div className="eval-compare-section">
-              <MetricsPanel left={leftRun} right={rightRun} />
-            </div>
-            <div className="eval-compare-section">
-              <OutcomePanel left={leftRun} right={rightRun} />
-            </div>
-            <Panel
-              title="Availability & provenance"
-              description="Withheld and missing evidence per run — withheld, not_retained, not_recorded and aggregate_only stay distinct — plus notes, sources and publication state."
-            >
-              <div className="eval-compare-side-grid">
-                <SideFacts run={leftRun} />
-                <SideFacts run={rightRun} />
+          </>
+        )}
+
+        {leftRun && rightRun && (
+          <>
+            <details className="eval-compare-disclosure">
+              <summary>Detailed counts, timing &amp; costs</summary>
+              <div className="eval-compare-section">
+                <CoveragePanel left={leftRun} right={rightRun} />
               </div>
-            </Panel>
+              <div className="eval-compare-section">
+                <MetricsPanel left={leftRun} right={rightRun} />
+              </div>
+            </details>
+            <details className="eval-compare-disclosure">
+              <summary>Comparison rules &amp; evidence</summary>
+              <div className="eval-compare-section">
+                <Panel
+                  title="Recorded conditions"
+                  description="Direct differences require matching task versions, clients, access, repetitions and execution rules, plus complete grading."
+                >
+                  <div className="eval-compare-verdict">
+                    {eligibility?.reasons.map((reason) => (
+                      <p key={reason}>
+                        <code className="eval-compare-mono">{reason}</code> ·{" "}
+                        {reasonContext(reason, leftRun, rightRun) ?? eligibilityText(reason)}
+                      </p>
+                    ))}
+                    {eligibility?.conditions.length ? (
+                      <ul className="eval-compare-note-list">
+                        {eligibility.conditions.map((condition) => (
+                          <li key={condition}>{condition}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>Recorded configurations match.</p>
+                    )}
+                  </div>
+                  <div className="eval-compare-side-grid">
+                    <SideFacts run={leftRun} />
+                    <SideFacts run={rightRun} />
+                  </div>
+                </Panel>
+              </div>
+            </details>
           </>
         )}
       </div>

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "ask-gina-perps-regrade.v1",
-  "policyId": "perps-price-evidence-v1",
+  "policyId": "perps-price-evidence-v2",
   "inputs": [
     {
       "path": "apps/evals/src/results/2026-09-16/reasoning-sweep/ask-gina-reasoning-sweep.json",
@@ -20,7 +20,11 @@
     },
     {
       "path": "packages/evals/src/perps-price.ts",
-      "sha256": "896e5b13c12bd9e672650d810c9ff1e66da514150d29dc9ef17cca3ee6270497"
+      "sha256": "d85ea82a34ecb1448ebbf47df17868e22f2454c44e11afb9539dec7a0d13a361"
+    },
+    {
+      "path": "packages/evals/src/price-claims.ts",
+      "sha256": "a5409bc6e7a713322cb717ec92a95e3e94dd812bc8f9f9ccade0f27e7dad0a63"
     },
     {
       "path": "packages/evals/src/grading.ts",
@@ -32,7 +36,7 @@
     },
     {
       "path": "apps/evals/src/lib/grading-revisions.ts",
-      "sha256": "7560fa99d89d8e463e4aa81d62c736c2ec67cbaa5653a1d1e4d83c9df388899a"
+      "sha256": "31ebec3824347e618080195ea2b004251d203d1e0e21d994330ce35617dbd20c"
     },
     {
       "path": "plugins/ask-gina/evals/model/v1/families/perps.yaml",
@@ -40,7 +44,7 @@
     },
     {
       "path": "tools/regrade-eval-perps.ts",
-      "sha256": "7aa9751803faa49e516cbc067e14a4305e5af6b6696edffa361aeef8756b8266"
+      "sha256": "047ac4293ecb27f528c839b7948727897a7f1a622d736abdbd39cbc26de3fed7"
     }
   ],
   "reviewedAttempts": 382,

@@ -99,6 +99,93 @@ describe("Perps price contract", () => {
     ).toBe(0);
     expect(checkPriceAnswer([markets()], "single_mark", "").score).toBe(0);
   });
+  test.each([
+    "The mark price of Bitcoin is $81,093.",
+    "BTC mark is USD 81,093.",
+    "Bitcoin's mark price is USDC 81,093.",
+    "Bitcoin (BTC) mark price is 81,093 USD.",
+    "The current mark price is 81093.",
+    "On Hyperliquid, Bitcoin's mark is $81,093.",
+    "BTC mark is not $1; the mark is $81,093.",
+    "BTC mark is $81,093, not $1.",
+    "BTC mark (not midpoint) is $81,093.",
+    "BTC mark is not $1 but $81,093.",
+    "BTC mark: $81,093. Use ~$81,090 as a rough trading level.",
+    "BTC mark: $81,093. Volume: $1. Leverage: 20x.",
+    "BTC mark: $81,093 on Hyperliquid, not Coinbase.",
+  ])("accepts equivalent grounded assertions: %s", (answer) => {
+    expect(checkPriceAnswer([markets()], "single_mark", answer).score).toBe(1);
+  });
+  test.each([
+    "BTC mark is not $81,093.",
+    "Bitcoin's mark isn't USD 81,093.",
+    "BTC mark: $81,093.\nActually the mark is $1.",
+    "BTC mark: $81,093.\nActually it's $1.",
+    "BTC mark: $81,093.\nPrice is USD 1.",
+    "BTC mark: $81,093. Actually the mark is $1.",
+    "BTC mark: $81,093. The mark is not $81,093.",
+    "BTC mark: $81,093 on Coinbase.",
+    "On Binance, Bitcoin's mark price is $81,093.",
+    "Coinbase BTC mark: $81,093.",
+    "Venue: Coinbase\nBTC mark: $81,093.",
+    "BTC mark: $81,093.\nVenue: Coinbase",
+    "BTC mark might be $81,093.",
+    "If BTC mark were $81,093, I would buy.",
+    "I cannot confirm BTC mark is $81,093.",
+    "ETH mark: $81,093.",
+    "BTC mark: -$81,093.",
+    "BTC mark (not midpoint) is $81,093 on Coinbase.",
+    "BTC mark: $81,093.\n- Venue: Coinbase",
+    "BTC mark: $81,093 is incorrect.",
+    "DOGE mark: $81,093.",
+    "The mark price of Dogecoin is $81,093.",
+    "BTC mark: $81,093k.",
+    "BTC mark: $81,093e3.",
+    "BTC mark: $81,093.\nBTC mark: $81,093%.",
+    "BTC mark: $81,093.\nBTC mark: -81,093 USD.",
+  ])("rejects denied, contradictory, hypothetical or misattributed assertions: %s", (answer) => {
+    expect(checkPriceAnswer([markets()], "single_mark", answer).score).toBe(0);
+  });
+  test("binds aliases and separate prose clauses to the correct asset and metric", () => {
+    const answer =
+      "Bitcoin mark is USD 81,093; Ethereum mark is USDC 2,633.90; Solana mark is $110.19.";
+    expect(checkPriceAnswer([markets()], "multiple_marks", answer).score).toBe(1);
+    expect(
+      checkPriceAnswer([markets()], "multiple_marks", answer.replace("2,633.90", "81,093")).score,
+    ).toBe(0);
+    expect(
+      checkPriceAnswer([markets()], "multiple_marks", answer + "\nActually Ethereum mark is $1.")
+        .score,
+    ).toBe(0);
+    const table =
+      "| Coin | Mark | Mid | Venue |\n|---|---|---|---|\n| Bitcoin | USD 81,093 | $1 | Hyperliquid |\n| Ethereum | USDC 2,633.90 | $2 | Hyperliquid |\n| Solana | 110.19 USD | $3 | Hyperliquid |";
+    expect(checkPriceAnswer([markets()], "multiple_marks", table).score).toBe(1);
+    expect(
+      checkPriceAnswer([markets()], "multiple_marks", table.replace("$1 |", "unavailable |")).score,
+    ).toBe(1);
+    expect(
+      checkPriceAnswer([markets()], "multiple_marks", table.replace("Hyperliquid", "Coinbase"))
+        .score,
+    ).toBe(0);
+    expect(
+      checkPriceAnswer(
+        [markets()],
+        "multiple_marks",
+        table.replace("Hyperliquid", "Hyperliquid / Coinbase"),
+      ).score,
+    ).toBe(0);
+    expect(
+      checkPriceAnswer([markets()], "multiple_marks", table.replace("USD 81,093", "not $81,093"))
+        .score,
+    ).toBe(0);
+    expect(
+      checkPriceAnswer(
+        [markets()],
+        "multiple_marks",
+        table + "\n| Bitcoin | $1 | $81,093 | Hyperliquid |",
+      ).score,
+    ).toBe(0);
+  });
   test("requires HIP-3 confirmation in either order and binds the price arguments to the price call", () => {
     const lookup = markets([market("xyz:CL", 97.504, "hip3:xyz")], {
       query: "CL",
@@ -127,6 +214,37 @@ describe("Perps price contract", () => {
         [{ ...lookup, result: { isError: true } }, quote],
         "hip3_price",
         "CL on xyz: $97.507 midpoint",
+      ).score,
+    ).toBe(0);
+  });
+  test("keeps HIP-3 midpoint assertions separate from timestamps, oracle values and field tables", () => {
+    const calls = [
+      markets([market("xyz:CL", 97.504, "hip3:xyz")], {
+        providerContext: { providerId: "hip3:xyz" },
+      }),
+      price("CL", 97.507, "hip3:xyz"),
+    ];
+    for (const answer of [
+      "CL (WTI crude) on xyz (HIP-3): $97.507 USD midpoint, updated at 19:40:11 UTC.",
+      "CL is $97.507 USD at the latest fetched midpoint on xyz (TradeXYZ), Hyperliquid HIP-3.",
+      "CL on xyz's HIP-3 venue is $97.507 USD, based on the latest midpoint.",
+      "CL on xyz: $97.507 midpoint.\nMark: $97.504\nOracle: $1",
+      "CL on xyz: $97.507 midpoint.\n| Field | Value |\n|---|---|\n| Venue | TradeXYZ (hip3:xyz) |\n| Market | xyz:CL-USD |\n| Mid | USD 97.507 |\n| Mark | $97.504 |\n| Oracle | $1 |\n| Open interest | 1,234 CL |",
+    ])
+      expect(checkPriceAnswer(calls, "hip3_price", answer).score, answer).toBe(1);
+    expect(checkPriceAnswer(calls, "hip3_price", "CL on Coinbase: $97.507 midpoint").score).toBe(0);
+    expect(
+      checkPriceAnswer(
+        calls,
+        "hip3_price",
+        "CL midpoint: $97.507\n| Field | Value |\n|---|---|\n| Mid | $97.507 |\n| Venue | Coinbase |",
+      ).score,
+    ).toBe(0);
+    expect(
+      checkPriceAnswer(
+        calls,
+        "hip3_price",
+        "CL on xyz: $97.507 midpoint.\nActually the midpoint is $1.",
       ).score,
     ).toBe(0);
   });

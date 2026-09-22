@@ -13,6 +13,7 @@
 
 import { clientDisplayName, settingDisplayName } from "../lib/client-labels";
 import {
+  canonicalCampaigns,
   canonicalCaseDefinitions,
   canonicalCohorts,
   canonicalModels,
@@ -916,6 +917,66 @@ export function deduplicateEvidenceRows(
     const key = signature(row);
     return !key || preferred.get(key) === row;
   });
+}
+
+/** Latest campaign for each comparable recorded setting; never select by score or grading. */
+export function modelProfileRows(
+  modelId: string,
+  rows: readonly LeaderboardModelRow[] = configurationLeaderboardRows(),
+): readonly LeaderboardModelRow[] {
+  const startedAt = (row: LeaderboardModelRow) =>
+    Object.values(row.runs)
+      .map((run) => run.startedAt)
+      .sort()[0] ?? "";
+  const newestFirst = [...rows].sort(
+    (a, b) =>
+      startedAt(b).localeCompare(startedAt(a)) || (a.rowId ?? "").localeCompare(b.rowId ?? ""),
+  );
+  const settings = new Map<string, LeaderboardModelRow>();
+  for (const row of newestFirst) {
+    if (row.model.id !== modelId) continue;
+    const run = Object.values(row.runs)[0];
+    if (!run) continue;
+    const key = JSON.stringify([
+      run.configuration.candidate,
+      run.configuration.reasoning,
+      run.cohort.target,
+      run.cohort.accountClass,
+      run.cohort.suiteVersion,
+      run.cohort.fixtureVersion,
+      run.cohort.catalogSha,
+      run.cohort.repetitions,
+      run.cohort.evidenceCategory,
+    ]);
+    if (!settings.has(key)) settings.set(key, row);
+  }
+  const efforts = ["none", "minimal", "low", "medium", "high", "xhigh", "max"];
+  const effortIndex = (row: LeaderboardModelRow) => {
+    const index = efforts.indexOf(Object.values(row.runs)[0]?.configuration.reasoning ?? "");
+    return index < 0 ? efforts.length : index;
+  };
+  return [...settings.values()].sort(
+    (a, b) =>
+      effortIndex(a) - effortIndex(b) ||
+      (a.configurationLabel ?? "").localeCompare(b.configurationLabel ?? ""),
+  );
+}
+
+/** Selected attempt budgets, not the maximum permitted by the campaign. */
+export function recordedBudgetLabel(runs: readonly CanonicalRun[]): string {
+  const budgets = [
+    ...new Set(
+      runs.flatMap((run) => {
+        if (run.recovery) return run.recovery.timeoutBudgetsMs;
+        const timeout =
+          run.timeoutMs ??
+          canonicalCampaigns.find((campaign) => campaign.campaignId === run.campaignId)?.timeoutMs;
+        return timeout == null ? [] : [timeout];
+      }),
+    ),
+  ].sort((a, b) => a - b);
+  if (!budgets.length) return "Timeout not recorded";
+  return `${budgets.map((ms) => ms / 1000).join(" / ")}s ${runs.some((run) => run.recovery) ? "recorded budgets" : "timeout"}`;
 }
 
 /** Choose by grading coverage and date within the newest campaign, never by score. */

@@ -1,4 +1,5 @@
 import { Function } from "effect";
+import { extractPriceClaims } from "./price-claims";
 /** Versioned price-task contract. No model or score targets belong here. */
 export type PerpsPriceMode = "single_mark" | "multiple_marks" | "hip3_price";
 export const MARKETS = "perps.getHyperliquidMarkets";
@@ -220,96 +221,20 @@ export const checkPriceAnswer = Function.dual<
   if (mode === "hip3_price" && !confirmed)
     return dimension(false, "No successful venue-scoped markets result confirms CL on xyz.");
   if (answer.trim().length === 0) return dimension(false, "No retained final answer.");
-  const clean = answer.replace(/[*`_]/g, "");
-  const lines = clean.split(/\n/);
-  const metricOf = (text: string): "mark" | "mid" | "oracle" | undefined => {
-    const word = [...text.matchAll(/\b(mark|mid(?:point)?|oracle)(?:s|\s+prices?)?\b/gi)]
-      .at(-1)?.[1]
-      ?.toLowerCase();
-    return word?.startsWith("mid") === true
-      ? "mid"
-      : word === "mark" || word === "oracle"
-        ? word
-        : undefined;
-  };
-  const claims: { coin: string; metric: "mark" | "mid"; token: string }[] = [];
-  let tableMetrics: ("mark" | "mid" | "oracle" | undefined)[] = [];
-  let sectionMetric: "mark" | "mid" | "oracle" | undefined;
-  for (const line of lines) {
-    const cells = line.trim().startsWith("|")
-      ? line
-          .trim()
-          .slice(1)
-          .replace(/\|$/, "")
-          .split("|")
-          .map((c) => c.trim())
-      : [];
-    const mentioned = coins.filter((coin) => new RegExp(`\\b${coin}\\b`, "i").test(line));
-    if (
-      cells.length > 0 &&
-      mentioned.length === 0 &&
-      cells.some((c) => metricOf(c) !== undefined)
-    ) {
-      tableMetrics = cells.map(metricOf);
-      continue;
-    }
-    if (cells.length > 0 && tableMetrics.length === cells.length && mentioned.length === 1) {
-      cells.forEach((cell, i) => {
-        const metric = tableMetrics[i];
-        if (metric !== "mark" && metric !== "mid") return;
-        const token = cell.match(/^(?:\$\s*)?(\d+(?:,\d{3})*(?:\.\d+)?)(?:\s+(?:USD|USDC))?$/)?.[1];
-        if (token !== undefined && token.length > 0)
-          claims.push({ coin: mentioned[0]!, metric, token });
-      });
-      continue;
-    }
-    if (cells.length > 0) continue;
-    if (line.trim().length === 0) {
-      tableMetrics = [];
-      continue;
-    }
-    if (!/\d/.test(line) && !/\bnot\b/i.test(line) && metricOf(line) !== undefined)
-      sectionMetric = metricOf(line);
-    const coin =
-      mentioned.length === 1
-        ? mentioned[0]
-        : coins.length === 1 && mentioned.length === 0
-          ? coins[0]
-          : undefined;
-    if (coin === undefined || coin.length === 0) continue;
-    if (
-      mentioned.length === 0 &&
-      !/^\s*[-•]?\s*(?:mark(?:\s+price)?|mid(?:point)?(?:\s+price)?|price)\s*[:=]/i.test(line)
-    )
-      continue;
-    for (const number of line.matchAll(/(?:\$\s*)?\b\d+(?:,\d{3})*(?:\.\d+)?\b/g)) {
-      const before = line.slice(0, number.index);
-      const after = line.slice(number.index! + number[0].length);
-      // Only dollar quotes, price-labelled numbers, or values immediately
-      // followed by USD/USDC are claims. Dates, leverage and volumes are not.
-      const labelled = /\b(?:mark|mid(?:point)?|price)(?:\s+price)?\s*[:=]?\s*$/.test(
-        before.toLowerCase(),
-      );
-      if (!number[0].includes("$") && !labelled && !/^\s*(?:USD|USDC)\b/.test(after)) continue;
-      const metric =
-        metricOf(before) ??
-        (/^\s*(?:USD|USDC)?\s*(?:mark|mid(?:point)?)(?:\s|[,.)]|$)/i.test(after)
-          ? metricOf(after.split(/[,.]/)[0]!)
-          : undefined) ??
-        sectionMetric;
-      if (metric === "oracle") continue;
-      if (metric === "mark" || metric === "mid")
-        claims.push({ coin, metric, token: number[0].replace(/[$\s]/g, "") });
-      else if (mode === "hip3_price") {
-        // The HIP-3 prompt asks for price, not specifically mark or midpoint.
-        claims.push({
-          coin,
-          metric: calls.some((c) => c.name === PRICE) ? "mid" : "mark",
-          token: number[0].replace(/[$\s]/g, ""),
-        });
-      }
-    }
-  }
+  const { claims, ambiguous } = extractPriceClaims({
+    answer,
+    coins,
+    ...(mode === "hip3_price"
+      ? {
+          defaultMetric: calls.some((c) => c.name === PRICE) ? ("mid" as const) : ("mark" as const),
+        }
+      : {}),
+  });
+  if (ambiguous)
+    return dimension(
+      false,
+      "The retained answer contains an ambiguous price assertion; manual review is required.",
+    );
   for (const coin of coins) {
     const evidence = snapshots.filter(
       (s) => s.coin === coin && (mode === "hip3_price" || s.metric === "mark"),
@@ -320,17 +245,20 @@ export const checkPriceAnswer = Function.dual<
         `No retained ${mode === "hip3_price" ? "venue price" : "mark"} evidence for ${coin}.`,
       );
     const quoted = claims.filter(
-      (c) => c.coin === coin && (mode === "hip3_price" || c.metric === "mark"),
+      (c) =>
+        c.coin === coin && (mode === "hip3_price" ? c.metric !== "oracle" : c.metric === "mark"),
     );
     if (
-      quoted.length === 0 ||
+      !quoted.some((c) => !c.denied && !c.uncertain) ||
       !quoted.every((c) => {
         const token = c.token.replaceAll(",", "");
         const decimalPlaces = token.split(".")[1]?.length ?? 0;
         const tolerance = 0.5 * 10 ** -decimalPlaces + 1e-8;
-        return evidence.some(
+        if (c.uncertain || c.venues.some((v) => v !== venue)) return false;
+        const matches = evidence.some(
           (s) => s.metric === c.metric && Math.abs(Number(token) - s.value) <= tolerance,
         );
+        return c.denied ? !matches : matches;
       })
     )
       return dimension(
