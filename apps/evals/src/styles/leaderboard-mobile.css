@@ -242,7 +242,7 @@
   .lb-mobile-value [data-complete-score="false"] {
     font-size: 14px;
   }
-  .lb-mobile-value [data-complete-score="true"] .results-outcome-value > small:first-of-type {
+  .lb-mobile-value [data-complete-score="true"] .results-pass-fail {
     display: none;
   }
   .lb-mobile-value .results-eligibility {

@@ -16,6 +16,8 @@ import {
   cohortLabel,
 } from "../src/canonical/selectors";
 import { AttemptConversationPanel } from "../src/components/conversation-panel";
+import { LeaderboardMobile } from "../src/components/leaderboard-mobile";
+import { ModelSettingResults } from "../src/components/model-setting-results";
 import { LeaderboardPage } from "../src/pages/leaderboard";
 import results from "../src/results/2026-09-22/grok-4.7/low-recovery.json";
 import snapshot from "../src/results/2026-09-22/grok-4.7/low-recovery-snapshot.json";
@@ -69,10 +71,27 @@ test("selects Low recovery in latest views while other levels keep their origina
     expect(low.overall).toBeNull();
     expect(low.estimatedCost.availability).toBe("unavailable");
     const html = renderToStaticMarkup(createElement(LeaderboardPage, { rows: [low] }));
+    expect(html).toContain(">Completed</span>");
+    expect(html).toContain("105/105 processed");
     expect(html).toContain("92/105 graded");
+    expect(html).toContain("13 run errors");
     expect(html).toContain("Not ranked");
     for (const row of selected.filter((row) => row !== low))
       expect(row.campaignId).toBe(original.campaignId);
+  }
+});
+
+test("Low is marked completed on the profile and mobile leaderboard with grading separate", () => {
+  const low = modelProfileRows("grok-4-7").find((row) => row.campaignId === results.campaignId)!;
+  for (const view of [
+    createElement(ModelSettingResults, { modelId: "grok-4-7" }),
+    createElement(LeaderboardMobile, { rows: [low] }),
+  ]) {
+    const html = renderToStaticMarkup(view);
+    expect(html).toContain(">Completed</span><small>105/105 processed</small>");
+    expect(html).toContain("92/105 graded");
+    expect(html).toContain("13 run errors");
+    expect(html).toContain("13 ungraded");
   }
 });
 

@@ -13,8 +13,10 @@ export function ModelSettingResults({ modelId }: { modelId: string }) {
       description="Latest recorded results for each setting, using the same scores as the leaderboard. Earlier runs remain in Run history."
     >
       <p className="model-profile-results-note">
-        Overall averages Spot, Perps, and Predictions equally. Incomplete settings remain unranked.
-        Select a category result to explore its tasks and chat transcripts.
+        Completed means every trial finished processing, including execution errors. Graded counts
+        trials with a pass or fail verdict. Overall averages Spot, Perps, and Predictions equally;
+        settings with ungraded trials remain unranked. Select a category result to explore its tasks
+        and chat transcripts.
       </p>
       <p className="model-profile-scroll-hint">Scroll across for category scores, time and cost.</p>
       <div

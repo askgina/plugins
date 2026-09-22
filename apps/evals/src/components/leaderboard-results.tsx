@@ -1,5 +1,6 @@
 import type { CanonicalRun } from "../canonical/canonical";
 import {
+  processingProgress,
   recordedOutcomes,
   type LeaderboardMetric,
   type LeaderboardModelRow,
@@ -114,11 +115,14 @@ export function RecordedResult({
 }) {
   if (runs.length === 0) return <span>Not evaluated</span>;
   const counts = recordedOutcomes(runs);
+  const progress = processingProgress(runs);
   const value =
     score !== null
       ? percent(score)
       : overall
-        ? `${counts.graded}/${counts.planned} graded`
+        ? progress.complete
+          ? "Completed"
+          : `${progress.processed}/${progress.planned} processed`
         : `${counts.passed} passed · ${counts.failed} failed`;
   const interruptions = [
     counts.timedOut > 0 ? `${counts.timedOut} timed out` : "",
@@ -138,15 +142,19 @@ export function RecordedResult({
       ) : (
         <span>{value}</span>
       )}
-      <small>
+      {overall && (score !== null || progress.complete) && (
+        <small>
+          {score !== null && progress.complete ? "Completed · " : ""}
+          {`${progress.processed}/${progress.planned} processed`}
+        </small>
+      )}
+      <small className={score !== null || overall ? "results-pass-fail" : undefined}>
         {score !== null || overall
           ? `${counts.passed} passed · ${counts.failed} failed`
           : `${counts.graded}/${counts.planned} graded`}
       </small>
-      {score !== null && (
-        <small>
-          {counts.graded}/{counts.planned} graded
-        </small>
+      {(score !== null || overall) && (
+        <small>{`${counts.graded}/${counts.planned} graded`}</small>
       )}
       {interruptions && <small>{interruptions}</small>}
       {score === null && overall && (
@@ -155,7 +163,7 @@ export function RecordedResult({
           {runs.length < 3
             ? "partial coverage"
             : counts.graded < counts.planned
-              ? "grading incomplete"
+              ? `${counts.planned - counts.graded} ungraded`
               : (reason ?? "not eligible")}
         </small>
       )}

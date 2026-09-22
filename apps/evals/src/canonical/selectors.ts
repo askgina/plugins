@@ -1061,6 +1061,27 @@ export function defaultLeaderboardRows(
   });
 }
 
+/** Terminal execution includes errors and timeouts; grading is a separate state. */
+export function processingProgress(runs: readonly CanonicalRun[]) {
+  const processed = (counts: CanonicalRunCounts) =>
+    counts.completed + counts.timedOut + counts.runtimeFailure;
+  return {
+    planned: runs.reduce((total, run) => total + run.counts.planned, 0),
+    processed: runs.reduce((total, run) => total + processed(run.counts), 0),
+    complete:
+      runs.length > 0 &&
+      runs.every(
+        ({ counts }) =>
+          counts.planned > 0 &&
+          counts.started === counts.planned &&
+          processed(counts) === counts.planned &&
+          counts.pending === 0 &&
+          counts.unstarted === 0 &&
+          counts.unknown === 0,
+      ),
+  };
+}
+
 export function recordedOutcomes(runs: readonly CanonicalRun[]) {
   return runs.reduce(
     (total, run) => ({

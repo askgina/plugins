@@ -259,9 +259,10 @@ export function LeaderboardMobile({
             <p>
               Latest per setting keeps each reasoning level separate, including incomplete results.
               Choose All campaigns (history) to inspect earlier runs. Recovery rows include retries
-              and show their recorded time budgets. Clients, reasoning controls, and time budgets
-              vary. Overall weights Spot, Perps, and Predictions equally. Small score differences do
-              not establish statistical significance.
+              and show their recorded time budgets. Completed means every trial finished processing,
+              including execution errors. Graded counts trials with a pass or fail verdict. Clients,
+              reasoning controls, and time budgets vary. Overall weights Spot, Perps, and Predictions
+              equally. Small score differences do not establish statistical significance.
             </p>
           </InfoPopover>
         </div>
