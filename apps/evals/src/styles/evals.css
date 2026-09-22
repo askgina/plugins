@@ -1,3 +1,7 @@
+html {
+  /* Keep navigation aligned across document-scrolling and panel-scrolling pages. */
+  scrollbar-gutter: stable;
+}
 html,
 body,
 #root {
@@ -44,11 +48,13 @@ body,
   opacity: 0.5;
 }
 .eval-header {
+  width: 100%;
   max-width: 1440px;
-  margin: auto;
+  margin: 0 auto;
   min-height: 86px;
   padding: 20px 52px;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 32px;
 }
