@@ -6,14 +6,6 @@
   flex-direction: column;
   overflow: hidden;
 }
-.task-workspace-shell .eval-header {
-  width: 100%;
-  max-width: none;
-  min-height: 72px;
-  margin: 0;
-  padding: 12px 24px;
-  flex-shrink: 0;
-}
 .task-workspace-shell .eval-main,
 .task-workspace-page {
   display: flex;
@@ -612,9 +604,6 @@
     height: auto;
     min-height: 100dvh;
     overflow: visible;
-  }
-  .task-workspace-shell .eval-header {
-    padding: 12px 16px 0;
   }
   .task-workspace-shell .task-workspace-page {
     padding: 12px 16px 24px;
