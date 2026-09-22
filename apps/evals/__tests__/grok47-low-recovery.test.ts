@@ -68,15 +68,15 @@ test("selects Low recovery in latest views while other levels keep their origina
     expect(selected).toHaveLength(4);
     const low = selected.find((row) => row.runs.Perps?.configuration.reasoning === "low")!;
     expect(low.campaignId).toBe(results.campaignId);
-    expect(low.overall).toBeNull();
+    expect(low.overall).toBeCloseTo((11 / 12 + 36 / 54 + 23 / 39) / 3);
     expect(low.estimatedCost.availability).toBe("unavailable");
     const html = renderToStaticMarkup(createElement(LeaderboardPage, { rows: [low] }));
-    expect(html).toContain(">79.3%</span>");
-    expect(html).toContain("Provisional · graded-only");
+    expect(html).toContain(">72.4%</span>");
+    expect(html).toContain("13 ungraded · zero credit");
     expect(html).toContain("105/105 processed");
     expect(html).toContain("92/105 graded");
     expect(html).toContain("13 run errors");
-    expect(html).toContain("Not ranked");
+    expect(html).not.toContain("Not ranked");
     for (const row of selected.filter((row) => row !== low))
       expect(row.campaignId).toBe(original.campaignId);
   }
@@ -89,8 +89,8 @@ test("Low is marked completed on the profile and mobile leaderboard with grading
     createElement(LeaderboardMobile, { rows: [low] }),
   ]) {
     const html = renderToStaticMarkup(view);
-    expect(html).toContain(">79.3%</span>");
-    expect(html).toContain("Provisional · graded-only");
+    expect(html).toContain(">72.4%</span>");
+    expect(html).toContain("13 ungraded · zero credit");
     expect(html).toContain("Completed · 105/105 processed");
     expect(html).toContain("92/105 graded");
     expect(html).toContain("13 run errors");

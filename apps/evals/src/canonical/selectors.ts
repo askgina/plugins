@@ -136,9 +136,10 @@ export function resolveBaselineRun(run: CanonicalRun): CanonicalRun | undefined 
 }
 
 // ---------------------------------------------------------------------------
-// Headline — passes/started is a quality sort key only when dispatch and grading
+// Conformance headline — passes/started is a quality sort key only when dispatch and grading
 // are complete. Dispatch reasons take precedence over incomplete grading;
 // otherwise show counts only, without treating unscored starts as failures.
+// The leaderboard's separate end-to-end metric includes terminal execution errors.
 // ---------------------------------------------------------------------------
 
 export type Headline =
@@ -781,8 +782,7 @@ export function unifiedLeaderboardRows(
       const scores = Object.fromEntries(
         SCORED_FAMILIES.map((family) => {
           const run = runs[family];
-          const key = run ? headlineSortKey(run) : -1;
-          return [family, key < 0 ? null : key];
+          return [family, run ? endToEndSuccessRate(run) : null];
         }),
       ) as Record<ScoredFamily, number | null>;
       const fullRuns = SCORED_FAMILIES.flatMap((family) => (runs[family] ? [runs[family]!] : []));
@@ -792,19 +792,15 @@ export function unifiedLeaderboardRows(
         : !compatibleSuiteRuns(fullRuns)
           ? "These runs have different benchmark settings."
           : SCORED_FAMILIES.some((family) => scores[family] === null)
-            ? (fullRuns
-                .map(headlineFor)
-                .flatMap((headline) =>
-                  headline.kind === "counts_only" ? [eligibilityText(headline.reason)] : [],
-                )[0] ?? "Complete dispatch and grading are needed in every category.")
+            ? "Every planned trial must finish processing in each category."
             : null;
       const overall =
         overallReason === null
           ? SCORED_FAMILIES.reduce((sum, family) => sum + scores[family]!, 0) /
             SCORED_FAMILIES.length
           : null;
-      // Measurement availability is independent of whether execution produced
-      // enough graded attempts for a quality ranking.
+      // Measurement availability is independent of end-to-end scoring;
+      // timing and cost disclose excluded executions separately.
       const measurementReason = missing
         ? "Results are needed in all three categories."
         : !compatibleSuiteRuns(fullRuns)
@@ -1055,8 +1051,12 @@ export function defaultLeaderboardRows(
     );
     const newest = newestFirst[0]!;
     return (
-      newestFirst.find((row) => row.campaignId === newest.campaignId && row.overall !== null) ??
-      newest
+      newestFirst.find(
+        (row) =>
+          row.campaignId === newest.campaignId &&
+          row.overall !== null &&
+          Object.values(row.runs).every((run) => scoringCoverageFor(run) === "complete"),
+      ) ?? newest
     );
   });
 }
@@ -1082,35 +1082,18 @@ export function processingProgress(runs: readonly CanonicalRun[]) {
   };
 }
 
-/** Conditional on retained grades; supports display sorting, never comparison eligibility. */
-export function gradedOnlyScore(runs: readonly CanonicalRun[], overall = false): number | null {
-  if (!processingProgress(runs).complete) return null;
+export const LEADERBOARD_SCORE_POLICY = "end-to-end-success-v1";
+
+/** Every planned slot remains in the denominator. Terminal non-passes earn zero credit. */
+export function endToEndSuccessRate(run: CanonicalRun): number | null {
   if (
-    runs.some(
-      (run) =>
-        run.origin !== "measured" ||
-        run.configuration.availability !== "pinned" ||
-        run.dispatchCoverage !== "complete" ||
-        run.counts.graded <= 0 ||
-        run.counts.graded > run.counts.completed ||
-        run.counts.passed + run.counts.failed !== run.counts.graded,
-    ) ||
-    runs.every((run) => run.counts.graded === run.counts.planned)
+    run.dispatchCoverage !== "complete" ||
+    !processingProgress([run]).complete ||
+    run.counts.graded > run.counts.completed ||
+    run.counts.passed + run.counts.failed !== run.counts.graded
   )
     return null;
-  if (overall) {
-    if (
-      runs.length !== SCORED_FAMILIES.length ||
-      !SCORED_FAMILIES.every((family) => runs.some((run) => run.family === family)) ||
-      !compatibleSuiteRuns(runs) ||
-      runs.some((run) => run.modelId !== runs[0]!.modelId || run.campaignId !== runs[0]!.campaignId)
-    )
-      return null;
-  } else if (runs.length !== 1) return null;
-  // Match Overall's equal-category weighting, with each denominator limited to grades.
-  return (
-    runs.reduce((total, run) => total + run.counts.passed / run.counts.graded, 0) / runs.length
-  );
+  return run.counts.passed / run.counts.planned;
 }
 
 export function recordedOutcomes(runs: readonly CanonicalRun[]) {
@@ -1148,13 +1131,12 @@ export function sortLeaderboardRows(
   direction: "asc" | "desc" = "desc",
 ): LeaderboardModelRow[] {
   const value = (row: LeaderboardModelRow): number | null => {
-    if (metric === "overall") return row.overall ?? gradedOnlyScore(Object.values(row.runs), true);
+    if (metric === "overall") return row.overall;
     if (metric === "time" || metric === "cost") {
       const summary = metric === "time" ? row.averageTime : row.estimatedCost;
       return summary.availability === "available" ? summary.value : null;
     }
-    const run = row.runs[metric];
-    return row.scores[metric] ?? gradedOnlyScore(run ? [run] : []);
+    return row.scores[metric];
   };
   return [...rows].sort((a, b) => {
     const av = value(a);

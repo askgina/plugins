@@ -196,7 +196,7 @@ describe("default leaderboard settings", () => {
     expect(gemini.overall).toBeCloseTo((4 / 12 + 20 / 54 + 9 / 39) / 3);
     expect(
       configurations.find((row) => row.runs.Spot?.runId === "astra-max-spot-1")?.overall,
-    ).toBeNull();
+    ).toBeCloseTo(0.3827160494);
   });
 });
 
@@ -386,8 +386,8 @@ describe("unified leaderboard", () => {
         expect(row.scores.Spot).toBe(0);
         expect(row.overall).toBeCloseTo(0.5 / 3);
       } else {
-        expect(row.scores.Spot).toBeNull();
-        expect(row.overall).toBeNull();
+        expect(row.scores.Spot).toBe(latest.counts.passed / latest.counts.planned);
+        expect(row.overall).toBeCloseTo((latest.counts.passed / latest.counts.planned + 0.5) / 3);
         const completed = outcomes.filter((outcome) => outcome === "pass").length;
         expect(row.averageTime).toEqual({
           availability: "available",
@@ -418,7 +418,7 @@ describe("unified leaderboard", () => {
     const complete = rows.find((row) => row.runs.Spot?.configuration.reasoning === "low")!;
     const partial = rows.find((row) => row.runs.Spot?.configuration.reasoning === "max")!;
     expect(complete.overall).toBe(0.5);
-    expect(partial.overall).toBeNull();
+    expect(partial.overall).toBeCloseTo(1 / 3);
     expect(partial.runs.Perps?.counts).toMatchObject({ passed: 1, timedOut: 1, runtimeFailure: 1 });
     expect(partial.averageTime).toEqual({
       availability: "available",
@@ -444,6 +444,7 @@ describe("unified leaderboard", () => {
     const missing = rowFor([
       {
         ...fixtureRun("Spot", ["runtime_failure", "runtime_failure", "runtime_failure"]),
+        dispatchCoverage: "unknown",
         pricing: null,
       },
     ]);

@@ -14,9 +14,9 @@ export function ModelSettingResults({ modelId }: { modelId: string }) {
     >
       <p className="model-profile-results-note">
         Completed means every trial finished processing, including execution errors. Graded counts
-        trials with a pass or fail verdict. Overall averages Spot, Perps, and Predictions equally.
-        Graded-only percentages exclude ungraded trials and remain provisional and unranked. Select
-        a category result to explore its tasks and chat transcripts.
+        trials with a pass or fail verdict. Scores divide verified passes by all planned trials;
+        timeouts and execution errors earn zero credit. Overall averages the three categories
+        equally. Select a category result to explore its tasks and chat transcripts.
       </p>
       <p className="model-profile-scroll-hint">Scroll across for category scores, time and cost.</p>
       <div

@@ -18,17 +18,19 @@ remain on their original publication until their recovery results are published.
 Original slots keep their 120-second budget. Every Low recovery attempt used
 720 seconds. The 114 recorded executions (105 original plus nine retries), their
 outcomes, budgets and terminal hashes are included in the numeric download. The
-new cohort cannot compare as the original fixed-budget run. Low remains unranked
-because 13 slots have no grade; cost remains unknown.
+new cohort cannot compare as the original fixed-budget run; cost remains unknown.
 
-The result cell shows a provisional graded-only percentage, with execution
-completion on its own line. Low's 79.3% is the equally weighted average of
-11/12 Spot, 36/47 Perps and 23/33 Predictions grades. The 13 ungraded slots are
-excluded from this conditional display rate. Tables sort by the displayed
-percentage, including provisional results, while comparison eligibility and
-efficiency charts still require complete grading. Fully graded
-settings keep their existing scores. A provisional Overall requires grades in
-all three compatible categories and finished processing in every selected slot.
+The leaderboard uses `end-to-end-success-v1`: verified passes divided by all
+planned trials, then an equal average across the three categories. Low scores
+72.4%, `(11/12 + 36/54 + 23/39) / 3`. Its 13 ungraded execution errors earn zero
+credit and stay visible as execution errors; original verdicts are unchanged.
+The earlier conditional 79.3% excluded those errors and is no longer a headline
+or sort value. Medium, High and xHigh score 67.1%, 68.0% and 68.9% on their
+published records. Fully graded Astra High stays at 86.6% and Max at 80.4%.
+Scores require all planned trials to finish processing, and Overall requires
+all three compatible categories. Direct controlled comparisons retain their
+grading requirements; efficiency charts exclude incompletely graded settings
+because their timing and cost samples omit execution errors.
 
 `tools/project-eval-grok47-low-recovery.py` runs beside the private VM evidence.
 It verifies both campaigns' source/config/code/manifest hashes, all 420 original

@@ -28,19 +28,19 @@ test("a shared mobile view restores model, campaign, grading, metric and sort di
   expect(html).toContain("105 attempts · 0 excluded");
 });
 
-test("incomplete mobile results retain execution errors and never turn into a ranked score", () => {
+test("mobile scores give execution errors zero credit while preserving their counts", () => {
   const html = render(
     "#/leaderboard?search=Astra&campaign=reasoning-sweep-2026-09-16&grading=incomplete",
   );
   const max = html.match(/<li data-mobile-configuration="astra-max-[^"]+"[^]*?<\/li>/u)?.[0];
   expect(max).toBeDefined();
   expect(max).toContain("32/105 graded");
-  expect(max).toContain("Not ranked");
+  expect(max).toContain("73 ungraded · zero credit");
   expect(max).toContain("run errors");
   expect(max).toContain("timed out");
-  // This historical setting has no Predictions grades, so even a provisional Overall is unavailable.
-  expect(max).not.toMatch(/\d+\.\d+%/u);
-  expect(max).toContain("Score unavailable");
+  // No Predictions grades means zero credit for that category, not a smaller denominator.
+  expect(max).toContain("38.3%");
+  expect(max).not.toContain("Score unavailable");
 });
 
 test("grouping keeps latest settings without inventing a combined model score", () => {

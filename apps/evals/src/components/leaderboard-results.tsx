@@ -1,6 +1,5 @@
 import type { CanonicalRun } from "../canonical/canonical";
 import {
-  gradedOnlyScore,
   processingProgress,
   recordedOutcomes,
   type LeaderboardMetric,
@@ -25,25 +24,25 @@ export const columns: readonly { metric: LeaderboardMetric; label: string; expla
       metric: "overall",
       label: "Overall",
       explanation:
-        "The average of Spot, Perps, and Predictions pass rates, with each category contributing one third. Sorting uses the displayed percentage. Graded-only percentages use available verdicts in each category, exclude ungraded trials, and remain provisional. Fully graded scores are required for comparisons and efficiency charts.",
+        "End-to-end success: average the Spot, Perps and Predictions scores equally. Each category divides verified passes by all planned trials. Timeouts, execution errors and terminal ungraded trials earn zero credit. Every planned trial must finish processing before a score is shown.",
     },
     {
       metric: "Spot",
       label: "Spot",
       explanation:
-        "Passed attempts divided by started attempts on spot-market tasks. Graded-only percentages divide by graded attempts instead and remain provisional. Timeouts and run errors remain unscored.",
+        "Verified passes divided by all planned spot-market trials. Timeouts, execution errors and terminal ungraded trials earn zero credit. Unfinished runs have no score.",
     },
     {
       metric: "Perps",
       label: "Perps",
       explanation:
-        "Passed attempts divided by started attempts on perpetual-futures tasks. Graded-only percentages divide by graded attempts instead and remain provisional. Timeouts and run errors remain unscored.",
+        "Verified passes divided by all planned perpetual-futures trials. Timeouts, execution errors and terminal ungraded trials earn zero credit. Unfinished runs have no score.",
     },
     {
       metric: "Predictions",
       label: "Predictions",
       explanation:
-        "Passed attempts divided by started attempts on prediction-market tasks. Graded-only percentages divide by graded attempts instead and remain provisional. Timeouts and run errors remain unscored.",
+        "Verified passes divided by all planned prediction-market trials. Timeouts, execution errors and terminal ungraded trials earn zero credit. Unfinished runs have no score.",
     },
     {
       metric: "time",
@@ -117,16 +116,13 @@ export function RecordedResult({
   if (runs.length === 0) return <span>Not evaluated</span>;
   const counts = recordedOutcomes(runs);
   const progress = processingProgress(runs);
-  const provisional = score === null ? gradedOnlyScore(runs, overall) : null;
-  const hasRate = score !== null || provisional !== null;
+  const hasRate = score !== null;
   const value =
     score !== null
       ? percent(score)
-      : provisional !== null
-        ? percent(provisional)
-        : overall
-          ? "Score unavailable"
-          : `${counts.passed} passed · ${counts.failed} failed`;
+      : overall
+        ? "Score unavailable"
+        : `${counts.passed} passed · ${counts.failed} failed`;
   const interruptions = [
     counts.timedOut > 0 ? `${counts.timedOut} timed out` : "",
     counts.runtimeFailure > 0 ? `${counts.runtimeFailure} run errors` : "",
@@ -145,10 +141,8 @@ export function RecordedResult({
       ) : (
         <span>{value}</span>
       )}
-      {provisional !== null && (
-        <small title="Excludes ungraded trials; unavailable for quality rankings.">
-          Provisional · graded-only
-        </small>
+      {hasRate && counts.graded < counts.planned && (
+        <small>{`${counts.planned - counts.graded} ungraded · zero credit`}</small>
       )}
       {overall && (
         <small>{`${progress.complete ? "Completed · " : ""}${progress.processed}/${progress.planned} processed`}</small>

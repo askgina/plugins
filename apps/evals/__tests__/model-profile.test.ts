@@ -44,7 +44,7 @@ test("Astra overview includes every effort and selects the latest whole setting 
   );
   expect(max.overall).toBeCloseTo(0.804368471);
   const xhigh = rows.find((row) => row.runs.Spot?.configuration.reasoning === "xhigh")!;
-  expect(xhigh.overall).toBeNull();
+  expect(xhigh.overall).toBeCloseTo((11 / 12 + 42 / 54 + 30 / 39) / 3);
   expect(xhigh.runs.Predictions?.counts.graded).toBe(38);
   expect(configurationLeaderboardRows().filter((row) => row.model.id === "astra")).toHaveLength(7);
 });

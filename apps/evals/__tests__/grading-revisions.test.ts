@@ -89,7 +89,7 @@ describe("versioned search regrade", () => {
       outputTokens: 23889,
     });
   });
-  test("applies the same rule across models while withholding incomplete rankings", () => {
+  test("applies the same grading rule across models and gives provider errors zero credit", () => {
     const rows = configurationLeaderboardRows();
     for (const [id, label, campaign, score] of [
       ["astra", "high", "reasoning-sweep-2026-09-16", (12 / 12 + 42 / 54 + 32 / 39) / 3],
@@ -112,6 +112,6 @@ describe("versioned search regrade", () => {
           r.configurationLabel?.startsWith("xhigh ") &&
           r.campaignId === "recovery-2026-09-21",
       )?.overall,
-    ).toBeNull();
+    ).toBeCloseTo((11 / 12 + 42 / 54 + 30 / 39) / 3);
   });
 });

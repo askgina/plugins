@@ -100,7 +100,8 @@ test("retains visible outcomes when a later configuration has incomplete grading
   expect(html).toContain("32/105 graded");
   expect(html).toContain("passed");
   expect(html).toContain("failed");
-  expect(html).toContain("Not ranked");
+  expect(html).toContain("73 ungraded · zero credit");
+  expect(html).toContain("38.3%");
   expect(html).not.toMatch(/>\s*—\s*</u);
   expect(html).toContain("run=astra-max-perps-1");
 });

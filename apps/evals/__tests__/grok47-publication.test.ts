@@ -37,7 +37,7 @@ test("publishes every terminal slot with execution failures separate from graded
   expect(canonicalRuns.some((run) => run.modelId === "grok")).toBe(true);
 });
 
-test("shows all four settings as unranked with their actual graded coverage and unknown cost", () => {
+test("scores all four completed settings with zero credit for errors and retains actual grading coverage", () => {
   expect(rows).toHaveLength(4);
   for (const [reasoning, graded, passed, failed] of [
     ["low", 87, 68, 19],
@@ -48,11 +48,13 @@ test("shows all four settings as unranked with their actual graded coverage and 
     const selected = runs.filter((run) => run.configuration.reasoning === reasoning);
     expect(recordedOutcomes(selected)).toMatchObject({ planned: 105, graded, passed, failed });
     const row = rows.find((entry) => entry.runs.Spot?.configuration.reasoning === reasoning)!;
-    expect(row.overall).toBeNull();
+    expect(row.overall).toBeCloseTo(
+      selected.reduce((sum, run) => sum + run.counts.passed / run.counts.planned, 0) / 3,
+    );
     expect(row.estimatedCost.availability).toBe("unavailable");
     const html = renderToStaticMarkup(createElement(LeaderboardPage, { rows: [row] }));
     expect(html).toContain(`${graded}/105 graded`);
-    expect(html).toContain("Not ranked");
+    expect(html).toContain(`${105 - graded} ungraded · zero credit`);
     expect(html).toContain("Grok 4.7");
     expect(html).not.toContain("$0.000");
   }
