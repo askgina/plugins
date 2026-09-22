@@ -2617,7 +2617,7 @@ function grok47RecoveryFamilyRun(row: SweepRow, source: GrokRecoveryRun): Canoni
     const execution = source.executions.find(
       (entry) => entry.caseId === attempt.caseId && entry.repetition === attempt.repetition,
     );
-    if (!execution) throw new Error("Missing Grok recovery execution history");
+    if (execution === undefined) throw new Error("Missing Grok recovery execution history");
     return {
       ...attempt,
       recovery: {

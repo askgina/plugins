@@ -265,9 +265,9 @@ const APPROVED_GROK47_ARTIFACTS: Readonly<Record<string, string>> = {
 // Numeric checks, public identifiers and evidence hashes only. Original result
 // and transcript bytes stay pinned separately above.
 const APPROVED_REGRADE_RECEIPT_SHA256 =
-  "c670879e5c0cee21f635b4eab3f709ad211c84f0c2be9902967af965cd52ec73";
+  "253072b330612f4d6e1f57e52d8b3e464ca743f893ed1146cecde41f78e76716";
 const APPROVED_PERPS_REGRADE_RECEIPT_SHA256 =
-  "4b79ed93b490e0f14beb1647e22f0cba88f47ea724c2ec2ce58552ecf7977e82";
+  "da9a0c8201dcd24012d51961a4d5b32d0b8d8fd6129c5ecb04775d7f6e97c239";
 const decodeArtifactJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
 
 /** Fixed diagnostics never include provider values or schema issue excerpts. */
