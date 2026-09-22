@@ -86,7 +86,9 @@ export function ConversationView({
   conversation,
   sha256,
   model,
+  compact = false,
 }: {
+  compact?: boolean;
   conversation: Conversation;
   sha256: string;
   model?: CanonicalModel;
@@ -112,22 +114,44 @@ export function ConversationView({
       if (block.call_id) toolNames.set(block.call_id, block.name);
     }
   }
+  const hasUserMessage = conversation.visibleMessages.some((message) => message.role === "user");
+  const recordedInput = (
+    <details className="conversation-output" open={!hasUserMessage}>
+      <summary>Recorded task input</summary>
+      {conversation.frozenUserTurns.map((turn, index) => (
+        <TranscriptText key={index} text={turn.content} source={source} />
+      ))}
+    </details>
+  );
   return (
-    <div className="conversation-view" data-expanded={fullHeight}>
-      <div className="conversation-heading">
-        <p className="conversation-title">
-          Conversation{" "}
-          <span>
-            {conversation.visibleMessages.length} messages · Attempt {conversation.repetition}
-          </span>
-        </p>
-        <span className="conversation-capture">
+    <div className="conversation-view" data-expanded={fullHeight} data-compact={compact}>
+      {compact ? (
+        <p className="conversation-summary">
+          {conversation.visibleMessages.length} messages ·{" "}
           {conversation.completeness.transcriptCaptureComplete
             ? "Capture complete"
             : "Partial transcript"}
-        </span>
-      </div>
-      {conversation.publication && (
+          {conversation.publication && " · Public transcript"}
+          {conversation.publication &&
+            Object.values(conversation.publication.redactions).some((count) => count > 0) &&
+            ". Redactions marked inline."}
+        </p>
+      ) : (
+        <div className="conversation-heading">
+          <p className="conversation-title">
+            Conversation{" "}
+            <span>
+              {conversation.visibleMessages.length} messages · Attempt {conversation.repetition}
+            </span>
+          </p>
+          <span className="conversation-capture">
+            {conversation.completeness.transcriptCaptureComplete
+              ? "Capture complete"
+              : "Partial transcript"}
+          </span>
+        </div>
+      )}
+      {!compact && conversation.publication && (
         <p className="conversation-label">
           Public transcript.{" "}
           {Object.values(conversation.publication.redactions).some((count) => count > 0)
@@ -169,15 +193,7 @@ export function ConversationView({
         </ul>
       )}
       <div id={transcriptId} ref={transcript}>
-        <details
-          className="conversation-output"
-          open={!conversation.visibleMessages.some((message) => message.role === "user")}
-        >
-          <summary>Recorded task input</summary>
-          {conversation.frozenUserTurns.map((turn, index) => (
-            <TranscriptText key={index} text={turn.content} source={source} />
-          ))}
-        </details>
+        {(!compact || !hasUserMessage) && recordedInput}
         {conversation.visibleMessages.length === 0 ? (
           <p>No conversation messages were retained for this attempt.</p>
         ) : (
@@ -228,6 +244,7 @@ export function ConversationView({
             ))}
           </ol>
         )}
+        {compact && hasUserMessage && recordedInput}
         <details className="conversation-output">
           <summary>Capture details</summary>
           <p>
@@ -268,7 +285,9 @@ type LoadState = { readonly status: "loading" | "error" } | ConversationResponse
 function LoadedConversation({
   reference,
   model,
+  compact = false,
 }: {
+  compact?: boolean;
   reference: ConversationReference;
   model?: CanonicalModel;
 }) {
@@ -294,7 +313,12 @@ function LoadedConversation({
     );
   if (state.status === "available")
     return (
-      <ConversationView conversation={state.conversation} sha256={state.sha256} model={model} />
+      <ConversationView
+        conversation={state.conversation}
+        sha256={state.sha256}
+        model={model}
+        compact={compact}
+      />
     );
   return (
     <div>
@@ -320,8 +344,10 @@ function LoadedConversation({
 export function ConversationPanel({
   reference,
   model,
+  compact = false,
   inline = false,
 }: {
+  compact?: boolean;
   reference?: ConversationReference;
   model: CanonicalModel | undefined;
   inline?: boolean;
@@ -333,7 +359,12 @@ export function ConversationPanel({
     );
   if (inline)
     return (
-      <LoadedConversation key={conversationUrl(reference)} reference={reference} model={model} />
+      <LoadedConversation
+        key={conversationUrl(reference)}
+        reference={reference}
+        model={model}
+        compact={compact}
+      />
     );
   return (
     <details
@@ -347,6 +378,7 @@ export function ConversationPanel({
             key={conversationUrl(reference)}
             reference={reference}
             model={model}
+            compact={compact}
           />
         )}
       </div>
@@ -357,7 +389,9 @@ export function ConversationPanel({
 function RecoveryConversation({
   attempt,
   model,
+  compact = false,
 }: {
+  compact?: boolean;
   attempt: CanonicalAttempt;
   model: CanonicalModel | undefined;
 }) {
@@ -398,7 +432,7 @@ function RecoveryConversation({
           </p>
         </div>
       )}
-      <ConversationPanel reference={reference} model={model} inline />
+      <ConversationPanel reference={reference} model={model} compact={compact} inline />
     </>
   );
 }
@@ -406,11 +440,13 @@ function RecoveryConversation({
 export function AttemptConversationPanel({
   attempt,
   model,
+  compact = false,
 }: {
+  compact?: boolean;
   attempt: CanonicalAttempt | undefined;
   model: CanonicalModel | undefined;
 }) {
-  if (!attempt) return <ConversationPanel model={model} inline />;
+  if (!attempt) return <ConversationPanel model={model} compact={compact} inline />;
   return (
     <RecoveryConversation
       key={
@@ -420,6 +456,7 @@ export function AttemptConversationPanel({
       }
       attempt={attempt}
       model={model}
+      compact={compact}
     />
   );
 }

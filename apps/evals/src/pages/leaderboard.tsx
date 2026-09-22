@@ -12,14 +12,14 @@ import {
 import { LeaderboardScatter } from "../components/leaderboard-scatter";
 import { LeaderboardConversations } from "../components/leaderboard-conversations";
 import { ModelAvatar, PageShell } from "../components/eval-ui";
-import { canonicalCampaigns } from "../canonical/canonical";
 import { InfoPopover, ResultsHeader, RunDetails, dollars, seconds } from "../components/results-ui";
 import {
   SCORED_FAMILIES,
   benchmarkSummary,
   campaignDisplayLabel,
   configurationLeaderboardRows,
-  deduplicateEvidenceRows,
+  leaderboardCampaignRows,
+  recordedBudgetLabel,
   recordedOutcomes,
   sortLeaderboardRows,
   type LeaderboardMetric,
@@ -45,8 +45,8 @@ export function LeaderboardPage({
   const [search, setSearch] = useState(initialSearch);
   const [campaign, setCampaign] = useState(() =>
     typeof window === "undefined"
-      ? "all"
-      : (new URLSearchParams(window.location.hash.split("?")[1]).get("campaign") ?? "all"),
+      ? "latest"
+      : (new URLSearchParams(window.location.hash.split("?")[1]).get("campaign") ?? "latest"),
   );
   const [grading, setGrading] = useState("all");
   const [metric, setMetric] = useState<LeaderboardMetric>("overall");
@@ -65,20 +65,18 @@ export function LeaderboardPage({
   }
   const query = search.trim().toLocaleLowerCase();
   const campaigns = [...new Set(rows.map((row) => row.campaignId).filter(Boolean))];
+  const campaignRows = leaderboardCampaignRows(rows, campaign);
   const shown = sortLeaderboardRows(
-    deduplicateEvidenceRows(
-      rows.filter((row) => {
-        const counts = recordedOutcomes(Object.values(row.runs));
-        const complete = counts.planned > 0 && counts.graded === counts.planned;
-        return (
-          `${row.model.name} ${row.model.provider} ${row.configurationLabel ?? ""} ${row.campaignId ?? ""}`
-            .toLocaleLowerCase()
-            .includes(query) &&
-          (campaign === "all" || row.campaignId === campaign) &&
-          (grading === "all" || (grading === "complete" ? complete : !complete))
-        );
-      }),
-    ),
+    campaignRows.filter((row) => {
+      const counts = recordedOutcomes(Object.values(row.runs));
+      const complete = counts.planned > 0 && counts.graded === counts.planned;
+      return (
+        `${row.model.name} ${row.model.provider} ${row.configurationLabel ?? ""} ${row.campaignId ?? ""}`
+          .toLocaleLowerCase()
+          .includes(query) &&
+        (grading === "all" || (grading === "complete" ? complete : !complete))
+      );
+    }),
     metric,
     direction,
   );
@@ -105,7 +103,7 @@ export function LeaderboardPage({
   }
   function clearFilters() {
     setSearch("");
-    setCampaign("all");
+    setCampaign("latest");
     setGrading("all");
   }
   return (
@@ -114,17 +112,22 @@ export function LeaderboardPage({
       <div className="eval-container results-page leaderboard-desktop">
         <ResultsHeader
           title="Gina Model Leaderboard"
-          description="Complete recorded results by model, reasoning setting, and campaign."
+          description={
+            campaign === "latest"
+              ? "The latest recorded result for each model and reasoning setting."
+              : "Recorded results by model, reasoning setting, and campaign."
+          }
         >
           <p className="results-context">{benchmarkSummary(rows)}</p>
           <p className="results-context">
-            Every recorded setting has its own row, including incomplete runs and earlier campaigns.
-            Identical attempts reused across campaigns appear once. Scores measure tool-use
-            conformance, with retained-price grounding for three Perps tasks. Other answer quality
-            was not evaluated.
+            Latest per setting keeps each reasoning level separate, including incomplete results.
+            Choose All campaigns (history) to inspect earlier runs. Scores measure tool-use
+            conformance, with price grounding for three Perps tasks. Other answer quality was not
+            evaluated.
           </p>
           <p className="results-context">
-            100% graded means every trial has a verdict. Each row shows its recorded time budgets.
+            Recovery rows include retries and show their recorded time budgets. 100% graded means
+            every trial has a verdict, not that every trial passed.
           </p>
         </ResultsHeader>
         <div className="results-toolbar">
@@ -133,8 +136,6 @@ export function LeaderboardPage({
             alongside the results. Overall weights Spot, Perps, and Predictions equally. Small score
             differences do not establish statistical significance.{" "}
             <a href="#/methodology">Methodology ↗</a>
-            {" · "}
-            <a href="#/handoff">Data and exports ↗</a>
           </p>
           <label className="results-search">
             <Search size={17} aria-hidden="true" />
@@ -151,7 +152,8 @@ export function LeaderboardPage({
           <label>
             Campaign
             <select value={campaign} onChange={(event) => setCampaign(event.target.value)}>
-              <option value="all">All recorded campaigns</option>
+              <option value="latest">Latest per setting</option>
+              <option value="all">All campaigns (history)</option>
               {campaigns.map((id) => (
                 <option key={id} value={id}>
                   {campaignDisplayLabel(id)}
@@ -168,9 +170,9 @@ export function LeaderboardPage({
             </select>
           </label>
           <p role="status" className="results-filter-summary">
-            {shown.length}/{rows.length} settings · {new Set(shown.map((row) => row.model.id)).size}{" "}
-            models · {totals.graded.toLocaleString()}/{totals.planned.toLocaleString()} attempts
-            graded
+            {shown.length} {campaign === "all" ? "records" : "settings"} ·{" "}
+            {new Set(shown.map((row) => row.model.id)).size} models ·{" "}
+            {totals.graded.toLocaleString()}/{totals.planned.toLocaleString()} attempts graded
             <span>
               {totals.passed.toLocaleString()} passed · {totals.failed.toLocaleString()} failed ·{" "}
               {totals.timedOut} timed out · {totals.runtimeFailure} run errors
@@ -185,8 +187,8 @@ export function LeaderboardPage({
         >
           <table className="results-table leaderboard-table">
             <caption className="results-sr-only">
-              All recorded model settings, sorted by{" "}
-              {columns.find((col) => col.metric === metric)?.label},{" "}
+              {campaign === "latest" ? "Latest model settings" : "Recorded model settings"}, sorted
+              by {columns.find((col) => col.metric === metric)?.label},{" "}
               {direction === "desc" ? "descending" : "ascending"}. Unavailable values appear last.
             </caption>
             <thead>
@@ -227,18 +229,7 @@ export function LeaderboardPage({
                 const label = rowLabel(row);
                 const runs = Object.values(row.runs);
                 const first = runs[0];
-                const timeouts = [
-                  ...new Set(
-                    runs.flatMap((run) => {
-                      if (run.recovery) return [...run.recovery.timeoutBudgetsMs];
-                      const timeout =
-                        run.timeoutMs ??
-                        canonicalCampaigns.find((entry) => entry.campaignId === run.campaignId)
-                          ?.timeoutMs;
-                      return timeout == null ? [] : [timeout];
-                    }),
-                  ),
-                ];
+                const recovery = runs.some((run) => run.recovery);
                 return (
                   <Fragment key={key}>
                     <tr
@@ -264,16 +255,9 @@ export function LeaderboardPage({
                               {row.configurationLabel ?? "Recorded setting"}
                             </small>
                             <small>
-                              {first?.startedAt.slice(0, 10)} ·{" "}
-                              {timeouts.length
-                                ? `${timeouts
-                                    .map((value) => value! / 1000)
-                                    .sort((a, b) => a - b)
-                                    .join(
-                                      " / ",
-                                    )}s ${first?.recovery ? "recorded budgets" : "timeout"}`
-                                : "Timeout not recorded"}{" "}
-                              · {first?.cohort.repetitions} reps
+                              {recovery && "Recovery · "}
+                              {first?.startedAt.slice(0, 10)} · {recordedBudgetLabel(runs)} ·{" "}
+                              {first?.cohort.repetitions} reps
                             </small>
                             {row.coverageLabel && <small>{row.coverageLabel}</small>}
                             <div className="results-row-actions">

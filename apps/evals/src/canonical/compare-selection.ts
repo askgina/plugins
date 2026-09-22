@@ -1,6 +1,47 @@
 import type { CanonicalRun, PrototypeFamily } from "./canonical";
+import { compareEligibility, scoringCoverageFor } from "./selectors";
 
-/** Prefer matching test conditions and effort, then date. Never choose by result. */
+function newestFirst(a: CanonicalRun, b: CanonicalRun): number {
+  return (
+    (b.recovery?.capturedAt ?? b.startedAt).localeCompare(a.recovery?.capturedAt ?? a.startedAt) ||
+    a.runId.localeCompare(b.runId)
+  );
+}
+
+/** Choose the latest evidence before considering grades or scores. */
+function latestCompareRecordings(runs: readonly CanonicalRun[]): CanonicalRun[] {
+  const latest = new Map<string, CanonicalRun>();
+  for (const run of [...runs].sort(newestFirst)) {
+    const key = JSON.stringify([
+      run.origin,
+      run.modelId,
+      run.family,
+      run.cohort.cohortId,
+      run.configuration.reasoning,
+    ]);
+    if (!latest.has(key)) latest.set(key, run);
+  }
+  return [...latest.values()];
+}
+
+function isFullyGraded(run: CanonicalRun): boolean {
+  return (
+    run.origin === "measured" &&
+    run.counts.planned > 0 &&
+    scoringCoverageFor(run) === "complete" &&
+    compareEligibility(run, run).eligible
+  );
+}
+
+function passRate(run: CanonicalRun): number {
+  return run.counts.passed / run.counts.planned;
+}
+
+function strongestFirst(a: CanonicalRun, b: CanonicalRun): number {
+  return passRate(b) - passRate(a) || newestFirst(a, b);
+}
+
+/** Automatic model choices favor complete, matching evidence; explicit run choices stay intact. */
 export function preferredCompareRun(
   runs: readonly CanonicalRun[],
   modelId: string,
@@ -8,15 +49,78 @@ export function preferredCompareRun(
   reference?: CanonicalRun,
   reasoning = reference?.configuration.reasoning,
 ): CanonicalRun | undefined {
-  return runs
+  return latestCompareRecordings(runs)
     .filter((run) => run.modelId === modelId && run.family === family)
     .sort(
       (a, b) =>
+        Number(
+          Boolean(reference && isFullyGraded(b) && compareEligibility(reference, b).eligible),
+        ) -
+          Number(
+            Boolean(reference && isFullyGraded(a) && compareEligibility(reference, a).eligible),
+          ) ||
         Number(b.cohort.cohortId === reference?.cohort.cohortId) -
           Number(a.cohort.cohortId === reference?.cohort.cohortId) ||
+        Number(isFullyGraded(b)) - Number(isFullyGraded(a)) ||
         Number(b.configuration.reasoning === reasoning) -
           Number(a.configuration.reasoning === reasoning) ||
-        b.startedAt.localeCompare(a.startedAt) ||
-        a.runId.localeCompare(b.runId),
+        newestFirst(a, b),
     )[0];
+}
+
+export interface ComparePair {
+  readonly left: CanonicalRun;
+  readonly right: CanonicalRun;
+}
+
+/** Highest combined pass rate among fully graded, comparable, distinct models. */
+export function recommendedComparePair(
+  runs: readonly CanonicalRun[],
+  family: PrototypeFamily,
+): ComparePair | undefined {
+  const candidates = latestCompareRecordings(runs)
+    .filter((run) => run.family === family && isFullyGraded(run))
+    .sort(strongestFirst);
+  let best: ComparePair | undefined;
+  let bestRate = -1;
+  for (const [index, left] of candidates.entries()) {
+    for (const right of candidates.slice(index + 1)) {
+      if (left.modelId === right.modelId || !compareEligibility(left, right).eligible) continue;
+      const rate = passRate(left) + passRate(right);
+      if (rate > bestRate) {
+        best = { left, right };
+        bestRate = rate;
+      }
+    }
+  }
+  return best;
+}
+
+/** Fill only unspecified sides. Broken, withdrawn and incomplete links remain inspectable. */
+export function resolveCompareSelection(
+  runs: readonly CanonicalRun[],
+  family: PrototypeFamily,
+  left?: string,
+  right?: string,
+): { left?: string; right?: string } {
+  if (left !== undefined && right !== undefined) return { left, right };
+  if (left === undefined && right === undefined) {
+    const pair = recommendedComparePair(runs, family);
+    return { left: pair?.left.runId, right: pair?.right.runId };
+  }
+  const selected = runs.find((run) => run.runId === (left ?? right));
+  if (!selected || selected.family !== family || !isFullyGraded(selected)) return { left, right };
+  const opponent = latestCompareRecordings(runs)
+    .filter(
+      (run) =>
+        run.family === family &&
+        run.modelId !== selected.modelId &&
+        isFullyGraded(run) &&
+        compareEligibility(selected, run).eligible,
+    )
+    .sort(strongestFirst)[0];
+  return {
+    left: left ?? opponent?.runId,
+    right: right ?? opponent?.runId,
+  };
 }

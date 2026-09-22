@@ -3,7 +3,8 @@ import { ArrowDown, ArrowUp, ChevronDown, Search, SlidersHorizontal, X } from "l
 import {
   benchmarkSummary,
   campaignDisplayLabel,
-  deduplicateEvidenceRows,
+  leaderboardCampaignRows,
+  recordedBudgetLabel,
   recordedOutcomes,
   SCORED_FAMILIES,
   sortLeaderboardRows,
@@ -43,7 +44,7 @@ function initialState(search: string) {
     columns.find((column) => column.metric === params.get("metric"))?.metric ?? "overall";
   return {
     search: params.get("search") ?? search,
-    campaign: params.get("campaign") ?? "all",
+    campaign: params.get("campaign") ?? "latest",
     grading: ["complete", "incomplete"].includes(params.get("grading") ?? "")
       ? params.get("grading")!
       : "all",
@@ -147,28 +148,26 @@ export function LeaderboardMobile({
   const column = columns.find((entry) => entry.metric === state.metric)!;
   const campaigns = [...new Set(rows.map((row) => row.campaignId).filter(Boolean))];
   const query = state.search.trim().toLocaleLowerCase();
+  const campaignRows = leaderboardCampaignRows(rows, state.campaign);
   const shown = sortLeaderboardRows(
-    deduplicateEvidenceRows(
-      rows.filter((row) => {
-        const counts = recordedOutcomes(Object.values(row.runs));
-        const complete = counts.planned > 0 && counts.graded === counts.planned;
-        return (
-          `${row.model.name} ${row.model.provider} ${row.configurationLabel ?? ""} ${row.campaignId ?? ""}`
-            .toLocaleLowerCase()
-            .includes(query) &&
-          (state.campaign === "all" || row.campaignId === state.campaign) &&
-          (state.grading === "all" || (state.grading === "complete" ? complete : !complete))
-        );
-      }),
-    ),
+    campaignRows.filter((row) => {
+      const counts = recordedOutcomes(Object.values(row.runs));
+      const complete = counts.planned > 0 && counts.graded === counts.planned;
+      return (
+        `${row.model.name} ${row.model.provider} ${row.configurationLabel ?? ""} ${row.campaignId ?? ""}`
+          .toLocaleLowerCase()
+          .includes(query) &&
+        (state.grading === "all" || (state.grading === "complete" ? complete : !complete))
+      );
+    }),
     state.metric,
     state.direction,
   );
   const groups = new Map<string, LeaderboardModelRow[]>();
   for (const row of shown) groups.set(row.model.id, [...(groups.get(row.model.id) ?? []), row]);
   const totals = recordedOutcomes(shown.flatMap((row) => Object.values(row.runs)));
-  const hasFilters = Boolean(query || state.campaign !== "all" || state.grading !== "all");
-  const scope = `${state.campaign === "all" ? "All campaigns" : campaignDisplayLabel(state.campaign)} · ${state.grading === "all" ? "All results" : state.grading === "complete" ? "Fully graded" : "Incomplete grading"}`;
+  const hasFilters = Boolean(query || state.campaign !== "latest" || state.grading !== "all");
+  const scope = `${state.campaign === "latest" ? "Latest per setting" : state.campaign === "all" ? "All campaigns (history)" : campaignDisplayLabel(state.campaign)} · ${state.grading === "all" ? "All results" : state.grading === "complete" ? "Fully graded" : "Incomplete grading"}`;
 
   useEffect(() => {
     // Keep mobile exploration shareable without changing desktop navigation or
@@ -178,7 +177,7 @@ export function LeaderboardMobile({
     const params = new URLSearchParams(search);
     for (const [key, value, fallback] of [
       ["search", state.search, ""],
-      ["campaign", state.campaign, "all"],
+      ["campaign", state.campaign, "latest"],
       ["grading", state.grading, "all"],
       ["metric", state.metric, "overall"],
       ["direction", state.direction, "desc"],
@@ -196,7 +195,7 @@ export function LeaderboardMobile({
   }, [state]);
 
   function clearFilters() {
-    setState({ ...state, search: "", campaign: "all", grading: "all" });
+    setState({ ...state, search: "", campaign: "latest", grading: "all" });
   }
   function closeInspection(key: string) {
     setSelected(null);
@@ -205,7 +204,9 @@ export function LeaderboardMobile({
   function renderRow(row: LeaderboardModelRow) {
     const key = rowKey(row);
     const open = selected === key;
-    const first = Object.values(row.runs)[0];
+    const runs = Object.values(row.runs);
+    const first = runs[0];
+    const recovery = runs.some((run) => run.recovery);
     return (
       <li key={key} data-mobile-configuration={key}>
         <div className="lb-mobile-row" data-selected={open}>
@@ -224,7 +225,11 @@ export function LeaderboardMobile({
               <small>
                 {row.configurationLabel?.replace(" reasoning", "") ?? "Recorded setting"}
               </small>
-              <small>{first?.startedAt.slice(0, 10) ?? "Date not recorded"}</small>
+              <small>
+                {recovery && "Recovery · "}
+                {first?.startedAt.slice(0, 10) ?? "Date not recorded"}
+              </small>
+              {recovery && <small>{recordedBudgetLabel(runs)}</small>}
             </span>
             <ChevronDown size={14} aria-hidden="true" />
           </button>
@@ -252,12 +257,12 @@ export function LeaderboardMobile({
           <a href="#/methodology">Methodology ↗</a>
           <InfoPopover label="Comparison conditions">
             <p>
-              Every recorded setting is retained, including incomplete runs and earlier campaigns.
-              Identical attempts reused across campaigns appear once. Clients, reasoning controls,
-              and time budgets vary. Overall weights Spot, Perps, and Predictions equally. Small
-              score differences do not establish statistical significance.
+              Latest per setting keeps each reasoning level separate, including incomplete results.
+              Choose All campaigns (history) to inspect earlier runs. Recovery rows include retries
+              and show their recorded time budgets. Clients, reasoning controls, and time budgets
+              vary. Overall weights Spot, Perps, and Predictions equally. Small score differences do
+              not establish statistical significance.
             </p>
-            <a href="#/handoff">Data and exports ↗</a>
           </InfoPopover>
         </div>
       </ResultsHeader>
@@ -298,7 +303,8 @@ export function LeaderboardMobile({
             value={state.campaign}
             onChange={(event) => setState({ ...state, campaign: event.target.value })}
           >
-            <option value="all">All campaigns</option>
+            <option value="latest">Latest per setting</option>
+            <option value="all">All campaigns (history)</option>
             {campaigns.map((campaign) => (
               <option key={campaign} value={campaign}>
                 {campaignDisplayLabel(campaign)}
@@ -361,7 +367,8 @@ export function LeaderboardMobile({
         </div>
         <div className="lb-mobile-result-summary">
           <p role="status">
-            {shown.length} settings · {groups.size} {groups.size === 1 ? "model" : "models"}
+            {shown.length} {state.campaign === "all" ? "records" : "settings"} · {groups.size}{" "}
+            {groups.size === 1 ? "model" : "models"}
           </p>
           <InfoPopover label={`About ${column.label}`}>
             <p>{column.explanation}</p>

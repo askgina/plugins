@@ -13,7 +13,6 @@ const navigation: readonly { id: ShellPageId; label: string; href: string }[] = 
   { id: "tasks", label: "Tasks", href: "#/tasks" },
   { id: "methodology", label: "Methodology", href: "#/methodology" },
   { id: "compare", label: "Compare", href: "#/compare" },
-  { id: "handoff", label: "Exports", href: "#/handoff" },
 ];
 
 const DATA_ORIGIN_NOTE =
@@ -23,13 +22,15 @@ export function PageShell({
   active,
   children,
   footerNote,
+  className,
 }: {
   active: ShellPageId;
   children: ReactNode;
   footerNote?: string;
+  className?: string;
 }) {
   return (
-    <div className="eval-app">
+    <div className={`eval-app${className ? ` ${className}` : ""}`}>
       <a className="eval-skip-link" href="#eval-main">
         Skip to content
       </a>

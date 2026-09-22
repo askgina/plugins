@@ -49,27 +49,38 @@ export function navigate(path: string): void {
   window.location.hash = path;
 }
 
+function enabledRoute(route: string): string {
+  return matchPath("/handoff", parseRoute(route).path) !== null
+    ? DEFAULT_ROUTE
+    : route || DEFAULT_ROUTE;
+}
+
 /**
  * The current hash route, re-rendering on `hashchange`. The bare `#eval-main`
  * skip-link anchor is ignored so it never remounts the current page.
  */
 export function useHashRoute(): string {
-  const [route, setRoute] = useState(() => window.location.hash.slice(1) || DEFAULT_ROUTE);
+  const [route, setRoute] = useState(() => enabledRoute(window.location.hash.slice(1)));
   useEffect(() => {
-    let previousRoute = window.location.hash.slice(1) || DEFAULT_ROUTE;
+    let previousRoute = enabledRoute(window.location.hash.slice(1));
     const handleRoute = () => {
-      const nextRoute = window.location.hash.slice(1);
-      if (nextRoute === "eval-main") return;
-      setRoute(nextRoute || DEFAULT_ROUTE);
+      const requestedRoute = window.location.hash.slice(1);
+      if (requestedRoute === "eval-main") return;
+      const nextRoute = enabledRoute(requestedRoute);
+      if (requestedRoute && nextRoute !== requestedRoute)
+        window.history.replaceState(window.history.state, "", `#${nextRoute}`);
+      setRoute(nextRoute);
       // Updating selections should not throw the reviewer back to the page heading.
       const previousPath = parseRoute(previousRoute).path;
       const nextPath = parseRoute(nextRoute).path;
       const withinSelections =
         previousPath === nextPath && ["/tasks", "/compare"].includes(nextPath);
-      previousRoute = nextRoute || DEFAULT_ROUTE;
+      previousRoute = nextRoute;
       if (!withinSelections) window.scrollTo({ top: 0, behavior: "auto" });
     };
     window.addEventListener("hashchange", handleRoute);
+    const initialRoute = window.location.hash.slice(1);
+    if (initialRoute && enabledRoute(initialRoute) !== initialRoute) handleRoute();
     return () => window.removeEventListener("hashchange", handleRoute);
   }, []);
   return route;
