@@ -252,12 +252,18 @@ const APPROVED_RECOVERY_ARTIFACTS: Readonly<Record<string, string>> = {
   "src/results/2026-09-21/recovery/snapshot.json":
     "a4e5b8a350e822d687e8cd85f7db64bdfb70c2776f11cf96e56a1a3d87ccf5fe",
 };
+const APPROVED_GROK47_ARTIFACTS: Readonly<Record<string, string>> = {
+  "src/results/2026-09-22/grok-4.7/results.json":
+    "88d508cc4fa4b0a0c74e725bbabed8c50744ccd1ee91465666e845fca9cf91ef",
+  "src/results/2026-09-22/grok-4.7/snapshot.json":
+    "cdb01a1faf2db9b4f2806c042fc3f5831a3d1eb0d7237b56aa2a11697974bf4f",
+};
 // Numeric checks, public identifiers and evidence hashes only. Original result
 // and transcript bytes stay pinned separately above.
 const APPROVED_REGRADE_RECEIPT_SHA256 =
-  "0abf96e65ba3a089f7a243a13888a96fdb223802fe6a24a5b45e348d0145bf2e";
+  "d0536ced795ab2384bd1b7234c61bbcc37df9c2f0e1a337fa34fa36290322002";
 const APPROVED_PERPS_REGRADE_RECEIPT_SHA256 =
-  "43b6bd06bc2fe94d1baf82cb6d5f5569012a910d5efc4ce8d8b591e0b4f76570";
+  "c08d05899652439dc4bd8df803dbeda4d79c8fcb4df49a056da6a12208642d12";
 const decodeArtifactJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
 
 /** Fixed diagnostics never include provider values or schema issue excerpts. */
@@ -377,8 +383,10 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
         }
         if (info.type !== "File") return yield* fail(relative, "unsupported_entry");
         const publicTranscript = relative.startsWith("public/transcripts/");
+        const grok47Artifact = relative.startsWith("src/results/2026-09-22/grok-4.7/");
         if (!relative.toLowerCase().endsWith(".json")) {
-          if (publicTranscript) return yield* fail(relative, "unapproved_artifact");
+          if (publicTranscript || grok47Artifact)
+            return yield* fail(relative, "unapproved_artifact");
           return;
         }
         const bytes = yield* fs
@@ -427,7 +435,14 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
               APPROVED_RECOVERY_ARTIFACTS[relative])
         )
           return yield* fail(relative, "unapproved_artifact");
-        if (claudeBearing || sweepArtifact || recoveryArtifact) {
+        if (
+          grok47Artifact &&
+          (!Object.hasOwn(APPROVED_GROK47_ARTIFACTS, relative) ||
+            createHash("sha256").update(bytes).digest("hex") !==
+              APPROVED_GROK47_ARTIFACTS[relative])
+        )
+          return yield* fail(relative, "unapproved_artifact");
+        if (claudeBearing || sweepArtifact || recoveryArtifact || grok47Artifact) {
           yield* validateClaudePublicArtifact(input, relative);
         }
         if (claudeBearing) {

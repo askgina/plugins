@@ -28,7 +28,7 @@
     },
     {
       "path": "apps/evals/src/canonical/canonical.ts",
-      "sha256": "4d2f07e7f3552c02dedeeb40b44ff9bf59e8dfe01f19dfac55c2bdfd70792777"
+      "sha256": "98bc1fb99d9aa01956a01cce9f82719bc251aff3200431e30bdc34698cf1e026"
     },
     {
       "path": "apps/evals/src/lib/grading-revisions.ts",

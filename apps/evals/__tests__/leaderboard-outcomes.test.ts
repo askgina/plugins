@@ -33,7 +33,7 @@ test("shows the latest campaign for each model setting by default", () => {
   for (const row of configurations) {
     expect(html).toContain(`data-configuration="${row.rowId}"`);
   }
-  expect(new Set(configurations.map((row) => row.model.id)).size).toBe(10);
+  expect(new Set(configurations.map((row) => row.model.id)).size).toBe(11);
   expect(html).toContain("Latest per setting keeps each reasoning level separate");
   expect(html).toContain("Recovery ·");
   expect(html).not.toContain("Recorded setting</label>");
@@ -43,8 +43,8 @@ test("shows the latest campaign for each model setting by default", () => {
 test("desktop history retains older results behind the campaign selector", () => {
   vi.stubGlobal("window", { location: { hash: "#/leaderboard?campaign=all" } });
   const html = renderToStaticMarkup(createElement(LeaderboardPage));
-  expect(html.match(/<tr data-configuration=/gu)).toHaveLength(50);
-  expect(html).toContain("50 records");
+  expect(html.match(/<tr data-configuration=/gu)).toHaveLength(54);
+  expect(html).toContain("54 records");
   expect(html).toContain('data-configuration="astra-max-');
   expect(html).toContain('data-configuration="recovery-astra-max-');
 });

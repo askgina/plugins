@@ -43,6 +43,15 @@ const sourcePaths = [
 const json = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Unknown));
 const object = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown));
 const hash = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
+// This receipt audits retained historical transcripts. Later campaigns apply
+// the price policy during execution and publish their own evidence.
+const campaigns = new Set([
+  "omp-2026-09-11",
+  "muse-2026-09-14",
+  "claude-2026-09-14",
+  "reasoning-sweep-2026-09-16",
+  "recovery-2026-09-21",
+]);
 const hostTools = new Set([
   "read",
   "read_skill",
@@ -84,7 +93,12 @@ const main = Effect.gen(function* () {
   const entries: GradingRevisionEntry[] = [];
   const skipped: { runId: string; caseId: string; repetition: number; reason: string }[] = [];
   for (const run of originalCanonicalRuns) {
-    if (run.family !== "Perps" || run.attempts.availability !== "available") continue;
+    if (
+      !campaigns.has(run.campaignId) ||
+      run.family !== "Perps" ||
+      run.attempts.availability !== "available"
+    )
+      continue;
     for (const attempt of run.attempts.value) {
       const evalCase = cases.get(attempt.caseId);
       if (evalCase?.expected.routing.kind !== "perps_price") continue;
