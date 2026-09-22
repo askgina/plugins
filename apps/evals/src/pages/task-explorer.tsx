@@ -16,7 +16,7 @@ import {
   type TaskSummary,
 } from "../canonical/selectors";
 import { ModelAvatar, PageShell } from "../components/eval-ui";
-import { ResultsHeader, seconds } from "../components/results-ui";
+import { seconds } from "../components/results-ui";
 import { AttemptConversationPanel } from "../components/conversation-panel";
 import { AttemptChecks, TaskCriteria, TaskRunEvidence } from "../components/task-evidence";
 import {
@@ -141,8 +141,13 @@ export function TaskExplorerPage({
   });
   const [search, setSearch] = useState(initialSearch);
   const [modelSearch, setModelSearch] = useState("");
+  const [modelSearchOpen, setModelSearchOpen] = useState(false);
   const evidenceBody = useRef<HTMLDivElement>(null);
   const modelList = useRef<HTMLDivElement>(null);
+  const modelSearchInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (modelSearchOpen) modelSearchInput.current?.focus();
+  }, [modelSearchOpen]);
   useEffect(() => {
     setSelection({
       family: initialFamily,
@@ -186,17 +191,30 @@ export function TaskExplorerPage({
     `${entry.model.name} ${entry.model.provider}`.toLocaleLowerCase().includes(modelQuery),
   );
   useEffect(() => {
-    evidenceBody.current?.scrollTo({ top: 0 });
+    const body = evidenceBody.current;
+    if (!body) return;
+    body.scrollTo({ top: 0 });
+    // On phones the document scrolls, so advancing at the end of a transcript
+    // should bring the new evidence into view without skipping the initial pickers.
+    if (getComputedStyle(body).overflowY === "visible" && body.getBoundingClientRect().top < 0)
+      body.scrollIntoView({ block: "start" });
   }, [definition?.caseId, run?.runId, repetition, view]);
   useEffect(() => {
     const list = modelList.current;
     const selected = list?.querySelector<HTMLButtonElement>('[aria-pressed="true"]');
     if (!list || !selected) return;
-    const top = selected.offsetTop;
-    const bottom = top + selected.offsetHeight;
-    if (top < list.scrollTop) list.scrollTop = top;
-    else if (bottom > list.scrollTop + list.clientHeight)
-      list.scrollTop = bottom - list.clientHeight;
+    const revealSelection = () => {
+      if (!list.clientHeight) return;
+      const top = selected.offsetTop;
+      const bottom = top + selected.offsetHeight;
+      if (top < list.scrollTop) list.scrollTop = top;
+      else if (bottom > list.scrollTop + list.clientHeight)
+        list.scrollTop = bottom - list.clientHeight;
+    };
+    revealSelection();
+    const observer = new ResizeObserver(revealSelection);
+    observer.observe(list);
+    return () => observer.disconnect();
   }, [row?.model.id, modelQuery]);
 
   function move(next: Partial<TaskSelection>) {
@@ -234,12 +252,12 @@ export function TaskExplorerPage({
   }
 
   return (
-    <PageShell active="tasks">
+    <PageShell active="tasks" className="task-workspace-shell">
       <div className="eval-container results-page task-workspace-page">
-        <ResultsHeader
-          title="Tasks"
-          description="Read each prompt and compare the models’ results."
-        />
+        <header className="task-workspace-page-heading">
+          <h1>Tasks</h1>
+          <p>Compare model responses and inspect the evidence.</p>
+        </header>
         <div className="results-toolbar task-toolbar">
           <nav className="results-category-tabs" aria-label="Task categories">
             {PROTOTYPE_FAMILIES.map((category) => (
@@ -250,7 +268,6 @@ export function TaskExplorerPage({
                 onClick={() => chooseFamily(category)}
               >
                 {category} <span>({caseDefinitionsForFamily(category).length})</span>
-                {category === "Portfolio" && <small>Not evaluated</small>}
               </button>
             ))}
           </nav>
@@ -265,11 +282,6 @@ export function TaskExplorerPage({
             />
           </label>
         </div>
-        <p className="results-footnote">
-          {family === "Portfolio"
-            ? "Portfolio tasks have not been evaluated and do not contribute to Overall."
-            : "Choose a task, then a model to inspect its recorded settings, attempts, and evidence."}
-        </p>
         {!definition ? (
           <div className="task-workspace-empty" role="status">
             <h2>No tasks match “{search}”</h2>
@@ -308,61 +320,69 @@ export function TaskExplorerPage({
                     aria-current={definition.caseId === entry.caseId ? "true" : undefined}
                     onClick={() => move({ caseId: entry.caseId, attempt: undefined })}
                   >
-                    <ChevronRight size={15} aria-hidden="true" />
                     <span>{taskName(entry)}</span>
                   </button>
                 ))}
               </nav>
             </section>
-            <section className="task-workspace-models" aria-labelledby="workspace-task-heading">
-              <div className="task-workspace-prompt" key={definition.caseId}>
-                <h2 id="workspace-task-heading">{taskName(definition)}</h2>
-                <h3>Full prompt</h3>
-                <EvidenceValue
-                  evidence={definition.prompt}
-                  renderValue={(prompt) => <p>{prompt}</p>}
-                />
-                <TaskCriteria definition={definition} />
-              </div>
+            <section
+              className="task-workspace-models"
+              aria-labelledby="workspace-models-heading"
+              data-search-open={modelSearchOpen || Boolean(modelSearch)}
+            >
+              {rows.length > 0 && (
+                <label className="task-workspace-model-select">
+                  <span className="results-sr-only">Selected model</span>
+                  <select
+                    value={row?.model.id ?? ""}
+                    onChange={(event) => chooseModel(event.target.value)}
+                  >
+                    {row && !shownModels.includes(row) && (
+                      <option value={row.model.id}>{row.model.name} (selected)</option>
+                    )}
+                    {shownModels.map((entry) => (
+                      <option key={entry.model.id} value={entry.model.id}>
+                        {entry.model.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <div className="task-workspace-model-tools">
                 <div className="task-workspace-heading">
-                  <h3>Model results</h3>
+                  <h2 id="workspace-models-heading">Models</h2>
                   <span>
                     {modelQuery ? `${shownModels.length} of ${rows.length}` : rows.length} models
                   </span>
                 </div>
-                <label className="task-workspace-model-search">
+                <button
+                  type="button"
+                  className="task-workspace-model-search-toggle"
+                  aria-label="Search models"
+                  aria-expanded={modelSearchOpen || Boolean(modelSearch)}
+                  aria-controls="workspace-model-search"
+                  onClick={() => {
+                    const expanded = modelSearchOpen || Boolean(modelSearch);
+                    setModelSearchOpen(!expanded);
+                    if (expanded) setModelSearch("");
+                  }}
+                >
+                  <Search size={17} aria-hidden="true" />
+                </button>
+                <label id="workspace-model-search" className="task-workspace-model-search">
                   <Search size={15} aria-hidden="true" />
                   <span className="results-sr-only">Search models</span>
                   <input
                     type="search"
+                    ref={modelSearchInput}
                     placeholder="Search models"
                     value={modelSearch}
                     onChange={(event) => setModelSearch(event.target.value)}
                   />
                 </label>
-                <p className="task-workspace-hint">
-                  Latest recorded setting per model. Select a model to browse its history.
-                </p>
               </div>
               {shownModels.length ? (
                 <>
-                  <label className="task-workspace-model-select">
-                    <span className="results-sr-only">Selected model</span>
-                    <select
-                      value={row?.model.id ?? ""}
-                      onChange={(event) => chooseModel(event.target.value)}
-                    >
-                      {row && !shownModels.includes(row) && (
-                        <option value={row.model.id}>{row.model.name} (selected)</option>
-                      )}
-                      {shownModels.map((entry) => (
-                        <option key={entry.model.id} value={entry.model.id}>
-                          {entry.model.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
                   <div
                     ref={modelList}
                     className="task-workspace-model-list"
@@ -411,25 +431,32 @@ export function TaskExplorerPage({
                   )}
                 </div>
               )}
+              <p className="task-workspace-hint">
+                Latest setting per model. History in Recorded setting.
+              </p>
             </section>
             <section className="task-workspace-inspector" aria-labelledby="workspace-model-heading">
               <div className="task-workspace-inspector-header">
-                <h2 id="workspace-model-heading">{row?.model.name ?? "No model selected"}</h2>
-                {run && (
-                  <label className="task-workspace-setting">
-                    <span>Recorded setting</span>
-                    <select
-                      value={run.runId}
-                      onChange={(event) => move({ runId: event.target.value, attempt: undefined })}
-                    >
-                      {runOptions.map((entry) => (
-                        <option key={entry.runId} value={entry.runId}>
-                          {taskSettingLabel(entry)} · {entry.startedAt.slice(0, 10)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                )}
+                <div className="task-workspace-model-heading">
+                  <h2 id="workspace-model-heading">{row?.model.name ?? "No model selected"}</h2>
+                  {run && (
+                    <label className="task-workspace-setting">
+                      <span>Recorded setting</span>
+                      <select
+                        value={run.runId}
+                        onChange={(event) =>
+                          move({ runId: event.target.value, attempt: undefined })
+                        }
+                      >
+                        {runOptions.map((entry) => (
+                          <option key={entry.runId} value={entry.runId}>
+                            {taskSettingLabel(entry)} · {entry.startedAt.slice(0, 10)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                </div>
                 {summary.slots.length > 0 && (
                   <div className="task-attempts" role="group" aria-label="Attempts">
                     {summary.slots.map((entry, index) => (
@@ -446,6 +473,11 @@ export function TaskExplorerPage({
                       </button>
                     ))}
                   </div>
+                )}
+                {attempt && (
+                  <p className="task-workspace-attempt-meta">
+                    <EvidenceValue evidence={attempt.durationMs} renderValue={seconds} />
+                  </p>
                 )}
                 <div className="task-workspace-tabs" role="tablist" aria-label="Attempt evidence">
                   {views.map((entry, index) => (
@@ -488,6 +520,16 @@ export function TaskExplorerPage({
                 aria-labelledby={`task-tab-${view}`}
                 tabIndex={0}
               >
+                <details className="task-workspace-prompt" key={definition.caseId}>
+                  <summary>
+                    {taskName(definition)} <span>· Prompt & criteria</span>
+                  </summary>
+                  <EvidenceValue
+                    evidence={definition.prompt}
+                    renderValue={(prompt) => <p>{prompt}</p>}
+                  />
+                  <TaskCriteria definition={definition} />
+                </details>
                 {summary.status !== "available" && (
                   <p className="task-workspace-status" role="status">
                     <strong>
@@ -511,13 +553,7 @@ export function TaskExplorerPage({
                   view === "checks" ? (
                     <AttemptChecks attempt={attempt} />
                   ) : (
-                    <>
-                      <p className="task-workspace-attempt-meta">
-                        Attempt {repetition} · {attemptLabel(attempt)} ·{" "}
-                        <EvidenceValue evidence={attempt.durationMs} renderValue={seconds} />
-                      </p>
-                      <AttemptConversationPanel attempt={attempt} model={row?.model} />
-                    </>
+                    <AttemptConversationPanel attempt={attempt} model={row?.model} compact />
                   )
                 ) : (
                   <p>

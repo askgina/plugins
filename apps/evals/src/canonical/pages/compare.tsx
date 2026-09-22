@@ -46,7 +46,7 @@ import {
 import { RecordedResult } from "../../components/leaderboard-results";
 import { dollars } from "../../components/results-ui";
 import { clientDisplayName, settingDisplayName } from "../../lib/client-labels";
-import { preferredCompareRun } from "../compare-selection";
+import { preferredCompareRun, resolveCompareSelection } from "../compare-selection";
 import "./compare.css";
 
 const numberFormatter = new Intl.NumberFormat("en-US");
@@ -758,8 +758,8 @@ function SideFacts({ run }: { run: CanonicalRun }) {
 // ---------------------------------------------------------------------------
 
 export function ComparePage({
-  left,
-  right,
+  left: requestedLeft,
+  right: requestedRight,
   includeSynthetic = false,
 }: {
   left?: string;
@@ -767,25 +767,28 @@ export function ComparePage({
   includeSynthetic?: boolean;
 }) {
   const route = useHashRoute();
-  const leftRun = left === undefined ? undefined : getRun(left);
-  const rightRun = right === undefined ? undefined : getRun(right);
+  const requestedLeftRun = requestedLeft === undefined ? undefined : getRun(requestedLeft);
+  const requestedRightRun = requestedRight === undefined ? undefined : getRun(requestedRight);
   const requestedCategory = new URLSearchParams(route.split("?")[1] ?? "").get("category");
   const categories: readonly PrototypeFamily[] = [
     ...new Set<PrototypeFamily>([
       ...MEASURED_FAMILIES,
-      ...(leftRun ? [leftRun.family] : []),
-      ...(rightRun ? [rightRun.family] : []),
+      ...(requestedLeftRun ? [requestedLeftRun.family] : []),
+      ...(requestedRightRun ? [requestedRightRun.family] : []),
     ]),
   ];
   const category =
     categories.find((family) => family === requestedCategory) ??
-    leftRun?.family ??
-    rightRun?.family ??
+    requestedLeftRun?.family ??
+    requestedRightRun?.family ??
     "Perps";
   const runs = useMemo(
     () => canonicalRuns.filter((run) => includeSynthetic || run.origin === "measured"),
     [includeSynthetic],
   );
+  const { left, right } = resolveCompareSelection(runs, category, requestedLeft, requestedRight);
+  const leftRun = left === undefined ? undefined : getRun(left);
+  const rightRun = right === undefined ? undefined : getRun(right);
   const familyRuns = runs.filter((run) => run.family === category);
   const modelIds = [
     ...new Set([
@@ -820,7 +823,18 @@ export function ComparePage({
           rightRun.configuration.reasoning,
         )
       : undefined;
-    navigate(comparePath(nextLeft?.runId, nextRight?.runId, family));
+    const keepPair =
+      nextLeft &&
+      nextRight &&
+      nextLeft.runId !== nextRight.runId &&
+      compareEligibility(nextLeft, nextRight).eligible;
+    navigate(
+      comparePath(
+        keepPair ? nextLeft.runId : undefined,
+        keepPair ? nextRight.runId : undefined,
+        family,
+      ),
+    );
   };
   const picker = (side: "left" | "right", selected: CanonicalRun | undefined) => {
     const other = side === "left" ? rightRun : leftRun;
@@ -846,7 +860,7 @@ export function ComparePage({
               )
             }
           >
-            <option value="">Choose a model…</option>
+            {!selected && <option value="">Choose a model…</option>}
             {modelIds.map((modelId) => (
               <option
                 key={modelId}
@@ -915,24 +929,11 @@ export function ComparePage({
                 value={category}
                 onChange={(event) => changeCategory(event.currentTarget.value as PrototypeFamily)}
               >
-                {categories.map((family) => {
-                  const missing = [leftRun, rightRun].find(
-                    (run) =>
-                      run &&
-                      !runs.some(
-                        (candidate) =>
-                          candidate.modelId === run.modelId && candidate.family === family,
-                      ),
-                  );
-                  return (
-                    <option key={family} value={family} disabled={Boolean(missing)}>
-                      {family}
-                      {missing
-                        ? ` (no recordings for ${getModel(missing.modelId)?.name ?? missing.modelId})`
-                        : ""}
-                    </option>
-                  );
-                })}
+                {categories.map((family) => (
+                  <option key={family} value={family}>
+                    {family}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="eval-compare-picker-actions">
@@ -948,11 +949,11 @@ export function ComparePage({
               <button
                 type="button"
                 className="eval-compare-button"
-                disabled={!left && !right}
-                aria-label="Clear comparison"
+                disabled={!requestedLeft && !requestedRight}
+                aria-label="Reset to fully graded comparison"
                 onClick={() => navigate(comparePath(undefined, undefined, category))}
               >
-                <RotateCcw size={13} aria-hidden="true" /> Clear
+                <RotateCcw size={13} aria-hidden="true" /> Reset
               </button>
             </div>
           </div>
@@ -960,17 +961,12 @@ export function ComparePage({
             {picker("left", leftRun)}
             {picker("right", rightRun)}
           </div>
-          {!left && !right && (
-            <div className="eval-compare-examples">
-              <span>Start with Perps:</span>
-              <a href="#/compare?category=Perps&left=astra-high-perps-1&right=grok-low-perps-1">
-                Astra high vs Grok low
-              </a>
-              <a href="#/compare?category=Perps&left=astra-high-perps-1&right=astra-medium-perps-1">
-                Astra high vs medium
-              </a>
-            </div>
-          )}
+          <div className="eval-compare-examples">
+            <span>
+              Suggestions use the highest pass rates among fully graded, matching runs, using the
+              latest recording per setting. All recordings remain available in the pickers.
+            </span>
+          </div>
         </Panel>
 
         {(left !== undefined || right !== undefined) && (
