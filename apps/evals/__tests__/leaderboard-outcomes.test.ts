@@ -36,7 +36,8 @@ test("finished runs include terminal errors in processing but never invent grade
   const html = renderToStaticMarkup(
     createElement(RecordedResult, { runs, score: null, overall: true }),
   );
-  expect(html).toContain(">Completed</span>");
+  expect(html).toContain(">Score unavailable</span>");
+  expect(html).toContain("Completed · 5/5 processed");
   expect(html).toContain("5/5 processed");
   expect(html).toContain("3/5 graded");
   expect(html).toContain("1 timed out");
@@ -62,7 +63,7 @@ test.each(["pending", "unstarted", "unknown"] as const)(
     const html = renderToStaticMarkup(
       createElement(RecordedResult, { runs, score: null, overall: true }),
     );
-    expect(html).not.toContain(">Completed</span>");
+    expect(html).not.toContain("Completed ·");
     expect(html).toContain("4/5 processed");
     expect(html).toContain("3/5 graded");
   },

@@ -1082,6 +1082,37 @@ export function processingProgress(runs: readonly CanonicalRun[]) {
   };
 }
 
+/** Display-only, conditional on retained grades. Never used to rank or compare runs. */
+export function gradedOnlyScore(runs: readonly CanonicalRun[], overall = false): number | null {
+  if (!processingProgress(runs).complete) return null;
+  if (
+    runs.some(
+      (run) =>
+        run.origin !== "measured" ||
+        run.configuration.availability !== "pinned" ||
+        run.dispatchCoverage !== "complete" ||
+        run.counts.graded <= 0 ||
+        run.counts.graded > run.counts.completed ||
+        run.counts.passed + run.counts.failed !== run.counts.graded,
+    ) ||
+    runs.every((run) => run.counts.graded === run.counts.planned)
+  )
+    return null;
+  if (overall) {
+    if (
+      runs.length !== SCORED_FAMILIES.length ||
+      !SCORED_FAMILIES.every((family) => runs.some((run) => run.family === family)) ||
+      !compatibleSuiteRuns(runs) ||
+      runs.some((run) => run.modelId !== runs[0]!.modelId || run.campaignId !== runs[0]!.campaignId)
+    )
+      return null;
+  } else if (runs.length !== 1) return null;
+  // Match Overall's equal-category weighting, with each denominator limited to grades.
+  return (
+    runs.reduce((total, run) => total + run.counts.passed / run.counts.graded, 0) / runs.length
+  );
+}
+
 export function recordedOutcomes(runs: readonly CanonicalRun[]) {
   return runs.reduce(
     (total, run) => ({

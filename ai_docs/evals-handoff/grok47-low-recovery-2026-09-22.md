@@ -21,6 +21,14 @@ outcomes, budgets and terminal hashes are included in the numeric download. The
 new cohort cannot compare as the original fixed-budget run. Low remains unranked
 because 13 slots have no grade; cost remains unknown.
 
+The result cell shows a provisional graded-only percentage, with execution
+completion on its own line. Low's 79.3% is the equally weighted average of
+11/12 Spot, 36/47 Perps and 23/33 Predictions grades. The 13 ungraded slots are
+excluded from this conditional display rate, which is never used for sorting,
+quality rankings, comparison eligibility or efficiency charts. Fully graded
+settings keep their existing scores. A provisional Overall requires grades in
+all three compatible categories and finished processing in every selected slot.
+
 `tools/project-eval-grok47-low-recovery.py` runs beside the private VM evidence.
 It verifies both campaigns' source/config/code/manifest hashes, all 420 original
 terminal bindings, the nine completed Low recovery slots, selected native and

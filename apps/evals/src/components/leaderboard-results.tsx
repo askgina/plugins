@@ -1,5 +1,6 @@
 import type { CanonicalRun } from "../canonical/canonical";
 import {
+  gradedOnlyScore,
   processingProgress,
   recordedOutcomes,
   type LeaderboardMetric,
@@ -24,25 +25,25 @@ export const columns: readonly { metric: LeaderboardMetric; label: string; expla
       metric: "overall",
       label: "Overall",
       explanation:
-        "The average of Spot, Perps, and Predictions pass rates, with each category contributing one third. Requires complete dispatch and grading in all three categories.",
+        "The average of Spot, Perps, and Predictions pass rates, with each category contributing one third. Ranked scores require complete dispatch and grading. Graded-only percentages use available verdicts in each category, exclude ungraded trials, and remain provisional and unranked.",
     },
     {
       metric: "Spot",
       label: "Spot",
       explanation:
-        "Passed attempts divided by started attempts on spot-market tasks. Shown only with complete dispatch and grading. Timeouts and run errors remain unscored.",
+        "Passed attempts divided by started attempts on spot-market tasks. Graded-only percentages divide by graded attempts instead and remain provisional. Timeouts and run errors remain unscored.",
     },
     {
       metric: "Perps",
       label: "Perps",
       explanation:
-        "Passed attempts divided by started attempts on perpetual-futures tasks. Shown only with complete dispatch and grading. Timeouts and run errors remain unscored.",
+        "Passed attempts divided by started attempts on perpetual-futures tasks. Graded-only percentages divide by graded attempts instead and remain provisional. Timeouts and run errors remain unscored.",
     },
     {
       metric: "Predictions",
       label: "Predictions",
       explanation:
-        "Passed attempts divided by started attempts on prediction-market tasks. Shown only with complete dispatch and grading. Timeouts and run errors remain unscored.",
+        "Passed attempts divided by started attempts on prediction-market tasks. Graded-only percentages divide by graded attempts instead and remain provisional. Timeouts and run errors remain unscored.",
     },
     {
       metric: "time",
@@ -116,14 +117,16 @@ export function RecordedResult({
   if (runs.length === 0) return <span>Not evaluated</span>;
   const counts = recordedOutcomes(runs);
   const progress = processingProgress(runs);
+  const provisional = score === null ? gradedOnlyScore(runs, overall) : null;
+  const hasRate = score !== null || provisional !== null;
   const value =
     score !== null
       ? percent(score)
-      : overall
-        ? progress.complete
-          ? "Completed"
-          : `${progress.processed}/${progress.planned} processed`
-        : `${counts.passed} passed · ${counts.failed} failed`;
+      : provisional !== null
+        ? percent(provisional)
+        : overall
+          ? "Score unavailable"
+          : `${counts.passed} passed · ${counts.failed} failed`;
   const interruptions = [
     counts.timedOut > 0 ? `${counts.timedOut} timed out` : "",
     counts.runtimeFailure > 0 ? `${counts.runtimeFailure} run errors` : "",
@@ -142,20 +145,20 @@ export function RecordedResult({
       ) : (
         <span>{value}</span>
       )}
-      {overall && (score !== null || progress.complete) && (
-        <small>
-          {score !== null && progress.complete ? "Completed · " : ""}
-          {`${progress.processed}/${progress.planned} processed`}
+      {provisional !== null && (
+        <small title="Excludes ungraded trials; unavailable for quality rankings.">
+          Provisional · graded-only
         </small>
       )}
-      <small className={score !== null || overall ? "results-pass-fail" : undefined}>
-        {score !== null || overall
+      {overall && (
+        <small>{`${progress.complete ? "Completed · " : ""}${progress.processed}/${progress.planned} processed`}</small>
+      )}
+      <small className={hasRate || overall ? "results-pass-fail" : undefined}>
+        {hasRate || overall
           ? `${counts.passed} passed · ${counts.failed} failed`
           : `${counts.graded}/${counts.planned} graded`}
       </small>
-      {(score !== null || overall) && (
-        <small>{`${counts.graded}/${counts.planned} graded`}</small>
-      )}
+      {(hasRate || overall) && <small>{`${counts.graded}/${counts.planned} graded`}</small>}
       {interruptions && <small>{interruptions}</small>}
       {score === null && overall && (
         <small className="results-eligibility">

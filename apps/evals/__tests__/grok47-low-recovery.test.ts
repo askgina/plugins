@@ -71,7 +71,8 @@ test("selects Low recovery in latest views while other levels keep their origina
     expect(low.overall).toBeNull();
     expect(low.estimatedCost.availability).toBe("unavailable");
     const html = renderToStaticMarkup(createElement(LeaderboardPage, { rows: [low] }));
-    expect(html).toContain(">Completed</span>");
+    expect(html).toContain(">79.3%</span>");
+    expect(html).toContain("Provisional · graded-only");
     expect(html).toContain("105/105 processed");
     expect(html).toContain("92/105 graded");
     expect(html).toContain("13 run errors");
@@ -88,7 +89,9 @@ test("Low is marked completed on the profile and mobile leaderboard with grading
     createElement(LeaderboardMobile, { rows: [low] }),
   ]) {
     const html = renderToStaticMarkup(view);
-    expect(html).toContain(">Completed</span><small>105/105 processed</small>");
+    expect(html).toContain(">79.3%</span>");
+    expect(html).toContain("Provisional · graded-only");
+    expect(html).toContain("Completed · 105/105 processed");
     expect(html).toContain("92/105 graded");
     expect(html).toContain("13 run errors");
     expect(html).toContain("13 ungraded");

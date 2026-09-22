@@ -38,7 +38,9 @@ test("incomplete mobile results retain execution errors and never turn into a ra
   expect(max).toContain("Not ranked");
   expect(max).toContain("run errors");
   expect(max).toContain("timed out");
+  // This historical setting has no Predictions grades, so even a provisional Overall is unavailable.
   expect(max).not.toMatch(/\d+\.\d+%/u);
+  expect(max).toContain("Score unavailable");
 });
 
 test("grouping keeps latest settings without inventing a combined model score", () => {
