@@ -68,6 +68,32 @@ export function preferredCompareRun(
     )[0];
 }
 
+/** Category changes keep the chosen model, effort and client, regardless of score eligibility. */
+export function compareRunForCategory(
+  runs: readonly CanonicalRun[],
+  selected: CanonicalRun,
+  family: PrototypeFamily,
+): CanonicalRun | undefined {
+  if (selected.family === family) return selected;
+  return runs
+    .filter(
+      (run) =>
+        run.family === family &&
+        run.modelId === selected.modelId &&
+        run.origin === selected.origin &&
+        run.configuration.reasoning === selected.configuration.reasoning &&
+        run.cohort.target === selected.cohort.target,
+    )
+    .sort(
+      (a, b) =>
+        Number(b.campaignId === selected.campaignId) -
+          Number(a.campaignId === selected.campaignId) ||
+        Number(b.cohort.cohortId === selected.cohort.cohortId) -
+          Number(a.cohort.cohortId === selected.cohort.cohortId) ||
+        newestFirst(a, b),
+    )[0];
+}
+
 export interface ComparePair {
   readonly left: CanonicalRun;
   readonly right: CanonicalRun;

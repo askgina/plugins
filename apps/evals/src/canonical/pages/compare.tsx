@@ -47,7 +47,11 @@ import {
 import { RecordedResult } from "../../components/leaderboard-results";
 import { dollars } from "../../components/results-ui";
 import { clientDisplayName, settingDisplayName } from "../../lib/client-labels";
-import { preferredCompareRun, resolveCompareSelection } from "../compare-selection";
+import {
+  compareRunForCategory,
+  preferredCompareRun,
+  resolveCompareSelection,
+} from "../compare-selection";
 import "./compare.css";
 
 const numberFormatter = new Intl.NumberFormat("en-US");
@@ -152,7 +156,15 @@ function reasonContext(
 // Run summary card
 // ---------------------------------------------------------------------------
 
-function RunSummaryCard({ title, runId }: { title: string; runId: string | undefined }) {
+function RunSummaryCard({
+  title,
+  runId,
+  family,
+}: {
+  title: string;
+  runId: string | undefined;
+  family: PrototypeFamily;
+}) {
   if (runId === undefined) {
     return (
       <Panel title={title}>
@@ -194,6 +206,21 @@ function RunSummaryCard({ title, runId }: { title: string; runId: string | undef
     );
   }
   const model = getModel(run.modelId);
+  if (run.family !== family) {
+    return (
+      <Panel title={title}>
+        <div className="eval-compare-run-card">
+          <p>
+            <strong>{model?.name ?? run.modelId}</strong> ·{" "}
+            {settingDisplayName(run.configuration.reasoning, run.cohort.target)}
+          </p>
+          <p className="eval-muted" role="status">
+            No {family} recording selected. Choose another recording or category.
+          </p>
+        </div>
+      </Panel>
+    );
+  }
   const campaign = canonicalCampaigns.find((entry) => entry.campaignId === run.campaignId);
   const baseline = resolveBaselineRun(run);
   const cost = derivedCostPerTask(run);
@@ -781,14 +808,16 @@ export function ComparePage({
     [includeSynthetic],
   );
   const { left, right } = resolveCompareSelection(runs, category, requestedLeft, requestedRight);
-  const leftRun = left === undefined ? undefined : getRun(left);
-  const rightRun = right === undefined ? undefined : getRun(right);
+  const selectedLeftRun = left === undefined ? undefined : getRun(left);
+  const selectedRightRun = right === undefined ? undefined : getRun(right);
+  const leftRun = selectedLeftRun?.family === category ? selectedLeftRun : undefined;
+  const rightRun = selectedRightRun?.family === category ? selectedRightRun : undefined;
   const familyRuns = runs.filter((run) => run.family === category);
   const modelIds = [
     ...new Set([
       ...familyRuns.map((run) => run.modelId),
-      ...(leftRun ? [leftRun.modelId] : []),
-      ...(rightRun ? [rightRun.modelId] : []),
+      ...(selectedLeftRun ? [selectedLeftRun.modelId] : []),
+      ...(selectedRightRun ? [selectedRightRun.modelId] : []),
     ]),
   ].sort((a, b) => (getModel(a)?.name ?? a).localeCompare(getModel(b)?.name ?? b));
   const eligibility = leftRun && rightRun ? compareEligibility(leftRun, rightRun) : undefined;
@@ -799,36 +828,14 @@ export function ComparePage({
     );
   };
   const changeCategory = (family: PrototypeFamily) => {
-    const nextLeft = leftRun
-      ? preferredCompareRun(
-          runs,
-          leftRun.modelId,
-          family,
-          undefined,
-          leftRun.configuration.reasoning,
-        )
-      : undefined;
-    const nextRight = rightRun
-      ? preferredCompareRun(
-          runs,
-          rightRun.modelId,
-          family,
-          nextLeft,
-          rightRun.configuration.reasoning,
-        )
-      : undefined;
-    const keepPair =
-      nextLeft &&
-      nextRight &&
-      nextLeft.runId !== nextRight.runId &&
-      compareEligibility(nextLeft, nextRight).eligible;
-    navigate(
-      comparePath(
-        keepPair ? nextLeft.runId : undefined,
-        keepPair ? nextRight.runId : undefined,
-        family,
-      ),
-    );
+    // Retain the selection as an identity anchor when that setting has no category recording.
+    const nextLeft = selectedLeftRun
+      ? (compareRunForCategory(runs, selectedLeftRun, family)?.runId ?? left)
+      : left;
+    const nextRight = selectedRightRun
+      ? (compareRunForCategory(runs, selectedRightRun, family)?.runId ?? right)
+      : right;
+    navigate(comparePath(nextLeft, nextRight, family));
   };
   const picker = (side: "left" | "right", selected: CanonicalRun | undefined) => {
     const other = side === "left" ? rightRun : leftRun;
@@ -874,14 +881,15 @@ export function ComparePage({
             id={`eval-compare-${side}-picker`}
             className="eval-compare-select"
             value={selected?.runId ?? ""}
-            disabled={!selected}
+            disabled={!selected || !options.some((run) => run.family === category)}
             onChange={(event) => selectRun(side, event.currentTarget.value || undefined)}
           >
             {!selected && <option value="">Choose a model first</option>}
             {options.map((run) => (
               <option key={run.runId} value={run.runId}>
-                {runOptionLabel(run)} · {recordedBudgetLabel([run])}
-                {run.family !== category ? ` · ${run.family}` : ""}
+                {run.family === category
+                  ? `${runOptionLabel(run)} · ${recordedBudgetLabel([run])}`
+                  : `No ${category} recording selected · ${settingDisplayName(run.configuration.reasoning, run.cohort.target)}`}
               </option>
             ))}
           </select>
@@ -952,8 +960,8 @@ export function ComparePage({
             </div>
           </div>
           <div className="eval-compare-pickers">
-            {picker("left", leftRun)}
-            {picker("right", rightRun)}
+            {picker("left", selectedLeftRun)}
+            {picker("right", selectedRightRun)}
           </div>
           <div className="eval-compare-examples">
             <span>
@@ -965,8 +973,8 @@ export function ComparePage({
 
         {(left !== undefined || right !== undefined) && (
           <div className="eval-two-column eval-compare-section">
-            <RunSummaryCard title="Model A" runId={left} />
-            <RunSummaryCard title="Model B" runId={right} />
+            <RunSummaryCard title="Model A" runId={left} family={category} />
+            <RunSummaryCard title="Model B" runId={right} family={category} />
           </div>
         )}
         {leftRun &&
