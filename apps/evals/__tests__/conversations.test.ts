@@ -92,4 +92,37 @@ describe("attempt conversations", () => {
     expect(html).toContain("native conversation is unavailable");
     expect(html).toContain("Recorded task input");
   });
+
+  test("compact conversations lead with messages while retaining input and capture limitations", () => {
+    const withUser: Conversation = {
+      ...conversation,
+      visibleMessages: [
+        { role: "user", sequence: 0, content: [{ type: "text", text: "Read the market." }] },
+        ...conversation.visibleMessages,
+      ],
+    };
+    const html = renderToStaticMarkup(
+      createElement(ConversationView, {
+        conversation: withUser,
+        sha256: "b".repeat(64),
+        compact: true,
+      }),
+    );
+    expect(html.indexOf("Read the market.")).toBeLessThan(html.indexOf("Recorded task input"));
+    expect(html).toContain("&lt;script&gt;private input&lt;/script&gt;");
+    expect(html).toContain("Partial transcript");
+    expect(html).toContain("No final answer was retained.");
+    expect(html).toContain("Capture completeness is separate from grading.");
+    expect(html).toContain("b".repeat(64));
+  });
+
+  test("compact conversations keep the task input open first when no user message was captured", () => {
+    const html = renderToStaticMarkup(
+      createElement(ConversationView, { conversation, sha256: "c".repeat(64), compact: true }),
+    );
+    expect(html).toContain(
+      '<details class="conversation-output" open=""><summary>Recorded task input',
+    );
+    expect(html.indexOf("Recorded task input")).toBeLessThan(html.indexOf("Retained answer"));
+  });
 });

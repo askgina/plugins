@@ -5,7 +5,6 @@ import { ModelIndexPage } from "./pages/model-index";
 import { ModelProfilePage } from "./pages/model-profile";
 import { TaskExplorerPage } from "./pages/task-explorer";
 import { MethodologyPage } from "./pages/methodology";
-import { HandoffPage } from "./pages/handoff";
 import { ComparePage } from "./canonical/pages/compare";
 import { matchPath, navigate, parseRoute, useHashRoute } from "./router";
 import { PROTOTYPE_FAMILIES } from "./canonical/canonical";
@@ -55,7 +54,6 @@ const ROUTES: readonly RouteEntry[] = [
     ),
   },
   { pattern: "/methodology", title: "Methodology", render: () => <MethodologyPage /> },
-  { pattern: "/handoff", title: "Exports", render: () => <HandoffPage /> },
 ];
 
 export default function App() {

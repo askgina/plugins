@@ -1,8 +1,10 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
-import { expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { LeaderboardPage } from "../src/pages/leaderboard";
-import { configurationLeaderboardRows, deduplicateEvidenceRows } from "../src/canonical/selectors";
+import { configurationLeaderboardRows, leaderboardCampaignRows } from "../src/canonical/selectors";
+
+afterEach(() => vi.unstubAllGlobals());
 
 test("retains visible outcomes when a later configuration has incomplete grading", () => {
   const row = configurationLeaderboardRows().find(
@@ -24,17 +26,27 @@ test("the page supplies all eligible original and recovery settings to the chart
   expect(html).toContain("GPT-6 Astra, high reasoning");
 });
 
-test("shows every recorded model setting in its own row", () => {
-  const configurations = deduplicateEvidenceRows(configurationLeaderboardRows());
+test("shows the latest campaign for each model setting by default", () => {
+  const configurations = leaderboardCampaignRows(configurationLeaderboardRows());
   const html = renderToStaticMarkup(createElement(LeaderboardPage));
   expect(html.match(/<tr data-configuration=/gu)).toHaveLength(configurations.length);
   for (const row of configurations) {
     expect(html).toContain(`data-configuration="${row.rowId}"`);
   }
   expect(new Set(configurations.map((row) => row.model.id)).size).toBe(10);
-  expect(html).toContain("Every recorded setting has its own row");
+  expect(html).toContain("Latest per setting keeps each reasoning level separate");
+  expect(html).toContain("Recovery ·");
   expect(html).not.toContain("Recorded setting</label>");
   expect(html).not.toMatch(/\bOMP\b/u);
+});
+
+test("desktop history retains older results behind the campaign selector", () => {
+  vi.stubGlobal("window", { location: { hash: "#/leaderboard?campaign=all" } });
+  const html = renderToStaticMarkup(createElement(LeaderboardPage));
+  expect(html.match(/<tr data-configuration=/gu)).toHaveLength(50);
+  expect(html).toContain("50 records");
+  expect(html).toContain('data-configuration="astra-max-');
+  expect(html).toContain('data-configuration="recovery-astra-max-');
 });
 
 test("Fable low, medium, high and incomplete max are visible without a setting switch", () => {

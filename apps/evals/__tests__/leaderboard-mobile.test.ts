@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, expect, test, vi } from "vitest";
-import { configurationLeaderboardRows, deduplicateEvidenceRows } from "../src/canonical/selectors";
+import { configurationLeaderboardRows, leaderboardCampaignRows } from "../src/canonical/selectors";
 import { LeaderboardMobile } from "../src/components/leaderboard-mobile";
 
 const rows = configurationLeaderboardRows();
@@ -29,7 +29,9 @@ test("a shared mobile view restores model, campaign, grading, metric and sort di
 });
 
 test("incomplete mobile results retain execution errors and never turn into a ranked score", () => {
-  const html = render("#/leaderboard?search=Astra&grading=incomplete");
+  const html = render(
+    "#/leaderboard?search=Astra&campaign=reasoning-sweep-2026-09-16&grading=incomplete",
+  );
   const max = html.match(/<li data-mobile-configuration="astra-max-[^"]+"[^]*?<\/li>/u)?.[0];
   expect(max).toBeDefined();
   expect(max).toContain("32/105 graded");
@@ -39,13 +41,31 @@ test("incomplete mobile results retain execution errors and never turn into a ra
   expect(max).not.toMatch(/\d+\.\d+%/u);
 });
 
-test("grouping retains every recorded setting without inventing a combined model score", () => {
+test("grouping keeps latest settings without inventing a combined model score", () => {
   const html = render("#/leaderboard?group=models");
   expect(html.match(/class="lb-mobile-group-trigger"/gu)).toHaveLength(10);
-  const distinct = deduplicateEvidenceRows(rows);
+  const distinct = leaderboardCampaignRows(rows);
   expect(html.match(/data-mobile-configuration=/gu)).toHaveLength(distinct.length);
   expect(html).toContain("No settings are combined into a model score");
   for (const row of distinct) expect(html).toContain(`data-mobile-configuration="${row.rowId}"`);
+});
+
+test("grading filters do not bring superseded campaigns back into the latest view", () => {
+  const html = render("#/leaderboard?search=Astra&grading=incomplete");
+  expect(html.match(/data-mobile-configuration=/gu)).toHaveLength(1);
+  expect(html).toContain('data-mobile-configuration="recovery-astra-xhigh-');
+  expect(html).toContain("104/105 graded");
+  expect(html).toContain("Recovery ·");
+  expect(html).toContain("120 / 300s recorded budgets");
+  expect(html).not.toContain('data-mobile-configuration="astra-max-');
+});
+
+test("mobile history can be shared and restores earlier campaigns", () => {
+  const html = render("#/leaderboard?campaign=all");
+  expect(html.match(/data-mobile-configuration=/gu)).toHaveLength(50);
+  expect(html).toContain("50 records");
+  expect(html).toContain('data-mobile-configuration="astra-max-');
+  expect(html).toContain('data-mobile-configuration="recovery-astra-max-');
 });
 
 test("invalid view parameters recover to usable defaults and empty filters can be cleared", () => {

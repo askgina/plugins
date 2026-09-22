@@ -919,6 +919,53 @@ export function deduplicateEvidenceRows(
   });
 }
 
+/** Select whole campaign rows before search/grading filters; never choose by score. */
+export function leaderboardCampaignRows(
+  rows: readonly LeaderboardModelRow[],
+  campaign = "latest",
+): readonly LeaderboardModelRow[] {
+  const distinct = deduplicateEvidenceRows(
+    campaign === "latest" || campaign === "all"
+      ? rows
+      : rows.filter((row) => row.campaignId === campaign),
+  );
+  if (campaign !== "latest") return distinct;
+
+  const recordedAt = (row: LeaderboardModelRow) =>
+    Object.values(row.runs)
+      .map((run) => run.recovery?.capturedAt ?? run.startedAt)
+      .sort()
+      .at(-1) ?? "";
+  const newestFirst = [...distinct].sort(
+    (a, b) =>
+      recordedAt(b).localeCompare(recordedAt(a)) || (a.rowId ?? "").localeCompare(b.rowId ?? ""),
+  );
+  const settings = new Map<string, LeaderboardModelRow>();
+  for (const row of newestFirst) {
+    const run = Object.values(row.runs)[0];
+    // Preserve caller-supplied summaries without inventing a configuration identity.
+    if (!run) {
+      settings.set(row.rowId ?? row.model.id, row);
+      continue;
+    }
+    // Candidate aliases and campaign/retry protocols can change over time. Keep
+    // the latest row intact, retaining its budgets and evidence in the UI.
+    const key = JSON.stringify([
+      row.model.id,
+      run.configuration.reasoning,
+      run.cohort.target,
+      run.cohort.accountClass,
+      run.cohort.suiteVersion,
+      run.cohort.fixtureVersion,
+      run.cohort.catalogSha,
+      run.cohort.repetitions,
+      run.cohort.evidenceCategory,
+    ]);
+    if (!settings.has(key)) settings.set(key, row);
+  }
+  return [...settings.values()];
+}
+
 /** Latest campaign for each comparable recorded setting; never select by score or grading. */
 export function modelProfileRows(
   modelId: string,
