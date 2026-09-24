@@ -79,6 +79,25 @@ export const invalidRouteReason = Function.dual<
     required.set(targetKey, (required.get(targetKey) ?? 0n) + minimum);
   }
   const accountsById = new Map(task.accounts.map((account) => [account.id, account]));
+  // A wallet that ends holding a target must keep gas for one more transaction.
+  const reserveKeys = new Set<string>();
+  for (const target of task.targets) {
+    const account = accountsById.get(target.account);
+    if (account === undefined || account.gas_asset === target.asset) continue;
+    // A target that already keeps at least one transaction of gas covers the reserve.
+    const keepsGas = task.targets.some(
+      (other) =>
+        other.account === account.id &&
+        other.asset === account.gas_asset &&
+        BigInt(other.amount) - (BigInt(other.amount) * BigInt(other.tolerance_bps)) / 10_000n >=
+          BigInt(account.gas_per_tx),
+    );
+    if (keepsGas) continue;
+    const gasKey = key(account.id, account.gas_asset);
+    if (reserveKeys.has(gasKey)) continue;
+    reserveKeys.add(gasKey);
+    required.set(gasKey, (required.get(gasKey) ?? 0n) + BigInt(account.gas_per_tx));
+  }
   const dust = BigInt(task.dust_usd_micros);
   for (let index = legs.length - 1; index >= 0; index -= 1) {
     const { edge, amountIn, amountOut } = legs[index] as QuotedLeg;
@@ -115,7 +134,7 @@ export const invalidRouteReason = Function.dual<
     }
   }
   // Whatever demand remains must come from starting balances (targets included).
-  for (const targetKey of targetKeys) {
+  for (const targetKey of [...targetKeys, ...reserveKeys]) {
     const [account = "", asset = ""] = targetKey.split("\u0000");
     const starting = balances[account]?.[asset] ?? 0n;
     const outstanding = required.get(targetKey) ?? 0n;

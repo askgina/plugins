@@ -558,11 +558,7 @@ export const gradeExecutionTrial = Function.dual<
     }
     if (gas >= BigInt(account.gas_per_tx)) continue;
     for (const [asset, amount] of Object.entries(final.balances[account.id] ?? {})) {
-      // The task's own destination is where the user wants funds; it cannot be stranded.
-      const isTarget = task.targets.some(
-        (target) => target.account === account.id && target.asset === asset,
-      );
-      if (asset === account.gas_asset || amount === 0n || isTarget) continue;
+      if (asset === account.gas_asset || amount === 0n) continue;
       const value = valueUsdMicros(task, asset, amount);
       if (value === undefined || value > dust) {
         fail("no_stranded_funds", `${account.id}: ${amount} ${asset} with no gas to move it`);

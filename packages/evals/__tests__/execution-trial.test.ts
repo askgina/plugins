@@ -433,6 +433,23 @@ describe("execution trial end to end (fake ledger)", () => {
       }).pipe(Effect.scoped),
     );
 
+    it.effect("list_accounts tells the model how much gas one transaction costs", () =>
+      Effect.gen(function* () {
+        const task = yield* loadTask("t1-base-eth-to-usdc");
+        const tools = makeExecutionTools(makeFakeLedger(task));
+        const execute = tools["list_accounts"]?.execute as
+          | ((input: unknown, options: { toolCallId: string; messages: [] }) => unknown)
+          | undefined;
+        const accounts = yield* Effect.promise(() =>
+          Promise.resolve(execute?.({}, { toolCallId: "t", messages: [] })),
+        );
+        assert.deepStrictEqual(
+          Array.isArray(accounts) ? accounts.map((account) => field(account, "gas_per_tx")) : [],
+          ["20000000000000"],
+        );
+      }),
+    );
+
     it.effect("rejects a task file whose amounts are not integer base units", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

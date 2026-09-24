@@ -156,6 +156,7 @@ export const makeFakeLedger = (task: ExecutionTask): ExecutionAdapter => {
         id: account.id,
         network: account.network,
         gas_asset: account.gas_asset,
+        gas_per_tx: BigInt(account.gas_per_tx),
         balances: Object.fromEntries(balances.get(account.id) ?? []),
       })),
     ),

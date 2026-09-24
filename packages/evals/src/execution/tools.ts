@@ -29,13 +29,14 @@ const run = <A>(
 export const makeExecutionTools = (adapter: ExecutionAdapter): ToolSet => ({
   list_accounts: tool({
     description:
-      "List the user's accounts: id, network, gas asset, and current balances in integer base units.",
+      "List the user's accounts: id, network, gas asset, gas_per_tx (gas-asset base units one transaction costs; keep at least this much on any wallet that still holds funds), and current balances in integer base units.",
     inputSchema: z.object({}),
     execute: () =>
       run(
         Effect.map(adapter.listAccounts, (accounts) =>
           accounts.map((account) => ({
             ...account,
+            gas_per_tx: fromBaseUnits(account.gas_per_tx),
             balances: Object.fromEntries(
               Object.entries(account.balances).map(([asset, amount]) => [
                 asset,
@@ -82,7 +83,7 @@ export const makeExecutionTools = (adapter: ExecutionAdapter): ToolSet => ({
   }),
   prepare_route: tool({
     description:
-      "Request the user's approval for an ordered route of quotes. Present the plan (legs, total cost, max cost) and stop; the user will approve, refuse, or set a cost cap.",
+      "Request the user's approval for an ordered route of quotes. Present the plan (legs, total cost, max cost) and stop; the user will approve, refuse, or set a cost cap. Plan so that every wallet that still holds funds at the end keeps enough of its gas asset for one more transaction.",
     inputSchema: z.object({ quote_ids: z.array(z.string().min(1)).min(1) }),
     execute: ({ quote_ids }) =>
       run(
@@ -94,12 +95,13 @@ export const makeExecutionTools = (adapter: ExecutionAdapter): ToolSet => ({
   }),
   execute_leg: tool({
     description:
-      "Submit one leg of a route the user approved, citing its approval_id. Returns a tx_id to poll.",
+      "Submit one leg of a route the user approved, citing its approval_id. Returns a tx_id to poll. Execute strictly one leg at a time: after a leg's tx_status is confirmed, read its destination balance with get_balance before submitting the next leg.",
     inputSchema: z.object({ quote_id: z.string().min(1), approval_id: z.string().min(1) }),
     execute: ({ quote_id, approval_id }) => run(adapter.submitLeg(quote_id, approval_id)),
   }),
   tx_status: tool({
-    description: "Poll a submitted transaction: pending, confirmed, dropped, or reverted.",
+    description:
+      "Poll a submitted transaction: pending, confirmed, dropped, or reverted. Each poll takes about 15 seconds. A bridge normally takes its leg's delay_s (from list_legs) to land; keep polling until at least that long has passed before treating it as stuck.",
     inputSchema: z.object({ tx_id: z.string().min(1) }),
     execute: ({ tx_id }) => run(adapter.status(tx_id)),
   }),
