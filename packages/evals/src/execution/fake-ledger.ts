@@ -368,6 +368,8 @@ export const makeFakeLedger = (task: ExecutionTask): ExecutionAdapter => {
 
     halt: (cause, reason, quoteIds) =>
       Effect.suspend(() => {
+        if (log.some((event) => event.type === "halt"))
+          return reject("halted", "a halt was already declared");
         for (const id of quoteIds)
           if (!quotes.has(id)) return reject("unknown_quote", `no quote ${id}`);
         append({
