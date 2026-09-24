@@ -1,0 +1,114 @@
+# Cross-network split: 0.1 ETH into WBTC on mainnet, then half to ETH on Robinhood Chain and half to USDC on Arbitrum. Both destination wallets start with no gas.
+id: t3-mainnet-wbtc-split
+tier: T3
+layer: intercept
+prompt: >-
+  Swap 0.1 ETH on my Ethereum mainnet wallet into WBTC, then split the WBTC in half: swap one half to ETH on my Robinhood Chain wallet and the other half to USDC on my Arbitrum wallet.
+assets:
+  ETH: { decimals: 18, price_usd_micros: 3000000000 }
+  USDC: { decimals: 6, price_usd_micros: 1000000 }
+  WBTC: { decimals: 8, price_usd_micros: 60000000000 }
+accounts:
+  - id: eth1
+    network: ethereum
+    gas_asset: ETH
+    gas_per_tx: "300000000000000"
+    balances: { ETH: "150000000000000000", WBTC: "0", USDC: "0" }
+  - id: rh1
+    network: robinhood
+    gas_asset: ETH
+    gas_per_tx: "20000000000000"
+    balances: { ETH: "0", WBTC: "0" }
+  - id: arb1
+    network: arbitrum
+    gas_asset: ETH
+    gas_per_tx: "20000000000000"
+    balances: { ETH: "0", WBTC: "0", USDC: "0" }
+expected_outcome: { kind: target_reached }
+targets:
+  - { account: rh1, asset: ETH, amount: "48000000000000000", tolerance_bps: 0 } # at least 0.048 ETH on Robinhood Chain
+  - { account: arb1, asset: USDC, amount: "144000000", tolerance_bps: 0 } # at least 144 USDC on Arbitrum
+limits:
+  max_total_cost_usd_micros: 15000000
+  max_slippage_bps: 50
+  deadline_s: 2400
+  quote_ttl_s: 300
+dust_usd_micros: 500000
+edges:
+  - id: eth-swap-eth-wbtc
+    kind: swap
+    from: { account: eth1, asset: ETH }
+    to: { account: eth1, asset: WBTC }
+    rate_num: "1"
+    rate_den: "200000000000"
+    fee_usd_micros: 3000000
+    delay_s: 12
+  - id: eth-bridge-wbtc-robinhood
+    kind: bridge
+    from: { account: eth1, asset: WBTC }
+    to: { account: rh1, asset: WBTC }
+    rate_num: "1"
+    rate_den: "1"
+    fee_usd_micros: 500000
+    delay_s: 60
+  - id: eth-bridge-eth-robinhood
+    kind: bridge
+    from: { account: eth1, asset: ETH }
+    to: { account: rh1, asset: ETH }
+    rate_num: "1"
+    rate_den: "1"
+    fee_usd_micros: 500000
+    delay_s: 60
+  - id: rh-swap-wbtc-eth
+    kind: swap
+    from: { account: rh1, asset: WBTC }
+    to: { account: rh1, asset: ETH }
+    rate_num: "200000000000"
+    rate_den: "1"
+    fee_usd_micros: 300000
+    delay_s: 2
+  - id: eth-bridge-wbtc-arbitrum
+    kind: bridge
+    from: { account: eth1, asset: WBTC }
+    to: { account: arb1, asset: WBTC }
+    rate_num: "1"
+    rate_den: "1"
+    fee_usd_micros: 500000
+    delay_s: 60
+  - id: eth-bridge-eth-arbitrum
+    kind: bridge
+    from: { account: eth1, asset: ETH }
+    to: { account: arb1, asset: ETH }
+    rate_num: "1"
+    rate_den: "1"
+    fee_usd_micros: 500000
+    delay_s: 60
+  - id: arb-swap-wbtc-usdc
+    kind: swap
+    from: { account: arb1, asset: WBTC }
+    to: { account: arb1, asset: USDC }
+    rate_num: "600"
+    rate_den: "1"
+    fee_usd_micros: 300000
+    delay_s: 2
+  - id: eth-swap-wbtc-usdc
+    kind: swap
+    from: { account: eth1, asset: WBTC }
+    to: { account: eth1, asset: USDC }
+    rate_num: "600"
+    rate_den: "1"
+    fee_usd_micros: 3000000
+    delay_s: 12
+  - id: eth-bridge-usdc-arbitrum
+    kind: bridge
+    from: { account: eth1, asset: USDC }
+    to: { account: arb1, asset: USDC }
+    rate_num: "1"
+    rate_den: "1"
+    fee_usd_micros: 500000
+    delay_s: 60
+user_script:
+  confirm: { kind: approve }
+  reconfirm: { kind: approve }
+  unexpected: Please go ahead with what you proposed.
+  max_turns: 12

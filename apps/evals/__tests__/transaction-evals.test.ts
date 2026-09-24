@@ -82,12 +82,14 @@ describe("transaction score", () => {
   const full = ids.flatMap((id, index) => [1, 2, 3].map((rep) => trial(id, rep, index !== 1)));
 
   test("averages task pass rates equally (the task is the scoring unit)", () => {
-    expect(transactionScore({ ...base, trials: full })).toBeCloseTo(2 / 3);
-    // Task A 3/3, task B 1/3, task C 3/3 -> (1 + 1/3 + 1) / 3, not 7/9 by pooled attempts.
+    const n = ids.length;
+    // Every task passes 3/3 except task B at 0/3.
+    expect(transactionScore({ ...base, trials: full })).toBeCloseTo((n - 1) / n);
+    // Task B at 1/3 counts as one third of one task, not as one extra pooled attempt.
     const uneven = full.map((entry) =>
       entry.taskId === ids[1] && entry.repetition === 1 ? { ...entry, passed: true } : entry,
     );
-    expect(transactionScore({ ...base, trials: uneven })).toBeCloseTo((1 + 1 / 3 + 1) / 3);
+    expect(transactionScore({ ...base, trials: uneven })).toBeCloseTo((n - 1 + 1 / 3) / n);
   });
 
   test("has no score when an attempt is missing, duplicated, or its identity is unverified", () => {
@@ -101,7 +103,7 @@ describe("transaction score", () => {
     expect(transactionScore({ ...base, trials: unverified })).toBeNull();
   });
 
-  test("the published Grok 4.7 Low run scores 2/3", () => {
-    expect(transactionScore(base)).toBeCloseTo(2 / 3);
+  test("a run recorded on a different task set has no score", () => {
+    expect(transactionScore(base)).toBeNull();
   });
 });

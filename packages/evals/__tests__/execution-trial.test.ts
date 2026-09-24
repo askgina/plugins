@@ -16,6 +16,8 @@ import {
 } from "../src/execution/turn-driver";
 
 const TASKS_DIR = fileURLToPath(new URL("../src/execution/tasks", import.meta.url));
+// Harness-only tasks (refusal, two-step deposit) kept for tests but not published.
+const FIXTURE_TASKS_DIR = fileURLToPath(new URL("./fixtures/execution-tasks", import.meta.url));
 
 /** Calls a real execution tool the way the AI SDK would, returning its (untyped) result. */
 type Call = (name: string, input: Record<string, unknown>) => Effect.Effect<unknown>;
@@ -62,11 +64,16 @@ const scriptedModel = (
 };
 
 const loadTask = (id: string) =>
-  Effect.map(loadExecutionTasks(TASKS_DIR), (tasks) => {
-    const task = tasks.find((candidate) => candidate.id === id);
-    if (task === undefined) throw new Error(`missing task ${id}`);
-    return task;
-  });
+  Effect.map(
+    Effect.all([loadExecutionTasks(TASKS_DIR), loadExecutionTasks(FIXTURE_TASKS_DIR)]),
+    ([published, fixtures]) => [...published, ...fixtures],
+  ).pipe(
+    Effect.map((tasks) => {
+      const task = tasks.find((candidate) => candidate.id === id);
+      if (task === undefined) throw new Error(`missing task ${id}`);
+      return task;
+    }),
+  );
 
 const trial = (task: ExecutionTask, turns: ReadonlyArray<Turn>, failure?: ModelSessionError) =>
   Effect.gen(function* () {
@@ -399,7 +406,7 @@ describe("execution trial end to end (fake ledger)", () => {
     it.effect("over_limit tasks load only with a hand-checked minimum cost above the cap", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const source = yield* fs.readFileString(`${TASKS_DIR}/t5-user-rejects.yaml`);
+        const source = yield* fs.readFileString(`${FIXTURE_TASKS_DIR}/t5-user-rejects.yaml`);
         const variant = (minimum: string) =>
           source
             .replace(
