@@ -42,6 +42,7 @@
     "tailwindcss": "4.3.3",
     "tailwindcss-animate": "1.0.7",
     "typescript": "7.0.2",
-    "vite-plus": "0.3.0"
+    "vite-plus": "0.3.0",
+    "yaml": "2.8.3"
   }
 }
