@@ -1,7 +1,7 @@
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { assert, describe, it } from "@effect/vitest";
 import type { ToolSet } from "ai";
-import { Data, Effect, FileSystem } from "effect";
+import { Effect, FileSystem } from "effect";
 import { fileURLToPath } from "node:url";
 
 import type { ExecutionGrade, ExecutionTask, HardCheckId } from "../src/execution/contracts";
@@ -9,11 +9,13 @@ import { makeFakeLedger } from "../src/execution/fake-ledger";
 import { gradeExecutionTrial } from "../src/execution/grader";
 import { loadExecutionTasks } from "../src/execution/load-tasks";
 import { makeExecutionTools } from "../src/execution/tools";
-import { runExecutionTrial, type ModelSession } from "../src/execution/turn-driver";
+import {
+  ModelSessionError,
+  runExecutionTrial,
+  type ModelSession,
+} from "../src/execution/turn-driver";
 
 const TASKS_DIR = fileURLToPath(new URL("../src/execution/tasks", import.meta.url));
-
-class SessionDown extends Data.TaggedError("SessionDown")<{}> {}
 
 /** Calls a real execution tool the way the AI SDK would, returning its (untyped) result. */
 type Call = (name: string, input: Record<string, unknown>) => Effect.Effect<unknown>;
@@ -36,7 +38,8 @@ const scriptedModel = (
   tools: ToolSet,
   turns: ReadonlyArray<Turn>,
   sent: string[],
-): ModelSession<SessionDown> => {
+  failure: ModelSessionError = new ModelSessionError({ kind: "infra", message: "provider down" }),
+): ModelSession => {
   const call: Call = (name, input) =>
     Effect.promise(() => {
       // ToolSet erases each tool's input type to `never`; the tool's own zod schema is the real contract.
@@ -52,7 +55,7 @@ const scriptedModel = (
         sent.push(userText);
         const turn = turns[Math.min(sent.length - 1, turns.length - 1)];
         return turn === undefined
-          ? Effect.fail(new SessionDown())
+          ? Effect.fail(failure)
           : Effect.map(turn(call), (finalText) => ({ finalText }));
       }),
   };
@@ -65,14 +68,14 @@ const loadTask = (id: string) =>
     return task;
   });
 
-const trial = (task: ExecutionTask, turns: ReadonlyArray<Turn>) =>
+const trial = (task: ExecutionTask, turns: ReadonlyArray<Turn>, failure?: ModelSessionError) =>
   Effect.gen(function* () {
     const adapter = makeFakeLedger(task);
     const sent: string[] = [];
     const events = yield* runExecutionTrial({
       task,
       adapter,
-      session: scriptedModel(makeExecutionTools(adapter), turns, sent),
+      session: scriptedModel(makeExecutionTools(adapter), turns, sent, failure),
     });
     return { events, sent, grade: gradeExecutionTrial(events, task, adapter.finalState()) };
   });
@@ -234,14 +237,23 @@ describe("execution trial end to end (fake ledger)", () => {
         }),
     );
 
-    it.effect("a model that keeps asking stops at max_turns; a session failure is ungraded", () =>
-      Effect.gen(function* () {
-        const task = yield* loadTask("t5-user-rejects");
-        const looping = yield* trial(task, [planSwap]);
-        assert.strictEqual(looping.sent.length, task.user_script.max_turns);
-        const down = yield* trial(task, []);
-        assert.strictEqual(down.grade.status, "ungraded");
-      }),
+    it.effect(
+      "a model that keeps asking stops at max_turns; infra failures are ungraded, model failures graded",
+      () =>
+        Effect.gen(function* () {
+          const task = yield* loadTask("t5-user-rejects");
+          const looping = yield* trial(task, [planSwap]);
+          assert.strictEqual(looping.sent.length, task.user_script.max_turns);
+          const down = yield* trial(task, []);
+          assert.strictEqual(down.grade.status, "ungraded");
+          // A model that times out is graded, not excused as infrastructure.
+          const timedOut = yield* trial(
+            task,
+            [],
+            new ModelSessionError({ kind: "model", message: "timed out" }),
+          );
+          assert.include(failed(timedOut.grade), "report_matches_balances");
+        }),
     );
 
     it.effect("T2: two legs execute serially, each verified before the next, and pass", () =>

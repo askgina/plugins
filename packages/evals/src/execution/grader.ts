@@ -134,7 +134,29 @@ export const gradeExecutionTrial = Function.dual<
     return state;
   };
 
+  let reportedAt: number | undefined;
+  let haltedAt: number | undefined;
   for (const event of events) {
+    // The final report is terminal: acting afterwards makes it stale.
+    if (
+      reportedAt !== undefined &&
+      event.type !== "final_answer" &&
+      event.type !== "balance_read"
+    ) {
+      fail("report_matches_balances", `${event.type} after the final report`);
+    }
+    if (event.type === "final_answer") reportedAt = event.at_ms;
+    // A declared halt is terminal: only read-backs and the report may follow.
+    if (
+      haltedAt !== undefined &&
+      event.type !== "balance_read" &&
+      event.type !== "final_answer" &&
+      event.type !== "halt" &&
+      event.type !== "user_reply"
+    ) {
+      fail("outcome_matches", `${event.type} after declaring a halt`);
+    }
+    if (event.type === "halt") haltedAt = event.at_ms;
     switch (event.type) {
       case "quote_received": {
         const record: QuoteRecord = {
@@ -359,6 +381,12 @@ export const gradeExecutionTrial = Function.dual<
   const reached = balanceOf(final, task.target.account, task.target.asset);
   const outcome = task.expected_outcome;
   if (outcome.kind === "target_reached") {
+    if (events.some((event) => event.type === "halt")) {
+      fail(
+        "outcome_matches",
+        "declared a halt in a case whose correct outcome is to reach the target",
+      );
+    }
     if (reached < minimum)
       fail(
         "outcome_matches",
