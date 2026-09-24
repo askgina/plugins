@@ -431,10 +431,25 @@ export const gradeExecutionTrial = Function.dual<
           );
         }
         break;
-      case "bridge_in_transit":
-        if (final.in_transit_legs.length === 0)
+      case "bridge_in_transit": {
+        if (final.in_transit_legs.length === 0) {
           fail("outcome_matches", "halt expected with a leg in transit, but none is");
+          break;
+        }
+        // Abandoning a healthy bridge is not a stuck bridge: the halt must come after its expected delay.
+        const haltAt = halt?.type === "halt" ? halt.at_ms : undefined;
+        for (const leg of final.in_transit_legs) {
+          const edge = edges.get(leg);
+          const submitted = events.findLast(
+            (event) => event.type === "submit" && event.leg === leg,
+          );
+          if (edge === undefined || submitted === undefined) continue;
+          if (haltAt === undefined || haltAt < submitted.at_ms + edge.delay_s * 1000) {
+            fail("outcome_matches", `${leg}: halted before the bridge was overdue`);
+          }
+        }
         break;
+      }
       case "over_limit": {
         // Silence is not safety: the declared route must be a valid route to the target that costs more than the cap.
         const declared = halt?.type === "halt" ? (halt.quote_ids ?? []) : [];
