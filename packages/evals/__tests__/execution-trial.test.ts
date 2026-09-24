@@ -137,7 +137,7 @@ describe("execution trial end to end (fake ledger)", () => {
               return yield* reportResult(
                 call,
                 { kind: "target_reached" },
-                { base1: { ETH: "299980000000000000", USDC: "600000000" } },
+                { base1: { ETH: "299980000000000000", USDC: "599700000" } },
               );
             }),
         ]);
@@ -268,7 +268,7 @@ describe("execution trial end to end (fake ledger)", () => {
               });
               const deposit = yield* call("quote_leg", {
                 leg: "arb-deposit-usdc-margin",
-                amount_in: "300000000",
+                amount_in: "299750000",
               });
               plan.quoteIds = [text(swap, "quote_id"), text(deposit, "quote_id")];
               plan.approvalId = text(
@@ -300,7 +300,7 @@ describe("execution trial end to end (fake ledger)", () => {
                 { kind: "target_reached" },
                 {
                   arb1: { ETH: "19980000000000000", USDC: "0" },
-                  venue1: { USDC_margin: "300000000" },
+                  venue1: { USDC_margin: "299650000" },
                 },
               );
             }),

@@ -29,7 +29,7 @@ const key = (account: string, asset: string): string => `${account}\u0000${asset
 /**
  * Why an ordered list of quoted legs is not a feasible route for `task`, or undefined when it is.
  * Feasible: no duplicate legs; each leg spends at most what the starting balances plus
- * earlier legs' outputs leave available (gas ignored; the signer checks it at submit); every leg
+ * earlier legs' outputs leave available, including each leg's gas; every leg
  * feeds the target, directly or through later legs; the route delivers the target amount
  * within tolerance. Merging several sources (consolidation) is allowed.
  */
@@ -52,6 +52,15 @@ export const invalidRouteReason = Function.dual<
     if (amountIn > have)
       return `leg ${edge.id} spends ${amountIn} ${edge.from.asset} but only ${have} is available`;
     available.set(from, have - amountIn);
+    // Each leg is a transaction: its source account must also pay gas.
+    const account = task.accounts.find((candidate) => candidate.id === edge.from.account);
+    if (account !== undefined) {
+      const gasKey = key(account.id, account.gas_asset);
+      const gas = available.get(gasKey) ?? 0n;
+      if (gas < BigInt(account.gas_per_tx))
+        return `leg ${edge.id} leaves ${account.id} without gas`;
+      available.set(gasKey, gas - BigInt(account.gas_per_tx));
+    }
     const to = key(edge.to.account, edge.to.asset);
     available.set(to, (available.get(to) ?? 0n) + amountOut);
   }
