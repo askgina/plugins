@@ -18,7 +18,7 @@ const REFERENCE: Readonly<Record<string, ReadonlyArray<readonly [leg: string, am
   {
     "t1-base-eth-to-usdc": [["base-swap-eth-usdc", 200_000_000_000_000_000n]],
     "t1-mainnet-sell-99-eth": [["eth-swap-eth-usdc", 990_000_000_000_000_000n]],
-    // Bridge the ETH, then swap on Base keeping one transaction's gas.
+    // Bridge the ETH, then swap on Base; the swap spends its own gas, leaving USDC on Base.
     "t3-mainnet-eth-to-base-usdc": [
       ["eth-bridge-eth-base", 100_000_000_000_000_000n],
       ["base-swap-eth-usdc", 99_813_333_333_333_333n],
@@ -32,7 +32,7 @@ const REFERENCE: Readonly<Record<string, ReadonlyArray<readonly [leg: string, am
       ["eth-swap-wbtc-usdc", 247_500n],
       ["eth-bridge-usdc-arbitrum", 145_500_000n],
     ],
-    // Bridge nearly all ETH (keeping Robinhood gas), then buy PEPE keeping mainnet gas.
+    // Bridge nearly all ETH (the bridge pays Robinhood gas), then buy PEPE (the swap pays mainnet gas).
     "t3-robinhood-eth-to-mainnet-pepe": [
       ["rh-bridge-eth-mainnet", 199_980_000_000_000_000n],
       ["eth-swap-eth-pepe", 199_513_333_333_333_333n],
