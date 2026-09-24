@@ -14,7 +14,8 @@ accounts:
     gas_per_tx: "20000000000000" # 0.00002 ETH ≈ $0.06
     balances: { ETH: "500000000000000000", USDC: "0" } # 0.5 ETH
 expected_outcome: { kind: target_reached }
-target: { account: base1, asset: USDC, amount: "600000000", tolerance_bps: 50 } # 600 USDC
+targets:
+  - { account: base1, asset: USDC, amount: "600000000", tolerance_bps: 50 } # 600 USDC
 limits:
   max_total_cost_usd_micros: 2000000 # $2
   max_slippage_bps: 50

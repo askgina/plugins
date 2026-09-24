@@ -38,7 +38,7 @@ const task: ExecutionTask = {
     },
   ],
   expected_outcome: { kind: "target_reached" },
-  target: { account: "base1", asset: "USDC", amount: "600000000", tolerance_bps: 50 },
+  targets: [{ account: "base1", asset: "USDC", amount: "600000000", tolerance_bps: 50 }],
   limits: {
     max_total_cost_usd_micros: 2_000_000,
     max_slippage_bps: 50,

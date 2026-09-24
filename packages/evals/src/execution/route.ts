@@ -68,13 +68,20 @@ export const invalidRouteReason = Function.dual<
   // Walk backwards propagating required amounts: the target needs `minimum − starting balance`;
   // each leg must cover part of an outstanding requirement on its output, and in turn requires its
   // full input. Output beyond the requirement is waste; waste worth more than dust is rejected.
-  const target = BigInt(task.target.amount);
-  const minimum = target - (target * BigInt(task.target.tolerance_bps)) / 10_000n;
-  const targetKey = key(task.target.account, task.target.asset);
-  const starting = balances[task.target.account]?.[task.target.asset] ?? 0n;
-  const required = new Map<string, bigint>([
-    [targetKey, minimum > starting ? minimum - starting : 0n],
-  ]);
+  const targetKeys = new Set<string>();
+  const required = new Map<string, bigint>();
+  for (const target of task.targets) {
+    const amount = BigInt(target.amount);
+    const minimum = amount - (amount * BigInt(target.tolerance_bps)) / 10_000n;
+    const starting = balances[target.account]?.[target.asset] ?? 0n;
+    const targetKey = key(target.account, target.asset);
+    targetKeys.add(targetKey);
+    required.set(
+      targetKey,
+      (required.get(targetKey) ?? 0n) + (minimum > starting ? minimum - starting : 0n),
+    );
+  }
+  const accountsById = new Map(task.accounts.map((account) => [account.id, account]));
   const dust = BigInt(task.dust_usd_micros);
   for (let index = legs.length - 1; index >= 0; index -= 1) {
     const { edge, amountIn, amountOut } = legs[index] as QuotedLeg;
@@ -88,8 +95,11 @@ export const invalidRouteReason = Function.dual<
       meta === undefined
         ? undefined
         : ((amountOut - covered) * BigInt(meta.price_usd_micros)) / 10n ** BigInt(meta.decimals);
+    // Surplus on a target, or gas kept on an account, is not waste.
+    const isGas = accountsById.get(edge.to.account)?.gas_asset === edge.to.asset;
     if (
-      to !== targetKey &&
+      !targetKeys.has(to) &&
+      !isGas &&
       amountOut > covered &&
       (wasteUsdMicros === undefined || wasteUsdMicros > dust)
     ) {
@@ -97,7 +107,16 @@ export const invalidRouteReason = Function.dual<
     }
     const from = key(edge.from.account, edge.from.asset);
     required.set(from, (required.get(from) ?? 0n) + amountIn);
+    // The leg's own transaction needs gas on its source account, so a gas top-up contributes.
+    const source = accountsById.get(edge.from.account);
+    if (source !== undefined) {
+      const gasKey = key(source.id, source.gas_asset);
+      required.set(gasKey, (required.get(gasKey) ?? 0n) + BigInt(source.gas_per_tx));
+    }
   }
-  const short = required.get(targetKey) ?? 0n;
-  return short === 0n ? undefined : `route leaves the target ${short} short`;
+  for (const targetKey of targetKeys) {
+    const short = required.get(targetKey) ?? 0n;
+    if (short > 0n) return `route leaves a target ${short} short`;
+  }
+  return undefined;
 });
