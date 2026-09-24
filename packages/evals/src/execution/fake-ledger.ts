@@ -183,7 +183,8 @@ export const makeFakeLedger = (task: ExecutionTask): ExecutionAdapter => {
         // actually deducted, so balances always reconcile with graded spend.
         const scale = 10n ** BigInt(outMeta.decimals);
         const price = BigInt(outMeta.price_usd_micros);
-        const feeUnits = (feeUsdMicros * scale) / price;
+        // Round up: a positive fee smaller than one output unit still costs a whole unit, never zero.
+        const feeUnits = (feeUsdMicros * scale + price - 1n) / price;
         const grossOut = (amountIn * BigInt(edge.rate_num)) / BigInt(edge.rate_den);
         if (grossOut <= feeUnits)
           return reject("amount_too_small", "output would not cover the fee");

@@ -378,6 +378,24 @@ describe("execution trial end to end (fake ledger)", () => {
         }),
     );
 
+    it.effect("a fee below one output unit is charged as one unit and costed from that unit", () =>
+      Effect.gen(function* () {
+        const base = yield* loadTask("t1-base-eth-to-usdc");
+        // 0.4 micro-dollar fee < 1 USDC base unit (1 micro-dollar).
+        const task: ExecutionTask = { ...base, edges: [{ ...base.edges[0]!, fee_usd_micros: 0 }] };
+        const free = yield* makeFakeLedger(task).quote(
+          "base-swap-eth-usdc",
+          200_000_000_000_000_000n,
+        );
+        const tiny = yield* makeFakeLedger({
+          ...task,
+          edges: [{ ...task.edges[0]!, fee_usd_micros: 1 }],
+        }).quote("base-swap-eth-usdc", 200_000_000_000_000_000n);
+        assert.strictEqual(free.amount_out - tiny.amount_out, 1n);
+        assert.strictEqual(tiny.cost_usd_micros - free.cost_usd_micros, 1);
+      }),
+    );
+
     it.effect("over_limit tasks load only with a hand-checked minimum cost above the cap", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

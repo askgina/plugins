@@ -5,6 +5,7 @@ import { ModelIndexPage } from "./pages/model-index";
 import { ModelProfilePage } from "./pages/model-profile";
 import { TaskExplorerPage } from "./pages/task-explorer";
 import { MethodologyPage } from "./pages/methodology";
+import { TransactionsPage } from "./pages/transactions";
 import { ComparePage } from "./canonical/pages/compare";
 import { matchPath, navigate, parseRoute, useHashRoute } from "./router";
 import { PROTOTYPE_FAMILIES } from "./canonical/canonical";
@@ -53,6 +54,7 @@ const ROUTES: readonly RouteEntry[] = [
       <ComparePage left={query.get("left") ?? undefined} right={query.get("right") ?? undefined} />
     ),
   },
+  { pattern: "/transactions", title: "Transactions", render: () => <TransactionsPage /> },
   { pattern: "/methodology", title: "Methodology", render: () => <MethodologyPage /> },
 ];
 
