@@ -23,7 +23,7 @@ export function TransactionResult({ row }: { row: LeaderboardModelRow }) {
   return (
     <a className="results-transactions-line" href={spotTransactionsHref(row)}>
       Transactions {score === null ? "incomplete" : percent(score)} · {passed}/{plannedTrials(run)}{" "}
-      passed
+      attempts passed
     </a>
   );
 }

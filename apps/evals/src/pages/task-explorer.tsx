@@ -223,13 +223,14 @@ export function TaskExplorerPage({
   }, [row?.model.id, modelQuery]);
 
   function move(next: Partial<TaskSelection>) {
+    // A transaction task has no canonical run/attempt/view; keep its id and drop the rest.
     const updated = {
       family,
-      caseId: definition?.caseId,
+      caseId: transactionTask?.id ?? definition?.caseId,
       modelId: row?.model.id,
-      runId: run?.runId,
-      attempt: repetition,
-      view,
+      runId: transactionTask ? undefined : run?.runId,
+      attempt: transactionTask ? undefined : repetition,
+      view: transactionTask ? undefined : view,
       ...next,
     };
     setSelection(updated);
@@ -344,7 +345,14 @@ export function TaskExplorerPage({
                         type="button"
                         key={task.id}
                         aria-current={transactionTask?.id === task.id ? "true" : undefined}
-                        onClick={() => move({ caseId: task.id, attempt: undefined })}
+                        onClick={() =>
+                          move({
+                            caseId: task.id,
+                            runId: undefined,
+                            attempt: undefined,
+                            view: undefined,
+                          })
+                        }
                       >
                         <span>{task.name}</span>
                       </button>
