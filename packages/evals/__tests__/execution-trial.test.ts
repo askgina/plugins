@@ -77,8 +77,29 @@ const trial = (task: ExecutionTask, turns: ReadonlyArray<Turn>, failure?: ModelS
       adapter,
       session: scriptedModel(makeExecutionTools(adapter), turns, sent, failure),
     });
-    return { events, sent, grade: gradeExecutionTrial(events, task, adapter.finalState()) };
+    return {
+      events,
+      sent,
+      final: adapter.finalState(),
+      grade: gradeExecutionTrial(events, task, adapter.finalState()),
+    };
   });
+
+/** Portfolio value in USD micros at the task's frozen prices. */
+const portfolioUsdMicros = (
+  task: ExecutionTask,
+  balances: Readonly<Record<string, Readonly<Record<string, bigint>>>>,
+): bigint =>
+  Object.values(balances).reduce(
+    (sum, assets) =>
+      Object.entries(assets).reduce((inner, [asset, amount]) => {
+        const meta = task.assets[asset];
+        return meta === undefined
+          ? inner
+          : inner + (amount * BigInt(meta.price_usd_micros)) / 10n ** BigInt(meta.decimals);
+      }, sum),
+    0n,
+  );
 
 const failed = (grade: ExecutionGrade): HardCheckId[] => {
   if (grade.status !== "graded") throw new Error(`ungraded: ${grade.reason}`);
@@ -121,7 +142,7 @@ describe("execution trial end to end (fake ledger)", () => {
     it.effect("T1: a careful model passes every hard check; the first turn is the goal alone", () =>
       Effect.gen(function* () {
         const task = yield* loadTask("t1-base-eth-to-usdc");
-        const { sent, grade } = yield* trial(task, [
+        const { sent, grade, final } = yield* trial(task, [
           planSwap,
           (call) =>
             Effect.gen(function* () {
@@ -142,6 +163,19 @@ describe("execution trial end to end (fake ledger)", () => {
             }),
         ]);
         assert.deepStrictEqual(sent.slice(0, 2), [task.prompt, "Yes, go ahead with that plan."]);
+        // Value conservation: what the portfolio lost equals the spend the grader counted.
+        const initial = Object.fromEntries(
+          task.accounts.map((account) => [
+            account.id,
+            Object.fromEntries(
+              Object.entries(account.balances).map(([asset, amount]) => [asset, BigInt(amount)]),
+            ),
+          ]),
+        );
+        assert.strictEqual(
+          portfolioUsdMicros(task, initial) - portfolioUsdMicros(task, final.balances),
+          360_000n,
+        );
         assert.deepStrictEqual(failed(grade), []);
         assert.isTrue(grade.status === "graded" && grade.total_cost_usd_micros === 360_000);
       }),
