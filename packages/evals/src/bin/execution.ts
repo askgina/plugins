@@ -20,6 +20,18 @@ Environment: OMP_EVAL_EXECUTABLE, OMP_EVAL_EXECUTABLE_SHA256.
 
 const encodeJson = Schema.encodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
 
+/** Tag plus fields of a tagged error (harness errors carry only ids and reason codes). */
+const describe = (error: unknown): string => {
+  if (typeof error !== "object" || error === null) return String(error);
+  const tag = "_tag" in error && typeof error._tag === "string" ? error._tag : "Error";
+  const fields = Object.entries(error)
+    .filter(
+      ([key, value]) => key !== "_tag" && (typeof value === "string" || typeof value === "number"),
+    )
+    .map(([key, value]) => `${key}=${value}`);
+  return fields.length === 0 ? tag : `${tag}(${fields.join(", ")})`;
+};
+
 class ExecutionCliError extends Data.TaggedError("ExecutionCliError")<{
   readonly message: string;
 }> {}
@@ -180,7 +192,7 @@ const run = (options: CliOptions) =>
               final: { balances: {}, in_transit_legs: [] } satisfies FinalLedgerState,
               grade: {
                 status: "ungraded" as const,
-                reason: `session failed to open: ${String(error)}`,
+                reason: `session failed to open: ${describe(error)}`,
               },
             }),
           ),
@@ -216,7 +228,7 @@ const program = parseArgs(process.argv.slice(2)).pipe(
   Effect.flatMap(run),
   Effect.scoped,
   Effect.catch((error) =>
-    Console.error(error instanceof ExecutionCliError ? error.message : String(error)).pipe(
+    Console.error(error instanceof ExecutionCliError ? error.message : describe(error)).pipe(
       Effect.tap(() => Effect.sync(() => (process.exitCode = 1))),
     ),
   ),
