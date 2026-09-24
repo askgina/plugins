@@ -148,6 +148,10 @@ function decodePricePayload(value: unknown, depth: number): Record<string, unkno
   const structured = object(v["structuredContent"]);
   if (structured?.["payload"] !== undefined)
     return decodePricePayload(structured["payload"], depth + 1);
+  // Claude Code exposes the MCP tool envelope directly in a text block.
+  // Decode only the known tool/payload shape, preserving explicit failures.
+  if (typeof v["tool"] === "string" && object(v["payload"]) !== undefined)
+    return decodePricePayload(v["payload"], depth + 1);
   if (v["success"] === true) return v;
   for (const key of ["result", "output", "content"]) {
     const nested = v[key];

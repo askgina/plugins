@@ -31,11 +31,11 @@ describe("research chart comparisons", () => {
   );
   const astra = eligible.filter((row) => row.model.name === "GPT-6 Astra");
 
-  test("connects the six existing model series in reasoning order without changing eligible results", () => {
+  test("connects the seven model series in reasoning order without changing eligible results", () => {
     const groups = scatterSeries(eligible.map(asPoint));
-    expect(groups).toHaveLength(6);
-    expect(groups.flatMap((group) => group.points)).toHaveLength(13);
-    expect(groups.flatMap((group) => group.segments)).toHaveLength(7);
+    expect(groups).toHaveLength(7);
+    expect(groups.flatMap((group) => group.points)).toHaveLength(17);
+    expect(groups.flatMap((group) => group.segments)).toHaveLength(10);
     const ordered = scatterSeries(astra.map(asPoint))[0]!;
     expect(
       ordered.points.map((point) => Object.values(point.row.runs)[0]!.configuration.reasoning),
@@ -149,10 +149,10 @@ describe("scatter plot configuration rows", () => {
       }),
     );
     expect(html).toContain('viewBox="0 0 360 280"');
-    expect(html.match(/class="lb-chart-model"/gu)).toHaveLength(20);
-    expect(html).toContain("20 plotted settings: names and values");
+    expect(html.match(/class="lb-chart-model"/gu)).toHaveLength(24);
+    expect(html).toContain("24 plotted settings: names and values");
     expect(html).toContain("Grok 4.6, low reasoning");
     expect(html).toContain("79.3% overall · 30.3s");
-    expect(html).toContain("36 settings not plotted");
+    expect(html).toContain("37 settings not plotted");
   });
 });

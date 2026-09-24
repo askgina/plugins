@@ -57,8 +57,8 @@ test("equal scores do not hide independent executions", () => {
 
 test("latest view keeps reasoning levels while hiding older campaigns and candidate aliases", () => {
   const latest = leaderboardCampaignRows(rows);
-  expect(latest).toHaveLength(40);
-  expect(new Set(latest.map((row) => `${row.model.id}/${row.configurationLabel}`)).size).toBe(40);
+  expect(latest).toHaveLength(45);
+  expect(new Set(latest.map((row) => `${row.model.id}/${row.configurationLabel}`)).size).toBe(45);
   expect(latest.filter((row) => row.model.id === "astra")).toHaveLength(5);
   expect(latest.filter((row) => row.model.id === "claude-fable")).toHaveLength(4);
   expect(

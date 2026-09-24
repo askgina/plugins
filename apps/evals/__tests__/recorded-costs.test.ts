@@ -9,11 +9,14 @@ import { publishedNativeCosts, recordedSweepCost } from "../src/lib/recorded-cos
 import projection from "../src/results/2026-09-16/reasoning-sweep/native-cost-estimates.json";
 
 describe("retained native cost estimates", () => {
-  test("retains known model costs and leaves unknown Grok 4.7 pricing unavailable", () => {
+  test("retains known model costs and leaves unknown Grok 4.7 and Opus 5.5 pricing unavailable", () => {
     const rows = unifiedLeaderboardRows();
-    expect(rows).toHaveLength(11);
+    expect(rows).toHaveLength(12);
     expect(rows.filter((row) => row.estimatedCost.availability === "available")).toHaveLength(10);
     expect(rows.find((row) => row.model.id === "grok-4-7")?.estimatedCost.availability).toBe(
+      "unavailable",
+    );
+    expect(rows.find((row) => row.model.id === "claude-opus-5-5")?.estimatedCost.availability).toBe(
       "unavailable",
     );
     const partial = rows.find((row) => row.model.id === "gpt-5.5")!;

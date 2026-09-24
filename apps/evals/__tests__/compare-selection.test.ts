@@ -3,6 +3,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { canonicalRuns, MEASURED_FAMILIES, type CanonicalRun } from "../src/canonical/canonical";
 import {
+  compareRunForCategory,
   preferredCompareRun,
   recommendedComparePair,
   resolveCompareSelection,
@@ -33,11 +34,74 @@ test("defaults never replace a newer incomplete recording with an older high sco
   expect(preferredCompareRun([base, newer], base.modelId, base.family, base)).toBe(newer);
 });
 
-test("category changes preserve reasoning when available and never substitute another category", () => {
+test("automatic run selection honors reasoning when available and never substitutes another category", () => {
   const next = preferredCompareRun(canonicalRuns, "astra", "Predictions", undefined, "high")!;
   expect(next.family).toBe("Predictions");
   expect(next.configuration.reasoning).toBe("high");
   expect(preferredCompareRun(canonicalRuns, "gpt-5.5", "Perps")).toBeUndefined();
+});
+
+test("Grok category round trips preserve both models, reasoning levels and original campaigns", () => {
+  for (const runId of ["grok-low-perps-1", "grok47-low-perps-1"]) {
+    const original = getRun(runId)!;
+    let selected = original;
+    for (const family of ["Spot", "Predictions", "Perps"] as const) {
+      selected = compareRunForCategory(canonicalRuns, selected, family)!;
+      expect(selected).toBeDefined();
+      expect(selected.family).toBe(family);
+      expect(selected.modelId).toBe(original.modelId);
+      expect(selected.configuration.reasoning).toBe("low");
+      expect(selected.campaignId).toBe(original.campaignId);
+      expect(selected.cohort.target).toBe(original.cohort.target);
+    }
+    expect(selected.runId).toBe(runId);
+  }
+});
+
+test("category selection keeps incomplete and incompatible recordings instead of changing effort", () => {
+  const original = getRun("grok47-xhigh-spot-1")!;
+  const selected = compareRunForCategory(canonicalRuns, original, "Predictions")!;
+  expect(selected.runId).toBe("grok47-xhigh-predictions-1");
+  expect(selected.counts.graded).toBeLessThan(selected.counts.planned);
+  expect(compareEligibility(getRun("grok-low-predictions-1")!, selected).eligible).toBe(false);
+});
+
+test("category selection preserves a historical campaign even when newer recordings exist", () => {
+  const matching = getRun("astra-high-spot-1")!;
+  const newer = {
+    ...matching,
+    runId: "newer-campaign",
+    campaignId: "newer-campaign",
+    startedAt: "2099-01-01T00:00:00Z",
+  };
+  expect(compareRunForCategory([newer, matching], base, "Spot")).toBe(matching);
+  expect(compareRunForCategory([newer, matching], matching, "Spot")).toBe(matching);
+});
+
+test("missing category settings never fall back to another model, effort or client", () => {
+  const matching = getRun("astra-high-spot-1")!;
+  const candidates = [
+    { ...matching, modelId: "another-model" },
+    { ...matching, configuration: { ...matching.configuration, reasoning: "low" } },
+    { ...matching, cohort: { ...matching.cohort, target: "another-client" } },
+  ];
+  expect(compareRunForCategory(candidates, base, "Spot")).toBeUndefined();
+  const spotOnly = canonicalRuns.find((run) => run.modelId === "gpt-5.5")!;
+  expect(compareRunForCategory(canonicalRuns, spotOnly, "Perps")).toBeUndefined();
+});
+
+test("missing category recordings keep the selected models visible without showing other-category results", () => {
+  const spotOnly = canonicalRuns.find((run) => run.modelId === "gpt-5.5")!;
+  vi.stubGlobal("window", { location: { hash: "#/compare?category=Perps" } });
+  const html = renderToStaticMarkup(
+    createElement(ComparePage, { left: spotOnly.runId, right: "astra-high-spot-1" }),
+  );
+  expect(html).toMatch(/value="gpt-5\.5"[^>]*selected=""/u);
+  expect(html).toContain('value="astra" selected=""');
+  expect(html).toContain("No Perps recording selected.");
+  expect(html).not.toContain("Spot end-to-end success");
+  expect(html).not.toContain("Task outcomes");
+  expect(html).not.toContain("Detailed counts, timing &amp; costs");
 });
 
 test("starter comparisons use retained compatible recordings", () => {
