@@ -43,6 +43,14 @@ const invariantViolations = (task: ExecutionTask, fileId: string): string[] => {
   ) {
     reasons.push("user_rejected outcome needs user_script.confirm = reject");
   }
+  if (task.expected_outcome.kind === "halt" && task.expected_outcome.cause === "over_limit") {
+    const minimum = task.min_feasible_cost_usd_micros;
+    if (minimum === undefined)
+      reasons.push("over_limit cases need a hand-checked min_feasible_cost_usd_micros");
+    else if (minimum <= task.limits.max_total_cost_usd_micros) {
+      reasons.push("over_limit case is wrong: the cheapest route fits under the cap");
+    }
+  }
   return reasons;
 };
 
