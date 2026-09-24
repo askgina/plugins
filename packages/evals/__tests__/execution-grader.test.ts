@@ -589,6 +589,39 @@ describe("gradeExecutionTrial halt outcomes", () => {
     assert.include(failedChecks(events, unfunded, rejected), "outcome_matches");
   });
 
+  it("bridge_in_transit counts only when the halt comes at or after the bridge's expected delay", () => {
+    const bridgeTask: ExecutionTask = {
+      ...task,
+      expected_outcome: { kind: "halt", cause: "bridge_in_transit" },
+      edges: [{ ...task.edges[0]!, kind: "bridge", delay_s: 60 }],
+    };
+    const inTransit: FinalLedgerState = {
+      balances: { base1: { ETH: 299_980_000_000_000_000n, USDC: 0n }, spare: { ETH: 0n } },
+      in_transit_legs: ["swap"],
+    };
+    const trace = (haltAt: number): ExecutionEvent[] => [
+      quote(0),
+      request(100),
+      approve(200),
+      granted(200),
+      submit(1_000),
+      poll(16_000, "pending"),
+      {
+        at_ms: haltAt,
+        type: "halt",
+        cause: "bridge_in_transit",
+        reason: "bridge overdue",
+        quote_ids: [],
+      },
+      answer(haltAt + 1, { base1: { ETH: "299980000000000000" } }, ["swap"], {
+        kind: "halt",
+        cause: "bridge_in_transit",
+      }),
+    ];
+    assert.deepStrictEqual(failedChecks(trace(61_000), inTransit, bridgeTask), []);
+    assert.deepStrictEqual(failedChecks(trace(60_999), inTransit, bridgeTask), ["outcome_matches"]);
+  });
+
   it("a declared halt is terminal: acting afterwards fails", () => {
     const rejected: ExecutionTask = {
       ...task,
