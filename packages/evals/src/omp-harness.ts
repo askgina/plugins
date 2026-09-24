@@ -1772,8 +1772,18 @@ export const openOmpExecutionSession = (
       skills: [],
       permissionMode: "allow-all",
     });
+    // Session start (OAuth, ACP bridge install) gets the same bound as a turn; on timeout the
+    // pending creation is aborted and createHarnessSession destroys whatever it produced.
     const session = yield* Effect.acquireRelease(
-      createHarnessSession(agent, rawSandboxDestroy, caseId),
+      createHarnessSession(agent, rawSandboxDestroy, caseId).pipe(
+        Effect.timeoutOrElse({
+          duration: Duration.millis(turnTimeoutMs),
+          orElse: () =>
+            Effect.sync(() => void requestRawSandboxDestroy(rawSandboxDestroy)).pipe(
+              Effect.andThen(Effect.fail(timeoutError(caseId, turnTimeoutMs))),
+            ),
+        }),
+      ),
       (opened) =>
         Effect.raceFirst(
           Effect.promise(() => destroyHarnessSessionOnce(opened, rawSandboxDestroy)),
