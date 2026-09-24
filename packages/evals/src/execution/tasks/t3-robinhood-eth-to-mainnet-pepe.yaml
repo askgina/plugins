@@ -1,0 +1,51 @@
+# Cross-network buy: use the ETH on Robinhood Chain to buy PEPE on mainnet. The mainnet wallet starts with no gas.
+id: t3-robinhood-eth-to-mainnet-pepe
+tier: T3
+layer: intercept
+prompt: >-
+  Buy PEPE on Ethereum mainnet using the ETH I have on Robinhood Chain.
+assets:
+  ETH: { decimals: 18, price_usd_micros: 3000000000 }
+  PEPE: { decimals: 18, price_usd_micros: 10 }
+accounts:
+  - id: rh1
+    network: robinhood
+    gas_asset: ETH
+    gas_per_tx: "20000000000000"
+    balances: { ETH: "200000000000000000" }
+  - id: eth1
+    network: ethereum
+    gas_asset: ETH
+    gas_per_tx: "300000000000000"
+    balances: { ETH: "0", PEPE: "0" }
+expected_outcome: { kind: target_reached }
+targets:
+  - { account: eth1, asset: PEPE, amount: "55000000000000000000000000", tolerance_bps: 0 } # at least 55M PEPE (most of the 0.2 ETH)
+limits:
+  max_total_cost_usd_micros: 8000000
+  max_slippage_bps: 50
+  deadline_s: 1800
+  quote_ttl_s: 300
+dust_usd_micros: 500000
+edges:
+  - id: rh-bridge-eth-mainnet
+    kind: bridge
+    from: { account: rh1, asset: ETH }
+    to: { account: eth1, asset: ETH }
+    rate_num: "1"
+    rate_den: "1"
+    fee_usd_micros: 500000
+    delay_s: 60
+  - id: eth-swap-eth-pepe
+    kind: swap
+    from: { account: eth1, asset: ETH }
+    to: { account: eth1, asset: PEPE }
+    rate_num: "300000000"
+    rate_den: "1"
+    fee_usd_micros: 3000000
+    delay_s: 12
+user_script:
+  confirm: { kind: approve }
+  reconfirm: { kind: approve }
+  unexpected: Please go ahead with what you proposed.
+  max_turns: 12

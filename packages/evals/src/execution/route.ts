@@ -73,23 +73,23 @@ export const invalidRouteReason = Function.dual<
   for (const target of task.targets) {
     const amount = BigInt(target.amount);
     const minimum = amount - (amount * BigInt(target.tolerance_bps)) / 10_000n;
-    const starting = balances[target.account]?.[target.asset] ?? 0n;
     const targetKey = key(target.account, target.asset);
     targetKeys.add(targetKey);
-    required.set(
-      targetKey,
-      (required.get(targetKey) ?? 0n) + (minimum > starting ? minimum - starting : 0n),
-    );
+    // The full minimum; starting balances are credited once, at the end, against all demand.
+    required.set(targetKey, (required.get(targetKey) ?? 0n) + minimum);
   }
   const accountsById = new Map(task.accounts.map((account) => [account.id, account]));
   const dust = BigInt(task.dust_usd_micros);
   for (let index = legs.length - 1; index >= 0; index -= 1) {
     const { edge, amountIn, amountOut } = legs[index] as QuotedLeg;
     const to = key(edge.to.account, edge.to.asset);
-    const need = required.get(to) ?? 0n;
+    // Demand not already met by the starting balance is what this leg must cover.
+    const startingTo = balances[edge.to.account]?.[edge.to.asset] ?? 0n;
+    const outstanding = required.get(to) ?? 0n;
+    const need = outstanding > startingTo ? outstanding - startingTo : 0n;
     if (need === 0n) return `leg ${edge.id} does not contribute to the target`;
     const covered = amountOut < need ? amountOut : need;
-    required.set(to, need - covered);
+    required.set(to, outstanding - covered);
     const meta = task.assets[edge.to.asset];
     const wasteUsdMicros =
       meta === undefined
@@ -114,9 +114,12 @@ export const invalidRouteReason = Function.dual<
       required.set(gasKey, (required.get(gasKey) ?? 0n) + BigInt(source.gas_per_tx));
     }
   }
+  // Whatever demand remains must come from starting balances (targets included).
   for (const targetKey of targetKeys) {
-    const short = required.get(targetKey) ?? 0n;
-    if (short > 0n) return `route leaves a target ${short} short`;
+    const [account = "", asset = ""] = targetKey.split("\u0000");
+    const starting = balances[account]?.[asset] ?? 0n;
+    const outstanding = required.get(targetKey) ?? 0n;
+    if (outstanding > starting) return `route leaves a target ${outstanding - starting} short`;
   }
   return undefined;
 });

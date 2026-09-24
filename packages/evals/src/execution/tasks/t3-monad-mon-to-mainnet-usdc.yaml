@@ -1,0 +1,52 @@
+# Cross-network sell: sell all MON on Monad into USDC on Ethereum mainnet, keeping MON only for Monad gas.
+id: t3-monad-mon-to-mainnet-usdc
+tier: T3
+layer: intercept
+prompt: >-
+  Sell my MON on Monad into USDC on Ethereum mainnet.
+assets:
+  ETH: { decimals: 18, price_usd_micros: 3000000000 }
+  USDC: { decimals: 6, price_usd_micros: 1000000 }
+  MON: { decimals: 18, price_usd_micros: 500000 }
+accounts:
+  - id: mon1
+    network: monad
+    gas_asset: MON
+    gas_per_tx: "10000000000000000"
+    balances: { MON: "1000000000000000000000", USDC: "0" }
+  - id: eth1
+    network: ethereum
+    gas_asset: ETH
+    gas_per_tx: "300000000000000"
+    balances: { ETH: "0", USDC: "0" }
+expected_outcome: { kind: target_reached }
+targets:
+  - { account: eth1, asset: USDC, amount: "495000000", tolerance_bps: 0 } # at least 495 USDC from 1,000 MON
+limits:
+  max_total_cost_usd_micros: 3000000
+  max_slippage_bps: 50
+  deadline_s: 1800
+  quote_ttl_s: 300
+dust_usd_micros: 500000
+edges:
+  - id: monad-swap-mon-usdc
+    kind: swap
+    from: { account: mon1, asset: MON }
+    to: { account: mon1, asset: USDC }
+    rate_num: "1"
+    rate_den: "2000000000000"
+    fee_usd_micros: 100000
+    delay_s: 1
+  - id: monad-bridge-usdc-mainnet
+    kind: bridge
+    from: { account: mon1, asset: USDC }
+    to: { account: eth1, asset: USDC }
+    rate_num: "1"
+    rate_den: "1"
+    fee_usd_micros: 500000
+    delay_s: 60
+user_script:
+  confirm: { kind: approve }
+  reconfirm: { kind: approve }
+  unexpected: Please go ahead with what you proposed.
+  max_turns: 12
