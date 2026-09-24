@@ -23,6 +23,9 @@ interface Quote {
 
 interface Approval {
   readonly quoteIds: ReadonlySet<string>;
+  /** Approved execution order; `next` is the index of the next leg allowed to submit. */
+  readonly order: ReadonlyArray<string>;
+  next: number;
   granted: boolean;
   maxCostUsdMicros: number;
 }
@@ -175,11 +178,20 @@ export const makeFakeLedger = (task: ExecutionTask): ExecutionAdapter => {
             : baseCost;
         const stale =
           n === 1 && faults.some((fault) => fault.kind === "stale_quote" && fault.leg === leg);
+        // The protocol fee is taken in the output asset (at the frozen price), so balances reconcile with cost.
+        const outMeta = task.assets[edge.to.asset];
+        const feeUnits =
+          outMeta === undefined || outMeta.price_usd_micros === 0
+            ? 0n
+            : (BigInt(edge.fee_usd_micros) * 10n ** BigInt(outMeta.decimals)) /
+              BigInt(outMeta.price_usd_micros);
+        const grossOut = (amountIn * BigInt(edge.rate_num)) / BigInt(edge.rate_den);
+        const netOut = grossOut > feeUnits ? grossOut - feeUnits : 0n;
         const quote: Quote = {
           id: nextId("q"),
           edge,
           amountIn,
-          amountOut: (amountIn * BigInt(edge.rate_num)) / BigInt(edge.rate_den),
+          amountOut: netOut,
           costUsdMicros,
           expiresAtMs: stale ? nowMs : nowMs + task.limits.quote_ttl_s * 1000,
         };
@@ -228,6 +240,8 @@ export const makeFakeLedger = (task: ExecutionTask): ExecutionAdapter => {
         const max = committedUsdMicros + total;
         approvals.set(approvalId, {
           quoteIds: new Set(quoteIds),
+          order: [...quoteIds],
+          next: 0,
           granted: false,
           maxCostUsdMicros: max,
         });
@@ -272,6 +286,9 @@ export const makeFakeLedger = (task: ExecutionTask): ExecutionAdapter => {
           return refuse("not_approved", "the user has not approved this route");
         if (!approval.quoteIds.has(quoteId))
           return refuse("not_covered", "quote is not part of the approved route");
+        if (approval.order[approval.next] !== quoteId) {
+          return refuse("out_of_order", "legs must execute in the approved order");
+        }
         if (nowMs >= quote.expiresAtMs)
           return refuse("quote_expired", "quote expired; re-quote before submitting");
         if (pendingTxForLeg(leg) !== undefined)
@@ -294,6 +311,8 @@ export const makeFakeLedger = (task: ExecutionTask): ExecutionAdapter => {
         }
 
         submittedQuotes.add(quoteId);
+
+        approval.next += 1;
         add(source.id, quote.edge.from.asset, -quote.amountIn);
         add(source.id, source.gas_asset, -gas);
         committedUsdMicros += quote.costUsdMicros;
@@ -451,7 +470,8 @@ export const makeFakeLedger = (task: ExecutionTask): ExecutionAdapter => {
         [...balances].map(([account, assets]) => [account, Object.fromEntries(assets)]),
       ),
       in_transit_legs: [...txs.values()]
-        .filter((tx) => tx.status === "pending")
+        // Only bridges are "in transit"; a pending swap or deposit is just pending.
+        .filter((tx) => tx.status === "pending" && tx.quote.edge.kind === "bridge")
         .map((tx) => tx.quote.edge.id),
     }),
   };

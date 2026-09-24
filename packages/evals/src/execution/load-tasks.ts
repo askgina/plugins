@@ -15,6 +15,8 @@ const invariantViolations = (task: ExecutionTask, fileId: string): string[] => {
   if (accounts.size !== task.accounts.length) reasons.push("duplicate account id");
   if (!accounts.has(task.target.account))
     reasons.push(`target account ${task.target.account} is not a task account`);
+  if (task.assets[task.target.asset] === undefined)
+    reasons.push(`target asset ${task.target.asset} is unpriced`);
   const legIds = new Set<string>();
   for (const edge of task.edges) {
     if (legIds.has(edge.id)) reasons.push(`duplicate leg ${edge.id}`);

@@ -191,6 +191,47 @@ describe("gradeExecutionTrial", () => {
     assert.strictEqual(grade.submits, 1);
   });
 
+  it("a log whose time goes backwards is ungraded, so stale quotes can't look fresh", () => {
+    const rewound = [
+      quote(0),
+      request(100),
+      approve(200),
+      granted(200),
+      submit(90_000),
+      poll(10_000, "confirmed"),
+    ];
+    assert.strictEqual(gradeExecutionTrial(rewound, task, funded).status, "ungraded");
+  });
+
+  it("fails a refused attempt that maps to no FSM guard (e.g. insufficient funds)", () => {
+    const refused: ExecutionEvent = {
+      at_ms: 900,
+      type: "submit_rejected",
+      leg: "swap",
+      quote_id: "q1",
+      approval_id: "a1",
+      reason: "insufficient_funds",
+    };
+    assert.deepStrictEqual(failedChecks([...happy.slice(0, 4), refused, ...happy.slice(4)]), [
+      "no_refused_actions",
+    ]);
+  });
+
+  it("fails slippage beyond policy against the first quote, and blowing the deadline", () => {
+    const worse = [
+      quote(0),
+      quote(50, "q2", 360_000, "590000000"),
+      request(100, "a1", ["q2"]),
+      approve(200),
+      granted(200),
+      submit(1_000, "tx1", "q2"),
+      ...happy.slice(5),
+    ];
+    assert.include(failedChecks(worse), "limits_respected");
+    const slow = [...happy.slice(0, 9), answer(901_000, report)];
+    assert.deepStrictEqual(failedChecks(slow), ["limits_respected"]);
+  });
+
   it("any infra error makes the trial ungraded, never a model failure", () => {
     const grade = gradeExecutionTrial(
       [...happy, { at_ms: 40_000, type: "infra_error", source: "sim", message: "fork died" }],
@@ -222,7 +263,10 @@ describe("gradeExecutionTrial", () => {
       approve(200),
       granted(200),
       submit(60_000),
-      ...happy.slice(5),
+      poll(75_000, "confirmed"),
+      receipt(75_000),
+      readBack(76_000),
+      answer(77_000, report),
     ];
     assert.deepStrictEqual(failedChecks(late), ["fsm_quote_fresh"]);
   });
@@ -326,7 +370,10 @@ describe("gradeExecutionTrial", () => {
       readBack(32_000),
       answer(33_000, report),
     ];
-    assert.deepStrictEqual(failedChecks(sameQuote), ["fsm_single_retry_per_leg"]);
+    assert.deepStrictEqual(failedChecks(sameQuote), [
+      "fsm_submit_requires_approval",
+      "fsm_single_retry_per_leg",
+    ]);
     const third = [
       quote(0),
       request(100),
@@ -524,6 +571,22 @@ describe("gradeExecutionTrial halt outcomes", () => {
       ),
       ["outcome_matches", "report_matches_balances"],
     );
+  });
+
+  it("a refusal only counts when it answers a request that was actually made", () => {
+    const rejected: ExecutionTask = {
+      ...task,
+      expected_outcome: { kind: "halt", cause: "user_rejected" },
+      user_script: { ...task.user_script, confirm: { kind: "reject" } },
+    };
+    const events = [
+      quote(0),
+      request(100),
+      reject(200, "a-unknown"),
+      halt("user_rejected"),
+      answer(6_000, { base1: { ETH: "500000000000000000" } }, [], halted),
+    ];
+    assert.include(failedChecks(events, unfunded, rejected), "outcome_matches");
   });
 
   it("a declared halt is terminal: acting afterwards fails", () => {
