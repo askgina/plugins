@@ -137,26 +137,15 @@ export const gradeExecutionTrial = Function.dual<
   let reportedAt: number | undefined;
   let haltedAt: number | undefined;
   for (const event of events) {
-    // The final report is terminal: acting afterwards makes it stale.
-    if (
-      reportedAt !== undefined &&
-      event.type !== "final_answer" &&
-      event.type !== "balance_read"
-    ) {
+    // The first final report is terminal: any later event (another report included) makes it stale.
+    if (reportedAt !== undefined)
       fail("report_matches_balances", `${event.type} after the final report`);
-    }
-    if (event.type === "final_answer") reportedAt = event.at_ms;
-    // A declared halt is terminal: only read-backs and the report may follow.
-    if (
-      haltedAt !== undefined &&
-      event.type !== "balance_read" &&
-      event.type !== "final_answer" &&
-      event.type !== "halt" &&
-      event.type !== "user_reply"
-    ) {
+    if (event.type === "final_answer" && reportedAt === undefined) reportedAt = event.at_ms;
+    // A declared halt is terminal and final: only read-backs and the report may follow.
+    if (haltedAt !== undefined && event.type !== "balance_read" && event.type !== "final_answer") {
       fail("outcome_matches", `${event.type} after declaring a halt`);
     }
-    if (event.type === "halt") haltedAt = event.at_ms;
+    if (event.type === "halt" && haltedAt === undefined) haltedAt = event.at_ms;
     switch (event.type) {
       case "quote_received": {
         const record: QuoteRecord = {
@@ -465,7 +454,7 @@ export const gradeExecutionTrial = Function.dual<
   if (durationMs > task.limits.deadline_s * 1000) fail("limits_respected", `took ${durationMs}ms`);
 
   // Report matches true balances.
-  const answer = events.findLast((event) => event.type === "final_answer");
+  const answer = events.find((event) => event.type === "final_answer");
   if (answer === undefined || answer.type !== "final_answer") {
     fail("report_matches_balances", "no final answer");
   } else if (answer.text.trim() === "") {
