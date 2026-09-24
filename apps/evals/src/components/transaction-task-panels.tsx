@@ -35,6 +35,20 @@ export function TransactionTaskPanels({
   return (
     <>
       <section className="task-workspace-models" aria-labelledby="workspace-models-heading">
+        <label className="task-workspace-model-select">
+          <span className="results-sr-only">Selected model</span>
+          <select
+            value={selected?.row.model.id ?? ""}
+            onChange={(event) => onSelectModel(event.target.value)}
+          >
+            {ordered.map(({ row, run }) => (
+              <option key={row.model.id} value={row.model.id}>
+                {row.model.name}
+                {run ? ` (${run.reasoning} reasoning)` : " (not run)"}
+              </option>
+            ))}
+          </select>
+        </label>
         <div className="task-workspace-model-tools">
           <div className="task-workspace-heading">
             <h2 id="workspace-models-heading">Models</h2>
@@ -99,7 +113,10 @@ export function TransactionTaskPanels({
                 {selected.run.environment}.
               </p>
               <div className="results-scroll">
-                <table className="eval-table" aria-label={`${selected.row.model.name} attempts`}>
+                <table
+                  className="eval-table transaction-attempts"
+                  aria-label={`${selected.row.model.name} attempts`}
+                >
                   <thead>
                     <tr>
                       <th scope="col">Attempt</th>

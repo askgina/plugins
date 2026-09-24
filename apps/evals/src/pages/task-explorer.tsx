@@ -167,15 +167,28 @@ export function TaskExplorerPage({
     selection.family;
   const definitions = caseDefinitionsForFamily(family);
   // Spot also lists the transaction tasks; they are owned per model and scored separately.
-  const transactionTask =
-    family === "Spot" ? TRANSACTION_TASKS.find((task) => task.id === selection.caseId) : undefined;
   const query = search.trim().toLocaleLowerCase();
+  // Spot also lists the transaction tasks; search covers their names and prompts too.
+  const shownTransactionTasks =
+    family === "Spot"
+      ? TRANSACTION_TASKS.filter((task) =>
+          `${task.name} ${task.prompt}`.toLocaleLowerCase().includes(query),
+        )
+      : [];
   const shownTasks = definitions.filter((definition) =>
     `${taskName(definition)} ${definition.prompt.availability === "available" ? definition.prompt.value : ""}`
       .toLocaleLowerCase()
       .includes(query),
   );
-  const definition = shownTasks.find((entry) => entry.caseId === selection.caseId) ?? shownTasks[0];
+  const selectedTransactionTask = shownTransactionTasks.find(
+    (task) => task.id === selection.caseId,
+  );
+  const definition = selectedTransactionTask
+    ? shownTasks[0]
+    : (shownTasks.find((entry) => entry.caseId === selection.caseId) ?? shownTasks[0]);
+  // If the search leaves only transaction tasks, show the first of them.
+  const transactionTask =
+    selectedTransactionTask ?? (definition ? undefined : shownTransactionTasks[0]);
   const rows = [...new Map(sourceRows.map((row) => [row.model.id, row])).values()];
   const row = rows.find((entry) => entry.model.id === selection.modelId) ?? rows[0];
   const configurations = sourceRows === defaultRows ? configurationRows : sourceRows;
@@ -236,6 +249,15 @@ export function TaskExplorerPage({
     setSelection(updated);
     onNavigate?.(updated);
   }
+  /** One entry point for every task control (sidebar, mobile picker). */
+  function chooseTask(caseId: string) {
+    const isTransaction = TRANSACTION_TASKS.some((task) => task.id === caseId);
+    move(
+      isTransaction
+        ? { caseId, runId: undefined, attempt: undefined, view: undefined }
+        : { caseId, attempt: undefined },
+    );
+  }
   function chooseFamily(next: PrototypeFamily) {
     const configuration = configurations.find((entry) =>
       Object.values(entry.runs).some((candidate) => candidate.runId === run?.runId),
@@ -273,7 +295,13 @@ export function TaskExplorerPage({
                 aria-current={family === category ? "page" : undefined}
                 onClick={() => chooseFamily(category)}
               >
-                {category} <span>({caseDefinitionsForFamily(category).length})</span>
+                {category}{" "}
+                <span>
+                  (
+                  {caseDefinitionsForFamily(category).length +
+                    (category === "Spot" ? TRANSACTION_TASKS.length : 0)}
+                  )
+                </span>
               </button>
             ))}
           </nav>
@@ -288,7 +316,7 @@ export function TaskExplorerPage({
             />
           </label>
         </div>
-        {!definition ? (
+        {!definition && !transactionTask ? (
           <div className="task-workspace-empty" role="status">
             <h2>No tasks match “{search}”</h2>
             <p>Search a task name or a phrase from its prompt.</p>
@@ -302,14 +330,15 @@ export function TaskExplorerPage({
               <div className="task-workspace-heading">
                 <h2 id="workspace-tasks-heading">{family} tasks</h2>
                 <span>
-                  {shownTasks.length + (family === "Spot" ? TRANSACTION_TASKS.length : 0)} tasks
+                  {shownTasks.length + shownTransactionTasks.length}{" "}
+                  {shownTasks.length + shownTransactionTasks.length === 1 ? "task" : "tasks"}
                 </span>
               </div>
               <label className="task-workspace-task-select">
                 <span className="results-sr-only">Selected task</span>
                 <select
-                  value={transactionTask?.id ?? definition.caseId}
-                  onChange={(event) => move({ caseId: event.target.value, attempt: undefined })}
+                  value={transactionTask?.id ?? definition?.caseId}
+                  onChange={(event) => chooseTask(event.target.value)}
                 >
                   {shownTasks.map((entry) => (
                     <option key={entry.caseId} value={entry.caseId}>
@@ -317,7 +346,7 @@ export function TaskExplorerPage({
                     </option>
                   ))}
                   {family === "Spot" &&
-                    TRANSACTION_TASKS.map((task) => (
+                    shownTransactionTasks.map((task) => (
                       <option key={task.id} value={task.id}>
                         Transactions: {task.name}
                       </option>
@@ -330,9 +359,9 @@ export function TaskExplorerPage({
                     type="button"
                     key={entry.caseId}
                     aria-current={
-                      !transactionTask && definition.caseId === entry.caseId ? "true" : undefined
+                      !transactionTask && definition?.caseId === entry.caseId ? "true" : undefined
                     }
-                    onClick={() => move({ caseId: entry.caseId, attempt: undefined })}
+                    onClick={() => chooseTask(entry.caseId)}
                   >
                     <span>{taskName(entry)}</span>
                   </button>
@@ -340,7 +369,7 @@ export function TaskExplorerPage({
                 {family === "Spot" && (
                   <>
                     <h3 className="task-workspace-task-group">Transactions</h3>
-                    {TRANSACTION_TASKS.map((task) => (
+                    {shownTransactionTasks.map((task) => (
                       <button
                         type="button"
                         key={task.id}
@@ -361,13 +390,15 @@ export function TaskExplorerPage({
                 )}
               </nav>
             </section>
-            {transactionTask ? (
-              <TransactionTaskPanels
-                task={transactionTask}
-                rows={rows}
-                selectedModelId={selection.modelId}
-                onSelectModel={(modelId) => move({ modelId, attempt: undefined })}
-              />
+            {transactionTask || !definition ? (
+              transactionTask && (
+                <TransactionTaskPanels
+                  task={transactionTask}
+                  rows={rows}
+                  selectedModelId={selection.modelId}
+                  onSelectModel={(modelId) => move({ modelId, attempt: undefined })}
+                />
+              )
             ) : (
               <>
                 <section
