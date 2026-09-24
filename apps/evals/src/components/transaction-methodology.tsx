@@ -9,8 +9,7 @@ export function TransactionMethodology() {
         simulated ledger; results appear under each model's Spot score on the{" "}
         <a href="#/leaderboard">leaderboard</a> and in the{" "}
         <a href="#/tasks?category=Spot&task=t1-base-eth-to-usdc">Spot tasks</a>, scored separately
-        from Spot. These evals are separate from the tool-use scores above and never enter the
-        leaderboard.
+        from Spot. They never change the Spot score or Overall.
       </p>
 
       <ol className="method-steps">

@@ -20,6 +20,11 @@ export interface TransactionRun {
   readonly date: string;
   /** Canonical model id, e.g. `grok-4-7`. */
   readonly canonicalModelId: string;
+  /**
+   * The leaderboard setting that owns this run, identified by that row's Spot run id. A model
+   * and reasoning level can appear in several campaigns; only this one row carries the result.
+   */
+  readonly ownerSpotRunId: string;
   readonly modelId: string;
   readonly reasoning: string;
   readonly client: string;
@@ -30,14 +35,15 @@ export interface TransactionRun {
 }
 
 export const TRANSACTION_RUNS: readonly TransactionRun[] = [
-  { ...grok47Low, canonicalModelId: "grok-4-7" },
+  // Current Grok 4.7 Low setting: same OMP client and xAI OAuth profile as the low recovery.
+  { ...grok47Low, canonicalModelId: "grok-4-7", ownerSpotRunId: "grok47-recovery-low-spot-1" },
 ];
 
-/** The transaction run owned by this leaderboard row (same model, same reasoning), if any. */
+/** The transaction run owned by exactly this leaderboard row, if any. */
 export function transactionRunForRow(row: LeaderboardModelRow): TransactionRun | undefined {
-  const reasoning = Object.values(row.runs)[0]?.configuration.reasoning;
+  const spotRunId = row.runs.Spot?.runId;
   return TRANSACTION_RUNS.find(
-    (run) => run.canonicalModelId === row.model.id && run.reasoning === reasoning,
+    (run) => run.canonicalModelId === row.model.id && run.ownerSpotRunId === spotRunId,
   );
 }
 
@@ -45,13 +51,24 @@ export function transactionRunForRow(row: LeaderboardModelRow): TransactionRun |
 export const plannedTrials = (run: TransactionRun) => TRANSACTION_TASKS.length * run.repetitions;
 
 /**
- * Same rule as the other categories: verified passes ÷ all planned trials, as a fraction (0–1)
- * like the other category scores. A run that is not complete has no score.
+ * The task (case) is the scoring unit: each task's pass rate over its attempts, averaged equally
+ * across tasks, as a fraction (0–1) like the other category scores. Complete only when every
+ * published task has attempts 1..N exactly once and every trial's model identity is verified.
  */
 export function transactionScore(run: TransactionRun): number | null {
-  const planned = plannedTrials(run);
-  if (run.trials.length !== planned) return null;
-  return run.trials.filter((trial) => trial.passed).length / planned;
+  const reps = Array.from({ length: run.repetitions }, (_, index) => index + 1).join(",");
+  const rates: number[] = [];
+  for (const task of TRANSACTION_TASKS) {
+    const trials = run.trials.filter((trial) => trial.taskId === task.id);
+    const seen = trials
+      .map((trial) => trial.repetition)
+      .sort((a, b) => a - b)
+      .join(",");
+    if (seen !== reps || trials.some((trial) => !trial.identityVerified)) return null;
+    rates.push(trials.filter((trial) => trial.passed).length / trials.length);
+  }
+  if (run.trials.length !== TRANSACTION_TASKS.length * run.repetitions) return null;
+  return rates.reduce((sum, rate) => sum + rate, 0) / rates.length;
 }
 
 export const TRANSACTION_CHECK_LABEL: Readonly<Record<string, string>> = {
