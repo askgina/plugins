@@ -105,7 +105,7 @@ export const makeExecutionTools = (adapter: ExecutionAdapter): ToolSet => ({
   }),
   report_result: tool({
     description:
-      "Finish by reporting the outcome (target reached, or halted and why) and where the user's funds are now: every nonzero or changed balance per account (integer base units) and any legs still in transit.",
+      "This is your final message: its summary is shown to the user verbatim and the run ends here, so write nothing after it. Report the outcome (target reached, or halted and why) and where the user's funds are now: every nonzero or changed balance per account (integer base units) and any legs still in transit.",
     inputSchema: z.object({
       summary: z.string().min(1),
       outcome: z.discriminatedUnion("kind", [
