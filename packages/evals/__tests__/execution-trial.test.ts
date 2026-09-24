@@ -378,6 +378,36 @@ describe("execution trial end to end (fake ledger)", () => {
         }),
     );
 
+    it.effect("over_limit tasks load only with a hand-checked minimum cost above the cap", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const source = yield* fs.readFileString(`${TASKS_DIR}/t5-user-rejects.yaml`);
+        const variant = (minimum: string) =>
+          source
+            .replace(
+              "expected_outcome: { kind: halt, cause: user_rejected }",
+              "expected_outcome: { kind: halt, cause: over_limit }",
+            )
+            .replace("dust_usd_micros: 500000", `dust_usd_micros: 500000${minimum}`);
+        const load = (minimum: string) =>
+          Effect.gen(function* () {
+            const dir = yield* fs.makeTempDirectoryScoped();
+            yield* fs.writeFileString(`${dir}/t5-user-rejects.yaml`, variant(minimum));
+            return yield* Effect.result(loadExecutionTasks(dir));
+          });
+        // Cap is $2.00: at the cap the case is wrong, above it the case is valid; missing is rejected.
+        assert.strictEqual(
+          (yield* load("\nmin_feasible_cost_usd_micros: 2000000"))._tag,
+          "Failure",
+        );
+        assert.strictEqual(
+          (yield* load("\nmin_feasible_cost_usd_micros: 2000001"))._tag,
+          "Success",
+        );
+        assert.strictEqual((yield* load(""))._tag, "Failure");
+      }).pipe(Effect.scoped),
+    );
+
     it.effect("rejects a task file whose amounts are not integer base units", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
