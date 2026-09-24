@@ -30,6 +30,7 @@ import perpsAttemptsJson from "../results/2026-09-11/perps-predictions/perps/per
 import type { ConversationReference } from "../lib/conversations";
 import { recordedSweepCost } from "../lib/recorded-costs";
 import recoveryResults from "../results/2026-09-21/recovery/results.json";
+import opus55Results from "../results/2026-09-24/claude-opus-5.5/results.json";
 import grok47Results from "../results/2026-09-22/grok-4.7/results.json";
 import grok47LowRecovery from "../results/2026-09-22/grok-4.7/low-recovery.json";
 import {
@@ -538,6 +539,15 @@ export const canonicalModels: readonly CanonicalModel[] = [
     origin: "measured",
   },
   {
+    id: "claude-opus-5-5",
+    name: "Claude Opus 5.5",
+    provider: "Anthropic",
+    providerModel: "claude-opus-5-5",
+    mark: "◎",
+    color: "#6b4c9a",
+    origin: "measured",
+  },
+  {
     id: "claude-opus",
     release: { date: "2026-07-24", source: "https://www.anthropic.com/news/claude-opus-5" },
     name: "Claude Opus 5",
@@ -719,11 +729,20 @@ const devinSpotCohort = cohort({ suiteId: SUITE_IDS.Spot, target: "devin_cli" })
 const devinPerpsCohort = cohort({ suiteId: SUITE_IDS.Perps, target: "devin_cli" });
 const devinPredictionsCohort = cohort({ suiteId: SUITE_IDS.Predictions, target: "devin_cli" });
 
+const claudeSpotCohort = cohort({ suiteId: SUITE_IDS.Spot, target: "claude_cli" });
+const claudePerpsCohort = cohort({ suiteId: SUITE_IDS.Perps, target: "claude_cli" });
+const claudePredictionsCohort = cohort({ suiteId: SUITE_IDS.Predictions, target: "claude_cli" });
+
 const SWEEP_COHORTS: Readonly<
   Record<string, Readonly<Record<"Spot" | "Perps" | "Predictions", CanonicalCohort>>>
 > = {
   omp_harness: { Spot: ompSpotCohort, Perps: ompPerpsCohort, Predictions: ompPredictionsCohort },
   muse_cli: { Spot: museSpotCohort, Perps: musePerpsCohort, Predictions: musePredictionsCohort },
+  claude_cli: {
+    Spot: claudeSpotCohort,
+    Perps: claudePerpsCohort,
+    Predictions: claudePredictionsCohort,
+  },
   devin_cli: {
     Spot: devinSpotCohort,
     Perps: devinPerpsCohort,
@@ -764,6 +783,9 @@ export const canonicalCohorts: readonly CanonicalCohort[] = [
   devinSpotCohort,
   devinPerpsCohort,
   devinPredictionsCohort,
+  claudeSpotCohort,
+  claudePerpsCohort,
+  claudePredictionsCohort,
   meridianSpotCohort,
   ...[
     ompSpotCohort,
@@ -905,6 +927,26 @@ const solSpotLabelsOnlyConfiguration: CanonicalConfiguration = {
 // ---------------------------------------------------------------------------
 
 export const canonicalCampaigns: readonly CanonicalCampaign[] = [
+  {
+    campaignId: opus55Results.campaignId,
+    date: "2026-09-24",
+    harness: "Claude Opus 5.5 · Claude Code",
+    repetitions: 3,
+    timeoutMs: 720000,
+    sourceCommit: opus55Results.sourceCommit,
+    limitations: [
+      "All 525 planned trials were processed: 524 graded and one Max timeout. Each of five thinking levels has 105 planned trials.",
+      "Each trial had a 720-second limit and 32-turn cap. Budgets and native client differ from older campaigns.",
+      "Claude Code 2.1.280 used subscription OAuth. The subscription account changed after 71 completed trials; remaining trials used the requested account.",
+      "337 explicit quota rejections were retained and retried after cooldown. Model attempts were never rerun after receiving a grade or timing out. Original verdicts remain in the revision receipt.",
+      "The requested model was verified in native output; effort is the explicit CLI setting, not provider-internal compute attestation.",
+      "Perps price tasks additionally require perps-price-evidence-v2. Other tasks measure tool-use conformance; live fixture or service failures can affect results.",
+      "A response-envelope decoding correction regraded all 45 retained price trials and recovered 18 passes; original verdicts and evidence hashes are retained.",
+      "The source is a pinned archive plus an adapter patch; its base commit alone does not identify the executed code. Archive and patch hashes are published.",
+      "Pricing is unknown. Only numeric evidence and hashes are published; private conversations remain withheld.",
+    ],
+    origin: "measured",
+  },
   {
     campaignId: grok47LowRecovery.campaignId,
     date: "2026-09-22",
@@ -2174,6 +2216,7 @@ const PROJECTED_TIMEOUT_TAGS: Readonly<Record<string, true>> = {
   PluginEvalOmpHarnessTimeoutError: true,
   PluginEvalMuseCliTimeoutError: true,
   PluginEvalDevinTimeoutError: true,
+  PluginEvalClaudeCliTimeoutError: true,
 };
 
 function projectedTrialToCanonical(trial: ProjectedTrial): CanonicalAttempt {
@@ -2536,19 +2579,20 @@ function sweepFamilyRun(row: SweepRow, run: SweepRun): CanonicalRun {
   };
 }
 
-interface FreshGrokRun extends SweepRun {
+interface FreshGradedRun extends SweepRun {
   readonly priceChecks: readonly {
     readonly caseId: string;
     readonly repetition: number;
     readonly policyId: string;
     readonly outcome: string;
     readonly nativeVerdict: string;
+    readonly originalOutcome?: string;
+    readonly revisionId?: string;
   }[];
 }
 
-function freshGrokFamilyRun(row: SweepRow, source: FreshGrokRun): CanonicalRun {
-  const base = sweepFamilyRun(row, source);
-  const attempts = source.trials.map((trial): CanonicalAttempt => {
+function freshGradedAttempts(source: FreshGradedRun): readonly CanonicalAttempt[] {
+  return source.trials.map((trial): CanonicalAttempt => {
     const attempt = projectedTrialToCanonical(trial);
     const price = source.priceChecks.find(
       (check) => check.caseId === trial.caseId && check.repetition === trial.repetition,
@@ -2562,7 +2606,10 @@ function freshGrokFamilyRun(row: SweepRow, source: FreshGrokRun): CanonicalRun {
       priceGrounding: {
         policyId: price.policyId,
         outcome: price.outcome,
-        detail: `Recorded during this trial under ${price.policyId}. Native tool-use verdict: ${price.nativeVerdict}.`,
+        detail:
+          price.revisionId === undefined
+            ? `Recorded during this trial under ${price.policyId}. Native tool-use verdict: ${price.nativeVerdict}.`
+            : `Retained evidence regraded under ${price.policyId}. Original price verdict: ${price.originalOutcome}. Native tool-use verdict: ${price.nativeVerdict}.`,
       },
       failureCategories: [
         ...attempt.failureCategories,
@@ -2570,6 +2617,11 @@ function freshGrokFamilyRun(row: SweepRow, source: FreshGrokRun): CanonicalRun {
       ],
     };
   });
+}
+
+function freshGrokFamilyRun(row: SweepRow, source: FreshGradedRun): CanonicalRun {
+  const base = sweepFamilyRun(row, source);
+  const attempts = freshGradedAttempts(source);
   return {
     ...base,
     campaignId: grok47Results.campaignId,
@@ -2598,7 +2650,43 @@ function freshGrokFamilyRun(row: SweepRow, source: FreshGrokRun): CanonicalRun {
   };
 }
 
-interface GrokRecoveryRun extends FreshGrokRun {
+function opus55FamilyRun(row: SweepRow, source: FreshGradedRun): CanonicalRun {
+  const base = sweepFamilyRun(row, source);
+  const attempts = freshGradedAttempts(source);
+  return {
+    ...base,
+    campaignId: opus55Results.campaignId,
+    recordedCostEstimate: { availability: "not_recorded" },
+    attempts: available(attempts),
+    dimensions: available(dimensionsFromAttempts(attempts)),
+    coveragePlan: {
+      planSource: "run_manifest",
+      planSha256: opus55Results.sourcePlanSha256,
+      statusSha256: opus55Results.sourceStatusSha256,
+    },
+    provenance: {
+      ...base.provenance,
+      sourceLabel:
+        "Claude Opus 5.5 VM campaign · pinned source archive and native OAuth adapter patch",
+    },
+    notes: [
+      "Finished " +
+        opus55Results.generatedAt +
+        ". Each setting has 105 planned trials across 35 tasks and three repetitions.",
+      "Claude Code 2.1.280; requested effort " +
+        row.reasoning +
+        "; 720-second limit and 32-turn cap per trial. Exact model verified in native evidence; provider-internal compute is not attested.",
+      "337 quota rejections were archived and retried after cooldown. No graded model attempt or Max timeout was rerun; execution failures receive zero credit.",
+      "The subscription account changed after 71 completed trials. Remaining trials used the requested account.",
+      "All 45 price trials were regraded from retained evidence after correcting Claude tool/payload decoding. 18 passes were recovered; original verdicts are preserved in the downloadable revision receipt.",
+      "Perps price verdicts require native tool-use checks and perps-price-evidence-v2. Other tasks measure tool-use conformance, not general answer quality.",
+      "The source archive and adapter patch are pinned by hashes in the results artifact. The base commit is a reference, not a clean-checkout attestation.",
+      "Timing and tokens cover graded attempts. Subscription cost is unavailable. Private transcripts and tool results are withheld.",
+    ],
+  };
+}
+
+interface GrokRecoveryRun extends FreshGradedRun {
   readonly timeoutBudgetsMs: readonly number[];
   readonly budgetCounts: Readonly<Record<string, number | undefined>>;
   readonly executions: readonly {
@@ -3112,6 +3200,7 @@ export const originalCanonicalRuns: readonly CanonicalRun[] = [
   ),
   ...reasoningSweepRows.flatMap((row) => row.runs.map((run) => sweepFamilyRun(row, run))),
   ...recoveryResults.models.flatMap((row) => row.runs.map((run) => recoveryFamilyRun(row, run))),
+  ...opus55Results.models.flatMap((row) => row.runs.map((run) => opus55FamilyRun(row, run))),
   ...grok47Results.models.flatMap((row) => row.runs.map((run) => freshGrokFamilyRun(row, run))),
   ...grok47LowRecovery.models.flatMap((row) =>
     row.runs.map((run) => grok47RecoveryFamilyRun(row, run)),
@@ -3386,15 +3475,17 @@ export const canonicalPublications: readonly CanonicalPublication[] = [
       ? correctedPublication(run)
       : resultPublication(
           run,
-          run.campaignId === grok47LowRecovery.campaignId
-            ? grok47LowRecovery.capturedAt
-            : run.campaignId === grok47Results.campaignId
-              ? grok47Results.generatedAt
-              : run.campaignId === "recovery-2026-09-21"
-                ? recoveryResults.capturedAt
-                : run.campaignId === SWEEP_CAMPAIGN_ID
-                  ? reasoningSweep.generatedAt
-                  : "2026-09-14T18:00:00.000Z",
+          run.campaignId === opus55Results.campaignId
+            ? opus55Results.generatedAt
+            : run.campaignId === grok47LowRecovery.campaignId
+              ? grok47LowRecovery.capturedAt
+              : run.campaignId === grok47Results.campaignId
+                ? grok47Results.generatedAt
+                : run.campaignId === "recovery-2026-09-21"
+                  ? recoveryResults.capturedAt
+                  : run.campaignId === SWEEP_CAMPAIGN_ID
+                    ? reasoningSweep.generatedAt
+                    : "2026-09-14T18:00:00.000Z",
         ),
   ),
   ...withdrawnRuns.map(withdrawnPublication),

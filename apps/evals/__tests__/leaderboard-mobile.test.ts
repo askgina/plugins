@@ -45,7 +45,7 @@ test("mobile scores give execution errors zero credit while preserving their cou
 
 test("grouping keeps latest settings without inventing a combined model score", () => {
   const html = render("#/leaderboard?group=models");
-  expect(html.match(/class="lb-mobile-group-trigger"/gu)).toHaveLength(11);
+  expect(html.match(/class="lb-mobile-group-trigger"/gu)).toHaveLength(12);
   const distinct = leaderboardCampaignRows(rows);
   expect(html.match(/data-mobile-configuration=/gu)).toHaveLength(distinct.length);
   expect(html).toContain("No settings are combined into a model score");
@@ -64,8 +64,8 @@ test("grading filters do not bring superseded campaigns back into the latest vie
 
 test("mobile history can be shared and restores earlier campaigns", () => {
   const html = render("#/leaderboard?campaign=all");
-  expect(html.match(/data-mobile-configuration=/gu)).toHaveLength(55);
-  expect(html).toContain("55 records");
+  expect(html.match(/data-mobile-configuration=/gu)).toHaveLength(60);
+  expect(html).toContain("60 records");
   expect(html).toContain('data-mobile-configuration="astra-max-');
   expect(html).toContain('data-mobile-configuration="recovery-astra-max-');
 });
