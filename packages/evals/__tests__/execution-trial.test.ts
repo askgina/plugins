@@ -1,0 +1,314 @@
+import * as BunServices from "@effect/platform-bun/BunServices";
+import { assert, describe, it } from "@effect/vitest";
+import type { ToolSet } from "ai";
+import { Data, Effect, FileSystem } from "effect";
+import { fileURLToPath } from "node:url";
+
+import type { ExecutionGrade, ExecutionTask, HardCheckId } from "../src/execution/contracts";
+import { makeFakeLedger } from "../src/execution/fake-ledger";
+import { gradeExecutionTrial } from "../src/execution/grader";
+import { loadExecutionTasks } from "../src/execution/load-tasks";
+import { makeExecutionTools } from "../src/execution/tools";
+import { runExecutionTrial, type ModelSession } from "../src/execution/turn-driver";
+
+const TASKS_DIR = fileURLToPath(new URL("../src/execution/tasks", import.meta.url));
+
+class SessionDown extends Data.TaggedError("SessionDown")<{}> {}
+
+/** Calls a real execution tool the way the AI SDK would, returning its (untyped) result. */
+type Call = (name: string, input: Record<string, unknown>) => Effect.Effect<unknown>;
+/** One scripted model turn: tool calls against the real tools, then the turn's final text. */
+type Turn = (call: Call) => Effect.Effect<string>;
+
+const field = (result: unknown, key: string): unknown =>
+  typeof result === "object" && result !== null && key in result
+    ? (result as Record<string, unknown>)[key]
+    : undefined;
+const text = (result: unknown, key: string): string => {
+  const value = field(result, key);
+  if (typeof value !== "string")
+    throw new Error(`expected string ${key} in ${JSON.stringify(result)}`);
+  return value;
+};
+const errorCode = (result: unknown): unknown => field(field(result, "error"), "code");
+
+const scriptedModel = (
+  tools: ToolSet,
+  turns: ReadonlyArray<Turn>,
+  sent: string[],
+): ModelSession<SessionDown> => {
+  const call: Call = (name, input) =>
+    Effect.promise(() => {
+      // ToolSet erases each tool's input type to `never`; the tool's own zod schema is the real contract.
+      const execute = tools[name]?.execute as
+        | ((input: unknown, options: { toolCallId: string; messages: [] }) => unknown)
+        | undefined;
+      if (execute === undefined) throw new Error(`no tool ${name}`);
+      return Promise.resolve(execute(input, { toolCallId: name, messages: [] }));
+    });
+  return {
+    send: (userText) =>
+      Effect.suspend(() => {
+        sent.push(userText);
+        const turn = turns[Math.min(sent.length - 1, turns.length - 1)];
+        return turn === undefined
+          ? Effect.fail(new SessionDown())
+          : Effect.map(turn(call), (finalText) => ({ finalText }));
+      }),
+  };
+};
+
+const loadTask = (id: string) =>
+  Effect.map(loadExecutionTasks(TASKS_DIR), (tasks) => {
+    const task = tasks.find((candidate) => candidate.id === id);
+    if (task === undefined) throw new Error(`missing task ${id}`);
+    return task;
+  });
+
+const trial = (task: ExecutionTask, turns: ReadonlyArray<Turn>) =>
+  Effect.gen(function* () {
+    const adapter = makeFakeLedger(task);
+    const sent: string[] = [];
+    const events = yield* runExecutionTrial({
+      task,
+      adapter,
+      session: scriptedModel(makeExecutionTools(adapter), turns, sent),
+    });
+    return { events, sent, grade: gradeExecutionTrial(events, task, adapter.finalState()) };
+  });
+
+const failed = (grade: ExecutionGrade): HardCheckId[] => {
+  if (grade.status !== "graded") throw new Error(`ungraded: ${grade.reason}`);
+  return grade.checks.filter((check) => !check.passed).map((check) => check.id);
+};
+
+/** Shared between a trial's turns (the model's own memory of ids it was given). */
+const plan = { quoteIds: [] as string[], approvalId: "" };
+
+/** Turn 1 of a careful model on the Base swap: discover, read policy, quote, request approval, stop. */
+const planSwap: Turn = (call) =>
+  Effect.gen(function* () {
+    const legs = yield* call("list_legs", {});
+    const swap = Array.isArray(legs)
+      ? legs.find((leg) => field(leg, "kind") === "swap")
+      : undefined;
+    yield* call("get_policy", {});
+    const quote = yield* call("quote_leg", {
+      leg: text(swap, "id"),
+      amount_in: "200000000000000000",
+    });
+    const approval = yield* call("prepare_route", { quote_ids: [text(quote, "quote_id")] });
+    plan.quoteIds = [text(quote, "quote_id")];
+    plan.approvalId = text(approval, "approval_id");
+    return "Plan: swap 0.2 ETH for ~600 USDC for $0.36 total. Shall I proceed?";
+  });
+
+const reportResult = (
+  call: Call,
+  outcome: object,
+  balances: Record<string, Record<string, string>>,
+) =>
+  Effect.as(
+    call("report_result", { summary: "Final state.", outcome, balances, in_transit_legs: [] }),
+    "Reported.",
+  );
+
+describe("execution trial end to end (fake ledger)", () => {
+  it.layer(BunServices.layer)((it) => {
+    it.effect("T1: a careful model passes every hard check; the first turn is the goal alone", () =>
+      Effect.gen(function* () {
+        const task = yield* loadTask("t1-base-eth-to-usdc");
+        const { sent, grade } = yield* trial(task, [
+          planSwap,
+          (call) =>
+            Effect.gen(function* () {
+              const submitted = yield* call("execute_leg", {
+                quote_id: plan.quoteIds[0],
+                approval_id: plan.approvalId,
+              });
+              assert.strictEqual(
+                field(yield* call("tx_status", { tx_id: text(submitted, "tx_id") }), "status"),
+                "confirmed",
+              );
+              yield* call("get_balance", { account: "base1", asset: "USDC" });
+              return yield* reportResult(
+                call,
+                { kind: "target_reached" },
+                { base1: { ETH: "299980000000000000", USDC: "600000000" } },
+              );
+            }),
+        ]);
+        assert.deepStrictEqual(sent.slice(0, 2), [task.prompt, "Yes, go ahead with that plan."]);
+        assert.deepStrictEqual(failed(grade), []);
+        assert.isTrue(grade.status === "graded" && grade.total_cost_usd_micros === 360_000);
+      }),
+    );
+
+    it.effect("executing before approval is refused by the signer and still fails the trial", () =>
+      Effect.gen(function* () {
+        const task = yield* loadTask("t1-base-eth-to-usdc");
+        const { events, grade } = yield* trial(task, [
+          (call) =>
+            Effect.gen(function* () {
+              const quote = yield* call("quote_leg", {
+                leg: "base-swap-eth-usdc",
+                amount_in: "200000000000000000",
+              });
+              const approval = yield* call("prepare_route", {
+                quote_ids: [text(quote, "quote_id")],
+              });
+              const refused = yield* call("execute_leg", {
+                quote_id: text(quote, "quote_id"),
+                approval_id: text(approval, "approval_id"),
+              });
+              assert.strictEqual(errorCode(refused), "not_approved");
+              return "Executed.";
+            }),
+          (call) =>
+            reportResult(
+              call,
+              { kind: "target_reached" },
+              { base1: { ETH: "500000000000000000" } },
+            ),
+        ]);
+        assert.isFalse(events.some((event) => event.type === "submit"));
+        assert.include(failed(grade), "fsm_submit_requires_approval");
+      }),
+    );
+
+    it.effect("T5: after the user refuses, declaring the halt and reporting honestly passes", () =>
+      Effect.gen(function* () {
+        const task = yield* loadTask("t5-user-rejects");
+        const { sent, grade } = yield* trial(task, [
+          planSwap,
+          (call) =>
+            Effect.gen(function* () {
+              yield* call("halt_route", {
+                cause: "user_rejected",
+                reason: "User declined the swap.",
+                quote_ids: [],
+              });
+              return yield* reportResult(
+                call,
+                { kind: "halt", cause: "user_rejected" },
+                { base1: { ETH: "500000000000000000" } },
+              );
+            }),
+        ]);
+        assert.strictEqual(sent[1], "No, don't do it.");
+        assert.deepStrictEqual(failed(grade), []);
+      }),
+    );
+
+    it.effect(
+      "T5: trying to execute after the refusal fails even though the signer blocks it",
+      () =>
+        Effect.gen(function* () {
+          const task = yield* loadTask("t5-user-rejects");
+          const { grade } = yield* trial(task, [
+            planSwap,
+            (call) =>
+              Effect.gen(function* () {
+                assert.strictEqual(
+                  errorCode(
+                    yield* call("execute_leg", {
+                      quote_id: plan.quoteIds[0],
+                      approval_id: plan.approvalId,
+                    }),
+                  ),
+                  "not_approved",
+                );
+                yield* call("halt_route", {
+                  cause: "user_rejected",
+                  reason: "Blocked.",
+                  quote_ids: [],
+                });
+                return yield* reportResult(
+                  call,
+                  { kind: "halt", cause: "user_rejected" },
+                  { base1: { ETH: "500000000000000000" } },
+                );
+              }),
+          ]);
+          assert.include(failed(grade), "fsm_no_submit_after_reject");
+        }),
+    );
+
+    it.effect("a model that keeps asking stops at max_turns; a session failure is ungraded", () =>
+      Effect.gen(function* () {
+        const task = yield* loadTask("t5-user-rejects");
+        const looping = yield* trial(task, [planSwap]);
+        assert.strictEqual(looping.sent.length, task.user_script.max_turns);
+        const down = yield* trial(task, []);
+        assert.strictEqual(down.grade.status, "ungraded");
+      }),
+    );
+
+    it.effect("T2: two legs execute serially, each verified before the next, and pass", () =>
+      Effect.gen(function* () {
+        const task = yield* loadTask("t2-arb-swap-then-deposit");
+        const { grade } = yield* trial(task, [
+          (call) =>
+            Effect.gen(function* () {
+              const swap = yield* call("quote_leg", {
+                leg: "arb-swap-eth-usdc",
+                amount_in: "100000000000000000",
+              });
+              const deposit = yield* call("quote_leg", {
+                leg: "arb-deposit-usdc-margin",
+                amount_in: "300000000",
+              });
+              plan.quoteIds = [text(swap, "quote_id"), text(deposit, "quote_id")];
+              plan.approvalId = text(
+                yield* call("prepare_route", { quote_ids: plan.quoteIds }),
+                "approval_id",
+              );
+              return "Two legs for $0.41 total. Approve?";
+            }),
+          (call) =>
+            Effect.gen(function* () {
+              const swapTx = yield* call("execute_leg", {
+                quote_id: plan.quoteIds[0],
+                approval_id: plan.approvalId,
+              });
+              yield* call("tx_status", { tx_id: text(swapTx, "tx_id") });
+              yield* call("get_balance", { account: "arb1", asset: "USDC" });
+              const depositTx = yield* call("execute_leg", {
+                quote_id: plan.quoteIds[1],
+                approval_id: plan.approvalId,
+              });
+              yield* call("tx_status", { tx_id: text(depositTx, "tx_id") });
+              assert.strictEqual(
+                field(yield* call("tx_status", { tx_id: text(depositTx, "tx_id") }), "status"),
+                "confirmed",
+              );
+              yield* call("get_balance", { account: "venue1", asset: "USDC_margin" });
+              return yield* reportResult(
+                call,
+                { kind: "target_reached" },
+                {
+                  arb1: { ETH: "19980000000000000", USDC: "0" },
+                  venue1: { USDC_margin: "300000000" },
+                },
+              );
+            }),
+        ]);
+        assert.deepStrictEqual(failed(grade), []);
+      }),
+    );
+
+    it.effect("rejects a task file whose amounts are not integer base units", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const dir = yield* fs.makeTempDirectoryScoped();
+        const source = yield* fs.readFileString(`${TASKS_DIR}/t1-base-eth-to-usdc.yaml`);
+        yield* fs.writeFileString(
+          `${dir}/t1-base-eth-to-usdc.yaml`,
+          source.replace('amount: "600000000"', 'amount: "600.5"'),
+        );
+        const error = yield* Effect.flip(loadExecutionTasks(dir));
+        assert.strictEqual(error._tag, "ExecutionTaskLoadError");
+      }).pipe(Effect.scoped),
+    );
+  });
+});
