@@ -5,9 +5,9 @@ export function TransactionMethodology() {
   return (
     <>
       <p className="method-limits" role="status">
-        <strong>Not run yet: 0 model runs, no scores.</strong> The harness, simulated ledger, and
-        grader are built and checked with scripted reference trials, not with models. These evals
-        are separate from the tool-use scores above and never enter the leaderboard.
+        <strong>Pilot stage.</strong> One model has been run (Grok 4.7, low reasoning) on a
+        simulated ledger; see <a href="#/transactions">Transactions</a> for results. These evals are
+        separate from the tool-use scores above and never enter the leaderboard.
       </p>
 
       <ol className="method-steps">

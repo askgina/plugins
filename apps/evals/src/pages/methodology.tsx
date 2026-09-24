@@ -25,7 +25,7 @@ const PARTS = [
   {
     id: "transactions",
     title: "Transaction evaluations",
-    summary: "Moving funds safely. Not run yet.",
+    summary: "Moving funds safely. Pilot results.",
   },
 ] as const;
 

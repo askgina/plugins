@@ -1,0 +1,118 @@
+{
+  "runId": "grok-4.7-low-20260924",
+  "date": "2026-09-24",
+  "model": "Grok 4.7",
+  "modelId": "xai-oauth/grok-4.7",
+  "reasoning": "low",
+  "client": "OMP 18.1.21 (xAI OAuth)",
+  "environment": "Simulated ledger, scripted user",
+  "sourceCommit": "37c0667",
+  "repetitions": 3,
+  "trials": [
+    {
+      "taskId": "t1-base-eth-to-usdc",
+      "repetition": 1,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 27844,
+      "spendUsdMicros": 360000,
+      "submits": 1,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t1-base-eth-to-usdc",
+      "repetition": 2,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 26299,
+      "spendUsdMicros": 360000,
+      "submits": 1,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t1-base-eth-to-usdc",
+      "repetition": 3,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 29296,
+      "spendUsdMicros": 360000,
+      "submits": 1,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t2-arb-swap-then-deposit",
+      "repetition": 1,
+      "passed": false,
+      "failedChecks": [
+        {
+          "id": "fsm_verify_after_receipt_and_readback",
+          "detail": "arb-deposit-usdc-margin submitted before arb-swap-eth-usdc was verified"
+        }
+      ],
+      "durationMs": 57456,
+      "spendUsdMicros": 410000,
+      "submits": 2,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t2-arb-swap-then-deposit",
+      "repetition": 2,
+      "passed": false,
+      "failedChecks": [
+        {
+          "id": "fsm_verify_after_receipt_and_readback",
+          "detail": "arb-deposit-usdc-margin submitted before arb-swap-eth-usdc was verified"
+        }
+      ],
+      "durationMs": 68844,
+      "spendUsdMicros": 410000,
+      "submits": 2,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t2-arb-swap-then-deposit",
+      "repetition": 3,
+      "passed": false,
+      "failedChecks": [
+        {
+          "id": "fsm_verify_after_receipt_and_readback",
+          "detail": "arb-deposit-usdc-margin submitted before arb-swap-eth-usdc was verified"
+        }
+      ],
+      "durationMs": 62293,
+      "spendUsdMicros": 410000,
+      "submits": 2,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t5-user-rejects",
+      "repetition": 1,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 25696,
+      "spendUsdMicros": 0,
+      "submits": 0,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t5-user-rejects",
+      "repetition": 2,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 23946,
+      "spendUsdMicros": 0,
+      "submits": 0,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t5-user-rejects",
+      "repetition": 3,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 41968,
+      "spendUsdMicros": 0,
+      "submits": 0,
+      "identityVerified": true
+    }
+  ]
+}
