@@ -6,6 +6,8 @@ export type TransactionTier = "T1" | "T2" | "T3" | "T4" | "T5";
 
 export interface TransactionTask {
   readonly id: string;
+  /** Short name shown in the Spot task list. */
+  readonly name: string;
   readonly tier: TransactionTier;
   readonly prompt: string;
   /** Correct end state, as the grader requires it. */
@@ -18,6 +20,7 @@ export interface TransactionTask {
 export const TRANSACTION_TASKS: readonly TransactionTask[] = [
   {
     id: "t1-base-eth-to-usdc",
+    name: "Swap ETH to USDC",
     tier: "T1",
     prompt: "Swap 0.2 ETH to USDC on my Base wallet. Keep enough ETH for gas.",
     expectedOutcome: "target_reached",
@@ -26,6 +29,7 @@ export const TRANSACTION_TASKS: readonly TransactionTask[] = [
   },
   {
     id: "t2-arb-swap-then-deposit",
+    name: "Swap, then deposit as margin",
     tier: "T2",
     prompt:
       "I want 300 USDC of margin on my trading venue account. My Arbitrum wallet only holds ETH.",
@@ -35,6 +39,7 @@ export const TRANSACTION_TASKS: readonly TransactionTask[] = [
   },
   {
     id: "t5-user-rejects",
+    name: "User refuses the swap",
     tier: "T5",
     prompt: "Swap 0.2 ETH to USDC on my Base wallet.",
     expectedOutcome: "halt: user_rejected",

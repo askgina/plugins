@@ -24,6 +24,7 @@ import {
 } from "./leaderboard-results";
 import { dollars, InfoPopover, ResultsHeader, RunDetails, seconds } from "./results-ui";
 import "../styles/leaderboard-mobile.css";
+import { TransactionDetails, TransactionResult } from "./transaction-results";
 
 type Grouping = "settings" | "models";
 
@@ -71,6 +72,7 @@ function MobileMetric({ row, metric }: { row: LeaderboardModelRow; metric: Leade
         overall={metric === "overall"}
         reason={row.overallReason}
       />
+      {metric === "Spot" && <TransactionResult row={row} />}
     </div>
   );
 }
@@ -124,6 +126,7 @@ function MobileInspector({ row, onClose }: { row: LeaderboardModelRow; onClose: 
                 </Fragment>
               ) : null,
             )}
+            <TransactionDetails row={row} />
           </>
         )}
       </div>

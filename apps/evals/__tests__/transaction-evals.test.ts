@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
+import { configurationLeaderboardRows } from "../src/canonical/selectors";
 import { TRANSACTION_TASKS } from "../src/lib/transaction-evals";
+import { transactionRunForRow } from "../src/lib/transaction-results";
 
 // The page's catalog must describe exactly the execution task files the harness runs.
 const TASK_SOURCES: Readonly<Record<string, string>> = import.meta.glob(
@@ -41,5 +43,27 @@ describe("Transactions page catalog", () => {
       expectedOutcome,
     })).sort((a, b) => a.id.localeCompare(b.id));
     expect(onPage).toEqual(fromFiles);
+  });
+});
+
+describe("transaction run ownership", () => {
+  test("only Grok 4.7 low rows own the low run; medium, high and xhigh show none", () => {
+    const grokRows = configurationLeaderboardRows().filter((row) => row.model.id === "grok-4-7");
+    const owners = grokRows.map((row) => ({
+      reasoning: Object.values(row.runs)[0]?.configuration.reasoning,
+      owns: transactionRunForRow(row) !== undefined,
+    }));
+    expect(owners.length).toBeGreaterThanOrEqual(4);
+    // Low can appear in several campaigns (original and recovery); every other setting owns nothing.
+    expect(owners.some((entry) => entry.owns)).toBe(true);
+    expect(owners.filter((entry) => entry.owns).every((entry) => entry.reasoning === "low")).toBe(
+      true,
+    );
+    expect(owners.filter((entry) => entry.reasoning !== "low").every((entry) => !entry.owns)).toBe(
+      true,
+    );
+    expect(new Set(owners.map((entry) => entry.reasoning))).toEqual(
+      new Set(["low", "medium", "high", "xhigh"]),
+    );
   });
 });

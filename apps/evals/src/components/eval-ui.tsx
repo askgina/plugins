@@ -4,14 +4,13 @@ import { reasoningSweepPublication } from "../results";
 import { Button } from "./ui/button";
 import { DialogRoot, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 
-export type PageId = "leaderboard" | "models" | "tasks" | "transactions" | "methodology";
+export type PageId = "leaderboard" | "models" | "tasks" | "methodology";
 export type ShellPageId = PageId | "handoff" | "compare";
 
 const navigation: readonly { id: ShellPageId; label: string; href: string }[] = [
   { id: "leaderboard", label: "Leaderboard", href: "#/leaderboard" },
   { id: "models", label: "Models", href: "#/models" },
   { id: "tasks", label: "Tasks", href: "#/tasks" },
-  { id: "transactions", label: "Transactions", href: "#/transactions" },
   { id: "methodology", label: "Methodology", href: "#/methodology" },
   { id: "compare", label: "Compare", href: "#/compare" },
 ];
