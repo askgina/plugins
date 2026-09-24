@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Data, Effect } from "effect";
 import type {
   ExecutionAdapter,
   ExecutionEvent,
@@ -7,9 +7,18 @@ import type {
   UserScript,
 } from "./contracts";
 
+/**
+ * Why a model turn failed. `infra`: provider/process/simulator outage, the trial is ungraded.
+ * `model`: timeout, step limit, or broken generation, a graded failure of the model under test.
+ */
+export class ModelSessionError extends Data.TaggedError("ModelSessionError")<{
+  readonly kind: "infra" | "model";
+  readonly message: string;
+}> {}
+
 /** One persistent model conversation. Each `send` is a new user turn in the same session. */
-export interface ModelSession<E> {
-  readonly send: (text: string) => Effect.Effect<{ readonly finalText: string }, E>;
+export interface ModelSession {
+  readonly send: (text: string) => Effect.Effect<{ readonly finalText: string }, ModelSessionError>;
 }
 
 type UserStage = "confirm" | "reconfirm";
@@ -50,12 +59,12 @@ const isAdapterAction = (event: ExecutionEvent): boolean =>
  *    after that (or once the model has acted), the trial ends. The model reports through the
  *    `report_result` tool; if it never did, its last text is recorded without balances, which
  *    fails the report check rather than guessing from prose.
- * Session failures are infrastructure errors, never model failures.
+ * Session failures are ungraded only when classified `infra`; `model` failures end the trial graded.
  */
-export const runExecutionTrial = <E>(input: {
+export const runExecutionTrial = (input: {
   readonly task: ExecutionTask;
   readonly adapter: ExecutionAdapter;
-  readonly session: ModelSession<E>;
+  readonly session: ModelSession;
 }): Effect.Effect<ReadonlyArray<ExecutionEvent>> =>
   Effect.gen(function* () {
     const { task, adapter, session } = input;
@@ -69,8 +78,12 @@ export const runExecutionTrial = <E>(input: {
       const before = adapter.events().length;
       const result = yield* Effect.result(session.send(text));
       if (result._tag === "Failure") {
-        yield* adapter.recordInfraError("model_session", String(result.failure));
-        return adapter.events();
+        if (result.failure.kind === "infra") {
+          yield* adapter.recordInfraError("model_session", result.failure.message);
+          return adapter.events();
+        }
+        lastAssistantText = `Model turn failed: ${result.failure.message}`;
+        break;
       }
       lastAssistantText = result.success.finalText;
       const fresh = adapter.events().slice(before);

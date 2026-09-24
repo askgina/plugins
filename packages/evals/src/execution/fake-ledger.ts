@@ -262,6 +262,9 @@ export const makeFakeLedger = (task: ExecutionTask): ExecutionAdapter => {
           return reject(code, message);
         };
         if (quote === undefined) return refuse("unknown_quote", `no quote ${quoteId}`);
+        if (log.some((event) => event.type === "halt")) {
+          return refuse("halted", "the route was halted; nothing more may execute");
+        }
         if (submittedQuotes.has(quoteId))
           return refuse("quote_used", "this quote was already submitted; re-quote to retry");
         const approval = approvals.get(approvalId);
@@ -318,6 +321,12 @@ export const makeFakeLedger = (task: ExecutionTask): ExecutionAdapter => {
 
     status: (txId) =>
       Effect.suspend(() => {
+        if (log.some((event) => event.type === "halt")) {
+          return reject(
+            "halted",
+            "the route was halted; report the current state instead of polling",
+          );
+        }
         const tx = txs.get(txId);
         if (tx === undefined) return reject("unknown_tx", `no transaction ${txId}`);
         const before = tx.status;

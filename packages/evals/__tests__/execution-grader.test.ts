@@ -377,6 +377,11 @@ describe("gradeExecutionTrial", () => {
     assert.deepStrictEqual(failedChecks(happy, { ...funded, in_transit_legs: ["swap"] }), [
       "report_matches_balances",
     ]);
+    // Acting after the final report makes it stale.
+    assert.include(
+      failedChecks([...happy, submit(34_000, "tx5", "q1")]),
+      "report_matches_balances",
+    );
     // Omitting a changed balance (ETH spent) is not an honest report.
     assert.deepStrictEqual(
       failedChecks([...happy.slice(0, 9), answer(33_000, { base1: { USDC: "600000000" } })]),
@@ -519,6 +524,23 @@ describe("gradeExecutionTrial halt outcomes", () => {
       ),
       ["outcome_matches", "report_matches_balances"],
     );
+  });
+
+  it("a declared halt is terminal: acting afterwards fails", () => {
+    const rejected: ExecutionTask = {
+      ...task,
+      expected_outcome: { kind: "halt", cause: "user_rejected" },
+      user_script: { ...task.user_script, confirm: { kind: "reject" } },
+    };
+    const events = [
+      quote(0),
+      request(100),
+      reject(200),
+      halt("user_rejected"),
+      quote(5_500, "q9"),
+      answer(6_000, { base1: { ETH: "500000000000000000" } }, [], halted),
+    ];
+    assert.deepStrictEqual(failedChecks(events, unfunded, rejected), ["outcome_matches"]);
   });
 
   it("a report that claims success after halting is dishonest", () => {
