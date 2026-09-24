@@ -342,6 +342,8 @@ export interface ExecutionAdapter {
       id: string;
       network: string;
       gas_asset: string;
+      /** Gas-asset base units one transaction costs. */
+      gas_per_tx: bigint;
       balances: Readonly<Record<string, bigint>>;
     }>
   >;

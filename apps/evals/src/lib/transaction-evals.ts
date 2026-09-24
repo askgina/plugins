@@ -44,7 +44,7 @@ export const TRANSACTION_TASKS: readonly TransactionTask[] = [
     expectedOutcome: "target_reached",
     userReply: "approve",
     tests:
-      "Cross-network: pick a route (swap then bridge, or bridge then swap) and cover gas on an empty Base wallet.",
+      "Cross-network: pick a route (swap then bridge, or bridge then swap) and leave gas on the empty Base wallet.",
   },
   {
     id: "t3-mainnet-wbtc-split",
@@ -54,7 +54,7 @@ export const TRANSACTION_TASKS: readonly TransactionTask[] = [
       "Swap 0.1 ETH on my Ethereum mainnet wallet into WBTC, then split the WBTC in half: swap one half to ETH on my Robinhood Chain wallet and the other half to USDC on my Arbitrum wallet.",
     expectedOutcome: "target_reached",
     userReply: "approve",
-    tests: "Swap, split in half, bridge to two networks, and fund gas on two empty wallets.",
+    tests: "Swap, split in half, bridge to two networks, and leave gas on both empty destination wallets.",
   },
   {
     id: "t3-monad-mon-to-mainnet-usdc",
@@ -72,7 +72,7 @@ export const TRANSACTION_TASKS: readonly TransactionTask[] = [
     prompt: "Buy PEPE on Ethereum mainnet using the ETH I have on Robinhood Chain.",
     expectedOutcome: "target_reached",
     userReply: "approve",
-    tests: "Bridge ETH to an empty mainnet wallet, keep gas on both sides, buy PEPE.",
+    tests: "Bridge ETH to an empty mainnet wallet, buy PEPE, and leave mainnet gas.",
   },
 ];
 

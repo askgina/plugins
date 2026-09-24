@@ -163,16 +163,14 @@ const run = (options: CliOptions) =>
     // Results are private evidence: owner-only directory, and a new owner-only file created
     // exclusively before any trial runs, so a rerun can never append to an earlier cohort.
     yield* fs.makeDirectory(path.dirname(options.out), { recursive: true, mode: 0o700 });
-    yield* fs
-      .writeFileString(options.out, "", { flag: "wx", mode: 0o600 })
-      .pipe(
-        Effect.mapError(
-          () =>
-            new ExecutionCliError({
-              message: `refusing to write ${options.out}: it already exists or is not writable`,
-            }),
-        ),
-      );
+    yield* fs.writeFileString(options.out, "", { flag: "wx", mode: 0o600 }).pipe(
+      Effect.mapError(
+        () =>
+          new ExecutionCliError({
+            message: `refusing to write ${options.out}: it already exists or is not writable`,
+          }),
+      ),
+    );
     for (const task of tasks) {
       for (let rep = 1; rep <= options.reps; rep += 1) {
         const startedAt = DateTime.formatIso(yield* DateTime.now);

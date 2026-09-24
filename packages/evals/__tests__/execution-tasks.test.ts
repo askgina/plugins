@@ -18,26 +18,27 @@ const REFERENCE: Readonly<Record<string, ReadonlyArray<readonly [leg: string, am
   {
     "t1-base-eth-to-usdc": [["base-swap-eth-usdc", 200_000_000_000_000_000n]],
     "t1-mainnet-sell-99-eth": [["eth-swap-eth-usdc", 990_000_000_000_000_000n]],
-    // Bridge the ETH, then swap on Base; the swap spends its own gas, leaving USDC on Base.
+    // Bridge the ETH, then swap on Base, leaving one transaction of ETH gas on Base.
     "t3-mainnet-eth-to-base-usdc": [
       ["eth-bridge-eth-base", 100_000_000_000_000_000n],
-      ["base-swap-eth-usdc", 99_813_333_333_333_333n],
+      ["base-swap-eth-usdc", 99_793_333_333_333_333n],
     ],
-    // ETH -> WBTC; half bridged to Robinhood (plus gas) and swapped to ETH; half sold to USDC and bridged to Arbitrum.
+    // ETH -> WBTC; half bridged to Robinhood (plus gas) and swapped to ETH; half sold to USDC and bridged to Arbitrum (plus gas).
     "t3-mainnet-wbtc-split": [
       ["eth-swap-eth-wbtc", 100_000_000_000_000_000n],
       ["eth-bridge-wbtc-robinhood", 247_500n],
       ["eth-bridge-eth-robinhood", 1_000_000_000_000_000n],
       ["rh-swap-wbtc-eth", 246_666n],
       ["eth-swap-wbtc-usdc", 247_500n],
+      ["eth-bridge-eth-arbitrum", 1_000_000_000_000_000n],
       ["eth-bridge-usdc-arbitrum", 145_500_000n],
     ],
-    // Bridge nearly all ETH (the bridge pays Robinhood gas), then buy PEPE (the swap pays mainnet gas).
+    // Bridge nearly all ETH, then buy PEPE keeping one transaction of mainnet gas.
     "t3-robinhood-eth-to-mainnet-pepe": [
       ["rh-bridge-eth-mainnet", 199_980_000_000_000_000n],
-      ["eth-swap-eth-pepe", 199_513_333_333_333_333n],
+      ["eth-swap-eth-pepe", 199_213_333_333_333_333n],
     ],
-    // Sell MON keeping gas for the swap and the bridge, then bridge the USDC.
+    // Sell MON keeping gas for the swap and the bridge, then bridge the USDC (mainnet already holds gas).
     "t3-monad-mon-to-mainnet-usdc": [
       ["monad-swap-mon-usdc", 999_980_000_000_000_000_000n],
       ["monad-bridge-usdc-mainnet", 499_890_000n],
@@ -87,7 +88,9 @@ describe("published execution tasks", () => {
         const tasks = yield* loadExecutionTasks(TASKS_DIR);
         assert.deepStrictEqual(tasks.map((task) => task.id).sort(), Object.keys(REFERENCE).sort());
         for (const task of tasks) {
-          const grade = yield* runReference(task, REFERENCE[task.id]!);
+          const grade = yield* runReference(task, REFERENCE[task.id]!).pipe(
+            Effect.tapError((error) => Effect.logError(`${task.id}: ${error.message}`)),
+          );
           assert.strictEqual(grade.status, "graded", task.id);
           if (grade.status === "graded") {
             assert.deepStrictEqual(

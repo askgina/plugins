@@ -1,4 +1,4 @@
-# Cross-network sell: sell all MON on Monad into USDC on Ethereum mainnet, keeping MON only for Monad gas.
+# Cross-network sell: sell all MON on Monad into USDC on Ethereum mainnet, keeping MON only for Monad gas. The mainnet wallet already holds a little ETH for gas.
 id: t3-monad-mon-to-mainnet-usdc
 tier: T3
 layer: intercept
@@ -18,7 +18,7 @@ accounts:
     network: ethereum
     gas_asset: ETH
     gas_per_tx: "300000000000000"
-    balances: { ETH: "0", USDC: "0" }
+    balances: { ETH: "1000000000000000", USDC: "0" } # 0.001 ETH gas already on mainnet
 expected_outcome: { kind: target_reached }
 targets:
   - { account: eth1, asset: USDC, amount: "495000000", tolerance_bps: 0 } # at least 495 USDC from 1,000 MON
