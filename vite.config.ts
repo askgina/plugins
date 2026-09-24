@@ -52,6 +52,7 @@ export default defineConfig({
       entry: {
         "bin/check-codex-marketplace": "src/bin/check-codex-marketplace.ts",
         "bin/export-public-results": "src/bin/export-public-results.ts",
+        "bin/execution": "src/bin/execution.ts",
         "bin/live": "src/bin/live.ts",
         "bin/replay": "src/bin/replay.ts",
         index: "src/index.ts",
