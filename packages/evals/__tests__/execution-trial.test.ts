@@ -343,6 +343,41 @@ describe("execution trial end to end (fake ledger)", () => {
       }),
     );
 
+    it.effect(
+      "a price move re-prices the real fee, so a drifted re-quote still conserves value",
+      () =>
+        Effect.gen(function* () {
+          const base = yield* loadTask("t1-base-eth-to-usdc");
+          const task: ExecutionTask = {
+            ...base,
+            faults: [{ kind: "price_move", leg: "base-swap-eth-usdc", cost_bps: 20_000 }],
+          };
+          const ledger = makeFakeLedger(task);
+          const first = yield* ledger.quote("base-swap-eth-usdc", 200_000_000_000_000_000n);
+          const drifted = yield* ledger.quote("base-swap-eth-usdc", 200_000_000_000_000_000n);
+          // Fee doubles ($0.30 → $0.60): cost rises and output falls by the same value.
+          assert.strictEqual(drifted.cost_usd_micros - first.cost_usd_micros, 300_000);
+          assert.strictEqual(first.amount_out - drifted.amount_out, 300_000n);
+          const approval = yield* ledger.prepareRoute([drifted.quote_id]);
+          yield* ledger.recordUserReply(approval.approval_id, { kind: "approve" }, "yes");
+          const { tx_id } = yield* ledger.submitLeg(drifted.quote_id, approval.approval_id);
+          yield* ledger.status(tx_id);
+          const initial = Object.fromEntries(
+            task.accounts.map((account) => [
+              account.id,
+              Object.fromEntries(
+                Object.entries(account.balances).map(([asset, amount]) => [asset, BigInt(amount)]),
+              ),
+            ]),
+          );
+          assert.strictEqual(
+            portfolioUsdMicros(task, initial) -
+              portfolioUsdMicros(task, ledger.finalState().balances),
+            BigInt(drifted.cost_usd_micros),
+          );
+        }),
+    );
+
     it.effect("rejects a task file whose amounts are not integer base units", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

@@ -170,23 +170,28 @@ export const makeFakeLedger = (task: ExecutionTask): ExecutionAdapter => {
         if (amountIn <= 0n) return reject("invalid_amount", "amount_in must be positive");
         const n = (quoteCount.get(leg) ?? 0) + 1;
         quoteCount.set(leg, n);
-        const baseCost = edge.fee_usd_micros + gasValueUsdMicros(edge.from.account);
+        const outMeta = task.assets[edge.to.asset];
+        if (outMeta === undefined)
+          return reject("unpriced_asset", `${edge.to.asset} has no frozen price`);
+        // A price move re-prices the protocol fee on re-quotes (cost_bps: 10000 = unchanged).
         const move = faults.find((fault) => fault.kind === "price_move" && fault.leg === leg);
-        const costUsdMicros =
+        const feeUsdMicros =
           move?.kind === "price_move" && n > 1
-            ? Math.floor((baseCost * move.cost_bps) / 10_000)
-            : baseCost;
+            ? (BigInt(edge.fee_usd_micros) * BigInt(move.cost_bps)) / 10_000n
+            : BigInt(edge.fee_usd_micros);
+        // The fee is taken in the output asset at the frozen price; cost is derived from what is
+        // actually deducted, so balances always reconcile with graded spend.
+        const scale = 10n ** BigInt(outMeta.decimals);
+        const price = BigInt(outMeta.price_usd_micros);
+        const feeUnits = (feeUsdMicros * scale) / price;
+        const grossOut = (amountIn * BigInt(edge.rate_num)) / BigInt(edge.rate_den);
+        if (grossOut <= feeUnits)
+          return reject("amount_too_small", "output would not cover the fee");
+        const netOut = grossOut - feeUnits;
+        const costUsdMicros =
+          Number((feeUnits * price) / scale) + gasValueUsdMicros(edge.from.account);
         const stale =
           n === 1 && faults.some((fault) => fault.kind === "stale_quote" && fault.leg === leg);
-        // The protocol fee is taken in the output asset (at the frozen price), so balances reconcile with cost.
-        const outMeta = task.assets[edge.to.asset];
-        const feeUnits =
-          outMeta === undefined || outMeta.price_usd_micros === 0
-            ? 0n
-            : (BigInt(edge.fee_usd_micros) * 10n ** BigInt(outMeta.decimals)) /
-              BigInt(outMeta.price_usd_micros);
-        const grossOut = (amountIn * BigInt(edge.rate_num)) / BigInt(edge.rate_den);
-        const netOut = grossOut > feeUnits ? grossOut - feeUnits : 0n;
         const quote: Quote = {
           id: nextId("q"),
           edge,

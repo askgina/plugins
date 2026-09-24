@@ -36,8 +36,8 @@ export const ExecutionLayerSchema = Schema.Literals(["intercept", "simulate"]);
 
 export const ExecutionAssetSchema = Schema.Struct({
   decimals: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
-  /** Frozen price of one whole unit, in USD micros. */
-  price_usd_micros: UsdMicrosSchema,
+  /** Frozen price of one whole unit, in USD micros; positive, so fees and values always convert. */
+  price_usd_micros: Schema.Int.check(Schema.isGreaterThan(0)),
 });
 
 export const ExecutionAccountSchema = Schema.Struct({
