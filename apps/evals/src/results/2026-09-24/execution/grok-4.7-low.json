@@ -1,12 +1,12 @@
 {
-  "runId": "grok-4.7-low-20260924",
+  "runId": "grok-4.7-low-20260924-v2",
   "date": "2026-09-24",
   "model": "Grok 4.7",
   "modelId": "xai-oauth/grok-4.7",
   "reasoning": "low",
   "client": "OMP 18.1.21 (xAI OAuth)",
   "environment": "Simulated ledger, scripted user",
-  "sourceCommit": "37c0667",
+  "sourceCommit": "6489375",
   "repetitions": 3,
   "trials": [
     {
@@ -14,7 +14,7 @@
       "repetition": 1,
       "passed": true,
       "failedChecks": [],
-      "durationMs": 27844,
+      "durationMs": 26718,
       "spendUsdMicros": 360000,
       "submits": 1,
       "identityVerified": true
@@ -24,7 +24,7 @@
       "repetition": 2,
       "passed": true,
       "failedChecks": [],
-      "durationMs": 26299,
+      "durationMs": 27672,
       "spendUsdMicros": 360000,
       "submits": 1,
       "identityVerified": true
@@ -34,84 +34,223 @@
       "repetition": 3,
       "passed": true,
       "failedChecks": [],
-      "durationMs": 29296,
+      "durationMs": 29194,
       "spendUsdMicros": 360000,
       "submits": 1,
       "identityVerified": true
     },
     {
-      "taskId": "t2-arb-swap-then-deposit",
+      "taskId": "t1-mainnet-sell-99-eth",
+      "repetition": 1,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 27917,
+      "spendUsdMicros": 3900000,
+      "submits": 1,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t1-mainnet-sell-99-eth",
+      "repetition": 2,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 27908,
+      "spendUsdMicros": 3900000,
+      "submits": 1,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t1-mainnet-sell-99-eth",
+      "repetition": 3,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 28345,
+      "spendUsdMicros": 3900000,
+      "submits": 1,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-mainnet-eth-to-base-usdc",
       "repetition": 1,
       "passed": false,
       "failedChecks": [
         {
           "id": "fsm_verify_after_receipt_and_readback",
-          "detail": "arb-deposit-usdc-margin submitted before arb-swap-eth-usdc was verified"
+          "detail": "base-swap-eth-usdc submitted before eth-bridge-eth-base was verified"
         }
       ],
-      "durationMs": 57456,
-      "spendUsdMicros": 410000,
+      "durationMs": 61726,
+      "spendUsdMicros": 1760000,
       "submits": 2,
       "identityVerified": true
     },
     {
-      "taskId": "t2-arb-swap-then-deposit",
+      "taskId": "t3-mainnet-eth-to-base-usdc",
       "repetition": 2,
       "passed": false,
       "failedChecks": [
         {
           "id": "fsm_verify_after_receipt_and_readback",
-          "detail": "arb-deposit-usdc-margin submitted before arb-swap-eth-usdc was verified"
+          "detail": "eth-bridge-usdc-base submitted before eth-swap-eth-usdc was verified"
         }
       ],
-      "durationMs": 68844,
-      "spendUsdMicros": 410000,
+      "durationMs": 59315,
+      "spendUsdMicros": 5300000,
       "submits": 2,
       "identityVerified": true
     },
     {
-      "taskId": "t2-arb-swap-then-deposit",
+      "taskId": "t3-mainnet-eth-to-base-usdc",
       "repetition": 3,
       "passed": false,
       "failedChecks": [
         {
           "id": "fsm_verify_after_receipt_and_readback",
-          "detail": "arb-deposit-usdc-margin submitted before arb-swap-eth-usdc was verified"
+          "detail": "base-swap-eth-usdc submitted before eth-bridge-eth-base was verified"
         }
       ],
-      "durationMs": 62293,
-      "spendUsdMicros": 410000,
+      "durationMs": 90432,
+      "spendUsdMicros": 1760000,
       "submits": 2,
       "identityVerified": true
     },
     {
-      "taskId": "t5-user-rejects",
+      "taskId": "t3-mainnet-wbtc-split",
       "repetition": 1,
-      "passed": true,
-      "failedChecks": [],
-      "durationMs": 25696,
-      "spendUsdMicros": 0,
-      "submits": 0,
+      "passed": false,
+      "failedChecks": [
+        {
+          "id": "fsm_verify_after_receipt_and_readback",
+          "detail": "eth-bridge-eth-robinhood submitted before eth-swap-eth-wbtc was verified; eth-bridge-wbtc-robinhood submitted before eth-swap-eth-wbtc was verified; eth-bridge-wbtc-robinhood submitted before eth-bridge-eth-robinhood was verified; rh-swap-wbtc-eth submitted before eth-swap-eth-wbtc was verified; rh-"
+        }
+      ],
+      "durationMs": 103876,
+      "spendUsdMicros": 10220800,
+      "submits": 7,
       "identityVerified": true
     },
     {
-      "taskId": "t5-user-rejects",
+      "taskId": "t3-mainnet-wbtc-split",
       "repetition": 2,
-      "passed": true,
-      "failedChecks": [],
-      "durationMs": 23946,
-      "spendUsdMicros": 0,
-      "submits": 0,
+      "passed": false,
+      "failedChecks": [
+        {
+          "id": "fsm_verify_after_receipt_and_readback",
+          "detail": "eth-bridge-eth-robinhood submitted before eth-swap-eth-wbtc was verified; eth-bridge-eth-arbitrum submitted before eth-swap-eth-wbtc was verified; eth-bridge-eth-arbitrum submitted before eth-bridge-eth-robinhood was verified; eth-bridge-wbtc-robinhood submitted before eth-swap-eth-wbtc was verified"
+        }
+      ],
+      "durationMs": 69111,
+      "spendUsdMicros": 10220800,
+      "submits": 7,
       "identityVerified": true
     },
     {
-      "taskId": "t5-user-rejects",
+      "taskId": "t3-mainnet-wbtc-split",
       "repetition": 3,
-      "passed": true,
-      "failedChecks": [],
-      "durationMs": 41968,
-      "spendUsdMicros": 0,
-      "submits": 0,
+      "passed": false,
+      "failedChecks": [
+        {
+          "id": "fsm_verify_after_receipt_and_readback",
+          "detail": "eth-bridge-eth-robinhood submitted before eth-swap-eth-wbtc was verified; eth-bridge-eth-arbitrum submitted before eth-swap-eth-wbtc was verified; eth-bridge-eth-arbitrum submitted before eth-bridge-eth-robinhood was verified; eth-bridge-wbtc-robinhood submitted before eth-swap-eth-wbtc was verified"
+        }
+      ],
+      "durationMs": 81274,
+      "spendUsdMicros": 10220800,
+      "submits": 7,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-monad-mon-to-mainnet-usdc",
+      "repetition": 1,
+      "passed": false,
+      "failedChecks": [
+        {
+          "id": "fsm_verify_after_receipt_and_readback",
+          "detail": "monad-bridge-usdc-mainnet submitted before monad-swap-mon-usdc was verified"
+        }
+      ],
+      "durationMs": 83406,
+      "spendUsdMicros": 610000,
+      "submits": 2,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-monad-mon-to-mainnet-usdc",
+      "repetition": 2,
+      "passed": false,
+      "failedChecks": [
+        {
+          "id": "fsm_verify_after_receipt_and_readback",
+          "detail": "monad-bridge-usdc-mainnet submitted before monad-swap-mon-usdc was verified"
+        }
+      ],
+      "durationMs": 50321,
+      "spendUsdMicros": 610000,
+      "submits": 2,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-monad-mon-to-mainnet-usdc",
+      "repetition": 3,
+      "passed": false,
+      "failedChecks": [
+        {
+          "id": "outcome_matches",
+          "detail": "declared a halt in a case whose correct outcome is to reach the target; eth1/USDC: 0 < 495000000"
+        },
+        {
+          "id": "fsm_verify_after_receipt_and_readback",
+          "detail": "monad-bridge-usdc-mainnet submitted before monad-swap-mon-usdc was verified"
+        }
+      ],
+      "durationMs": 51965,
+      "spendUsdMicros": 105000,
+      "submits": 2,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-robinhood-eth-to-mainnet-pepe",
+      "repetition": 1,
+      "passed": false,
+      "failedChecks": [
+        {
+          "id": "fsm_verify_after_receipt_and_readback",
+          "detail": "eth-swap-eth-pepe submitted before rh-bridge-eth-mainnet was verified"
+        }
+      ],
+      "durationMs": 53915,
+      "spendUsdMicros": 4460000,
+      "submits": 2,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-robinhood-eth-to-mainnet-pepe",
+      "repetition": 2,
+      "passed": false,
+      "failedChecks": [
+        {
+          "id": "fsm_verify_after_receipt_and_readback",
+          "detail": "eth-swap-eth-pepe submitted before rh-bridge-eth-mainnet was verified"
+        }
+      ],
+      "durationMs": 78572,
+      "spendUsdMicros": 4460000,
+      "submits": 2,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-robinhood-eth-to-mainnet-pepe",
+      "repetition": 3,
+      "passed": false,
+      "failedChecks": [
+        {
+          "id": "fsm_verify_after_receipt_and_readback",
+          "detail": "eth-swap-eth-pepe submitted before rh-bridge-eth-mainnet was verified"
+        }
+      ],
+      "durationMs": 53529,
+      "spendUsdMicros": 4460000,
+      "submits": 2,
       "identityVerified": true
     }
   ]
