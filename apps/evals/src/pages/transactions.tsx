@@ -15,10 +15,10 @@ export function TransactionsPage() {
         />
         <div className="method-content">
           <p className="method-limits" role="status">
-            <strong>No model has been run yet.</strong> The harness, simulated ledger, and grader
-            are built and verified with scripted reference trials. Results will appear here once
-            models are run through it. The leaderboard's read-only tool-use scores are separate and
-            unaffected.
+            <strong>Harness ready · 0 model runs · no score yet.</strong> The harness, simulated
+            ledger, and grader are built and verified with scripted reference trials. Results will
+            appear here once models are run through it. The leaderboard's read-only tool-use scores
+            are separate and unaffected.
           </p>
 
           <ol className="method-steps">
