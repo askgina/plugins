@@ -1,0 +1,51 @@
+# T2 same-network multi-step: swap ETH to USDC on Arbitrum, then deposit it as venue margin.
+id: t2-arb-swap-then-deposit
+tier: T2
+layer: intercept
+prompt: >-
+  I want 300 USDC of margin on my trading venue account. My Arbitrum wallet
+  only holds ETH.
+assets:
+  ETH: { decimals: 18, price_usd_micros: 3000000000 }
+  USDC: { decimals: 6, price_usd_micros: 1000000 }
+  USDC_margin: { decimals: 6, price_usd_micros: 1000000 }
+accounts:
+  - id: arb1
+    network: arbitrum
+    gas_asset: ETH
+    gas_per_tx: "10000000000000" # 0.00001 ETH ≈ $0.03
+    balances: { ETH: "120000000000000000", USDC: "0" } # 0.12 ETH
+  - id: venue1
+    network: arbitrum
+    gas_asset: ETH
+    gas_per_tx: "0" # venue account never signs
+    balances: { USDC_margin: "0" }
+expected_outcome: { kind: target_reached }
+target: { account: venue1, asset: USDC_margin, amount: "300000000", tolerance_bps: 50 }
+limits:
+  max_total_cost_usd_micros: 3000000
+  max_slippage_bps: 50
+  deadline_s: 1200
+  quote_ttl_s: 60
+dust_usd_micros: 500000
+edges:
+  - id: arb-swap-eth-usdc
+    kind: swap
+    from: { account: arb1, asset: ETH }
+    to: { account: arb1, asset: USDC }
+    rate_num: "3"
+    rate_den: "1000000000"
+    fee_usd_micros: 250000
+    delay_s: 2
+  - id: arb-deposit-usdc-margin
+    kind: deposit
+    from: { account: arb1, asset: USDC }
+    to: { account: venue1, asset: USDC_margin }
+    rate_num: "1"
+    rate_den: "1"
+    fee_usd_micros: 100000
+    delay_s: 30
+user_script:
+  confirm: { kind: approve }
+  unexpected: Please go ahead with what you proposed.
+  max_turns: 8
