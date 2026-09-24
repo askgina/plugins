@@ -10,6 +10,10 @@ First model run of the execution (transaction) evals. Internal record; not publi
 - Environment: in-memory fake ledger (no chain), scripted user, 300 s per-turn timeout.
 - Tasks: the 3 task files in `packages/evals/src/execution/tasks/`, 3 repetitions each (`run-low-3reps.jsonl`), plus 1 earlier smoke repetition each (`smoke-low.jsonl`, same result pattern).
 
+## Model identity evidence (`native-identity.json`)
+
+The `model`/`reasoning` fields in the result files are the requested labels. Proof of what ran comes from OMP's own session records: all 12 trials (9 run + 3 smoke) matched exactly one native session each by time window, and every one records `model_change` = `xai-oauth/grok-4.7` with `resolvedModelIsFallback: false`, thinking level `low`, an `xai-oauth` credential, and only `xai-oauth/grok-4.7` assistant messages. The tool probe session matches too. This is client-side attestation, not provider-internal compute attestation.
+
 ## Results (`run-low-3reps.jsonl`)
 
 | Task                       | Passed | Avg time | Spend per trial | Notes                                                                                                                                                                           |
