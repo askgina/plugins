@@ -635,23 +635,51 @@
   color: var(--eval-muted);
   font-variant-numeric: tabular-nums;
 }
-.method-steps h2 {
+.method-steps h3 {
   font-size: 21px;
   font-weight: 500;
   letter-spacing: -0.02em;
   margin: 0 0 14px;
 }
-.tx-section-title {
+.method-parts ol {
+  list-style: none;
+  padding: 0;
+  margin: 28px 0 8px;
+  display: grid;
+  gap: 10px;
+}
+.method-parts li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+.method-parts span {
+  color: var(--eval-muted);
+  font-size: 13px;
+}
+.method-part {
+  padding-top: 40px;
+  scroll-margin-top: 24px;
+}
+.method-part + .method-part {
+  margin-top: 48px;
+  border-top: 1px solid var(--eval-line);
+}
+.method-part-title {
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  margin: 0 0 16px;
+}
+.method-subtitle {
   font-size: 21px;
   font-weight: 500;
   letter-spacing: -0.02em;
   margin: 40px 0 14px;
 }
-.tx-table code {
+.method-task-table code {
   white-space: nowrap;
-}
-.method-content .results-scroll + .tx-section-title {
-  margin-top: 44px;
 }
 .method-formulas {
   border: 1px solid var(--eval-line);

@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { PageShell } from "../components/eval-ui";
+import { TransactionMethodology } from "../components/transaction-methodology";
 import gradingReceiptUrl from "../results/2026-09-21/regrade/receipt.json?url";
 import perpsReceiptUrl from "../results/2026-09-21/regrade/perps-receipt.json?url";
 import { ResultsHeader, RunDetails } from "../components/results-ui";
@@ -18,7 +20,21 @@ import {
   measuredRepresentativeRuns,
 } from "../canonical/selectors";
 
-export function MethodologyPage() {
+const PARTS = [
+  { id: "tool-use", title: "Tool-use evaluations", summary: "What the leaderboard measures." },
+  {
+    id: "transactions",
+    title: "Transaction evaluations",
+    summary: "Moving funds safely. Not run yet.",
+  },
+] as const;
+
+export type MethodologySection = (typeof PARTS)[number]["id"];
+
+export function MethodologyPage({ section }: { readonly section?: MethodologySection }) {
+  useEffect(() => {
+    if (section !== undefined) document.getElementById(`method-${section}`)?.scrollIntoView();
+  }, [section]);
   const runs = measuredRepresentativeRuns();
   const campaigns = canonicalCampaigns.filter((campaign) =>
     runs.some((run) => run.campaignId === campaign.campaignId),
@@ -42,291 +58,321 @@ export function MethodologyPage() {
           description="What we ask, what we check, and how the results are calculated."
         />
         <div className="method-content">
-          <p className="method-limits">
-            These results measure tool use and task completion, with retained-price grounding for
-            three revised Perps tasks. General answer quality and trading returns are not evaluated.
-            Samples are small, and models used different clients.
-          </p>
-          <ol className="method-steps">
-            <li>
-              <h2>Choose the tasks</h2>
-              <p>
-                We test three categories: spot markets ({caseDefinitionsForFamily("Spot").length}{" "}
-                tasks), perpetual futures ({caseDefinitionsForFamily("Perps").length}), and
-                prediction markets ({caseDefinitionsForFamily("Predictions").length}). Each task has
-                a fixed prompt and rules for the tools the model should use.
-              </p>
-              <p>
-                The {caseDefinitionsForFamily("Portfolio").length} Portfolio tasks are published but
-                have not been evaluated. They do not contribute to Overall.{" "}
-                <a href="#/tasks">Read the prompts ↗</a>
-              </p>
-            </li>
-            <li>
-              <h2>
-                Run each prompt{" "}
-                {repetitions.length === 1 && repetitions[0] === 3 ? "three times" : "repeatedly"}
-              </h2>
-              <p>
-                Each attempt starts a fresh conversation with access to read-only financial tools.
-                The current runs use {repetitions.join(" or ")} attempts per task and a{" "}
-                {timeouts.join(" or ")}-second timeout per attempt.
-              </p>
-              <details className="results-accordion">
-                <summary>Clients, settings, and run dates</summary>
-                <div>
+          <nav className="method-parts" aria-label="Methodology parts">
+            <ol>
+              {PARTS.map((part) => (
+                <li key={part.id}>
+                  <a href={`#/methodology?section=${part.id}`}>{part.title}</a>
+                  <span>{part.summary}</span>
+                </li>
+              ))}
+            </ol>
+          </nav>
+          <section
+            id="method-tool-use"
+            className="method-part"
+            aria-labelledby="method-tool-use-title"
+          >
+            <h2 id="method-tool-use-title" className="method-part-title">
+              Tool-use evaluations
+            </h2>
+            <p className="method-limits">
+              These results measure tool use and task completion, with retained-price grounding for
+              three revised Perps tasks. General answer quality and trading returns are not
+              evaluated. Samples are small, and models used different clients.
+            </p>
+            <ol className="method-steps">
+              <li>
+                <h3>Choose the tasks</h3>
+                <p>
+                  We test three categories: spot markets ({caseDefinitionsForFamily("Spot").length}{" "}
+                  tasks), perpetual futures ({caseDefinitionsForFamily("Perps").length}), and
+                  prediction markets ({caseDefinitionsForFamily("Predictions").length}). Each task
+                  has a fixed prompt and rules for the tools the model should use.
+                </p>
+                <p>
+                  The {caseDefinitionsForFamily("Portfolio").length} Portfolio tasks are published
+                  but have not been evaluated. They do not contribute to Overall.{" "}
+                  <a href="#/tasks">Read the prompts ↗</a>
+                </p>
+              </li>
+              <li>
+                <h3>
+                  Run each prompt{" "}
+                  {repetitions.length === 1 && repetitions[0] === 3 ? "three times" : "repeatedly"}
+                </h3>
+                <p>
+                  Each attempt starts a fresh conversation with access to read-only financial tools.
+                  The current runs use {repetitions.join(" or ")} attempts per task and a{" "}
+                  {timeouts.join(" or ")}-second timeout per attempt.
+                </p>
+                <details className="results-accordion">
+                  <summary>Clients, settings, and run dates</summary>
+                  <div>
+                    <p>
+                      Runs use several clients, including native Muse and native Devin. The
+                      leaderboard shows them together, but these results reflect the model and its
+                      client setup, not an isolated model-only comparison.
+                    </p>
+                    {campaigns.map((campaign) => (
+                      <div className="method-record" key={campaign.campaignId}>
+                        <h3>{campaign.harness}</h3>
+                        <p>
+                          {campaign.date} · {campaign.repetitions} attempts per task ·{" "}
+                          {campaign.timeoutMs === null
+                            ? "route-specific timeouts"
+                            : `${campaign.timeoutMs / 1000}s timeout`}
+                        </p>
+                        <ul>
+                          {runs
+                            .filter((run) => run.campaignId === campaign.campaignId)
+                            .map((run) => (
+                              <li key={run.runId}>
+                                {getModel(run.modelId)?.name ?? run.modelId}, {run.family}:{" "}
+                                {run.configuration.reasoning ?? "unspecified"} reasoning;{" "}
+                                <code>{run.configuration.configurationId}</code>
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              </li>
+              <li>
+                <h3>Check what the model did</h3>
+                <p>
+                  An attempt passes when it satisfies every applicable grading check: calling the
+                  required tools, supplying the required arguments, completing without errors, and
+                  obeying the task’s restrictions.
+                </p>
+                <p>
+                  Some tasks require one tool call; others require calls in a particular order. The
+                  task’s grading criteria explain those requirements. Three revised Perps price
+                  tasks also check quoted prices against retained tool results. Other final-answer
+                  accuracy is not scored. <a href="#/tasks">See task-specific rules ↗</a>
+                </p>
+                <p>
+                  The perps-price-evidence-v1 revision requires actual mark-price evidence for BTC
+                  and BTC/ETH/SOL mark requests. A midpoint alone does not satisfy them. HIP-3
+                  quotes require a successful xyz markets lookup confirming CL; a price read may
+                  occur before or after that lookup. The replay checks coin, venue, metric and
+                  quoted values, allowing rounding to displayed precision. It reviews existing
+                  passes and failures equally across models, preserving original records and all
+                  other checks. Complete visible market objects in truncated output can support a
+                  grade; omitted values cannot. Of 450 recorded slots, 382 have replayable completed
+                  evidence, 32 have incomplete executions and 36 older completed records lack public
+                  transcripts. Those 68 records retain their original status. This is a narrow price
+                  check, not a general answer-quality evaluation.{" "}
+                  <a href={perpsReceiptUrl} download>
+                    Download the price grading revision ↗
+                  </a>
+                </p>
+                <p>
+                  Prediction-market discovery permits one to three distinct, nonempty searches using
+                  the required search tool, with the original request as the first query. The
+                  bounded-prediction-search-v1 revision applies this routing rule consistently to
+                  retained 16 and 21 September attempts across all models. Argument, restriction,
+                  and completion checks retain their recorded outcomes. Search relevance, whether a
+                  follow-up was necessary, and answer accuracy are not scored by this routing check.
+                  Original grades and transcripts are preserved; changed attempts show the original
+                  verdict in Checks. Provider errors remain ungraded.{" "}
+                  <a href={gradingReceiptUrl} download>
+                    Download the grading revision ↗
+                  </a>
+                </p>
+              </li>
+              <li>
+                <h3>Calculate the scores</h3>
+                <div className="method-formulas">
                   <p>
-                    Runs use several clients, including native Muse and native Devin. The
-                    leaderboard shows them together, but these results reflect the model and its
-                    client setup, not an isolated model-only comparison.
+                    <strong>Category score</strong> = verified passes ÷ all planned trials × 100
                   </p>
+                  <p>
+                    <strong>Overall</strong> = (Spot score + Perps score + Predictions score) ÷ 3
+                  </p>
+                </div>
+                <p>
+                  For example, category scores of 90%, 60%, and 30% give an Overall score of 60%.
+                  Each category contributes one third, regardless of its number of tasks.
+                  Calculations use full precision; the table displays one decimal place.
+                </p>
+                <p>
+                  Scoring policy <code>{LEADERBOARD_SCORE_POLICY}</code> measures end-to-end
+                  success. Every planned trial stays in the denominator. Timeouts, execution errors
+                  and other terminal trials without a passing verdict earn zero credit. Their
+                  execution status remains separate from graded failures; no missing verdict is
+                  fabricated. A category score requires every planned trial to finish processing.
+                  Pending, unstarted or unknown outcomes keep its score unavailable. Overall
+                  requires all three compatible categories. Fully graded scores are unchanged. The
+                  leaderboard shows every recorded model, reasoning setting, and campaign as a
+                  separate row; identical attempts reused across campaigns appear once. Complete and
+                  incomplete results remain visible together; campaign and grading filters narrow
+                  the view explicitly. Each row retains its category outcomes, timing and cost
+                  sample counts, timeout budget, repetitions, source hashes, and links to individual
+                  attempts. Sorting does not make different clients, reasoning settings, or time
+                  budgets equivalent.
+                </p>
+                <p>
+                  Sorting describes these observed results. It does not establish statistical
+                  significance or change the exported pilot runs’ unranked status.
+                </p>
+              </li>
+              <li>
+                <h3>Report time and estimated cost</h3>
+                <p>
+                  <strong>Average time</strong> is the sum of completed-attempt durations divided by
+                  the number of completed attempts across all three categories. It excludes timeouts
+                  and run errors. If any completed attempt lacks a timing, we leave the full-suite
+                  mean unavailable instead of averaging medians. Incomplete grading does not hide
+                  retained timings: expanded run details show the measured sample count and how many
+                  started attempts were excluded.
+                </p>
+                <p>
+                  <strong>Estimated cost per task</strong> uses retained native usage and divides by
+                  completed attempts with cost records. Native sessions retain per-message USD
+                  estimates, including cache reads and writes. Devin uses its retained model
+                  catalogue rates and cached-token totals; that catalogue explicitly lists SWE-2 as
+                  Free. Muse uses{" "}
+                  <a
+                    href="https://dev.meta.ai/docs/pricing-rate-limits"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Meta’s standard API rates
+                  </a>{" "}
+                  checked September 18: $1.25 per million uncached input tokens, $0.15 cached input,
+                  and $4.25 output. These are API-equivalent estimates, not Muse subscription
+                  charges. The records are matched to the published model, source summary, and
+                  attempt token totals. Graded failures are included; timeouts and run errors are
+                  excluded. Older runs use recorded tokens and their listed price source. No
+                  estimate is a billing receipt.
+                </p>
+                <p>
+                  Overall scores and average time need data from all three categories. Cost may
+                  cover a smaller recorded population, labelled with the available categories, such
+                  as Spot only. Open a model’s row to see sample counts, exclusions, category timing
+                  percentiles, and pricing sources.
+                </p>
+              </li>
+            </ol>
+            <div className="method-reference">
+              <details className="results-accordion">
+                <summary>Run records</summary>
+                <div>
                   {campaigns.map((campaign) => (
-                    <div className="method-record" key={campaign.campaignId}>
-                      <h3>{campaign.harness}</h3>
+                    <section className="method-record" key={campaign.campaignId}>
+                      <h3>
+                        {campaign.date}: {campaign.harness}
+                      </h3>
                       <p>
-                        {campaign.date} · {campaign.repetitions} attempts per task ·{" "}
-                        {campaign.timeoutMs === null
-                          ? "route-specific timeouts"
-                          : `${campaign.timeoutMs / 1000}s timeout`}
+                        Source commit:{" "}
+                        <code>{campaign.sourceCommit ?? "Recorded per route and run"}</code>
                       </p>
+                      {campaign.executableSourceCommit && (
+                        <p>
+                          Executable commit: <code>{campaign.executableSourceCommit}</code>
+                        </p>
+                      )}
+                      {campaign.prUrl && (
+                        <a href={campaign.prUrl} target="_blank" rel="noreferrer">
+                          {campaign.prLabel ?? "Source pull request"} ↗
+                        </a>
+                      )}
                       <ul>
-                        {runs
-                          .filter((run) => run.campaignId === campaign.campaignId)
-                          .map((run) => (
-                            <li key={run.runId}>
-                              {getModel(run.modelId)?.name ?? run.modelId}, {run.family}:{" "}
-                              {run.configuration.reasoning ?? "unspecified"} reasoning;{" "}
-                              <code>{run.configuration.configurationId}</code>
-                            </li>
-                          ))}
+                        {campaign.limitations.map((limitation) => (
+                          <li key={limitation}>{limitation}</li>
+                        ))}
                       </ul>
-                    </div>
+                      {runs
+                        .filter((run) => run.campaignId === campaign.campaignId)
+                        .map((run) => (
+                          <details className="results-accordion" key={run.runId}>
+                            <summary>
+                              {getModel(run.modelId)?.name ?? run.modelId}: {run.family}
+                            </summary>
+                            <div>
+                              <RunDetails run={run} />
+                              <p>
+                                Artifact:{" "}
+                                <code>{run.provenance.sourceArtifactSha256 ?? "Not retained"}</code>
+                              </p>
+                              {run.notes.map((note) => (
+                                <p key={note}>{note}</p>
+                              ))}
+                            </div>
+                          </details>
+                        ))}
+                    </section>
                   ))}
                 </div>
               </details>
-            </li>
-            <li>
-              <h2>Check what the model did</h2>
-              <p>
-                An attempt passes when it satisfies every applicable grading check: calling the
-                required tools, supplying the required arguments, completing without errors, and
-                obeying the task’s restrictions.
-              </p>
-              <p>
-                Some tasks require one tool call; others require calls in a particular order. The
-                task’s grading criteria explain those requirements. Three revised Perps price tasks
-                also check quoted prices against retained tool results. Other final-answer accuracy
-                is not scored. <a href="#/tasks">See task-specific rules ↗</a>
-              </p>
-              <p>
-                The perps-price-evidence-v1 revision requires actual mark-price evidence for BTC and
-                BTC/ETH/SOL mark requests. A midpoint alone does not satisfy them. HIP-3 quotes
-                require a successful xyz markets lookup confirming CL; a price read may occur before
-                or after that lookup. The replay checks coin, venue, metric and quoted values,
-                allowing rounding to displayed precision. It reviews existing passes and failures
-                equally across models, preserving original records and all other checks. Complete
-                visible market objects in truncated output can support a grade; omitted values
-                cannot. Of 450 recorded slots, 382 have replayable completed evidence, 32 have
-                incomplete executions and 36 older completed records lack public transcripts. Those
-                68 records retain their original status. This is a narrow price check, not a general
-                answer-quality evaluation.{" "}
-                <a href={perpsReceiptUrl} download>
-                  Download the price grading revision ↗
-                </a>
-              </p>
-              <p>
-                Prediction-market discovery permits one to three distinct, nonempty searches using
-                the required search tool, with the original request as the first query. The
-                bounded-prediction-search-v1 revision applies this routing rule consistently to
-                retained 16 and 21 September attempts across all models. Argument, restriction, and
-                completion checks retain their recorded outcomes. Search relevance, whether a
-                follow-up was necessary, and answer accuracy are not scored by this routing check.
-                Original grades and transcripts are preserved; changed attempts show the original
-                verdict in Checks. Provider errors remain ungraded.{" "}
-                <a href={gradingReceiptUrl} download>
-                  Download the grading revision ↗
-                </a>
-              </p>
-            </li>
-            <li>
-              <h2>Calculate the scores</h2>
-              <div className="method-formulas">
-                <p>
-                  <strong>Category score</strong> = verified passes ÷ all planned trials × 100
-                </p>
-                <p>
-                  <strong>Overall</strong> = (Spot score + Perps score + Predictions score) ÷ 3
-                </p>
-              </div>
-              <p>
-                For example, category scores of 90%, 60%, and 30% give an Overall score of 60%. Each
-                category contributes one third, regardless of its number of tasks. Calculations use
-                full precision; the table displays one decimal place.
-              </p>
-              <p>
-                Scoring policy <code>{LEADERBOARD_SCORE_POLICY}</code> measures end-to-end success.
-                Every planned trial stays in the denominator. Timeouts, execution errors and other
-                terminal trials without a passing verdict earn zero credit. Their execution status
-                remains separate from graded failures; no missing verdict is fabricated. A category
-                score requires every planned trial to finish processing. Pending, unstarted or
-                unknown outcomes keep its score unavailable. Overall requires all three compatible
-                categories. Fully graded scores are unchanged. The leaderboard shows every recorded
-                model, reasoning setting, and campaign as a separate row; identical attempts reused
-                across campaigns appear once. Complete and incomplete results remain visible
-                together; campaign and grading filters narrow the view explicitly. Each row retains
-                its category outcomes, timing and cost sample counts, timeout budget, repetitions,
-                source hashes, and links to individual attempts. Sorting does not make different
-                clients, reasoning settings, or time budgets equivalent.
-              </p>
-              <p>
-                Sorting describes these observed results. It does not establish statistical
-                significance or change the exported pilot runs’ unranked status.
-              </p>
-            </li>
-            <li>
-              <h2>Report time and estimated cost</h2>
-              <p>
-                <strong>Average time</strong> is the sum of completed-attempt durations divided by
-                the number of completed attempts across all three categories. It excludes timeouts
-                and run errors. If any completed attempt lacks a timing, we leave the full-suite
-                mean unavailable instead of averaging medians. Incomplete grading does not hide
-                retained timings: expanded run details show the measured sample count and how many
-                started attempts were excluded.
-              </p>
-              <p>
-                <strong>Estimated cost per task</strong> uses retained native usage and divides by
-                completed attempts with cost records. Native sessions retain per-message USD
-                estimates, including cache reads and writes. Devin uses its retained model catalogue
-                rates and cached-token totals; that catalogue explicitly lists SWE-2 as Free. Muse
-                uses{" "}
-                <a
-                  href="https://dev.meta.ai/docs/pricing-rate-limits"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Meta’s standard API rates
-                </a>{" "}
-                checked September 18: $1.25 per million uncached input tokens, $0.15 cached input,
-                and $4.25 output. These are API-equivalent estimates, not Muse subscription charges.
-                The records are matched to the published model, source summary, and attempt token
-                totals. Graded failures are included; timeouts and run errors are excluded. Older
-                runs use recorded tokens and their listed price source. No estimate is a billing
-                receipt.
-              </p>
-              <p>
-                Overall scores and average time need data from all three categories. Cost may cover
-                a smaller recorded population, labelled with the available categories, such as Spot
-                only. Open a model’s row to see sample counts, exclusions, category timing
-                percentiles, and pricing sources.
-              </p>
-            </li>
-          </ol>
-          <div className="method-reference">
-            <details className="results-accordion">
-              <summary>Run records</summary>
-              <div>
-                {campaigns.map((campaign) => (
-                  <section className="method-record" key={campaign.campaignId}>
-                    <h2>
-                      {campaign.date}: {campaign.harness}
-                    </h2>
-                    <p>
-                      Source commit:{" "}
-                      <code>{campaign.sourceCommit ?? "Recorded per route and run"}</code>
-                    </p>
-                    {campaign.executableSourceCommit && (
-                      <p>
-                        Executable commit: <code>{campaign.executableSourceCommit}</code>
-                      </p>
-                    )}
-                    {campaign.prUrl && (
-                      <a href={campaign.prUrl} target="_blank" rel="noreferrer">
-                        {campaign.prLabel ?? "Source pull request"} ↗
-                      </a>
-                    )}
-                    <ul>
-                      {campaign.limitations.map((limitation) => (
-                        <li key={limitation}>{limitation}</li>
-                      ))}
-                    </ul>
-                    {runs
-                      .filter((run) => run.campaignId === campaign.campaignId)
-                      .map((run) => (
-                        <details className="results-accordion" key={run.runId}>
-                          <summary>
-                            {getModel(run.modelId)?.name ?? run.modelId}: {run.family}
-                          </summary>
-                          <div>
-                            <RunDetails run={run} />
-                            <p>
-                              Artifact:{" "}
-                              <code>{run.provenance.sourceArtifactSha256 ?? "Not retained"}</code>
-                            </p>
-                            {run.notes.map((note) => (
-                              <p key={note}>{note}</p>
-                            ))}
-                          </div>
-                        </details>
-                      ))}
-                  </section>
-                ))}
-              </div>
-            </details>
-            <details className="results-accordion">
-              <summary>Technical setup</summary>
-              <div>
-                <p>
-                  Tool catalog: <code>{CATALOG_LABEL}</code>
-                </p>
-                <p>
-                  Catalog SHA: <code>{CATALOG_SHA_31_TOOLS}</code>
-                </p>
-                <p>
-                  Deterministic grader SHA: <code>{GRADER_SHA256}</code>
-                </p>
-                <ul>
-                  {[...SCORED_FAMILIES, "Portfolio" as const].map((family) => (
-                    <li key={family}>
-                      {family}: <code>{SUITE_IDS[family]}</code>
-                      <br />
-                      Suite SHA: <code>{SUITE_SHA256[family]}</code>
-                    </li>
-                  ))}
-                </ul>
-                <p>
-                  Native checks and checks derived from recorded scores retain their source labels.
-                  Withheld, not recorded, and not retained evidence remain distinct. Synthetic
-                  examples appear only in Storybook. The Compare tool still requires matching
-                  benchmark conditions.
-                </p>
-              </div>
-            </details>
-            <details className="results-accordion">
-              <summary>Reproduce the evaluation</summary>
-              <div>
-                <p>
-                  The evaluation runner is in <code>packages/evals</code>. Run these commands from
-                  the repository root with Bun 1.4.x.
-                </p>
-                <pre className="method-code">
-                  <code>{`bun install --frozen-lockfile\nbun run eval:replay -- \\\n  --suite packages/evals/src/fixtures/model-smoke.yaml \\\n  --observations packages/evals/src/fixtures/synthetic-observations.yaml \\\n  --output /tmp/plugin-eval-report.json`}</code>
-                </pre>
-                <p>
-                  This replay uses synthetic observations to check the runner without credentials or
-                  live calls. Reproducing measured runs requires the original suite and
-                  configuration plus the appropriate provider credentials; the README documents the
-                  live runner options.
-                </p>
-                <a
-                  href="https://github.com/askgina/plugins/tree/main/packages/evals"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Read the runner instructions ↗
-                </a>
-              </div>
-            </details>
-          </div>
+              <details className="results-accordion">
+                <summary>Technical setup</summary>
+                <div>
+                  <p>
+                    Tool catalog: <code>{CATALOG_LABEL}</code>
+                  </p>
+                  <p>
+                    Catalog SHA: <code>{CATALOG_SHA_31_TOOLS}</code>
+                  </p>
+                  <p>
+                    Deterministic grader SHA: <code>{GRADER_SHA256}</code>
+                  </p>
+                  <ul>
+                    {[...SCORED_FAMILIES, "Portfolio" as const].map((family) => (
+                      <li key={family}>
+                        {family}: <code>{SUITE_IDS[family]}</code>
+                        <br />
+                        Suite SHA: <code>{SUITE_SHA256[family]}</code>
+                      </li>
+                    ))}
+                  </ul>
+                  <p>
+                    Native checks and checks derived from recorded scores retain their source
+                    labels. Withheld, not recorded, and not retained evidence remain distinct.
+                    Synthetic examples appear only in Storybook. The Compare tool still requires
+                    matching benchmark conditions.
+                  </p>
+                </div>
+              </details>
+              <details className="results-accordion">
+                <summary>Reproduce the evaluation</summary>
+                <div>
+                  <p>
+                    The evaluation runner is in <code>packages/evals</code>. Run these commands from
+                    the repository root with Bun 1.4.x.
+                  </p>
+                  <pre className="method-code">
+                    <code>{`bun install --frozen-lockfile\nbun run eval:replay -- \\\n  --suite packages/evals/src/fixtures/model-smoke.yaml \\\n  --observations packages/evals/src/fixtures/synthetic-observations.yaml \\\n  --output /tmp/plugin-eval-report.json`}</code>
+                  </pre>
+                  <p>
+                    This replay uses synthetic observations to check the runner without credentials
+                    or live calls. Reproducing measured runs requires the original suite and
+                    configuration plus the appropriate provider credentials; the README documents
+                    the live runner options.
+                  </p>
+                  <a
+                    href="https://github.com/askgina/plugins/tree/main/packages/evals"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Read the runner instructions ↗
+                  </a>
+                </div>
+              </details>
+            </div>
+          </section>
+          <section
+            id="method-transactions"
+            className="method-part"
+            aria-labelledby="method-transactions-title"
+          >
+            <h2 id="method-transactions-title" className="method-part-title">
+              Transaction evaluations
+            </h2>
+            <TransactionMethodology />
+          </section>
         </div>
       </div>
     </PageShell>
