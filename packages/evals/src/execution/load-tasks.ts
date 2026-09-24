@@ -13,10 +13,12 @@ const invariantViolations = (task: ExecutionTask, fileId: string): string[] => {
   if (task.id !== fileId) reasons.push(`id ${task.id} must match file name ${fileId}`);
   const accounts = new Set(task.accounts.map((account) => account.id));
   if (accounts.size !== task.accounts.length) reasons.push("duplicate account id");
-  if (!accounts.has(task.target.account))
-    reasons.push(`target account ${task.target.account} is not a task account`);
-  if (task.assets[task.target.asset] === undefined)
-    reasons.push(`target asset ${task.target.asset} is unpriced`);
+  for (const target of task.targets) {
+    if (!accounts.has(target.account))
+      reasons.push(`target account ${target.account} is not a task account`);
+    if (task.assets[target.asset] === undefined)
+      reasons.push(`target asset ${target.asset} is unpriced`);
+  }
   const legIds = new Set<string>();
   for (const edge of task.edges) {
     if (legIds.has(edge.id)) reasons.push(`duplicate leg ${edge.id}`);

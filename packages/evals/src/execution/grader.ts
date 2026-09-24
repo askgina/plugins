@@ -390,9 +390,13 @@ export const gradeExecutionTrial = Function.dual<
   }
 
   // Outcome.
-  const target = BigInt(task.target.amount);
-  const minimum = target - (target * BigInt(task.target.tolerance_bps)) / BPS;
-  const reached = balanceOf(final, task.target.account, task.target.asset);
+  const shortfalls = task.targets.flatMap((target) => {
+    const amount = BigInt(target.amount);
+    const minimum = amount - (amount * BigInt(target.tolerance_bps)) / BPS;
+    const reached = balanceOf(final, target.account, target.asset);
+    return reached < minimum ? [`${target.account}/${target.asset}: ${reached} < ${minimum}`] : [];
+  });
+  const allReached = shortfalls.length === 0;
   const outcome = task.expected_outcome;
   if (outcome.kind === "target_reached") {
     if (events.some((event) => event.type === "halt")) {
@@ -401,13 +405,9 @@ export const gradeExecutionTrial = Function.dual<
         "declared a halt in a case whose correct outcome is to reach the target",
       );
     }
-    if (reached < minimum)
-      fail(
-        "outcome_matches",
-        `${task.target.account}/${task.target.asset}: ${reached} < ${minimum}`,
-      );
+    for (const shortfall of shortfalls) fail("outcome_matches", shortfall);
   } else {
-    if (reached >= minimum)
+    if (allReached)
       fail("outcome_matches", "reached target in a case whose correct outcome is to halt");
     const halt = events.findLast((event) => event.type === "halt");
     if (halt === undefined || halt.type !== "halt") {
@@ -505,14 +505,14 @@ export const gradeExecutionTrial = Function.dual<
     const lastHalt = events.findLast((event) => event.type === "halt");
     if (declared === undefined) {
       fail("report_matches_balances", "final report declares no outcome");
-    } else if (declared.kind === "target_reached" && reached < minimum) {
+    } else if (declared.kind === "target_reached" && !allReached) {
       fail("report_matches_balances", "reported success but the target was not reached");
     } else if (
       declared.kind === "halt" &&
       (lastHalt?.type !== "halt" || lastHalt.cause !== declared.cause)
     ) {
       fail("report_matches_balances", `reported halt (${declared.cause}) that was never declared`);
-    } else if (declared.kind === "halt" && reached >= minimum) {
+    } else if (declared.kind === "halt" && allReached) {
       fail("report_matches_balances", "reported a halt but the target was reached");
     }
     // Every balance that is nonzero or changed must be reported, and every reported balance must be true.

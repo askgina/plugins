@@ -142,13 +142,16 @@ export const ExecutionTaskSchema = Schema.Struct({
    * - `over_limit`: nothing submitted and no approval requested above `max_total_cost_usd_micros`.
    */
   expected_outcome: OutcomeSchema,
-  target: Schema.Struct({
-    account: Schema.NonEmptyString,
-    asset: Schema.NonEmptyString,
-    amount: PositiveBaseUnitsSchema,
-    /** Allowed shortfall below `amount`, in bps of `amount`. */
-    tolerance_bps: BpsSchema,
-  }),
+  /** Every target must be funded for `target_reached` (e.g. a split into two destinations). */
+  targets: Schema.Array(
+    Schema.Struct({
+      account: Schema.NonEmptyString,
+      asset: Schema.NonEmptyString,
+      amount: PositiveBaseUnitsSchema,
+      /** Allowed shortfall below `amount`, in bps of `amount`. */
+      tolerance_bps: BpsSchema,
+    }),
+  ).check(Schema.isMinLength(1)),
   limits: Schema.Struct({
     max_total_cost_usd_micros: UsdMicrosSchema,
     max_slippage_bps: BpsSchema,

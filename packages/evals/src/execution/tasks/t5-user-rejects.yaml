@@ -14,7 +14,8 @@ accounts:
     gas_per_tx: "20000000000000"
     balances: { ETH: "500000000000000000", USDC: "0" }
 expected_outcome: { kind: halt, cause: user_rejected }
-target: { account: base1, asset: USDC, amount: "600000000", tolerance_bps: 50 }
+targets:
+  - { account: base1, asset: USDC, amount: "600000000", tolerance_bps: 50 }
 limits:
   max_total_cost_usd_micros: 2000000
   max_slippage_bps: 50
