@@ -11,6 +11,7 @@ import {
 } from "../components/leaderboard-results";
 import { LeaderboardScatter } from "../components/leaderboard-scatter";
 import { LeaderboardConversations } from "../components/leaderboard-conversations";
+import { TransactionDetails, TransactionResult } from "../components/transaction-results";
 import { ModelAvatar, PageShell } from "../components/eval-ui";
 import { InfoPopover, ResultsHeader, RunDetails, dollars, seconds } from "../components/results-ui";
 import {
@@ -311,6 +312,7 @@ export function LeaderboardPage({
                                 : undefined
                             }
                           />
+                          {family === "Spot" && <TransactionResult row={row} />}
                         </td>
                       ))}
                       <td>
@@ -356,6 +358,7 @@ export function LeaderboardPage({
                                 </Fragment>
                               ) : null,
                             )}
+                            <TransactionDetails row={row} />
                           </div>
                         </td>
                       </tr>

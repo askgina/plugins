@@ -6,8 +6,11 @@ export function TransactionMethodology() {
     <>
       <p className="method-limits" role="status">
         <strong>Pilot stage.</strong> One model has been run (Grok 4.7, low reasoning) on a
-        simulated ledger; see <a href="#/transactions">Transactions</a> for results. These evals are
-        separate from the tool-use scores above and never enter the leaderboard.
+        simulated ledger; results appear under each model's Spot score on the{" "}
+        <a href="#/leaderboard">leaderboard</a> and in the{" "}
+        <a href="#/tasks?category=Spot&task=t1-base-eth-to-usdc">Spot tasks</a>, scored separately
+        from Spot. These evals are separate from the tool-use scores above and never enter the
+        leaderboard.
       </p>
 
       <ol className="method-steps">
