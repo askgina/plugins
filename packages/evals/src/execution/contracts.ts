@@ -159,6 +159,11 @@ export const ExecutionTaskSchema = Schema.Struct({
   }),
   /** Balances worth ≤ this are dust and never count as stranded. */
   dust_usd_micros: UsdMicrosSchema,
+  /**
+   * Hand-checked cheapest feasible route cost. Required for `over_limit` halt cases (which only
+   * make sense if even the cheapest route exceeds the cap) until the reference solver lands.
+   */
+  min_feasible_cost_usd_micros: Schema.optional(UsdMicrosSchema),
   edges: Schema.Array(ExecutionEdgeSchema),
   user_script: UserScriptSchema,
   faults: Schema.optional(Schema.Array(ExecutionFaultSchema)),
