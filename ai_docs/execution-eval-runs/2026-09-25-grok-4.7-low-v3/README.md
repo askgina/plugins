@@ -1,6 +1,6 @@
 # Execution evals: Grok 4.7 Low (xAI OAuth), rules stated to the model, 2026-09-25
 
-Third run on the 6 published tasks. Replaces v2 in the evals app.
+Third run on the 6 published tasks. Superseded by the fresh v4 run for publication.
 
 ## What changed from v2
 
@@ -17,7 +17,7 @@ Third run on the 6 published tasks. Replaces v2 in the evals app.
 
 ## Re-grading (`run-v3-low-3reps.regraded.jsonl`)
 
-The raw file `run-v3-low-3reps.jsonl` holds the grades at run time. Two grading bugs surfaced in it and were fixed, then the recorded events were re-graded. The grader is a pure function of the events, and the model never sees targets, so no rerun was needed.
+The raw file `run-v3-low-3reps.jsonl` holds the grades at run time. Two grading bugs surfaced in it and were fixed, then the recorded events were re-graded for diagnosis only. This is **not** a valid retest: the signer checks targets when approving a route, so under the new MON target Grok's attempt-1 plan would have been refused and it could have re-planned. The published results come from a fresh run at the final commit (v4).
 
 - **Slippage compared quotes of different sizes.** In split attempts 1 and 3, Grok re-quoted a gas bridge at a smaller amount. The fixed $0.50 fee made the net rate lower, which was flagged as more than 50 bps of slippage. Slippage now compares only same-size quotes of the same leg. Both attempts become passes.
 - **"Sell my MON" was graded too loosely** (at least 495 USDC). The target is now all MON but gas, allowing one extra 0.01 MON gas payment (499.385 USDC). Attempt 1 kept 1.98 MON, so it now fails.
