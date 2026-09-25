@@ -21,7 +21,7 @@ accounts:
     balances: { ETH: "1000000000000000", USDC: "0" } # 0.001 ETH gas already on mainnet
 expected_outcome: { kind: target_reached }
 targets:
-  - { account: eth1, asset: USDC, amount: "495000000", tolerance_bps: 0 } # at least 495 USDC from 1,000 MON
+  - { account: eth1, asset: USDC, amount: "499385000", tolerance_bps: 0 } # all MON but gas; keeping one extra 0.01 MON gas payment is allowed
 limits:
   max_total_cost_usd_micros: 3000000
   max_slippage_bps: 50

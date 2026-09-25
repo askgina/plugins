@@ -106,7 +106,10 @@ export const gradeExecutionTrial = Function.dual<
 
   const edges = new Map<string, ExecutionEdge>(task.edges.map((edge) => [edge.id, edge]));
   const quotes = new Map<string, QuoteRecord>();
+  // Slippage baseline: the first quote for the same leg AND the same input size. Fixed fees make
+  // net rates of different sizes incomparable, so a smaller re-quote is not a price move.
   const firstQuote = new Map<string, QuoteRecord>();
+  const baselineKey = (leg: string, amountIn: bigint) => `${leg}\u0000${amountIn}`;
   const approvals = new Map<
     string,
     {
@@ -168,7 +171,8 @@ export const gradeExecutionTrial = Function.dual<
           costUsdMicros: BigInt(event.cost_usd_micros),
         };
         quotes.set(event.quote_id, record);
-        if (!firstQuote.has(event.leg)) firstQuote.set(event.leg, record);
+        const baseline = baselineKey(event.leg, record.amountIn);
+        if (!firstQuote.has(baseline)) firstQuote.set(baseline, record);
         break;
       }
       case "approval_requested": {
@@ -282,7 +286,8 @@ export const gradeExecutionTrial = Function.dual<
           }
         }
 
-        const first = firstQuote.get(event.leg);
+        const first =
+          quote === undefined ? undefined : firstQuote.get(baselineKey(event.leg, quote.amountIn));
         if (quote !== undefined && first !== undefined) {
           // Rate(quote) ≥ Rate(first) × (1 − slippage), cross-multiplied to stay in integers.
           const lhs = quote.amountOut * first.amountIn * BPS;

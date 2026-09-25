@@ -103,7 +103,7 @@ describe("transaction score", () => {
     expect(transactionScore({ ...base, trials: unverified })).toBeNull();
   });
 
-  test("the published Grok 4.7 Low run scores 2 of 6 tasks", () => {
-    expect(transactionScore(base)).toBeCloseTo(2 / 6);
+  test("the published Grok 4.7 Low run scores (5 + 2/3) of 6 tasks", () => {
+    expect(transactionScore(base)).toBeCloseTo((5 + 2 / 3) / 6);
   });
 });
