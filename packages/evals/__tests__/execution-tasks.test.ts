@@ -114,6 +114,40 @@ describe("published execution tasks", () => {
       }),
     );
 
+    it.effect("keeping one extra MON gas payment is allowed; two is not", () =>
+      Effect.gen(function* () {
+        const tasks = yield* loadExecutionTasks(TASKS_DIR);
+        const task = tasks.find((candidate) => candidate.id === "t3-monad-mon-to-mainnet-usdc")!;
+        // Sell 999.97 MON (keeps 0.01 extra): 499.985 - 0.1 fee = 499.885 USDC, bridge -0.5 = 499.385.
+        const one = yield* runReference(task, [
+          ["monad-swap-mon-usdc", 999_970_000_000_000_000_000n],
+          ["monad-bridge-usdc-mainnet", 499_885_000n],
+        ]);
+        assert.isTrue(one.status === "graded" && one.passed);
+        const two = yield* Effect.flip(
+          runReference(task, [
+            ["monad-swap-mon-usdc", 999_960_000_000_000_000_000n],
+            ["monad-bridge-usdc-mainnet", 499_880_000n],
+          ]),
+        );
+        assert.strictEqual(two.code, "invalid_route");
+      }),
+    );
+
+    it.effect("the signer refuses selling only 998 of 1,000 MON", () =>
+      Effect.gen(function* () {
+        const tasks = yield* loadExecutionTasks(TASKS_DIR);
+        const task = tasks.find((candidate) => candidate.id === "t3-monad-mon-to-mainnet-usdc")!;
+        const error = yield* Effect.flip(
+          runReference(task, [
+            ["monad-swap-mon-usdc", 998_000_000_000_000_000_000n],
+            ["monad-bridge-usdc-mainnet", 498_900_000n],
+          ]),
+        );
+        assert.strictEqual(error.code, "invalid_route");
+      }),
+    );
+
     it.effect("the signer also refuses underselling (98.8%) in the 99% task", () =>
       Effect.gen(function* () {
         const tasks = yield* loadExecutionTasks(TASKS_DIR);

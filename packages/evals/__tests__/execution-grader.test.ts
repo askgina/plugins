@@ -217,6 +217,31 @@ describe("gradeExecutionTrial", () => {
     ]);
   });
 
+  it("a smaller re-quote of the same leg is not slippage, even when a fixed fee lowers its net rate", () => {
+    // First quote 0.2 ETH; submitted quote 0.1 ETH whose net output is lower per unit because of
+    // the same fixed fee. Only same-size quotes are compared, so this is not a price move.
+    const halfSize: ExecutionEvent = {
+      at_ms: 50,
+      type: "quote_received",
+      leg: "swap",
+      quote_id: "q2",
+      amount_in: "100000000000000000",
+      amount_out: "290000000",
+      cost_usd_micros: 360_000,
+      expires_at_ms: 60_050,
+    };
+    const events = [
+      quote(0),
+      halfSize,
+      request(100, "a1", ["q2"]),
+      approve(200),
+      granted(200),
+      submit(1_000, "tx1", "q2"),
+      ...happy.slice(5),
+    ];
+    assert.notInclude(failedChecks(events), "limits_respected");
+  });
+
   it("fails slippage beyond policy against the first quote, and blowing the deadline", () => {
     const worse = [
       quote(0),
