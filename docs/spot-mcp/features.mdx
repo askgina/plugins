@@ -3,7 +3,9 @@ title: "Features and Allowlist"
 description: "The complete host-tool boundary for Spot MCP"
 ---
 
-Spot MCP exposes the following 29 tools directly. `bash` remains a separate tool for scripts, files, SQL, short waits, and composed workflows. Its host-tool allowlist covers the same 29 tools plus two sandbox-only analysis helpers: `spot.captureDataset` snapshots a caller-created SQL table, and `spot.sql` runs isolated queries over captured datasets.
+The native tool inventory below is checked against a pinned application registry. Run `tools/list` to verify your deployed connection. `bash` provides scripts, files, SQL, short waits and composed workflows; its host-tool allowlist includes these tools plus the sandbox-only analysis helpers `spot.captureDataset` and `spot.sql`.
+
+For protocols, actions, restrictions and release evidence, use the [LP support matrix](/spot-mcp/liquidity-positions#capability-and-access).
 
 ## Market Reads
 
@@ -17,13 +19,10 @@ Spot MCP exposes the following 29 tools directly. `bash` remains a separate tool
 | `getTokensByCategory` | Category-based discovery    |
 | `fetchSwapHistory`    | Completed swap history      |
 
-## LONG / Robinhood reads
+## Pool reads
 
 | Host tool            | Purpose                                                             |
 | -------------------- | ------------------------------------------------------------------- |
-| `getLongMarkets`     | List LONG launchpad markets on chain 4663                           |
-| `getLongMarket`      | One market by tokenAddress or poolAddress (exactly one)             |
-| `getLongLaunches`    | Recent LONG launchpad observations (delayed, not live)              |
 | `getPoolState`       | Pinned-block Uniswap V2/V3 compatible pool state on Robinhood Chain |
 | `getRecentPoolSwaps` | Recent swaps for a pool address                                     |
 
@@ -38,21 +37,29 @@ Spot MCP exposes the following 29 tools directly. `bash` remains a separate tool
 | `getLpAllowlist`       | List allowlisted pools and the current revision                          |
 | `updateLpAllowlist`    | Grant or revoke a pool on the allowlist                                  |
 
-LP reads and writes run against the user's delegated wallet on Robinhood
-Chain (chain 4663). `getLpPositions` can also read another address, but that
-result is labelled foreign and can never be quoted or executed.
-`quoteLpOperation` returns a bound quote id plus explicit spend and receive
-bounds; nothing is signed or sent until `executeLpOperation` submits that
-quote. A status of submitted or pending means the outcome is still unknown;
-settled, partial, or failed is reported only from chain evidence.
+## Liquidity positions (Raydium)
 
-The per-user pool allowlist decides which pools may take new or increased
-exposure. Revoking a pool never blocks exits: decrease, collect, and close
-stay quotable on an existing position. `updateLpAllowlist` takes
-`action: "add"` with the full pool identity, or `action: "remove"` with the
-entry's `poolKey`, and requires the current `expectedRevision` from
-`getLpAllowlist`. A v4 pool whose hook can return a liquidity delta cannot be
-admitted.
+| Host tool                    | Purpose                                                   |
+| ---------------------------- | --------------------------------------------------------- |
+| `getSolanaLpPositions`       | Read owned CPMM and CLMM positions with coverage          |
+| `resolveSolanaLpPool`        | Resolve a mint or pool address to candidates              |
+| `getSolanaLpAllowlist`       | Read Solana pool admission and revision                   |
+| `updateSolanaLpAllowlist`    | Add or revoke a Solana pool                               |
+| `quoteSolanaLpOperation`     | Quote a protocol-specific operation                       |
+| `executeSolanaLpOperation`   | Submit the current bound quote                            |
+| `getSolanaLpOperationStatus` | Reconcile one operation or discover unresolved operations |
+
+See [LP operations](/spot-mcp/liquidity-positions) for discovery, allowlists, funding, schema-checked templates and status recovery. Quotes do not authorize sends. Unknown outcomes require reconciliation before another attempt.
+
+## Analytics
+
+| Host tool                     | Purpose                                            |
+| ----------------------------- | -------------------------------------------------- |
+| `previewConcentratedPosition` | Preview a supplied Uniswap range and capital       |
+| `getLpPerformance`            | Attribute historical LP cashflows and costs        |
+| `previewWeightRebalance`      | Compare spot holdings with supplied target weights |
+
+[LP analytics](/spot-mcp/lp-analytics) explains evidence, missing values and the distinction between past performance and hypothetical comparisons.
 
 ## Account Support
 
@@ -64,19 +71,13 @@ admitted.
 
 ## Writes
 
-| Host tool                 | Purpose                                |
-| ------------------------- | -------------------------------------- |
-| `getSwapCalldatas`        | Prepare swap transaction data          |
-| `getTransferCalldata`     | Prepare transfer transaction data      |
-| `executeSupertransaction` | Execute an approved transaction bundle |
+| Host tool                  | Purpose                                |
+| -------------------------- | -------------------------------------- |
+| `quoteSpotTransaction`     | Prepare a bound swap or transfer quote |
+| `executeSpotTransaction`   | Execute the authorized current quote   |
+| `getSpotTransactionStatus` | Reconcile transaction status           |
 
-For an imperative transaction request, the agent prepares and executes without
-requiring a phrase such as `confirm execute`. If preparation reveals a material
-new term, it asks one normal question. After submission, it checks the returned
-transaction hash against swap history and portfolio state for up to 20 seconds.
-A landed receipt reports recorded amounts spent and received. A transaction that
-has not appeared yet is reported as submitted/pending, with quote values clearly
-labeled as estimates.
+A quote or preparation request stops before execution. A complete imperative transaction request can authorize execution; material new terms need review. After submission, reconcile the exact operation. A submitted or pending result is not settlement, and a timeout never authorizes repeating a send. Report recorded amounts from attributable receipts; label quote values as estimates.
 
 ## Scheduling
 

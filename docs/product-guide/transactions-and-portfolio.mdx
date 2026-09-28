@@ -2,7 +2,7 @@
 title: "Transactions and portfolio"
 description: "Review holdings, request a proposal, and distinguish submission from settlement."
 owner: "Ask Gina web team"
-lastReviewed: "2026-09-06"
+lastReviewed: "2026-09-28"
 kind: "guide"
 includeInDocsAgent: true
 relatedSlugs:
@@ -33,5 +33,9 @@ _Actual recipient-verification component with a sample address. Never send funds
 A direct **send** or **swap** instruction authorizes same-turn execution; no special “confirm execute” phrase is required. For swaps, specify input asset, amount, output asset, and network. Quotes expire and fees can change.
 
 Inspect **Trade History** or the chat result. Match the hash to your requested action. Submitted can mean pending; a hash alone does not guarantee finality. Check status before repeating an unclear send. Gina cannot recover a wrong send.
+
+## Liquidity positions
+
+**Wallet → Spot → Yield** shows Uniswap positions on Robinhood Chain and Raydium positions on Solana. Select an exit, review its quote, press **Confirm**, then check status. CPMM uses withdrawal; a funded CLMM full exit can leave an empty position to close. See [Yield](/product-guide/liquidity-positions).
 
 Related: [Wallet](/product-guide/wallet-and-account), [Fees](/product-guide/networks-fees-and-pricing), [Safety](/product-guide/safety-support-and-limitations), [Product Guide](/product-guide).

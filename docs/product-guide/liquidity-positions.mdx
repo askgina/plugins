@@ -1,0 +1,61 @@
+---
+title: "Liquidity positions and Yield"
+description: "Find liquidity positions, read their balances and fees, and review an exit."
+owner: "Ask Gina web team"
+lastReviewed: "2026-09-28"
+kind: "guide"
+includeInDocsAgent: false
+relatedSlugs:
+  - transactions-and-portfolio
+---
+
+# Liquidity positions and Yield
+
+Open **Wallet → Spot → Yield** to see liquidity-provider (LP) positions. Select a position for its details, use **Refresh** to update the list, and use the wallet's balance-visibility control to hide amounts.
+
+| Network                | Protocol          | Position model         |
+| ---------------------- | ----------------- | ---------------------- |
+| Robinhood Chain (4663) | Uniswap v3 and v4 | Concentrated liquidity |
+| Solana                 | Raydium CLMM      | Concentrated liquidity |
+| Solana                 | Raydium CPMM      | Full-range pool share  |
+
+See the [LP support matrix](/spot-mcp/liquidity-positions#capability-and-access) for actions, access and availability. Support depends on the pool, token programs and quote checks.
+
+Using Gina Spot in ChatGPT? See the [LP positions and detail widgets](/spot-mcp/liquidity-positions#manage-all-your-lp-positions-from-an-agent-of-your-choice) for screenshots of the chat experience.
+
+## Understand the list
+
+An empty result means no positions were found within the reported coverage. **No wallet** means there is no configured wallet to inspect. Partial discovery can miss positions; stale data is a cached observation; unavailable data means the provider could not establish a value. Missing data is never a zero balance. Refresh after a transaction, and check coverage before concluding that a position disappeared. Cached values are not execution quotes.
+
+## Read a position
+
+Details show the pair's token amounts, position value, fees, rewards where available, and range status. For concentrated liquidity, compare the **lower**, **current** and **upper** prices. The quote-direction toggle reverses the displayed pair and the meaning of its range: read the displayed units before deciding whether the price is above or below it.
+
+An out-of-range position has no active liquidity at the current price; it can still hold assets and accrued fees. An **inactive** position has zero liquidity but can still have amounts to collect. CPMM has no chosen tick range: its LP tokens represent a full-range share of the pool.
+
+**Estimated fee APR** annualizes the reported recent fee window at current liquidity. It is an estimate, not realized profit or a prediction. Unavailable fee windows or prices remain unavailable.
+
+- Uncollected amounts can include principal from an earlier withdrawal, so they are not necessarily all fee income.
+- A stored fee checkpoint can exclude fees earned since the checkpoint. Read pending growth and coverage too.
+- CPMM fees stay in the pool and contribute to the position value. There is no separate fee collection action.
+- [Historical performance](/spot-mcp/lp-analytics) measures a past interval; APR estimates answer a different question.
+
+## Review an exit
+
+1. Select the position and choose **Collect fees**, **Remove**, **Withdraw** (CPMM), or **Close**, where offered.
+2. For a partial removal, select a whole percentage. At 100%, the button reads **Remove all & close**.
+3. Review the current quote: action, minimum receive amounts, network fee and expiry. A missing minimum is not a guaranteed payout.
+4. Press **Confirm** to submit that quote. An expired or refused quote cannot proceed; resolve its stated reason and obtain a fresh quote only after any outstanding send is reconciled.
+5. Check status and the transaction receipt link when available. Refresh the position after settlement.
+
+Uniswap close removes remaining liquidity and collects amounts owed. A funded Raydium CLMM full exit removes all liquidity and collects fees; closing the emptied position can require a subsequent action. If fees remain on an empty position, collect them before closing. CPMM exits withdraw the requested LP-token share, including the pool's accrued fee value.
+
+Closing returns the protocol's assets. Swapping those assets into a stablecoin is a separate transaction.
+
+The Yield panel provides exit controls. Opening, adding liquidity and recentering use the separately documented [Spot MCP operations](/spot-mcp/liquidity-positions). **Manage with Gina** passes position context into chat; its presence does not establish that chat can execute every LP action.
+
+## Fees and uncertain results
+
+The wallet Yield contract requests sponsored EVM exits. Sponsorship must be available for the actual quote; a refusal does not authorize a paid fallback. Solana exits pay network fees from the wallet's SOL, so keep enough SOL available for the quoted action. See [network fees](/product-guide/networks-fees-and-pricing).
+
+Prepared, submitted and pending describe progress, not settlement. **Partial** means only part of the intended result is established; **unknown** means the outcome remains unresolved. Neither a timeout nor a missing receipt authorizes another send. Keep the operation details and follow [status recovery](/spot-mcp/liquidity-positions#recover-an-uncertain-operation) before trying another action.

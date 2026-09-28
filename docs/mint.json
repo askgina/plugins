@@ -87,6 +87,8 @@
             "spot-mcp/quick-start",
             "spot-mcp/client-setup",
             "spot-mcp/features",
+            "spot-mcp/liquidity-positions",
+            "spot-mcp/lp-analytics",
             "spot-mcp/troubleshooting",
             "spot-mcp/faq"
           ]
@@ -126,6 +128,7 @@
       "pages": [
         "product-guide/index",
         "product-guide/transactions-and-portfolio",
+        "product-guide/liquidity-positions",
         "product-guide/market-research",
         "product-guide/predictions",
         "product-guide/perps",

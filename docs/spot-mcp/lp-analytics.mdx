@@ -1,0 +1,42 @@
+---
+title: "LP analytics"
+description: "Separate current liquidity values, fee estimates, historical performance and hypothetical ranges."
+---
+
+Connect through [Spot MCP](/spot-mcp/client-setup). See the [tool inventory](/spot-mcp/features) and [LP support matrix](/spot-mcp/liquidity-positions#capability-and-access) for access and verified scope.
+
+## Choose the right measurement
+
+| Measurement            | Meaning                                                       |
+| ---------------------- | ------------------------------------------------------------- |
+| Current holdings       | Observed inventory with source times and discovery coverage   |
+| Estimated fee APR      | A recent fee window annualized at current liquidity           |
+| Historical performance | Attributable cashflows, costs and endpoint evidence           |
+| Range preview          | A calculation for an explicitly supplied position or scenario |
+| Portfolio weights      | A comparison with explicitly supplied spot allocation targets |
+
+Use `getLpPositions` or `getSolanaLpPositions` for current holdings and available fee/APR details. Estimates are not realized returns. The tools below answer historical and hypothetical questions.
+
+The [ChatGPT detail widget example](/spot-mcp/liquidity-positions#position-details-in-chatgpt) also shows **Simulated fee APY**: a hypothetical calculation assuming daily reinvestment at a constant rate. It does not establish automatic compounding or future returns.
+
+## Preview a concentrated position
+
+`previewConcentratedPosition` covers Uniswap v3/v4 on Robinhood Chain at the reviewed application revision. Supply an owned position identity, or an explicit pool, tick range and raw token budgets for a hypothetical position. Do not infer Raydium preview support from the presence of Raydium inventory tools.
+
+The preview reports liquidity, rounded token requirements, unused budget, current and boundary prices, and composition at the current price and range boundaries. Ticks must match the pool's tick spacing. A budget too small for one unit of liquidity can produce zero with a reported minimum usable budget. Optional USD marks retain their own evidence.
+
+The tool does not choose a range, store an executable quote, mint liquidity or promise a fill. An owned-position input describes existing exposure; a hypothetical input describes the supplied scenario.
+
+## Read historical performance
+
+`getLpPerformance` reads a bounded interval for Uniswap v3/v4 on Robinhood Chain or Raydium CPMM/CLMM on Solana. It uses acquired history and endpoint evidence to attribute contributions, withdrawals, collections, rewards and costs, and to calculate available performance measures and a matched holding baseline.
+
+Preserve source times, the observation window and coverage. A current balance cannot establish historical inventory; Solana's `minContextSlot` is a lower bound on a live read, not a historical snapshot. Externally opened, transferred or closed positions require acquired evidence too.
+
+Missing prices, costs, endpoint evidence or fee/principal attribution remain unknown. Do not fill gaps with zero. A stored owed balance can include withdrawn principal; stored fee checkpoints can omit pending growth. CPMM fees remain in the pool value. Pool APR is not a forecast for the position, and historical profit does not establish future returns.
+
+## Separate portfolio calculations
+
+`previewWeightRebalance` compares spot holdings with explicitly supplied target weights. It does not execute swaps or supply LP funding. Settle any separately authorized preparatory swaps before requesting a fresh [LP quote](/spot-mcp/liquidity-positions#fund-and-quote).
+
+The user or external client chooses the pool, capital, range and intended action. These analytics tools do not run a hosted LP strategy, select an automatic allocation, score a guaranteed net edge or establish profitable recentering. Missing transition costs or future economics cannot support a profitability conclusion.

@@ -80,8 +80,8 @@ export default defineConfig({
       ...(effectTsgoRecommended.overrides ?? []),
       {
         // The docs workflow runs these standalone Node checks without installing
-        // workspace dependencies. Keep general lint rules enabled for both files.
-        files: ["tools/docs/check.mjs", "tools/docs/check.test.mjs"],
+        // workspace dependencies. The refresh utility shares their Node conventions.
+        files: ["tools/docs/*.mjs"],
         rules: {
           "effecttsgo/node-builtin-import": "off",
           "effecttsgo/async-function": "off",

@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { validateLpContract } from "./lp-contract.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -289,7 +290,7 @@ async function checkExternal(urls) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const root = path.resolve("docs");
   const result = validateDocs(root);
-  result.errors.push(...validateGina(root));
+  result.errors.push(...validateGina(root), ...validateLpContract(root));
   if (process.argv.includes("--external"))
     result.errors.push(...(await checkExternal(result.external)));
   if (result.errors.length) {

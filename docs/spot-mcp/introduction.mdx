@@ -3,7 +3,7 @@ title: "Introduction"
 description: "What Spot MCP is and when to use it"
 ---
 
-Spot MCP is Gina's dedicated write-capable server for token workflows. It exposes 29 native tools for Spot reads, LONG and Robinhood reads, Uniswap v3/v4 liquidity positions, account support, swaps, transfers, transaction execution, and scheduling. It also retains a sandboxed `bash` tool for scripts, files, SQL, short waits, and composed workflows.
+Spot MCP is Gina's dedicated write-capable server for token workflows. It exposes native tools for Spot reads, pool reads, Uniswap and Raydium liquidity positions, account support, swaps, transfers, transaction execution, and scheduling. It also retains a sandboxed `bash` tool for scripts, files, SQL, short waits, and composed workflows.
 
 ## How It Works
 
@@ -20,7 +20,7 @@ After OAuth sign-in and approval, call the native tools directly for ordinary wo
     Inspect tokens, prices, charts, trends, portfolio context, and completed swaps.
   </Card>
   <Card title="Execute" icon="arrow-right-arrow-left">
-    Prepare swaps or transfers, execute an approved supertransaction, or run a quoted LP operation.
+    Prepare swaps or transfers, execute a quoted transaction, or run a quoted LP operation.
   </Card>
   <Card title="Automate" icon="clock">
     Create, inspect, update, pause, or delete scheduled prompts.
@@ -30,3 +30,7 @@ After OAuth sign-in and approval, call the native tools directly for ordinary wo
 ## Access
 
 Spot MCP is controlled by the global `mcp_spot_enabled` rollout flag. Authentication and `tools:execute` are still required when the flag is enabled.
+
+## Liquidity positions
+
+Use [LP operations](/spot-mcp/liquidity-positions) for Uniswap on Robinhood Chain and Raydium on Solana. [LP analytics](/spot-mcp/lp-analytics) explains current values, historical performance and previews. Connect through [Spot client setup](/spot-mcp/client-setup); Gina Read has a separate tool catalog.

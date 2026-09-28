@@ -1,0 +1,199 @@
+---
+title: "LP operations"
+description: "One MCP to manage and execute liquidity operations on Uniswap (Robinhood Chain EVM) and Raydium (Solana)."
+---
+
+Spot MCP brings **Uniswap on Robinhood Chain (EVM)** and **Raydium on Solana** into one connection. Discover positions, add or remove liquidity, collect fees where supported, and execute quoted operations through the same MCP.
+
+## Manage all your LP positions from an agent of your choice.
+
+Ask **“Show my LP positions”** in ChatGPT with Gina Spot connected. See your pairs, position values, estimated fees and price ranges in one view.
+
+<Frame>
+  <img
+    src="/images/product/chatgpt-lp-positions.jpg"
+    alt="Gina Spot LP positions in ChatGPT, showing filters and position cards for Solana and Robinhood Chain."
+    style={{ width: "100%" }}
+  />
+</Frame>
+
+Filter by **Chain**, **Protocol** or **Status**, then choose **View position** to explore a pair. [Open the full-size screenshot](/images/product/chatgpt-lp-positions.jpg).
+
+## Connect to Spot MCP
+
+Use [Spot client setup](/spot-mcp/client-setup) to connect to `https://askgina.ai/ai/spot/mcp`, sign in, and approve `tools:execute` access. Run `tools/list` to check the deployed inventory. The [tool reference](/spot-mcp/features) lists the source-verified native tools.
+
+## Capability and access
+
+Reviewed September 28, 2026 against application revision `2e847ae3dd0523e7ea3e3b9944c9b6bcc232fd37`. The matrix describes implemented contracts; production rollout and funded execution were not independently verified. A registered operation still needs a successful current quote and settlement evidence.
+
+| Network / protocol                 | Spot operation kinds                               | Wallet Yield controls       | Restrictions                                                                               |
+| ---------------------------------- | -------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------ |
+| Robinhood Chain, 4663 / Uniswap v3 | open, increase, decrease, collect, close, recenter | Collect fees, Remove, Close | Delegated EVM wallet; pool admission for new exposure                                      |
+| Robinhood Chain, 4663 / Uniswap v4 | open, increase, decrease, collect, close, recenter | Collect fees, Remove, Close | Full v4 pool key; delta-returning hooks cannot be admitted                                 |
+| Solana / Raydium CLMM              | open, increase, decrease, collect, close, recenter | Collect fees, Remove, Close | Supported token programs; close requires an empty position; funded full exit uses decrease |
+| Solana / Raydium CPMM              | deposit, withdraw                                  | Withdraw, Close             | LP-token share; no separate collect or range management                                    |
+
+All rows are source-verified, with deployment availability unverified. Recenter is implemented as a composite operation, subject to quote guards and reconciliation of both the retired position and its replacement. Schema acceptance alone does not prove a successful lifecycle.
+
+These tools are registered natively on Spot MCP and through its sandbox host-tool interface. Wallet Yield has the narrower exit controls above. Web chat's **Manage with Gina** is a context handoff; do not assume it exposes all these operations. Gina Read is a separate connection with its own [public catalog](/mcp-access/gina-read); an internal tool allowlist does not grant public Gina Read access to LP tools.
+
+## Discover and select
+
+1. Read `getAccountAddresses` and `getCrosschainPortfolio` for wallet identity and available balances.
+2. Read `getLpPositions` for Robinhood Chain, or `getSolanaLpPositions` for Solana. Follow returned inventory cursors and preserve partial coverage, unread positions and source times.
+3. Select the exact pool and position. `resolveSolanaLpPool` returns candidates from a mint or pool address; it neither selects one nor admits it.
+4. Check `getLpAllowlist` or `getSolanaLpAllowlist`. Each user has separate EVM and Solana admission lists and revisions.
+
+Admission updates use different identity fields:
+
+- EVM: `updateLpAllowlist` takes `action: "add"` with the full `pool`, or `action: "remove"` with the entry's `poolKey`.
+- Solana: `updateSolanaLpAllowlist` takes `protocol`, `poolAddress` and `action: "add"` or `"remove"`. Adding checks the pool's on-chain program owner.
+
+Both require the current `expectedRevision`. Re-read on a revision conflict. Revocation blocks new exposure, including recentering; supported reductions remain available: decrease, collect and close, plus CPMM withdraw.
+
+Keep chain ID, wallet, protocol, pool and position identifiers intact. Uniswap token IDs and position-manager addresses are distinct from v4 pool IDs and pool keys. Raydium uses pool, mint, token-account and position addresses. A foreign EVM position may be observable; visibility never grants permission to operate it.
+
+## Fund and quote
+
+Both assets must cover the intended operation. LP quotes do not swap into the desired ratio. Preparatory swaps are separate transactions: reconcile them before requesting a fresh LP quote. Uncollected position assets are not spendable wallet balances.
+
+For EVM, `quoteLpOperation` requires `funding`: delegated `account`, `chainId: 4663`, authorized `fee` alternatives, `assetCeilings` and retained-balance `reserves`. A fee alternative is `sponsored` or `fee-token` with `asset` and `maxWeiAmount`. There is no implicit paid fallback. Duplicate assets or a different wallet/chain are refused. Unknown costs are not zero fees.
+
+For Solana, `quoteSolanaLpOperation` binds the selected pool, position, wallet, allowlist revision and slot window. Supply the last read `expectedRevision` to detect admission changes. Review token maximums, receive minimums and other returned constraints. Keep SOL for fees and account creation. The compiler can wrap native SOL to cover a WSOL funding shortfall; inspect `wrapsNativeSol`. Receiving native SOL instead of WSOL requires `unwrapWsolToNative: true`, supported for withdraw, decrease, collect and recenter. Review `unwrapsWsolToNative` in the quote.
+
+A live Token-2022 transfer-hook program is refused, even if the token can be swapped. An empty transfer-hook slot can be supported. Other token-program and extension checks still apply; a successful swap is not proof of LP compatibility. Follow the quote's refusal instead of repeatedly sending the same unsupported request.
+
+### Read and quote examples
+
+The examples below are templates, checked against the pinned input schemas with synthetic test substitutions. Angle-bracket strings must be replaced with identities from your wallet and pool reads; they are deliberately not runnable addresses. Schema checks do not prove admission, balances, pool ownership or execution. Use a real admitted pool for new exposure, and inspect the current published schema before sending.
+
+Raw amounts are decimal strings in the token's smallest units. `"1000000"` is one token only when it has six decimals. LP-token amounts and liquidity units have their own protocol meaning.
+
+{/* lp-example: evm-read */}
+
+```json
+{ "protocol": "uniswap-v3" }
+```
+
+Call `getLpPositions` with the input above; use `"uniswap-v4"` for v4. Call `getSolanaLpPositions` with:
+
+{/* lp-example: solana-read */}
+
+```json
+{ "analytics": true }
+```
+
+Quote an EVM increase with `quoteLpOperation`. Copy the position reference returned by discovery; the same shape supports v4 with `protocol: "uniswap-v4"` and its actual manager/token ID. Amounts below are illustrative ceilings, not recommended sizes.
+
+{/* lp-example: evm-increase */}
+
+```json
+{
+  "kind": "increase",
+  "position": {
+    "chainId": 4663,
+    "protocol": "uniswap-v3",
+    "positionManager": "<position-manager>",
+    "tokenId": "<position-token-id>"
+  },
+  "amount0Desired": "1000000",
+  "amount1Desired": "1000000",
+  "funding": {
+    "account": "<delegated-evm-wallet>",
+    "chainId": 4663,
+    "fee": [{ "mode": "sponsored" }],
+    "assetCeilings": [
+      { "asset": "<token0-address>", "maxWeiAmount": "1000000" },
+      { "asset": "<token1-address>", "maxWeiAmount": "1000000" }
+    ],
+    "reserves": []
+  }
+}
+```
+
+Quote a Raydium CLMM increase with `quoteSolanaLpOperation`. Replace every position field from discovery and the revision from the Solana allowlist. Liquidity here is in protocol units, not tokens.
+
+{/* lp-example: clmm-increase */}
+
+```json
+{
+  "protocol": "raydium-clmm",
+  "kind": "increase",
+  "pool": { "protocol": "raydium-clmm", "poolAddress": "<clmm-pool>" },
+  "position": {
+    "protocol": "raydium-clmm",
+    "owner": "<delegated-solana-wallet>",
+    "pool": { "protocol": "raydium-clmm", "poolAddress": "<clmm-pool>" },
+    "nftMintAddress": "<position-nft-mint>",
+    "tokenAccountAddress": "<position-token-account>",
+    "positionAddress": "<position-address>"
+  },
+  "liquidity": { "mode": "exact-liquidity", "liquidity": "1000" },
+  "expectedRevision": 0,
+  "slippageBps": 50
+}
+```
+
+Quote a Raydium CPMM deposit with the same tool. Copy the entire pool identity from a resolved and admitted candidate. `lpTokenAmount` requests a raw LP-token quantity; the quote determines required pair amounts.
+
+{/* lp-example: cpmm-deposit */}
+
+```json
+{
+  "protocol": "raydium-cpmm",
+  "kind": "deposit",
+  "pool": {
+    "protocol": "raydium-cpmm",
+    "poolAddress": "<cpmm-pool>",
+    "lpMintAddress": "<lp-mint>",
+    "vault0Address": "<vault0>",
+    "vault1Address": "<vault1>",
+    "token0MintAddress": "<token0-mint>",
+    "token1MintAddress": "<token1-mint>",
+    "token0ProgramAddress": "<token0-program>",
+    "token1ProgramAddress": "<token1-program>"
+  },
+  "lpTokenAmount": "1000",
+  "expectedRevision": 0,
+  "slippageBps": 50
+}
+```
+
+## Execute the exact quote
+
+Keep `intentId`, `quoteId` and `planHash`. `intentId` identifies the intended action; `quoteId` identifies its current quote; `planHash` binds the plan. Review amounts, fees, minimum receive bounds and expiry before authorizing execution.
+
+Call `executeLpOperation` or `executeSolanaLpOperation` with the exact returned `quoteId` and `planHash` only when execution is authorized. Quoting signs and sends nothing. A quote request alone does not authorize execution.
+
+To refresh an unexecuted intent, pass its `intentId` to the quote tool. The new `quoteId` supersedes the old one: never execute the old quote. An outstanding send blocks re-quoting. EVM quotes expire by their stated deadline; Solana quotes have an `expiresAtSlot` window. A replacement quote must be reviewed again if material terms change.
+
+## Recover an uncertain operation
+
+Keep the returned `operationId`, quote identity and any attributable transaction reference. Read `getLpOperationStatus` by `operationId` or the exact claiming `quoteId`. Read `getSolanaLpOperationStatus` by `operationId`.
+
+If those handles were lost, call the relevant status tool with:
+
+{/* lp-example: unresolved */}
+
+```json
+{ "unresolved": true, "limit": 10 }
+```
+
+Follow each returned `nextCursor` using `cursor` until null. The listing is bounded; a single page is not all outstanding operations. Native results expose `operations` and `nextCursor` directly; sandbox results wrap them under `data`. Rows may settle during reconciliation or remain unavailable.
+
+Prepared, submitted and pending are not settled. Unknown or partial results require reconciliation of receipts, position state and attributable asset flows. A timeout, missing receipt or successful outer shell command does not prove whether funds moved. Never automatically resend, replace an unknown send or repeat a settled leg. Only authoritative resolution can establish whether a distinct new attempt is eligible.
+
+## Widgets and text clients
+
+Compatible clients can render LP positions and quote/status widgets. Clients without widgets still receive the tool's structured/text result, identifiers, constraints and recovery steps. Rendering a card changes presentation, not transaction authority; an Execute control must use the current bound quote and the user's authorization.
+
+### Position details in ChatGPT
+
+The detail view shows the pair, network and protocol, token amounts, current price and range bounds. Use the pair-direction control to reverse the displayed price units. Read the labels beside each value: in this example, **Position value** is principal excluding uncollected balances, and **Est. fee APR** uses a 24-hour fee window before costs.
+
+![Raydium CLMM position detail widget in ChatGPT showing SPCXx/USDC principal value, estimated fee APR, simulated fee APY, price range and token amounts.](/images/product/chatgpt-lp-position-detail.jpg)
+
+_User-provided ChatGPT capture, September 28, 2026. **Simulated fee APY** assumes daily reinvestment at a constant rate. It is a hypothetical calculation, not evidence of automatic reinvestment or a forecast. The widget also labels unavailable liquidity-distribution data explicitly._
+
+For fee interpretation and hypothetical comparisons, see [LP analytics](/spot-mcp/lp-analytics). For wallet controls, see [Liquidity positions and Yield](/product-guide/liquidity-positions).
