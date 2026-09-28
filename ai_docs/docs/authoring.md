@@ -13,7 +13,7 @@ Use sentence-case headings and actual UI labels. Define MCP, plugin, skill, and 
 - Check tool names against `packages/contracts/src/index.ts` for Gina Read and the current server registry for each write venue. Do not infer write tools from the research plugin.
 - Check host setup against primary host documentation. Record evidence in `ai_docs/docs-host-verification.md`. Source adapters do not prove marketplace approval. Mark unverified availability and authenticated tests explicitly.
 - Store installation instructions once per client or venue; link quickstarts to them.
-- Preserve product-guide routes and existing frontmatter. The chatbot consumes eight explicit corpus entries with reciprocal `relatedSlugs`. New pages are public docs but are not automatically added to that corpus. Coordinate corpus additions in the chatbot repo.
+- Preserve product-guide routes and existing frontmatter. The chatbot's Docs Agent consumes every product-guide page listed in `tools/docs/check.mjs`, with reciprocal `relatedSlugs` and a 20,000-character corpus cap. A new product-guide page needs the corpus frontmatter, an H1 matching its title, a reciprocal `relatedSlugs` entry, and a matching chatbot `lib/docs/corpus.ts` entry before it reaches the Docs Agent.
 - Do not call a proposed flow “tested” until it was run. Keep UI-source verification separate from authenticated end-to-end verification.
 
 ## Screenshots
