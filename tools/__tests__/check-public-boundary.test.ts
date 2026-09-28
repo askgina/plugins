@@ -28,6 +28,32 @@ const inventory: readonly PublicSourceAsset[] = [
 ];
 
 describe("public binary boundary", () => {
+  it("requires an exact path, digest and JPEG signature for reviewed screenshots", () => {
+    const jpeg = Uint8Array.from([0xff, 0xd8, 0xff, 0, 0xff, 0xd9]);
+    const label = "docs/images/product/example.jpg";
+    const assets: readonly PublicSourceAsset[] = [
+      {
+        path: label,
+        bytes: jpeg.length,
+        kind: "jpeg",
+        sha256: "1d4d47030772999b01d3d1ba14be0f13ce77efc2860086dfaefdb0e8bacf6b2b",
+      },
+    ];
+    assert.deepStrictEqual(findPublicBinaryBoundaryRules(label, jpeg, assets), []);
+    assert.deepStrictEqual(
+      findPublicBinaryBoundaryRules("docs/images/product/other.jpg", jpeg, assets),
+      ["unscannable-binary-file"],
+    );
+    const changed = Uint8Array.from(jpeg);
+    changed[3] = 1;
+    assert.deepStrictEqual(findPublicBinaryBoundaryRules(label, changed, assets), [
+      "unscannable-binary-file",
+    ]);
+    assert.isFalse(
+      isAttestedPublicSourceAsset(IMAGE_PATH, WEBP, [{ ...inventory[1]!, kind: "jpeg" }]),
+    );
+  });
+
   it("admits only attested app bytes at their reviewed paths", () => {
     assert.deepStrictEqual(findPublicBinaryBoundaryRules(FONT_PATH, WOFF2, inventory), []);
     assert.deepStrictEqual(findPublicBinaryBoundaryRules(IMAGE_PATH, WEBP, inventory), []);

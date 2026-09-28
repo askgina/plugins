@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { Function } from "effect";
 
-export type PublicSourceAssetKind = "woff2" | "webp" | "png" | "ico";
+export type PublicSourceAssetKind = "woff2" | "webp" | "png" | "jpeg" | "ico";
 
 export type PublicSourceAsset = {
   readonly path: string;
@@ -16,6 +16,20 @@ const WEBP_RIFF = [0x52, 0x49, 0x46, 0x46] as const;
 const WEBP_FOURCC = [0x57, 0x45, 0x42, 0x50] as const;
 
 export const PUBLIC_SOURCE_ASSETS: readonly PublicSourceAsset[] = [
+  // User-provided ChatGPT LP screenshots, reviewed for public documentation.
+  {
+    path: "docs/images/product/chatgpt-lp-positions.jpg",
+    sha256: "2b8bc32a185d514404a93da1f0aaff2574a95cd4901de11a16e5203e01669db2",
+    bytes: 344918,
+    kind: "jpeg",
+  },
+  {
+    path: "docs/images/product/chatgpt-lp-position-detail.jpg",
+    sha256: "96fae721387e019793f3ad86beb05d5b0d4feebf9bb2ef0f8fffd6cd31a8b907",
+    bytes: 287423,
+    kind: "jpeg",
+  },
+
   // User-supplied Cognition avatars, verified for light and dark themes.
   {
     path: "apps/evals/public/images/model-logos/cognition-avatar-black.png",
@@ -96,6 +110,9 @@ export const isAttestedPublicSourceAsset: {
         WEBP_RIFF.every((value, index) => bytes[index] === value) &&
         WEBP_FOURCC.every((value, index) => bytes[8 + index] === value)
       );
+    }
+    if (asset.kind === "jpeg") {
+      return bytes.length >= 4 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
     }
     if (asset.kind === "png") {
       return (

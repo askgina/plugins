@@ -2,7 +2,7 @@
 
 - Owner: Ask Gina web team; repository review owner: @ericjuta (existing CODEOWNERS).
 - Reviewed: 2026-09-28.
-- Verified application: `t-y-b-b/nextjs-ai-chatbot`, commit `2e847ae3dd0523e7ea3e3b9944c9b6bcc232fd37`.
+- Verified application: `Gina application (private)`, commit `2e847ae3dd0523e7ea3e3b9944c9b6bcc232fd37`.
 - Evidence: committed source, generated registry/schema snapshot and schema-checked templates. No funded transaction was executed. Deployment availability remains unverified.
 - Application companion: pending; proposed owner is Ask Gina web team / @ericjuta. No assignment, GitHub issue, application change or published upstream revision is claimed by this local implementation.
 
@@ -13,7 +13,7 @@ The canonical public source is this repository's `docs/`. The authoritative acti
 `tools/docs/lp-contract.snapshot.json` records source commit, per-file SHA-256 hashes, generated native inventory, input schemas and templates validated against actual source Zod schemas. To refresh from a trusted application checkout with dependencies installed:
 
 ```sh
-node tools/docs/refresh-lp-contract.mjs /absolute/path/to/nextjs-ai-chatbot <full-application-commit>
+node tools/docs/refresh-lp-contract.mjs /absolute/path/to/gina-application <full-application-commit>
 bun run docs:test
 bun run docs:check
 bun run lint

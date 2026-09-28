@@ -8,7 +8,7 @@ import { createRequire } from "node:module";
 import ts from "typescript-api";
 import { lpExamples } from "./lp-contract.mjs";
 
-const app = path.resolve(process.argv[2] ?? "../nextjs-ai-chatbot");
+const app = path.resolve(process.argv[2] ?? "../gina-application");
 const revision = process.argv[3];
 if (!/^[a-f0-9]{40}$/.test(revision ?? ""))
   throw new Error(
@@ -153,7 +153,7 @@ if (!registry.includes("SPOT_HOST_TOOLS_ALLOWLIST.map((name)"))
 hashes["lib/mcp/spot-tool-registry.ts"] = createHash("sha256").update(registry).digest("hex");
 const inventory = Array.from(value("lib/ai/sandbox/skills/index.ts", "SPOT_HOST_TOOLS_ALLOWLIST"));
 const snapshot = {
-  sourceRepository: "t-y-b-b/nextjs-ai-chatbot",
+  sourceRepository: "Gina application (private)",
   revision,
   zodVersion: requireApp("zod/package.json").version,
   sourceHashes: hashes,
