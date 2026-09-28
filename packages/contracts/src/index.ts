@@ -294,8 +294,12 @@ export const GINA_PREDICTION_RENDER_TOOL_NAMES = [
   "predictions.renderPredictionCollection",
 ] as const;
 
+/** App-capable hosts only: renders a QR code for adding Gina to another app. Not in the connected SDK list. */
+export const GINA_CONNECT_OPTIONS_TOOL = "gina.showConnectOptions" as const;
+
 export const GINA_RENDER_TOOL_NAMES = [
   GINA_DYNAMIC_WIDGET_TOOL,
+  GINA_CONNECT_OPTIONS_TOOL,
   ...GINA_PREDICTION_RENDER_TOOL_NAMES,
 ] as const;
 export type GinaRenderToolName = (typeof GINA_RENDER_TOOL_NAMES)[number];

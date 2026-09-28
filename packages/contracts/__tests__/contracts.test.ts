@@ -145,6 +145,7 @@ describe("@askgina/contracts", () => {
 
       assert.deepStrictEqual(GINA_RENDER_TOOL_NAMES, [
         "gina.renderReadOnlyDashboard",
+        "gina.showConnectOptions",
         "predictions.renderPredictionPodium",
         "predictions.renderPredictionBinaryMarket",
         "predictions.renderPredictionCollection",
