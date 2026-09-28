@@ -200,10 +200,12 @@ const EVALS_MAPPED_JS_FILES = [
   "bin/replay.js",
   "canonical-json-x.js",
   "codex-cli-x.js",
+  "omp-harness-x.js",
   "publication-x.js",
   "replay-x.js",
   "report-x.js",
   "runner-x.js",
+  "sanitize-x.js",
   "trial-journal-x.js",
 ] as const;
 const EVALS_MAPPED_CHUNK = "runner-x.js";
