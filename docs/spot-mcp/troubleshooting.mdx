@@ -7,7 +7,7 @@ description: "Verify and fix a Spot MCP connection"
 
 1. Confirm the URL is exactly `https://askgina.ai/ai/spot/mcp`.
 2. Complete OAuth and approve write access.
-3. Run `tools/list`; `bash` and 29 native Spot tools should appear.
+3. Run `tools/list`; compare the returned native tools with the [tool reference](/spot-mcp/features).
 4. Call `getSimplePrice` directly.
 5. Call `{ "command": "echo ok" }` to verify `bash`.
 6. Call `{ "command": "host-tools --name getSimplePrice --limit 5 --full" }` to verify the matching sandbox allowlist.
@@ -30,4 +30,36 @@ Check [Features and Allowlist](/spot-mcp/features). Predictions, Perps, dashboar
 
 ### A write input fails
 
-Read the native tool's published input schema, or run `host-tools schema <toolName>` inside `bash`. Re-check the asset, chain, amount, destination, and transaction details before retrying.
+Read the native tool's published input schema, or run `host-tools schema <toolName>` inside `bash`. Re-check the asset, chain, amount, destination, and transaction details before requesting a new quote. First reconcile any submitted or uncertain operation.
+
+## LP positions or quotes
+
+### Positions are missing, partial or stale
+
+Check the delegated wallet and network, then refresh. Read discovery coverage and follow inventory
+cursors; a partial page or provider failure is not an empty wallet. Unavailable economics should
+not erase a discovered position or be displayed as zero. Cached inventory is not a fresh quote.
+
+### Solana reports insufficient funds
+
+Check both pool tokens and SOL for network fees and account creation. A quoted WSOL wrap consumes
+SOL too. Settle preparatory swaps before obtaining a fresh LP quote.
+
+### A quote expired or admission changed
+
+Read the current allowlist revision and resolve the refusal. Re-quote an unexecuted intent using
+its `intentId`; the new quote supersedes the old `quoteId`. If a send is outstanding, reconcile it
+first. Never execute a superseded quote.
+
+### A pool or token is unsupported
+
+Use the full resolved pool identity and correct protocol. A candidate result is not admission.
+Live Token-2022 transfer-hook programs and unsupported v4 hooks can prevent LP operations even
+when swaps work. Preserve the refusal and choose a supported operation or pool; do not keep
+resubmitting the same unsupported request.
+
+### A send is pending, partial or unknown
+
+Use `getLpOperationStatus` or `getSolanaLpOperationStatus`. Keep the original operation ID; if it
+was lost, use `unresolved: true` and paginate. Missing receipts and timeouts do not authorize
+another send. Follow [LP recovery](/spot-mcp/liquidity-positions#recover-an-uncertain-operation).

@@ -9,7 +9,7 @@ Follow [Spot client setup](/spot-mcp/client-setup) to add the server and authent
 
 ## 2. Sign In and Approve
 
-Restart the client, complete Gina OAuth in the browser, and approve Spot write access. `tools/list` should return `bash` plus 29 native Spot tools.
+Restart the client, complete Gina OAuth in the browser, and approve Spot write access. `tools/list` should return `bash` plus the native tools in the [tool reference](/spot-mcp/features).
 
 ## 3. Verify
 
@@ -32,5 +32,9 @@ To verify `bash` too:
 Native MCP clients publish each tool's input schema. Inside `bash`, inspect a write schema with:
 
 ```json
-{ "command": "host-tools schema getSwapCalldatas" }
+{ "command": "host-tools schema quoteSpotTransaction" }
 ```
+
+## Liquidity positions
+
+Use [LP operations](/spot-mcp/liquidity-positions) for Uniswap on Robinhood Chain and Raydium on Solana. [LP analytics](/spot-mcp/lp-analytics) explains current values, historical performance and previews. Connect through [Spot client setup](/spot-mcp/client-setup); Gina Read has a separate tool catalog.

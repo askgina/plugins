@@ -1,0 +1,1014 @@
+{
+  "sourceRepository": "t-y-b-b/nextjs-ai-chatbot",
+  "revision": "2e847ae3dd0523e7ea3e3b9944c9b6bcc232fd37",
+  "zodVersion": "4.5.4",
+  "sourceHashes": {
+    "lib/lp/inventory-contracts.ts": "d938432a2cbe1904815c77c5b856c1e916d6c031cacbea0f0726582daaa57db5",
+    "lib/lp/contracts.ts": "4ddaf7470a8f56eb59f8bb4522d65d1a442463378e1d7c6192a96cae117af42d",
+    "app/actions/wallet/tools/getSolanaLpPositions/index.ts": "23551896d770cde810fb55e4e937cdd492b025270b0ed9119e343349b0f5a6c2",
+    "lib/solana-lp/analytics-schemas.ts": "dbd45d07df58bdd1b29ae2416e9c4d707644208434c9abac410d079d0acccd61",
+    "lib/solana-lp/analytics-contracts.ts": "768b6efb8d2055b6812ab262cc30f09c94a2c5c594c2c9e50d1102c42c4056f2",
+    "app/actions/wallet/tools/quoteLpOperation/index.ts": "25c4b4c0bfdc73c068ffbc8fc6c151d80b5e8d99edfb17c0ee3d7e9130093e5a",
+    "lib/chain-ids.ts": "86df5045069adb9d7bc9c2cb8655ec5ea66fd9d5e9d5a487bc72727aa8a25c2c",
+    "lib/lp/evidence-contracts.ts": "cf238be9415bedb45af0d9067e27ad19a96713aa91ac367c80eff495d29a71b7",
+    "app/actions/wallet/tools/quoteSolanaLpOperation/index.ts": "d5222a755ab18346126207a8965a79dd638aa4ce4bba8642064fb55b23cb862a",
+    "app/actions/wallet/tools/executeLpOperation/index.ts": "f89d65b703985cf220475ce22d583d8b77a906307679264cd45c170710c1b62c",
+    "lib/db/queries/lp-operations.ts": "315a905985c1171a0d0a31d7ce5d7d905b13ba0b8dd53c620982b5877d312f3e",
+    "app/actions/wallet/tools/executeSolanaLpOperation/index.ts": "03dc1508839deac32596544503ffd72aa898efe66a8005e67b69327df6d8a672",
+    "lib/solana-lp/status-contracts.ts": "4f00890b2ff924200863ef5d7f4d6c0b4d49c8f5b655a7ad9d820e184fd52014",
+    "lib/mcp/spot-tool-registry.ts": "458c2d32d9f86de934efe5f68f4f7c6de346c1cc4d46109be5555061b5089ddd",
+    "lib/ai/sandbox/skills/index.ts": "2b2a7c83323246e5e7dbd182235950036901c255a69dc62456a58a2e0fdb5357"
+  },
+  "nativeTools": [
+    "getTrendingCoins",
+    "getTrendingSearch",
+    "getTokenMetadata",
+    "getTokenChart",
+    "getSimplePrice",
+    "getTokensByCategory",
+    "getPoolState",
+    "getRecentPoolSwaps",
+    "getLpPositions",
+    "quoteLpOperation",
+    "executeLpOperation",
+    "getLpOperationStatus",
+    "getLpAllowlist",
+    "updateLpAllowlist",
+    "getSolanaLpPositions",
+    "resolveSolanaLpPool",
+    "getSolanaLpAllowlist",
+    "updateSolanaLpAllowlist",
+    "quoteSolanaLpOperation",
+    "executeSolanaLpOperation",
+    "getSolanaLpOperationStatus",
+    "previewConcentratedPosition",
+    "getLpPerformance",
+    "previewWeightRebalance",
+    "getCrosschainPortfolio",
+    "getAccountAddresses",
+    "nameResolver",
+    "fetchSwapHistory",
+    "quoteSpotTransaction",
+    "executeSpotTransaction",
+    "getSpotTransactionStatus",
+    "createScheduledPrompt",
+    "listScheduledPrompts",
+    "toggleScheduledPrompt",
+    "deleteScheduledPrompt",
+    "updateScheduledAgentConfig"
+  ],
+  "schemaBindings": {
+    "getLpPositions": [
+      "lib/lp/inventory-contracts.ts",
+      "getLpPositionsPageInputSchema"
+    ],
+    "getSolanaLpPositions": [
+      "app/actions/wallet/tools/getSolanaLpPositions/index.ts",
+      "inputSchema"
+    ],
+    "quoteLpOperation": [
+      "app/actions/wallet/tools/quoteLpOperation/index.ts",
+      "inputSchema"
+    ],
+    "quoteSolanaLpOperation": [
+      "app/actions/wallet/tools/quoteSolanaLpOperation/index.ts",
+      "inputSchema"
+    ],
+    "getLpOperationStatus": [
+      "app/actions/wallet/tools/executeLpOperation/index.ts",
+      "statusInputSchema"
+    ],
+    "getSolanaLpOperationStatus": [
+      "app/actions/wallet/tools/executeSolanaLpOperation/index.ts",
+      "statusInputSchema"
+    ]
+  },
+  "inputSchemas": {
+    "getLpPositions": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "owner": {
+          "type": "string",
+          "pattern": "^0x[0-9a-fA-F]{40}$"
+        },
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "uniswap-v3",
+            "uniswap-v4"
+          ]
+        },
+        "tokenIds": {
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,77})$"
+          }
+        },
+        "limit": {
+          "default": 20,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "includeZeroLiquidity": {
+          "default": true,
+          "type": "boolean"
+        },
+        "cursor": {
+          "type": "string",
+          "maxLength": 256
+        }
+      }
+    },
+    "getSolanaLpPositions": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "cursor": {
+          "description": "Continuation cursor from a previous call's coverage.continuation.cursor. Enumeration is re-run and verification resumes at the cursor; holdings created between calls can shift the window.",
+          "type": "string",
+          "maxLength": 64
+        },
+        "knownPositions": {
+          "description": "Verify only these named holdings instead of scanning the wallet. The result then makes no wallet-wide completeness claim.",
+          "maxItems": 16,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "mint": {
+                "type": "string",
+                "minLength": 32,
+                "maxLength": 44,
+                "description": "LP mint (CPMM) or position NFT mint (CLMM)."
+              },
+              "tokenAccountAddress": {
+                "description": "Wallet token account holding the mint, when already known.",
+                "type": "string",
+                "minLength": 32,
+                "maxLength": 44
+              }
+            },
+            "required": [
+              "mint"
+            ]
+          }
+        },
+        "analytics": {
+          "description": "Spot analytics surface only, where it defaults to true. False returns identity rows only, with economics marked not-requested. Ignored elsewhere, where economics never run.",
+          "type": "boolean"
+        },
+        "valueInUsd": {
+          "description": "Spot analytics surface only. Additively projects already-published raw amounts to USD using shared source-bound marks. Raw amounts are unaffected; mints without a mark stay explicitly unmarked.",
+          "type": "boolean"
+        }
+      }
+    },
+    "quoteLpOperation": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "open",
+            "increase",
+            "decrease",
+            "collect",
+            "close",
+            "recenter"
+          ]
+        },
+        "intentId": {
+          "description": "Pass an earlier quote's intentId to re-quote that intent.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "pool": {
+          "description": "Required for open.",
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "protocol": {
+                  "type": "string",
+                  "const": "uniswap-v3"
+                },
+                "chainId": {
+                  "type": "number",
+                  "const": 4663
+                },
+                "poolAddress": {
+                  "type": "string",
+                  "pattern": "^0x[0-9a-fA-F]{40}$"
+                },
+                "token0": {
+                  "type": "string",
+                  "pattern": "^0x[0-9a-fA-F]{40}$"
+                },
+                "token1": {
+                  "type": "string",
+                  "pattern": "^0x[0-9a-fA-F]{40}$"
+                },
+                "fee": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 16777215
+                },
+                "tickSpacing": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 32767
+                }
+              },
+              "required": [
+                "protocol",
+                "chainId",
+                "poolAddress",
+                "token0",
+                "token1",
+                "fee",
+                "tickSpacing"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "protocol": {
+                  "type": "string",
+                  "const": "uniswap-v4"
+                },
+                "chainId": {
+                  "type": "number",
+                  "const": 4663
+                },
+                "poolId": {
+                  "type": "string",
+                  "pattern": "^0x[0-9a-fA-F]{64}$"
+                },
+                "poolKey": {
+                  "type": "object",
+                  "properties": {
+                    "currency0": {
+                      "type": "string",
+                      "pattern": "^0x[0-9a-fA-F]{40}$"
+                    },
+                    "currency1": {
+                      "type": "string",
+                      "pattern": "^0x[0-9a-fA-F]{40}$"
+                    },
+                    "fee": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 16777215
+                    },
+                    "tickSpacing": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 32767
+                    },
+                    "hooks": {
+                      "type": "string",
+                      "pattern": "^0x[0-9a-fA-F]{40}$"
+                    }
+                  },
+                  "required": [
+                    "currency0",
+                    "currency1",
+                    "fee",
+                    "tickSpacing",
+                    "hooks"
+                  ]
+                }
+              },
+              "required": [
+                "protocol",
+                "chainId",
+                "poolId",
+                "poolKey"
+              ]
+            }
+          ]
+        },
+        "position": {
+          "description": "Required for every operation except open.",
+          "type": "object",
+          "properties": {
+            "chainId": {
+              "type": "number",
+              "const": 4663
+            },
+            "protocol": {
+              "type": "string",
+              "enum": [
+                "uniswap-v3",
+                "uniswap-v4"
+              ]
+            },
+            "positionManager": {
+              "type": "string",
+              "pattern": "^0x[0-9a-fA-F]{40}$"
+            },
+            "tokenId": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]{0,77})$"
+            }
+          },
+          "required": [
+            "chainId",
+            "protocol",
+            "positionManager",
+            "tokenId"
+          ]
+        },
+        "tickLower": {
+          "description": "Required for open and recenter.",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "tickUpper": {
+          "description": "Required for open and recenter.",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "amount0Desired": {
+          "description": "Required for open and increase.",
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,77})$"
+        },
+        "amount1Desired": {
+          "description": "Required for open and increase.",
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,77})$"
+        },
+        "liquidity": {
+          "description": "Required for decrease.",
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,77})$"
+        },
+        "slippageBps": {
+          "default": 50,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "deadlineSeconds": {
+          "default": 300,
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 3600
+        },
+        "funding": {
+          "type": "object",
+          "properties": {
+            "account": {
+              "type": "string",
+              "description": "Delegated wallet these ceilings authorize. Must match the quoting wallet."
+            },
+            "chainId": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "description": "Chain these ceilings authorize. Must match the pool."
+            },
+            "fee": {
+              "minItems": 1,
+              "maxItems": 8,
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mode": {
+                        "type": "string",
+                        "const": "sponsored"
+                      }
+                    },
+                    "required": [
+                      "mode"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "mode": {
+                        "type": "string",
+                        "const": "fee-token"
+                      },
+                      "asset": {
+                        "type": "string",
+                        "description": "native, or the fee-token address."
+                      },
+                      "maxWeiAmount": {
+                        "type": "string",
+                        "pattern": "^(0|[1-9][0-9]{0,77})$"
+                      }
+                    },
+                    "required": [
+                      "mode",
+                      "asset",
+                      "maxWeiAmount"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "description": "Ordered authorized fee alternatives. No implicit paid fallback."
+            },
+            "assetCeilings": {
+              "maxItems": 8,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "asset": {
+                    "type": "string"
+                  },
+                  "maxWeiAmount": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,77})$"
+                  }
+                },
+                "required": [
+                  "asset",
+                  "maxWeiAmount"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "reserves": {
+              "maxItems": 8,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "asset": {
+                    "type": "string"
+                  },
+                  "minRetainedWeiAmount": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,77})$"
+                  }
+                },
+                "required": [
+                  "asset",
+                  "minRetainedWeiAmount"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "account",
+            "chainId",
+            "fee",
+            "assetCeilings",
+            "reserves"
+          ],
+          "description": "Required caller authorization for fees, debit ceilings, and retained balances. A quote without these terms is not stored."
+        }
+      },
+      "required": [
+        "kind",
+        "funding"
+      ]
+    },
+    "quoteSolanaLpOperation": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "intentId": {
+          "description": "Existing intent ID when re-quoting the same operation.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "raydium-cpmm",
+            "raydium-clmm"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "deposit",
+            "withdraw",
+            "open",
+            "increase",
+            "decrease",
+            "collect",
+            "close",
+            "recenter"
+          ]
+        },
+        "pool": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "protocol": {
+                  "type": "string",
+                  "const": "raydium-cpmm"
+                },
+                "poolAddress": {
+                  "type": "string",
+                  "minLength": 32,
+                  "maxLength": 44
+                },
+                "lpMintAddress": {
+                  "type": "string",
+                  "minLength": 32,
+                  "maxLength": 44
+                },
+                "vault0Address": {
+                  "type": "string",
+                  "minLength": 32,
+                  "maxLength": 44
+                },
+                "vault1Address": {
+                  "type": "string",
+                  "minLength": 32,
+                  "maxLength": 44
+                },
+                "token0MintAddress": {
+                  "type": "string",
+                  "minLength": 32,
+                  "maxLength": 44
+                },
+                "token1MintAddress": {
+                  "type": "string",
+                  "minLength": 32,
+                  "maxLength": 44
+                },
+                "token0ProgramAddress": {
+                  "type": "string",
+                  "minLength": 32,
+                  "maxLength": 44
+                },
+                "token1ProgramAddress": {
+                  "type": "string",
+                  "minLength": 32,
+                  "maxLength": 44
+                }
+              },
+              "required": [
+                "protocol",
+                "poolAddress",
+                "lpMintAddress",
+                "vault0Address",
+                "vault1Address",
+                "token0MintAddress",
+                "token1MintAddress",
+                "token0ProgramAddress",
+                "token1ProgramAddress"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "protocol": {
+                  "type": "string",
+                  "const": "raydium-clmm"
+                },
+                "poolAddress": {
+                  "type": "string",
+                  "minLength": 32,
+                  "maxLength": 44
+                }
+              },
+              "required": [
+                "protocol",
+                "poolAddress"
+              ]
+            }
+          ],
+          "description": "Pool identity — its protocol must match `protocol` and it must be on the caller's allowlist."
+        },
+        "position": {
+          "description": "Required for withdraw and every CLMM kind except open.",
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "protocol": {
+                  "type": "string",
+                  "const": "raydium-cpmm"
+                },
+                "owner": {
+                  "type": "string",
+                  "minLength": 32,
+                  "maxLength": 44
+                },
+                "pool": {
+                  "type": "object",
+                  "properties": {
+                    "protocol": {
+                      "type": "string",
+                      "const": "raydium-cpmm"
+                    },
+                    "poolAddress": {
+                      "type": "string",
+                      "minLength": 32,
+                      "maxLength": 44
+                    },
+                    "lpMintAddress": {
+                      "type": "string",
+                      "minLength": 32,
+                      "maxLength": 44
+                    },
+                    "vault0Address": {
+                      "type": "string",
+                      "minLength": 32,
+                      "maxLength": 44
+                    },
+                    "vault1Address": {
+                      "type": "string",
+                      "minLength": 32,
+                      "maxLength": 44
+                    },
+                    "token0MintAddress": {
+                      "type": "string",
+                      "minLength": 32,
+                      "maxLength": 44
+                    },
+                    "token1MintAddress": {
+                      "type": "string",
+                      "minLength": 32,
+                      "maxLength": 44
+                    },
+                    "token0ProgramAddress": {
+                      "type": "string",
+                      "minLength": 32,
+                      "maxLength": 44
+                    },
+                    "token1ProgramAddress": {
+                      "type": "string",
+                      "minLength": 32,
+                      "maxLength": 44
+                    }
+                  },
+                  "required": [
+                    "protocol",
+                    "poolAddress",
+                    "lpMintAddress",
+                    "vault0Address",
+                    "vault1Address",
+                    "token0MintAddress",
+                    "token1MintAddress",
+                    "token0ProgramAddress",
+                    "token1ProgramAddress"
+                  ]
+                },
+                "tokenAccountAddress": {
+                  "type": "string",
+                  "minLength": 32,
+                  "maxLength": 44
+                },
+                "amount": {
+                  "type": "string",
+                  "maxLength": 39,
+                  "pattern": "^(0|[1-9][0-9]*)$"
+                }
+              },
+              "required": [
+                "protocol",
+                "owner",
+                "pool",
+                "tokenAccountAddress",
+                "amount"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "protocol": {
+                  "type": "string",
+                  "const": "raydium-clmm"
+                },
+                "owner": {
+                  "type": "string",
+                  "minLength": 32,
+                  "maxLength": 44
+                },
+                "pool": {
+                  "type": "object",
+                  "properties": {
+                    "protocol": {
+                      "type": "string",
+                      "const": "raydium-clmm"
+                    },
+                    "poolAddress": {
+                      "type": "string",
+                      "minLength": 32,
+                      "maxLength": 44
+                    }
+                  },
+                  "required": [
+                    "protocol",
+                    "poolAddress"
+                  ]
+                },
+                "nftMintAddress": {
+                  "type": "string",
+                  "minLength": 32,
+                  "maxLength": 44
+                },
+                "tokenAccountAddress": {
+                  "type": "string",
+                  "minLength": 32,
+                  "maxLength": 44
+                },
+                "positionAddress": {
+                  "type": "string",
+                  "minLength": 32,
+                  "maxLength": 44
+                }
+              },
+              "required": [
+                "protocol",
+                "owner",
+                "pool",
+                "nftMintAddress",
+                "tokenAccountAddress",
+                "positionAddress"
+              ]
+            }
+          ]
+        },
+        "lpTokenAmount": {
+          "description": "Required for CPMM deposit and withdraw.",
+          "type": "string",
+          "maxLength": 39,
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "liquidity": {
+          "description": "Open/increase/recenter: a liquidity intent object. Decrease: a raw u128 amount.",
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "const": "exact-liquidity"
+                    },
+                    "liquidity": {
+                      "type": "string",
+                      "maxLength": 39,
+                      "pattern": "^(0|[1-9][0-9]*)$"
+                    }
+                  },
+                  "required": [
+                    "mode",
+                    "liquidity"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "const": "base-amount"
+                    },
+                    "baseFlag": {
+                      "type": "boolean"
+                    },
+                    "amount": {
+                      "type": "string",
+                      "maxLength": 39,
+                      "pattern": "^(0|[1-9][0-9]*)$"
+                    }
+                  },
+                  "required": [
+                    "mode",
+                    "baseFlag",
+                    "amount"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "string",
+              "maxLength": 39,
+              "pattern": "^(0|[1-9][0-9]*)$"
+            }
+          ]
+        },
+        "tickLowerIndex": {
+          "description": "Required for open and recenter.",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "tickUpperIndex": {
+          "description": "Required for open and recenter.",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "slippageBps": {
+          "default": 50,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "unwrapWsolToNative": {
+          "description": "Withdraw/decrease/collect/recenter only: unwrap received WSOL to native SOL.",
+          "type": "boolean"
+        },
+        "expectedRevision": {
+          "description": "Allowlist revision last read; a mismatch fails the quote.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "minContextSlot": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "protocol",
+        "kind",
+        "pool"
+      ]
+    },
+    "getLpOperationStatus": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "operationId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "description": "Operation ID returned by executeLpOperation."
+        },
+        "quoteId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "description": "Quote ID returned by quoteLpOperation."
+        },
+        "unresolved": {
+          "description": "Discover owned unresolved operations without either ID.",
+          "type": "boolean",
+          "const": true
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        }
+      }
+    },
+    "getSolanaLpOperationStatus": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "operationId": {
+          "description": "Known operation id. Omit for owned-unresolved discovery.",
+          "type": "string"
+        },
+        "unresolved": {
+          "description": "Use true without operationId to list and reconcile your unresolved operations.",
+          "type": "boolean"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        }
+      }
+    }
+  },
+  "examplesToTools": {
+    "evm-read": [
+      "getLpPositions"
+    ],
+    "solana-read": [
+      "getSolanaLpPositions"
+    ],
+    "evm-increase": [
+      "quoteLpOperation"
+    ],
+    "clmm-increase": [
+      "quoteSolanaLpOperation"
+    ],
+    "cpmm-deposit": [
+      "quoteSolanaLpOperation"
+    ],
+    "unresolved": [
+      "getLpOperationStatus",
+      "getSolanaLpOperationStatus"
+    ]
+  },
+  "validatedExamples": {
+    "evm-read": {
+      "protocol": "uniswap-v3"
+    },
+    "solana-read": {
+      "analytics": true
+    },
+    "evm-increase": {
+      "kind": "increase",
+      "position": {
+        "chainId": 4663,
+        "protocol": "uniswap-v3",
+        "positionManager": "<position-manager>",
+        "tokenId": "<position-token-id>"
+      },
+      "amount0Desired": "1000000",
+      "amount1Desired": "1000000",
+      "funding": {
+        "account": "<delegated-evm-wallet>",
+        "chainId": 4663,
+        "fee": [
+          {
+            "mode": "sponsored"
+          }
+        ],
+        "assetCeilings": [
+          {
+            "asset": "<token0-address>",
+            "maxWeiAmount": "1000000"
+          },
+          {
+            "asset": "<token1-address>",
+            "maxWeiAmount": "1000000"
+          }
+        ],
+        "reserves": []
+      }
+    },
+    "clmm-increase": {
+      "protocol": "raydium-clmm",
+      "kind": "increase",
+      "pool": {
+        "protocol": "raydium-clmm",
+        "poolAddress": "<clmm-pool>"
+      },
+      "position": {
+        "protocol": "raydium-clmm",
+        "owner": "<delegated-solana-wallet>",
+        "pool": {
+          "protocol": "raydium-clmm",
+          "poolAddress": "<clmm-pool>"
+        },
+        "nftMintAddress": "<position-nft-mint>",
+        "tokenAccountAddress": "<position-token-account>",
+        "positionAddress": "<position-address>"
+      },
+      "liquidity": {
+        "mode": "exact-liquidity",
+        "liquidity": "1000"
+      },
+      "expectedRevision": 0,
+      "slippageBps": 50
+    },
+    "cpmm-deposit": {
+      "protocol": "raydium-cpmm",
+      "kind": "deposit",
+      "pool": {
+        "protocol": "raydium-cpmm",
+        "poolAddress": "<cpmm-pool>",
+        "lpMintAddress": "<lp-mint>",
+        "vault0Address": "<vault0>",
+        "vault1Address": "<vault1>",
+        "token0MintAddress": "<token0-mint>",
+        "token1MintAddress": "<token1-mint>",
+        "token0ProgramAddress": "<token0-program>",
+        "token1ProgramAddress": "<token1-program>"
+      },
+      "lpTokenAmount": "1000",
+      "expectedRevision": 0,
+      "slippageBps": 50
+    },
+    "unresolved": {
+      "unresolved": true,
+      "limit": 10
+    }
+  },
+  "validation": "Actual source Zod safeParse with synthetic placeholder substitutions; no runtime, admission, balance or execution validation. Refinements are checked during refresh, not represented fully by JSON Schema."
+}

@@ -82,3 +82,31 @@ test("corpus rejects rich MDX but accepts Markdown images and matching H1", () =
     validateCorpusBody(front.replace("# Guide", "# Wrong"), "guide").some((x) => x.includes("H1")),
   );
 });
+
+test("LP examples reject duplicate identities", async () => {
+  const { lpExamples } = await import("./lp-contract.mjs");
+  const example = "{/* lp-example: sample */}\n```json\n{}\n```";
+  assert.throws(() => lpExamples(example + "\n" + example), /Duplicate/);
+});
+
+test("LP contract gate detects inventory and validated-example drift", async (t) => {
+  const { validateLpContract } = await import("./lp-contract.mjs");
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), "gina-lp-contract-"));
+  t.after(() => fs.rmSync(repo, { recursive: true, force: true }));
+  const root = path.join(repo, "docs");
+  const spot = path.join(root, "spot-mcp");
+  fs.mkdirSync(spot, { recursive: true });
+  fs.mkdirSync(path.join(repo, "tools/docs"), { recursive: true });
+  for (const file of ["features.mdx", "liquidity-positions.mdx"])
+    fs.copyFileSync(path.resolve("docs/spot-mcp", file), path.join(spot, file));
+  fs.copyFileSync(
+    path.resolve("tools/docs/lp-contract.snapshot.json"),
+    path.join(repo, "tools/docs/lp-contract.snapshot.json"),
+  );
+  assert.deepEqual(validateLpContract(root), []);
+  fs.appendFileSync(path.join(spot, "features.mdx"), "\n| `unknownTool` | Drift |\n");
+  assert.ok(validateLpContract(root).some((error) => error.includes("inventory")));
+  const guide = path.join(spot, "liquidity-positions.mdx");
+  fs.writeFileSync(guide, fs.readFileSync(guide, "utf8").replace('"limit": 10', '"limit": 999'));
+  assert.ok(validateLpContract(root).some((error) => error.includes("examples changed")));
+});

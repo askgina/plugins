@@ -6,11 +6,11 @@ description: "Frequently asked questions about Spot MCP"
 <AccordionGroup>
   <Accordion title="Is Spot MCP the same as Gina MCP?">
     No. Gina MCP at `/ai/gina/mcp` is cross-market and read-only. Spot MCP at `/ai/spot/mcp` is
-    venue-scoped write access with 29 native tools and a sandboxed `bash` fallback.
+    venue-scoped write access with native tools and a sandboxed `bash` fallback.
   </Accordion>
   <Accordion title="What can Spot MCP write?">
-    It can prepare swaps and transfers, execute approved supertransactions, quote and execute
-    Uniswap v3/v4 liquidity operations on Robinhood Chain, manage the LP pool allowlist, and manage
+    It can prepare swaps and transfers, execute quoted transactions, quote and execute
+    Uniswap v3/v4 operations on Robinhood Chain and Raydium CLMM/CPMM operations on Solana, manage their separate pool allowlists, and manage
     scheduled prompts. Its full host-tool boundary is listed on the [Features and
     Allowlist](/spot-mcp/features) page.
   </Accordion>
@@ -19,13 +19,12 @@ description: "Frequently asked questions about Spot MCP"
   </Accordion>
   <Accordion title="Why does Spot include both native tools and bash?">
     Native tools are the fast path for ordinary reads and transactions. `bash` remains available for
-    scripts, files, SQL, short waits, and composed workflows. Its host-tool allowlist covers the 29
+    scripts, files, SQL, short waits, and composed workflows. Its host-tool allowlist covers the
     native tools plus two sandbox-only analysis helpers.
   </Accordion>
   <Accordion title="Do I have to type confirm execute?">
     No. A complete imperative transaction request authorizes preparation and execution. If
-    preparation reveals a material new term, the agent asks one normal question. A normal answer
-    such as `yes` or `retry` is enough. Your MCP client or wallet may still show its own approval
+    preparation reveals a material new term, the agent asks one normal question. An affirmative answer can approve new terms, but an uncertain send must be reconciled before another attempt. Your MCP client or wallet may still show its own approval
     UI.
   </Accordion>
   <Accordion title="What does Spot report after a swap?">
@@ -38,5 +37,20 @@ description: "Frequently asked questions about Spot MCP"
     Not automatically. Access is controlled by one global database-backed `mcp_spot_enabled` rollout
     flag. A true row enables authenticated accounts; a false, missing, or unavailable row denies
     them all.
+  </Accordion>
+  <Accordion title="How do CPMM and CLMM fees differ?">
+    CPMM fees stay in the pool value and are realized through withdrawal; there is no separate
+    collect action. CLMM has separate fee collection. A funded CLMM full exit removes liquidity
+    and collects fees; closing its empty position can be a later action. See [Yield](/product-guide/liquidity-positions).
+  </Accordion>
+  <Accordion title="Does an LP quote fund both sides of the pair?">
+    No. Settle any preparatory swaps first. Review both token balances, EVM funding ceilings and
+    reserves, or Solana SOL for fees and account creation. A WSOL shortfall can be covered by a
+    quoted SOL wrap; receive-side unwrapping is opt-in. See [funding](/spot-mcp/liquidity-positions#fund-and-quote).
+  </Accordion>
+  <Accordion title="Can I retry after an LP timeout?">
+    Keep the operation ID and reconcile status. Unknown, pending or partial results are not
+    permission to resend. If IDs were lost, use the status tool's bounded unresolved listing and
+    follow its cursor. See [recovery](/spot-mcp/liquidity-positions#recover-an-uncertain-operation).
   </Accordion>
 </AccordionGroup>
