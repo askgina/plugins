@@ -204,6 +204,7 @@ export function validateGina(root) {
     "index",
     "wallet-and-account",
     "transactions-and-portfolio",
+    "liquidity-positions",
     "market-research",
     "predictions",
     "perps",
