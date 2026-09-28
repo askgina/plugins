@@ -10,7 +10,11 @@ Spot MCP brings **Uniswap on Robinhood Chain (EVM)** and **Raydium on Solana** i
 Ask **“Show my LP positions”** in ChatGPT with Gina Spot connected. See your pairs, position values, estimated fees and price ranges in one view.
 
 <Frame>
-  <img src="/images/product/chatgpt-lp-positions.jpg" alt="Gina Spot LP positions in ChatGPT, showing filters and position cards for Solana and Robinhood Chain." style={{ width: "100%" }} />
+  <img
+    src="/images/product/chatgpt-lp-positions.jpg"
+    alt="Gina Spot LP positions in ChatGPT, showing filters and position cards for Solana and Robinhood Chain."
+    style={{ width: "100%" }}
+  />
 </Frame>
 
 Filter by **Chain**, **Protocol** or **Status**, then choose **View position** to explore a pair. [Open the full-size screenshot](/images/product/chatgpt-lp-positions.jpg).
@@ -23,12 +27,12 @@ Use [Spot client setup](/spot-mcp/client-setup) to connect to `https://askgina.a
 
 Reviewed September 28, 2026 against application revision `2e847ae3dd0523e7ea3e3b9944c9b6bcc232fd37`. The matrix describes implemented contracts; production rollout and funded execution were not independently verified. A registered operation still needs a successful current quote and settlement evidence.
 
-| Network / protocol | Spot operation kinds | Wallet Yield controls | Restrictions |
-| --- | --- | --- | --- |
-| Robinhood Chain, 4663 / Uniswap v3 | open, increase, decrease, collect, close, recenter | Collect fees, Remove, Close | Delegated EVM wallet; pool admission for new exposure |
-| Robinhood Chain, 4663 / Uniswap v4 | open, increase, decrease, collect, close, recenter | Collect fees, Remove, Close | Full v4 pool key; delta-returning hooks cannot be admitted |
-| Solana / Raydium CLMM | open, increase, decrease, collect, close, recenter | Collect fees, Remove, Close | Supported token programs; close requires an empty position; funded full exit uses decrease |
-| Solana / Raydium CPMM | deposit, withdraw | Withdraw, Close | LP-token share; no separate collect or range management |
+| Network / protocol                 | Spot operation kinds                               | Wallet Yield controls       | Restrictions                                                                               |
+| ---------------------------------- | -------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------ |
+| Robinhood Chain, 4663 / Uniswap v3 | open, increase, decrease, collect, close, recenter | Collect fees, Remove, Close | Delegated EVM wallet; pool admission for new exposure                                      |
+| Robinhood Chain, 4663 / Uniswap v4 | open, increase, decrease, collect, close, recenter | Collect fees, Remove, Close | Full v4 pool key; delta-returning hooks cannot be admitted                                 |
+| Solana / Raydium CLMM              | open, increase, decrease, collect, close, recenter | Collect fees, Remove, Close | Supported token programs; close requires an empty position; funded full exit uses decrease |
+| Solana / Raydium CPMM              | deposit, withdraw                                  | Withdraw, Close             | LP-token share; no separate collect or range management                                    |
 
 All rows are source-verified, with deployment availability unverified. Recenter is implemented as a composite operation, subject to quote guards and reconciliation of both the retired position and its replacement. Schema acceptance alone does not prove a successful lifecycle.
 
@@ -67,6 +71,7 @@ The examples below are templates, checked against the pinned input schemas with 
 Raw amounts are decimal strings in the token's smallest units. `"1000000"` is one token only when it has six decimals. LP-token amounts and liquidity units have their own protocol meaning.
 
 {/* lp-example: evm-read */}
+
 ```json
 { "protocol": "uniswap-v3" }
 ```
@@ -74,6 +79,7 @@ Raw amounts are decimal strings in the token's smallest units. `"1000000"` is on
 Call `getLpPositions` with the input above; use `"uniswap-v4"` for v4. Call `getSolanaLpPositions` with:
 
 {/* lp-example: solana-read */}
+
 ```json
 { "analytics": true }
 ```
@@ -81,6 +87,7 @@ Call `getLpPositions` with the input above; use `"uniswap-v4"` for v4. Call `get
 Quote an EVM increase with `quoteLpOperation`. Copy the position reference returned by discovery; the same shape supports v4 with `protocol: "uniswap-v4"` and its actual manager/token ID. Amounts below are illustrative ceilings, not recommended sizes.
 
 {/* lp-example: evm-increase */}
+
 ```json
 {
   "kind": "increase",
@@ -108,6 +115,7 @@ Quote an EVM increase with `quoteLpOperation`. Copy the position reference retur
 Quote a Raydium CLMM increase with `quoteSolanaLpOperation`. Replace every position field from discovery and the revision from the Solana allowlist. Liquidity here is in protocol units, not tokens.
 
 {/* lp-example: clmm-increase */}
+
 ```json
 {
   "protocol": "raydium-clmm",
@@ -130,6 +138,7 @@ Quote a Raydium CLMM increase with `quoteSolanaLpOperation`. Replace every posit
 Quote a Raydium CPMM deposit with the same tool. Copy the entire pool identity from a resolved and admitted candidate. `lpTokenAmount` requests a raw LP-token quantity; the quote determines required pair amounts.
 
 {/* lp-example: cpmm-deposit */}
+
 ```json
 {
   "protocol": "raydium-cpmm",
@@ -166,6 +175,7 @@ Keep the returned `operationId`, quote identity and any attributable transaction
 If those handles were lost, call the relevant status tool with:
 
 {/* lp-example: unresolved */}
+
 ```json
 { "unresolved": true, "limit": 10 }
 ```

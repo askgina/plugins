@@ -58,18 +58,12 @@
     "updateScheduledAgentConfig"
   ],
   "schemaBindings": {
-    "getLpPositions": [
-      "lib/lp/inventory-contracts.ts",
-      "getLpPositionsPageInputSchema"
-    ],
+    "getLpPositions": ["lib/lp/inventory-contracts.ts", "getLpPositionsPageInputSchema"],
     "getSolanaLpPositions": [
       "app/actions/wallet/tools/getSolanaLpPositions/index.ts",
       "inputSchema"
     ],
-    "quoteLpOperation": [
-      "app/actions/wallet/tools/quoteLpOperation/index.ts",
-      "inputSchema"
-    ],
+    "quoteLpOperation": ["app/actions/wallet/tools/quoteLpOperation/index.ts", "inputSchema"],
     "quoteSolanaLpOperation": [
       "app/actions/wallet/tools/quoteSolanaLpOperation/index.ts",
       "inputSchema"
@@ -94,10 +88,7 @@
         },
         "protocol": {
           "type": "string",
-          "enum": [
-            "uniswap-v3",
-            "uniswap-v4"
-          ]
+          "enum": ["uniswap-v3", "uniswap-v4"]
         },
         "tokenIds": {
           "maxItems": 20,
@@ -152,9 +143,7 @@
                 "maxLength": 44
               }
             },
-            "required": [
-              "mint"
-            ]
+            "required": ["mint"]
           }
         },
         "analytics": {
@@ -173,14 +162,7 @@
       "properties": {
         "kind": {
           "type": "string",
-          "enum": [
-            "open",
-            "increase",
-            "decrease",
-            "collect",
-            "close",
-            "recenter"
-          ]
+          "enum": ["open", "increase", "decrease", "collect", "close", "recenter"]
         },
         "intentId": {
           "description": "Pass an earlier quote's intentId to re-quote that intent.",
@@ -276,21 +258,10 @@
                       "pattern": "^0x[0-9a-fA-F]{40}$"
                     }
                   },
-                  "required": [
-                    "currency0",
-                    "currency1",
-                    "fee",
-                    "tickSpacing",
-                    "hooks"
-                  ]
+                  "required": ["currency0", "currency1", "fee", "tickSpacing", "hooks"]
                 }
               },
-              "required": [
-                "protocol",
-                "chainId",
-                "poolId",
-                "poolKey"
-              ]
+              "required": ["protocol", "chainId", "poolId", "poolKey"]
             }
           ]
         },
@@ -304,10 +275,7 @@
             },
             "protocol": {
               "type": "string",
-              "enum": [
-                "uniswap-v3",
-                "uniswap-v4"
-              ]
+              "enum": ["uniswap-v3", "uniswap-v4"]
             },
             "positionManager": {
               "type": "string",
@@ -318,12 +286,7 @@
               "pattern": "^(0|[1-9][0-9]{0,77})$"
             }
           },
-          "required": [
-            "chainId",
-            "protocol",
-            "positionManager",
-            "tokenId"
-          ]
+          "required": ["chainId", "protocol", "positionManager", "tokenId"]
         },
         "tickLower": {
           "description": "Required for open and recenter.",
@@ -391,9 +354,7 @@
                         "const": "sponsored"
                       }
                     },
-                    "required": [
-                      "mode"
-                    ],
+                    "required": ["mode"],
                     "additionalProperties": false
                   },
                   {
@@ -412,11 +373,7 @@
                         "pattern": "^(0|[1-9][0-9]{0,77})$"
                       }
                     },
-                    "required": [
-                      "mode",
-                      "asset",
-                      "maxWeiAmount"
-                    ],
+                    "required": ["mode", "asset", "maxWeiAmount"],
                     "additionalProperties": false
                   }
                 ]
@@ -437,10 +394,7 @@
                     "pattern": "^(0|[1-9][0-9]{0,77})$"
                   }
                 },
-                "required": [
-                  "asset",
-                  "maxWeiAmount"
-                ],
+                "required": ["asset", "maxWeiAmount"],
                 "additionalProperties": false
               }
             },
@@ -458,28 +412,16 @@
                     "pattern": "^(0|[1-9][0-9]{0,77})$"
                   }
                 },
-                "required": [
-                  "asset",
-                  "minRetainedWeiAmount"
-                ],
+                "required": ["asset", "minRetainedWeiAmount"],
                 "additionalProperties": false
               }
             }
           },
-          "required": [
-            "account",
-            "chainId",
-            "fee",
-            "assetCeilings",
-            "reserves"
-          ],
+          "required": ["account", "chainId", "fee", "assetCeilings", "reserves"],
           "description": "Required caller authorization for fees, debit ceilings, and retained balances. A quote without these terms is not stored."
         }
       },
-      "required": [
-        "kind",
-        "funding"
-      ]
+      "required": ["kind", "funding"]
     },
     "quoteSolanaLpOperation": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -493,10 +435,7 @@
         },
         "protocol": {
           "type": "string",
-          "enum": [
-            "raydium-cpmm",
-            "raydium-clmm"
-          ]
+          "enum": ["raydium-cpmm", "raydium-clmm"]
         },
         "kind": {
           "type": "string",
@@ -586,10 +525,7 @@
                   "maxLength": 44
                 }
               },
-              "required": [
-                "protocol",
-                "poolAddress"
-              ]
+              "required": ["protocol", "poolAddress"]
             }
           ],
           "description": "Pool identity — its protocol must match `protocol` and it must be on the caller's allowlist."
@@ -680,13 +616,7 @@
                   "pattern": "^(0|[1-9][0-9]*)$"
                 }
               },
-              "required": [
-                "protocol",
-                "owner",
-                "pool",
-                "tokenAccountAddress",
-                "amount"
-              ]
+              "required": ["protocol", "owner", "pool", "tokenAccountAddress", "amount"]
             },
             {
               "type": "object",
@@ -713,10 +643,7 @@
                       "maxLength": 44
                     }
                   },
-                  "required": [
-                    "protocol",
-                    "poolAddress"
-                  ]
+                  "required": ["protocol", "poolAddress"]
                 },
                 "nftMintAddress": {
                   "type": "string",
@@ -769,10 +696,7 @@
                       "pattern": "^(0|[1-9][0-9]*)$"
                     }
                   },
-                  "required": [
-                    "mode",
-                    "liquidity"
-                  ]
+                  "required": ["mode", "liquidity"]
                 },
                 {
                   "type": "object",
@@ -790,11 +714,7 @@
                       "pattern": "^(0|[1-9][0-9]*)$"
                     }
                   },
-                  "required": [
-                    "mode",
-                    "baseFlag",
-                    "amount"
-                  ]
+                  "required": ["mode", "baseFlag", "amount"]
                 }
               ]
             },
@@ -839,11 +759,7 @@
           "maximum": 9007199254740991
         }
       },
-      "required": [
-        "protocol",
-        "kind",
-        "pool"
-      ]
+      "required": ["protocol", "kind", "pool"]
     },
     "getLpOperationStatus": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -904,25 +820,12 @@
     }
   },
   "examplesToTools": {
-    "evm-read": [
-      "getLpPositions"
-    ],
-    "solana-read": [
-      "getSolanaLpPositions"
-    ],
-    "evm-increase": [
-      "quoteLpOperation"
-    ],
-    "clmm-increase": [
-      "quoteSolanaLpOperation"
-    ],
-    "cpmm-deposit": [
-      "quoteSolanaLpOperation"
-    ],
-    "unresolved": [
-      "getLpOperationStatus",
-      "getSolanaLpOperationStatus"
-    ]
+    "evm-read": ["getLpPositions"],
+    "solana-read": ["getSolanaLpPositions"],
+    "evm-increase": ["quoteLpOperation"],
+    "clmm-increase": ["quoteSolanaLpOperation"],
+    "cpmm-deposit": ["quoteSolanaLpOperation"],
+    "unresolved": ["getLpOperationStatus", "getSolanaLpOperationStatus"]
   },
   "validatedExamples": {
     "evm-read": {

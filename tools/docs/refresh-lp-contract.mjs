@@ -171,6 +171,11 @@ const snapshot = {
     "Actual source Zod safeParse with synthetic placeholder substitutions; no runtime, admission, balance or execution validation. Refinements are checked during refresh, not represented fully by JSON Schema.",
 };
 fs.writeFileSync("tools/docs/lp-contract.snapshot.json", JSON.stringify(snapshot, null, 2) + "\n");
+execFileSync(
+  path.resolve("node_modules/.bin/vp"),
+  ["fmt", "--write", "tools/docs/lp-contract.snapshot.json"],
+  { stdio: "inherit" },
+);
 console.log(
   `Extracted ${inventory.length} native tools; validated ${Object.keys(examples).length} templates at ${revision}.`,
 );

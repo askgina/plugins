@@ -21,10 +21,10 @@ For protocols, actions, restrictions and release evidence, use the [LP support m
 
 ## Pool reads
 
-| Host tool | Purpose |
-| --- | --- |
-| `getPoolState` | Pinned-block Uniswap V2/V3 compatible pool state on Robinhood Chain |
-| `getRecentPoolSwaps` | Recent swaps for a pool address |
+| Host tool            | Purpose                                                             |
+| -------------------- | ------------------------------------------------------------------- |
+| `getPoolState`       | Pinned-block Uniswap V2/V3 compatible pool state on Robinhood Chain |
+| `getRecentPoolSwaps` | Recent swaps for a pool address                                     |
 
 ## Liquidity positions (Uniswap v3/v4)
 
@@ -39,25 +39,25 @@ For protocols, actions, restrictions and release evidence, use the [LP support m
 
 ## Liquidity positions (Raydium)
 
-| Host tool | Purpose |
-| --- | --- |
-| `getSolanaLpPositions` | Read owned CPMM and CLMM positions with coverage |
-| `resolveSolanaLpPool` | Resolve a mint or pool address to candidates |
-| `getSolanaLpAllowlist` | Read Solana pool admission and revision |
-| `updateSolanaLpAllowlist` | Add or revoke a Solana pool |
-| `quoteSolanaLpOperation` | Quote a protocol-specific operation |
-| `executeSolanaLpOperation` | Submit the current bound quote |
+| Host tool                    | Purpose                                                   |
+| ---------------------------- | --------------------------------------------------------- |
+| `getSolanaLpPositions`       | Read owned CPMM and CLMM positions with coverage          |
+| `resolveSolanaLpPool`        | Resolve a mint or pool address to candidates              |
+| `getSolanaLpAllowlist`       | Read Solana pool admission and revision                   |
+| `updateSolanaLpAllowlist`    | Add or revoke a Solana pool                               |
+| `quoteSolanaLpOperation`     | Quote a protocol-specific operation                       |
+| `executeSolanaLpOperation`   | Submit the current bound quote                            |
 | `getSolanaLpOperationStatus` | Reconcile one operation or discover unresolved operations |
 
 See [LP operations](/spot-mcp/liquidity-positions) for discovery, allowlists, funding, schema-checked templates and status recovery. Quotes do not authorize sends. Unknown outcomes require reconciliation before another attempt.
 
 ## Analytics
 
-| Host tool | Purpose |
-| --- | --- |
-| `previewConcentratedPosition` | Preview a supplied Uniswap range and capital |
-| `getLpPerformance` | Attribute historical LP cashflows and costs |
-| `previewWeightRebalance` | Compare spot holdings with supplied target weights |
+| Host tool                     | Purpose                                            |
+| ----------------------------- | -------------------------------------------------- |
+| `previewConcentratedPosition` | Preview a supplied Uniswap range and capital       |
+| `getLpPerformance`            | Attribute historical LP cashflows and costs        |
+| `previewWeightRebalance`      | Compare spot holdings with supplied target weights |
 
 [LP analytics](/spot-mcp/lp-analytics) explains evidence, missing values and the distinction between past performance and hypothetical comparisons.
 
@@ -71,11 +71,11 @@ See [LP operations](/spot-mcp/liquidity-positions) for discovery, allowlists, fu
 
 ## Writes
 
-| Host tool                 | Purpose                                |
-| ------------------------- | -------------------------------------- |
-| `quoteSpotTransaction` | Prepare a bound swap or transfer quote |
-| `executeSpotTransaction` | Execute the authorized current quote |
-| `getSpotTransactionStatus` | Reconcile transaction status |
+| Host tool                  | Purpose                                |
+| -------------------------- | -------------------------------------- |
+| `quoteSpotTransaction`     | Prepare a bound swap or transfer quote |
+| `executeSpotTransaction`   | Execute the authorized current quote   |
+| `getSpotTransactionStatus` | Reconcile transaction status           |
 
 A quote or preparation request stops before execution. A complete imperative transaction request can authorize execution; material new terms need review. After submission, reconcile the exact operation. A submitted or pending result is not settlement, and a timeout never authorizes repeating a send. Report recorded amounts from attributable receipts; label quote values as estimates.
 
