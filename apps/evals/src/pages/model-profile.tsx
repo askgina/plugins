@@ -58,6 +58,8 @@ import museReportUrl from "../results/2026-09-14/muse-spark-1.3/report/ask-gina-
 import claudeComparisonUrl from "../results/2026-09-14/claude-comparison/ask-gina-claude-comparison.json?url";
 import reasoningSweepUrl from "../results/2026-09-16/reasoning-sweep/ask-gina-reasoning-sweep.json?url";
 import reasoningSweepClaudeUrl from "../results/2026-09-16/reasoning-sweep/ask-gina-reasoning-sweep-claude.json?url";
+import opus55ResultsUrl from "../results/2026-09-24/claude-opus-5.5/results.json?url";
+import opus55SnapshotUrl from "../results/2026-09-24/claude-opus-5.5/snapshot.json?url";
 import grok47ResultsUrl from "../results/2026-09-22/grok-4.7/results.json?url";
 import grok47SnapshotUrl from "../results/2026-09-22/grok-4.7/snapshot.json?url";
 import grok47LowRecoveryUrl from "../results/2026-09-22/grok-4.7/low-recovery.json?url";
@@ -111,6 +113,18 @@ const MODEL_ARTIFACTS: Readonly<Record<string, readonly BundledArtifact[]>> = {
       description: "Claude comparison (2026-09-14)",
     },
     REASONING_SWEEP_CLAUDE_ARTIFACT,
+  ],
+  "claude-opus-5-5": [
+    {
+      url: opus55ResultsUrl,
+      filename: "claude-opus-5.5-results-2026-09-24.json",
+      description: "Opus 5.5 results · all five thinking levels",
+    },
+    {
+      url: opus55SnapshotUrl,
+      filename: "claude-opus-5.5-snapshot-2026-09-24.json",
+      description: "Opus 5.5 evidence hashes",
+    },
   ],
   "claude-opus": [
     {

@@ -73,6 +73,7 @@ const TrialError = Schema.Struct({
     "PluginEvalMuseCliProcessError",
     "PluginEvalMuseMcpError",
     "PluginEvalDevinTimeoutError",
+    "PluginEvalClaudeCliTimeoutError",
     "PluginEvalDevinSpawnError",
     "PluginEvalDevinMcpError",
     "PluginEvalDevinProcessError",
@@ -193,6 +194,11 @@ const CLAUDE_ID = /(?:^|[/-])claude(?:[/-]|$)/iu;
 // Freeze the reviewed legacy projections, including their free-form source
 // metadata. New paths or changed bytes require a new explicit privacy review.
 const APPROVED_CLAUDE_ARTIFACTS: Readonly<Record<string, string>> = {
+  "src/results/2026-09-24/claude-opus-5.5/results.json":
+    "07ebf1964721a11cedaa14eb4fbba157072a9f3d29bd9149c72a11ff9877f706",
+  "src/results/2026-09-24/claude-opus-5.5/snapshot.json":
+    "7fd1e4d3b0f5d0af373bd29daf06870c1ac2fc77dc4f2e8e5ce62b5ee4b905ca",
+
   // Numeric-only costs; user explicitly approved public inclusion on 2026-09-18.
   "src/results/2026-09-16/reasoning-sweep/native-cost-estimates.json":
     "ce34869373a72390ca458c721f201ebcb14180e789be9f19095ca301063d8c6a",
@@ -265,9 +271,9 @@ const APPROVED_GROK47_ARTIFACTS: Readonly<Record<string, string>> = {
 // Numeric checks, public identifiers and evidence hashes only. Original result
 // and transcript bytes stay pinned separately above.
 const APPROVED_REGRADE_RECEIPT_SHA256 =
-  "253072b330612f4d6e1f57e52d8b3e464ca743f893ed1146cecde41f78e76716";
+  "29fb40353ef527f4a0adb9cd27ce8f456b70c558d5a7d7b281c20766ce27a6de";
 const APPROVED_PERPS_REGRADE_RECEIPT_SHA256 =
-  "da9a0c8201dcd24012d51961a4d5b32d0b8d8fd6129c5ecb04775d7f6e97c239";
+  "c3f77f99174fecd34e9ad0f159189ad0d6fb4b4bea45276e8cceeb68f2742f25";
 const decodeArtifactJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
 
 /** Fixed diagnostics never include provider values or schema issue excerpts. */
@@ -389,7 +395,11 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
         const publicTranscript = relative.startsWith("public/transcripts/");
         const grok47Artifact = relative.startsWith("src/results/2026-09-22/grok-4.7/");
         if (!relative.toLowerCase().endsWith(".json")) {
-          if (publicTranscript || grok47Artifact)
+          if (
+            publicTranscript ||
+            grok47Artifact ||
+            relative.startsWith("src/results/2026-09-24/claude-opus-5.5/")
+          )
             return yield* fail(relative, "unapproved_artifact");
           return;
         }

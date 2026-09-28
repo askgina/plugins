@@ -15,7 +15,14 @@ describe("versioned Perps price regrade", () => {
         r.overall !== null &&
         Object.values(r.runs).every((run) => scoringCoverageFor(run) === "complete"),
     )) {
-      expect(perpsGradingEntries.filter((e) => e.runId === row.runs.Perps?.runId)).toHaveLength(9);
+      const run = row.runs.Perps!;
+      const nativeChecks =
+        run.attempts.availability === "available"
+          ? run.attempts.value.filter((attempt) => attempt.priceGrounding !== undefined).length
+          : 0;
+      expect(perpsGradingEntries.filter((e) => e.runId === run.runId).length + nativeChecks).toBe(
+        9,
+      );
     }
   });
   test("scoring execution errors does not give credit to failed price checks", () => {
@@ -24,8 +31,15 @@ describe("versioned Perps price regrade", () => {
       "recovery-2026-09-21",
       "grok47-20260921",
       "grok47-low-recovery-20260922",
+      "opus55-20260922",
     ]);
-    const priceCases = new Set(["perps-single-price", "perps-multiple-prices", "perps-hip3-price"]);
+    const priceCases = new Set([
+      "perps-single-price",
+      "perps-multiple-prices",
+      "perps-asset-price",
+      "perps-market-prices",
+      "perps-hip3-price",
+    ]);
     for (const row of configurationLeaderboardRows().filter(
       (r) => r.overall !== null && reviewedCampaigns.has(r.campaignId ?? ""),
     )) {

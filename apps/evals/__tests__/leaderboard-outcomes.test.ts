@@ -108,7 +108,7 @@ test("retains visible outcomes when a later configuration has incomplete grading
 
 test("the page supplies all eligible original and recovery settings to the chart", () => {
   const html = renderToStaticMarkup(createElement(LeaderboardPage));
-  expect(html.match(/class="lb-chart-model"/gu)).toHaveLength(19);
+  expect(html.match(/class="lb-chart-model"/gu)).toHaveLength(23);
   expect(html).toContain("GPT-6 Astra, low reasoning");
   expect(html).toContain("GPT-6 Astra, high reasoning");
 });
@@ -120,7 +120,7 @@ test("shows the latest campaign for each model setting by default", () => {
   for (const row of configurations) {
     expect(html).toContain(`data-configuration="${row.rowId}"`);
   }
-  expect(new Set(configurations.map((row) => row.model.id)).size).toBe(11);
+  expect(new Set(configurations.map((row) => row.model.id)).size).toBe(12);
   expect(html).toContain("Latest per setting keeps each reasoning level separate");
   expect(html).toContain("Recovery ·");
   expect(html).not.toContain("Recorded setting</label>");
@@ -130,8 +130,8 @@ test("shows the latest campaign for each model setting by default", () => {
 test("desktop history retains older results behind the campaign selector", () => {
   vi.stubGlobal("window", { location: { hash: "#/leaderboard?campaign=all" } });
   const html = renderToStaticMarkup(createElement(LeaderboardPage));
-  expect(html.match(/<tr data-configuration=/gu)).toHaveLength(55);
-  expect(html).toContain("55 records");
+  expect(html.match(/<tr data-configuration=/gu)).toHaveLength(60);
+  expect(html).toContain("60 records");
   expect(html).toContain('data-configuration="astra-max-');
   expect(html).toContain('data-configuration="recovery-astra-max-');
 });

@@ -210,7 +210,7 @@ describe("canonical models and runs", () => {
       (r) =>
         r.origin === "measured" && r.campaignId !== "reasoning-sweep-2026-09-16" && !r.recovery,
     );
-    expect(spotRuns).toHaveLength(9);
+    expect(spotRuns).toHaveLength(14);
     for (const run of spotRuns) {
       expect(run.counts.planned).toBe(12);
       expect(run.counts.started).toBe(12);

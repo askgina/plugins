@@ -28,6 +28,24 @@ const price = (coin = "BTC", mid = 81094, providerId = "hyperliquid"): PriceCall
 });
 
 describe("Perps price contract", () => {
+  test("decodes Claude tool/payload envelopes and rejects errors and arbitrary nesting", () => {
+    const payload = { success: true, markets: [market("BTC", 81093)] };
+    const wrapped = (value: unknown) => ({
+      content: [{ type: "text", text: JSON.stringify(value) }],
+    });
+    const call = { ...markets(), result: wrapped({ tool: MARKETS, payload }) };
+    expect(checkPriceAnswer([call], "single_mark", "BTC mark: $81,093").score).toBe(1);
+    expect(checkPriceAnswer([call], "single_mark", "BTC mark: $81,094").score).toBe(0);
+    for (const envelope of [
+      { tool: MARKETS, payload, isError: true },
+      { tool: MARKETS, payload, success: false },
+      { tool: MARKETS, payload: { ...payload, success: false } },
+      { payload },
+      { message: { tool: MARKETS, payload } },
+    ])
+      expect(pricePayload(wrapped(envelope))).toBeUndefined();
+  });
+
   test("mark requests require mark-bearing reads, accepting canonical asset data as well as markets", () => {
     expect(gradePerpsPriceCalls([price()], "single_mark").routing.score).toBe(0);
     expect(gradePerpsPriceCalls([markets()], "single_mark").routing.score).toBe(1);
