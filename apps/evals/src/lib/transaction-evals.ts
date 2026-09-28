@@ -54,7 +54,8 @@ export const TRANSACTION_TASKS: readonly TransactionTask[] = [
       "Swap 0.1 ETH on my Ethereum mainnet wallet into WBTC, then split the WBTC in half: swap one half to ETH on my Robinhood Chain wallet and the other half to USDC on my Arbitrum wallet.",
     expectedOutcome: "target_reached",
     userReply: "approve",
-    tests: "Swap, split in half, bridge to two networks, and leave gas on both empty destination wallets.",
+    tests:
+      "Swap, split in half, bridge to two networks, and leave gas on both empty destination wallets.",
   },
   {
     id: "t3-monad-mon-to-mainnet-usdc",
