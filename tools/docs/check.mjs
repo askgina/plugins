@@ -199,13 +199,20 @@ export function validateGina(root) {
     if (!read("agents/plugins-and-skills").includes("`" + skill + "`"))
       errors.push(`Undocumented skill: ${skill}`);
 
-  // Preserve the chatbot's eight maintained corpus routes and reciprocal relatedSlugs.
+  // Every product-guide page the chatbot Docs Agent corpus consumes, with reciprocal relatedSlugs.
   const corpus = [
     "index",
     "wallet-and-account",
     "transactions-and-portfolio",
+    "liquidity-positions",
     "market-research",
+    "predictions",
+    "perps",
     "recipes-and-webhooks",
+    "automations/recipes",
+    "automations/schedules",
+    "automations/webhooks",
+    "automations/copy-trading",
     "memory",
     "networks-fees-and-pricing",
     "safety-support-and-limitations",
@@ -245,8 +252,8 @@ export function validateGina(root) {
         errors.push(`Broken corpus relationship: ${slug} ↔ ${other}`);
     }
   const corpusLength = corpusParts.join("\n\n---\n\n").length;
-  if (corpusLength > 12_000)
-    errors.push(`Chatbot corpus exceeds 12000 characters: ${corpusLength}`);
+  if (corpusLength > 24_000)
+    errors.push(`Chatbot corpus exceeds 24000 characters: ${corpusLength}`);
   const robots = fs.readFileSync(path.join(root, "robots.txt"), "utf8");
   for (const rule of [
     "Content-Signal: ai-train=no, search=yes, ai-input=yes",

@@ -32,6 +32,14 @@ Implementation tracker: [#42](https://github.com/askgina/plugins/issues/42).
 - Local Mintlify homepage renders the product-first cards and updated sidebar, with no leaderboard/community sections.
 - Product-owner screenshots remain pending; insertion destinations are recorded in `screenshots.md`. No broken image placeholders added. Connector logos remain separate follow-up assets.
 
+## Chatbot corpus expansion — 2026-09-28
+
+- Predictions, Perps, and the four `product-guide/automations/*` pages now carry the chatbot corpus metadata and a source H1, with reciprocal `relatedSlugs` to the overview, wallet, transactions, and automations pages. This supersedes the earlier note that new Predictions/Perps pages are excluded: 13 of 15 product-guide pages are in the chatbot Docs Agent corpus. `safety-support-and-limitations` and `liquidity-positions` stay catalogued but excluded (`includeInDocsAgent: false`); transactions now lists `liquidity-positions` reciprocally.
+- `tools/docs/check.mjs` validates all 15 product-guide routes and caps the assembled corpus at 24,000 characters (20,513 at this revision).
+- `node --test tools/docs/check.test.mjs`: 9 tests pass. `node tools/docs/check.mjs`: 65 pages and 27 images pass, including corpus metadata, reciprocity, and size.
+- The sibling chatbot mirrored all 15 files through `bun run docs:sync-product-guide:from`; its corpus, sync, and public-review tests pass against them.
+- `bun run lint` was not run locally: installed Bun 1.3.14 cannot read this repository's lockfile version 2 and `vp` is unavailable. PR CI runs the full lint.
+
 ## Standalone docs lint boundary
 
 The docs workflow deliberately runs under Node without workspace dependency installation. `vite.config.ts` exempts only `tools/docs/check.mjs` and `tools/docs/check.test.mjs` from five Effect migration diagnostics (Node imports, async functions, console, Date, fetch). General lint rules and `--deny-warnings` remain enabled; application and other tooling files retain the full Effect preset.
