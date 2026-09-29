@@ -45,3 +45,10 @@ Implementation tracker: [#42](https://github.com/askgina/plugins/issues/42).
 The docs workflow deliberately runs under Node without workspace dependency installation. `vite.config.ts` exempts only `tools/docs/check.mjs` and `tools/docs/check.test.mjs` from five Effect migration diagnostics (Node imports, async functions, console, Date, fetch). General lint rules and `--deny-warnings` remain enabled; application and other tooling files retain the full Effect preset.
 
 Verified using oxlint 1.78.0 and oxlint-tsgolint 7.0.2001 patched by @effect/tsgo 0.36.5 in an isolated temporary installation: the original preset reproduces all 12 CI warnings, and the override extracted from vite.config.ts passes with zero warnings. Docs validation and all seven checker tests pass. This targeted reproduction does not substitute for the full CI build.
+
+## Claude phone apps — 2026-09-29
+
+- `docs/connect/claude.mdx` adds a Claude on iPhone and Android section. The iPhone link (`claude://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=Gina&connectorUrl=…`) was verified by the product owner on an iPhone; the Android link (`claude://claude.ai/add-connector?name=Gina&url=…`) was verified by the product owner in the Claude Android app on a BlueStacks emulator, not yet on a physical Android phone. Both open Claude's Add custom connector screen with Gina filled in.
+- Anthropic documents `claude://` only for Claude Code routes ([Open the Claude mobile app with a link](https://support.claude.com/en/articles/14898120-open-the-claude-mobile-app-with-a-link)), so the page labels these links undocumented and keeps the web and Desktop steps as the fallback.
+- `tools/docs/check.mjs` skips `claude:` links like `mailto:` and `tel:`, since they are app deep links rather than docs routes; the broken-link regression test covers one alongside two real misses.
+- `node tools/docs/check.mjs`: 65 pages pass. `node --test tools/docs/check.test.mjs`: 9 tests pass.
