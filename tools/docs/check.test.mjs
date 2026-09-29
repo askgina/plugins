@@ -29,9 +29,10 @@ test("detects broken card and image links, and missing alt text", (t) => {
   const root = fixture(t);
   fs.appendFileSync(
     path.join(root, "index.mdx"),
-    '<Card href="/missing" /><img src="/missing.png" />',
+    '<Card href="/missing" /><img src="/missing.png" />\n[Add in Claude](claude://claude.ai/add-connector?name=Gina)\n',
   );
   const errors = validateDocs(root).errors;
+  // The Claude app link is an app deep link, not a docs route; only the two real misses count.
   assert.equal(errors.filter((x) => x.startsWith("Broken link")).length, 2);
   assert.ok(errors.some((x) => x.startsWith("Image needs alt")));
 });

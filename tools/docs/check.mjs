@@ -91,7 +91,8 @@ export function validateDocs(root) {
     if (/bunx add-mcp|clawhub install|\.claude\/settings\.json/.test(source))
       errors.push(`Retired installation instructions: ${relative}`);
     for (const link of linksIn(source)) {
-      if (!link.href || /^(#|mailto:|tel:|data:)/.test(link.href)) continue;
+      // claude:// links open the Claude mobile app; they are not docs routes.
+      if (!link.href || /^(#|mailto:|tel:|data:|claude:)/.test(link.href)) continue;
       let href = link.href;
       if (/^https?:\/\//.test(href)) {
         const url = new URL(href);
