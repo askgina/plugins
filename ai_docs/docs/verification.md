@@ -59,3 +59,8 @@ Verified using oxlint 1.78.0 and oxlint-tsgolint 7.0.2001 patched by @effect/tsg
 - In a local `mint dev` preview all three cards render as `<a>` elements with those exact `href`s, on a 1280 px desktop and a 390 px phone viewport.
 - claude.ai answers scripted and headless-browser requests with a Cloudflare challenge (HTTP 403, "Just a moment…"), so `tools/docs/check.mjs --external` lists that exact URL in `BOT_CHALLENGE_403_URLS` next to the existing Perplexity entry; any other status still fails.
 - `node tools/docs/check.mjs` and `--external` pass (65 pages); `node --test tools/docs/check.test.mjs` passes.
+
+## Claude compact install buttons — 2026-09-30
+
+- The three one-tap cards in `docs/connect/claude.mdx` are now horizontal, title-only buttons: Web (Claude spark, the existing `docs/images/clients/claude.svg`), iPhone (Font Awesome brands `apple`, `#8E8E93`) and Android (brands `android`, `#3DDC84`), replacing the theme-brown icons. One paragraph below the buttons carries the per-button detail. The `href`s are unchanged.
+- In a local `mint dev` preview all three buttons render as `<a>` elements with those `href`s, on one row at 1440 px and stacked at 390 px.
