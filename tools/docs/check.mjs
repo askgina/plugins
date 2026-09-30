@@ -267,6 +267,16 @@ export function validateGina(root) {
   return errors;
 }
 
+// Hosts that answer every non-browser request with HTTP 403 (a bot challenge), so a script cannot
+// load them. See ai_docs/docs-host-verification.md. Any other status for these URLs still fails.
+const BOT_CHALLENGE_403_URLS = new Set([
+  // Primary guide verified 2026-09-06.
+  "https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors",
+  // Claude's prefilled Add custom connector screen for Gina; the Gina connect widget uses the
+  // same link. claude.ai serves a Cloudflare challenge to scripts (checked 2026-09-30).
+  "https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=Ask%20Gina&connectorUrl=https%3A%2F%2Faskgina.ai%2Fai%2Fgina%2Fmcp",
+]);
+
 async function checkExternal(urls) {
   const errors = [];
   let index = 0;
@@ -278,13 +288,7 @@ async function checkExternal(urls) {
           let result = await fetch(url, { method: "HEAD", signal: AbortSignal.timeout(10000) });
           if ([403, 405, 501].includes(result.status))
             result = await fetch(url, { signal: AbortSignal.timeout(10000) });
-          if (
-            result.status === 403 &&
-            url ===
-              "https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors"
-          ) {
-            // Primary guide verified 2026-09-06; the host blocks non-browser requests.
-            // See ai_docs/docs-host-verification.md. Other statuses still fail.
+          if (result.status === 403 && BOT_CHALLENGE_403_URLS.has(url)) {
             console.warn(`External URL requires browser verification (known HTTP 403): ${url}`);
           } else if (!result.ok) errors.push(`External URL ${result.status}: ${url}`);
         } catch (error) {
