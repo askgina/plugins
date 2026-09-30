@@ -36,3 +36,19 @@ _Avoid_: Connection approval, implicit consent
 **Settlement evidence**:
 Action-linked venue or chain state or receipts establishing the financial stage actually attained. Submission, a successful tool return and an agent's narration do not by themselves establish settlement. [Source](https://github.com/askgina/plugins/issues/72#issuecomment-5600247605)
 _Avoid_: Success message, transaction submitted
+
+**Composite write confirmation**:
+One owner decision covering every financial leg of a complete, exact reviewed quote or plan. It does not cover changed plans, hidden legs or later separately quoted actions. [Source](https://github.com/askgina/plugins/issues/152#issuecomment-5920642654)
+_Avoid_: Blanket permission
+
+**Cleanup unit**:
+The interval of trial-created exposure covered by one final cleanup obligation. It may span explicitly approved chained lifecycle steps while each step retains its own financial evidence. [Source](https://github.com/askgina/plugins/issues/152#issuecomment-5920642654)
+_Avoid_: Tool call
+
+**Wallet withdrawal**:
+Position assets actually delivered to the declared receiving wallet, evidenced separately from balances owed inside the position. Reducing liquidity or crediting an owed balance is not itself wallet delivery. [Source](https://github.com/askgina/plugins/issues/152#issuecomment-5920642654)
+_Avoid_: Decrease-to-owed credit
+
+**Financial exit**:
+An exit with no remaining position liquidity or share, collectible principal/fee/reward balance or unresolved leg, and with attributable proceeds. An empty position NFT may remain under the explicitly chosen exit goal. [Source](https://github.com/askgina/plugins/issues/152#issuecomment-5920642654)
+_Avoid_: NFT burn
