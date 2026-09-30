@@ -52,3 +52,10 @@ Verified using oxlint 1.78.0 and oxlint-tsgolint 7.0.2001 patched by @effect/tsg
 - Anthropic documents `claude://` only for Claude Code routes ([Open the Claude mobile app with a link](https://support.claude.com/en/articles/14898120-open-the-claude-mobile-app-with-a-link)), so the page labels these links undocumented and keeps the web and Desktop steps as the fallback.
 - `tools/docs/check.mjs` skips `claude:` links like `mailto:` and `tel:`, since they are app deep links rather than docs routes; the broken-link regression test covers one alongside two real misses.
 - `node tools/docs/check.mjs`: 65 pages pass. `node --test tools/docs/check.test.mjs`: 9 tests pass.
+
+## Claude one-tap install buttons — 2026-09-30
+
+- `docs/connect/claude.mdx` now opens with three Mintlify cards: Web browser (`https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=Ask%20Gina&connectorUrl=…`, the link the Gina connect widget uses), iPhone and Android (the owner-verified `claude://` links, moved up from the phone section). The manual web/Desktop steps, the phone note and both Claude Code routes stay below.
+- In a local `mint dev` preview all three cards render as `<a>` elements with those exact `href`s, on a 1280 px desktop and a 390 px phone viewport.
+- claude.ai answers scripted and headless-browser requests with a Cloudflare challenge (HTTP 403, "Just a moment…"), so `tools/docs/check.mjs --external` lists that exact URL in `BOT_CHALLENGE_403_URLS` next to the existing Perplexity entry; any other status still fails.
+- `node tools/docs/check.mjs` and `--external` pass (65 pages); `node --test tools/docs/check.test.mjs` passes.
