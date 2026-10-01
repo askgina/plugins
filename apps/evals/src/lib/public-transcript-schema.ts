@@ -76,7 +76,7 @@ export function isPublicTranscriptIndex(value: unknown): value is PublicTranscri
       "files",
     ]) ||
     value.schemaVersion !== "ask-gina-public-conversations.v1" ||
-    (value.campaignId !== "eval-campaigns-2026-09-21" &&
+    (value.campaignId !== "eval-campaigns-2026-09-25" &&
       value.campaignId !== PUBLIC_TRANSCRIPT_CAMPAIGN) ||
     !hash(value.sourceManifestSha256) ||
     !hash(value.exporterSha256) ||

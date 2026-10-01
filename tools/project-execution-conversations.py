@@ -25,6 +25,8 @@ from collections import Counter
 from pathlib import Path
 
 CAMPAIGN = "transactions-2026-09-25"
+# The merged index spans every published campaign up to and including this one.
+INDEX_CAMPAIGN = "eval-campaigns-2026-09-25"
 FAMILY = "spot"
 TARGET = "omp_harness"
 SOURCE_LABEL = "OMP native visible messages; hidden reasoning excluded"
@@ -151,6 +153,7 @@ def project(run_file, identity_file, sessions, base_index_file, repository, row_
                        "nativeSessions": dict(sorted(session_hashes.items()))}
     index["sourceManifestSha256"] = digest(encode(source_manifest))
     index["exporterSha256"] = digest(Path(__file__).read_bytes())
+    index["campaignId"] = INDEX_CAMPAIGN
     index_bytes = encode(index)
     (transcripts / "index.json").write_bytes(index_bytes)
     (output / "source-manifest.json").write_bytes(encode(source_manifest))
