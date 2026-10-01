@@ -1,4 +1,4 @@
-// Pinned after validating original and recovery public projections.
+// Pinned after validating original, recovery and transaction public projections.
 export const PUBLIC_TRANSCRIPTS_INDEX_SHA256 =
-  "eb2d412a812d312e59267f8563c7334bf45f30e7bd8b3b28811dd163b0eae5bd";
-export const PUBLIC_TRANSCRIPTS_COUNT = 4364;
+  "9fbebb12eb0ce9713349db2b73e87b12feacb8f5829d311709f478117583cd02";
+export const PUBLIC_TRANSCRIPTS_COUNT = 4382;

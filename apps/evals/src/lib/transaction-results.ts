@@ -2,6 +2,7 @@
 // A run belongs to the leaderboard row with the same model id and reasoning setting.
 // Scores are separate from Overall: they never change the tool-use leaderboard.
 import type { LeaderboardModelRow } from "../canonical/selectors";
+import type { ConversationReference } from "./conversations";
 import grok47Low from "../results/2026-09-24/execution/grok-4.7-low.json";
 import { TRANSACTION_TASKS } from "./transaction-evals";
 
@@ -12,6 +13,7 @@ export interface TransactionTrial {
   readonly failedChecks: readonly { readonly id: string; readonly detail: string }[];
   readonly durationMs: number;
   readonly spendUsdMicros: number;
+  readonly submits: number;
   readonly identityVerified: boolean;
 }
 
@@ -32,11 +34,28 @@ export interface TransactionRun {
   readonly sourceCommit: string;
   readonly repetitions: number;
   readonly trials: readonly TransactionTrial[];
+  /**
+   * Public chats for every trial, projected from the run's native OMP sessions by
+   * `tools/project-execution-conversations.py`; each trial adds family, task and repetition.
+   */
+  readonly conversations: Omit<ConversationReference, "family" | "caseId" | "repetition">;
 }
 
 export const TRANSACTION_RUNS: readonly TransactionRun[] = [
   // Current Grok 4.7 Low setting: same OMP client and xAI OAuth profile as the low recovery.
-  { ...grok47Low, canonicalModelId: "grok-4-7", ownerSpotRunId: "grok47-recovery-low-spot-1" },
+  {
+    ...grok47Low,
+    canonicalModelId: "grok-4-7",
+    ownerSpotRunId: "grok47-recovery-low-spot-1",
+    conversations: {
+      campaignId: "transactions-2026-09-25",
+      rowId: "transactions-grok-4-7-low",
+      sourceSummarySha256: "396970e0d653b6c3e20e006ca348b02f0d780c2bdfcdf58a9511bb60a3b42ee9",
+      sourceCommit: "2bca798732995a271c84c7011351f2f1bf85e49b",
+      catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
+      target: "omp_harness",
+    },
+  },
 ];
 
 /** The transaction run owned by exactly this leaderboard row, if any. */

@@ -76,6 +76,7 @@ describe("transaction score", () => {
     failedChecks: [],
     durationMs: 1000,
     spendUsdMicros: 0,
+    submits: 1,
     identityVerified: true,
   });
   const ids = TRANSACTION_TASKS.map((task) => task.id);
