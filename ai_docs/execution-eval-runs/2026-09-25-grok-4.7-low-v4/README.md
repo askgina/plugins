@@ -15,3 +15,5 @@ Fresh 18-trial run at source `2bca798` (all fixes: rules stated in tool descript
 | `t3-robinhood-eth-to-mainnet-pepe` |    3/3 |
 
 Score 100% (18/18 attempts).
+
+Public chats for all 18 attempts are under `apps/evals/public/transcripts/transactions-grok-4-7-low/`, projected from the native OMP sessions (see `ai_docs/evals-handoff/public-transcripts.md`).

@@ -65,3 +65,27 @@ only public fields using the same redactor. Numeric result artifacts must pass
 the existing strict schemas and an additional frozen hash allowlist. See
 [the recovery publication record](reviews/recovery-publication-2026-09-21.md)
 for selection policy, counts, costs, privacy checks, and reproduction details.
+
+## September 25 transaction publication
+
+The Grok 4.7 Low transaction run (`grok-4.7-low-20260925-v4`) adds 18 public
+chats, one per attempt, bringing the combined index to 4,382 documents. They
+appear in Tasks → Spot → Transactions with the same Conversation, Checks and
+Run details views as tool-use tasks.
+
+`tools/project-execution-conversations.py` reads the run's native OMP session
+files (kept on the run host, never committed). It binds each attempt to one
+session through the published `native-identity.json`. It also requires the
+session's first user turn to equal the task prompt and its later user turns to
+equal the run's recorded scripted replies. Visible messages are projected with
+the same OMP projection and redactor as the recovery chats, so hidden reasoning
+is excluded. One rule is different: the private-account key rule is disabled.
+These accounts and balances are simulated-ledger task fixtures, and that rule
+would blank every `balances` field. Credential, address, email, path and host
+scrubbing still apply; this run needed no redactions.
+
+To regenerate, copy the session files to a directory outside the repository,
+named `<session_id>.jsonl`. Then run the projector with `--run`, `--identity`,
+`--sessions`, `--row-id`, `--source-commit` and `--output` (outside the
+repository). Review the output, copy it into `public/transcripts`, and pin the
+new index hash and count in `public-transcript-manifest.ts`.

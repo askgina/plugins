@@ -2,8 +2,11 @@ import type { Conversation, ConversationReference } from "./conversations";
 
 export const PUBLIC_TRANSCRIPT_CAMPAIGN = "reasoning-sweep-2026-09-16";
 export const PUBLIC_RECOVERY_CAMPAIGN = "recovery-2026-09-21";
+export const PUBLIC_TRANSACTIONS_CAMPAIGN = "transactions-2026-09-25";
 const supportedCampaign = (value: unknown) =>
-  value === PUBLIC_TRANSCRIPT_CAMPAIGN || value === PUBLIC_RECOVERY_CAMPAIGN;
+  value === PUBLIC_TRANSCRIPT_CAMPAIGN ||
+  value === PUBLIC_RECOVERY_CAMPAIGN ||
+  value === PUBLIC_TRANSACTIONS_CAMPAIGN;
 const digest = /^[a-f0-9]{64}$/u;
 const identifier = /^[a-z0-9][a-z0-9-]{0,150}$/u;
 const record = (value: unknown): value is Record<string, unknown> =>

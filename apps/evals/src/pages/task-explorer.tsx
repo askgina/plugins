@@ -27,6 +27,7 @@ import {
   type TaskView,
 } from "../lib/task-workspace";
 import "../styles/task-workspace.css";
+import { TaskEvidenceTabs } from "../components/task-evidence-tabs";
 import { TransactionTaskPanels } from "../components/transaction-task-panels";
 import { TRANSACTION_TASKS } from "../lib/transaction-evals";
 
@@ -34,11 +35,6 @@ const defaultRows = [...unifiedLeaderboardRows()].sort((a, b) =>
   a.model.name.localeCompare(b.model.name),
 );
 const configurationRows = configurationLeaderboardRows();
-const views = [
-  { id: "conversation", label: "Conversation" },
-  { id: "checks", label: "Checks" },
-  { id: "run", label: "Run details" },
-] as const;
 
 const taskNames: Record<string, string> = {
   "spot-token-metadata": "Token information",
@@ -236,14 +232,14 @@ export function TaskExplorerPage({
   }, [row?.model.id, modelQuery]);
 
   function move(next: Partial<TaskSelection>) {
-    // A transaction task has no canonical run/attempt/view; keep its id and drop the rest.
+    // A transaction task has no canonical run; its attempt and view are its own.
     const updated = {
       family,
       caseId: transactionTask?.id ?? definition?.caseId,
       modelId: row?.model.id,
       runId: transactionTask ? undefined : run?.runId,
-      attempt: transactionTask ? undefined : repetition,
-      view: transactionTask ? undefined : view,
+      attempt: transactionTask ? selection.attempt : repetition,
+      view,
       ...next,
     };
     setSelection(updated);
@@ -254,7 +250,7 @@ export function TaskExplorerPage({
     const isTransaction = TRANSACTION_TASKS.some((task) => task.id === caseId);
     move(
       isTransaction
-        ? { caseId, runId: undefined, attempt: undefined, view: undefined }
+        ? { caseId, runId: undefined, attempt: undefined }
         : { caseId, attempt: undefined },
     );
   }
@@ -374,14 +370,7 @@ export function TaskExplorerPage({
                         type="button"
                         key={task.id}
                         aria-current={transactionTask?.id === task.id ? "true" : undefined}
-                        onClick={() =>
-                          move({
-                            caseId: task.id,
-                            runId: undefined,
-                            attempt: undefined,
-                            view: undefined,
-                          })
-                        }
+                        onClick={() => chooseTask(task.id)}
                       >
                         <span>{task.name}</span>
                       </button>
@@ -396,7 +385,9 @@ export function TaskExplorerPage({
                   task={transactionTask}
                   rows={rows}
                   selectedModelId={selection.modelId}
-                  onSelectModel={(modelId) => move({ modelId, attempt: undefined })}
+                  attempt={selection.attempt}
+                  view={view}
+                  onMove={move}
                 />
               )
             ) : (
@@ -561,42 +552,7 @@ export function TaskExplorerPage({
                         <EvidenceValue evidence={attempt.durationMs} renderValue={seconds} />
                       </p>
                     )}
-                    <div
-                      className="task-workspace-tabs"
-                      role="tablist"
-                      aria-label="Attempt evidence"
-                    >
-                      {views.map((entry, index) => (
-                        <button
-                          key={entry.id}
-                          id={`task-tab-${entry.id}`}
-                          role="tab"
-                          type="button"
-                          aria-selected={view === entry.id}
-                          aria-controls="task-evidence-panel"
-                          tabIndex={view === entry.id ? 0 : -1}
-                          onClick={() => move({ view: entry.id })}
-                          onKeyDown={(event) => {
-                            const next =
-                              event.key === "ArrowRight"
-                                ? (index + 1) % views.length
-                                : event.key === "ArrowLeft"
-                                  ? (index + views.length - 1) % views.length
-                                  : event.key === "Home"
-                                    ? 0
-                                    : event.key === "End"
-                                      ? views.length - 1
-                                      : null;
-                            if (next === null) return;
-                            event.preventDefault();
-                            move({ view: views[next]!.id });
-                            document.getElementById(`task-tab-${views[next]!.id}`)?.focus();
-                          }}
-                        >
-                          {entry.label}
-                        </button>
-                      ))}
-                    </div>
+                    <TaskEvidenceTabs view={view} onSelect={(next) => move({ view: next })} />
                   </div>
                   <div
                     ref={evidenceBody}
