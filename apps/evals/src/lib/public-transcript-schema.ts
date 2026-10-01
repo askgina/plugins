@@ -3,7 +3,12 @@ import type { Conversation, ConversationReference } from "./conversations";
 export const PUBLIC_TRANSCRIPT_CAMPAIGN = "reasoning-sweep-2026-09-16";
 export const PUBLIC_RECOVERY_CAMPAIGN = "recovery-2026-09-21";
 export const PUBLIC_TRANSACTIONS_CAMPAIGN = "transactions-2026-09-25";
-const supportedCampaign = (value: unknown) =>
+const supportedCampaign = (
+  value: unknown,
+): value is
+  | typeof PUBLIC_TRANSCRIPT_CAMPAIGN
+  | typeof PUBLIC_RECOVERY_CAMPAIGN
+  | typeof PUBLIC_TRANSACTIONS_CAMPAIGN =>
   value === PUBLIC_TRANSCRIPT_CAMPAIGN ||
   value === PUBLIC_RECOVERY_CAMPAIGN ||
   value === PUBLIC_TRANSACTIONS_CAMPAIGN;
