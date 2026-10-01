@@ -4,7 +4,7 @@ import { LeaderboardPage } from "./pages/leaderboard";
 import { ModelIndexPage } from "./pages/model-index";
 import { ModelProfilePage } from "./pages/model-profile";
 import { TaskExplorerPage } from "./pages/task-explorer";
-import { MethodologyPage } from "./pages/methodology";
+import { MethodologyPage, type MethodologySection } from "./pages/methodology";
 import { ComparePage } from "./canonical/pages/compare";
 import { matchPath, navigate, parseRoute, useHashRoute } from "./router";
 import { PROTOTYPE_FAMILIES } from "./canonical/canonical";
@@ -15,6 +15,8 @@ interface RouteEntry {
   readonly title: string;
   readonly render: (params: Readonly<Record<string, string>>, query: URLSearchParams) => ReactNode;
 }
+
+const METHODOLOGY_SECTIONS: readonly MethodologySection[] = ["tool-use", "transactions"];
 
 const ROUTES: readonly RouteEntry[] = [
   { pattern: "/", title: "Leaderboard", render: () => <LeaderboardPage /> },
@@ -53,7 +55,17 @@ const ROUTES: readonly RouteEntry[] = [
       <ComparePage left={query.get("left") ?? undefined} right={query.get("right") ?? undefined} />
     ),
   },
-  { pattern: "/methodology", title: "Methodology", render: () => <MethodologyPage /> },
+  {
+    pattern: "/methodology",
+    title: "Methodology",
+    render: (_params, query) => (
+      <MethodologyPage
+        section={
+          METHODOLOGY_SECTIONS.find((section) => section === query.get("section")) ?? undefined
+        }
+      />
+    ),
+  },
 ];
 
 export default function App() {

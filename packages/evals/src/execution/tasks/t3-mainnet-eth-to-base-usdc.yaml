@@ -1,0 +1,67 @@
+# Cross-network: 0.1 ETH on Ethereum mainnet into USDC on Base. Two valid routes; the Base wallet starts with no gas.
+id: t3-mainnet-eth-to-base-usdc
+tier: T3
+layer: intercept
+prompt: >-
+  Swap 0.1 ETH on my Ethereum mainnet wallet into USDC on my Base wallet.
+assets:
+  ETH: { decimals: 18, price_usd_micros: 3000000000 }
+  USDC: { decimals: 6, price_usd_micros: 1000000 }
+accounts:
+  - id: eth1
+    network: ethereum
+    gas_asset: ETH
+    gas_per_tx: "300000000000000"
+    balances: { ETH: "150000000000000000", USDC: "0" }
+  - id: base1
+    network: base
+    gas_asset: ETH
+    gas_per_tx: "20000000000000"
+    balances: { ETH: "0", USDC: "0" }
+expected_outcome: { kind: target_reached }
+targets:
+  - { account: base1, asset: USDC, amount: "295000000", tolerance_bps: 0 } # at least 295 USDC from 0.1 ETH
+limits:
+  max_total_cost_usd_micros: 8000000
+  max_slippage_bps: 50
+  deadline_s: 1800
+  quote_ttl_s: 300
+dust_usd_micros: 500000
+edges:
+  - id: eth-swap-eth-usdc
+    kind: swap
+    from: { account: eth1, asset: ETH }
+    to: { account: eth1, asset: USDC }
+    rate_num: "3"
+    rate_den: "1000000000"
+    fee_usd_micros: 3000000
+    delay_s: 12
+  - id: eth-bridge-usdc-base
+    kind: bridge
+    from: { account: eth1, asset: USDC }
+    to: { account: base1, asset: USDC }
+    rate_num: "1"
+    rate_den: "1"
+    fee_usd_micros: 500000
+    delay_s: 60
+  - id: eth-bridge-eth-base
+    kind: bridge
+    from: { account: eth1, asset: ETH }
+    to: { account: base1, asset: ETH }
+    rate_num: "1"
+    rate_den: "1"
+    fee_usd_micros: 500000
+    delay_s: 60
+  - id: base-swap-eth-usdc
+    kind: swap
+    from: { account: base1, asset: ETH }
+    to: { account: base1, asset: USDC }
+    rate_num: "3"
+    rate_den: "1000000000"
+    fee_usd_micros: 300000
+    delay_s: 2
+user_script:
+  confirm: { kind: approve }
+  reconfirm: { kind: approve }
+  unexpected: Please go ahead with what you proposed.
+  max_turns: 12

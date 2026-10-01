@@ -1045,6 +1045,59 @@ export const prepareOmpHarnessRuntime = (
 const invalidOptions = (caseId: string): PluginEvalOmpHarnessRequestError =>
   new PluginEvalOmpHarnessRequestError({ caseId, reason: "invalid-options" });
 
+const validateOmpAuth = (
+  authOption: OmpAuth,
+  caseId: string,
+): Effect.Effect<
+  ValidatedOmpAuth,
+  PluginEvalOmpHarnessRequestError,
+  FileSystem.FileSystem | Path.Path
+> =>
+  Effect.gen(function* () {
+    if (authOption.mode === "api-key") {
+      const providerBaseUrl =
+        authOption.providerBaseUrl === undefined
+          ? undefined
+          : parseProviderBaseUrl(authOption.providerBaseUrl);
+      if (authOption.providerBaseUrl !== undefined && providerBaseUrl === undefined) {
+        return yield* new PluginEvalOmpHarnessRequestError({
+          caseId,
+          reason: "invalid-endpoint",
+        });
+      }
+      const apiKey = Redacted.value(authOption.apiKey);
+      if (!isOmpApiKeyProvider(authOption.provider) || apiKey.trim().length === 0) {
+        return yield* invalidOptions(caseId);
+      }
+      return {
+        mode: "api-key",
+        provider: authOption.provider,
+        apiKey,
+        ...(providerBaseUrl === undefined ? {} : { providerBaseUrl }),
+      };
+    } else {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      if (
+        !isOmpProviderIdentifier(authOption.provider) ||
+        !path.isAbsolute(authOption.agentDirectory)
+      ) {
+        return yield* invalidOptions(caseId);
+      }
+      const info = yield* fs
+        .stat(authOption.agentDirectory)
+        .pipe(Effect.mapError(() => invalidOptions(caseId)));
+      if (info.type !== "Directory") {
+        return yield* invalidOptions(caseId);
+      }
+      return {
+        mode: "native",
+        provider: authOption.provider,
+        agentDirectory: authOption.agentDirectory,
+      };
+    }
+  });
+
 const validateOptions = (
   evalCase: PluginEvalCase,
   options: OmpHarnessTrialOptions,
@@ -1085,49 +1138,7 @@ const validateOptions = (
       });
     }
 
-    let auth: ValidatedOmpAuth;
-    if (authOption.mode === "api-key") {
-      const providerBaseUrl =
-        authOption.providerBaseUrl === undefined
-          ? undefined
-          : parseProviderBaseUrl(authOption.providerBaseUrl);
-      if (authOption.providerBaseUrl !== undefined && providerBaseUrl === undefined) {
-        return yield* new PluginEvalOmpHarnessRequestError({
-          caseId: evalCase.id,
-          reason: "invalid-endpoint",
-        });
-      }
-      const apiKey = Redacted.value(authOption.apiKey);
-      if (!isOmpApiKeyProvider(authOption.provider) || apiKey.trim().length === 0) {
-        return yield* invalidOptions(evalCase.id);
-      }
-      auth = {
-        mode: "api-key",
-        provider: authOption.provider,
-        apiKey,
-        ...(providerBaseUrl === undefined ? {} : { providerBaseUrl }),
-      };
-    } else {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      if (
-        !isOmpProviderIdentifier(authOption.provider) ||
-        !path.isAbsolute(authOption.agentDirectory)
-      ) {
-        return yield* invalidOptions(evalCase.id);
-      }
-      const info = yield* fs
-        .stat(authOption.agentDirectory)
-        .pipe(Effect.mapError(() => invalidOptions(evalCase.id)));
-      if (info.type !== "Directory") {
-        return yield* invalidOptions(evalCase.id);
-      }
-      auth = {
-        mode: "native",
-        provider: authOption.provider,
-        agentDirectory: authOption.agentDirectory,
-      };
-    }
+    const auth = yield* validateOmpAuth(authOption, evalCase.id);
 
     return {
       runId,
@@ -1591,6 +1602,70 @@ const observedToolCalls = (
   return { toolCalls, activatedSkills: [...activatedSkills], failedNativeRead };
 };
 
+/** Wraps a sandbox so its raw destroy can be forced if session teardown hangs. */
+const trackSandboxDestroy = (
+  selectedSandbox: HarnessV1SandboxProvider,
+): { sandbox: HarnessV1SandboxProvider; rawSandboxDestroy: RawSandboxDestroyRef } => {
+  const rawSandboxDestroy: RawSandboxDestroyRef = { current: undefined };
+  const sandbox: HarnessV1SandboxProvider = {
+    ...selectedSandbox,
+    createSession: (sessionOptions) =>
+      Promise.resolve(selectedSandbox.createSession(sessionOptions)).then((session) => {
+        if (typeof session.destroy !== "function") {
+          throw new Error("OMP sandbox session cleanup unavailable");
+        }
+        const sharedDestroy = shareSandboxDestroy(session.destroy.bind(session));
+        rawSandboxDestroy.current = sharedDestroy;
+        Object.assign(session, { destroy: sharedDestroy });
+        return session;
+      }),
+  };
+  return { sandbox, rawSandboxDestroy };
+};
+
+/**
+ * The OMP ACP harness every eval path launches with a pinned config. `nativeRead` keeps OMP's
+ * read-only `read` tool (tool-use evals read staged skills); without it OMP runs `--no-tools`
+ * and the model sees only host tools.
+ */
+const createOmpAcpHarness = (
+  runtimeDirectory: string,
+  auth: ValidatedOmpAuth,
+  model: string,
+  reasoning: OmpReasoning,
+  nativeRead: boolean,
+) =>
+  createACP({
+    harnessId: "omp-acp",
+    builtinTools: nativeRead ? OMP_BUILTIN_TOOLS : {},
+    source: { type: "install-command", command: installCommand(runtimeDirectory, auth, model) },
+    executable: "omp",
+    args: [
+      "acp",
+      "--no-extensions",
+      ...(nativeRead ? ["--tools", "read"] : ["--no-tools"]),
+      "--config",
+      `${runtimeDirectory}/config.yml`,
+      "--provider",
+      auth.mode === "api-key" ? OMP_EVAL_PROVIDER_ALIAS : auth.provider,
+      "--model",
+      model,
+      "--thinking",
+      reasoning,
+      "--approval-mode",
+      "yolo",
+      "--no-session",
+    ],
+    skillsDirectory: ".agents/skills",
+    modelMapping: { type: "session-config-option", path: "model" },
+    mcpServers: {},
+    hostToolMcpTransport: "http",
+    env:
+      auth.mode === "api-key"
+        ? { NO_COLOR: "1", [OMP_EVAL_PROVIDER_API_KEY_ENV]: auth.apiKey }
+        : { NO_COLOR: "1", PI_CODING_AGENT_DIR: auth.agentDirectory },
+  });
+
 const promptText = (evalCase: PluginEvalCase): string =>
   evalCase.turns
     .filter((turn) => turn.role === "user")
@@ -1630,6 +1705,109 @@ const createHarnessSession = (
           );
         },
       );
+  });
+
+export interface OmpExecutionSessionOptions {
+  /** Label for errors and logs (the execution task id). */
+  readonly caseId: string;
+  /** From `prepareOmpHarnessRuntime`. */
+  readonly runtimeDirectory: string;
+  readonly auth: OmpAuth;
+  readonly model: string;
+  readonly reasoning: string;
+  /** Host tools the model may call; for execution evals, the execution tool surface only. */
+  readonly tools: ToolSet;
+  /** Budget for one user turn (one generation). */
+  readonly turnTimeoutMs: number;
+}
+
+export interface OmpExecutionTurn {
+  readonly text: string;
+  readonly finishReason: string;
+}
+
+/** One OMP conversation that stays open across user turns until its scope closes. */
+export interface OmpExecutionSession {
+  readonly send: (prompt: string) => Effect.Effect<OmpExecutionTurn, PluginEvalOmpHarnessError>;
+}
+
+/**
+ * Opens a single OMP session for a multi-turn execution trial. Unlike the tool-use trial, which
+ * sends one flattened prompt, each `send` is a new user turn in the same session, so a model can
+ * ask for approval and receive the user's reply mid-conversation. No Gina MCP catalog or skills
+ * are mounted: the model sees only `options.tools`.
+ */
+export const openOmpExecutionSession = (
+  options: OmpExecutionSessionOptions,
+): Effect.Effect<
+  OmpExecutionSession,
+  PluginEvalOmpHarnessError,
+  FileSystem.FileSystem | Path.Path | Scope.Scope
+> =>
+  Effect.gen(function* () {
+    const { caseId, turnTimeoutMs } = options;
+    const model = options.model.trim();
+    if (
+      model.length === 0 ||
+      !options.runtimeDirectory.startsWith("/") ||
+      !Number.isSafeInteger(turnTimeoutMs) ||
+      turnTimeoutMs <= 0
+    ) {
+      return yield* invalidOptions(caseId);
+    }
+    if (!isOmpReasoning(options.reasoning)) {
+      return yield* new PluginEvalOmpHarnessRequestError({
+        caseId,
+        reason: "unsupported-reasoning",
+      });
+    }
+    const auth = yield* validateOmpAuth(options.auth, caseId);
+    const { sandbox, rawSandboxDestroy } = trackSandboxDestroy(
+      createLocalHarnessSandbox({ rootDirectory: options.runtimeDirectory }),
+    );
+    const agent = new HarnessAgent({
+      harness: createOmpAcpHarness(options.runtimeDirectory, auth, model, options.reasoning, false),
+      sandbox,
+      tools: options.tools,
+      skills: [],
+      permissionMode: "allow-all",
+    });
+    // Session start (OAuth, ACP bridge install) gets the same bound as a turn; on timeout the
+    // pending creation is aborted and createHarnessSession destroys whatever it produced.
+    const session = yield* Effect.acquireRelease(
+      createHarnessSession(agent, rawSandboxDestroy, caseId).pipe(
+        Effect.timeoutOrElse({
+          duration: Duration.millis(turnTimeoutMs),
+          orElse: () =>
+            Effect.sync(() => void requestRawSandboxDestroy(rawSandboxDestroy)).pipe(
+              Effect.andThen(Effect.fail(timeoutError(caseId, turnTimeoutMs))),
+            ),
+        }),
+      ),
+      (opened) =>
+        Effect.raceFirst(
+          Effect.promise(() => destroyHarnessSessionOnce(opened, rawSandboxDestroy)),
+          Effect.sleep(Duration.millis(MAX_SESSION_DESTROY_WAIT_MS)).pipe(
+            Effect.tap(() => Effect.sync(() => void requestRawSandboxDestroy(rawSandboxDestroy))),
+          ),
+        ).pipe(Effect.asVoid),
+    );
+    return {
+      send: (prompt) =>
+        Effect.tryPromise({
+          try: (signal) => agent.generate({ session, prompt, abortSignal: signal }),
+          catch: (error) => generationError(caseId, error),
+        }).pipe(
+          Effect.timeoutOrElse({
+            duration: Duration.millis(turnTimeoutMs),
+            orElse: () => Effect.fail(timeoutError(caseId, turnTimeoutMs)),
+          }),
+          Effect.map((generated) => ({
+            text: generated.text,
+            finishReason: generated.finishReason,
+          })),
+        ),
+    };
   });
 
 export const runOmpHarnessPluginEvalTrial = Function.dual<
@@ -1719,68 +1897,17 @@ export const runOmpHarnessPluginEvalTrial = Function.dual<
                     evalCase.id,
                   );
                   yield* ensureBeforeDeadline(evalCase.id, validated.timeoutMs, deadlineMillis);
-                  const selectedSandbox =
+                  const { sandbox, rawSandboxDestroy } = trackSandboxDestroy(
                     validated.sandbox ??
-                    createLocalHarnessSandbox({
-                      rootDirectory: validated.runtimeDirectory,
-                    });
-                  const rawSandboxDestroy: RawSandboxDestroyRef = { current: undefined };
-                  const sandbox: HarnessV1SandboxProvider = {
-                    ...selectedSandbox,
-                    createSession: (sessionOptions) =>
-                      Promise.resolve(selectedSandbox.createSession(sessionOptions)).then(
-                        (session) => {
-                          if (typeof session.destroy !== "function") {
-                            throw new Error("OMP sandbox session cleanup unavailable");
-                          }
-                          const sharedDestroy = shareSandboxDestroy(session.destroy.bind(session));
-                          rawSandboxDestroy.current = sharedDestroy;
-                          Object.assign(session, { destroy: sharedDestroy });
-                          return session;
-                        },
-                      ),
-                  };
-                  const { auth } = validated;
-                  const harness = createACP({
-                    harnessId: "omp-acp",
-                    builtinTools: OMP_BUILTIN_TOOLS,
-                    source: {
-                      type: "install-command",
-                      command: installCommand(validated.runtimeDirectory, auth, validated.model),
-                    },
-                    executable: "omp",
-                    args: [
-                      "acp",
-                      "--no-extensions",
-                      "--tools",
-                      "read",
-                      "--config",
-                      `${validated.runtimeDirectory}/config.yml`,
-                      "--provider",
-                      auth.mode === "api-key" ? OMP_EVAL_PROVIDER_ALIAS : auth.provider,
-                      "--model",
-                      validated.model,
-                      "--thinking",
-                      validated.reasoning,
-                      "--approval-mode",
-                      "yolo",
-                      "--no-session",
-                    ],
-                    skillsDirectory: ".agents/skills",
-                    modelMapping: { type: "session-config-option", path: "model" },
-                    mcpServers: {},
-                    hostToolMcpTransport: "http",
-                    env:
-                      auth.mode === "api-key"
-                        ? {
-                            NO_COLOR: "1",
-                            [OMP_EVAL_PROVIDER_API_KEY_ENV]: auth.apiKey,
-                          }
-                        : {
-                            NO_COLOR: "1",
-                            PI_CODING_AGENT_DIR: auth.agentDirectory,
-                          },
-                  });
+                      createLocalHarnessSandbox({ rootDirectory: validated.runtimeDirectory }),
+                  );
+                  const harness = createOmpAcpHarness(
+                    validated.runtimeDirectory,
+                    validated.auth,
+                    validated.model,
+                    validated.reasoning,
+                    true,
+                  );
                   let sessionSkillsDirectory: string | undefined;
                   const agent = new HarnessAgent({
                     harness,

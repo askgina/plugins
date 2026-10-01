@@ -1,0 +1,39 @@
+# Single transaction with an exact fraction: sell 99% of 1 ETH on mainnet, keeping ~1% (selling more fails the ETH target).
+id: t1-mainnet-sell-99-eth
+tier: T1
+layer: intercept
+prompt: >-
+  Sell 99% of my ETH into USDC.
+assets:
+  ETH: { decimals: 18, price_usd_micros: 3000000000 }
+  USDC: { decimals: 6, price_usd_micros: 1000000 }
+accounts:
+  - id: eth1
+    network: ethereum
+    gas_asset: ETH
+    gas_per_tx: "300000000000000"
+    balances: { ETH: "1000000000000000000", USDC: "0" }
+expected_outcome: { kind: target_reached }
+targets:
+  - { account: eth1, asset: USDC, amount: "2967000000", tolerance_bps: 0 } # exactly 0.99 ETH at $3,000 less the $3 fee
+  - { account: eth1, asset: ETH, amount: "9500000000000000", tolerance_bps: 0 } # keeps at least 0.0095 ETH (~1% less gas)
+limits:
+  max_total_cost_usd_micros: 6000000
+  max_slippage_bps: 50
+  deadline_s: 900
+  quote_ttl_s: 300
+dust_usd_micros: 500000
+edges:
+  - id: eth-swap-eth-usdc
+    kind: swap
+    from: { account: eth1, asset: ETH }
+    to: { account: eth1, asset: USDC }
+    rate_num: "3"
+    rate_den: "1000000000"
+    fee_usd_micros: 3000000
+    delay_s: 12
+user_script:
+  confirm: { kind: approve }
+  reconfirm: { kind: approve }
+  unexpected: Please go ahead with what you proposed.
+  max_turns: 12

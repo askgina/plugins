@@ -27,6 +27,8 @@ import {
   type TaskView,
 } from "../lib/task-workspace";
 import "../styles/task-workspace.css";
+import { TransactionTaskPanels } from "../components/transaction-task-panels";
+import { TRANSACTION_TASKS } from "../lib/transaction-evals";
 
 const defaultRows = [...unifiedLeaderboardRows()].sort((a, b) =>
   a.model.name.localeCompare(b.model.name),
@@ -164,13 +166,29 @@ export function TaskExplorerPage({
     (selection.caseId ? getCaseDefinition(selection.caseId)?.family : undefined) ??
     selection.family;
   const definitions = caseDefinitionsForFamily(family);
+  // Spot also lists the transaction tasks; they are owned per model and scored separately.
   const query = search.trim().toLocaleLowerCase();
+  // Spot also lists the transaction tasks; search covers their names and prompts too.
+  const shownTransactionTasks =
+    family === "Spot"
+      ? TRANSACTION_TASKS.filter((task) =>
+          `${task.name} ${task.prompt}`.toLocaleLowerCase().includes(query),
+        )
+      : [];
   const shownTasks = definitions.filter((definition) =>
     `${taskName(definition)} ${definition.prompt.availability === "available" ? definition.prompt.value : ""}`
       .toLocaleLowerCase()
       .includes(query),
   );
-  const definition = shownTasks.find((entry) => entry.caseId === selection.caseId) ?? shownTasks[0];
+  const selectedTransactionTask = shownTransactionTasks.find(
+    (task) => task.id === selection.caseId,
+  );
+  const definition = selectedTransactionTask
+    ? shownTasks[0]
+    : (shownTasks.find((entry) => entry.caseId === selection.caseId) ?? shownTasks[0]);
+  // If the search leaves only transaction tasks, show the first of them.
+  const transactionTask =
+    selectedTransactionTask ?? (definition ? undefined : shownTransactionTasks[0]);
   const rows = [...new Map(sourceRows.map((row) => [row.model.id, row])).values()];
   const row = rows.find((entry) => entry.model.id === selection.modelId) ?? rows[0];
   const configurations = sourceRows === defaultRows ? configurationRows : sourceRows;
@@ -218,17 +236,27 @@ export function TaskExplorerPage({
   }, [row?.model.id, modelQuery]);
 
   function move(next: Partial<TaskSelection>) {
+    // A transaction task has no canonical run/attempt/view; keep its id and drop the rest.
     const updated = {
       family,
-      caseId: definition?.caseId,
+      caseId: transactionTask?.id ?? definition?.caseId,
       modelId: row?.model.id,
-      runId: run?.runId,
-      attempt: repetition,
-      view,
+      runId: transactionTask ? undefined : run?.runId,
+      attempt: transactionTask ? undefined : repetition,
+      view: transactionTask ? undefined : view,
       ...next,
     };
     setSelection(updated);
     onNavigate?.(updated);
+  }
+  /** One entry point for every task control (sidebar, mobile picker). */
+  function chooseTask(caseId: string) {
+    const isTransaction = TRANSACTION_TASKS.some((task) => task.id === caseId);
+    move(
+      isTransaction
+        ? { caseId, runId: undefined, attempt: undefined, view: undefined }
+        : { caseId, attempt: undefined },
+    );
   }
   function chooseFamily(next: PrototypeFamily) {
     const configuration = configurations.find((entry) =>
@@ -267,7 +295,13 @@ export function TaskExplorerPage({
                 aria-current={family === category ? "page" : undefined}
                 onClick={() => chooseFamily(category)}
               >
-                {category} <span>({caseDefinitionsForFamily(category).length})</span>
+                {category}{" "}
+                <span>
+                  (
+                  {caseDefinitionsForFamily(category).length +
+                    (category === "Spot" ? TRANSACTION_TASKS.length : 0)}
+                  )
+                </span>
               </button>
             ))}
           </nav>
@@ -282,7 +316,7 @@ export function TaskExplorerPage({
             />
           </label>
         </div>
-        {!definition ? (
+        {!definition && !transactionTask ? (
           <div className="task-workspace-empty" role="status">
             <h2>No tasks match “{search}”</h2>
             <p>Search a task name or a phrase from its prompt.</p>
@@ -296,20 +330,27 @@ export function TaskExplorerPage({
               <div className="task-workspace-heading">
                 <h2 id="workspace-tasks-heading">{family} tasks</h2>
                 <span>
-                  {shownTasks.length} {shownTasks.length === 1 ? "task" : "tasks"}
+                  {shownTasks.length + shownTransactionTasks.length}{" "}
+                  {shownTasks.length + shownTransactionTasks.length === 1 ? "task" : "tasks"}
                 </span>
               </div>
               <label className="task-workspace-task-select">
                 <span className="results-sr-only">Selected task</span>
                 <select
-                  value={definition.caseId}
-                  onChange={(event) => move({ caseId: event.target.value, attempt: undefined })}
+                  value={transactionTask?.id ?? definition?.caseId}
+                  onChange={(event) => chooseTask(event.target.value)}
                 >
                   {shownTasks.map((entry) => (
                     <option key={entry.caseId} value={entry.caseId}>
                       {taskName(entry)}
                     </option>
                   ))}
+                  {family === "Spot" &&
+                    shownTransactionTasks.map((task) => (
+                      <option key={task.id} value={task.id}>
+                        Transactions: {task.name}
+                      </option>
+                    ))}
                 </select>
               </label>
               <nav className="task-workspace-task-list" aria-label={`${family} tasks`}>
@@ -317,282 +358,329 @@ export function TaskExplorerPage({
                   <button
                     type="button"
                     key={entry.caseId}
-                    aria-current={definition.caseId === entry.caseId ? "true" : undefined}
-                    onClick={() => move({ caseId: entry.caseId, attempt: undefined })}
+                    aria-current={
+                      !transactionTask && definition?.caseId === entry.caseId ? "true" : undefined
+                    }
+                    onClick={() => chooseTask(entry.caseId)}
                   >
                     <span>{taskName(entry)}</span>
                   </button>
                 ))}
-              </nav>
-            </section>
-            <section
-              className="task-workspace-models"
-              aria-labelledby="workspace-models-heading"
-              data-search-open={modelSearchOpen || Boolean(modelSearch)}
-            >
-              {rows.length > 0 && (
-                <label className="task-workspace-model-select">
-                  <span className="results-sr-only">Selected model</span>
-                  <select
-                    value={row?.model.id ?? ""}
-                    onChange={(event) => chooseModel(event.target.value)}
-                  >
-                    {row && !shownModels.includes(row) && (
-                      <option value={row.model.id}>{row.model.name} (selected)</option>
-                    )}
-                    {shownModels.map((entry) => (
-                      <option key={entry.model.id} value={entry.model.id}>
-                        {entry.model.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-              <div className="task-workspace-model-tools">
-                <div className="task-workspace-heading">
-                  <h2 id="workspace-models-heading">Models</h2>
-                  <span>
-                    {modelQuery ? `${shownModels.length} of ${rows.length}` : rows.length} models
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  className="task-workspace-model-search-toggle"
-                  aria-label="Search models"
-                  aria-expanded={modelSearchOpen || Boolean(modelSearch)}
-                  aria-controls="workspace-model-search"
-                  onClick={() => {
-                    const expanded = modelSearchOpen || Boolean(modelSearch);
-                    setModelSearchOpen(!expanded);
-                    if (expanded) setModelSearch("");
-                  }}
-                >
-                  <Search size={17} aria-hidden="true" />
-                </button>
-                <label id="workspace-model-search" className="task-workspace-model-search">
-                  <Search size={15} aria-hidden="true" />
-                  <span className="results-sr-only">Search models</span>
-                  <input
-                    type="search"
-                    ref={modelSearchInput}
-                    placeholder="Search models"
-                    value={modelSearch}
-                    onChange={(event) => setModelSearch(event.target.value)}
-                  />
-                </label>
-              </div>
-              {shownModels.length ? (
-                <>
-                  <div
-                    ref={modelList}
-                    className="task-workspace-model-list"
-                    role="group"
-                    aria-label="Model results"
-                  >
-                    {shownModels.map((entry) => {
-                      const selected = row?.model.id === entry.model.id;
-                      const modelRun = selected ? run : entry.runs[family];
-                      return (
-                        <button
-                          key={entry.model.id}
-                          type="button"
-                          className="task-workspace-model"
-                          aria-label={`View ${entry.model.name} results`}
-                          aria-pressed={selected}
-                          onClick={() => chooseModel(entry.model.id)}
-                        >
-                          <ModelAvatar model={entry.model} />
-                          <span className="task-workspace-model-name">
-                            <strong>{entry.model.name}</strong>
-                            <small>
-                              {modelRun ? taskSettingLabel(modelRun) : "No measured run"}
-                            </small>
-                            <span className="task-workspace-outcome">
-                              <TaskOutcome summary={summarizeTask(modelRun, definition.caseId)} />
-                            </span>
-                          </span>
-                          <ChevronRight size={15} aria-hidden="true" />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
-              ) : (
-                <div className="task-workspace-empty-models" role="status">
-                  <p>
-                    {rows.length
-                      ? `No models match “${modelSearch}”.`
-                      : "No models have recorded results yet."}
-                  </p>
-                  {modelSearch && (
-                    <button type="button" onClick={() => setModelSearch("")}>
-                      <X size={14} aria-hidden="true" /> Clear model search
-                    </button>
-                  )}
-                </div>
-              )}
-              <p className="task-workspace-hint">
-                Latest setting per model. History in Recorded setting.
-              </p>
-            </section>
-            <section className="task-workspace-inspector" aria-labelledby="workspace-model-heading">
-              <div className="task-workspace-inspector-header">
-                <div className="task-workspace-model-heading">
-                  <h2 id="workspace-model-heading">{row?.model.name ?? "No model selected"}</h2>
-                  {run && (
-                    <label className="task-workspace-setting">
-                      <span>Recorded setting</span>
-                      <select
-                        value={run.runId}
-                        onChange={(event) =>
-                          move({ runId: event.target.value, attempt: undefined })
+                {family === "Spot" && (
+                  <>
+                    <h3 className="task-workspace-task-group">Transactions</h3>
+                    {shownTransactionTasks.map((task) => (
+                      <button
+                        type="button"
+                        key={task.id}
+                        aria-current={transactionTask?.id === task.id ? "true" : undefined}
+                        onClick={() =>
+                          move({
+                            caseId: task.id,
+                            runId: undefined,
+                            attempt: undefined,
+                            view: undefined,
+                          })
                         }
                       >
-                        {runOptions.map((entry) => (
-                          <option key={entry.runId} value={entry.runId}>
-                            {taskSettingLabel(entry)} · {entry.startedAt.slice(0, 10)}
+                        <span>{task.name}</span>
+                      </button>
+                    ))}
+                  </>
+                )}
+              </nav>
+            </section>
+            {transactionTask || !definition ? (
+              transactionTask && (
+                <TransactionTaskPanels
+                  task={transactionTask}
+                  rows={rows}
+                  selectedModelId={selection.modelId}
+                  onSelectModel={(modelId) => move({ modelId, attempt: undefined })}
+                />
+              )
+            ) : (
+              <>
+                <section
+                  className="task-workspace-models"
+                  aria-labelledby="workspace-models-heading"
+                  data-search-open={modelSearchOpen || Boolean(modelSearch)}
+                >
+                  {rows.length > 0 && (
+                    <label className="task-workspace-model-select">
+                      <span className="results-sr-only">Selected model</span>
+                      <select
+                        value={row?.model.id ?? ""}
+                        onChange={(event) => chooseModel(event.target.value)}
+                      >
+                        {row && !shownModels.includes(row) && (
+                          <option value={row.model.id}>{row.model.name} (selected)</option>
+                        )}
+                        {shownModels.map((entry) => (
+                          <option key={entry.model.id} value={entry.model.id}>
+                            {entry.model.name}
                           </option>
                         ))}
                       </select>
                     </label>
                   )}
-                </div>
-                {summary.slots.length > 0 && (
-                  <div className="task-attempts" role="group" aria-label="Attempts">
-                    {summary.slots.map((entry, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        className={`task-attempt ${entry?.verdict === "pass" ? "task-attempt-pass" : ""}`}
-                        aria-pressed={repetition === index + 1}
-                        disabled={!entry}
-                        onClick={() => move({ attempt: index + 1 })}
-                      >
-                        <span>Attempt {index + 1}</span>
-                        <strong>{attemptLabel(entry)}</strong>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {attempt && (
-                  <p className="task-workspace-attempt-meta">
-                    <EvidenceValue evidence={attempt.durationMs} renderValue={seconds} />
-                  </p>
-                )}
-                <div className="task-workspace-tabs" role="tablist" aria-label="Attempt evidence">
-                  {views.map((entry, index) => (
+                  <div className="task-workspace-model-tools">
+                    <div className="task-workspace-heading">
+                      <h2 id="workspace-models-heading">Models</h2>
+                      <span>
+                        {modelQuery ? `${shownModels.length} of ${rows.length}` : rows.length}{" "}
+                        models
+                      </span>
+                    </div>
                     <button
-                      key={entry.id}
-                      id={`task-tab-${entry.id}`}
-                      role="tab"
                       type="button"
-                      aria-selected={view === entry.id}
-                      aria-controls="task-evidence-panel"
-                      tabIndex={view === entry.id ? 0 : -1}
-                      onClick={() => move({ view: entry.id })}
-                      onKeyDown={(event) => {
-                        const next =
-                          event.key === "ArrowRight"
-                            ? (index + 1) % views.length
-                            : event.key === "ArrowLeft"
-                              ? (index + views.length - 1) % views.length
-                              : event.key === "Home"
-                                ? 0
-                                : event.key === "End"
-                                  ? views.length - 1
-                                  : null;
-                        if (next === null) return;
-                        event.preventDefault();
-                        move({ view: views[next]!.id });
-                        document.getElementById(`task-tab-${views[next]!.id}`)?.focus();
+                      className="task-workspace-model-search-toggle"
+                      aria-label="Search models"
+                      aria-expanded={modelSearchOpen || Boolean(modelSearch)}
+                      aria-controls="workspace-model-search"
+                      onClick={() => {
+                        const expanded = modelSearchOpen || Boolean(modelSearch);
+                        setModelSearchOpen(!expanded);
+                        if (expanded) setModelSearch("");
                       }}
                     >
-                      {entry.label}
+                      <Search size={17} aria-hidden="true" />
                     </button>
-                  ))}
-                </div>
-              </div>
-              <div
-                ref={evidenceBody}
-                id="task-evidence-panel"
-                className="task-workspace-evidence"
-                role="tabpanel"
-                aria-labelledby={`task-tab-${view}`}
-                tabIndex={0}
-              >
-                <details className="task-workspace-prompt" key={definition.caseId}>
-                  <summary>
-                    {taskName(definition)} <span>· Prompt & criteria</span>
-                  </summary>
-                  <EvidenceValue
-                    evidence={definition.prompt}
-                    renderValue={(prompt) => <p>{prompt}</p>}
-                  />
-                  <TaskCriteria definition={definition} />
-                </details>
-                {summary.status !== "available" && (
-                  <p className="task-workspace-status" role="status">
-                    <strong>
-                      {summary.status === "not_evaluated"
-                        ? "Not evaluated"
-                        : summary.status === "incomplete"
-                          ? "Incomplete results"
-                          : "Results unavailable"}
-                      .
-                    </strong>{" "}
-                    {summary.reason}
-                  </p>
-                )}
-                {view === "run" ? (
-                  run ? (
-                    <TaskRunEvidence run={run} />
+                    <label id="workspace-model-search" className="task-workspace-model-search">
+                      <Search size={15} aria-hidden="true" />
+                      <span className="results-sr-only">Search models</span>
+                      <input
+                        type="search"
+                        ref={modelSearchInput}
+                        placeholder="Search models"
+                        value={modelSearch}
+                        onChange={(event) => setModelSearch(event.target.value)}
+                      />
+                    </label>
+                  </div>
+                  {shownModels.length ? (
+                    <>
+                      <div
+                        ref={modelList}
+                        className="task-workspace-model-list"
+                        role="group"
+                        aria-label="Model results"
+                      >
+                        {shownModels.map((entry) => {
+                          const selected = row?.model.id === entry.model.id;
+                          const modelRun = selected ? run : entry.runs[family];
+                          return (
+                            <button
+                              key={entry.model.id}
+                              type="button"
+                              className="task-workspace-model"
+                              aria-label={`View ${entry.model.name} results`}
+                              aria-pressed={selected}
+                              onClick={() => chooseModel(entry.model.id)}
+                            >
+                              <ModelAvatar model={entry.model} />
+                              <span className="task-workspace-model-name">
+                                <strong>{entry.model.name}</strong>
+                                <small>
+                                  {modelRun ? taskSettingLabel(modelRun) : "No measured run"}
+                                </small>
+                                <span className="task-workspace-outcome">
+                                  <TaskOutcome
+                                    summary={summarizeTask(modelRun, definition.caseId)}
+                                  />
+                                </span>
+                              </span>
+                              <ChevronRight size={15} aria-hidden="true" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
                   ) : (
-                    <p>No measured run is available for this model and category.</p>
-                  )
-                ) : attempt ? (
-                  view === "checks" ? (
-                    <AttemptChecks attempt={attempt} />
-                  ) : (
-                    <AttemptConversationPanel attempt={attempt} model={row?.model} compact />
-                  )
-                ) : (
-                  <p>
-                    {summary.slots.length
-                      ? `Attempt ${repetition} was not recorded.`
-                      : "Individual attempts are not available for this selection."}
+                    <div className="task-workspace-empty-models" role="status">
+                      <p>
+                        {rows.length
+                          ? `No models match “${modelSearch}”.`
+                          : "No models have recorded results yet."}
+                      </p>
+                      {modelSearch && (
+                        <button type="button" onClick={() => setModelSearch("")}>
+                          <X size={14} aria-hidden="true" /> Clear model search
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  <p className="task-workspace-hint">
+                    Latest setting per model. History in Recorded setting.
                   </p>
-                )}
-              </div>
-              {summary.slots.length > 0 && (
-                <div className="task-workspace-attempt-navigation">
-                  <button
-                    type="button"
-                    disabled={!summary.slots.slice(0, repetition - 1).some(Boolean)}
-                    onClick={() => {
-                      const previous = summary.slots
-                        .slice(0, repetition - 1)
-                        .reverse()
-                        .find((entry) => entry);
-                      if (previous) move({ attempt: previous.repetition });
-                    }}
+                </section>
+                <section
+                  className="task-workspace-inspector"
+                  aria-labelledby="workspace-model-heading"
+                >
+                  <div className="task-workspace-inspector-header">
+                    <div className="task-workspace-model-heading">
+                      <h2 id="workspace-model-heading">{row?.model.name ?? "No model selected"}</h2>
+                      {run && (
+                        <label className="task-workspace-setting">
+                          <span>Recorded setting</span>
+                          <select
+                            value={run.runId}
+                            onChange={(event) =>
+                              move({ runId: event.target.value, attempt: undefined })
+                            }
+                          >
+                            {runOptions.map((entry) => (
+                              <option key={entry.runId} value={entry.runId}>
+                                {taskSettingLabel(entry)} · {entry.startedAt.slice(0, 10)}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      )}
+                    </div>
+                    {summary.slots.length > 0 && (
+                      <div className="task-attempts" role="group" aria-label="Attempts">
+                        {summary.slots.map((entry, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            className={`task-attempt ${entry?.verdict === "pass" ? "task-attempt-pass" : ""}`}
+                            aria-pressed={repetition === index + 1}
+                            disabled={!entry}
+                            onClick={() => move({ attempt: index + 1 })}
+                          >
+                            <span>Attempt {index + 1}</span>
+                            <strong>{attemptLabel(entry)}</strong>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {attempt && (
+                      <p className="task-workspace-attempt-meta">
+                        <EvidenceValue evidence={attempt.durationMs} renderValue={seconds} />
+                      </p>
+                    )}
+                    <div
+                      className="task-workspace-tabs"
+                      role="tablist"
+                      aria-label="Attempt evidence"
+                    >
+                      {views.map((entry, index) => (
+                        <button
+                          key={entry.id}
+                          id={`task-tab-${entry.id}`}
+                          role="tab"
+                          type="button"
+                          aria-selected={view === entry.id}
+                          aria-controls="task-evidence-panel"
+                          tabIndex={view === entry.id ? 0 : -1}
+                          onClick={() => move({ view: entry.id })}
+                          onKeyDown={(event) => {
+                            const next =
+                              event.key === "ArrowRight"
+                                ? (index + 1) % views.length
+                                : event.key === "ArrowLeft"
+                                  ? (index + views.length - 1) % views.length
+                                  : event.key === "Home"
+                                    ? 0
+                                    : event.key === "End"
+                                      ? views.length - 1
+                                      : null;
+                            if (next === null) return;
+                            event.preventDefault();
+                            move({ view: views[next]!.id });
+                            document.getElementById(`task-tab-${views[next]!.id}`)?.focus();
+                          }}
+                        >
+                          {entry.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div
+                    ref={evidenceBody}
+                    id="task-evidence-panel"
+                    className="task-workspace-evidence"
+                    role="tabpanel"
+                    aria-labelledby={`task-tab-${view}`}
+                    tabIndex={0}
                   >
-                    <ArrowLeft size={14} aria-hidden="true" />
-                    Previous attempt
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!summary.slots.slice(repetition).some(Boolean)}
-                    onClick={() => {
-                      const next = summary.slots.slice(repetition).find((entry) => entry);
-                      if (next) move({ attempt: next.repetition });
-                    }}
-                  >
-                    Next attempt
-                    <ArrowRight size={14} aria-hidden="true" />
-                  </button>
-                </div>
-              )}
-            </section>
+                    <details className="task-workspace-prompt" key={definition.caseId}>
+                      <summary>
+                        {taskName(definition)} <span>· Prompt & criteria</span>
+                      </summary>
+                      <EvidenceValue
+                        evidence={definition.prompt}
+                        renderValue={(prompt) => <p>{prompt}</p>}
+                      />
+                      <TaskCriteria definition={definition} />
+                    </details>
+                    {summary.status !== "available" && (
+                      <p className="task-workspace-status" role="status">
+                        <strong>
+                          {summary.status === "not_evaluated"
+                            ? "Not evaluated"
+                            : summary.status === "incomplete"
+                              ? "Incomplete results"
+                              : "Results unavailable"}
+                          .
+                        </strong>{" "}
+                        {summary.reason}
+                      </p>
+                    )}
+                    {view === "run" ? (
+                      run ? (
+                        <TaskRunEvidence run={run} />
+                      ) : (
+                        <p>No measured run is available for this model and category.</p>
+                      )
+                    ) : attempt ? (
+                      view === "checks" ? (
+                        <AttemptChecks attempt={attempt} />
+                      ) : (
+                        <AttemptConversationPanel attempt={attempt} model={row?.model} compact />
+                      )
+                    ) : (
+                      <p>
+                        {summary.slots.length
+                          ? `Attempt ${repetition} was not recorded.`
+                          : "Individual attempts are not available for this selection."}
+                      </p>
+                    )}
+                  </div>
+                  {summary.slots.length > 0 && (
+                    <div className="task-workspace-attempt-navigation">
+                      <button
+                        type="button"
+                        disabled={!summary.slots.slice(0, repetition - 1).some(Boolean)}
+                        onClick={() => {
+                          const previous = summary.slots
+                            .slice(0, repetition - 1)
+                            .reverse()
+                            .find((entry) => entry);
+                          if (previous) move({ attempt: previous.repetition });
+                        }}
+                      >
+                        <ArrowLeft size={14} aria-hidden="true" />
+                        Previous attempt
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!summary.slots.slice(repetition).some(Boolean)}
+                        onClick={() => {
+                          const next = summary.slots.slice(repetition).find((entry) => entry);
+                          if (next) move({ attempt: next.repetition });
+                        }}
+                      >
+                        Next attempt
+                        <ArrowRight size={14} aria-hidden="true" />
+                      </button>
+                    </div>
+                  )}
+                </section>
+              </>
+            )}
           </div>
         )}
         <p className="results-footnote task-workspace-footnote">

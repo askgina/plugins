@@ -195,14 +195,17 @@ const compiledContractFixture = Effect.gen(function* () {
 const EVALS_MAPPED_JS_FILES = [
   "bin/check-codex-marketplace.js",
   "bin/export-public-results.js",
+  "bin/execution.js",
   "bin/live.js",
   "bin/replay.js",
   "canonical-json-x.js",
   "codex-cli-x.js",
+  "omp-harness-x.js",
   "publication-x.js",
   "replay-x.js",
   "report-x.js",
   "runner-x.js",
+  "sanitize-x.js",
   "trial-journal-x.js",
 ] as const;
 const EVALS_MAPPED_CHUNK = "runner-x.js";
@@ -229,6 +232,7 @@ const compiledEvalsFixture = Effect.gen(function* () {
   yield* fs.writeFileString(path.join(packageRoot, "src/index.ts"), source);
   yield* fs.writeFileString(path.join(dist, "bin/check-codex-marketplace.d.ts"), "export {};\n");
   yield* fs.writeFileString(path.join(dist, "bin/export-public-results.d.ts"), "export {};\n");
+  yield* fs.writeFileString(path.join(dist, "bin/execution.d.ts"), "export {};\n");
   yield* fs.writeFileString(path.join(dist, "bin/live.d.ts"), "export {};\n");
   yield* fs.writeFileString(path.join(dist, "bin/replay.d.ts"), "export {};\n");
   yield* fs.writeFileString(path.join(dist, "index.d.ts"), "export {};\n");

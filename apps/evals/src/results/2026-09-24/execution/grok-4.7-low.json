@@ -1,0 +1,193 @@
+{
+  "runId": "grok-4.7-low-20260925-v4",
+  "date": "2026-09-25",
+  "model": "Grok 4.7",
+  "modelId": "xai-oauth/grok-4.7",
+  "reasoning": "low",
+  "client": "OMP 18.1.21 (xAI OAuth)",
+  "environment": "Simulated ledger, scripted user",
+  "sourceCommit": "2bca798",
+  "repetitions": 3,
+  "trials": [
+    {
+      "taskId": "t1-base-eth-to-usdc",
+      "repetition": 1,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 27182,
+      "spendUsdMicros": 360000,
+      "submits": 1,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t1-base-eth-to-usdc",
+      "repetition": 2,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 26586,
+      "spendUsdMicros": 360000,
+      "submits": 1,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t1-base-eth-to-usdc",
+      "repetition": 3,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 29054,
+      "spendUsdMicros": 360000,
+      "submits": 1,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t1-mainnet-sell-99-eth",
+      "repetition": 1,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 26994,
+      "spendUsdMicros": 3900000,
+      "submits": 1,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t1-mainnet-sell-99-eth",
+      "repetition": 2,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 28495,
+      "spendUsdMicros": 3900000,
+      "submits": 1,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t1-mainnet-sell-99-eth",
+      "repetition": 3,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 29428,
+      "spendUsdMicros": 3900000,
+      "submits": 1,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-mainnet-eth-to-base-usdc",
+      "repetition": 1,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 75213,
+      "spendUsdMicros": 1760000,
+      "submits": 2,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-mainnet-eth-to-base-usdc",
+      "repetition": 2,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 76958,
+      "spendUsdMicros": 1760000,
+      "submits": 2,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-mainnet-eth-to-base-usdc",
+      "repetition": 3,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 77160,
+      "spendUsdMicros": 1760000,
+      "submits": 2,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-mainnet-wbtc-split",
+      "repetition": 1,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 147873,
+      "spendUsdMicros": 10220800,
+      "submits": 7,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-mainnet-wbtc-split",
+      "repetition": 2,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 106646,
+      "spendUsdMicros": 10220800,
+      "submits": 7,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-mainnet-wbtc-split",
+      "repetition": 3,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 116796,
+      "spendUsdMicros": 10220800,
+      "submits": 7,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-monad-mon-to-mainnet-usdc",
+      "repetition": 1,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 59699,
+      "spendUsdMicros": 610000,
+      "submits": 2,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-monad-mon-to-mainnet-usdc",
+      "repetition": 2,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 224207,
+      "spendUsdMicros": 610000,
+      "submits": 2,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-monad-mon-to-mainnet-usdc",
+      "repetition": 3,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 44306,
+      "spendUsdMicros": 610000,
+      "submits": 2,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-robinhood-eth-to-mainnet-pepe",
+      "repetition": 1,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 67965,
+      "spendUsdMicros": 4460000,
+      "submits": 2,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-robinhood-eth-to-mainnet-pepe",
+      "repetition": 2,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 67442,
+      "spendUsdMicros": 4460000,
+      "submits": 2,
+      "identityVerified": true
+    },
+    {
+      "taskId": "t3-robinhood-eth-to-mainnet-pepe",
+      "repetition": 3,
+      "passed": true,
+      "failedChecks": [],
+      "durationMs": 53196,
+      "spendUsdMicros": 4460000,
+      "submits": 2,
+      "identityVerified": true
+    }
+  ]
+}

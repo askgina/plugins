@@ -1,0 +1,196 @@
+{
+  "schema": "execution-eval-native-identity.v1",
+  "method": "Each trial matched to exactly one native OMP session in its window; OMP session records only. Client-side attestation.",
+  "omp_executable": {
+    "version": "omp/18.1.21",
+    "sha256": "0d9dfcc4561b5877f571cac81226fe8a1466d951cb840e091f3f82a684b3fde4"
+  },
+  "requested": {
+    "provider": "xai-oauth",
+    "model": "grok-4.7",
+    "reasoning": "low"
+  },
+  "all_trials_verified": true,
+  "trials": [
+    {
+      "task_id": "t1-base-eth-to-usdc",
+      "repetition": 1,
+      "session_id": "01a0d5f2-e5a4-75f8-977b-80b8b72c2d84",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    },
+    {
+      "task_id": "t1-base-eth-to-usdc",
+      "repetition": 2,
+      "session_id": "01a0d5f3-4f54-71ee-8bc0-bb0ace4ea28a",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    },
+    {
+      "task_id": "t1-base-eth-to-usdc",
+      "repetition": 3,
+      "session_id": "01a0d5f3-b6d4-72ce-bf27-74109fe39206",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    },
+    {
+      "task_id": "t1-mainnet-sell-99-eth",
+      "repetition": 1,
+      "session_id": "01a0d5f4-288c-7239-b5a2-d7ad4bf8d1bb",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    },
+    {
+      "task_id": "t1-mainnet-sell-99-eth",
+      "repetition": 2,
+      "session_id": "01a0d5f4-92dc-74b9-b9a1-369899734f61",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    },
+    {
+      "task_id": "t1-mainnet-sell-99-eth",
+      "repetition": 3,
+      "session_id": "01a0d5f5-018a-7009-ab31-450cc9133f43",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    },
+    {
+      "task_id": "t3-mainnet-eth-to-base-usdc",
+      "repetition": 1,
+      "session_id": "01a0d5f5-73ef-76b4-b6d8-7a92a0a0e2d3",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    },
+    {
+      "task_id": "t3-mainnet-eth-to-base-usdc",
+      "repetition": 2,
+      "session_id": "01a0d5f6-9977-7063-bedd-244fbd82504c",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    },
+    {
+      "task_id": "t3-mainnet-eth-to-base-usdc",
+      "repetition": 3,
+      "session_id": "01a0d5f7-c64a-7042-a703-4dd51eadca3c",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    },
+    {
+      "task_id": "t3-mainnet-wbtc-split",
+      "repetition": 1,
+      "session_id": "01a0d5f8-f410-750e-855e-9700dc38b377",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    },
+    {
+      "task_id": "t3-mainnet-wbtc-split",
+      "repetition": 2,
+      "session_id": "01a0d5fb-3543-7144-b3c0-14f877eae361",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    },
+    {
+      "task_id": "t3-mainnet-wbtc-split",
+      "repetition": 3,
+      "session_id": "01a0d5fc-d674-77ac-acf7-f0237b256a7b",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    },
+    {
+      "task_id": "t3-monad-mon-to-mainnet-usdc",
+      "repetition": 1,
+      "session_id": "01a0d5fe-9e71-71dc-b9a9-955a76a17970",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    },
+    {
+      "task_id": "t3-monad-mon-to-mainnet-usdc",
+      "repetition": 2,
+      "session_id": "01a0d5ff-876d-7684-80a1-2241748b2717",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    },
+    {
+      "task_id": "t3-monad-mon-to-mainnet-usdc",
+      "repetition": 3,
+      "session_id": "01a0d602-f3cc-771a-86ae-930a3cbf9517",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    },
+    {
+      "task_id": "t3-robinhood-eth-to-mainnet-pepe",
+      "repetition": 1,
+      "session_id": "01a0d603-a055-779a-bea4-5a918d930b8f",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    },
+    {
+      "task_id": "t3-robinhood-eth-to-mainnet-pepe",
+      "repetition": 2,
+      "session_id": "01a0d604-a9c6-739d-a86b-0125fc582ead",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    },
+    {
+      "task_id": "t3-robinhood-eth-to-mainnet-pepe",
+      "repetition": 3,
+      "session_id": "01a0d605-b163-72c8-bfe6-43063dcbc3a0",
+      "native_model": "xai-oauth/grok-4.7",
+      "resolved_model_is_fallback": false,
+      "thinking_level": ["low"],
+      "credential_provider": ["xai-oauth"],
+      "verified": true
+    }
+  ]
+}
