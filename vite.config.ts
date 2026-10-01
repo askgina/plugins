@@ -72,6 +72,7 @@ export default defineConfig({
       "apps/*/dist/**",
       "apps/evals/src/results/**",
       "apps/evals/public/transcripts/**",
+      "ai_docs/execution-eval-runs/*/public-chat-source-manifest.json",
     ],
   },
   lint: {
