@@ -121,7 +121,7 @@ test("shows the latest campaign for each model setting by default", () => {
     expect(html).toContain(`data-configuration="${row.rowId}"`);
   }
   expect(new Set(configurations.map((row) => row.model.id)).size).toBe(12);
-  expect(html).toContain("Latest per setting keeps each reasoning level separate");
+  expect(html).toContain('<option value="latest" selected="">Latest per setting</option>');
   expect(html).toContain("Recovery ·");
   expect(html).not.toContain("Recorded setting</label>");
   expect(html).not.toMatch(/\bOMP\b/u);

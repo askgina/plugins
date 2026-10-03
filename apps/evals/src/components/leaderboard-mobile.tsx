@@ -1,7 +1,6 @@
 import { Fragment, useEffect, useId, useState, useSyncExternalStore } from "react";
 import { ArrowDown, ArrowUp, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 import {
-  benchmarkSummary,
   campaignDisplayLabel,
   leaderboardCampaignRows,
   recordedBudgetLabel,
@@ -252,25 +251,14 @@ export function LeaderboardMobile({
 
   return (
     <div className="eval-container results-page leaderboard-mobile">
-      <ResultsHeader title="Gina Model Leaderboard" description={benchmarkSummary(rows)}>
-        <p className="lb-mobile-caveat">
-          Tool-use conformance with price grounding on three Perps tasks.
-        </p>
-        <div className="lb-mobile-methodology">
-          <a href="#/methodology">Methodology ↗</a>
-          <InfoPopover label="Comparison conditions">
-            <p>
-              Latest per setting keeps each reasoning level separate, including incomplete results.
-              Choose All campaigns (history) to inspect earlier runs. Recovery rows include retries
-              and show their recorded time budgets. Completed means every trial finished processing,
-              including execution errors. Scores divide verified passes by all planned trials;
-              timeouts and execution errors earn zero credit. Clients, reasoning controls, and time
-              budgets vary. Overall weights Spot, Perps, and Predictions equally. Small score
-              differences do not establish statistical significance.
-            </p>
-          </InfoPopover>
-        </div>
-      </ResultsHeader>
+      <ResultsHeader
+        title="Gina Model Leaderboard"
+        description={
+          state.campaign === "latest"
+            ? "Financial evaluations to test model reliability, accuracy, and cost for executing transactions"
+            : "Recorded results by model, reasoning setting, and campaign."
+        }
+      />
       <div className="lb-mobile-searchbar">
         <label className="results-search">
           <Search size={17} aria-hidden="true" />

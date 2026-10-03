@@ -16,7 +16,6 @@ import { ModelAvatar, PageShell } from "../components/eval-ui";
 import { InfoPopover, ResultsHeader, RunDetails, dollars, seconds } from "../components/results-ui";
 import {
   SCORED_FAMILIES,
-  benchmarkSummary,
   campaignDisplayLabel,
   configurationLeaderboardRows,
   leaderboardCampaignRows,
@@ -115,31 +114,11 @@ export function LeaderboardPage({
           title="Gina Model Leaderboard"
           description={
             campaign === "latest"
-              ? "The latest recorded result for each model and reasoning setting."
+              ? "Financial evaluations to test model reliability, accuracy, and cost for executing transactions"
               : "Recorded results by model, reasoning setting, and campaign."
           }
-        >
-          <p className="results-context">{benchmarkSummary(rows)}</p>
-          <p className="results-context">
-            Latest per setting keeps each reasoning level separate, including incomplete results.
-            Choose All campaigns (history) to inspect earlier runs. Scores measure tool-use
-            conformance, with price grounding for three Perps tasks. Other answer quality was not
-            evaluated.
-          </p>
-          <p className="results-context">
-            Recovery rows include retries and show their recorded time budgets. Completed means
-            every trial finished processing, including execution errors. Graded counts trials with a
-            pass or fail verdict. Scores measure end-to-end success across all planned trials.
-            Timeouts and execution errors earn zero credit and stay in the denominator.
-          </p>
-        </ResultsHeader>
+        />
         <div className="results-toolbar">
-          <p className="results-explanation">
-            Clients, reasoning controls, and time budgets vary. Compare the recorded conditions
-            alongside the results. Overall weights Spot, Perps, and Predictions equally. Small score
-            differences do not establish statistical significance.{" "}
-            <a href="#/methodology">Methodology ↗</a>
-          </p>
           <label className="results-search">
             <Search size={17} aria-hidden="true" />
             <span className="results-sr-only">Search models, providers, or reasoning settings</span>
