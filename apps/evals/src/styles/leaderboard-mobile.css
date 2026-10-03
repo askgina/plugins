@@ -41,25 +41,6 @@
     font-size: 12px;
     line-height: 1.5;
   }
-  .lb-mobile-caveat {
-    margin: 6px 0 0;
-    color: var(--eval-muted);
-    font-size: 12px;
-    line-height: 1.5;
-  }
-  .lb-mobile-methodology {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 12px;
-  }
-  .lb-mobile-methodology a {
-    display: flex;
-    align-items: center;
-    min-height: 44px;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
   .leaderboard-mobile .results-info {
     min-width: 44px;
   }
