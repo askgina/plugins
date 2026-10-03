@@ -255,7 +255,7 @@ export function LeaderboardMobile({
         title="Gina Model Leaderboard"
         description={
           state.campaign === "latest"
-            ? "The latest recorded result for each model and reasoning setting."
+            ? "Financial evaluations to test model reliability, accuracy, and cost for executing transactions"
             : "Recorded results by model, reasoning setting, and campaign."
         }
       />
