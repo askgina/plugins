@@ -116,6 +116,26 @@ describe("transaction run ownership", () => {
       expect(owner.runs.Spot?.configuration.reasoning).toBe(run.reasoning);
     }
   });
+
+  test("every Claude Opus 5.5 setting owns the transaction run at its own level", () => {
+    const opusRows = configurationLeaderboardRows().filter(
+      (row) => row.model.id === "claude-opus-5-5",
+    );
+    const owned = Object.fromEntries(
+      opusRows.map((row) => [
+        row.runs.Spot?.configuration.reasoning,
+        transactionRunForRow(row)?.reasoning,
+      ]),
+    );
+    expect(opusRows).toHaveLength(5);
+    expect(owned).toEqual({
+      low: "low",
+      medium: "medium",
+      high: "high",
+      xhigh: "xhigh",
+      max: "max",
+    });
+  });
 });
 
 describe("transaction score", () => {
