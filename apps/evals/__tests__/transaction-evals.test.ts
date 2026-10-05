@@ -22,6 +22,8 @@ interface TaskFile {
   readonly user_script: { readonly confirm: { readonly kind: string } };
 }
 
+const grok47Low = TRANSACTION_RUNS.find((run) => run.runId === "grok-4.7-low-20260925-v4")!;
+
 describe("Transactions page catalog", () => {
   test("lists exactly the task files, with their prompt, tier, user reply and outcome", () => {
     const fromFiles = Object.keys(TASK_SOURCES)
@@ -68,7 +70,6 @@ describe("transaction run ownership", () => {
 });
 
 describe("transaction score", () => {
-  const base = TRANSACTION_RUNS[0]!;
   const trial = (taskId: string, repetition: number, passed: boolean) => ({
     taskId,
     repetition,
@@ -85,12 +86,12 @@ describe("transaction score", () => {
   test("averages task pass rates equally (the task is the scoring unit)", () => {
     const n = ids.length;
     // Every task passes 3/3 except task B at 0/3.
-    expect(transactionScore({ ...base, trials: full })).toBeCloseTo((n - 1) / n);
+    expect(transactionScore({ ...grok47Low, trials: full })).toBeCloseTo((n - 1) / n);
     // Task B at 1/3 counts as one third of one task, not as one extra pooled attempt.
     const uneven = full.map((entry) =>
       entry.taskId === ids[1] && entry.repetition === 1 ? { ...entry, passed: true } : entry,
     );
-    expect(transactionScore({ ...base, trials: uneven })).toBeCloseTo((n - 1 + 1 / 3) / n);
+    expect(transactionScore({ ...grok47Low, trials: uneven })).toBeCloseTo((n - 1 + 1 / 3) / n);
   });
 
   test("has no score when an attempt is missing, duplicated, or its identity is unverified", () => {
@@ -99,12 +100,12 @@ describe("transaction score", () => {
     const unverified = full.map((entry, index) =>
       index === 0 ? { ...entry, identityVerified: false } : entry,
     );
-    expect(transactionScore({ ...base, trials: missing })).toBeNull();
-    expect(transactionScore({ ...base, trials: duplicated })).toBeNull();
-    expect(transactionScore({ ...base, trials: unverified })).toBeNull();
+    expect(transactionScore({ ...grok47Low, trials: missing })).toBeNull();
+    expect(transactionScore({ ...grok47Low, trials: duplicated })).toBeNull();
+    expect(transactionScore({ ...grok47Low, trials: unverified })).toBeNull();
   });
 
   test("the published Grok 4.7 Low run scores every task", () => {
-    expect(transactionScore(base)).toBeCloseTo(1);
+    expect(transactionScore(grok47Low)).toBeCloseTo(1);
   });
 });
