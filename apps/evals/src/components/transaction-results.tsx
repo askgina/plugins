@@ -11,7 +11,7 @@ import { taskRoute } from "../lib/task-workspace";
 import { percent } from "./results-ui";
 
 /** The Tasks view of exactly this run, opened on the first transaction task. */
-const spotTransactionsHref = (run: TransactionRun) =>
+export const spotTransactionsHref = (run: TransactionRun) =>
   `#${taskRoute({
     family: "Spot",
     caseId: TRANSACTION_TASKS[0]?.id,

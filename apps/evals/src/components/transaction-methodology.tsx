@@ -1,4 +1,12 @@
+import { getModel } from "../canonical/selectors";
 import { TRANSACTION_CHECKS, TRANSACTION_TASKS, TRANSACTION_TIERS } from "../lib/transaction-evals";
+import {
+  plannedTrials,
+  TRANSACTION_RUNS_BY_MODEL,
+  transactionScore,
+} from "../lib/transaction-results";
+import { percent } from "./results-ui";
+import { spotTransactionsHref } from "./transaction-results";
 
 /** Methodology for the transaction (execution) evals. Rendered inside the Methodology page. */
 export function TransactionMethodology() {
@@ -11,6 +19,54 @@ export function TransactionMethodology() {
         <a href="#/tasks?category=Spot&task=t1-base-eth-to-usdc">Spot tasks</a>, scored separately
         from Spot. They never change the Spot score or Overall.
       </p>
+
+      <h3 className="method-subtitle">Runs</h3>
+      <p>
+        Every recorded setting, including transaction-only runs with no leaderboard row. The score
+        averages each task's pass rate over its attempts; it stays incomplete until every task has
+        all its attempts with a verified model identity.
+      </p>
+      <div className="results-scroll">
+        <table className="eval-table" aria-label="Transaction eval runs">
+          <thead>
+            <tr>
+              <th scope="col">Model</th>
+              <th scope="col">Reasoning</th>
+              <th scope="col">Client</th>
+              <th scope="col">Date</th>
+              <th scope="col">Score</th>
+              <th scope="col">Attempts passed</th>
+              <th scope="col">Tasks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {TRANSACTION_RUNS_BY_MODEL.map((run) => {
+              const name = getModel(run.canonicalModelId)?.name ?? run.canonicalModelId;
+              const score = transactionScore(run);
+              return (
+                <tr key={run.runId}>
+                  <th scope="row">{name}</th>
+                  <td>{run.reasoning}</td>
+                  <td>{run.client}</td>
+                  <td>{run.date}</td>
+                  <td>{score === null ? "Incomplete" : percent(score)}</td>
+                  <td>
+                    {run.trials.filter((trial) => trial.passed).length}/{plannedTrials(run)}
+                  </td>
+                  <td>
+                    <a
+                      href={spotTransactionsHref(run)}
+                      aria-label={`View ${name} ${run.reasoning} reasoning tasks`}
+                    >
+                      View ↗
+                    </a>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
       <ol className="method-steps">
         <li>
