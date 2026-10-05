@@ -1,7 +1,11 @@
 import { ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
 import { getModel, type LeaderboardModelRow } from "../canonical/selectors";
 import type { TransactionTask } from "../lib/transaction-evals";
-import { TRANSACTION_CHECK_LABEL, TRANSACTION_RUNS } from "../lib/transaction-results";
+import {
+  TRANSACTION_CHECK_LABEL,
+  TRANSACTION_RUNS,
+  TRANSACTION_RUNS_BY_MODEL,
+} from "../lib/transaction-results";
 import type { TaskSelection, TaskView } from "../lib/task-workspace";
 import { ConversationPanel } from "./conversation-panel";
 import { ModelAvatar } from "./eval-ui";
@@ -35,7 +39,7 @@ export function TransactionTaskPanels({
 }) {
   // A transaction-only model has no leaderboard row, so each run names its canonical model.
   const entries = [
-    ...TRANSACTION_RUNS.flatMap((run) => {
+    ...TRANSACTION_RUNS_BY_MODEL.flatMap((run) => {
       const model = getModel(run.canonicalModelId);
       return model
         ? [{ key: run.runId, label: `${model.name} · ${run.reasoning} reasoning`, model, run }]

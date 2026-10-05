@@ -1,7 +1,7 @@
 // Transaction (execution) eval results. A run owned by a leaderboard setting belongs to the row
 // with the same model id and Spot run; a transaction-only run belongs to no leaderboard row.
 // Scores are separate from Overall: they never change the tool-use leaderboard.
-import type { LeaderboardModelRow } from "../canonical/selectors";
+import { getModel, type LeaderboardModelRow } from "../canonical/selectors";
 import type { ConversationReference } from "./conversations";
 import grok47Low from "../results/2026-09-24/execution/grok-4.7-low.json";
 import { TRANSACTION_TASKS } from "./transaction-evals";
@@ -42,6 +42,7 @@ export interface TransactionRun {
   readonly conversations: Omit<ConversationReference, "family" | "caseId" | "repetition">;
 }
 
+/** List each model's runs from lowest to highest reasoning; views keep that order per model. */
 export const TRANSACTION_RUNS: readonly TransactionRun[] = [
   // Current Grok 4.7 Low setting: same OMP client and xAI OAuth profile as the low recovery.
   {
@@ -58,6 +59,14 @@ export const TRANSACTION_RUNS: readonly TransactionRun[] = [
     },
   },
 ];
+
+/** Runs grouped by model name: the order every list of transaction runs uses. */
+export const TRANSACTION_RUNS_BY_MODEL: readonly TransactionRun[] = TRANSACTION_RUNS.map((run) => ({
+  run,
+  name: getModel(run.canonicalModelId)?.name ?? run.canonicalModelId,
+}))
+  .sort((a, b) => a.name.localeCompare(b.name))
+  .map(({ run }) => run);
 
 /** The transaction run owned by exactly this leaderboard row, if any. */
 export function transactionRunForRow(
