@@ -302,6 +302,9 @@ const APPROVED_GROK47_ARTIFACTS: Readonly<Record<string, string>> = {
   "src/results/2026-09-22/grok-4.7/snapshot.json":
     "cdb01a1faf2db9b4f2806c042fc3f5831a3d1eb0d7237b56aa2a11697974bf4f",
 };
+// Claude-bearing execution results: the exact bytes reviewed for publication. A result is
+// Claude-bearing by its path or its own runId, model or modelId, never by file name alone.
+const APPROVED_EXECUTION_ARTIFACTS: Readonly<Record<string, string>> = {};
 // Numeric checks, public identifiers and evidence hashes only. Original result
 // and transcript bytes stay pinned separately above.
 const APPROVED_REGRADE_RECEIPT_SHA256 =
@@ -374,7 +377,10 @@ export const validateClaudePublicArtifact = Function.dual<
 );
 
 /** Scan source imports AND copied public assets, not a hand-maintained report list. */
-export const checkEvalPublicArtifacts = (appRoot?: string) =>
+export const checkEvalPublicArtifacts = (
+  appRoot?: string,
+  approvedExecutionArtifacts: Readonly<Record<string, string>> = APPROVED_EXECUTION_ARTIFACTS,
+) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -475,8 +481,21 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
           }
           return;
         }
-        if (executionArtifact && Option.isNone(decodeExecutionResult(input)))
-          return yield* fail(relative, "private_payload");
+        // Execution results have their own strict schema, so they never reach the read-only
+        // Trial guard below; Claude-bearing ones also need their reviewed bytes pinned.
+        if (executionArtifact) {
+          const result = decodeExecutionResult(input);
+          if (Option.isNone(result)) return yield* fail(relative, "private_payload");
+          const { runId, model, modelId } = result.value;
+          if (
+            [relative, runId, model, modelId].some((value) => /claude/iu.test(value)) &&
+            (!Object.hasOwn(approvedExecutionArtifacts, relative) ||
+              createHash("sha256").update(bytes).digest("hex") !==
+                approvedExecutionArtifacts[relative])
+          )
+            return yield* fail(relative, "unapproved_artifact");
+          return;
+        }
         const claudeBearing = /claude/iu.test(relative) || hasClaudeIdentity(input);
         const sweepArtifact = relative.startsWith("src/results/2026-09-16/reasoning-sweep/");
         const recoveryArtifact = relative.startsWith("src/results/2026-09-21/recovery/");
