@@ -1,5 +1,5 @@
-// Transaction (execution) eval results, owned by the model setting that produced them.
-// A run belongs to the leaderboard row with the same model id and reasoning setting.
+// Transaction (execution) eval results. A run owned by a leaderboard setting belongs to the row
+// with the same model id and Spot run; a transaction-only run belongs to no leaderboard row.
 // Scores are separate from Overall: they never change the tool-use leaderboard.
 import type { LeaderboardModelRow } from "../canonical/selectors";
 import type { ConversationReference } from "./conversations";
@@ -25,8 +25,9 @@ export interface TransactionRun {
   /**
    * The leaderboard setting that owns this run, identified by that row's Spot run id. A model
    * and reasoning level can appear in several campaigns; only this one row carries the result.
+   * Absent for a transaction-only run, which has no read-only setting on the leaderboard.
    */
-  readonly ownerSpotRunId: string;
+  readonly ownerSpotRunId?: string;
   readonly modelId: string;
   readonly reasoning: string;
   readonly client: string;
@@ -61,6 +62,8 @@ export const TRANSACTION_RUNS: readonly TransactionRun[] = [
 /** The transaction run owned by exactly this leaderboard row, if any. */
 export function transactionRunForRow(row: LeaderboardModelRow): TransactionRun | undefined {
   const spotRunId = row.runs.Spot?.runId;
+  // Transaction-only runs have no owner, so a row without a Spot run must not match them.
+  if (spotRunId === undefined) return undefined;
   return TRANSACTION_RUNS.find(
     (run) => run.canonicalModelId === row.model.id && run.ownerSpotRunId === spotRunId,
   );
