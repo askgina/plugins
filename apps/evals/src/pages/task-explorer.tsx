@@ -232,12 +232,12 @@ export function TaskExplorerPage({
   }, [row?.model.id, modelQuery]);
 
   function move(next: Partial<TaskSelection>) {
-    // A transaction task has no canonical run; its attempt and view are its own.
+    // A transaction task has no canonical run; its model, run, attempt and view are its own.
     const updated = {
       family,
       caseId: transactionTask?.id ?? definition?.caseId,
-      modelId: row?.model.id,
-      runId: transactionTask ? undefined : run?.runId,
+      modelId: transactionTask ? selection.modelId : row?.model.id,
+      runId: transactionTask ? selection.runId : run?.runId,
       attempt: transactionTask ? selection.attempt : repetition,
       view,
       ...next,
@@ -248,10 +248,11 @@ export function TaskExplorerPage({
   /** One entry point for every task control (sidebar, mobile picker). */
   function chooseTask(caseId: string) {
     const isTransaction = TRANSACTION_TASKS.some((task) => task.id === caseId);
+    // Transaction and read-only tasks select different runs: keep the run only within a kind.
     move(
-      isTransaction
-        ? { caseId, runId: undefined, attempt: undefined }
-        : { caseId, attempt: undefined },
+      isTransaction === (transactionTask !== undefined)
+        ? { caseId, attempt: undefined }
+        : { caseId, runId: undefined, attempt: undefined },
     );
   }
   function chooseFamily(next: PrototypeFamily) {
@@ -385,6 +386,7 @@ export function TaskExplorerPage({
                   task={transactionTask}
                   rows={rows}
                   selectedModelId={selection.modelId}
+                  selectedRunId={selection.runId}
                   attempt={selection.attempt}
                   view={view}
                   onMove={move}
