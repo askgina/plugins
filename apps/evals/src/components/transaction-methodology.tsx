@@ -2,6 +2,7 @@ import { getModel } from "../canonical/selectors";
 import { TRANSACTION_CHECKS, TRANSACTION_TASKS, TRANSACTION_TIERS } from "../lib/transaction-evals";
 import {
   plannedTrials,
+  TRANSACTION_RUNS,
   TRANSACTION_RUNS_BY_MODEL,
   transactionScore,
 } from "../lib/transaction-results";
@@ -10,14 +11,18 @@ import { spotTransactionsHref } from "./transaction-results";
 
 /** Methodology for the transaction (execution) evals. Rendered inside the Methodology page. */
 export function TransactionMethodology() {
+  const runCount = TRANSACTION_RUNS.length;
+  const modelCount = new Set(TRANSACTION_RUNS.map((run) => run.canonicalModelId)).size;
   return (
     <>
       <p className="method-limits" role="status">
-        <strong>Pilot stage.</strong> One model has been run (Grok 4.7, low reasoning) on a
-        simulated ledger; results appear under each model's Spot score on the{" "}
-        <a href="#/leaderboard">leaderboard</a> and in the{" "}
-        <a href="#/tasks?category=Spot&task=t1-base-eth-to-usdc">Spot tasks</a>, scored separately
-        from Spot. They never change the Spot score or Overall.
+        <strong>Pilot stage.</strong> {runCount} {runCount === 1 ? "setting" : "settings"} of{" "}
+        {modelCount} {modelCount === 1 ? "model" : "models"} {runCount === 1 ? "has" : "have"} been
+        run on a simulated ledger. Every run is listed below and in the{" "}
+        <a href="#/tasks?category=Spot&task=t1-base-eth-to-usdc">Spot tasks</a>; a run that belongs
+        to a leaderboard setting also appears under that setting's Spot score on the{" "}
+        <a href="#/leaderboard">leaderboard</a>. Transaction scores never change the Spot score or
+        Overall.
       </p>
 
       <h3 className="method-subtitle">Runs</h3>
