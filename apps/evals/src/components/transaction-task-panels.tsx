@@ -50,6 +50,8 @@ export function TransactionTaskPanels({
         run: undefined,
       })),
   ];
+  const runCount = entries.filter((entry) => entry.run).length;
+  const modelCount = new Set(entries.map((entry) => entry.model.id)).size;
   const selected =
     entries.find((entry) => entry.run !== undefined && entry.run.runId === selectedRunId) ??
     entries.find((entry) => entry.model.id === selectedModelId) ??
@@ -87,7 +89,10 @@ export function TransactionTaskPanels({
         <div className="task-workspace-model-tools">
           <div className="task-workspace-heading">
             <h2 id="workspace-models-heading">Models</h2>
-            <span>{rows.length} models</span>
+            <span>
+              {runCount} {runCount === 1 ? "run" : "runs"} · {modelCount}{" "}
+              {modelCount === 1 ? "model" : "models"}
+            </span>
           </div>
         </div>
         <div className="task-workspace-model-list" role="group" aria-label="Model results">
