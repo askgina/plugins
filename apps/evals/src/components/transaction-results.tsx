@@ -4,12 +4,20 @@ import {
   transactionRunForRow,
   transactionScore,
   transactionTaskSummaries,
+  type TransactionRun,
 } from "../lib/transaction-results";
 import { TRANSACTION_TASKS } from "../lib/transaction-evals";
+import { taskRoute } from "../lib/task-workspace";
 import { percent } from "./results-ui";
 
-const spotTransactionsHref = (row: LeaderboardModelRow) =>
-  `#/tasks?category=Spot&task=${TRANSACTION_TASKS[0]?.id ?? ""}&model=${row.model.id}`;
+/** The Tasks view of exactly this run, opened on the first transaction task. */
+const spotTransactionsHref = (run: TransactionRun) =>
+  `#${taskRoute({
+    family: "Spot",
+    caseId: TRANSACTION_TASKS[0]?.id,
+    modelId: run.canonicalModelId,
+    runId: run.runId,
+  })}`;
 
 const usd = (micros: number) => `$${(micros / 1_000_000).toFixed(2)}`;
 const secondsLabel = (ms: number) => `${Math.round(ms / 1000)}s`;
@@ -21,7 +29,7 @@ export function TransactionResult({ row }: { row: LeaderboardModelRow }) {
   const score = transactionScore(run);
   const passed = run.trials.filter((trial) => trial.passed).length;
   return (
-    <a className="results-transactions-line" href={spotTransactionsHref(row)}>
+    <a className="results-transactions-line" href={spotTransactionsHref(run)}>
       Transactions {score === null ? "incomplete" : percent(score)} · {passed}/{plannedTrials(run)}{" "}
       attempts passed
     </a>
@@ -73,7 +81,7 @@ export function TransactionDetails({ row }: { row: LeaderboardModelRow }) {
           </tbody>
         </table>
       </div>
-      <a className="results-score-link" href={spotTransactionsHref(row)}>
+      <a className="results-score-link" href={spotTransactionsHref(run)}>
         View Spot transaction tasks and trials ↗
       </a>
     </section>
