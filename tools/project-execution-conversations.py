@@ -24,8 +24,9 @@ import subprocess
 from collections import Counter
 from pathlib import Path
 
+# Campaign ids default to the first transaction publication; later publications pass their own.
 CAMPAIGN = "transactions-2026-09-25"
-# The merged index spans every published campaign up to and including this one.
+# The merged index spans every published campaign up to and including the newest one.
 INDEX_CAMPAIGN = "eval-campaigns-2026-09-25"
 FAMILY = "spot"
 TARGET = "omp_harness"
@@ -67,7 +68,8 @@ def check_identity(native, requested, label):
                             for m in replies), f"assistant model mismatch {label}")
 
 
-def project(run_file, identity_file, sessions, base_index_file, repository, row_id, source_commit, output):
+def project(run_file, identity_file, sessions, base_index_file, repository, row_id, source_commit, output,
+            campaign=CAMPAIGN, index_campaign=INDEX_CAMPAIGN):
     run_bytes = run_file.read_bytes()
     identity_bytes = identity_file.read_bytes()
     base_index_bytes = base_index_file.read_bytes()
@@ -125,7 +127,7 @@ def project(run_file, identity_file, sessions, base_index_file, repository, row_
                              "auxiliarySourceComplete": True, "finalAnswerPresent": bool(final_text),
                              "nativeVisibleEvidenceAvailable": True},
         }
-        reference = {"campaignId": CAMPAIGN, "rowId": row_id, "family": FAMILY, "caseId": task,
+        reference = {"campaignId": campaign, "rowId": row_id, "family": FAMILY, "caseId": task,
                      "repetition": repetition, "sourceSummarySha256": digest(run_bytes),
                      "sourceCommit": source_commit, "catalogSha": catalog_sha, "target": TARGET}
         exported = chat.project_chat(document, reference, digest(native_bytes), [])
@@ -147,17 +149,17 @@ def project(run_file, identity_file, sessions, base_index_file, repository, row_
     index["redactions"] = dict(sorted(merged_redactions.items()))
     # The combined index is bound to everything it was built from: the previous index (with its
     # own provenance) and this run's published summary, identity record and native sessions.
-    source_manifest = {"baseIndexSha256": digest(base_index_bytes), "campaignId": CAMPAIGN, "rowId": row_id,
+    source_manifest = {"baseIndexSha256": digest(base_index_bytes), "campaignId": campaign, "rowId": row_id,
                        "runSha256": digest(run_bytes), "identitySha256": digest(identity_bytes),
                        "catalogSha": catalog_sha, "sourceCommit": source_commit,
                        "nativeSessions": dict(sorted(session_hashes.items()))}
     index["sourceManifestSha256"] = digest(encode(source_manifest))
     index["exporterSha256"] = digest(Path(__file__).read_bytes())
-    index["campaignId"] = INDEX_CAMPAIGN
+    index["campaignId"] = index_campaign
     index_bytes = encode(index)
     (transcripts / "index.json").write_bytes(index_bytes)
     (output / "source-manifest.json").write_bytes(encode(source_manifest))
-    print(json.dumps({"campaignId": CAMPAIGN, "rowId": row_id, "catalogSha": catalog_sha,
+    print(json.dumps({"campaignId": campaign, "rowId": row_id, "catalogSha": catalog_sha,
                       "sourceSummarySha256": digest(run_bytes), "transcripts": len(files),
                       "redactions": dict(redactions), "sourceManifestSha256": index["sourceManifestSha256"],
                       "exporterSha256": index["exporterSha256"], "indexSha256": digest(index_bytes),
@@ -175,7 +177,10 @@ if __name__ == "__main__":
     parser.add_argument("--row-id", required=True)
     parser.add_argument("--source-commit", required=True, help="full commit the run was executed from")
     parser.add_argument("--output", type=Path, required=True, help="staging dir outside the repository")
+    parser.add_argument("--campaign", default=CAMPAIGN, help="campaign id of this publication's chats")
+    parser.add_argument("--index-campaign", default=INDEX_CAMPAIGN,
+                        help="campaign id of the merged index (spans every campaign up to this one)")
     args = parser.parse_args()
     require(not args.output.resolve().is_relative_to(args.repository.resolve()), "output must be outside repository")
     project(args.run, args.identity, args.sessions, args.base_index, args.repository, args.row_id,
-            args.source_commit, args.output)
+            args.source_commit, args.output, args.campaign, args.index_campaign)
