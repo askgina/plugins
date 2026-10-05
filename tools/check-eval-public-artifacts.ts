@@ -14,6 +14,7 @@ import {
   PublicEvalSha256Schema,
   PublicEvalTimestampSchema,
 } from "../packages/contracts/src/eval-results";
+import { HardCheckIdSchema } from "../packages/evals/src/execution/contracts";
 import { isSafePublicEvalText } from "../packages/evals/src/sanitize";
 import { isUnknownRecord } from "../packages/evals/src/type-guards";
 import {
@@ -191,6 +192,39 @@ const REASONING_LEVELS: Readonly<Record<string, true>> = {
 };
 const DIGEST = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u;
 const CLAUDE_ID = /(?:^|[/-])claude(?:[/-]|$)/iu;
+// Execution (transaction) results publish exactly these fields; anything else is rejected.
+const ExecutionText = Schema.NonEmptyString.check(
+  Schema.isMaxLength(2000),
+  Schema.isPattern(/^[^\p{Cc}]*$/u),
+  Schema.makeFilter(isSafePublicEvalText),
+);
+const ExecutionTrial = Schema.Struct({
+  taskId: SafeIdentifier,
+  repetition: Repetition,
+  passed: Schema.Boolean,
+  failedChecks: Schema.Array(Schema.Struct({ id: HardCheckIdSchema, detail: ExecutionText })),
+  durationMs: Count,
+  spendUsdMicros: Count,
+  submits: Count,
+  identityVerified: Schema.Boolean,
+});
+const decodeExecutionResult = Schema.decodeUnknownOption(
+  Schema.Struct({
+    runId: SafeIdentifier,
+    date: Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/u)),
+    model: ExecutionText,
+    modelId: SafeModel,
+    reasoning: Schema.String.check(
+      Schema.makeFilter((value: string) => Object.hasOwn(REASONING_LEVELS, value)),
+    ),
+    client: ExecutionText,
+    environment: ExecutionText,
+    sourceCommit: Schema.String.check(Schema.isPattern(/^[a-f0-9]{7,40}$/u)),
+    repetitions: Repetition,
+    trials: Schema.Array(ExecutionTrial),
+  }),
+  PUBLIC_EVAL_DECODE_OPTIONS,
+);
 // Freeze the reviewed legacy projections, including their free-form source
 // metadata. New paths or changed bytes require a new explicit privacy review.
 const APPROVED_CLAUDE_ARTIFACTS: Readonly<Record<string, string>> = {
@@ -394,10 +428,12 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
         if (info.type !== "File") return yield* fail(relative, "unsupported_entry");
         const publicTranscript = relative.startsWith("public/transcripts/");
         const grok47Artifact = relative.startsWith("src/results/2026-09-22/grok-4.7/");
+        const executionArtifact = /^src\/results\/[^/]+\/execution\//u.test(relative);
         if (!relative.toLowerCase().endsWith(".json")) {
           if (
             publicTranscript ||
             grok47Artifact ||
+            executionArtifact ||
             relative.startsWith("src/results/2026-09-24/claude-opus-5.5/")
           )
             return yield* fail(relative, "unapproved_artifact");
@@ -439,6 +475,8 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
           }
           return;
         }
+        if (executionArtifact && Option.isNone(decodeExecutionResult(input)))
+          return yield* fail(relative, "private_payload");
         const claudeBearing = /claude/iu.test(relative) || hasClaudeIdentity(input);
         const sweepArtifact = relative.startsWith("src/results/2026-09-16/reasoning-sweep/");
         const recoveryArtifact = relative.startsWith("src/results/2026-09-21/recovery/");
