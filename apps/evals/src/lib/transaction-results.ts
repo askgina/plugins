@@ -60,11 +60,14 @@ export const TRANSACTION_RUNS: readonly TransactionRun[] = [
 ];
 
 /** The transaction run owned by exactly this leaderboard row, if any. */
-export function transactionRunForRow(row: LeaderboardModelRow): TransactionRun | undefined {
+export function transactionRunForRow(
+  row: LeaderboardModelRow,
+  runs: readonly TransactionRun[] = TRANSACTION_RUNS,
+): TransactionRun | undefined {
   const spotRunId = row.runs.Spot?.runId;
   // Transaction-only runs have no owner, so a row without a Spot run must not match them.
   if (spotRunId === undefined) return undefined;
-  return TRANSACTION_RUNS.find(
+  return runs.find(
     (run) => run.canonicalModelId === row.model.id && run.ownerSpotRunId === spotRunId,
   );
 }
