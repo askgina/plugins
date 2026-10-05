@@ -100,6 +100,22 @@ describe("transaction run ownership", () => {
       runs.map((run) => (run.ownerSpotRunId === undefined ? [] : [run.ownerSpotRunId])),
     );
   });
+
+  test("each published owned run sits on exactly its own setting's row; others on none", () => {
+    const rows = configurationLeaderboardRows();
+    for (const run of TRANSACTION_RUNS) {
+      const owners = rows.filter((row) => transactionRunForRow(row) === run);
+      if (run.ownerSpotRunId === undefined) {
+        expect(owners, run.runId).toEqual([]);
+        continue;
+      }
+      expect(owners.length, run.runId).toBe(1);
+      const owner = owners[0]!;
+      expect(owner.model.id).toBe(run.canonicalModelId);
+      expect(owner.runs.Spot?.runId).toBe(run.ownerSpotRunId);
+      expect(owner.runs.Spot?.configuration.reasoning).toBe(run.reasoning);
+    }
+  });
 });
 
 describe("transaction score", () => {
