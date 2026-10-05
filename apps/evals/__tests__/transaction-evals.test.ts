@@ -67,6 +67,39 @@ describe("transaction run ownership", () => {
     const owners = grokRows.filter((row) => transactionRunForRow(row) !== undefined);
     expect(owners.map((row) => row.runs.Spot?.runId)).toEqual(["grok47-recovery-low-spot-1"]);
   });
+
+  test("an owned run has exactly one owner row; a transaction-only run has none", () => {
+    const rows = configurationLeaderboardRows();
+    const grokRows = rows.filter((row) => row.model.id === "grok-4-7");
+    // Fixtures from the Grok run: one owned run per Grok setting, and transaction-only runs for a
+    // model with leaderboard rows and for a model without any.
+    const owned = grokRows.map((row, index) => ({
+      ...grok47Low,
+      runId: `fixture-owned-${index}`,
+      ownerSpotRunId: row.runs.Spot!.runId,
+    }));
+    const transactionOnly = [
+      { ...grok47Low, runId: "fixture-grok-only", ownerSpotRunId: undefined },
+      {
+        ...grok47Low,
+        runId: "fixture-sonnet-only",
+        canonicalModelId: "claude-sonnet-5-5",
+        ownerSpotRunId: undefined,
+      },
+    ];
+    const runs = [...owned, ...transactionOnly];
+    // A row without a Spot run owns nothing, not even a run that names no owner.
+    const spotless = grokRows.map((row) => ({ ...row, runs: { ...row.runs, Spot: undefined } }));
+    const ownerSpotRunIds = runs.map((run) =>
+      [...rows, ...spotless]
+        .filter((row) => transactionRunForRow(row, runs) === run)
+        .map((row) => row.runs.Spot?.runId),
+    );
+    expect(owned.length).toBeGreaterThan(1);
+    expect(ownerSpotRunIds).toEqual(
+      runs.map((run) => (run.ownerSpotRunId === undefined ? [] : [run.ownerSpotRunId])),
+    );
+  });
 });
 
 describe("transaction score", () => {
