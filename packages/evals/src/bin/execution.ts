@@ -20,6 +20,7 @@ import { makeFakeLedger } from "../execution/fake-ledger";
 import { gradeExecutionTrial } from "../execution/grader";
 import { loadExecutionTasks } from "../execution/load-tasks";
 import { ompModelSession } from "../execution/omp-model-session";
+import { isRetryableTrial } from "../execution/retry";
 import { makeExecutionTools } from "../execution/tools";
 import { runExecutionTrial } from "../execution/turn-driver";
 import { openOmpExecutionSession, prepareOmpHarnessRuntime } from "../omp-harness";
@@ -27,9 +28,11 @@ import { openOmpExecutionSession, prepareOmpHarnessRuntime } from "../omp-harnes
 const USAGE = `Usage: bun packages/evals/dist/bin/execution.js --provider <id> --omp-agent-dir <dir> --model <id> --reasoning <level> --out <file.jsonl> [--reps <n>] [--task <id>]... [--turn-timeout-ms <ms>] [--max-attempts <n>] [--retry-delay-ms <ms>] [--probe-tools]
 Runs execution (transaction) eval tasks through OMP with native auth read in place from --omp-agent-dir.
 Environment: OMP_EVAL_EXECUTABLE, OMP_EVAL_EXECUTABLE_SHA256.
---max-attempts retries an ungraded (infrastructure) trial up to n attempts in total, waiting
---retry-delay-ms times the attempt number between tries; graded passes and failures are never
-retried. Every ungraded attempt that is retried is kept in <out>.ungraded-attempts.jsonl.
+--max-attempts retries an ungraded trial whose log holds only infrastructure errors (the session
+never opened, or failed before the model acted) up to n attempts in total, waiting
+--retry-delay-ms times the attempt number between tries. A trial in which the model acted stays
+ungraded, and graded passes and failures are never retried. Every retried attempt is kept in
+<out>.ungraded-attempts.jsonl.
 --probe-tools asks the model to list its tools once and exits (no grading).`;
 
 const encodeJson = Schema.encodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
@@ -250,11 +253,13 @@ const run = (options: CliOptions) =>
       });
     for (const task of tasks) {
       for (let rep = 1; rep <= options.reps; rep += 1) {
-        // Only infrastructure (ungraded) attempts are retried; the first graded attempt is final.
+        // Only attempts that failed before the model acted are retried; any other is final.
         let line = yield* runTrial(task, rep);
         for (
           let attempt = 1;
-          line.grade.status === "ungraded" && attempt < options.maxAttempts;
+          line.grade.status === "ungraded" &&
+          isRetryableTrial(line) &&
+          attempt < options.maxAttempts;
           attempt += 1
         ) {
           yield* fs.writeFileString(
