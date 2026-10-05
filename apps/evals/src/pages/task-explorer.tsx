@@ -30,6 +30,7 @@ import "../styles/task-workspace.css";
 import { TaskEvidenceTabs } from "../components/task-evidence-tabs";
 import { TransactionTaskPanels } from "../components/transaction-task-panels";
 import { TRANSACTION_TASKS } from "../lib/transaction-evals";
+import { TRANSACTION_RUNS } from "../lib/transaction-results";
 
 const defaultRows = [...unifiedLeaderboardRows()].sort((a, b) =>
   a.model.name.localeCompare(b.model.name),
@@ -248,12 +249,20 @@ export function TaskExplorerPage({
   /** One entry point for every task control (sidebar, mobile picker). */
   function chooseTask(caseId: string) {
     const isTransaction = TRANSACTION_TASKS.some((task) => task.id === caseId);
-    // Transaction and read-only tasks select different runs: keep the run only within a kind.
-    move(
-      isTransaction === (transactionTask !== undefined)
-        ? { caseId, attempt: undefined }
-        : { caseId, runId: undefined, attempt: undefined },
-    );
+    if (isTransaction === (transactionTask !== undefined)) {
+      move({ caseId, attempt: undefined });
+      return;
+    }
+    // Transaction and read-only tasks select different runs. Carry the setting across through
+    // ownership: an owned transaction run maps to its leaderboard Spot run, and back.
+    move({
+      caseId,
+      runId: isTransaction
+        ? TRANSACTION_RUNS.find((entry) => run !== undefined && entry.ownerSpotRunId === run.runId)
+            ?.runId
+        : TRANSACTION_RUNS.find((entry) => entry.runId === selection.runId)?.ownerSpotRunId,
+      attempt: undefined,
+    });
   }
   function chooseFamily(next: PrototypeFamily) {
     const configuration = configurations.find((entry) =>
