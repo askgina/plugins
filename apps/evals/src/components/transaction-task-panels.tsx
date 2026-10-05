@@ -37,11 +37,18 @@ export function TransactionTaskPanels({
   const entries = [
     ...TRANSACTION_RUNS.flatMap((run) => {
       const model = getModel(run.canonicalModelId);
-      return model ? [{ key: run.runId, model, run }] : [];
+      return model
+        ? [{ key: run.runId, label: `${model.name} · ${run.reasoning} reasoning`, model, run }]
+        : [];
     }),
     ...rows
       .filter((row) => !TRANSACTION_RUNS.some((run) => run.canonicalModelId === row.model.id))
-      .map((row) => ({ key: `model:${row.model.id}`, model: row.model, run: undefined })),
+      .map((row) => ({
+        key: `model:${row.model.id}`,
+        label: `${row.model.name} · not run`,
+        model: row.model,
+        run: undefined,
+      })),
   ];
   const selected =
     entries.find((entry) => entry.run !== undefined && entry.run.runId === selectedRunId) ??
@@ -72,8 +79,7 @@ export function TransactionTaskPanels({
           >
             {entries.map((entry) => (
               <option key={entry.key} value={entry.key}>
-                {entry.model.name}
-                {entry.run ? ` (${entry.run.reasoning} reasoning)` : " (not run)"}
+                {entry.label}
               </option>
             ))}
           </select>
@@ -92,7 +98,7 @@ export function TransactionTaskPanels({
                 key={entry.key}
                 type="button"
                 className="task-workspace-model"
-                aria-label={`View ${entry.model.name} results`}
+                aria-label={`View ${entry.label} results`}
                 aria-pressed={selected === entry}
                 onClick={() =>
                   onMove({ modelId: entry.model.id, runId: entry.run?.runId, attempt: undefined })
@@ -124,7 +130,7 @@ export function TransactionTaskPanels({
       <section className="task-workspace-inspector" aria-labelledby="workspace-model-heading">
         <div className="task-workspace-inspector-header">
           <div className="task-workspace-model-heading">
-            <h2 id="workspace-model-heading">{selected?.model.name ?? "No model selected"}</h2>
+            <h2 id="workspace-model-heading">{selected?.label ?? "No model selected"}</h2>
           </div>
           {trials.length > 0 && (
             <div className="task-attempts" role="group" aria-label="Attempts">
