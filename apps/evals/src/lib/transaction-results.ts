@@ -9,6 +9,7 @@ import opus55Low from "../results/2026-10-06/execution/claude-opus-5.5-low.json"
 import opus55Max from "../results/2026-10-06/execution/claude-opus-5.5-max.json";
 import opus55Medium from "../results/2026-10-06/execution/claude-opus-5.5-medium.json";
 import opus55Xhigh from "../results/2026-10-06/execution/claude-opus-5.5-xhigh.json";
+import sonnet55Low from "../results/2026-10-06/execution/claude-sonnet-5.5-low.json";
 import { TRANSACTION_TASKS } from "./transaction-evals";
 
 export interface TransactionTrial {
@@ -125,6 +126,19 @@ export const TRANSACTION_RUNS: readonly TransactionRun[] = [
       campaignId: "transactions-2026-10-06",
       rowId: "transactions-claude-opus-5-5-max",
       sourceSummarySha256: "bf44b69c635c22c983b9d3a690f9081f5c4df0cf30ff1558bbf720567e8ffe30",
+      sourceCommit: "29c2b669549d27b2d7d2fa4da9b39d9e0941f3f8",
+      catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
+      target: "omp_harness",
+    },
+  },
+  // Claude Sonnet 5.5 has no read-only leaderboard runs: transaction-only, OMP with Anthropic OAuth.
+  {
+    ...sonnet55Low,
+    canonicalModelId: "claude-sonnet-5-5",
+    conversations: {
+      campaignId: "transactions-2026-10-06",
+      rowId: "transactions-claude-sonnet-5-5-low",
+      sourceSummarySha256: "2ea90206db0ef78af18fb57733dbdfa2862cdc55863366e8e87e5701feba1595",
       sourceCommit: "29c2b669549d27b2d7d2fa4da9b39d9e0941f3f8",
       catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
       target: "omp_harness",
