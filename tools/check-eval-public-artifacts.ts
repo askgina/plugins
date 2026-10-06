@@ -307,6 +307,8 @@ const APPROVED_GROK47_ARTIFACTS: Readonly<Record<string, string>> = {
 const APPROVED_EXECUTION_ARTIFACTS: Readonly<Record<string, string>> = {
   "src/results/2026-10-06/execution/claude-opus-5.5-low.json":
     "dea35b608362266c4a42ba3a5df5758a5b218fa1166ae75815e02b913980fa3e",
+  "src/results/2026-10-06/execution/claude-opus-5.5-medium.json":
+    "c15683fc12dc3b8a3a88e87d3faeb7e28b7730f4409bda7da2d70d35070f564b",
 };
 // Numeric checks, public identifiers and evidence hashes only. Original result
 // and transcript bytes stay pinned separately above.
