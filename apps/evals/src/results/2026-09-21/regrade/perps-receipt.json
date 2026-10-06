@@ -16,7 +16,7 @@
     },
     {
       "path": "apps/evals/public/transcripts/index.json",
-      "sha256": "cec4109d7fb5f84655de15354420fd7fcf9aaed8fda8afd7ba0ff79dd21aa355"
+      "sha256": "59ffb08dd331be47d5b6c3118b6f3e35a492f96071df395d4d6379f83d111edb"
     },
     {
       "path": "packages/evals/src/perps-price.ts",
