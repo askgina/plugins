@@ -12,6 +12,7 @@ import opus55Xhigh from "../results/2026-10-06/execution/claude-opus-5.5-xhigh.j
 import sonnet55High from "../results/2026-10-06/execution/claude-sonnet-5.5-high.json";
 import sonnet55Low from "../results/2026-10-06/execution/claude-sonnet-5.5-low.json";
 import sonnet55Medium from "../results/2026-10-06/execution/claude-sonnet-5.5-medium.json";
+import sonnet55Xhigh from "../results/2026-10-06/execution/claude-sonnet-5.5-xhigh.json";
 import { TRANSACTION_TASKS } from "./transaction-evals";
 
 export interface TransactionTrial {
@@ -165,6 +166,18 @@ export const TRANSACTION_RUNS: readonly TransactionRun[] = [
       campaignId: "transactions-2026-10-06",
       rowId: "transactions-claude-sonnet-5-5-high",
       sourceSummarySha256: "a9e988aedf04fdc5a24cda5bf44bbc9e429cf2aeb493213d6b20c0dc9721714b",
+      sourceCommit: "29c2b669549d27b2d7d2fa4da9b39d9e0941f3f8",
+      catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
+      target: "omp_harness",
+    },
+  },
+  {
+    ...sonnet55Xhigh,
+    canonicalModelId: "claude-sonnet-5-5",
+    conversations: {
+      campaignId: "transactions-2026-10-06",
+      rowId: "transactions-claude-sonnet-5-5-xhigh",
+      sourceSummarySha256: "d5eea7c231f3d9f1d1dd69ea35288fcfe522dd0b48aa00e36d07c38256fee82d",
       sourceCommit: "29c2b669549d27b2d7d2fa4da9b39d9e0941f3f8",
       catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
       target: "omp_harness",

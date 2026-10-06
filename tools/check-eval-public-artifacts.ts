@@ -321,6 +321,8 @@ const APPROVED_EXECUTION_ARTIFACTS: Readonly<Record<string, string>> = {
     "b29e113da68d38d4e2f50d4838c7f108cec3accd4c6e7b5a0c9cb85fc59fafef",
   "src/results/2026-10-06/execution/claude-sonnet-5.5-medium.json":
     "562ab15bf0c9237663b522dff14a73320adcd5d33be1c961e316add8f31a906d",
+  "src/results/2026-10-06/execution/claude-sonnet-5.5-xhigh.json":
+    "5bddbb90dc5ff21731fa631792daab3fb739dde260fe0cd1a1fadc2f6ab427c6",
 };
 // Numeric checks, public identifiers and evidence hashes only. Original result
 // and transcript bytes stay pinned separately above.
