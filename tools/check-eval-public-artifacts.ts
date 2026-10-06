@@ -304,7 +304,10 @@ const APPROVED_GROK47_ARTIFACTS: Readonly<Record<string, string>> = {
 };
 // Claude-bearing execution results: the exact bytes reviewed for publication. A result is
 // Claude-bearing by its path or its own runId, model or modelId, never by file name alone.
-const APPROVED_EXECUTION_ARTIFACTS: Readonly<Record<string, string>> = {};
+const APPROVED_EXECUTION_ARTIFACTS: Readonly<Record<string, string>> = {
+  "src/results/2026-10-06/execution/claude-opus-5.5-low.json":
+    "dea35b608362266c4a42ba3a5df5758a5b218fa1166ae75815e02b913980fa3e",
+};
 // Numeric checks, public identifiers and evidence hashes only. Original result
 // and transcript bytes stay pinned separately above.
 const APPROVED_REGRADE_RECEIPT_SHA256 =

@@ -4,6 +4,7 @@
 import { getModel, type LeaderboardModelRow } from "../canonical/selectors";
 import type { ConversationReference } from "./conversations";
 import grok47Low from "../results/2026-09-24/execution/grok-4.7-low.json";
+import opus55Low from "../results/2026-10-06/execution/claude-opus-5.5-low.json";
 import { TRANSACTION_TASKS } from "./transaction-evals";
 
 export interface TransactionTrial {
@@ -54,6 +55,21 @@ export const TRANSACTION_RUNS: readonly TransactionRun[] = [
       rowId: "transactions-grok-4-7-low",
       sourceSummarySha256: "396970e0d653b6c3e20e006ca348b02f0d780c2bdfcdf58a9511bb60a3b42ee9",
       sourceCommit: "2bca798732995a271c84c7011351f2f1bf85e49b",
+      catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
+      target: "omp_harness",
+    },
+  },
+  // Claude Opus 5.5 settings, each owned by its Claude Code leaderboard row (campaign
+  // opus55-20260922); the transaction runs use OMP with Anthropic OAuth.
+  {
+    ...opus55Low,
+    canonicalModelId: "claude-opus-5-5",
+    ownerSpotRunId: "opus55-low-spot-1",
+    conversations: {
+      campaignId: "transactions-2026-10-06",
+      rowId: "transactions-claude-opus-5-5-low",
+      sourceSummarySha256: "8a58e38f30c1a88bca8e58f91331e49cc8a875772a2aea1027db3334b0c4e94b",
+      sourceCommit: "29c2b669549d27b2d7d2fa4da9b39d9e0941f3f8",
       catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
       target: "omp_harness",
     },
