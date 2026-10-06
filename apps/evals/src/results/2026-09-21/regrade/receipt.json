@@ -16,7 +16,7 @@
     },
     {
       "path": "apps/evals/public/transcripts/index.json",
-      "sha256": "932a1536633ea9d9a97e197b0268ae79f5db98bcce5f8ff53eea029e045fa4f6"
+      "sha256": "e912293a3a088a379df8396f4a786ec71f5576fe5b409921c0d8561e160c483c"
     },
     {
       "path": "packages/evals/src/bounded-search.ts",
