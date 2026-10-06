@@ -6,6 +6,7 @@ import type { ConversationReference } from "./conversations";
 import grok47Low from "../results/2026-09-24/execution/grok-4.7-low.json";
 import opus55High from "../results/2026-10-06/execution/claude-opus-5.5-high.json";
 import opus55Low from "../results/2026-10-06/execution/claude-opus-5.5-low.json";
+import opus55Max from "../results/2026-10-06/execution/claude-opus-5.5-max.json";
 import opus55Medium from "../results/2026-10-06/execution/claude-opus-5.5-medium.json";
 import opus55Xhigh from "../results/2026-10-06/execution/claude-opus-5.5-xhigh.json";
 import { TRANSACTION_TASKS } from "./transaction-evals";
@@ -111,6 +112,19 @@ export const TRANSACTION_RUNS: readonly TransactionRun[] = [
       campaignId: "transactions-2026-10-06",
       rowId: "transactions-claude-opus-5-5-xhigh",
       sourceSummarySha256: "6030d465f609ae0d2dc4b86c07f63f94add75f67c91d17c1a46787efab4fb050",
+      sourceCommit: "29c2b669549d27b2d7d2fa4da9b39d9e0941f3f8",
+      catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
+      target: "omp_harness",
+    },
+  },
+  {
+    ...opus55Max,
+    canonicalModelId: "claude-opus-5-5",
+    ownerSpotRunId: "opus55-max-spot-1",
+    conversations: {
+      campaignId: "transactions-2026-10-06",
+      rowId: "transactions-claude-opus-5-5-max",
+      sourceSummarySha256: "bf44b69c635c22c983b9d3a690f9081f5c4df0cf30ff1558bbf720567e8ffe30",
       sourceCommit: "29c2b669549d27b2d7d2fa4da9b39d9e0941f3f8",
       catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
       target: "omp_harness",
