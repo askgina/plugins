@@ -319,6 +319,8 @@ const APPROVED_EXECUTION_ARTIFACTS: Readonly<Record<string, string>> = {
     "47969b3a12f46145d66f714455a2feb911e2355fefce2e0bc71901df204873ca",
   "src/results/2026-10-06/execution/claude-sonnet-5.5-low.json":
     "b29e113da68d38d4e2f50d4838c7f108cec3accd4c6e7b5a0c9cb85fc59fafef",
+  "src/results/2026-10-06/execution/claude-sonnet-5.5-max.json":
+    "fb7f3e86039eb4ef9f59e4e8a33941c2833e3a66d116cd2f59d191ee68744e92",
   "src/results/2026-10-06/execution/claude-sonnet-5.5-medium.json":
     "562ab15bf0c9237663b522dff14a73320adcd5d33be1c961e316add8f31a906d",
   "src/results/2026-10-06/execution/claude-sonnet-5.5-xhigh.json":
