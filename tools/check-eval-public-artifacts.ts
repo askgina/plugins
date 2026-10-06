@@ -311,9 +311,9 @@ const APPROVED_EXECUTION_ARTIFACTS: Readonly<Record<string, string>> = {
 // Numeric checks, public identifiers and evidence hashes only. Original result
 // and transcript bytes stay pinned separately above.
 const APPROVED_REGRADE_RECEIPT_SHA256 =
-  "7618690b86feba90a6f3824c766a98a48fc13f2558280c0cc863eb03aec063be";
+  "dbecabc7f7cbf97998c880edd7736686110251914e37c05ebe3ea0aa7ecda094";
 const APPROVED_PERPS_REGRADE_RECEIPT_SHA256 =
-  "f525d9cc727e60e5e079820a0ae66980dd6a4b93fa3fb5c34cb5b20512ec29d9";
+  "ccac3287bae0256e2a986f0569f3ea3eb60d1d4ee98b36022f936e641452ddf1";
 const decodeArtifactJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
 
 /** Fixed diagnostics never include provider values or schema issue excerpts. */
