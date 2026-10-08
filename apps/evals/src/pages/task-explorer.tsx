@@ -30,6 +30,7 @@ import "../styles/task-workspace.css";
 import { TaskEvidenceTabs } from "../components/task-evidence-tabs";
 import { TransactionTaskPanels } from "../components/transaction-task-panels";
 import { TRANSACTION_TASKS } from "../lib/transaction-evals";
+import { TRANSACTION_RUNS } from "../lib/transaction-results";
 
 const defaultRows = [...unifiedLeaderboardRows()].sort((a, b) =>
   a.model.name.localeCompare(b.model.name),
@@ -232,12 +233,12 @@ export function TaskExplorerPage({
   }, [row?.model.id, modelQuery]);
 
   function move(next: Partial<TaskSelection>) {
-    // A transaction task has no canonical run; its attempt and view are its own.
+    // A transaction task has no canonical run; its model, run, attempt and view are its own.
     const updated = {
       family,
       caseId: transactionTask?.id ?? definition?.caseId,
-      modelId: row?.model.id,
-      runId: transactionTask ? undefined : run?.runId,
+      modelId: transactionTask ? selection.modelId : row?.model.id,
+      runId: transactionTask ? selection.runId : run?.runId,
       attempt: transactionTask ? selection.attempt : repetition,
       view,
       ...next,
@@ -248,11 +249,20 @@ export function TaskExplorerPage({
   /** One entry point for every task control (sidebar, mobile picker). */
   function chooseTask(caseId: string) {
     const isTransaction = TRANSACTION_TASKS.some((task) => task.id === caseId);
-    move(
-      isTransaction
-        ? { caseId, runId: undefined, attempt: undefined }
-        : { caseId, attempt: undefined },
-    );
+    if (isTransaction === (transactionTask !== undefined)) {
+      move({ caseId, attempt: undefined });
+      return;
+    }
+    // Transaction and read-only tasks select different runs. Carry the setting across through
+    // ownership: an owned transaction run maps to its leaderboard Spot run, and back.
+    move({
+      caseId,
+      runId: isTransaction
+        ? TRANSACTION_RUNS.find((entry) => run !== undefined && entry.ownerSpotRunId === run.runId)
+            ?.runId
+        : TRANSACTION_RUNS.find((entry) => entry.runId === selection.runId)?.ownerSpotRunId,
+      attempt: undefined,
+    });
   }
   function chooseFamily(next: PrototypeFamily) {
     const configuration = configurations.find((entry) =>
@@ -385,6 +395,7 @@ export function TaskExplorerPage({
                   task={transactionTask}
                   rows={rows}
                   selectedModelId={selection.modelId}
+                  selectedRunId={selection.runId}
                   attempt={selection.attempt}
                   view={view}
                   onMove={move}

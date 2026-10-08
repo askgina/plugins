@@ -1,0 +1,502 @@
+{
+  "schema": "execution-eval-native-identity.v1",
+  "method": "Each trial matched to exactly one native OMP session starting inside its window, among the sessions of the row's own OMP runtime (mapped from the row process tree); fields from OMP session records only; a trial also needs no provider error in its session. Client-side attestation, not provider-internal.",
+  "omp_executable": {
+    "version": "omp/18.4.8",
+    "sha256": "1b88f7a0da3f61edda915d836e11f63f20f2b56aeac2ddfa4ece0faa726f31c2"
+  },
+  "requested": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "reasoning": "high"
+  },
+  "all_trials_verified": true,
+  "trials": [
+    {
+      "task_id": "t1-base-eth-to-usdc",
+      "repetition": 1,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:14:40.451Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110ec-75a9-749b-81d5-0d7f3219e3da",
+      "session_started_at": "2026-10-06T11:14:54.505000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    },
+    {
+      "task_id": "t1-base-eth-to-usdc",
+      "repetition": 2,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:15:24.079Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110ed-2df2-70fc-98ba-f930172dcd0f",
+      "session_started_at": "2026-10-06T11:15:41.682000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    },
+    {
+      "task_id": "t1-base-eth-to-usdc",
+      "repetition": 3,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:16:06.085Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110ed-b248-7777-8a0f-140bbe3da7f3",
+      "session_started_at": "2026-10-06T11:16:15.560000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    },
+    {
+      "task_id": "t1-mainnet-sell-99-eth",
+      "repetition": 1,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:16:47.868Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110ee-548f-73fb-9d43-6dd808ae0e3e",
+      "session_started_at": "2026-10-06T11:16:57.103000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    },
+    {
+      "task_id": "t1-mainnet-sell-99-eth",
+      "repetition": 2,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:17:24.805Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110ee-e8e9-717c-9e42-cdd1232340a6",
+      "session_started_at": "2026-10-06T11:17:35.081000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    },
+    {
+      "task_id": "t1-mainnet-sell-99-eth",
+      "repetition": 3,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:18:02.339Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110ef-7228-7448-a52b-13b64f061b12",
+      "session_started_at": "2026-10-06T11:18:10.216000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    },
+    {
+      "task_id": "t3-mainnet-eth-to-base-usdc",
+      "repetition": 1,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:18:37.786Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110f0-0222-716c-8950-0651df8e1d8c",
+      "session_started_at": "2026-10-06T11:18:47.074000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    },
+    {
+      "task_id": "t3-mainnet-eth-to-base-usdc",
+      "repetition": 2,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:19:55.047Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110f1-28cb-7400-8000-fb9890eb8f2f",
+      "session_started_at": "2026-10-06T11:20:02.507000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    },
+    {
+      "task_id": "t3-mainnet-eth-to-base-usdc",
+      "repetition": 3,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:21:06.850Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110f2-4b36-7306-b1bf-61c4a223b29d",
+      "session_started_at": "2026-10-06T11:21:16.854000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    },
+    {
+      "task_id": "t3-mainnet-wbtc-split",
+      "repetition": 1,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:22:06.184Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110f3-2703-72ef-acef-93281b1394e5",
+      "session_started_at": "2026-10-06T11:22:13.123000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    },
+    {
+      "task_id": "t3-mainnet-wbtc-split",
+      "repetition": 2,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:24:03.414Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110f4-f055-76e2-acf0-15d6a7f96a3d",
+      "session_started_at": "2026-10-06T11:24:10.197000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    },
+    {
+      "task_id": "t3-mainnet-wbtc-split",
+      "repetition": 3,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:26:15.546Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110f6-f18c-714b-96f9-779ea613a4bd",
+      "session_started_at": "2026-10-06T11:26:21.580000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    },
+    {
+      "task_id": "t3-monad-mon-to-mainnet-usdc",
+      "repetition": 1,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:28:14.103Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110f8-c68b-75cb-9b77-4fd8ee085507",
+      "session_started_at": "2026-10-06T11:28:21.643000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    },
+    {
+      "task_id": "t3-monad-mon-to-mainnet-usdc",
+      "repetition": 2,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:29:39.217Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110fa-0d5c-7763-946e-e3b2a6fb7d9f",
+      "session_started_at": "2026-10-06T11:29:45.308000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    },
+    {
+      "task_id": "t3-monad-mon-to-mainnet-usdc",
+      "repetition": 3,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:30:31.059Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110fa-d7fb-778b-b7e1-07c37e4c7d86",
+      "session_started_at": "2026-10-06T11:30:37.179000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    },
+    {
+      "task_id": "t3-robinhood-eth-to-mainnet-pepe",
+      "repetition": 1,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:31:40.126Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110fb-e7a5-72b2-8d25-fa996090939f",
+      "session_started_at": "2026-10-06T11:31:46.725000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    },
+    {
+      "task_id": "t3-robinhood-eth-to-mainnet-pepe",
+      "repetition": 2,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:32:28.600Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110fc-a16e-7253-9cde-06bd6374c989",
+      "session_started_at": "2026-10-06T11:32:34.286000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    },
+    {
+      "task_id": "t3-robinhood-eth-to-mainnet-pepe",
+      "repetition": 3,
+      "grade_status": "graded",
+      "trial_started_at": "2026-10-06T11:33:25.760Z",
+      "runtime": "umZhZZ",
+      "session_id": "01a110fd-7f89-72dd-b169-973f54cc6947",
+      "session_started_at": "2026-10-06T11:33:31.145000Z",
+      "native_model": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "resolved_model_is_fallback": [
+        false
+      ],
+      "thinking_level": [
+        "high"
+      ],
+      "credential_provider": [
+        "anthropic"
+      ],
+      "assistant_models": [
+        "anthropic/claude-opus-5-5"
+      ],
+      "provider_errors": 0,
+      "first_turn_tool_call": true,
+      "verified": true
+    }
+  ]
+}

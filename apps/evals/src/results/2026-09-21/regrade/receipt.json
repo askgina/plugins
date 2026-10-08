@@ -16,7 +16,7 @@
     },
     {
       "path": "apps/evals/public/transcripts/index.json",
-      "sha256": "9fbebb12eb0ce9713349db2b73e87b12feacb8f5829d311709f478117583cd02"
+      "sha256": "ecdf2ec50432be91a288c47656c6f69785a01cd8c74691d1c52aef870d6288d5"
     },
     {
       "path": "packages/evals/src/bounded-search.ts",
@@ -28,7 +28,7 @@
     },
     {
       "path": "apps/evals/src/canonical/canonical.ts",
-      "sha256": "3cae43d8974897795be86f2b7431032abb437e91a9e1bfbe9b1d2ebc7c29ccd6"
+      "sha256": "5b871aa05362819c5a54f0741c2ed0911945188a83fc8429da2875cf20f5986b"
     },
     {
       "path": "apps/evals/src/lib/grading-revisions.ts",

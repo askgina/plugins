@@ -73,6 +73,8 @@ export default defineConfig({
       "apps/evals/src/results/**",
       "apps/evals/public/transcripts/**",
       "ai_docs/execution-eval-runs/*/public-chat-source-manifest.json",
+      // Identity records are hashed into each run's chat source manifest; keep their bytes.
+      "ai_docs/execution-eval-runs/*/native-identity.json",
     ],
   },
   lint: {

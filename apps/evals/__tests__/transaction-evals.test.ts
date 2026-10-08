@@ -22,6 +22,8 @@ interface TaskFile {
   readonly user_script: { readonly confirm: { readonly kind: string } };
 }
 
+const grok47Low = TRANSACTION_RUNS.find((run) => run.runId === "grok-4.7-low-20260925-v4")!;
+
 describe("Transactions page catalog", () => {
   test("lists exactly the task files, with their prompt, tier, user reply and outcome", () => {
     const fromFiles = Object.keys(TASK_SOURCES)
@@ -65,10 +67,78 @@ describe("transaction run ownership", () => {
     const owners = grokRows.filter((row) => transactionRunForRow(row) !== undefined);
     expect(owners.map((row) => row.runs.Spot?.runId)).toEqual(["grok47-recovery-low-spot-1"]);
   });
+
+  test("an owned run has exactly one owner row; a transaction-only run has none", () => {
+    const rows = configurationLeaderboardRows();
+    const grokRows = rows.filter((row) => row.model.id === "grok-4-7");
+    // Fixtures from the Grok run: one owned run per Grok setting, and transaction-only runs for a
+    // model with leaderboard rows and for a model without any.
+    const owned = grokRows.map((row, index) => ({
+      ...grok47Low,
+      runId: `fixture-owned-${index}`,
+      ownerSpotRunId: row.runs.Spot!.runId,
+    }));
+    const transactionOnly = [
+      { ...grok47Low, runId: "fixture-grok-only", ownerSpotRunId: undefined },
+      {
+        ...grok47Low,
+        runId: "fixture-sonnet-only",
+        canonicalModelId: "claude-sonnet-5-5",
+        ownerSpotRunId: undefined,
+      },
+    ];
+    const runs = [...owned, ...transactionOnly];
+    // A row without a Spot run owns nothing, not even a run that names no owner.
+    const spotless = grokRows.map((row) => ({ ...row, runs: { ...row.runs, Spot: undefined } }));
+    const ownerSpotRunIds = runs.map((run) =>
+      [...rows, ...spotless]
+        .filter((row) => transactionRunForRow(row, runs) === run)
+        .map((row) => row.runs.Spot?.runId),
+    );
+    expect(owned.length).toBeGreaterThan(1);
+    expect(ownerSpotRunIds).toEqual(
+      runs.map((run) => (run.ownerSpotRunId === undefined ? [] : [run.ownerSpotRunId])),
+    );
+  });
+
+  test("each published owned run sits on exactly its own setting's row; others on none", () => {
+    const rows = configurationLeaderboardRows();
+    for (const run of TRANSACTION_RUNS) {
+      const owners = rows.filter((row) => transactionRunForRow(row) === run);
+      if (run.ownerSpotRunId === undefined) {
+        expect(owners, run.runId).toEqual([]);
+        continue;
+      }
+      expect(owners.length, run.runId).toBe(1);
+      const owner = owners[0]!;
+      expect(owner.model.id).toBe(run.canonicalModelId);
+      expect(owner.runs.Spot?.runId).toBe(run.ownerSpotRunId);
+      expect(owner.runs.Spot?.configuration.reasoning).toBe(run.reasoning);
+    }
+  });
+
+  test("every Claude Opus 5.5 setting owns the transaction run at its own level", () => {
+    const opusRows = configurationLeaderboardRows().filter(
+      (row) => row.model.id === "claude-opus-5-5",
+    );
+    const owned = Object.fromEntries(
+      opusRows.map((row) => [
+        row.runs.Spot?.configuration.reasoning,
+        transactionRunForRow(row)?.reasoning,
+      ]),
+    );
+    expect(opusRows).toHaveLength(5);
+    expect(owned).toEqual({
+      low: "low",
+      medium: "medium",
+      high: "high",
+      xhigh: "xhigh",
+      max: "max",
+    });
+  });
 });
 
 describe("transaction score", () => {
-  const base = TRANSACTION_RUNS[0]!;
   const trial = (taskId: string, repetition: number, passed: boolean) => ({
     taskId,
     repetition,
@@ -85,12 +155,12 @@ describe("transaction score", () => {
   test("averages task pass rates equally (the task is the scoring unit)", () => {
     const n = ids.length;
     // Every task passes 3/3 except task B at 0/3.
-    expect(transactionScore({ ...base, trials: full })).toBeCloseTo((n - 1) / n);
+    expect(transactionScore({ ...grok47Low, trials: full })).toBeCloseTo((n - 1) / n);
     // Task B at 1/3 counts as one third of one task, not as one extra pooled attempt.
     const uneven = full.map((entry) =>
       entry.taskId === ids[1] && entry.repetition === 1 ? { ...entry, passed: true } : entry,
     );
-    expect(transactionScore({ ...base, trials: uneven })).toBeCloseTo((n - 1 + 1 / 3) / n);
+    expect(transactionScore({ ...grok47Low, trials: uneven })).toBeCloseTo((n - 1 + 1 / 3) / n);
   });
 
   test("has no score when an attempt is missing, duplicated, or its identity is unverified", () => {
@@ -99,12 +169,12 @@ describe("transaction score", () => {
     const unverified = full.map((entry, index) =>
       index === 0 ? { ...entry, identityVerified: false } : entry,
     );
-    expect(transactionScore({ ...base, trials: missing })).toBeNull();
-    expect(transactionScore({ ...base, trials: duplicated })).toBeNull();
-    expect(transactionScore({ ...base, trials: unverified })).toBeNull();
+    expect(transactionScore({ ...grok47Low, trials: missing })).toBeNull();
+    expect(transactionScore({ ...grok47Low, trials: duplicated })).toBeNull();
+    expect(transactionScore({ ...grok47Low, trials: unverified })).toBeNull();
   });
 
   test("the published Grok 4.7 Low run scores every task", () => {
-    expect(transactionScore(base)).toBeCloseTo(1);
+    expect(transactionScore(grok47Low)).toBeCloseTo(1);
   });
 });

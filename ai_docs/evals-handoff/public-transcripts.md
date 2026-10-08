@@ -86,7 +86,7 @@ These accounts and balances are simulated-ledger task fixtures, and that rule
 would blank every `balances` field. Credential, address, email, path and host
 scrubbing still apply; this run needed no redactions.
 
-The combined index's `sourceManifestSha256` is the digest of
+At that publication, the combined index's `sourceManifestSha256` was the digest of
 `ai_docs/execution-eval-runs/2026-09-25-grok-4.7-low-v4/public-chat-source-manifest.json`.
 That file binds the previous index, the run summary, the identity record, the
 task catalog, the source commit and every native session hash.
@@ -98,3 +98,28 @@ named `<session_id>.jsonl`. Then run the projector with `--run`, `--identity`,
 `--source-commit` and `--output` (outside the repository). Review the output,
 copy it into `public/transcripts`, and pin the new index hash and count in
 `public-transcript-manifest.ts`.
+
+## October 6 Claude transaction publication
+
+Ten transaction runs add 180 public chats, one per attempt, bringing the
+combined index to 4,562 documents: Claude Opus 5.5 and Claude Sonnet 5.5,
+each at `low`, `medium`, `high`, `xhigh` and `max` thinking. Chats carry the
+`transactions-2026-10-06` campaign; the merged index is
+`eval-campaigns-2026-10-06`. Each Opus 5.5 run belongs to the leaderboard
+setting at the same level; Sonnet 5.5 has no read-only runs, so its runs are
+transaction-only and appear in Tasks → Spot and the methodology runs table.
+
+The runs used OMP 18.4.8 with Anthropic OAuth on the Tailscale VM, all ten rows
+at once from one profile. Each attempt is bound to one native session of its
+own row's OMP runtime, recorded from the row's process tree while it ran, and
+`native-identity.json` also requires no provider error in that session. The
+projector checks are unchanged from September 25; these runs needed no redactions.
+
+Every run was chained onto the previous run's index, so each
+`public-chat-source-manifest.json` binds the index before it. The combined
+index's `sourceManifestSha256` is the digest of
+`ai_docs/execution-eval-runs/2026-10-06-claude-sonnet-5.5-max/public-chat-source-manifest.json`, the last run published.
+Three earlier attempts at these runs on 2026-10-05 were discarded before
+publication; each run's `README.md` says why. Pass
+`--campaign transactions-2026-10-06 --index-campaign eval-campaigns-2026-10-06`
+when regenerating.

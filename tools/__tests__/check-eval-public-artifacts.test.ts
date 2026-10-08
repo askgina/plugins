@@ -1,5 +1,6 @@
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
+import { createHash } from "node:crypto";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, FileSystem, Function, Layer, Path, Schema } from "effect";
 import { build } from "vite-plus";
@@ -139,6 +140,56 @@ const unsafeTrials = [
       token_usage: { ...observation.token_usage, provider_response: SENTINEL },
     },
   },
+];
+const failedCheck = {
+  id: "outcome_matches",
+  detail: "declared halt cause user_rejected, expected over_limit",
+};
+const executionTrial = {
+  taskId: "t1-base-eth-to-usdc",
+  repetition: 1,
+  passed: false,
+  failedChecks: [failedCheck],
+  durationMs: 27182,
+  spendUsdMicros: 360000,
+  submits: 1,
+  identityVerified: true,
+};
+// Neither this run id nor the file name below says Claude; the model fields do.
+const execution = {
+  runId: "opus55-high-transactions-1",
+  date: "2026-10-05",
+  model: "Claude Opus 5.5",
+  modelId: "anthropic/claude-opus-5-5",
+  reasoning: "high",
+  client: "OMP 18.1.21 (Anthropic OAuth)",
+  environment: "Simulated ledger, scripted user",
+  sourceCommit: "2bca798",
+  repetitions: 3,
+  trials: [executionTrial, { ...executionTrial, repetition: 2, passed: true, failedChecks: [] }],
+};
+const executionFile = "src/results/2026-10-05/execution/opus-high.json";
+const unsafeExecutions = [
+  { ...execution, transcript: SENTINEL },
+  { ...execution, trials: [{ ...executionTrial, finalAnswer: SENTINEL }] },
+  {
+    ...execution,
+    trials: [{ ...executionTrial, failedChecks: [{ ...failedCheck, raw: SENTINEL }] }],
+  },
+  {
+    ...execution,
+    trials: [{ ...executionTrial, failedChecks: [{ id: SENTINEL, detail: "unknown check" }] }],
+  },
+  {
+    ...execution,
+    trials: [
+      {
+        ...executionTrial,
+        failedChecks: [{ ...failedCheck, detail: `${SENTINEL} 0x${"1".repeat(40)}` }],
+      },
+    ],
+  },
+  { ...execution, client: `${SENTINEL}\n${SENTINEL}` },
 ];
 
 describe("Claude static public artifact boundary", () => {
@@ -387,6 +438,54 @@ describe("Claude static public artifact boundary", () => {
           const failure = yield* Effect.flip(checkEvalPublicArtifacts(root));
           assert.strictEqual(failure.reason, "invalid_json");
           assert.notInclude(encodeJson(failure), SENTINEL);
+        }),
+      ),
+    );
+
+    it.effect("admits a Claude execution result only with its approved bytes", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "eval-public-execution-" });
+          yield* fs.makeDirectory(path.join(root, path.dirname(executionFile)), {
+            recursive: true,
+          });
+          yield* fs.makeDirectory(path.join(root, "public"));
+          const bytes = encodeJson(execution);
+          yield* fs.writeFileString(path.join(root, executionFile), bytes);
+          yield* checkEvalPublicArtifacts(root, {
+            [executionFile]: createHash("sha256").update(bytes).digest("hex"),
+          });
+          const unapproved = yield* Effect.flip(checkEvalPublicArtifacts(root));
+          assert.strictEqual(unapproved.reason, "unapproved_artifact");
+          assert.strictEqual(unapproved.file, executionFile);
+        }),
+      ),
+    );
+
+    it.effect("rejects extra or private execution fields even when their bytes are approved", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "eval-public-execution-" });
+          yield* fs.makeDirectory(path.join(root, path.dirname(executionFile)), {
+            recursive: true,
+          });
+          yield* fs.makeDirectory(path.join(root, "public"));
+          for (const unsafe of unsafeExecutions) {
+            const bytes = encodeJson(unsafe);
+            yield* fs.writeFileString(path.join(root, executionFile), bytes);
+            const failure = yield* Effect.flip(
+              checkEvalPublicArtifacts(root, {
+                [executionFile]: createHash("sha256").update(bytes).digest("hex"),
+              }),
+            );
+            assert.strictEqual(failure.reason, "private_payload");
+            assert.strictEqual(failure.file, executionFile);
+            assert.notInclude(encodeJson(failure), SENTINEL);
+          }
         }),
       ),
     );

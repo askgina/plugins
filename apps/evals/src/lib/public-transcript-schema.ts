@@ -3,15 +3,20 @@ import type { Conversation, ConversationReference } from "./conversations";
 export const PUBLIC_TRANSCRIPT_CAMPAIGN = "reasoning-sweep-2026-09-16";
 export const PUBLIC_RECOVERY_CAMPAIGN = "recovery-2026-09-21";
 export const PUBLIC_TRANSACTIONS_CAMPAIGN = "transactions-2026-09-25";
+export const PUBLIC_CLAUDE_TRANSACTIONS_CAMPAIGN = "transactions-2026-10-06";
+/** Campaign of the merged transcript index: it spans every campaign up to the newest one. */
+export const PUBLIC_TRANSCRIPTS_INDEX_CAMPAIGN = "eval-campaigns-2026-10-06";
 const supportedCampaign = (
   value: unknown,
 ): value is
   | typeof PUBLIC_TRANSCRIPT_CAMPAIGN
   | typeof PUBLIC_RECOVERY_CAMPAIGN
-  | typeof PUBLIC_TRANSACTIONS_CAMPAIGN =>
+  | typeof PUBLIC_TRANSACTIONS_CAMPAIGN
+  | typeof PUBLIC_CLAUDE_TRANSACTIONS_CAMPAIGN =>
   value === PUBLIC_TRANSCRIPT_CAMPAIGN ||
   value === PUBLIC_RECOVERY_CAMPAIGN ||
-  value === PUBLIC_TRANSACTIONS_CAMPAIGN;
+  value === PUBLIC_TRANSACTIONS_CAMPAIGN ||
+  value === PUBLIC_CLAUDE_TRANSACTIONS_CAMPAIGN;
 const digest = /^[a-f0-9]{64}$/u;
 const identifier = /^[a-z0-9][a-z0-9-]{0,150}$/u;
 const record = (value: unknown): value is Record<string, unknown> =>
@@ -81,7 +86,7 @@ export function isPublicTranscriptIndex(value: unknown): value is PublicTranscri
       "files",
     ]) ||
     value.schemaVersion !== "ask-gina-public-conversations.v1" ||
-    (value.campaignId !== "eval-campaigns-2026-09-25" &&
+    (value.campaignId !== PUBLIC_TRANSCRIPTS_INDEX_CAMPAIGN &&
       value.campaignId !== PUBLIC_TRANSCRIPT_CAMPAIGN) ||
     !hash(value.sourceManifestSha256) ||
     !hash(value.exporterSha256) ||

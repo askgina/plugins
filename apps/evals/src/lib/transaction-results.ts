@@ -1,9 +1,19 @@
-// Transaction (execution) eval results, owned by the model setting that produced them.
-// A run belongs to the leaderboard row with the same model id and reasoning setting.
+// Transaction (execution) eval results. A run owned by a leaderboard setting belongs to the row
+// with the same model id and Spot run; a transaction-only run belongs to no leaderboard row.
 // Scores are separate from Overall: they never change the tool-use leaderboard.
-import type { LeaderboardModelRow } from "../canonical/selectors";
+import { getModel, type LeaderboardModelRow } from "../canonical/selectors";
 import type { ConversationReference } from "./conversations";
 import grok47Low from "../results/2026-09-24/execution/grok-4.7-low.json";
+import opus55High from "../results/2026-10-06/execution/claude-opus-5.5-high.json";
+import opus55Low from "../results/2026-10-06/execution/claude-opus-5.5-low.json";
+import opus55Max from "../results/2026-10-06/execution/claude-opus-5.5-max.json";
+import opus55Medium from "../results/2026-10-06/execution/claude-opus-5.5-medium.json";
+import opus55Xhigh from "../results/2026-10-06/execution/claude-opus-5.5-xhigh.json";
+import sonnet55High from "../results/2026-10-06/execution/claude-sonnet-5.5-high.json";
+import sonnet55Low from "../results/2026-10-06/execution/claude-sonnet-5.5-low.json";
+import sonnet55Max from "../results/2026-10-06/execution/claude-sonnet-5.5-max.json";
+import sonnet55Medium from "../results/2026-10-06/execution/claude-sonnet-5.5-medium.json";
+import sonnet55Xhigh from "../results/2026-10-06/execution/claude-sonnet-5.5-xhigh.json";
 import { TRANSACTION_TASKS } from "./transaction-evals";
 
 export interface TransactionTrial {
@@ -25,8 +35,9 @@ export interface TransactionRun {
   /**
    * The leaderboard setting that owns this run, identified by that row's Spot run id. A model
    * and reasoning level can appear in several campaigns; only this one row carries the result.
+   * Absent for a transaction-only run, which has no read-only setting on the leaderboard.
    */
-  readonly ownerSpotRunId: string;
+  readonly ownerSpotRunId?: string;
   readonly modelId: string;
   readonly reasoning: string;
   readonly client: string;
@@ -41,6 +52,7 @@ export interface TransactionRun {
   readonly conversations: Omit<ConversationReference, "family" | "caseId" | "repetition">;
 }
 
+/** List each model's runs from lowest to highest reasoning; views keep that order per model. */
 export const TRANSACTION_RUNS: readonly TransactionRun[] = [
   // Current Grok 4.7 Low setting: same OMP client and xAI OAuth profile as the low recovery.
   {
@@ -56,12 +68,153 @@ export const TRANSACTION_RUNS: readonly TransactionRun[] = [
       target: "omp_harness",
     },
   },
+  // Claude Opus 5.5 settings, each owned by its Claude Code leaderboard row (campaign
+  // opus55-20260922); the transaction runs use OMP with Anthropic OAuth.
+  {
+    ...opus55Low,
+    canonicalModelId: "claude-opus-5-5",
+    ownerSpotRunId: "opus55-low-spot-1",
+    conversations: {
+      campaignId: "transactions-2026-10-06",
+      rowId: "transactions-claude-opus-5-5-low",
+      sourceSummarySha256: "8a58e38f30c1a88bca8e58f91331e49cc8a875772a2aea1027db3334b0c4e94b",
+      sourceCommit: "29c2b669549d27b2d7d2fa4da9b39d9e0941f3f8",
+      catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
+      target: "omp_harness",
+    },
+  },
+  {
+    ...opus55Medium,
+    canonicalModelId: "claude-opus-5-5",
+    ownerSpotRunId: "opus55-medium-spot-1",
+    conversations: {
+      campaignId: "transactions-2026-10-06",
+      rowId: "transactions-claude-opus-5-5-medium",
+      sourceSummarySha256: "48e7ca447fd31c41de10699b97ba35d0076e28b2619528291dfb16178d81a8c0",
+      sourceCommit: "29c2b669549d27b2d7d2fa4da9b39d9e0941f3f8",
+      catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
+      target: "omp_harness",
+    },
+  },
+  {
+    ...opus55High,
+    canonicalModelId: "claude-opus-5-5",
+    ownerSpotRunId: "opus55-high-spot-1",
+    conversations: {
+      campaignId: "transactions-2026-10-06",
+      rowId: "transactions-claude-opus-5-5-high",
+      sourceSummarySha256: "6a1d5f2d28b04e3783a36534227eedff572db04fbb5ecc4f1356c3ab9ff0cdf6",
+      sourceCommit: "29c2b669549d27b2d7d2fa4da9b39d9e0941f3f8",
+      catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
+      target: "omp_harness",
+    },
+  },
+  {
+    ...opus55Xhigh,
+    canonicalModelId: "claude-opus-5-5",
+    ownerSpotRunId: "opus55-xhigh-spot-1",
+    conversations: {
+      campaignId: "transactions-2026-10-06",
+      rowId: "transactions-claude-opus-5-5-xhigh",
+      sourceSummarySha256: "6030d465f609ae0d2dc4b86c07f63f94add75f67c91d17c1a46787efab4fb050",
+      sourceCommit: "29c2b669549d27b2d7d2fa4da9b39d9e0941f3f8",
+      catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
+      target: "omp_harness",
+    },
+  },
+  {
+    ...opus55Max,
+    canonicalModelId: "claude-opus-5-5",
+    ownerSpotRunId: "opus55-max-spot-1",
+    conversations: {
+      campaignId: "transactions-2026-10-06",
+      rowId: "transactions-claude-opus-5-5-max",
+      sourceSummarySha256: "bf44b69c635c22c983b9d3a690f9081f5c4df0cf30ff1558bbf720567e8ffe30",
+      sourceCommit: "29c2b669549d27b2d7d2fa4da9b39d9e0941f3f8",
+      catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
+      target: "omp_harness",
+    },
+  },
+  // Claude Sonnet 5.5 has no read-only leaderboard runs: transaction-only, OMP with Anthropic OAuth.
+  {
+    ...sonnet55Low,
+    canonicalModelId: "claude-sonnet-5-5",
+    conversations: {
+      campaignId: "transactions-2026-10-06",
+      rowId: "transactions-claude-sonnet-5-5-low",
+      sourceSummarySha256: "2ea90206db0ef78af18fb57733dbdfa2862cdc55863366e8e87e5701feba1595",
+      sourceCommit: "29c2b669549d27b2d7d2fa4da9b39d9e0941f3f8",
+      catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
+      target: "omp_harness",
+    },
+  },
+  {
+    ...sonnet55Medium,
+    canonicalModelId: "claude-sonnet-5-5",
+    conversations: {
+      campaignId: "transactions-2026-10-06",
+      rowId: "transactions-claude-sonnet-5-5-medium",
+      sourceSummarySha256: "070822fcd5eb7db77f01eaf22d37f13a802df9bbf78ef39e5275ad23746e56ac",
+      sourceCommit: "29c2b669549d27b2d7d2fa4da9b39d9e0941f3f8",
+      catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
+      target: "omp_harness",
+    },
+  },
+  {
+    ...sonnet55High,
+    canonicalModelId: "claude-sonnet-5-5",
+    conversations: {
+      campaignId: "transactions-2026-10-06",
+      rowId: "transactions-claude-sonnet-5-5-high",
+      sourceSummarySha256: "a9e988aedf04fdc5a24cda5bf44bbc9e429cf2aeb493213d6b20c0dc9721714b",
+      sourceCommit: "29c2b669549d27b2d7d2fa4da9b39d9e0941f3f8",
+      catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
+      target: "omp_harness",
+    },
+  },
+  {
+    ...sonnet55Xhigh,
+    canonicalModelId: "claude-sonnet-5-5",
+    conversations: {
+      campaignId: "transactions-2026-10-06",
+      rowId: "transactions-claude-sonnet-5-5-xhigh",
+      sourceSummarySha256: "d5eea7c231f3d9f1d1dd69ea35288fcfe522dd0b48aa00e36d07c38256fee82d",
+      sourceCommit: "29c2b669549d27b2d7d2fa4da9b39d9e0941f3f8",
+      catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
+      target: "omp_harness",
+    },
+  },
+  {
+    ...sonnet55Max,
+    canonicalModelId: "claude-sonnet-5-5",
+    conversations: {
+      campaignId: "transactions-2026-10-06",
+      rowId: "transactions-claude-sonnet-5-5-max",
+      sourceSummarySha256: "bdd4f74eaea3b42c86625f6a2616a25d3dafeff2fa0984826b07ead0314564eb",
+      sourceCommit: "29c2b669549d27b2d7d2fa4da9b39d9e0941f3f8",
+      catalogSha: "02b436c2a3f3a731baf649bd7a15498f74429fb455d977f1d51b7e5bbed92ea5",
+      target: "omp_harness",
+    },
+  },
 ];
 
+/** Runs grouped by model name: the order every list of transaction runs uses. */
+export const TRANSACTION_RUNS_BY_MODEL: readonly TransactionRun[] = TRANSACTION_RUNS.map((run) => ({
+  run,
+  name: getModel(run.canonicalModelId)?.name ?? run.canonicalModelId,
+}))
+  .sort((a, b) => a.name.localeCompare(b.name))
+  .map(({ run }) => run);
+
 /** The transaction run owned by exactly this leaderboard row, if any. */
-export function transactionRunForRow(row: LeaderboardModelRow): TransactionRun | undefined {
+export function transactionRunForRow(
+  row: LeaderboardModelRow,
+  runs: readonly TransactionRun[] = TRANSACTION_RUNS,
+): TransactionRun | undefined {
   const spotRunId = row.runs.Spot?.runId;
-  return TRANSACTION_RUNS.find(
+  // Transaction-only runs have no owner, so a row without a Spot run must not match them.
+  if (spotRunId === undefined) return undefined;
+  return runs.find(
     (run) => run.canonicalModelId === row.model.id && run.ownerSpotRunId === spotRunId,
   );
 }

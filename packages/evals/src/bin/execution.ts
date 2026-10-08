@@ -2,20 +2,37 @@
 
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Config, Console, Data, DateTime, Effect, FileSystem, Layer, Path, Schema } from "effect";
+import {
+  Config,
+  Console,
+  Data,
+  DateTime,
+  Duration,
+  Effect,
+  FileSystem,
+  Layer,
+  Path,
+  Schema,
+} from "effect";
 
 import type { ExecutionTask, FinalLedgerState } from "../execution/contracts";
 import { makeFakeLedger } from "../execution/fake-ledger";
 import { gradeExecutionTrial } from "../execution/grader";
 import { loadExecutionTasks } from "../execution/load-tasks";
 import { ompModelSession } from "../execution/omp-model-session";
+import { isRetryableTrial } from "../execution/retry";
 import { makeExecutionTools } from "../execution/tools";
 import { runExecutionTrial } from "../execution/turn-driver";
 import { openOmpExecutionSession, prepareOmpHarnessRuntime } from "../omp-harness";
 
-const USAGE = `Usage: bun packages/evals/dist/bin/execution.js --provider <id> --omp-agent-dir <dir> --model <id> --reasoning <level> --out <file.jsonl> [--reps <n>] [--task <id>]... [--turn-timeout-ms <ms>] [--probe-tools]
+const USAGE = `Usage: bun packages/evals/dist/bin/execution.js --provider <id> --omp-agent-dir <dir> --model <id> --reasoning <level> --out <file.jsonl> [--reps <n>] [--task <id>]... [--turn-timeout-ms <ms>] [--max-attempts <n>] [--retry-delay-ms <ms>] [--probe-tools]
 Runs execution (transaction) eval tasks through OMP with native auth read in place from --omp-agent-dir.
 Environment: OMP_EVAL_EXECUTABLE, OMP_EVAL_EXECUTABLE_SHA256.
+--max-attempts retries an ungraded trial whose log holds only infrastructure errors (the session
+never opened, or failed before the model acted) up to n attempts in total, waiting
+--retry-delay-ms times the attempt number between tries. A trial in which the model acted stays
+ungraded, and graded passes and failures are never retried. Every retried attempt is kept in
+<out>.ungraded-attempts.jsonl.
 --probe-tools asks the model to list its tools once and exits (no grading).`;
 
 const encodeJson = Schema.encodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
@@ -45,6 +62,8 @@ interface CliOptions {
   readonly reps: number;
   readonly taskIds: readonly string[];
   readonly turnTimeoutMs: number;
+  readonly maxAttempts: number;
+  readonly retryDelayMs: number;
   readonly probeTools: boolean;
 }
 
@@ -76,14 +95,23 @@ const parseArgs = (argv: readonly string[]): Effect.Effect<CliOptions, Execution
     }
     const reps = Number(values["reps"] ?? "1");
     const turnTimeoutMs = Number(values["turn-timeout-ms"] ?? "300000");
+    const maxAttempts = Number(values["max-attempts"] ?? "1");
+    const retryDelayMs = Number(values["retry-delay-ms"] ?? "60000");
     if (
       !Number.isSafeInteger(reps) ||
       reps <= 0 ||
       !Number.isSafeInteger(turnTimeoutMs) ||
-      turnTimeoutMs <= 0
+      turnTimeoutMs <= 0 ||
+      !Number.isSafeInteger(maxAttempts) ||
+      maxAttempts <= 0
     ) {
       return yield* new ExecutionCliError({
-        message: `--reps and --turn-timeout-ms must be positive integers`,
+        message: `--reps, --turn-timeout-ms and --max-attempts must be positive integers`,
+      });
+    }
+    if (!Number.isSafeInteger(retryDelayMs) || retryDelayMs < 0) {
+      return yield* new ExecutionCliError({
+        message: `--retry-delay-ms must be a non-negative integer`,
       });
     }
     return {
@@ -95,6 +123,8 @@ const parseArgs = (argv: readonly string[]): Effect.Effect<CliOptions, Execution
       reps,
       taskIds,
       turnTimeoutMs,
+      maxAttempts,
+      retryDelayMs,
       probeTools,
     };
   });
@@ -171,8 +201,9 @@ const run = (options: CliOptions) =>
           }),
       ),
     );
-    for (const task of tasks) {
-      for (let rep = 1; rep <= options.reps; rep += 1) {
+    const ungradedAttempts = `${options.out}.ungraded-attempts.jsonl`;
+    const runTrial = (task: ExecutionTask, rep: number) =>
+      Effect.gen(function* () {
         const startedAt = DateTime.formatIso(yield* DateTime.now);
         const record = yield* Effect.scoped(
           Effect.gen(function* () {
@@ -207,7 +238,7 @@ const run = (options: CliOptions) =>
             }),
           ),
         );
-        const line = {
+        return {
           task_id: task.id,
           tier: task.tier,
           repetition: rep,
@@ -219,13 +250,38 @@ const run = (options: CliOptions) =>
           final: serializableFinal(record.final),
           events: record.events,
         };
+      });
+    for (const task of tasks) {
+      for (let rep = 1; rep <= options.reps; rep += 1) {
+        // Only attempts that failed before the model acted are retried; any other is final.
+        let line = yield* runTrial(task, rep);
+        for (
+          let attempt = 1;
+          line.grade.status === "ungraded" &&
+          isRetryableTrial(line) &&
+          attempt < options.maxAttempts;
+          attempt += 1
+        ) {
+          yield* fs.writeFileString(
+            ungradedAttempts,
+            `${yield* encodeJson({ ...line, attempt })}\n`,
+            { flag: "a", mode: 0o600 },
+          );
+          const waitMs = options.retryDelayMs * attempt;
+          yield* Console.log(
+            `${task.id} rep ${rep}: UNGRADED (${line.grade.reason}); attempt ${attempt + 1}/${options.maxAttempts} in ${Math.round(waitMs / 1000)}s`,
+          );
+          yield* Effect.sleep(Duration.millis(waitMs));
+          line = yield* runTrial(task, rep);
+        }
         yield* fs.writeFileString(options.out, `${yield* encodeJson(line)}\n`, { flag: "a" });
+        const grade = line.grade;
         const verdict =
-          record.grade.status === "ungraded"
-            ? `UNGRADED (${record.grade.reason})`
-            : record.grade.passed
+          grade.status === "ungraded"
+            ? `UNGRADED (${grade.reason})`
+            : grade.passed
               ? "PASS"
-              : `FAIL [${record.grade.checks
+              : `FAIL [${grade.checks
                   .filter((check) => !check.passed)
                   .map((check) => check.id)
                   .join(", ")}]`;
