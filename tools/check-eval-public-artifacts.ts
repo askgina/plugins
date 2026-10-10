@@ -398,10 +398,13 @@ export const validateClaudePublicArtifact = Function.dual<
 );
 
 /** Scan source imports AND copied public assets, not a hand-maintained report list. */
-export const checkEvalPublicArtifacts = (
-  appRoot?: string,
-  approvedExecutionArtifacts: Readonly<Record<string, string>> = APPROVED_EXECUTION_ARTIFACTS,
-) =>
+export const checkEvalPublicArtifacts = ({
+  appRoot,
+  approvedExecutionArtifacts = APPROVED_EXECUTION_ARTIFACTS,
+}: {
+  readonly appRoot?: string;
+  readonly approvedExecutionArtifacts?: Readonly<Record<string, string>>;
+} = {}) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -557,7 +560,7 @@ const main = (appRoot?: string) =>
   Effect.scoped(
     Effect.gen(function* () {
       const context = yield* Layer.build(services);
-      return yield* checkEvalPublicArtifacts(appRoot).pipe(Effect.provide(context));
+      return yield* checkEvalPublicArtifacts({ appRoot }).pipe(Effect.provide(context));
     }),
   );
 

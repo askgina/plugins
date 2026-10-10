@@ -11,7 +11,7 @@ export const GINA_MCP_APP_FAMILY_VALUES = ["spot", "perps", "predictions", "port
 export type GinaMcpAppFamily = (typeof GINA_MCP_APP_FAMILY_VALUES)[number];
 
 export type GinaReadToolAnnotations = Readonly<{
-  readOnlyHint: true;
+  readOnlyHint: boolean;
   destructiveHint: false;
   openWorldHint: boolean;
 }>;
@@ -187,7 +187,7 @@ export const GINA_READ_TOOL_CATALOG = [
   {
     name: "perps.createHyperliquidTable",
     family: "perps",
-    readOnlyHint: true,
+    readOnlyHint: false,
     destructiveHint: false,
     openWorldHint: true,
     mcpAppBound: false,
@@ -197,7 +197,7 @@ export const GINA_READ_TOOL_CATALOG = [
     family: "perps",
     readOnlyHint: true,
     destructiveHint: false,
-    openWorldHint: false,
+    openWorldHint: true,
     mcpAppBound: false,
   },
   {
@@ -313,7 +313,6 @@ export const GINA_CLOSED_WORLD_READ_TOOL_NAMES = [
   "gina.getAccountAddresses",
   "gina.listScheduledPrompts",
   "spot.fetchSwapHistory",
-  "perps.executeSqlQuery",
 ] as const satisfies readonly GinaReadToolName[];
 
 export const GINA_MCP_APP_BOUND_READ_TOOL_NAMES = [
@@ -361,7 +360,7 @@ export const getGinaReadToolFamily = (name: GinaReadToolName): GinaMcpAppFamily 
   name.startsWith("gina.") ? "portfolio" : (name.split(".", 1)[0] as GinaMcpAppFamily);
 
 export const getGinaReadToolAnnotations = (name: GinaReadToolName): GinaReadToolAnnotations => ({
-  readOnlyHint: true,
+  readOnlyHint: name !== "perps.createHyperliquidTable",
   destructiveHint: false,
   openWorldHint: !GINA_CLOSED_WORLD_READ_TOOL_NAMES.includes(
     name as (typeof GINA_CLOSED_WORLD_READ_TOOL_NAMES)[number],
@@ -420,6 +419,6 @@ export const ASK_GINA_SKILL_DEFINITIONS = [
   },
 ] as const satisfies readonly AskGinaSkillDefinition[];
 
-export const SOURCE_COMMIT = "ea8c56a0b065ea44cde89d05567999f976c61071";
+export const SOURCE_COMMIT = "2dbeb8b98cdadc999a5532061dcaed2a22b79bd1";
 export const RELEASE_VERSION = "0.1.0";
-export const catalogSha = "6738637b18462cafa3f4ffb77c1503515a7f851f9ec4130fa380ada7416d3b7e";
+export const catalogSha = "0a99010c7d22df9b9c50e049d13177d6e269db66de0c3b86dfa1ec66b0cfbdb9";

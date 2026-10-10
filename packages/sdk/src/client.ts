@@ -32,7 +32,7 @@ const requireAccessToken = (accessToken: string): Effect.Effect<string, AskGinaA
   if (trimmed.length === 0) {
     return new AskGinaAuthError({
       message:
-        "Missing OAuth access token. Pass createClient({ accessToken }) or set ASK_GINA_ACCESS_TOKEN. That value is a bearer from your app or an app-signed JWT.",
+        "Missing Gina-issued MCP bearer token with tools:read. Pass createClient({ accessToken }) in the SDK; set ASK_GINA_ACCESS_TOKEN for the CLI.",
     });
   }
   return Effect.succeed(trimmed);

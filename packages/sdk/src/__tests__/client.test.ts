@@ -190,21 +190,60 @@ describe("Ask Gina SDK", () => {
     }),
   );
 
-  it.effect("fails closed on a missing token", () =>
-    Effect.gen(function* () {
-      const client = createClient({
-        accessToken: "   ",
-        transport: mockTransport({}),
-      });
-      const error = yield* client.listTools().pipe(Effect.flip);
-      assert.instanceOf(error, AskGinaAuthError);
-      assert.strictEqual(
-        error.message,
-        "Missing OAuth access token. Pass createClient({ accessToken }) or set ASK_GINA_ACCESS_TOKEN. That value is a bearer from your app or an app-signed JWT.",
+  for (const [tokenLabel, accessToken] of [
+    ["empty string", ""],
+    ["whitespace-only", "   "],
+  ] as const) {
+    for (const method of ["listTools", "callTool"] as const) {
+      it.effect(
+        `fails closed on an ${tokenLabel} token for ${method} with injected transport`,
+        () =>
+          Effect.gen(function* () {
+            const listTools = vi.fn<AskGinaTransport["listTools"]>(() => Effect.succeed([]));
+            const callTool = vi.fn<AskGinaTransport["callTool"]>(() =>
+              Effect.succeed({ content: [] }),
+            );
+            const client = createClient({
+              accessToken,
+              transport: { listTools, callTool },
+            });
+            const result =
+              method === "listTools"
+                ? yield* Effect.result(client.listTools())
+                : yield* Effect.result(client.callTool("spot.getSimplePrice"));
+            const error = Result.match(result, {
+              onFailure: (failure) => failure,
+              onSuccess: () => assert.fail("Expected AskGinaAuthError"),
+            });
+            assert.instanceOf(error, AskGinaAuthError);
+            assert.strictEqual(listTools.mock.calls.length, 0);
+            assert.strictEqual(callTool.mock.calls.length, 0);
+          }),
       );
-      assert.isFalse(error.message.includes("codex mcp login"));
-    }),
-  );
+
+      it.effect(
+        `fails closed on an ${tokenLabel} token for ${method} with default production transport`,
+        () =>
+          Effect.gen(function* () {
+            const client = createClient({ accessToken });
+            const result =
+              method === "listTools"
+                ? yield* Effect.result(client.listTools())
+                : yield* Effect.result(client.callTool("spot.getSimplePrice"));
+            const error = Result.match(result, {
+              onFailure: (failure) => failure,
+              onSuccess: () => assert.fail("Expected AskGinaAuthError"),
+            });
+            assert.instanceOf(error, AskGinaAuthError);
+            assert.strictEqual(mcpMocks.clientConstructor.mock.calls.length, 0);
+            assert.strictEqual(mcpMocks.transportConstructor.mock.calls.length, 0);
+            assert.strictEqual(mcpMocks.connect.mock.calls.length, 0);
+            assert.strictEqual(mcpMocks.listTools.mock.calls.length, 0);
+            assert.strictEqual(mcpMocks.callTool.mock.calls.length, 0);
+          }),
+      );
+    }
+  }
 
   it.effect("rejects unknown tools before transport", () =>
     Effect.gen(function* () {

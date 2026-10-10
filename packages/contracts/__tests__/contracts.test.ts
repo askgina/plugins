@@ -61,7 +61,6 @@ const EXPECTED_CLOSED_WORLD_TOOLS: readonly string[] = [
   "gina.getAccountAddresses",
   "gina.listScheduledPrompts",
   "spot.fetchSwapHistory",
-  "perps.executeSqlQuery",
 ];
 
 const EXPECTED_MCP_APP_BOUND_TOOLS: readonly string[] = [
@@ -112,12 +111,11 @@ describe("@askgina/contracts", () => {
   it.effect("classifies every family and annotation", () =>
     Effect.sync(() => {
       for (const tool of GINA_READ_TOOL_CATALOG) {
-        assert.isTrue(tool.readOnlyHint);
         assert.isFalse(tool.destructiveHint);
         assert.strictEqual(tool.family, familyFromName(tool.name));
         assert.strictEqual(getGinaReadToolFamily(tool.name), familyFromName(tool.name));
         assert.deepStrictEqual(getGinaReadToolAnnotations(tool.name), {
-          readOnlyHint: true,
+          readOnlyHint: tool.name !== "perps.createHyperliquidTable",
           destructiveHint: false,
           openWorldHint: !EXPECTED_CLOSED_WORLD_TOOLS.includes(tool.name),
         });
@@ -125,6 +123,10 @@ describe("@askgina/contracts", () => {
         assert.strictEqual(isGinaMcpAppBoundReadTool(tool.name), tool.mcpAppBound);
       }
 
+      assert.deepStrictEqual(
+        GINA_READ_TOOL_CATALOG.filter((tool) => !tool.readOnlyHint).map((tool) => tool.name),
+        ["perps.createHyperliquidTable"],
+      );
       assert.deepStrictEqual(
         GINA_READ_TOOL_CATALOG.filter((tool) => !tool.openWorldHint).map((tool) => tool.name),
         EXPECTED_CLOSED_WORLD_TOOLS,

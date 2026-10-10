@@ -65,7 +65,8 @@
     "@effect/platform-node-shared": "4.0.0-rc.111",
     "esbuild": "0.28.1",
     "oxlint": "1.80.0",
-    "qs": "6.16.0"
+    "qs": "6.16.0",
+    "tinypool": "2.1.2"
   },
   "engines": {
     "bun": "1.4.x"
