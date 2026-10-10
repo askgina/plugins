@@ -13,7 +13,7 @@ Repository tooling pins Bun `1.4.0`; packing and Node consumer verification requ
 
 | Consumer | Internal closure, all version `0.1.0` | Direct external runtime dependencies                      |
 | -------- | ------------------------------------- | --------------------------------------------------------- |
-| SDK      | contracts + sdk                       | `effect@4.0.0-rc.111`, `@modelcontextprotocol/sdk@1.29.0` |
+| SDK      | contracts + sdk                       | `effect@4.0.0-rc.111`, `@modelcontextprotocol/sdk@1.32.0` |
 | CLI      | contracts + sdk + cli                 | SDK dependencies plus `@effect/platform-bun@4.0.0-rc.111` |
 
 Tarballs externalize dependencies, rather than bundling them. Contracts also depends on Effect; consumers importing Effect directly should declare it directly.
@@ -23,6 +23,8 @@ Packed manifests rewrite `workspace:*` to `0.1.0`, not sibling tarball paths; in
 The README consumer manifests use local tarballs and internal overrides; external resolution still requires registry access or a populated cache.
 Those minimal manifests are not the verifier's exact locked graph: [`cleanInstall`](../tools/verify-artifacts.ts) generates temporary SDK/CLI manifests with absolute `file:` paths and lock-matched external/root/internal overrides.
 Version/closure authorities: [contracts](../packages/contracts/package.json), [SDK](../packages/sdk/package.json), [CLI](../packages/cli/package.json), [bun.lock](../bun.lock), and [root overrides](../package.json).
+The root `tinypool` override patches prototype-pollution/RCE advisories despite the formatter's exact vulnerable pin; retain it until the formatter admits a patched worker version.
+Other compatible transitive security patches stay in `bun.lock` rather than becoming new direct dependencies.
 
 ## Existing artifact tooling (reference, not execution evidence)
 

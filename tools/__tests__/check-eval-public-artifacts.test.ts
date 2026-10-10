@@ -319,7 +319,7 @@ describe("Claude static public artifact boundary", () => {
             path.join(root, "public/transcripts/index.json"),
             encodeJson({ visibleMessages: [SENTINEL] }),
           );
-          const failure = yield* Effect.flip(checkEvalPublicArtifacts(root));
+          const failure = yield* Effect.flip(checkEvalPublicArtifacts({ appRoot: root }));
           assert.strictEqual(failure.reason, "unapproved_artifact");
           assert.notInclude(failure.message, SENTINEL);
         }),
@@ -343,7 +343,7 @@ describe("Claude static public artifact boundary", () => {
               final_answer: SENTINEL,
             }),
           );
-          const failure = yield* Effect.flip(checkEvalPublicArtifacts(root));
+          const failure = yield* Effect.flip(checkEvalPublicArtifacts({ appRoot: root }));
           assert.strictEqual(failure.reason, "private_payload");
           assert.strictEqual(failure.file, filename);
           assert.notInclude(encodeJson(failure), SENTINEL);
@@ -360,7 +360,7 @@ describe("Claude static public artifact boundary", () => {
           yield* fs.makeDirectory(path.join(root, "src"));
           yield* fs.makeDirectory(path.join(root, "public"));
           yield* fs.writeFileString(path.join(root, "src", "report.json"), encodeJson(report));
-          const unapproved = yield* Effect.flip(checkEvalPublicArtifacts(root));
+          const unapproved = yield* Effect.flip(checkEvalPublicArtifacts({ appRoot: root }));
           assert.strictEqual(unapproved.reason, "unapproved_artifact");
           yield* fs.remove(path.join(root, "src", "report.json"));
 
@@ -371,7 +371,7 @@ describe("Claude static public artifact boundary", () => {
               path.join(root, filename),
               encodeJson({ envelope: [{ ...family, trials: [unsafeTrials[0]] }] }),
             );
-            const failure = yield* Effect.flip(checkEvalPublicArtifacts(root));
+            const failure = yield* Effect.flip(checkEvalPublicArtifacts({ appRoot: root }));
             assert.strictEqual(failure.reason, "private_payload");
             assert.strictEqual(failure.file, filename);
             yield* fs.remove(path.join(root, filename));
@@ -416,7 +416,7 @@ describe("Claude static public artifact boundary", () => {
               const filename = path.join(root, artifact.file);
               yield* fs.makeDirectory(path.dirname(filename), { recursive: true });
               yield* fs.writeFileString(filename, encodeJson(artifact.value));
-              const failure = yield* Effect.flip(checkEvalPublicArtifacts(root));
+              const failure = yield* Effect.flip(checkEvalPublicArtifacts({ appRoot: root }));
               assert.strictEqual(failure.reason, "unapproved_artifact");
               assert.strictEqual(failure.file, artifact.file);
               assert.notInclude(failure.message, SENTINEL);
@@ -435,7 +435,7 @@ describe("Claude static public artifact boundary", () => {
           yield* fs.makeDirectory(path.join(root, "src"));
           yield* fs.makeDirectory(path.join(root, "public"));
           yield* fs.writeFileString(path.join(root, "src", "claude.json"), `{${SENTINEL}`);
-          const failure = yield* Effect.flip(checkEvalPublicArtifacts(root));
+          const failure = yield* Effect.flip(checkEvalPublicArtifacts({ appRoot: root }));
           assert.strictEqual(failure.reason, "invalid_json");
           assert.notInclude(encodeJson(failure), SENTINEL);
         }),
@@ -454,10 +454,13 @@ describe("Claude static public artifact boundary", () => {
           yield* fs.makeDirectory(path.join(root, "public"));
           const bytes = encodeJson(execution);
           yield* fs.writeFileString(path.join(root, executionFile), bytes);
-          yield* checkEvalPublicArtifacts(root, {
-            [executionFile]: createHash("sha256").update(bytes).digest("hex"),
+          yield* checkEvalPublicArtifacts({
+            appRoot: root,
+            approvedExecutionArtifacts: {
+              [executionFile]: createHash("sha256").update(bytes).digest("hex"),
+            },
           });
-          const unapproved = yield* Effect.flip(checkEvalPublicArtifacts(root));
+          const unapproved = yield* Effect.flip(checkEvalPublicArtifacts({ appRoot: root }));
           assert.strictEqual(unapproved.reason, "unapproved_artifact");
           assert.strictEqual(unapproved.file, executionFile);
         }),
@@ -478,8 +481,11 @@ describe("Claude static public artifact boundary", () => {
             const bytes = encodeJson(unsafe);
             yield* fs.writeFileString(path.join(root, executionFile), bytes);
             const failure = yield* Effect.flip(
-              checkEvalPublicArtifacts(root, {
-                [executionFile]: createHash("sha256").update(bytes).digest("hex"),
+              checkEvalPublicArtifacts({
+                appRoot: root,
+                approvedExecutionArtifacts: {
+                  [executionFile]: createHash("sha256").update(bytes).digest("hex"),
+                },
               }),
             );
             assert.strictEqual(failure.reason, "private_payload");
