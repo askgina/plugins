@@ -4,7 +4,10 @@ Apache-2.0 workspace for the Ask Gina programmatic client, Bun CLI,
 listed-plugin portable core, host adapters, and hermetic evals.
 
 Production Gina MCP remains at `https://askgina.ai/ai/gina/mcp`.
-Callers supply a bearer token or oauth authenticate.
+SDK and CLI callers supply an externally acquired Gina bearer token with
+`tools:read`; neither client implements login or OAuth authentication. See
+[authentication](https://docs.askgina.ai/agents/authentication) and
+[Agent Setup](https://askgina.ai/agent-setup) to obtain a read-only token.
 
 ## Packages and runtimes
 
