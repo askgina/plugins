@@ -1,0 +1,16 @@
+# lp-pool-scan (portable)
+
+```bash
+cd skills/spot/lp-pool-scan
+python3 scripts/lp_pool_scan.py --universe allowlist --top 10                       # example allowlist -> ./lp-scan-output
+python3 scripts/lp_pool_scan.py --universe allowlist --allowlist my.json --out /tmp/lp --format json --quiet
+python3 scripts/lp_pool_scan.py --universe top --pin <POOL>                          # daily 4-table report (RH Uniswap + Solana Raydium; --dex-scope all for every DEX), ~5-10 min
+LP_SCAN_OUT=/data/lp python3 scripts/lp_pool_scan.py --universe wide                # ~45 min
+```
+
+Stdlib only. Read-only: no wallet, keys, or transactions. See SKILL.md for flags, formulas, sources and limits.
+Interrupted runs resume: GET responses are cached in `<out>/cache/http` for `--cache-ttl` minutes (default 120). Rerun the same command.
+
+Metrics are 7-day horizon-matched (Fees 7d, Est IL 7d, Net 7d, Fee cover, break-even vs realized 7d move); IL is never annualised. See SKILL.md › Formulas.
+
+**Table columns (all reports: top, wide, allowlist), in order:** `#` | `Pool` (pair, chain/DEX, address) | `APR` (= Fee APR 7d: fees only, annualised, LP share) | `Fee` (tier) | `TVL` | `Tier` (wide majors table only) | `Fees 7d` | `IL 7d` | `Net 7d` | `Cover` | `Break-even vs realized` (σw* vs σd·√7, cushion in brackets) | `Vol 24h` / `Vol 7d` (top and allowlist tables show both; wide tables show Vol 7d) | `$1M slip / max fill` | `Flags` | `Allowlist`. Only APR is annualised; IL, Fees, Net are 7-day figures.
