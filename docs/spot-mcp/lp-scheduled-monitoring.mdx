@@ -1,0 +1,54 @@
+---
+title: "Scheduled LP monitoring"
+description: "Run recurring LP reviews that flag and propose, and pause or remove them."
+---
+
+Spot MCP includes scheduling tools, so an LP review can run on a cadence without a new chat request each time. A scheduled LP review should only read, flag and propose. It should never execute.
+
+| Host tool                    | Use it to                                 |
+| ---------------------------- | ----------------------------------------- |
+| `createScheduledPrompt`      | Create the recurring review               |
+| `listScheduledPrompts`       | Find the schedule and its recent runs     |
+| `toggleScheduledPrompt`      | Pause or resume it                        |
+| `deleteScheduledPrompt`      | Remove it                                 |
+| `updateScheduledAgentConfig` | Update the schedule's agent configuration |
+
+Spot schedules run through Gina's fixed internal agent. Read each tool's current input schema before calling it; this page does not list scheduling parameters.
+
+{/* TODO(confirm with app owner): which tools the fixed internal agent can call during a scheduled run, whether it can call LP execute tools, and whether it can run the lp-pool-scan script. Not verifiable from this repository. */}
+
+## Flag and propose only
+
+The [rebalancing playbook](/spot-mcp/lp-skills#lp-rebalancing-playbook) states that scheduled runs only flag and propose. Write the prompt so that this is explicit:
+
+- Read positions, pool state and allowlists, then apply the playbook rules.
+- Report the verdict and, for a fired rule, the proposed action and its trigger values.
+- Do not call `executeLpOperation`, `executeSolanaLpOperation` or `executeSpotTransaction`.
+- Stay silent when no rule fires and nothing material changed, unless a daily summary was requested.
+
+A quote from a scheduled run can expire before anyone reads it. Treat it as indicative. In the follow-up chat, re-quote and approve the exact current quote, as in the [LP agent workflow](/spot-mcp/lp-agent-workflow).
+
+## Daily example
+
+A prompt for a once-a-day review could read:
+
+```text
+Review my LP positions on Robinhood Chain and Solana using the lp-rebalancing-playbook rules.
+Read live positions and allowlists first; mark unknown values as n/a.
+Report Hold, or the single highest-priority rule that fired, with trigger values against thresholds.
+Flag any position value drop of 10% or more in 24h and any new pool risk flag.
+Propose actions only. Do not execute, sign or send anything.
+Only report if a rule fired or something material changed.
+```
+
+Choose a cadence and confirm its time zone when creating the schedule. For tokenized stocks and other session-bound assets, a run after the market opens avoids proposing re-ranges while the market is closed.
+
+## Pause, resume or remove
+
+1. Call `listScheduledPrompts` to find the schedule.
+2. Call `toggleScheduledPrompt` to pause it or resume it.
+3. Call `deleteScheduledPrompt` to remove it permanently.
+
+Pausing a schedule stops future runs. It does not cancel an operation that was already submitted; reconcile any outstanding operation with the [status tools](/spot-mcp/liquidity-positions#recover-an-uncertain-operation).
+
+Gina Read can list schedules and runs but cannot create, pause, edit or delete them. See [account and portfolio](/read-only/account). For schedules created in the web app, see [Schedule and monitor a recipe](/product-guide/automations/schedules).

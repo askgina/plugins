@@ -1,0 +1,104 @@
+---
+title: "LP skills"
+description: "Scan public pool data and apply numeric rebalancing rules that only produce proposals."
+---
+
+Two agent skills support LP work alongside Spot MCP. Neither one executes anything.
+
+| Skill                     | What it does                                                                                   | Needs                       |
+| ------------------------- | ---------------------------------------------------------------------------------------------- | --------------------------- |
+| `lp-pool-scan`            | Ranks pools from public data by fee yield, estimated impermanent loss (IL), depth and slippage | Python 3.9+; no keys        |
+| `lp-rebalancing-playbook` | Applies numeric rules for re-range, harvest, compound, trim, exit and size caps                | Live position and pool data |
+
+The sources are in [askgina/plugins](https://github.com/askgina/plugins/tree/main/skills/spot), under `skills/spot/<skill-name>/`. Each skill has a `SKILL.md` with its full rules, flags and formulas. Use those files rather than copies of this page. The [LP agent workflow](/spot-mcp/lp-agent-workflow) shows how the skills fit with the Spot MCP quote, execute and status tools.
+
+## lp-pool-scan
+
+The scanner only reads. It makes HTTP GET requests to public APIs and read calls to a public Robinhood Chain RPC. It never signs, sends or simulates a transaction for execution, and it needs no wallet, keys or API keys. Do not wire it to a trading or wallet connector.
+
+### Run it
+
+```bash
+cd skills/spot/lp-pool-scan
+python3 scripts/lp_pool_scan.py --universe top --out ./lp-scan-output
+python3 scripts/lp_pool_scan.py --universe allowlist --allowlist my_pools.json --top 10
+python3 scripts/lp_pool_scan.py --universe allowlist --format json --quiet
+```
+
+| Universe    | Scope                                                                                                  | Typical runtime             |
+| ----------- | ------------------------------------------------------------------------------------------------------ | --------------------------- |
+| `allowlist` | Pools listed in a local allowlist file (default)                                                       | Short                       |
+| `top`       | Daily mode: top pools by 24h volume per chain, tokenized-stock pools, allowlist pools and pinned pools | About 5 to 10 minutes       |
+| `wide`      | Allowlist, every tokenized-stock pool and the top pools above $1M TVL per chain                        | About 45 minutes; resumable |
+
+Exit code 0 means success, 1 a runtime error and 2 bad arguments or a missing allowlist file. Each rerun prints a one-line diff against the previous snapshot. `--render-only` re-scores and re-renders the latest snapshot without network access. See `SKILL.md` for every flag.
+
+### Read the output
+
+Reports are written under `reports/` and full snapshots under `snapshots/`. Each ranked row shows:
+
+- **APR**: fee APR over 7 days, fees only, annualized and adjusted for the LP share after protocol fees. It uses current TVL, not average TVL.
+- **Fees 7d, IL 7d and Net 7d**: 7-day figures as a percentage of TVL. IL is never annualized.
+- **Cover**: Fees 7d divided by estimated IL 7d. Above 1x means fees covered the IL implied by realized volatility.
+- **Break-even vs realized**: the 7-day price move at which IL equals fees, compared with the realized 7-day move.
+- **$1M slip / max fill**: price impact at $1M, or the largest fill a pool can absorb.
+- **Flags**: risk flags such as `LOOKALIKE`, `HONEYPOT`, `dead_volume` or `rugcheck_danger`. Several flags exclude a pool from ranked tables; others lower its score.
+
+A pool with no measurable IL is never ranked. Uniswap v4 hook or dynamic-fee pools without measurable IL appear in a separate **Needs review** list.
+
+### Scope differs from Spot MCP support
+
+The scanner's default `--dex-scope core` covers Uniswap v2, v3 and v4 on Robinhood Chain and Raydium AMM, CPMM and CLMM on Solana. `--dex-scope all` adds other DEXes such as Orca and Meteora. Spot MCP LP operations support a narrower set: Uniswap v3 and v4 on Robinhood Chain, and Raydium CLMM and CPMM on Solana. See the [LP support matrix](/spot-mcp/liquidity-positions#capability-and-access).
+
+A well-ranked Uniswap v2, Raydium AMM, Orca or Meteora pool cannot be operated through Spot MCP. Check the protocol in the **Pool** column before proposing an action.
+
+### The scanner allowlist is a local file
+
+`--allowlist` reads a local JSON file keyed by chain and protocol:
+
+```json
+{
+  "robinhood_chain_4663": { "uniswap-v3": ["<pool-address>"], "uniswap-v4": ["<pool-id>"] },
+  "solana": { "raydium-clmm": ["<pool-address>"], "raydium-cpmm": ["<pool-address>"] }
+}
+```
+
+This file only tells the scanner what to report. It is separate from the Spot MCP pool allowlists read with `getLpAllowlist` and `getSolanaLpAllowlist`, and editing it grants no permission to operate a pool. To keep both in step, see [allowlists end to end](/spot-mcp/liquidity-positions#allowlists-end-to-end).
+
+### Limits
+
+- Depth ignores routing across pools, just-in-time liquidity and v4 hook logic. Orca and Meteora depth is not available.
+- Tokenized-stock volume is structurally low on weekends; prefer 7-day figures.
+- Lists from public APIs are sorted by activity, so a high-TVL pool with no recent activity can be missed.
+- Scores are public-data estimates, not quotes or forecasts.
+
+## lp-rebalancing-playbook
+
+The playbook turns live position and pool data into proposals. Every rule produces a proposal, never an action. The owner approves each exact action in chat, and scheduled runs only flag and propose.
+
+### Guardrails
+
+- No execution, signing or fund movement without the owner's explicit in-chat approval of that exact action: pool, amounts, range, slippage and fees.
+- One approval covers one action. A re-range plus a swap is two actions.
+- Every proposal carries a live quote. If the quote expires, re-quote before asking again.
+- Read live state before any number, and mark unknown values as n/a.
+- When rules conflict, the priority is Exit, then Trim, then Re-range, then Harvest or Compound, then Add.
+
+### Rules at a glance
+
+| Rule       | Proposes when (defaults)                                                                                                                         |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Re-range   | Out of range for 6 or more active hours, or drift of 0.8 or more for 24 active hours, and 7-day fees in the new range cover at least 2x the cost |
+| Harvest    | Uncollected fees net of cost are at least the greater of $25 or 10x the collect cost, or other accrual thresholds in `SKILL.md`                  |
+| Compound   | Position in range with drift below 0.5, passes trim and exit checks, and stays under its size cap                                                |
+| Trim (50%) | Stable leg off peg by more than 0.5% for 1 hour, pool TVL down 40% in 7 days, IL above fees with fee cover below 1x, or a size cap breach        |
+| Full exit  | Stable leg off peg by more than 2% for 1 hour, a token risk event, pool TVL down 70% in 7 days, or position value down 25% in 24h                |
+| Size caps  | Position at or under 5% of pool TVL, 25% of the LP book per pool and 60% per chain, among others                                                 |
+
+Re-range has a 72-hour cooldown per position. For session-bound assets such as tokenized stocks, only open-session hours count, and re-ranges wait for the market to reopen unless the position is out of range. Thresholds are defaults that the owner can override per position.
+
+### Logging
+
+The playbook keeps one row per proposal with the rule, trigger values, action, amounts, range, slippage, total cost, quote ID, decision and outcome. Decisions are Pending, Approved, Declined, Expired or Superseded. A row not approved within 24 hours is Expired. It also keeps a daily position log for blended APR. See the [LP agent workflow](/spot-mcp/lp-agent-workflow#log-every-proposal) for the identifiers to record.
+
+The playbook is not financial advice and does not run a hosted strategy. [LP analytics](/spot-mcp/lp-analytics) explains what Spot MCP measurements can and cannot establish.

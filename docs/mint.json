@@ -88,7 +88,10 @@
             "spot-mcp/client-setup",
             "spot-mcp/features",
             "spot-mcp/liquidity-positions",
+            "spot-mcp/lp-agent-workflow",
             "spot-mcp/lp-analytics",
+            "spot-mcp/lp-skills",
+            "spot-mcp/lp-scheduled-monitoring",
             "spot-mcp/troubleshooting",
             "spot-mcp/faq"
           ]
