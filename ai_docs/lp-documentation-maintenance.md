@@ -98,3 +98,10 @@ Added September 28, 2026 from screenshots supplied by the user:
 - `Screenshot 2026-09-28 at 15.28.09.png` → `docs/images/product/chatgpt-lp-position-detail.jpg`: Raydium CLMM detail view, range, amounts, fee APR and simulated fee APY.
 
 Encoded as JPEG at original dimensions to keep each image below the documentation size limit; no crop or content changes. Capture dates are retained here for provenance. The public hero leads with the shared Uniswap/Raydium MCP workflow; its provenance caption was removed at the user’s request. These are evidence of the ChatGPT widget presentation, not Wallet Yield or funded execution. Wallet list, detail and quote-review screenshots remain pending separately.
+
+## LP skills, agent workflow, scheduled monitoring and allowlists, October 19, 2026
+
+- New pages: `docs/spot-mcp/lp-agent-workflow.mdx`, `docs/spot-mcp/lp-skills.mdx`, `docs/spot-mcp/lp-scheduled-monitoring.mdx`. Updated: `docs/spot-mcp/liquidity-positions.mdx` (allowlists end to end), `docs/spot-mcp/features.mdx`, `docs/spot-mcp/index.mdx`, `docs/agents/plugins-and-skills.mdx`, `docs/mint.json`.
+- Sources: the merged `skills/spot/lp-pool-scan` and `skills/spot/lp-rebalancing-playbook` files, existing LP pages and `tools/docs/lp-contract.snapshot.json`. The pinned application revision, validated examples and native inventory are unchanged.
+- No included Product Guide page changed, so the application mirror is unaffected.
+- Open items marked `TODO(confirm with app owner)` in MDX comments: render tools in newer catalogs, Uniswap v4 and chain coverage of the pool-read tools, and what the fixed internal agent can call during scheduled runs. Allowlist update field names come from existing prose; their schemas are not in the snapshot.

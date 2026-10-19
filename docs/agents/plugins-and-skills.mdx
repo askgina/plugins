@@ -1,9 +1,9 @@
 ---
 title: "Plugins and skills"
-description: "Understand the research plugin and its four canonical skills."
+description: "Understand the research plugin, its four research skills and the Spot LP skills."
 ---
 
-The Ask Gina plugin bundles a read-only MCP connection with four research skills. A **connection** makes tools available; a **skill** tells the agent when and how to use them. Authentication is still required.
+The Ask Gina plugin bundles a read-only MCP connection with four research skills. Separate Spot LP skills cover pool scanning and rebalancing proposals. A **connection** makes tools available; a **skill** tells the agent when and how to use them. Authentication is still required.
 
 ## Choose a research skill
 
@@ -15,6 +15,17 @@ The Ask Gina plugin bundles a read-only MCP connection with four research skills
 | `research-prediction-markets` | Polymarket discovery, order books, positions                     | “Which prediction markets expire soon?” |
 
 These skills cannot place trades, transfer assets, change leverage, redeem positions, or create/edit schedules. Adding another MCP server does not change that boundary.
+
+## Spot LP skills
+
+These skills are not part of the read-only plugin. They live in [askgina/plugins](https://github.com/askgina/plugins/tree/main/skills/spot) under `skills/spot/<skill-name>/`.
+
+| Skill                     | Use it for                                                                   | Example                                        |
+| ------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------- |
+| `lp-pool-scan`            | Rank pools from public data by fee APR, impermanent loss, depth and slippage | “Scan the top LP pools on both chains.”        |
+| `lp-rebalancing-playbook` | Propose re-range, harvest, compound, trim or exit with numeric rules         | “Review my LP positions against the playbook.” |
+
+Neither skill executes. The scanner needs no wallet or keys. The playbook reads live positions through [Spot MCP](/spot-mcp/liquidity-positions) and only proposes; each action needs approval of its exact quote. See [LP skills](/spot-mcp/lp-skills) and the [LP agent workflow](/spot-mcp/lp-agent-workflow).
 
 ## Install for your host
 

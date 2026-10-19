@@ -1,0 +1,61 @@
+---
+title: "LP agent workflow"
+description: "Scan, propose, approve the exact quote, execute, check status and log each LP action."
+---
+
+This page shows how an agent can combine the [LP skills](/spot-mcp/lp-skills) with the Spot MCP tools in [LP operations](/spot-mcp/liquidity-positions). The skills only read and propose. Execution happens only after the owner approves one exact quote.
+
+## The loop
+
+1. **Scan.** Run `lp-pool-scan` on the allowlist or the daily `top` universe. Treat its output as public-data estimates.
+2. **Read live state.** Read `getLpPositions` or `getSolanaLpPositions`, and the allowlist with `getLpAllowlist` or `getSolanaLpAllowlist`. Keep coverage, source times and unread positions. Missing values are unknown, not zero.
+3. **Apply the playbook.** Run `lp-rebalancing-playbook` against live values. If no rule fires, the verdict is Hold.
+4. **Quote.** For the single highest-priority rule, call `quoteLpOperation` or `quoteSolanaLpOperation`. Quoting signs and sends nothing.
+5. **Propose.** Show the owner the rule, its trigger value against the threshold, and the quote: action, amounts, minimum receive bounds, slippage, fees and expiry. Write a Pending log row.
+6. **Approve.** The owner approves that exact quote in chat. One approval covers one action. If the quote expires or material terms change, re-quote and ask again.
+7. **Execute.** Call `executeLpOperation` or `executeSolanaLpOperation` with the approved `quoteId` and `planHash`. Never execute a superseded quote.
+8. **Check status.** Read `getLpOperationStatus` or `getSolanaLpOperationStatus` by `operationId`. Prepared, submitted and pending are not settled. Follow [recovery](/spot-mcp/liquidity-positions#recover-an-uncertain-operation) for unknown or partial results, and never resend automatically.
+9. **Log.** Update the row with the decision and, after settlement, the outcome. Refresh positions.
+
+The playbook is stricter than the general Spot execution rule. A complete imperative request can authorize a Spot transaction, but the playbook always waits for approval of the exact quote it presents.
+
+## Playbook actions and operations
+
+| Playbook action | Uniswap v3/v4 and Raydium CLMM                                                            | Raydium CPMM                                |
+| --------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------- |
+| Add             | `open` for a new position, `increase` for an existing one                                 | `deposit`                                   |
+| Re-range        | `recenter` (composite; both positions are reconciled)                                     | Not applicable: CPMM has no range           |
+| Harvest         | `collect`                                                                                 | Not applicable: fees stay in the pool value |
+| Compound        | `collect`, then `increase`: two quotes and two approvals                                  | Not applicable                              |
+| Trim            | `decrease` for the trimmed share                                                          | `withdraw` for the trimmed LP-token share   |
+| Full exit       | Uniswap: `close`. Raydium CLMM: `decrease` all liquidity, then `close` the empty position | `withdraw` the full LP-token share          |
+
+All kinds go through the same quote, execute and status tools for their chain. The `kind` values above are the enum values in the published quote schemas.
+
+Some actions need a separate swap first, for example a ratio fix before a re-range or converting harvested fees to a stable leg. That swap is its own action with its own `quoteSpotTransaction` quote and approval. LP quotes do not swap into the desired ratio. Settle the swap, then request a fresh LP quote. See [Fund and quote](/spot-mcp/liquidity-positions#fund-and-quote).
+
+Before any action that adds exposure, confirm the pool is admitted on the Spot MCP allowlist and supported by Spot MCP. A pool ranked by the scanner is not necessarily either. See [allowlists end to end](/spot-mcp/liquidity-positions#allowlists-end-to-end).
+
+## Log every proposal
+
+Keep one row per proposal. The playbook defines the decision fields; the Spot MCP identifiers link each row to its quote and settlement.
+
+| Field                             | Source                                                            |
+| --------------------------------- | ----------------------------------------------------------------- |
+| Date, position, rule fired        | Playbook review                                                   |
+| Trigger values and threshold      | Live reads and the playbook                                       |
+| Action, amounts, range            | The proposal                                                      |
+| Slippage, total cost              | The quote                                                         |
+| `intentId`, `quoteId`, `planHash` | Quote result                                                      |
+| Decision                          | Pending, Approved, Declined, Expired or Superseded                |
+| `operationId`                     | Execute result                                                    |
+| Transaction reference             | Status result, when attributable                                  |
+| Outcome                           | Status result after settlement, or unknown pending reconciliation |
+
+Write the row as Pending when proposing. Mark it Superseded when a fresh quote replaces it and Expired when it is not approved within 24 hours. Report recorded amounts from attributable receipts, and label quote amounts as estimates.
+
+## What this workflow does not do
+
+- It does not choose capital, pools or ranges for the owner. The skills propose; the owner decides.
+- It does not prove profitability. Scanner fee APR and estimated fee APR are estimates. See [LP analytics](/spot-mcp/lp-analytics).
+- It does not run unattended execution. For recurring reviews, see [scheduled LP monitoring](/spot-mcp/lp-scheduled-monitoring).

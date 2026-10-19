@@ -3,7 +3,7 @@ title: "LP operations"
 description: "One MCP to manage and execute liquidity operations on Uniswap (Robinhood Chain EVM) and Raydium (Solana)."
 ---
 
-Spot MCP brings **Uniswap on Robinhood Chain (EVM)** and **Raydium on Solana** into one connection. Discover positions, add or remove liquidity, collect fees where supported, and execute quoted operations through the same MCP.
+Spot MCP brings **Uniswap on Robinhood Chain (EVM)** and **Raydium on Solana** into one connection. Discover positions, add or remove liquidity, collect fees where supported, and execute quoted operations through the same MCP. For an end-to-end agent loop with proposals and approvals, see the [LP agent workflow](/spot-mcp/lp-agent-workflow).
 
 ## Manage all your LP positions from an agent of your choice.
 
@@ -53,6 +53,39 @@ Admission updates use different identity fields:
 Both require the current `expectedRevision`. Re-read on a revision conflict. Revocation blocks new exposure, including recentering; supported reductions remain available: decrease, collect and close, plus CPMM withdraw.
 
 Keep chain ID, wallet, protocol, pool and position identifiers intact. Uniswap token IDs and position-manager addresses are distinct from v4 pool IDs and pool keys. Raydium uses pool, mint, token-account and position addresses. A foreign EVM position may be observable; visibility never grants permission to operate it.
+
+## Allowlists end to end
+
+The Spot MCP allowlists decide which pools can receive new exposure. They are per user, with one list and revision for EVM and another for Solana. A pool found by discovery, `resolveSolanaLpPool` or the [pool scanner](/spot-mcp/lp-skills#lp-pool-scan) is not admitted until it is added here.
+
+### From a scanned pool to an admitted pool
+
+1. Confirm the scanned pool's protocol is in the [support matrix](#capability-and-access). Uniswap v2, Raydium AMM, Orca and Meteora pools can be scanned but not operated.
+2. Get the full pool identity. On EVM, admission takes the full `pool`; for Uniswap v4 that includes the full pool key, and pools with delta-returning hooks cannot be admitted. On Solana, use `resolveSolanaLpPool` with the pool or mint address and select the exact candidate yourself.
+3. Read the current list and revision with `getLpAllowlist` or `getSolanaLpAllowlist`.
+4. Add the pool. EVM: `updateLpAllowlist` with `action: "add"`, the full `pool` and `expectedRevision`. Solana: `updateSolanaLpAllowlist` with `protocol`, `poolAddress`, `action: "add"` and `expectedRevision`. Solana adds check the pool's on-chain program owner.
+5. Add the pool to the scanner's local allowlist file too, if you want it in allowlist reports. That file grants no permission.
+
+Adding a pool changes access only. It does not fund, quote or open anything.
+
+### Quote against the current revision
+
+Request the quote after admission. A Solana quote binds the allowlist revision: pass the last read `expectedRevision` to `quoteSolanaLpOperation` so an admission change is detected. If admission changes before execution, read the current revision, resolve the refusal and re-quote the unexecuted intent with its `intentId`.
+
+### Revision conflicts
+
+Every update must carry the current `expectedRevision`. If another change landed first, the update is refused as a revision conflict. Re-read the list, check that the intended change still applies, and retry with the new revision. Do not reuse a stale revision.
+
+### Remove a pool
+
+EVM: `updateLpAllowlist` with `action: "remove"`, the entry's `poolKey` and `expectedRevision`. Solana: `updateSolanaLpAllowlist` with `protocol`, `poolAddress`, `action: "remove"` and `expectedRevision`.
+
+| After removal               | Operations                                              |
+| --------------------------- | ------------------------------------------------------- |
+| Blocked: new exposure       | Adding exposure to the pool, including `recenter`       |
+| Still available: reductions | `decrease`, `collect` and `close`, plus CPMM `withdraw` |
+
+Removing a pool does not close existing positions. Use the reductions above to exit them.
 
 ## Fund and quote
 

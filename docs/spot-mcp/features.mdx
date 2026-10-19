@@ -5,7 +5,9 @@ description: "The complete host-tool boundary for Spot MCP"
 
 The native tool inventory below is checked against a pinned application registry. Run `tools/list` to verify your deployed connection. `bash` provides scripts, files, SQL, short waits and composed workflows; its host-tool allowlist includes these tools plus the sandbox-only analysis helpers `spot.captureDataset` and `spot.sql`.
 
-For protocols, actions, restrictions and release evidence, use the [LP support matrix](/spot-mcp/liquidity-positions#capability-and-access).
+For protocols, actions, restrictions and release evidence, use the [LP support matrix](/spot-mcp/liquidity-positions#capability-and-access). The inventory matches application revision `2e847ae3dd0523e7ea3e3b9944c9b6bcc232fd37`, reviewed September 28, 2026; a deployed connection can list tools added later.
+
+{/* TODO(confirm with app owner): newer client catalogs list renderLpPositions, renderPortfolio, renderChart and renderDataView. They are not in the pinned snapshot, so they are not listed here. Refresh the snapshot before adding them. */}
 
 ## Market Reads
 
@@ -25,6 +27,10 @@ For protocols, actions, restrictions and release evidence, use the [LP support m
 | -------------------- | ------------------------------------------------------------------- |
 | `getPoolState`       | Pinned-block Uniswap V2/V3 compatible pool state on Robinhood Chain |
 | `getRecentPoolSwaps` | Recent swaps for a pool address                                     |
+
+{/* TODO(confirm with app owner): whether getPoolState and getRecentPoolSwaps read Uniswap v4 pools and which chains getRecentPoolSwaps covers. Not verifiable from the pinned snapshot. */}
+
+The [pool scanner skill](/spot-mcp/lp-skills#lp-pool-scan) reads public pool data outside Spot MCP and needs no connection.
 
 ## Liquidity positions (Uniswap v3/v4)
 
@@ -49,7 +55,7 @@ For protocols, actions, restrictions and release evidence, use the [LP support m
 | `executeSolanaLpOperation`   | Submit the current bound quote                            |
 | `getSolanaLpOperationStatus` | Reconcile one operation or discover unresolved operations |
 
-See [LP operations](/spot-mcp/liquidity-positions) for discovery, allowlists, funding, schema-checked templates and status recovery. Quotes do not authorize sends. Unknown outcomes require reconciliation before another attempt.
+See [LP operations](/spot-mcp/liquidity-positions) for discovery, [allowlists end to end](/spot-mcp/liquidity-positions#allowlists-end-to-end), funding, schema-checked templates and status recovery. The [LP agent workflow](/spot-mcp/lp-agent-workflow) maps proposals to these tools. Quotes do not authorize sends. Unknown outcomes require reconciliation before another attempt.
 
 ## Analytics
 
@@ -89,6 +95,6 @@ A quote or preparation request stops before execution. A complete imperative tra
 | `deleteScheduledPrompt`      | Delete a schedule                   |
 | `updateScheduledAgentConfig` | Update schedule agent configuration |
 
-Spot schedules continue to run through Gina's fixed internal agent. `updateScheduledPromptCondition` is not part of Spot MCP.
+Spot schedules continue to run through Gina's fixed internal agent. `updateScheduledPromptCondition` is not part of Spot MCP. For recurring LP reviews that only flag and propose, see [scheduled LP monitoring](/spot-mcp/lp-scheduled-monitoring).
 
 `webSearch` and `fetchUrl` are not part of Spot MCP. Use the MCP client's native web tools for outside context. Predictions and Perps host tools, `renderReadOnlyDashboard`, and every unlisted tool are denied.
