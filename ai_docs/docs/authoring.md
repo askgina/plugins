@@ -25,8 +25,9 @@ Essential instructions must remain understandable in Markdown without images. Si
 ## Checks and preview
 
 ```sh
-node --test tools/docs/check.test.mjs
+node --test tools/docs/*.test.mjs
 node tools/docs/check.mjs
+bun run docs:catalog   # regenerate docs/agents/skills-catalog.mdx after editing skills/index.json
 node tools/docs/check.mjs --external
 cd docs
 mint dev --port 3005
