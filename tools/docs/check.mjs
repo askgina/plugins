@@ -272,6 +272,7 @@ export function validateGina(root) {
     "wallet-and-account",
     "transactions-and-portfolio",
     "liquidity-positions",
+    "spot-lp-agents",
     "market-research",
     "predictions",
     "perps",
@@ -319,8 +320,8 @@ export function validateGina(root) {
         errors.push(`Broken corpus relationship: ${slug} ↔ ${other}`);
     }
   const corpusLength = corpusParts.join("\n\n---\n\n").length;
-  if (corpusLength > 24_000)
-    errors.push(`Chatbot corpus exceeds 24000 characters: ${corpusLength}`);
+  if (corpusLength > 28_000)
+    errors.push(`Chatbot corpus exceeds 28000 characters: ${corpusLength}`);
   const robots = fs.readFileSync(path.join(root, "robots.txt"), "utf8");
   for (const rule of [
     "Content-Signal: ai-train=no, search=yes, ai-input=yes",

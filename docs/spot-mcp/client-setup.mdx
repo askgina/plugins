@@ -50,3 +50,13 @@ Use a [Streamable HTTP client](/connect/other-clients) with this venue URL. Chec
 The credential must be valid for this venue and carry `tools:execute`. A read-only token or an old Gina execute grant is not a substitute. Complete a fresh connection if the grant is rejected.
 
 Next: run the [read-only connection checks](/spot-mcp/quick-start) before attempting execution.
+
+## Check that it works
+
+Restart the client and complete Gina OAuth. In Claude Code, `/mcp` should list `spot` as connected. Run `tools/list`. It should return `bash` and the native Spot tools. Then call `getSimplePrice` with:
+
+```json
+{ "ids": "ethereum", "vs_currencies": "usd" }
+```
+
+Expected: the current ETH price in USD. This is a read-only call, so nothing executes. If the grant is rejected, read the last paragraph above and reconnect.
