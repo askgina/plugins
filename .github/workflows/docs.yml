@@ -6,8 +6,11 @@ on:
     paths:
       - "docs/**"
       - "tools/docs/**"
-      - "plugins/ask-gina/skills/**"
-      - "plugins/ask-gina/.mcp.json"
+      - "plugins/*/skills/**"
+      - "plugins/*/.mcp.json"
+      - "plugins/*/plugin.yaml"
+      - "skills/index.json"
+      - "marketplace.yaml"
       - "packages/contracts/src/index.ts"
       - ".github/workflows/docs.yml"
   push:
@@ -16,8 +19,11 @@ on:
     paths:
       - "docs/**"
       - "tools/docs/**"
-      - "plugins/ask-gina/skills/**"
-      - "plugins/ask-gina/.mcp.json"
+      - "plugins/*/skills/**"
+      - "plugins/*/.mcp.json"
+      - "plugins/*/plugin.yaml"
+      - "skills/index.json"
+      - "marketplace.yaml"
       - "packages/contracts/src/index.ts"
       - ".github/workflows/docs.yml"
   workflow_dispatch:

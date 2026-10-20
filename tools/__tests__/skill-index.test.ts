@@ -1,14 +1,10 @@
+import { fileURLToPath } from "node:url";
+
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
 
-import {
-  buildSkillIndex,
-  PENDING_RELOCATION_PATH,
-  runSkillIndex,
-  SKILL_INDEX_PATH,
-  SkillIndexError,
-} from "../skill-index";
+import { buildSkillIndex, runSkillIndex, SKILL_INDEX_PATH, SkillIndexError } from "../skill-index";
 
 const skillDocument = (name: string, description = "Does a thing.") =>
   `---\nname: ${name}\ndescription: ${description}\n---\n\n# ${name}\n`;
@@ -179,25 +175,26 @@ describe("skill index", () => {
         ),
     );
 
-    it.effect("allows only SKILL.md paths named in the pending relocation list", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const root = yield* makeRepository;
-          yield* writeFixtureFile(root, "skills/moving/SKILL.md", skillDocument("moving"));
-          yield* writeFixtureFile(root, "skills/stray/SKILL.md", skillDocument("stray"));
-          yield* writeFixtureFile(
-            root,
-            PENDING_RELOCATION_PATH,
-            "paths:\n  - skills/moving/SKILL.md\n  - skills/gone/SKILL.md\n",
-          );
+    it.effect("indexes the six skills of the two real plugin packages", () =>
+      Effect.gen(function* () {
+        const index = yield* buildSkillIndex(fileURLToPath(new URL("../../", import.meta.url)));
 
-          const problems = yield* problemsOf(buildSkillIndex(root));
-
-          assert.strictEqual(problems.length, 2);
-          assert.include(problems[0], "skills/gone/SKILL.md, which does not exist");
-          assert.include(problems[1], "skills/stray/SKILL.md is not declared");
-        }),
-      ),
+        assert.deepStrictEqual(
+          index.skills.map((skill) => `${skill.mcpEndpoint}/${skill.package}/${skill.id}`),
+          [
+            "gina/ask-gina/research-hyperliquid",
+            "gina/ask-gina/research-prediction-markets",
+            "gina/ask-gina/research-spot-tokens",
+            "gina/ask-gina/review-gina-account",
+            "spot/ask-gina-spot/lp-pool-scan",
+            "spot/ask-gina-spot/lp-rebalancing-playbook",
+          ],
+        );
+        assert.deepStrictEqual(
+          index.skills.filter((skill) => !skill.mcpServed).map((skill) => skill.id),
+          ["lp-pool-scan"],
+        );
+      }),
     );
 
     it.effect("writes the index, then detects drift in --check mode", () =>

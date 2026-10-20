@@ -59,7 +59,7 @@ const Listing = Schema.Struct({
     termsOfServiceURL: Schema.String,
     defaultPrompt: Schema.Array(Schema.String),
     brandColor: Schema.String,
-    screenshots: Schema.Array(Schema.String),
+    screenshots: Schema.optional(Schema.Array(Schema.String)),
     policy: Schema.Struct({ installation: Schema.String, authentication: Schema.String }),
   }),
   cursorMarketplaceDescription: Schema.String,
@@ -68,7 +68,8 @@ const Listing = Schema.Struct({
 const PluginSource = Schema.Struct({
   name: Schema.String,
   version: Schema.String,
-  mcp: Schema.Struct({ url: Schema.String }),
+  mcp: Schema.Struct({ url: Schema.String, scopes: Schema.Array(Schema.String) }),
+  skills: Schema.Array(Schema.Struct({ id: Schema.String, mcpServed: Schema.Boolean })),
   listing: Listing,
 });
 
@@ -144,7 +145,9 @@ const codexManifest = (source: PluginSource): Json => {
       brandColor: listing.codex.brandColor,
       composerIcon: `./${listing.icon}`,
       logo: `./${listing.icon}`,
-      screenshots: listing.codex.screenshots,
+      ...(listing.codex.screenshots === undefined
+        ? {}
+        : { screenshots: listing.codex.screenshots }),
     },
   };
 };
@@ -182,6 +185,27 @@ const devinManifest = (source: PluginSource, description: string): Json => {
     mcpServers: ".mcp.json",
   };
 };
+
+/** Host targets in the order the packer and conformance tools use. */
+export const HOST_TARGETS = ["openai", "cursor", "claude", "copilot", "gemini", "devin"] as const;
+export type HostTarget = (typeof HOST_TARGETS)[number];
+
+/**
+ * Hosts a plugin publishes for. openai (Codex), cursor and claude are always included; copilot,
+ * gemini and devin only when the listing has a description for them.
+ */
+export const hostsOf = (source: PluginSource): readonly HostTarget[] =>
+  HOST_TARGETS.filter(
+    (host) =>
+      host === "openai" ||
+      host === "cursor" ||
+      host === "claude" ||
+      source.listing.descriptions[host] !== undefined,
+  );
+
+/** Skill ids declared in plugin.yaml, sorted. */
+export const skillIdsOf = (source: PluginSource): readonly string[] =>
+  [...source.skills.map(({ id }) => id)].sort();
 
 /** Every generated file of one plugin package, keyed by path relative to the package root. */
 export const generatePluginFiles = (source: PluginSource): Readonly<Record<string, string>> => {
@@ -315,17 +339,18 @@ export const loadPluginSource = (packageRoot: string) =>
 export const loadMarketplaceSource = (repositoryRoot: string) =>
   readYaml(MarketplaceSource, repositoryRoot, MARKETPLACE_SOURCE_PATH);
 
-/** Every generated file in the repository, keyed by repo-relative path. */
-export const generateAllManifests = (root: string) =>
+/**
+ * Loads every `plugins/<name>/plugin.yaml` in directory order. Each plugin's `name` must equal its
+ * directory name.
+ */
+export const loadPluginSources = (root: string) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const marketplace = yield* loadMarketplaceSource(root);
     const directories = yield* fs
       .readDirectory(path.join(root, "plugins"))
       .pipe(Effect.mapError(() => fail("plugins cannot be listed")));
-    const plugins: PluginSource[] = [];
-    const files: Record<string, string> = {};
+    const plugins: { readonly directory: string; readonly source: PluginSource }[] = [];
     for (const directory of [...directories].sort()) {
       const packageRoot = path.join(root, "plugins", directory);
       const present = yield* fs
@@ -338,12 +363,26 @@ export const generateAllManifests = (root: string) =>
           `plugins/${directory}/plugin.yaml declares name ${source.name}; expected ${directory}`,
         );
       }
-      plugins.push(source);
+      plugins.push({ directory, source });
+    }
+    return plugins;
+  });
+
+/** Every generated file in the repository, keyed by repo-relative path. */
+export const generateAllManifests = (root: string) =>
+  Effect.gen(function* () {
+    const marketplace = yield* loadMarketplaceSource(root);
+    const plugins = yield* loadPluginSources(root);
+    const files: Record<string, string> = {};
+    for (const { directory, source } of plugins) {
       for (const [relative, content] of Object.entries(generatePluginFiles(source))) {
         files[`plugins/${directory}/${relative}`] = content;
       }
     }
-    return { ...files, ...generateMarketplaceFiles({ marketplace, plugins }) };
+    return {
+      ...files,
+      ...generateMarketplaceFiles({ marketplace, plugins: plugins.map(({ source }) => source) }),
+    };
   });
 
 /** Writes every generated manifest, or with `check` fails when any committed file differs. */

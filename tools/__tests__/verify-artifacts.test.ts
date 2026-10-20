@@ -12,13 +12,20 @@ import {
 } from "../check-public-boundary";
 import { checkRepositoryConformance, type RepositorySummary } from "../check-target-conformance";
 import {
+  loadArtifactPackages,
+  packPluginPackage,
+  type ArtifactPackage,
+  type ArtifactSkill,
+} from "../pack-artifacts";
+import {
   ArtifactVerificationError,
-  OPENAI_ASSETS,
   runNodeEsmSmoke,
+  smokePluginArchives,
   snapshotArtifactInputs,
   verifyNoInstalledLibrarySources,
   verifyNode24Consumer,
   verifyOpenAiArchivePayload,
+  verifyTargets,
 } from "../verify-artifacts";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -45,6 +52,10 @@ const repositoryFixture = Effect.gen(function* () {
       fs.copy(
         path.join(repositoryRoot, "plugins", "ask-gina"),
         path.join(root, "plugins", "ask-gina"),
+      ),
+      fs.copy(
+        path.join(repositoryRoot, "plugins", "ask-gina-spot"),
+        path.join(root, "plugins", "ask-gina-spot"),
       ),
     ],
     { concurrency: "unbounded" },
@@ -74,18 +85,41 @@ const writeMarketplace = (root: string, marketplace: Record<string, unknown>) =>
 const failedCheck = (report: RepositorySummary, id: string): boolean =>
   report.checks.some((check) => check.id === id && !check.passed);
 
-const makeLeanOpenAiPayload = (root: string) =>
+const GINA_PAYLOAD = {
+  assets: [
+    "gold-up-or-down-daily.png",
+    "hyperliquid-chart.png",
+    "icon.svg",
+    "nba-champion-podium.png",
+    "perpetual-positions.png",
+    "premier-league-prediction-markets.png",
+  ],
+  skills: SKILLS.map((id) => ({ id, files: ["SKILL.md", "agents/openai.yaml"] })),
+};
+/** A package whose skills carry files beyond SKILL.md, like ask-gina-spot's lp-pool-scan. */
+const SPOT_PAYLOAD = {
+  assets: ["icon.svg"],
+  skills: [
+    {
+      id: "lp-pool-scan",
+      files: ["README.md", "SKILL.md", "agents/openai.yaml", "scripts/scan.py"],
+    },
+    { id: "lp-rebalancing-playbook", files: ["SKILL.md", "agents/openai.yaml"] },
+  ],
+};
+
+const makeLeanOpenAiPayload = (
+  root: string,
+  payload: { readonly assets: readonly string[]; readonly skills: readonly ArtifactSkill[] },
+) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const files = [
       ".codex-plugin/plugin.json",
       ".mcp.json",
-      ...OPENAI_ASSETS.map((asset) => `assets/${asset}`),
-      ...SKILLS.flatMap((skill) => [
-        `skills/${skill}/SKILL.md`,
-        `skills/${skill}/agents/openai.yaml`,
-      ]),
+      ...payload.assets.map((asset) => `assets/${asset}`),
+      ...payload.skills.flatMap((skill) => skill.files.map((file) => `skills/${skill.id}/${file}`)),
     ];
     yield* Effect.forEach(files, (file) =>
       Effect.gen(function* () {
@@ -94,6 +128,75 @@ const makeLeanOpenAiPayload = (root: string) =>
         yield* fs.writeFileString(destination, `${file}\n`);
       }),
     );
+  });
+
+/** Packs the real ask-gina-spot package into a temporary dist and builds its targets receipt. */
+const packSpot = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const packages = yield* loadArtifactPackages({ root: repositoryRoot });
+  const spot = packages.find(({ name }) => name === "ask-gina-spot");
+  if (spot === undefined) {
+    return yield* new ArtifactVerificationError({ message: "ask-gina-spot package is missing" });
+  }
+  const temporary = yield* fs.makeTempDirectoryScoped({ prefix: "verify-spot-test-" });
+  const dist = path.join(temporary, "dist");
+  const stages = path.join(temporary, "stages");
+  yield* Effect.forEach(
+    [path.join(dist, "targets"), path.join(dist, "skills"), stages],
+    (directory) => fs.makeDirectory(directory, { recursive: true }),
+  );
+  const version = spot.source.version;
+  const packed = yield* packPluginPackage({
+    root: repositoryRoot,
+    source: repositoryRoot,
+    dist,
+    temporary: stages,
+    plugin: spot,
+    version,
+  });
+  const receipt = {
+    schemaVersion: "v2",
+    releaseVersion: version,
+    sourceCommit: "0".repeat(40),
+    sourceDirty: false,
+    targets: packed.targets,
+    skillsCandidates: [packed.candidate],
+  };
+  return { spot, dist, version, receipt };
+});
+type SpotArtifacts = Effect.Success<typeof packSpot>;
+
+const verifySpotTargets = (artifacts: SpotArtifacts, receipt: unknown = artifacts.receipt) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const temporary = yield* fs.makeTempDirectoryScoped({ prefix: "verify-spot-extract-" });
+    yield* fs.makeDirectory(path.join(artifacts.dist, "receipts"), { recursive: true });
+    yield* fs.writeFileString(
+      path.join(artifacts.dist, "receipts", "targets.json"),
+      `${encodeUnknownJson(receipt)}\n`,
+    );
+    yield* verifyTargets({
+      root: repositoryRoot,
+      dist: artifacts.dist,
+      version: artifacts.version,
+      sourceDirty: false,
+      temporary,
+      plugins: [artifacts.spot],
+    });
+  });
+
+const smokeSpot = (artifacts: SpotArtifacts, plugin: ArtifactPackage = artifacts.spot) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const temporary = yield* fs.makeTempDirectoryScoped({ prefix: "verify-spot-smoke-" });
+    yield* smokePluginArchives({
+      dist: artifacts.dist,
+      version: artifacts.version,
+      temporary,
+      plugins: [plugin],
+    });
   });
 
 describe("artifact and source conformance verification", () => {
@@ -540,15 +643,155 @@ describe("artifact and source conformance verification", () => {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           const stage = yield* fs.makeTempDirectoryScoped({ prefix: "openai-payload-test-" });
-          yield* makeLeanOpenAiPayload(stage);
-          yield* verifyOpenAiArchivePayload(stage);
+          yield* makeLeanOpenAiPayload(stage, GINA_PAYLOAD);
+          yield* verifyOpenAiArchivePayload({ directory: stage, ...GINA_PAYLOAD });
 
           const foreign = path.join(stage, "targets", "claude", ".mcp.json");
           yield* fs.makeDirectory(path.dirname(foreign), { recursive: true });
           yield* fs.writeFileString(foreign, "{}\n");
-          const error = yield* verifyOpenAiArchivePayload(stage).pipe(Effect.flip);
+          const error = yield* verifyOpenAiArchivePayload({
+            directory: stage,
+            ...GINA_PAYLOAD,
+          }).pipe(Effect.flip);
           assert.instanceOf(error, ArtifactVerificationError);
           assert.include(error.message, "OpenAI archive root");
+        }),
+      ),
+    );
+
+    it.effect("requires the exact OpenAI payload of a package with extra skill files", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const stage = yield* fs.makeTempDirectoryScoped({ prefix: "openai-spot-payload-test-" });
+          yield* makeLeanOpenAiPayload(stage, SPOT_PAYLOAD);
+          yield* verifyOpenAiArchivePayload({ directory: stage, ...SPOT_PAYLOAD });
+
+          const ginaOnly = yield* verifyOpenAiArchivePayload({
+            directory: stage,
+            ...GINA_PAYLOAD,
+          }).pipe(Effect.flip);
+          assert.include(ginaOnly.message, "OpenAI archive");
+
+          const extra = path.join(stage, "skills", "lp-pool-scan", "scripts", "extra.py");
+          yield* fs.writeFileString(extra, "print()\n");
+          const extraError = yield* verifyOpenAiArchivePayload({
+            directory: stage,
+            ...SPOT_PAYLOAD,
+          }).pipe(Effect.flip);
+          assert.include(extraError.message, "OpenAI archive skills/lp-pool-scan/scripts");
+          yield* fs.remove(extra);
+
+          yield* fs.remove(path.join(stage, "skills", "lp-pool-scan", "README.md"));
+          const missingError = yield* verifyOpenAiArchivePayload({
+            directory: stage,
+            ...SPOT_PAYLOAD,
+          }).pipe(Effect.flip);
+          assert.include(missingError.message, "OpenAI archive skills/lp-pool-scan");
+        }),
+      ),
+    );
+
+    it.effect("verifies the ask-gina-spot archives, receipt and package smoke", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const artifacts = yield* packSpot;
+          yield* verifySpotTargets(artifacts);
+          yield* smokeSpot(artifacts);
+        }),
+      ),
+    );
+
+    it.effect("fails when a package's host archive is missing", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const artifacts = yield* packSpot;
+          yield* fs.remove(
+            path.join(artifacts.dist, "targets", `ask-gina-spot-claude-${artifacts.version}.tgz`),
+          );
+          const error = yield* verifySpotTargets(artifacts).pipe(Effect.flip);
+          assert.include(error.message, "target artifacts has missing or extra entries");
+          const smoke = yield* smokeSpot(artifacts).pipe(Effect.flip);
+          assert.include(smoke.message, "ask-gina-spot-claude");
+        }),
+      ),
+    );
+
+    it.effect("fails when an archive changes after its receipt", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const artifacts = yield* packSpot;
+          const archive = path.join(
+            artifacts.dist,
+            "targets",
+            `ask-gina-spot-cursor-${artifacts.version}.tgz`,
+          );
+          yield* fs.writeFile(archive, Uint8Array.from([...(yield* fs.readFile(archive)), 0]));
+          const error = yield* verifySpotTargets(artifacts).pipe(Effect.flip);
+          assert.include(error.message, "ask-gina-spot cursor receipt is stale");
+        }),
+      ),
+    );
+
+    it.effect("fails when a receipt entry names another package", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const artifacts = yield* packSpot;
+          const receipt = {
+            ...artifacts.receipt,
+            targets: artifacts.receipt.targets.map((entry, index) =>
+              index === 0 ? { ...entry, package: "ask-gina" } : entry,
+            ),
+          };
+          const error = yield* verifySpotTargets(artifacts, receipt).pipe(Effect.flip);
+          assert.include(error.message, "ask-gina-spot openai receipt must be an object");
+        }),
+      ),
+    );
+
+    it.effect("fails when a package has no skills candidate receipt", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const artifacts = yield* packSpot;
+          const error = yield* verifySpotTargets(artifacts, {
+            ...artifacts.receipt,
+            skillsCandidates: [],
+          }).pipe(Effect.flip);
+          assert.include(error.message, "targets receipt has the wrong package count");
+        }),
+      ),
+    );
+
+    it.effect("fails the package smoke for a skill the archive lacks", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const artifacts = yield* packSpot;
+          const error = yield* smokeSpot(artifacts, {
+            ...artifacts.spot,
+            skills: [...artifacts.spot.skills, { id: "ghost", files: ["SKILL.md"] }],
+          }).pipe(Effect.flip);
+          assert.include(error.message, "ask-gina-spot openai is missing skill ghost");
+        }),
+      ),
+    );
+
+    it.effect("fails the package smoke when the MCP configuration drops the declared URL", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const artifacts = yield* packSpot;
+          const error = yield* smokeSpot(artifacts, {
+            ...artifacts.spot,
+            source: {
+              ...artifacts.spot.source,
+              mcp: { ...artifacts.spot.source.mcp, url: "https://example.invalid/mcp" },
+            },
+          }).pipe(Effect.flip);
+          assert.include(error.message, "does not configure https://example.invalid/mcp");
         }),
       ),
     );

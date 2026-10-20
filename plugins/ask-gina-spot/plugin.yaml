@@ -1,0 +1,60 @@
+name: ask-gina-spot
+version: 0.1.0
+description: Ask Gina Spot MCP tools and skills to quote and execute spot swaps, transfers, and liquidity-pool operations with your approval.
+mcp:
+  url: https://askgina.ai/ai/spot/mcp
+  scopes:
+    - tools:execute
+skills:
+  - id: lp-pool-scan
+    mcpServed: false
+  - id: lp-rebalancing-playbook
+    mcpServed: true
+listing:
+  version: 1.0.0
+  displayName: Ask Gina Spot
+  author:
+    name: Ask Gina
+    url: https://askgina.ai
+  homepage: https://askgina.ai
+  repository: https://github.com/askgina/plugins
+  license: Apache-2.0
+  category: Finance
+  keywords:
+    - crypto
+    - spot
+    - swap
+    - transfer
+    - liquidity
+    - lp
+    - solana
+    - uniswap
+    - raydium
+    - mcp
+  icon: assets/icon.svg
+  mcpServerName: spot
+  descriptions:
+    codex: Quote and execute spot swaps, transfers, and liquidity-pool operations with your approval.
+    cursor: Ask Gina Spot lets an agent quote and, with your approval, execute spot token swaps, transfers, and liquidity-pool operations from your Gina wallet. It also reads swap history, wallet addresses, LP positions, and operation status, and it includes skills for scanning liquidity pools and rebalancing LP positions. Transactions move real funds, so review every quote before you approve it.
+    claude: Ask Gina Spot lets an agent quote and, with your approval, execute spot token swaps, transfers, and liquidity-pool operations from your Gina wallet. It also reads swap history, wallet addresses, LP positions, and operation status, and it includes skills for scanning liquidity pools and rebalancing LP positions. Transactions move real funds, so review every quote before you approve it.
+    devin: Ask Gina Spot lets an agent quote and, with your approval, execute spot token swaps, transfers, and liquidity-pool operations from your Gina wallet. It also reads swap history, wallet addresses, LP positions, and operation status, and it includes skills for scanning liquidity pools and rebalancing LP positions. Transactions move real funds, so review every quote before you approve it.
+    copilot: Ask Gina Spot lets an agent quote and, with your approval, execute spot token swaps, transfers, and liquidity-pool operations from your Gina wallet. It also reads swap history, wallet addresses, LP positions, and operation status, and it includes skills for scanning liquidity pools and rebalancing LP positions. Transactions move real funds, so review every quote before you approve it.
+  codex:
+    shortDescription: Spot swaps, transfers, and LP
+    longDescription: Ask Gina Spot connects your Ask Gina account to the Spot MCP server. It can quote and, with your approval, execute spot swaps, transfers, and EVM and Solana liquidity-pool operations from your Gina wallet. It can also read wallet addresses, swap history, LP positions, and operation status, and manage scheduled prompts and LP allowlists. Transactions move real funds, so review each quote before you approve it. The bundled skills scan liquidity pools from public data and propose LP rebalancing; they only propose, and every action needs your approval.
+    capabilities:
+      - Interactive
+      - Read
+      - Write
+    privacyPolicyURL: https://askgina.ai/privacy-policy
+    supportURL: https://askgina.ai/support
+    termsOfServiceURL: https://askgina.ai/terms-and-conditions
+    defaultPrompt:
+      - Quote swapping 100 USDC for ETH.
+      - Show my LP positions and propose any rebalancing.
+      - Scan the top liquidity pools by fee APR.
+    brandColor: "#B50D00"
+    policy:
+      installation: AVAILABLE
+      authentication: ON_INSTALL
+  cursorMarketplaceDescription: Ask Gina Spot quotes and, with your approval, executes spot swaps, transfers, and liquidity-pool operations. Transactions move real funds.

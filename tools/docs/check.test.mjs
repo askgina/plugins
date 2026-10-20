@@ -3,7 +3,13 @@ import { test } from "node:test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { linksIn, resolveRoute, validateDocs, validateCorpusBody } from "./check.mjs";
+import {
+  linksIn,
+  resolveRoute,
+  validateDocs,
+  validateCorpusBody,
+  validateSkillCoverage,
+} from "./check.mjs";
 
 function fixture(t, options = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "gina-docs-"));
@@ -110,4 +116,63 @@ test("LP contract gate detects inventory and validated-example drift", async (t)
   const guide = path.join(spot, "liquidity-positions.mdx");
   fs.writeFileSync(guide, fs.readFileSync(guide, "utf8").replace('"limit": 10', '"limit": 999'));
   assert.ok(validateLpContract(root).some((error) => error.includes("examples changed")));
+});
+
+function skillsFixture(t, { indexed, onDisk }) {
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), "gina-skills-"));
+  t.after(() => fs.rmSync(repo, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(repo, "skills"), { recursive: true });
+  fs.writeFileSync(
+    path.join(repo, "skills/index.json"),
+    JSON.stringify({ version: 1, skills: indexed.map(([pkg, id]) => ({ id, package: pkg })) }),
+  );
+  for (const [pkg, id] of onDisk)
+    fs.mkdirSync(path.join(repo, "plugins", pkg, "skills", id), { recursive: true });
+  return repo;
+}
+
+test("skill coverage requires every indexed skill of every package in backticks", (t) => {
+  const skills = [
+    ["ask-gina", "research-spot-tokens"],
+    ["ask-gina-spot", "lp-pool-scan"],
+    ["ask-gina-spot", "lp-rebalancing-playbook"],
+  ];
+  const repo = skillsFixture(t, { indexed: skills, onDisk: skills });
+  const page = "`research-spot-tokens` `lp-pool-scan` `lp-rebalancing-playbook`";
+  assert.deepEqual(validateSkillCoverage(repo, page), []);
+  assert.deepEqual(validateSkillCoverage(repo, "`research-spot-tokens` `lp-pool-scan`"), [
+    "Undocumented skill: lp-rebalancing-playbook",
+  ]);
+  // A bare mention without backticks does not count.
+  assert.deepEqual(
+    validateSkillCoverage(repo, "`research-spot-tokens` lp-pool-scan `lp-rebalancing-playbook`"),
+    ["Undocumented skill: lp-pool-scan"],
+  );
+});
+
+test("skill coverage also catches skill directories missing from a stale index", (t) => {
+  const repo = skillsFixture(t, {
+    indexed: [["ask-gina", "research-spot-tokens"]],
+    onDisk: [
+      ["ask-gina", "research-spot-tokens"],
+      ["ask-gina-spot", "lp-pool-scan"],
+    ],
+  });
+  assert.deepEqual(validateSkillCoverage(repo, "`research-spot-tokens`"), [
+    "Undocumented skill: lp-pool-scan",
+  ]);
+});
+
+test("skill coverage fails closed on a missing or malformed index", (t) => {
+  const repo = skillsFixture(t, { indexed: [], onDisk: [] });
+  fs.writeFileSync(path.join(repo, "skills/index.json"), "{}");
+  assert.match(validateSkillCoverage(repo, "")[0], /skills array/);
+  fs.rmSync(path.join(repo, "skills/index.json"));
+  assert.match(validateSkillCoverage(repo, "")[0], /Cannot read skills\/index\.json/);
+});
+
+test("the checked-in skills index is fully documented", () => {
+  const repo = path.resolve(".");
+  const page = fs.readFileSync(path.join(repo, "docs/agents/plugins-and-skills.mdx"), "utf8");
+  assert.deepEqual(validateSkillCoverage(repo, page), []);
 });

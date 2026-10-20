@@ -1,6 +1,0 @@
-# SKILL.md files that no plugin package declares yet.
-# askgina/plugins#181 moves both into plugins/ask-gina-spot and deletes this file.
-# Do not add entries. The index check fails on any other undeclared SKILL.md.
-paths:
-  - skills/spot/lp-pool-scan/SKILL.md
-  - skills/spot/lp-rebalancing-playbook/SKILL.md
