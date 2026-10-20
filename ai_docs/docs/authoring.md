@@ -2,6 +2,8 @@
 
 The public Mintlify source is `docs/`. Track changes in [askgina/plugins issues](https://github.com/askgina/plugins/issues); this overhaul is [#42](https://github.com/askgina/plugins/issues/42). Internal research, verification evidence, templates, and inventories belong in `ai_docs/`.
 
+For a user-facing feature release, follow the [release docs checklist](../release-docs-checklist.md). Its gate also requires a one-sentence `description` on every page, no hardcoded skill counts, and a `## Check that it works` section on every task page.
+
 ## Write for the task
 
 Lead with what the reader can accomplish. Explain Gina before its protocols. Use one primary purpose per page: a guided tutorial, task instructions, conceptual explanation, or factual reference. Keep this classification editorial; do not add another navigation layer.

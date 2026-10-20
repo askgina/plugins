@@ -44,7 +44,7 @@
     "typecheck": "bun run build && node_modules/.bin/tsc --noEmit -p tsconfig.json",
     "effect-tsgo:diagnostics": "node_modules/.bin/effect-tsgo diagnostics --project tsconfig.json --format json",
     "docs:check": "node tools/docs/check.mjs",
-    "docs:test": "node --test tools/docs/check.test.mjs"
+    "docs:test": "node --test tools/docs/check.test.mjs tools/docs/sweep/compare.test.mjs"
   },
   "devDependencies": {
     "@askgina/contracts": "workspace:*",

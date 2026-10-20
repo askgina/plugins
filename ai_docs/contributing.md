@@ -31,6 +31,10 @@ custom packer's ignored archives and receipts under repository `dist/`;
 entrypoints. Pull-request CI runs these repository gates, but `main` has no
 protected required checks, so CI does not gate merge or publish packages.
 
+A user-facing feature release also follows the
+[release docs checklist](release-docs-checklist.md): the docs gate must pass and
+the jevify sweep must show no regression against its committed baseline.
+
 Do not suppress Effect diagnostics or add diagnostic baselines, report files, or
 count ratchets. Fix the source. Package manifests, plugin manifests, and host
 manifests must keep the root release version exactly aligned.
