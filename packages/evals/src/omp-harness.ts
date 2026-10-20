@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { createMCPClient, type ListToolsResult, type MCPClient } from "@ai-sdk/mcp";
 import Ajv, { type ValidateFunction } from "ajv";
@@ -39,6 +38,7 @@ import {
   Stream,
 } from "effect";
 
+import { createSha256Stream } from "./canonical-json";
 import type { PluginEvalCase, PluginEvalObservation, PluginEvalToolCall } from "./contracts";
 import { createLocalHarnessSandbox } from "./local-harness-sandbox";
 import {
@@ -828,7 +828,7 @@ const snapshotExecutable = (
               () => new PluginEvalOmpHarnessExecutableError({ reason: "invalid-file" }),
             ),
           );
-        const hash = createHash("sha256");
+        const hash = createSha256Stream();
         const header: number[] = [];
         while (true) {
           const maybeChunk = yield* source
@@ -863,7 +863,7 @@ const snapshotExecutable = (
             () => new PluginEvalOmpHarnessExecutableError({ reason: "invalid-file" }),
           ),
         );
-        const sha256 = hash.digest("hex");
+        const sha256 = hash.digestHex();
         const beforeIno = Option.getOrUndefined(before.ino);
         const afterIno = Option.getOrUndefined(after.ino);
         if (

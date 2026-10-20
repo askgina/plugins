@@ -1,6 +1,6 @@
-import { createHash } from "node:crypto";
-
 import { Data, Effect, FileSystem, Function, Path, Schema } from "effect";
+
+import { sha256Hex } from "./canonical-json";
 
 const OPENROUTER_ENDPOINT_MAX_LENGTH = 128;
 const OPENROUTER_ENDPOINT_SLUG =
@@ -57,8 +57,7 @@ const encodeEvidence = Schema.encodeEffect(
   Schema.fromJsonString(LiveEvalRequestedRoutingEvidenceSchema, { space: 2 }),
 );
 
-export const sha256Hex = (content: string): string =>
-  createHash("sha256").update(content, "utf8").digest("hex");
+export { sha256Hex };
 
 export const makeLiveEvalRequestedRoutingEvidence = (options: {
   readonly reportContent: string;

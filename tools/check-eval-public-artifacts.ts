@@ -3,7 +3,6 @@
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
-import { createHash } from "node:crypto";
 import { Data, Effect, FileSystem, Function, Layer, Option, Path, Schema } from "effect";
 import type { Plugin } from "vite-plus";
 
@@ -14,6 +13,7 @@ import {
   PublicEvalSha256Schema,
   PublicEvalTimestampSchema,
 } from "../packages/contracts/src/eval-results";
+import { sha256Hex } from "../packages/evals/src/canonical-json";
 import { HardCheckIdSchema } from "../packages/evals/src/execution/contracts";
 import { isSafePublicEvalText } from "../packages/evals/src/sanitize";
 import { isUnknownRecord } from "../packages/evals/src/type-guards";
@@ -329,9 +329,9 @@ const APPROVED_EXECUTION_ARTIFACTS: Readonly<Record<string, string>> = {
 // Numeric checks, public identifiers and evidence hashes only. Original result
 // and transcript bytes stay pinned separately above.
 const APPROVED_REGRADE_RECEIPT_SHA256 =
-  "11ec5727b925374585ae3061e4a187c495200bbbeea9055cde359c3e3260db2f";
+  "85d85fbfb76d10f0889aed1b1b10459ee36b5ee7e0901dc6a3ca9a63468f7f49";
 const APPROVED_PERPS_REGRADE_RECEIPT_SHA256 =
-  "17daf2e0902845d0de48158d8261803642c764d5e64b97ffcce20eed5bdecd66";
+  "120d64698d25701cf38ffd4e62b7f0fcde7923f119843dd9b2e78f0fc1c2a5f2";
 const decodeArtifactJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
 
 /** Fixed diagnostics never include provider values or schema issue excerpts. */
@@ -426,7 +426,7 @@ export const checkEvalPublicArtifacts = ({
       const bytes = yield* fs
         .readFile(path.join(root, transcriptIndex))
         .pipe(Effect.mapError(() => fail(transcriptIndex, "unreadable_artifact")));
-      if (createHash("sha256").update(bytes).digest("hex") !== PUBLIC_TRANSCRIPTS_INDEX_SHA256)
+      if (sha256Hex(bytes) !== PUBLIC_TRANSCRIPTS_INDEX_SHA256)
         return yield* fail(transcriptIndex, "unapproved_artifact");
       const index = yield* Effect.try(() => textDecoder.decode(bytes)).pipe(
         Effect.flatMap(decodeArtifactJson),
@@ -484,7 +484,7 @@ export const checkEvalPublicArtifacts = ({
           if (
             entry === undefined ||
             bytes.byteLength !== entry.bytes ||
-            createHash("sha256").update(bytes).digest("hex") !== entry.sha256 ||
+            sha256Hex(bytes) !== entry.sha256 ||
             !isPublicTranscript(input) ||
             publicTranscriptPath(input.reference) !== entry.path
           )
@@ -494,7 +494,7 @@ export const checkEvalPublicArtifacts = ({
         }
         if (relative.startsWith("src/results/2026-09-21/regrade/")) {
           if (
-            createHash("sha256").update(bytes).digest("hex") !==
+            sha256Hex(bytes) !==
             (relative === "src/results/2026-09-21/regrade/receipt.json"
               ? APPROVED_REGRADE_RECEIPT_SHA256
               : relative === "src/results/2026-09-21/regrade/perps-receipt.json"
@@ -514,8 +514,7 @@ export const checkEvalPublicArtifacts = ({
           if (
             [relative, runId, model, modelId].some((value) => /claude/iu.test(value)) &&
             (!Object.hasOwn(approvedExecutionArtifacts, relative) ||
-              createHash("sha256").update(bytes).digest("hex") !==
-                approvedExecutionArtifacts[relative])
+              sha256Hex(bytes) !== approvedExecutionArtifacts[relative])
           )
             return yield* fail(relative, "unapproved_artifact");
           return;
@@ -526,15 +525,13 @@ export const checkEvalPublicArtifacts = ({
         if (
           recoveryArtifact &&
           (!Object.hasOwn(APPROVED_RECOVERY_ARTIFACTS, relative) ||
-            createHash("sha256").update(bytes).digest("hex") !==
-              APPROVED_RECOVERY_ARTIFACTS[relative])
+            sha256Hex(bytes) !== APPROVED_RECOVERY_ARTIFACTS[relative])
         )
           return yield* fail(relative, "unapproved_artifact");
         if (
           grok47Artifact &&
           (!Object.hasOwn(APPROVED_GROK47_ARTIFACTS, relative) ||
-            createHash("sha256").update(bytes).digest("hex") !==
-              APPROVED_GROK47_ARTIFACTS[relative])
+            sha256Hex(bytes) !== APPROVED_GROK47_ARTIFACTS[relative])
         )
           return yield* fail(relative, "unapproved_artifact");
         if (claudeBearing || sweepArtifact || recoveryArtifact || grok47Artifact) {
@@ -543,7 +540,7 @@ export const checkEvalPublicArtifacts = ({
         if (claudeBearing) {
           if (
             !Object.hasOwn(APPROVED_CLAUDE_ARTIFACTS, relative) ||
-            createHash("sha256").update(bytes).digest("hex") !== APPROVED_CLAUDE_ARTIFACTS[relative]
+            sha256Hex(bytes) !== APPROVED_CLAUDE_ARTIFACTS[relative]
           ) {
             return yield* fail(relative, "unapproved_artifact");
           }

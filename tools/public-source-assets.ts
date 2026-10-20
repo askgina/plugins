@@ -1,5 +1,6 @@
-import { createHash } from "node:crypto";
 import { Function } from "effect";
+
+import { sha256Hex } from "../packages/evals/src/canonical-json";
 
 export type PublicSourceAssetKind = "woff2" | "webp" | "png" | "jpeg" | "ico";
 
@@ -100,7 +101,7 @@ export const isAttestedPublicSourceAsset: {
     const asset = inventory.find((item) => item.path === label);
     if (asset === undefined) return false;
     if (bytes.length !== asset.bytes || !SHA_256.test(asset.sha256)) return false;
-    if (createHash("sha256").update(bytes).digest("hex") !== asset.sha256) return false;
+    if (sha256Hex(bytes) !== asset.sha256) return false;
     if (asset.kind === "woff2") {
       return bytes.length >= 4 && WOFF2_SIGNATURE.every((value, index) => bytes[index] === value);
     }

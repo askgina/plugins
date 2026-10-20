@@ -44,7 +44,7 @@
     },
     {
       "path": "tools/regrade-eval-perps.ts",
-      "sha256": "e08ffa91826595037fdc1027e0618a46b4c98acc9cd43b65c672daadd850be24"
+      "sha256": "f693cbf9c456ce6f124bc66a76a36c59ae115d80f408562934b42165fc360d5a"
     }
   ],
   "reviewedAttempts": 382,

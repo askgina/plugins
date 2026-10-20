@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 import {
@@ -15,14 +14,13 @@ import {
   decodePublicEvalPublication,
   decodePublicEvalResult,
 } from "@askgina/contracts";
+import { sha256Hex } from "../src/sha256";
 
 // All data, including approval records and measured labels, is test-only.
 const SHA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const UNAVAILABLE = { availability: "not_evaluated", reason: "no_declared_method" } as const;
 const attemptId = (runId: string, caseId: string): string =>
-  `attempt-${createHash("sha256")
-    .update(JSON.stringify([runId, caseId, 1]))
-    .digest("hex")}`;
+  `attempt-${sha256Hex(JSON.stringify([runId, caseId, 1]))}`;
 
 const PASS: PublicEvalAttemptSummary = {
   id: attemptId("synthetic-run", "case-one"),

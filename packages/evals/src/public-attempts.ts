@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import {
   PublicEvalAttemptCaptureSchema,
   PublicEvalAttemptSummarySchema,
@@ -18,6 +17,7 @@ import type {
   PluginEvalDimensionScore,
   PluginEvalObservationSet,
 } from "./contracts";
+import { sha256Hex } from "./canonical-json";
 import { SanitizedEvalRunReportSchema } from "./report";
 import { isSafePublicEvalText } from "./sanitize";
 
@@ -68,8 +68,6 @@ const captureError = () =>
     reasons: ["attempt data does not match the public capture contract"],
   });
 const writeError = () => new PublicEvalAttemptWriteError({ reason: "write-failed" });
-const sha256Hex = (content: string): string =>
-  createHash("sha256").update(content, "utf8").digest("hex");
 const checkVerdict = (dimension: PluginEvalDimensionScore | undefined) =>
   dimension === undefined
     ? ("not_applicable" as const)

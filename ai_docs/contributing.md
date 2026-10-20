@@ -36,5 +36,8 @@ A user-facing feature release also follows the
 the jevify sweep must show no regression against its committed baseline.
 
 Do not suppress Effect diagnostics or add diagnostic baselines, report files, or
-count ratchets. Fix the source. Package manifests, plugin manifests, and host
+count ratchets. Fix the source. The only suppression is `nodeBuiltinImport` on
+the two synchronous SHA-256 helpers, `packages/contracts/src/sha256.ts` and
+`packages/evals/src/canonical-json.ts`; every other file imports `sha256Hex`
+from them rather than `node:crypto`. Package manifests, plugin manifests, and host
 manifests must keep the root release version exactly aligned.
