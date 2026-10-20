@@ -48,7 +48,9 @@
     "typecheck": "bun run build && node_modules/.bin/tsc --noEmit -p tsconfig.json",
     "effect-tsgo:diagnostics": "node_modules/.bin/effect-tsgo diagnostics --project tsconfig.json --format json",
     "docs:check": "node tools/docs/check.mjs",
-    "docs:test": "node --test tools/docs/check.test.mjs"
+    "docs:catalog": "node tools/docs/skills-catalog.mjs",
+    "docs:catalog:check": "node tools/docs/skills-catalog.mjs --check",
+    "docs:test": "node --test tools/docs/*.test.mjs"
   },
   "devDependencies": {
     "@askgina/contracts": "workspace:*",

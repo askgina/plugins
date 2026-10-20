@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { validateLpContract } from "./lp-contract.mjs";
+import { validateSkillsCatalog } from "./skills-catalog.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -226,7 +227,12 @@ export function validateGina(root) {
   const auth = read("agents/authentication");
   if (!auth.includes("Read-only — view data") || !auth.includes("Full access — view and execute"))
     errors.push("Authentication guide must match app access labels.");
-  errors.push(...validateSkillCoverage(repo, read("agents/plugins-and-skills")));
+  errors.push(
+    ...validateSkillCoverage(
+      repo,
+      read("agents/plugins-and-skills") + read("agents/skills-catalog"),
+    ),
+  );
 
   // Every product-guide page the chatbot Docs Agent corpus consumes, with reciprocal relatedSlugs.
   const corpus = [
@@ -345,7 +351,11 @@ export async function checkExternal(urls, repoRoot) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const root = path.resolve("docs");
   const result = validateDocs(root);
-  result.errors.push(...validateGina(root), ...validateLpContract(root));
+  result.errors.push(
+    ...validateGina(root),
+    ...validateLpContract(root),
+    ...validateSkillsCatalog(path.dirname(root)),
+  );
   if (process.argv.includes("--external"))
     result.errors.push(...(await checkExternal(result.external, path.dirname(root))));
   if (result.errors.length) {

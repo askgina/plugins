@@ -193,6 +193,8 @@ test("skill coverage fails closed on a missing or malformed index", (t) => {
 
 test("the checked-in skills index is fully documented", () => {
   const repo = path.resolve(".");
-  const page = fs.readFileSync(path.join(repo, "docs/agents/plugins-and-skills.mdx"), "utf8");
+  const page = ["plugins-and-skills", "skills-catalog"]
+    .map((name) => fs.readFileSync(path.join(repo, `docs/agents/${name}.mdx`), "utf8"))
+    .join("\n");
   assert.deepEqual(validateSkillCoverage(repo, page), []);
 });
