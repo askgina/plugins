@@ -1,6 +1,5 @@
 [
   "agents/authentication.mdx",
-  "agents/plugins-and-skills.mdx",
   "agents/start.mdx",
   "connect/chatgpt.mdx",
   "connect/claude.mdx",

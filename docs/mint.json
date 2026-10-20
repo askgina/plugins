@@ -59,7 +59,12 @@
     },
     {
       "group": "For agents",
-      "pages": ["agents/start", "agents/plugins-and-skills", "agents/authentication"]
+      "pages": [
+        "agents/start",
+        "agents/plugins-and-skills",
+        "agents/skills-catalog",
+        "agents/authentication"
+      ]
     },
     {
       "group": "Connection basics",

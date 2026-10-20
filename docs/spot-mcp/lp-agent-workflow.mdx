@@ -12,7 +12,7 @@ This page shows how an agent can combine the [LP skills](/spot-mcp/lp-skills) wi
 3. **Apply the playbook.** Run `lp-rebalancing-playbook` against live values. If no rule fires, the verdict is Hold.
 4. **Quote.** For the single highest-priority rule, call `quoteLpOperation` or `quoteSolanaLpOperation`. Quoting signs and sends nothing.
 5. **Propose.** Show the owner the rule, its trigger value against the threshold, and the quote: action, amounts, minimum receive bounds, slippage, fees and expiry. Write a Pending log row.
-6. **Approve.** The owner approves that exact quote in chat. One approval covers one action. If the quote expires or material terms change, re-quote and ask again.
+6. **Approve.** The owner approves that exact quote in chat, under the playbook [guardrails](/spot-mcp/lp-skills#guardrails). If the quote expires or material terms change, re-quote and ask again.
 7. **Execute.** Call `executeLpOperation` or `executeSolanaLpOperation` with the approved `quoteId` and `planHash`. Never execute a superseded quote.
 8. **Check status.** Read `getLpOperationStatus` or `getSolanaLpOperationStatus` by `operationId`. Prepared, submitted and pending are not settled. Follow [recovery](/spot-mcp/liquidity-positions#recover-an-uncertain-operation) for unknown or partial results, and never resend automatically.
 9. **Log.** Update the row with the decision and, after settlement, the outcome. Refresh positions.

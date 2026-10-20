@@ -21,12 +21,10 @@ Spot schedules run through Gina's fixed internal agent. Read each tool's current
 
 The [rebalancing playbook](/spot-mcp/lp-skills#lp-rebalancing-playbook) states that scheduled runs only flag and propose. Write the prompt so that this is explicit:
 
-- Read positions, pool state and allowlists, then apply the playbook rules.
 - Report the verdict and, for a fired rule, the proposed action and its trigger values.
 - Do not call `executeLpOperation`, `executeSolanaLpOperation` or `executeSpotTransaction`.
-- Stay silent when no rule fires and nothing material changed, unless a daily summary was requested.
 
-A quote from a scheduled run can expire before anyone reads it. Treat it as indicative. In the follow-up chat, re-quote and approve the exact current quote, as in the [LP agent workflow](/spot-mcp/lp-agent-workflow).
+A quote from a scheduled run can expire before anyone reads it, so treat it as indicative. In the follow-up chat, continue from the [LP agent workflow](/spot-mcp/lp-agent-workflow#the-loop) quote step.
 
 ## Daily example
 

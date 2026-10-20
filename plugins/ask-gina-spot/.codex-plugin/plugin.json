@@ -1,0 +1,46 @@
+{
+  "name": "ask-gina-spot",
+  "version": "1.0.0",
+  "description": "Quote and execute spot swaps, transfers, and liquidity-pool operations with your approval.",
+  "author": {
+    "name": "Ask Gina",
+    "url": "https://askgina.ai"
+  },
+  "homepage": "https://askgina.ai",
+  "repository": "https://github.com/askgina/plugins",
+  "license": "Apache-2.0",
+  "keywords": [
+    "crypto",
+    "spot",
+    "swap",
+    "transfer",
+    "liquidity",
+    "lp",
+    "solana",
+    "uniswap",
+    "raydium",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Ask Gina Spot",
+    "shortDescription": "Spot swaps, transfers, and LP",
+    "longDescription": "Ask Gina Spot connects your Ask Gina account to the Spot MCP server. It can quote and, with your approval, execute spot swaps, transfers, and EVM and Solana liquidity-pool operations from your Gina wallet. It can also read wallet addresses, swap history, LP positions, and operation status, and manage scheduled prompts and LP allowlists. Transactions move real funds, so review each quote before you approve it. The bundled skills scan liquidity pools from public data and propose LP rebalancing; they only propose, and every action needs your approval.",
+    "developerName": "Ask Gina",
+    "category": "Finance",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "websiteURL": "https://askgina.ai",
+    "privacyPolicyURL": "https://askgina.ai/privacy-policy",
+    "supportURL": "https://askgina.ai/support",
+    "termsOfServiceURL": "https://askgina.ai/terms-and-conditions",
+    "defaultPrompt": [
+      "Quote swapping 100 USDC for ETH.",
+      "Show my LP positions and propose any rebalancing.",
+      "Scan the top liquidity pools by fee APR."
+    ],
+    "brandColor": "#B50D00",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/icon.svg"
+  }
+}

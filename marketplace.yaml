@@ -1,0 +1,8 @@
+name: ask-gina-plugins
+displayName: Ask Gina Plugins
+owner:
+  name: Ask Gina
+  url: https://askgina.ai
+version: 1.0.0
+claudeDescription: Research assistant for crypto, prediction, and perpetual markets.
+cursorDescription: Ask Gina is a research assistant for crypto, prediction markets, perpetuals, and equities. Use it to fetch real-time prices and historical data for tokens, Hyperliquid markets, and Polymarket prediction markets, and to analyze your Gina wallet, positions, and accounts.
