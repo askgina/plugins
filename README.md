@@ -63,7 +63,9 @@ Things that surprise people:
   `evals:check-grading`, the TypeScript compiler, and the TypeScript import
   check.
 - **Docs changes have their own checks.** If you touch `docs/` or `tools/docs/`,
-  also run `bun run docs:test` and `bun run docs:check`.
+  also run `bun run docs:test` and `bun run docs:check`. Releasing a user-facing
+  feature adds the steps in
+  [`ai_docs/release-docs-checklist.md`](ai_docs/release-docs-checklist.md).
 - **Fix Effect diagnostics at the source.** Don't suppress them or add
   baselines.
 
@@ -175,8 +177,8 @@ bun run check:public-boundary
 It then smokes the Codex marketplace with a pinned Codex CLI at the published
 revision. The docs workflow (`.github/workflows/docs.yml`) runs on pull requests
 that touch `docs/`, `tools/docs/`, the plugin skills or `.mcp.json`, or the
-contracts entry point: it runs `node --test tools/docs/check.test.mjs` and
-`node tools/docs/check.mjs --external`.
+contracts entry point: it runs the docs check, skills catalog and sweep comparison
+tests (`bun run docs:test`) and `node tools/docs/check.mjs --external`.
 
 ## Public evals app
 

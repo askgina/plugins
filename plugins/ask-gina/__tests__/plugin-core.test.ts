@@ -7,7 +7,12 @@ import { ASK_GINA_SKILL_DEFINITIONS, PRODUCTION_MCP_URL, READ_SCOPE } from "@ask
 import { Effect, FileSystem, Path, PlatformError, Schema } from "effect";
 
 import { loadCanonicalSkillDocuments, loadPluginManifest } from "../src/index";
-import { createGeneratedPluginTargets, TARGET_NAMES } from "../../../tools/sync-plugin-skills";
+import {
+  createGeneratedPluginTargets,
+  TARGET_NAMES,
+  type GeneratedPluginTargets,
+  type TargetName,
+} from "../../../tools/sync-plugin-skills";
 import {
   checkGeneratedTargetConformance,
   runTargetConformanceChecks,
@@ -15,6 +20,7 @@ import {
 
 const pluginRoot = fileURLToPath(new URL("../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
+const spotPluginRoot = fileURLToPath(new URL("../../ask-gina-spot/", import.meta.url));
 
 const ClaudeMarketplaceJson = Schema.fromJsonString(
   Schema.Struct({
@@ -84,6 +90,11 @@ const collectSkillDocuments = (
     return nested.flat();
   });
 
+const targetPath = (generated: GeneratedPluginTargets, host: TargetName): string => {
+  const path = generated.targets[host];
+  return path === undefined ? assert.fail(`${host} was not generated`) : path;
+};
+
 const makeGeneratedTargets = (packageRoot: string) =>
   Effect.acquireRelease(createGeneratedPluginTargets({ packageRoot }), (generated) =>
     generated.cleanup.pipe(Effect.orDie),
@@ -98,6 +109,10 @@ describe("Ask Gina portable plugin core", () => {
         assert.strictEqual(manifest.name, "ask-gina");
         assert.strictEqual(manifest.mcp.url, PRODUCTION_MCP_URL);
         assert.deepStrictEqual(manifest.mcp.scopes, [READ_SCOPE]);
+        assert.deepStrictEqual(
+          manifest.skills,
+          ASK_GINA_SKILL_DEFINITIONS.map((skill) => ({ id: skill.name, mcpServed: true })),
+        );
       }),
     );
 
@@ -135,12 +150,18 @@ describe("Ask Gina portable plugin core", () => {
 
         assert.strictEqual(marketplace.name, "ask-gina-plugins");
         assert.deepStrictEqual(marketplace.interface, { displayName: "Ask Gina Plugins" });
-        assert.strictEqual(marketplace.plugins.length, 1);
+        assert.strictEqual(marketplace.plugins.length, 2);
         const plugin = marketplace.plugins[0];
         assert.isDefined(plugin);
         assert.deepStrictEqual(plugin, {
           name: "ask-gina",
           source: { source: "local", path: "./plugins/ask-gina" },
+          policy: { installation: "AVAILABLE", authentication: "ON_INSTALL" },
+          category: "Finance",
+        });
+        assert.deepStrictEqual(marketplace.plugins[1], {
+          name: "ask-gina-spot",
+          source: { source: "local", path: "./plugins/ask-gina-spot" },
           policy: { installation: "AVAILABLE", authentication: "ON_INSTALL" },
           category: "Finance",
         });
@@ -168,7 +189,15 @@ describe("Ask Gina portable plugin core", () => {
           name: "Ask Gina",
           url: "https://askgina.ai",
         });
-        assert.strictEqual(marketplace.plugins.length, 1);
+        assert.strictEqual(marketplace.plugins.length, 2);
+        assert.deepNestedInclude(marketplace.plugins[1] as object, {
+          name: "ask-gina-spot",
+          source: "./plugins/ask-gina-spot",
+          strict: false,
+          skills: "./skills",
+          mcpServers: "./targets/claude/.mcp.json",
+          displayName: "Ask Gina Spot",
+        });
         assert.deepNestedInclude(marketplace.plugins[0] as object, {
           name: "ask-gina",
           source: "./plugins/ask-gina",
@@ -232,7 +261,7 @@ describe("Ask Gina portable plugin core", () => {
 
             for (const skill of ASK_GINA_SKILL_DEFINITIONS) {
               const generatedSkillRoot = paths.join(
-                generated.targets[target],
+                targetPath(generated, target),
                 "skills",
                 skill.name,
               );
@@ -263,13 +292,28 @@ describe("Ask Gina portable plugin core", () => {
         assert.strictEqual(Object.keys(report.targets).length, TARGET_NAMES.length);
       }),
     );
+    it.effect("passes conformance for every Ask Gina Spot host target", () =>
+      Effect.gen(function* () {
+        const report = yield* runTargetConformanceChecks({ packageRoot: spotPluginRoot });
+
+        assert.isTrue(report.allPassed);
+        assert.deepStrictEqual(Object.keys(report.targets), [
+          "ask-gina-spot:openai",
+          "ask-gina-spot:cursor",
+          "ask-gina-spot:claude",
+          "ask-gina-spot:copilot",
+          "ask-gina-spot:devin",
+        ]);
+      }),
+    );
+
     it.effect("rejects loss of canonical OpenAI support and skill metadata", () =>
       Effect.scoped(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const paths = yield* Path.Path;
           const generated = yield* makeGeneratedTargets(pluginRoot);
-          const openai = generated.targets.openai;
+          const openai = targetPath(generated, "openai");
           const manifestPath = paths.join(openai, ".codex-plugin", "plugin.json");
           const manifest = yield* fs.readFileString(manifestPath);
           yield* fs.writeFileString(

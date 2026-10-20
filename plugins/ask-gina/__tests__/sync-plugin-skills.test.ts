@@ -7,12 +7,20 @@ import {
   createGeneratedPluginTargets,
   SKILL_NAMES,
   TARGET_NAMES,
+  targetsForPackage,
+  type GeneratedPluginTargets,
+  type TargetName,
 } from "../../../tools/sync-plugin-skills";
 
-const makeGeneratedTargets = Effect.acquireRelease(
-  createGeneratedPluginTargets(),
-  (generatedTargets) => generatedTargets.cleanup.pipe(Effect.orDie),
-);
+const makeGeneratedTargets = (packageRoot?: string) =>
+  Effect.acquireRelease(createGeneratedPluginTargets({ packageRoot }), (generatedTargets) =>
+    generatedTargets.cleanup.pipe(Effect.orDie),
+  );
+
+const targetPath = (generated: GeneratedPluginTargets, host: TargetName): string => {
+  const path = generated.targets[host];
+  return path === undefined ? assert.fail(`${host} was not generated`) : path;
+};
 
 describe("sync-plugin-skills", () => {
   it.layer(BunServices.layer)((it) => {
@@ -21,10 +29,11 @@ describe("sync-plugin-skills", () => {
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const paths = yield* Path.Path;
-          const generatedTargets = yield* makeGeneratedTargets;
+          const generatedTargets = yield* makeGeneratedTargets();
           const packageRoot = paths.resolve("plugins/ask-gina");
           const canonicalSkillsRoot = paths.join(packageRoot, "skills");
 
+          assert.deepStrictEqual(generatedTargets.hosts, TARGET_NAMES);
           assert.isTrue(yield* fs.exists(paths.join(packageRoot, ".codex-plugin", "plugin.json")));
           assert.isTrue(yield* fs.exists(paths.join(packageRoot, ".devin-plugin", "plugin.json")));
           assert.isTrue(yield* fs.exists(paths.join(packageRoot, ".mcp.json")));
@@ -33,21 +42,19 @@ describe("sync-plugin-skills", () => {
           assert.isFalse(yield* fs.exists(paths.join(packageRoot, "targets", "cursor")));
           assert.isFalse(yield* fs.exists(paths.join(packageRoot, "targets", "devin")));
           assert.deepStrictEqual(
-            (yield* fs.readDirectory(generatedTargets.targets.openai)).sort(),
+            (yield* fs.readDirectory(targetPath(generatedTargets, "openai"))).sort(),
             [".codex-plugin", ".mcp.json", "assets", "skills"],
           );
           assert.deepStrictEqual(
-            (yield* fs.readDirectory(generatedTargets.targets.cursor)).sort(),
+            (yield* fs.readDirectory(targetPath(generatedTargets, "cursor"))).sort(),
             [".cursor-plugin", "README.md", "assets", "commands", "mcp.json", "rules", "skills"],
           );
-          assert.deepStrictEqual((yield* fs.readDirectory(generatedTargets.targets.devin)).sort(), [
-            ".devin-plugin",
-            ".mcp.json",
-            "assets",
-            "skills",
-          ]);
           assert.deepStrictEqual(
-            yield* fs.readDirectory(paths.join(generatedTargets.targets.devin, "assets")),
+            (yield* fs.readDirectory(targetPath(generatedTargets, "devin"))).sort(),
+            [".devin-plugin", ".mcp.json", "assets", "skills"],
+          );
+          assert.deepStrictEqual(
+            yield* fs.readDirectory(paths.join(targetPath(generatedTargets, "devin"), "assets")),
             ["icon.svg"],
           );
 
@@ -57,7 +64,9 @@ describe("sync-plugin-skills", () => {
             ["assets", "icon.svg"],
           ] as const) {
             assert.strictEqual(
-              yield* fs.readFileString(paths.join(generatedTargets.targets.openai, ...relative)),
+              yield* fs.readFileString(
+                paths.join(targetPath(generatedTargets, "openai"), ...relative),
+              ),
               yield* fs.readFileString(paths.join(packageRoot, ...relative)),
             );
           }
@@ -74,7 +83,9 @@ describe("sync-plugin-skills", () => {
             ["commands", "research-prediction-markets.md"],
           ] as const) {
             assert.strictEqual(
-              yield* fs.readFileString(paths.join(generatedTargets.targets.cursor, ...relative)),
+              yield* fs.readFileString(
+                paths.join(targetPath(generatedTargets, "cursor"), ...relative),
+              ),
               yield* fs.readFileString(paths.join(packageRoot, ...relative)),
             );
           }
@@ -85,7 +96,9 @@ describe("sync-plugin-skills", () => {
             ["assets", "icon.svg"],
           ] as const) {
             assert.strictEqual(
-              yield* fs.readFileString(paths.join(generatedTargets.targets.devin, ...relative)),
+              yield* fs.readFileString(
+                paths.join(targetPath(generatedTargets, "devin"), ...relative),
+              ),
               yield* fs.readFileString(paths.join(packageRoot, ...relative)),
             );
           }
@@ -94,7 +107,7 @@ describe("sync-plugin-skills", () => {
             (hostName) => hostName !== "openai" && hostName !== "cursor" && hostName !== "devin",
           )) {
             assert.deepStrictEqual(
-              (yield* fs.readDirectory(generatedTargets.targets[hostName]))
+              (yield* fs.readDirectory(targetPath(generatedTargets, hostName)))
                 .filter((entry) => entry !== "skills")
                 .sort(),
               (yield* fs.readDirectory(paths.join(packageRoot, "targets", hostName))).sort(),
@@ -105,7 +118,7 @@ describe("sync-plugin-skills", () => {
             for (const skillName of SKILL_NAMES) {
               const canonicalSkillPath = paths.join(canonicalSkillsRoot, skillName, "SKILL.md");
               const generatedSkillPath = paths.join(
-                generatedTargets.targets[hostName],
+                targetPath(generatedTargets, hostName),
                 "skills",
                 skillName,
                 "SKILL.md",
@@ -127,7 +140,7 @@ describe("sync-plugin-skills", () => {
             assert.isTrue(
               yield* fs.exists(
                 paths.join(
-                  generatedTargets.targets.openai,
+                  targetPath(generatedTargets, "openai"),
                   "skills",
                   skillName,
                   "agents",
@@ -141,7 +154,7 @@ describe("sync-plugin-skills", () => {
               assert.isFalse(
                 yield* fs.exists(
                   paths.join(
-                    generatedTargets.targets[hostName],
+                    targetPath(generatedTargets, hostName),
                     "skills",
                     skillName,
                     "agents",
@@ -154,6 +167,94 @@ describe("sync-plugin-skills", () => {
           }
         }),
       ),
+    );
+
+    it.effect("generates the Ask Gina Spot hosts with every file of each skill", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const paths = yield* Path.Path;
+          const packageRoot = paths.resolve("plugins/ask-gina-spot");
+          const generated = yield* makeGeneratedTargets(packageRoot);
+
+          assert.deepStrictEqual(generated.hosts, [
+            "openai",
+            "cursor",
+            "claude",
+            "copilot",
+            "devin",
+          ]);
+          assert.deepStrictEqual(yield* targetsForPackage({ packageRoot }), generated.hosts);
+          assert.isUndefined(generated.targets.gemini);
+          assert.isTrue(paths.basename(generated.path).startsWith("ask-gina-spot-targets-"));
+
+          assert.deepStrictEqual(
+            (yield* fs.readDirectory(targetPath(generated, "openai"))).sort(),
+            [".codex-plugin", ".mcp.json", "assets", "skills"],
+          );
+          // Spot ships no Cursor rule or commands; Cursor receives only what the package has.
+          assert.deepStrictEqual(
+            (yield* fs.readDirectory(targetPath(generated, "cursor"))).sort(),
+            [".cursor-plugin", "README.md", "assets", "mcp.json", "skills"],
+          );
+          assert.deepStrictEqual((yield* fs.readDirectory(targetPath(generated, "devin"))).sort(), [
+            ".devin-plugin",
+            ".mcp.json",
+            "assets",
+            "skills",
+          ]);
+
+          const skills = (yield* fs.readDirectory(paths.join(packageRoot, "skills"))).sort();
+          assert.deepStrictEqual(skills, ["lp-pool-scan", "lp-rebalancing-playbook"]);
+          for (const host of generated.hosts) {
+            for (const skill of skills) {
+              const canonicalDirectory = paths.join(packageRoot, "skills", skill);
+              const generatedDirectory = paths.join(targetPath(generated, host), "skills", skill);
+              const canonicalFiles = (yield* fs.readDirectory(canonicalDirectory, {
+                recursive: true,
+              }))
+                .filter((entry) => host === "openai" || !entry.startsWith("agents"))
+                .sort();
+              assert.deepStrictEqual(
+                (yield* fs.readDirectory(generatedDirectory, { recursive: true })).sort(),
+                canonicalFiles,
+                `${host} must carry every file of ${skill}`,
+              );
+            }
+          }
+          assert.isTrue(
+            yield* fs.exists(
+              paths.join(
+                targetPath(generated, "claude"),
+                "skills",
+                "lp-pool-scan",
+                "scripts",
+                "lp_pool_scan.py",
+              ),
+            ),
+          );
+          assert.isFalse(
+            yield* fs.exists(
+              paths.join(
+                targetPath(generated, "cursor"),
+                "skills",
+                "lp-pool-scan",
+                "agents",
+                "openai.yaml",
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+
+    it.effect("rejects a host the package does not publish", () =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(
+          createGeneratedPluginTarget("gemini", { packageRoot: "plugins/ask-gina-spot" }),
+        );
+        assert.include(error.reason, "does not publish the gemini target");
+      }),
     );
 
     it.effect("rejects a legacy OpenAI target overlay", () =>

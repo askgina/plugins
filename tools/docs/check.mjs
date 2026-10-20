@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { validateLpContract } from "./lp-contract.mjs";
+import { validateSkillsCatalog } from "./skills-catalog.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -129,6 +130,72 @@ export function validateDocs(root) {
   return { errors, external: [...external], pages: files.length, images: images.size };
 }
 
+export const TASK_HEADING = "## Check that it works";
+const SKILL_COUNT =
+  /\b(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+(?:(?!(?:of|the|a|an|and|or|to|in|for|your)\b)[a-z-]+\s+){0,2}skills?\b/gi;
+
+export function frontmatterOf(source) {
+  return source.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? "";
+}
+function frontmatterValue(front, key) {
+  const raw = front.match(new RegExp("^" + key + ":[ \\t]*(.*)$", "m"))?.[1]?.trim();
+  return raw?.replace(/^(["'])([\s\S]*)\1$/, "$2");
+}
+// A task page is any page inside a section folder. Top-level pages (what-is-gina, evaluations)
+// are overviews. A page leaves the task set with `pageType: reference`, or with `kind: reference`
+// or `kind: policy`, because product-guide corpus pages cannot add frontmatter keys.
+export function isTaskPage(relative, source) {
+  if (!relative.includes("/")) return false;
+  const front = frontmatterOf(source);
+  if (frontmatterValue(front, "pageType") === "reference") return false;
+  return !["reference", "policy"].includes(frontmatterValue(front, "kind"));
+}
+const stripFences = (source) => source.replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1\s*$/gm, "");
+
+// Release gate for agent-readable docs. `missingHeading` and `skillCounts` are ratchet baselines:
+// pages listed there may still fail a rule, and a listed page that now passes must be removed.
+export function validateReleaseGate(root, { missingHeading = [], skillCounts = [] } = {}) {
+  const errors = [];
+  const missing = new Set(missingHeading);
+  const counted = new Set(skillCounts);
+  for (const [name, list] of [
+    ["gate-baseline.json", missingHeading],
+    ["skill-count-allowlist.json", skillCounts],
+  ])
+    if (list.join("\n") !== [...new Set(list)].sort().join("\n"))
+      errors.push(`${name} must be a sorted list without duplicates.`);
+  const seen = new Set();
+  for (const file of filesUnder(root).filter((entry) => /\.mdx?$/.test(entry))) {
+    const relative = path.relative(root, file).split(path.sep).join("/");
+    seen.add(relative);
+    const source = fs.readFileSync(file, "utf8");
+    const front = frontmatterOf(source);
+    const description = frontmatterValue(front, "description");
+    if (description !== undefined && description !== "") {
+      if (/^[>|]/.test(description) || /[.!?]["')\]]*\s+\S/.test(description))
+        errors.push(`Description must be one sentence on one line: ${relative}`);
+    }
+    const found = [...stripFences(source).matchAll(SKILL_COUNT)].map((match) => match[0]);
+    if (found.length && !counted.has(relative))
+      errors.push(
+        `Hardcoded skill count, link to the skills list instead: ${relative}: "${found[0]}"`,
+      );
+    if (!found.length && counted.has(relative))
+      errors.push(`Remove ${relative} from skill-count-allowlist.json: it has no skill count.`);
+    if (isTaskPage(relative, source)) {
+      const has = new RegExp("^" + TASK_HEADING + "\\s*$", "m").test(source);
+      if (!has && !missing.has(relative))
+        errors.push(`Task page needs a "${TASK_HEADING}" section: ${relative}`);
+      if (has && missing.has(relative))
+        errors.push(`Remove ${relative} from gate-baseline.json: it has "${TASK_HEADING}".`);
+    } else if (missing.has(relative))
+      errors.push(`Remove ${relative} from gate-baseline.json: it is not a task page.`);
+  }
+  for (const relative of [...missing, ...counted])
+    if (!seen.has(relative)) errors.push(`Baseline lists a page that does not exist: ${relative}`);
+  return errors;
+}
+
 export function validateCorpusBody(source, slug) {
   const errors = [];
   const [, front = "", ...parts] = source.split("---");
@@ -153,6 +220,37 @@ export function validateCorpusBody(source, slug) {
     )
       errors.push(`Corpus requires plain Markdown: ${slug}`);
   }
+  return errors;
+}
+
+/**
+ * Every skill any package ships must be named in backticks on the plugins-and-skills page. The
+ * list comes from `skills/index.json` (plain JSON, so this check needs no installed dependencies),
+ * plus any skill directory under `plugins/<package>/skills` so a stale index cannot hide one.
+ */
+export function validateSkillCoverage(repo, pluginsAndSkillsSource) {
+  let index;
+  try {
+    index = JSON.parse(fs.readFileSync(path.join(repo, "skills/index.json"), "utf8"));
+  } catch {
+    return ["Cannot read skills/index.json; run bun run skills:index."];
+  }
+  if (!Array.isArray(index?.skills)) return ["skills/index.json must contain a skills array."];
+  const errors = [];
+  const ids = new Set();
+  for (const skill of index.skills) {
+    if (typeof skill?.id === "string" && skill.id.length > 0) ids.add(skill.id);
+    else errors.push("skills/index.json has a skill without an id.");
+  }
+  const pluginsRoot = path.join(repo, "plugins");
+  for (const pkg of fs.readdirSync(pluginsRoot, { withFileTypes: true })) {
+    const skillsRoot = path.join(pluginsRoot, pkg.name, "skills");
+    if (!pkg.isDirectory() || !fs.existsSync(skillsRoot)) continue;
+    for (const skill of fs.readdirSync(skillsRoot, { withFileTypes: true }))
+      if (skill.isDirectory()) ids.add(skill.name);
+  }
+  for (const id of [...ids].sort())
+    if (!pluginsAndSkillsSource.includes("`" + id + "`")) errors.push(`Undocumented skill: ${id}`);
   return errors;
 }
 
@@ -195,10 +293,12 @@ export function validateGina(root) {
   const auth = read("agents/authentication");
   if (!auth.includes("Read-only — view data") || !auth.includes("Full access — view and execute"))
     errors.push("Authentication guide must match app access labels.");
-  const skills = fs.readdirSync(path.join(repo, "plugins/ask-gina/skills"));
-  for (const skill of skills)
-    if (!read("agents/plugins-and-skills").includes("`" + skill + "`"))
-      errors.push(`Undocumented skill: ${skill}`);
+  errors.push(
+    ...validateSkillCoverage(
+      repo,
+      read("agents/plugins-and-skills") + read("agents/skills-catalog"),
+    ),
+  );
 
   // Every product-guide page the chatbot Docs Agent corpus consumes, with reciprocal relatedSlugs.
   const corpus = [
@@ -206,6 +306,7 @@ export function validateGina(root) {
     "wallet-and-account",
     "transactions-and-portfolio",
     "liquidity-positions",
+    "spot-lp-agents",
     "market-research",
     "predictions",
     "perps",
@@ -253,8 +354,8 @@ export function validateGina(root) {
         errors.push(`Broken corpus relationship: ${slug} ↔ ${other}`);
     }
   const corpusLength = corpusParts.join("\n\n---\n\n").length;
-  if (corpusLength > 24_000)
-    errors.push(`Chatbot corpus exceeds 24000 characters: ${corpusLength}`);
+  if (corpusLength > 28_000)
+    errors.push(`Chatbot corpus exceeds 28000 characters: ${corpusLength}`);
   const robots = fs.readFileSync(path.join(root, "robots.txt"), "utf8");
   for (const rule of [
     "Content-Signal: ai-train=no, search=yes, ai-input=yes",
@@ -286,13 +387,28 @@ const BOT_CHALLENGE_403_URLS = new Set([
   "https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=Ask%20Gina&connectorUrl=https%3A%2F%2Faskgina.ai%2Fai%2Fgina%2Fmcp",
 ]);
 
-async function checkExternal(urls) {
+// Links into this repository's main branch are checked against the checkout, so a pull
+// request can link to a file it adds. A live fetch would 404 until the merge.
+const SAME_REPO_MAIN = /^https:\/\/github\.com\/askgina\/plugins\/(?:tree|blob)\/main\/([^?#]+)/;
+export function sameRepoPath(url) {
+  const match = SAME_REPO_MAIN.exec(url);
+  return match ? decodeURIComponent(match[1]).replace(/\/+$/, "") : null;
+}
+
+export async function checkExternal(urls, repoRoot) {
   const errors = [];
   let index = 0;
   await Promise.all(
     Array.from({ length: 4 }, async () => {
       while (index < urls.length) {
         const url = urls[index++];
+        const repoPath = sameRepoPath(url);
+        if (repoPath !== null) {
+          const resolved = path.resolve(repoRoot, repoPath);
+          if (!resolved.startsWith(repoRoot + path.sep) || !fs.existsSync(resolved))
+            errors.push(`Repository link points to a missing path: ${url}`);
+          continue;
+        }
         try {
           let result = await fetch(url, { method: "HEAD", signal: AbortSignal.timeout(10000) });
           if ([403, 405, 501].includes(result.status))
@@ -311,9 +427,21 @@ async function checkExternal(urls) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const root = path.resolve("docs");
   const result = validateDocs(root);
-  result.errors.push(...validateGina(root), ...validateLpContract(root));
+  const baseline = (name) =>
+    JSON.parse(
+      fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), name), "utf8"),
+    );
+  result.errors.push(
+    ...validateGina(root),
+    ...validateLpContract(root),
+    ...validateSkillsCatalog(path.dirname(root)),
+    ...validateReleaseGate(root, {
+      missingHeading: baseline("gate-baseline.json"),
+      skillCounts: baseline("skill-count-allowlist.json"),
+    }),
+  );
   if (process.argv.includes("--external"))
-    result.errors.push(...(await checkExternal(result.external)));
+    result.errors.push(...(await checkExternal(result.external, path.dirname(root))));
   if (result.errors.length) {
     console.error(result.errors.join("\n"));
     process.exitCode = 1;

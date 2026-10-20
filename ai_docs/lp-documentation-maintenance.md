@@ -102,6 +102,6 @@ Encoded as JPEG at original dimensions to keep each image below the documentatio
 ## LP skills, agent workflow, scheduled monitoring and allowlists, October 19, 2026
 
 - New pages: `docs/spot-mcp/lp-agent-workflow.mdx`, `docs/spot-mcp/lp-skills.mdx`, `docs/spot-mcp/lp-scheduled-monitoring.mdx`. Updated: `docs/spot-mcp/liquidity-positions.mdx` (allowlists end to end), `docs/spot-mcp/features.mdx`, `docs/spot-mcp/index.mdx`, `docs/agents/plugins-and-skills.mdx`, `docs/mint.json`.
-- Sources: the merged `skills/spot/lp-pool-scan` and `skills/spot/lp-rebalancing-playbook` files, existing LP pages and `tools/docs/lp-contract.snapshot.json`. The pinned application revision, validated examples and native inventory are unchanged.
+- Sources: the merged `plugins/ask-gina-spot/skills/lp-pool-scan` and `plugins/ask-gina-spot/skills/lp-rebalancing-playbook` files, existing LP pages and `tools/docs/lp-contract.snapshot.json`. The pinned application revision, validated examples and native inventory are unchanged.
 - No included Product Guide page changed, so the application mirror is unaffected.
 - Open items marked `TODO(confirm with app owner)` in MDX comments: render tools in newer catalogs, Uniswap v4 and chain coverage of the pool-read tools, and what the fixed internal agent can call during scheduled runs. Allowlist update field names come from existing prose; their schemas are not in the snapshot.

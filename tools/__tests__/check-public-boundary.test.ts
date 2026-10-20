@@ -1,9 +1,19 @@
+import { fileURLToPath } from "node:url";
+
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
 
-import { findPublicBinaryBoundaryRules, scanPublicBoundaryFile } from "../check-public-boundary";
+import {
+  expectedArtifactPaths,
+  findArtifactInventoryViolations,
+  findPublicBinaryBoundaryRules,
+  scanPublicBoundaryFile,
+} from "../check-public-boundary";
+import { loadArtifactPackages } from "../pack-artifacts";
 import { isAttestedPublicSourceAsset, type PublicSourceAsset } from "../public-source-assets";
+
+const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 
 const PNG = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]);
 const WOFF2 = Uint8Array.from([0x77, 0x4f, 0x46, 0x32, 0, 1, 2, 3]);
@@ -149,6 +159,25 @@ describe("public binary boundary", () => {
     );
   });
 
+  it("admits reviewed PNGs only for their own package", () => {
+    const rejected = ["unscannable-binary-file"];
+    assert.deepStrictEqual(
+      findPublicBinaryBoundaryRules(
+        "dist/targets/ask-gina-cursor-1.0.0.tgz:assets/hyperliquid-chart.png",
+        PNG,
+      ),
+      [],
+    );
+    for (const label of [
+      "plugins/ask-gina-spot/assets/hyperliquid-chart.png",
+      "dist/targets/ask-gina-spot-openai-1.0.0.tgz:assets/hyperliquid-chart.png",
+      "dist/targets/ask-gina-spot-cursor-1.0.0.tgz:assets/hyperliquid-chart.png",
+      "dist/skills/ask-gina-spot-skills-1.0.0.tgz:assets/hyperliquid-chart.png",
+    ]) {
+      assert.deepStrictEqual(findPublicBinaryBoundaryRules(label, PNG), rejected, label);
+    }
+  });
+
   it("rejects lookalike bytes at reviewed app paths", () => {
     assert.deepStrictEqual(findPublicBinaryBoundaryRules(FONT_PATH, WOFF2), [
       "unscannable-binary-file",
@@ -176,6 +205,125 @@ const scanTextFixture = (text: string) =>
       return findings;
     }),
   );
+
+const GINA_HOSTS = ["openai", "cursor", "claude", "copilot", "gemini", "devin"] as const;
+const SPOT_HOSTS = ["openai", "cursor", "claude", "copilot", "devin"] as const;
+const bothPackages = [
+  { name: "ask-gina", hosts: GINA_HOSTS },
+  { name: "ask-gina-spot", hosts: SPOT_HOSTS },
+] as const;
+
+describe("artifact inventory", () => {
+  it("expects every package's host archives and skills archive", () => {
+    const expected = expectedArtifactPaths({ version: "1.0.0", packages: bothPackages });
+    for (const host of GINA_HOSTS) {
+      assert.include(expected, `targets/ask-gina-${host}-1.0.0.tgz`);
+    }
+    for (const host of SPOT_HOSTS) {
+      assert.include(expected, `targets/ask-gina-spot-${host}-1.0.0.tgz`);
+    }
+    assert.include(expected, "skills/ask-gina-skills-1.0.0.tgz");
+    assert.include(expected, "skills/ask-gina-spot-skills-1.0.0.tgz");
+    assert.notInclude(expected, "targets/ask-gina-spot-gemini-1.0.0.tgz");
+    assert.strictEqual(
+      expected.length,
+      5 + GINA_HOSTS.length + SPOT_HOSTS.length + 2 + 4,
+      "five npm archives, host archives, two skills archives, four receipts",
+    );
+  });
+
+  it("flags a spot archive missing from dist", () => {
+    const expected = expectedArtifactPaths({ version: "1.0.0", packages: bothPackages });
+    const missing = "targets/ask-gina-spot-openai-1.0.0.tgz";
+    assert.deepStrictEqual(
+      findArtifactInventoryViolations({
+        expected,
+        actual: expected.filter((file) => file !== missing),
+      }),
+      [{ rule: "missing-artifact", path: `dist/${missing}` }],
+    );
+    assert.deepStrictEqual(findArtifactInventoryViolations({ expected, actual: expected }), []);
+  });
+
+  it("flags spot archives that the expected list omits", () => {
+    const actual = expectedArtifactPaths({ version: "1.0.0", packages: bothPackages });
+    const expected = expectedArtifactPaths({ version: "1.0.0", packages: [bothPackages[0]] });
+    assert.deepStrictEqual(
+      findArtifactInventoryViolations({ expected, actual }).map(({ rule }) => rule),
+      Array.from({ length: SPOT_HOSTS.length + 1 }, () => "extra-artifact"),
+    );
+  });
+
+  it.layer(BunServices.layer)((it) => {
+    it.effect("derives the expected list from the repository's plugin packages", () =>
+      Effect.gen(function* () {
+        const packages = yield* loadArtifactPackages({ root: repositoryRoot });
+        assert.deepStrictEqual(
+          packages.map(({ name }) => name),
+          ["ask-gina", "ask-gina-spot"],
+        );
+        const expected = expectedArtifactPaths({ version: "1.0.0", packages });
+        for (const plugin of packages) {
+          assert.include(expected, `skills/${plugin.name}-skills-1.0.0.tgz`);
+          for (const host of plugin.hosts) {
+            assert.include(expected, `targets/${plugin.name}-${host}-1.0.0.tgz`);
+          }
+        }
+      }),
+    );
+
+    it.effect("scans the tracked source of ask-gina-spot with the same rules", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const paths = yield* Path.Path;
+        const spotRoot = paths.join(repositoryRoot, "plugins", "ask-gina-spot");
+        const scanned: string[] = [];
+        const findings: { rule: string; path: string }[] = [];
+        for (const relative of yield* fs.readDirectory(spotRoot, { recursive: true })) {
+          const absolute = paths.join(spotRoot, relative);
+          if ((yield* fs.stat(absolute)).type !== "File") continue;
+          scanned.push(relative);
+          const label = `plugins/ask-gina-spot/${relative}`;
+          yield* scanPublicBoundaryFile(absolute, label, false, (rule, path) => {
+            findings.push({ rule, path });
+          });
+        }
+        for (const required of ["README.md", "plugin.yaml", ".mcp.json"]) {
+          assert.include(scanned, required);
+        }
+        assert.isTrue(scanned.some((file) => file.endsWith(".py")));
+        assert.deepStrictEqual(findings, []);
+      }),
+    );
+
+    it.effect("rejects a private host in spot documentation", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const paths = yield* Path.Path;
+          const directory = yield* fs.makeTempDirectoryScoped({ prefix: "public-boundary-spot-" });
+          const file = paths.join(directory, "README.md");
+          yield* fs.writeFileString(
+            file,
+            `Callback ${["http:", "", "localhost:8787/callback"].join("/")}\n`,
+          );
+          const findings: { rule: string; path: string }[] = [];
+          yield* scanPublicBoundaryFile(
+            file,
+            "plugins/ask-gina-spot/README.md",
+            false,
+            (rule, path) => {
+              findings.push({ rule, path });
+            },
+          );
+          assert.deepStrictEqual(findings, [
+            { rule: "private-host", path: "plugins/ask-gina-spot/README.md" },
+          ]);
+        }),
+      ),
+    );
+  });
+});
 
 describe("public file boundary", () => {
   it.layer(BunServices.layer)((it) => {

@@ -68,3 +68,9 @@ These are the canonical catalog names. Your host may normalize punctuation or ad
 | `predictions.fetchPolymarketHistory`     | predictions |
 | `predictions.getPolymarketPositions`     | predictions |
 | `predictions.getPolymarketOrderHistory`  | predictions |
+
+## Check that it works
+
+Open your client's tool list for `https://askgina.ai/ai/gina/mcp`. It should show named read tools such as `getSimplePrice`, `getTokenChart` and `getAccountAddresses` (the host may add a prefix), and no `bash`. Then ask "Use Gina to show ETH's price in USD over the past seven days."
+
+Expected: a tool call to a Gina read tool and a price result. An answer without a tool call is not a connection test.

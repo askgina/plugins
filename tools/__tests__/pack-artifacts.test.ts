@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { assert, describe, it } from "@effect/vitest";
 import { ChildProcess } from "effect/unstable/process";
@@ -6,11 +8,17 @@ import { Data, Effect, FileSystem, Path, Schema } from "effect";
 import {
   ArtifactPackError,
   buildArtifacts,
+  loadArtifactPackages,
+  packPluginPackage,
+  skillArchiveFiles,
   stagePackage,
   stagePluginTarget,
+  targetManifestVersion,
   validateTargetVersion,
   verifyCompiledPackageOutput,
 } from "../pack-artifacts";
+
+const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 class TestCommandError extends Data.TaggedError("TestCommandError")<{
   readonly command: string;
   readonly exitCode: number;
@@ -96,6 +104,86 @@ const makePluginFixture = Effect.gen(function* () {
   return { plugin, stage, version };
 });
 const json = (value: unknown): string => `${encodeJson(value)}\n`;
+
+const IndexFile = Schema.Struct({
+  version: Schema.Finite,
+  skills: Schema.Array(
+    Schema.Struct({
+      id: Schema.String,
+      package: Schema.String,
+      path: Schema.String,
+      files: Schema.Array(Schema.String),
+    }),
+  ),
+});
+const decodeIndex = Schema.decodeUnknownSync(Schema.fromJsonString(IndexFile));
+const encodeIndex = Schema.encodeSync(Schema.fromJsonString(IndexFile));
+type IndexSkills = (typeof IndexFile.Type)["skills"];
+
+const SPOT_SKILL_FILES: Readonly<Record<string, readonly string[]>> = {
+  "lp-pool-scan": ["README.md", "SKILL.md", "agents/openai.yaml", "scripts/scan.py"],
+  "lp-rebalancing-playbook": ["SKILL.md", "agents/openai.yaml"],
+};
+const SPOT_SKILLS = Object.keys(SPOT_SKILL_FILES);
+
+/** A plugin package like ask-gina-spot: no Cursor rules or commands, skills with extra files. */
+const makeSpotPluginFixture = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const temporary = yield* fs.makeTempDirectoryScoped({ prefix: "pack-spot-plugin-test-" });
+  const plugin = path.join(temporary, "ask-gina-spot");
+  const stage = path.join(temporary, "stage");
+  const files = [
+    ".codex-plugin/plugin.json",
+    ".cursor-plugin/plugin.json",
+    ".devin-plugin/plugin.json",
+    ".mcp.json",
+    "mcp.json",
+    "README.md",
+    "assets/icon.svg",
+    "targets/claude/.claude-plugin/plugin.json",
+    "targets/claude/.mcp.json",
+    "targets/copilot/plugin.json",
+    "targets/copilot/mcp.json",
+    ...Object.entries(SPOT_SKILL_FILES).flatMap(([skill, skillFiles]) =>
+      skillFiles.map((file) => `skills/${skill}/${file}`),
+    ),
+  ];
+  yield* Effect.forEach(files, (file) =>
+    Effect.gen(function* () {
+      const destination = path.join(plugin, file);
+      yield* fs.makeDirectory(path.dirname(destination), { recursive: true });
+      yield* fs.writeFileString(destination, `${file}\n`);
+    }),
+  );
+  return { plugin, stage };
+});
+
+/** A temporary repository root holding the real plugin.yaml files and a mutated skills index. */
+const indexFixture = (mutate: (skills: IndexSkills) => IndexSkills) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const root = yield* fs.makeTempDirectoryScoped({ prefix: "pack-index-test-" });
+    yield* Effect.forEach(["ask-gina", "ask-gina-spot"], (name) =>
+      Effect.gen(function* () {
+        yield* fs.makeDirectory(path.join(root, "plugins", name), { recursive: true });
+        yield* fs.copy(
+          path.join(repositoryRoot, "plugins", name, "plugin.yaml"),
+          path.join(root, "plugins", name, "plugin.yaml"),
+        );
+      }),
+    );
+    const index = decodeIndex(
+      yield* fs.readFileString(path.join(repositoryRoot, "skills", "index.json")),
+    );
+    yield* fs.makeDirectory(path.join(root, "skills"), { recursive: true });
+    yield* fs.writeFileString(
+      path.join(root, "skills", "index.json"),
+      encodeIndex({ ...index, skills: mutate(index.skills) }),
+    );
+    return root;
+  });
 
 const SOURCE_DIRECTORIES = [
   "packages/contracts",
@@ -563,6 +651,275 @@ describe("pack artifact source snapshot", () => {
   });
 });
 
+describe("plugin package data", () => {
+  it.layer(BunServices.layer)((it) => {
+    it.effect("loads ask-gina and ask-gina-spot with their hosts, skills and assets", () =>
+      Effect.gen(function* () {
+        const packages = yield* loadArtifactPackages({ root: repositoryRoot });
+        assert.deepStrictEqual(
+          packages.map(({ name }) => name),
+          ["ask-gina", "ask-gina-spot"],
+        );
+        const [gina, spot] = packages;
+        assert.deepStrictEqual(gina?.hosts, [
+          "openai",
+          "cursor",
+          "claude",
+          "copilot",
+          "gemini",
+          "devin",
+        ]);
+        assert.deepStrictEqual(spot?.hosts, ["openai", "cursor", "claude", "copilot", "devin"]);
+        assert.deepStrictEqual(
+          gina?.skills.map(({ id }) => id),
+          [...SKILL_NAMES],
+        );
+        for (const skill of gina?.skills ?? []) {
+          assert.deepStrictEqual(skill.files, ["SKILL.md", "agents/openai.yaml"]);
+        }
+        assert.deepStrictEqual(gina?.openAiAssets, [
+          "gold-up-or-down-daily.png",
+          "hyperliquid-chart.png",
+          "icon.svg",
+          "nba-champion-podium.png",
+          "perpetual-positions.png",
+          "premier-league-prediction-markets.png",
+        ]);
+        assert.deepStrictEqual(spot?.openAiAssets, ["icon.svg"]);
+        assert.deepStrictEqual(
+          spot?.skills.map(({ id }) => id),
+          ["lp-pool-scan", "lp-rebalancing-playbook"],
+        );
+        const scan = spot?.skills.find(({ id }) => id === "lp-pool-scan");
+        assert.isTrue(scan?.files.includes("SKILL.md"));
+        assert.isAbove(
+          skillArchiveFiles({ skill: scan ?? { id: "", files: [] }, overlay: false }).length,
+          1,
+          "lp-pool-scan ships files beyond SKILL.md",
+        );
+      }),
+    );
+
+    it.effect("takes the manifest version from each package's own plugin.yaml", () =>
+      Effect.gen(function* () {
+        const packages = yield* loadArtifactPackages({ root: repositoryRoot });
+        for (const { source, hosts } of packages) {
+          for (const host of hosts) {
+            assert.strictEqual(
+              targetManifestVersion({ source, host }),
+              host === "openai" || host === "cursor" ? source.listing.version : source.version,
+            );
+          }
+        }
+      }),
+    );
+
+    it.effect("validates the generated ask-gina-spot manifests", () =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const packages = yield* loadArtifactPackages({ root: repositoryRoot });
+        const spot = packages.find(({ name }) => name === "ask-gina-spot");
+        assert.isDefined(spot);
+        if (spot === undefined) return;
+        const root = path.join(repositoryRoot, spot.directory);
+        for (const host of spot.hosts) {
+          yield* validateTargetVersion(
+            root,
+            host,
+            targetManifestVersion({ source: spot.source, host }),
+          );
+        }
+        const error = yield* validateTargetVersion(root, "claude", "9.9.9").pipe(Effect.flip);
+        assert.instanceOf(error, ArtifactPackError);
+        assert.include(error.message, "claude target version is inconsistent");
+      }),
+    );
+
+    it.effect("fails when the skills index omits a declared skill", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const root = yield* indexFixture((skills) =>
+            skills.filter(({ id }) => id !== "lp-pool-scan"),
+          );
+          const error = yield* loadArtifactPackages({ root }).pipe(Effect.flip);
+          assert.instanceOf(error, ArtifactPackError);
+          assert.include(
+            error.message,
+            "does not list exactly the skills declared by plugins/ask-gina-spot",
+          );
+        }),
+      ),
+    );
+
+    it.effect("fails when the skills index credits a skill to another package", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const root = yield* indexFixture((skills) =>
+            skills.map((skill) =>
+              skill.id === "lp-pool-scan" ? { ...skill, package: "ask-gina" } : skill,
+            ),
+          );
+          const error = yield* loadArtifactPackages({ root }).pipe(Effect.flip);
+          assert.include(error.message, "does not list exactly the skills declared by");
+        }),
+      ),
+    );
+
+    it.effect("fails when an indexed file leaves its skill directory or SKILL.md is absent", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const outside = yield* indexFixture((skills) =>
+            skills.map((skill) =>
+              skill.id === "lp-pool-scan"
+                ? { ...skill, files: [...skill.files, "plugins/ask-gina/README.md"] }
+                : skill,
+            ),
+          );
+          assert.include(
+            (yield* loadArtifactPackages({ root: outside }).pipe(Effect.flip)).message,
+            "lists unusable files for ask-gina-spot:lp-pool-scan",
+          );
+          const noSkillFile = yield* indexFixture((skills) =>
+            skills.map((skill) =>
+              skill.id === "lp-pool-scan"
+                ? { ...skill, files: skill.files.filter((file) => !file.endsWith("/SKILL.md")) }
+                : skill,
+            ),
+          );
+          assert.include(
+            (yield* loadArtifactPackages({ root: noSkillFile }).pipe(Effect.flip)).message,
+            "lists unusable files for ask-gina-spot:lp-pool-scan",
+          );
+          const wrongPath = yield* indexFixture((skills) =>
+            skills.map((skill) =>
+              skill.id === "lp-pool-scan"
+                ? { ...skill, path: "plugins/ask-gina/skills/lp-pool-scan" }
+                : skill,
+            ),
+          );
+          assert.include(
+            (yield* loadArtifactPackages({ root: wrongPath }).pipe(Effect.flip)).message,
+            "has a wrong path for ask-gina-spot:lp-pool-scan",
+          );
+        }),
+      ),
+    );
+
+    it.effect("stages every spot skill file, with the overlay only in the OpenAI archive", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const files = (stage: string, skill: string) =>
+            fs
+              .readDirectory(path.join(stage, "skills", skill), { recursive: true })
+              .pipe(Effect.map((entries) => entries.sort()));
+          const openai = yield* makeSpotPluginFixture;
+          yield* stagePluginTarget("openai", openai.plugin, openai.stage, SPOT_SKILLS);
+          assert.deepStrictEqual(
+            (yield* files(openai.stage, "lp-pool-scan")).filter((entry) => entry.includes(".")),
+            ["README.md", "SKILL.md", "agents/openai.yaml", "scripts/scan.py"],
+          );
+          const claude = yield* makeSpotPluginFixture;
+          yield* stagePluginTarget("claude", claude.plugin, claude.stage, SPOT_SKILLS);
+          assert.deepStrictEqual(
+            (yield* files(claude.stage, "lp-pool-scan")).filter((entry) => entry.includes(".")),
+            ["README.md", "SKILL.md", "scripts/scan.py"],
+          );
+          assert.isFalse(
+            yield* fs.exists(
+              path.join(claude.stage, "skills", "lp-rebalancing-playbook", "agents"),
+            ),
+          );
+        }),
+      ),
+    );
+
+    it.effect("stages a Cursor target without rules and commands when the package has none", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const fixture = yield* makeSpotPluginFixture;
+          yield* stagePluginTarget("cursor", fixture.plugin, fixture.stage, SPOT_SKILLS);
+          assert.deepStrictEqual((yield* fs.readDirectory(fixture.stage)).sort(), [
+            ".cursor-plugin",
+            "README.md",
+            "assets",
+            "mcp.json",
+            "skills",
+          ]);
+        }),
+      ),
+    );
+
+    it.effect("packs ask-gina-spot into package-named archives with package receipts", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const packages = yield* loadArtifactPackages({ root: repositoryRoot });
+          const spot = packages.find(({ name }) => name === "ask-gina-spot");
+          assert.isDefined(spot);
+          if (spot === undefined) return;
+          const temporary = yield* fs.makeTempDirectoryScoped({ prefix: "pack-spot-test-" });
+          const dist = path.join(temporary, "dist");
+          const stages = path.join(temporary, "stages");
+          yield* Effect.forEach(
+            [path.join(dist, "targets"), path.join(dist, "skills"), stages],
+            (directory) => fs.makeDirectory(directory, { recursive: true }),
+          );
+          const version = spot.source.version;
+          const packed = yield* packPluginPackage({
+            root: repositoryRoot,
+            source: repositoryRoot,
+            dist,
+            temporary: stages,
+            plugin: spot,
+            version,
+          });
+          const archives = spot.hosts.map((host) => `ask-gina-spot-${host}-${version}.tgz`);
+          assert.deepStrictEqual(
+            (yield* fs.readDirectory(path.join(dist, "targets"))).sort(),
+            [...archives].sort(),
+          );
+          assert.deepStrictEqual(yield* fs.readDirectory(path.join(dist, "skills")), [
+            `ask-gina-spot-skills-${version}.tgz`,
+          ]);
+          assert.deepStrictEqual(
+            packed.targets.map(({ package: name, host, archive }) => ({ name, host, archive })),
+            spot.hosts.map((host) => ({
+              name: "ask-gina-spot",
+              host,
+              archive: `targets/ask-gina-spot-${host}-${version}.tgz`,
+            })),
+          );
+          assert.strictEqual(packed.candidate.package, "ask-gina-spot");
+          assert.strictEqual(
+            packed.candidate.archive,
+            `skills/ask-gina-spot-skills-${version}.tgz`,
+          );
+          for (const target of packed.targets) {
+            assert.isTrue(target.conformance.passed);
+            assert.strictEqual(target.skillSourceSha, packed.candidate.skillSourceSha);
+            const overlays = target.files.filter(({ path: file }) =>
+              file.endsWith("/agents/openai.yaml"),
+            );
+            assert.strictEqual(overlays.length, target.host === "openai" ? spot.skills.length : 0);
+            assert.isTrue(
+              target.files.some(({ path: file }) => file === "skills/lp-pool-scan/SKILL.md"),
+            );
+          }
+          assert.isFalse(
+            packed.candidate.files.some(
+              ({ path: file }) => file.includes("/agents/") || file.startsWith("agents/"),
+            ),
+          );
+        }),
+      ),
+    );
+  });
+});
+
 describe("plugin target packing", () => {
   it.layer(BunServices.layer)((it) => {
     it.effect("validates root-sourced and overlay-sourced target versions", () =>
@@ -631,7 +988,7 @@ describe("plugin target packing", () => {
           const path = yield* Path.Path;
           const fixture = yield* makePluginFixture;
 
-          yield* stagePluginTarget("openai", fixture.plugin, fixture.stage);
+          yield* stagePluginTarget("openai", fixture.plugin, fixture.stage, SKILL_NAMES);
 
           assert.deepStrictEqual((yield* fs.readDirectory(fixture.stage)).sort(), [
             ".codex-plugin",
@@ -676,7 +1033,7 @@ describe("plugin target packing", () => {
           const path = yield* Path.Path;
           const fixture = yield* makePluginFixture;
 
-          yield* stagePluginTarget("cursor", fixture.plugin, fixture.stage);
+          yield* stagePluginTarget("cursor", fixture.plugin, fixture.stage, SKILL_NAMES);
 
           assert.deepStrictEqual((yield* fs.readDirectory(fixture.stage)).sort(), [
             ".cursor-plugin",
@@ -725,7 +1082,7 @@ describe("plugin target packing", () => {
           const path = yield* Path.Path;
           const fixture = yield* makePluginFixture;
 
-          yield* stagePluginTarget("devin", fixture.plugin, fixture.stage);
+          yield* stagePluginTarget("devin", fixture.plugin, fixture.stage, SKILL_NAMES);
 
           assert.deepStrictEqual((yield* fs.readDirectory(fixture.stage)).sort(), [
             ".devin-plugin",
@@ -761,7 +1118,7 @@ describe("plugin target packing", () => {
           const path = yield* Path.Path;
           const fixture = yield* makePluginFixture;
 
-          yield* stagePluginTarget("claude", fixture.plugin, fixture.stage);
+          yield* stagePluginTarget("claude", fixture.plugin, fixture.stage, SKILL_NAMES);
 
           assert.deepStrictEqual((yield* fs.readDirectory(fixture.stage)).sort(), [
             ".claude-plugin",

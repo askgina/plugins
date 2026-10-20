@@ -35,6 +35,35 @@
         "strategise",
         "mcp"
       ]
+    },
+    {
+      "name": "ask-gina-spot",
+      "source": "./plugins/ask-gina-spot",
+      "strict": false,
+      "skills": "./skills",
+      "mcpServers": "./targets/claude/.mcp.json",
+      "displayName": "Ask Gina Spot",
+      "description": "Ask Gina Spot lets an agent quote and, with your approval, execute spot token swaps, transfers, and liquidity-pool operations from your Gina wallet. It also reads swap history, wallet addresses, LP positions, and operation status, and it includes skills for scanning liquidity pools and rebalancing LP positions. Transactions move real funds, so review every quote before you approve it.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Ask Gina",
+        "url": "https://askgina.ai"
+      },
+      "homepage": "https://askgina.ai",
+      "repository": "https://github.com/askgina/plugins",
+      "license": "Apache-2.0",
+      "keywords": [
+        "crypto",
+        "spot",
+        "swap",
+        "transfer",
+        "liquidity",
+        "lp",
+        "solana",
+        "uniswap",
+        "raydium",
+        "mcp"
+      ]
     }
   ]
 }

@@ -45,3 +45,13 @@ Set up recurring scheduled tasks that run automatically.
 "pause my morning briefing recipe"
 "delete the NBA alert automation"
 ```
+
+## Check that it works
+
+Call `bash` with:
+
+```json
+{ "command": "host-tools listScheduledPrompts" }
+```
+
+Expected: JSON under `data.payload` with your scheduled prompts, or an empty list if you have none. The call only reads data. Create, pause and delete requests change your account, so run them on purpose.

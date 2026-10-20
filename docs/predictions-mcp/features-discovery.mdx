@@ -103,3 +103,13 @@ Discover markets that are about to resolve — great for finding last-minute opp
 "political markets resolving this week"
 "entertainment markets ending today"
 ```
+
+## Check that it works
+
+Call `bash` with:
+
+```json
+{ "command": "host-tools getExpiringMarkets '{\"timeWindow\":\"today\",\"limit\":5}'" }
+```
+
+Expected: JSON with up to five markets that end today. Each market has a `question`, an `end_date` and an `ends_in` value. Or ask "markets ending today" and check that the assistant calls `getExpiringMarkets` instead of answering from memory.
