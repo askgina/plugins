@@ -69,6 +69,7 @@ These live in the app repository, so the release pull request there is the proof
 - The first-request page, `docs/start/first-request.mdx`, shows the feature if it changes what a new user does first.
 - Update the package's host manifests, such as those under `plugins/<package>/targets/`, and the root `marketplace.json` files in `.claude-plugin/`, `.cursor-plugin/` and `.agents/`. Bump versions the way [`contributing.md`](contributing.md) requires.
 - Marketplace and vendor resubmissions, such as the ChatGPT tool justifications, the Grok bot form and the Devin marketplace pin, happen outside this repository. Record what you resubmitted in the release pull request.
+- A new public MCP server, or a changed name or remote, needs its `registry/server.*.json` entry updated with a new `version`. [`mcp-registry.md`](mcp-registry.md) has the publish steps.
 
 ## Agentic SEO
 
@@ -76,7 +77,7 @@ These live in the app repository, so the release pull request there is the proof
 - Page titles use the words a user would search. Headings that answer a question use the question as the heading. Names for the same thing match across docs, tool descriptions and listings.
 - After the docs deploy, fetch `https://docs.askgina.ai/llms.txt`, the sitemap and the new page, and confirm the page shows up with its description.
 - `https://askgina.ai/llms.txt` and `https://askgina.ai/llms-full.txt` redirect permanently to the docs copies. Check that both still redirect after the release.
-- `docs/docs.json` holds the site `description`, `seo.indexing` and the social metatags. `node tools/docs/check.mjs` fails without a site description, when `seo.indexing` is not `navigable`, on a site-wide `noindex` and without the `summary_large_image` card. Listings in MCP registries are tracked on the map, not in this checklist.
+- `docs/docs.json` holds the site `description`, `seo.indexing` and the social metatags. `node tools/docs/check.mjs` fails without a site description, when `seo.indexing` is not `navigable`, on a site-wide `noindex` and without the `summary_large_image` card. MCP Registry entries are covered under Distribution.
 
 ## Proof
 
