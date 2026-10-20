@@ -33,6 +33,8 @@ const pluginManifestSchema = z
         })
         .strict(),
     ),
+    // Host listing data; tools/plugin-manifests.ts validates it and generates every manifest.
+    listing: z.unknown(),
   })
   .strict();
 

@@ -27,6 +27,8 @@
     "check:public-boundary": "vp run public-boundary",
     "check:target-conformance": "vp run target-conformance",
     "check:typescript-imports": "bun tools/check-typescript-imports.ts",
+    "manifests:generate": "bun tools/plugin-manifests.ts",
+    "manifests:check": "bun tools/plugin-manifests.ts --check",
     "skills:index": "bun tools/skill-index.ts",
     "skills:index:check": "bun tools/skill-index.ts --check",
     "verify:packages": "bun tools/verify-artifacts.ts --packages",
@@ -46,7 +48,9 @@
     "typecheck": "bun run build && node_modules/.bin/tsc --noEmit -p tsconfig.json",
     "effect-tsgo:diagnostics": "node_modules/.bin/effect-tsgo diagnostics --project tsconfig.json --format json",
     "docs:check": "node tools/docs/check.mjs",
-    "docs:test": "node --test tools/docs/check.test.mjs"
+    "docs:catalog": "node tools/docs/skills-catalog.mjs",
+    "docs:catalog:check": "node tools/docs/skills-catalog.mjs --check",
+    "docs:test": "node --test tools/docs/*.test.mjs"
   },
   "devDependencies": {
     "@askgina/contracts": "workspace:*",

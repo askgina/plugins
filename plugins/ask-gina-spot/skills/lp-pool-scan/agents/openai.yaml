@@ -1,0 +1,10 @@
+interface:
+  display_name: "LP Pool Scan"
+  short_description: "Scan and rank liquidity pools from public data."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "ask-gina-spot"
+      description: "Ask Gina Spot quotes and executes swaps, transfers, and liquidity-pool operations with your approval"
+      transport: "streamable_http"
+      url: "https://askgina.ai/ai/spot/mcp"

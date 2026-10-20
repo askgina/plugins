@@ -16,8 +16,11 @@ const DEFAULT_TIMEOUT_MS = 120_000;
 const REPOSITORY_TOKEN_ENVIRONMENT_NAME = "CODEX_MARKETPLACE_REPOSITORY_TOKEN";
 const MAXIMUM_OUTPUT_BYTES = 1_048_576;
 const MARKETPLACE_NAME = "ask-gina-plugins";
-const PLUGIN_NAME = "ask-gina";
-const PLUGIN_ID = `${PLUGIN_NAME}@${MARKETPLACE_NAME}`;
+// The read-only listing package. Its skills and MCP URL are pinned to the contracts catalog;
+// every other package in the marketplace is checked against its own checkout.
+const CANONICAL_PLUGIN_NAME = "ask-gina";
+const MARKETPLACE_MANIFEST_SEGMENTS = [".agents", "plugins", "marketplace.json"] as const;
+const PLUGIN_NAME_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const IMMUTABLE_REF_RE = /^[0-9a-f]{40}$/iu;
 const REPOSITORY_RE = /^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,38})\/[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,99})$/u;
 const UnknownJson = Schema.fromJsonString(Schema.Unknown);
@@ -100,8 +103,10 @@ export interface CodexMarketplaceSmokeResult {
   readonly repository: string;
   readonly ref: string;
   readonly marketplaceName: string;
-  readonly pluginId: string;
+  readonly pluginIds: readonly string[];
 }
+
+const pluginIdOf = (pluginName: string): string => `${pluginName}@${MARKETPLACE_NAME}`;
 
 const fail = (
   stage: CodexMarketplaceSmokeStage,
@@ -258,10 +263,79 @@ export const parseMarketplaceAddOutput = (
     return { marketplaceName, installedRoot };
   });
 
+const normalizeSlashes = (value: string): string =>
+  value.replaceAll("\\", "/").replace(/\/+$/u, "");
+
+/**
+ * Names of every plugin the repository's Codex marketplace file lists, in file order. Each entry
+ * must be a local source at `./plugins/<name>` so one package maps to one directory.
+ */
+export const parseRepositoryMarketplaceManifest = (
+  text: string,
+): Effect.Effect<readonly string[], CodexMarketplaceSmokeError> =>
+  Effect.gen(function* () {
+    const decoded = yield* decodeJson("marketplace-list", text);
+    if (
+      !isJsonObject(decoded) ||
+      decoded.name !== MARKETPLACE_NAME ||
+      !Array.isArray(decoded.plugins) ||
+      decoded.plugins.length === 0
+    ) {
+      return yield* fail(
+        "marketplace-list",
+        "invalid-output",
+        `repository marketplace must be ${MARKETPLACE_NAME} and list at least one plugin`,
+      );
+    }
+    const names: string[] = [];
+    for (const entry of decoded.plugins) {
+      const name = isJsonObject(entry) ? stringProperty(entry, ["name"]) : undefined;
+      if (name === undefined || !PLUGIN_NAME_RE.test(name)) {
+        return yield* fail(
+          "marketplace-list",
+          "invalid-output",
+          "repository marketplace plugin entries must have a lowercase hyphenated name",
+        );
+      }
+      if (names.includes(name)) {
+        return yield* fail(
+          "marketplace-list",
+          "invalid-output",
+          `repository marketplace lists ${name} more than once`,
+        );
+      }
+      const source = isJsonObject(entry) ? entry.source : undefined;
+      if (
+        !isJsonObject(source) ||
+        source.source !== "local" ||
+        typeof source.path !== "string" ||
+        normalizeSlashes(source.path) !== `./plugins/${name}`
+      ) {
+        return yield* fail(
+          "marketplace-list",
+          "invalid-output",
+          `repository marketplace source for ${name} must be a local ./plugins/${name}`,
+        );
+      }
+      names.push(name);
+    }
+    return names;
+  });
+
+export interface MarketplaceListExpectation {
+  readonly marketplaceRoot: string;
+  readonly pluginNames: readonly string[];
+}
+
 export const parseMarketplaceListOutput: {
-  (marketplaceRoot: string): (output: string) => Effect.Effect<void, CodexMarketplaceSmokeError>;
-  (output: string, marketplaceRoot: string): Effect.Effect<void, CodexMarketplaceSmokeError>;
-} = Function.dual(2, (output: string, marketplaceRoot: string) =>
+  (
+    expected: MarketplaceListExpectation,
+  ): (output: string) => Effect.Effect<void, CodexMarketplaceSmokeError>;
+  (
+    output: string,
+    expected: MarketplaceListExpectation,
+  ): Effect.Effect<void, CodexMarketplaceSmokeError>;
+} = Function.dual(2, (output: string, expected: MarketplaceListExpectation) =>
   Effect.gen(function* () {
     const decoded = yield* decodeJson("marketplace-list", output);
     if (
@@ -269,72 +343,85 @@ export const parseMarketplaceListOutput: {
       !Array.isArray(decoded.installed) ||
       !Array.isArray(decoded.available) ||
       decoded.installed.length !== 0 ||
-      decoded.available.length !== 1 ||
-      !isJsonObject(decoded.available[0])
+      decoded.available.length !== expected.pluginNames.length
     ) {
       return yield* fail(
         "marketplace-list",
         "invalid-output",
-        "available listing must contain exactly one uninstalled Ask Gina plugin",
+        `available listing must contain exactly the uninstalled plugins ${expected.pluginNames.join(", ")}`,
       );
     }
-    const entry = decoded.available[0];
-    if (
-      entry.pluginId !== PLUGIN_ID ||
-      entry.name !== PLUGIN_NAME ||
-      entry.marketplaceName !== MARKETPLACE_NAME ||
-      entry.installed !== false ||
-      entry.enabled !== false ||
-      typeof entry.version !== "string" ||
-      entry.version.length === 0
-    ) {
-      return yield* fail(
-        "marketplace-list",
-        "invalid-output",
-        `available listing did not contain ${PLUGIN_ID}`,
+    const normalizedMarketplaceRoot = normalizeSlashes(expected.marketplaceRoot);
+    for (const pluginName of expected.pluginNames) {
+      const pluginId = pluginIdOf(pluginName);
+      const entry = decoded.available.find(
+        (candidate: unknown) => isJsonObject(candidate) && candidate.name === pluginName,
       );
-    }
-    if (entry.installPolicy !== "AVAILABLE") {
-      return yield* fail(
-        "marketplace-list",
-        "invalid-output",
-        "Ask Gina installation policy must be AVAILABLE",
-      );
-    }
-    if (entry.authPolicy !== "ON_INSTALL") {
-      return yield* fail(
-        "marketplace-list",
-        "invalid-output",
-        "Ask Gina authentication listing metadata must be ON_INSTALL",
-      );
-    }
-    const source = entry.source;
-    const sourcePath =
-      isJsonObject(source) && typeof source.path === "string" ? source.path : undefined;
-    const normalizedSourcePath = sourcePath?.replaceAll("\\", "/").replace(/\/+$/u, "");
-    const normalizedMarketplaceRoot = marketplaceRoot.replaceAll("\\", "/").replace(/\/+$/u, "");
-    const marketplaceSource = entry.marketplaceSource;
-    if (
-      !isJsonObject(source) ||
-      source.source !== "local" ||
-      normalizedSourcePath !== `${normalizedMarketplaceRoot}/plugins/ask-gina` ||
-      !isJsonObject(marketplaceSource) ||
-      marketplaceSource.sourceType !== "git" ||
-      typeof marketplaceSource.source !== "string" ||
-      marketplaceSource.source.length === 0
-    ) {
-      return yield* fail(
-        "marketplace-list",
-        "invalid-output",
-        "Ask Gina marketplace source must resolve to plugins/ask-gina",
-      );
+      if (
+        !isJsonObject(entry) ||
+        entry.pluginId !== pluginId ||
+        entry.marketplaceName !== MARKETPLACE_NAME ||
+        entry.installed !== false ||
+        entry.enabled !== false ||
+        typeof entry.version !== "string" ||
+        entry.version.length === 0
+      ) {
+        return yield* fail(
+          "marketplace-list",
+          "invalid-output",
+          `available listing did not contain ${pluginId}`,
+        );
+      }
+      if (entry.installPolicy !== "AVAILABLE") {
+        return yield* fail(
+          "marketplace-list",
+          "invalid-output",
+          `${pluginName} installation policy must be AVAILABLE`,
+        );
+      }
+      if (entry.authPolicy !== "ON_INSTALL") {
+        return yield* fail(
+          "marketplace-list",
+          "invalid-output",
+          `${pluginName} authentication listing metadata must be ON_INSTALL`,
+        );
+      }
+      const source = entry.source;
+      const sourcePath =
+        isJsonObject(source) && typeof source.path === "string" ? source.path : undefined;
+      const normalizedSourcePath =
+        sourcePath === undefined ? undefined : normalizeSlashes(sourcePath);
+      const marketplaceSource = entry.marketplaceSource;
+      if (
+        !isJsonObject(source) ||
+        source.source !== "local" ||
+        normalizedSourcePath !== `${normalizedMarketplaceRoot}/plugins/${pluginName}` ||
+        !isJsonObject(marketplaceSource) ||
+        marketplaceSource.sourceType !== "git" ||
+        typeof marketplaceSource.source !== "string" ||
+        marketplaceSource.source.length === 0
+      ) {
+        return yield* fail(
+          "marketplace-list",
+          "invalid-output",
+          `${pluginName} marketplace source must resolve to plugins/${pluginName}`,
+        );
+      }
     }
   }),
 );
 
-export const parsePluginAddOutput = (
-  output: string,
-): Effect.Effect<{ readonly installedPath: string }, CodexMarketplaceSmokeError> =>
+export const parsePluginAddOutput: {
+  (
+    pluginName: string,
+  ): (
+    output: string,
+  ) => Effect.Effect<{ readonly installedPath: string }, CodexMarketplaceSmokeError>;
+  (
+    output: string,
+    pluginName: string,
+  ): Effect.Effect<{ readonly installedPath: string }, CodexMarketplaceSmokeError>;
+} = Function.dual(2, (output: string, pluginName: string) =>
   Effect.gen(function* () {
     const decoded = yield* decodeJson("plugin-add", output);
     if (!isJsonObject(decoded)) {
@@ -343,8 +430,8 @@ export const parsePluginAddOutput = (
     const pluginId = stringProperty(decoded, ["pluginId"]);
     const installedPath = stringProperty(decoded, ["installedPath"]);
     if (
-      pluginId !== PLUGIN_ID ||
-      decoded.name !== PLUGIN_NAME ||
+      pluginId !== pluginIdOf(pluginName) ||
+      decoded.name !== pluginName ||
       decoded.marketplaceName !== MARKETPLACE_NAME ||
       typeof decoded.version !== "string" ||
       decoded.version.length === 0 ||
@@ -354,11 +441,12 @@ export const parsePluginAddOutput = (
       return yield* fail(
         "plugin-add",
         "invalid-output",
-        `expected installed plugin ${PLUGIN_ID} with ON_INSTALL metadata and an installed path`,
+        `expected installed plugin ${pluginIdOf(pluginName)} with ON_INSTALL metadata and an installed path`,
       );
     }
     return { installedPath };
-  });
+  }),
+);
 
 const readJsonObject = (
   file: string,
@@ -410,18 +498,33 @@ const requireNonEmptyRegularFile = (
     }
   });
 
-export const inspectInstalledAskGinaPlugin = (
-  installedRoot: string,
+export interface InspectInstalledPluginOptions {
+  readonly pluginName: string;
+  /** The plugin directory Codex installed into the isolated Codex home. */
+  readonly installedRoot: string;
+  /** The same plugin's `plugins/<name>` directory in the marketplace checkout. */
+  readonly sourceRoot: string;
+}
+
+/**
+ * Checks one installed plugin against its Codex root contract. The read-only `ask-gina` listing is
+ * pinned to the contracts catalog (four goal-led skills, production MCP URL). Every other package
+ * must install exactly the skills and MCP URL its own checkout declares.
+ */
+export const inspectInstalledPlugin = (
+  options: InspectInstalledPluginOptions,
 ): Effect.Effect<void, CodexMarketplaceSmokeError, FileSystem.FileSystem | Path.Path> =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
+    const { installedRoot, pluginName, sourceRoot } = options;
+    const canonical = pluginName === CANONICAL_PLUGIN_NAME;
     const manifest = yield* readJsonObject(
       path.join(installedRoot, ".codex-plugin", "plugin.json"),
     );
     const pluginInterface = manifest.interface;
     if (
-      manifest.name !== PLUGIN_NAME ||
+      manifest.name !== pluginName ||
       manifest.skills !== "./skills/" ||
       manifest.mcpServers !== "./.mcp.json" ||
       !isJsonObject(pluginInterface) ||
@@ -431,40 +534,63 @@ export const inspectInstalledAskGinaPlugin = (
       return yield* fail(
         "inspection",
         "invalid-plugin",
-        "installed Codex manifest does not match the Ask Gina root contract",
+        `installed Codex manifest does not match the ${pluginName} root contract`,
       );
     }
 
+    const expectedUrl = canonical
+      ? PRODUCTION_MCP_URL
+      : yield* readJsonObject(path.join(sourceRoot, ".mcp.json")).pipe(
+          Effect.map((sourceMcp) => {
+            const sourceServers = sourceMcp.mcpServers;
+            const sourceServer = isJsonObject(sourceServers)
+              ? sourceServers[pluginName]
+              : undefined;
+            return isJsonObject(sourceServer) ? sourceServer.url : undefined;
+          }),
+        );
+    if (typeof expectedUrl !== "string" || expectedUrl.length === 0) {
+      return yield* fail(
+        "inspection",
+        "invalid-plugin",
+        `marketplace checkout .mcp.json has no ${pluginName} server URL`,
+      );
+    }
     const mcp = yield* readJsonObject(path.join(installedRoot, ".mcp.json"));
     const mcpServers = mcp.mcpServers;
-    const server = isJsonObject(mcpServers) ? mcpServers[PLUGIN_NAME] : undefined;
+    const server = isJsonObject(mcpServers) ? mcpServers[pluginName] : undefined;
     if (
       !isJsonObject(mcpServers) ||
       Object.keys(mcpServers).length !== 1 ||
       !isJsonObject(server) ||
       server.type !== "http" ||
-      server.url !== PRODUCTION_MCP_URL
+      server.url !== expectedUrl
     ) {
       return yield* fail(
         "inspection",
         "invalid-plugin",
-        "installed root MCP configuration must contain only the ask-gina HTTP server",
+        `installed root MCP configuration must contain only the ${pluginName} HTTP server at ${expectedUrl}`,
       );
     }
 
     yield* requireNonEmptyRegularFile(path.join(installedRoot, "assets", "icon.svg"));
     const skillsRoot = path.join(installedRoot, "skills");
-    const actualSkills = (yield* fs.readDirectory(skillsRoot).pipe(
-      Effect.mapError(
-        () =>
-          new CodexMarketplaceSmokeError({
-            stage: "inspection",
-            reason: "io-failed",
-            detail: "cannot list installed Ask Gina skills",
-          }),
-      ),
-    )).sort();
-    const expectedSkills = ASK_GINA_SKILL_DEFINITIONS.map((skill) => skill.name).sort();
+    const listSkills = (root: string) =>
+      fs.readDirectory(root).pipe(
+        Effect.map((names) => names.toSorted()),
+        Effect.mapError(
+          () =>
+            new CodexMarketplaceSmokeError({
+              stage: "inspection",
+              reason: "io-failed",
+              detail: `cannot list ${pluginName} skills in ${root}`,
+            }),
+        ),
+      );
+    const actualSkills = yield* listSkills(skillsRoot);
+    const expectedSkills = canonical
+      ? ASK_GINA_SKILL_DEFINITIONS.map((skill) => skill.name).toSorted()
+      : yield* listSkills(path.join(sourceRoot, "skills"));
     if (
       actualSkills.length !== expectedSkills.length ||
       !actualSkills.every((skill, index) => skill === expectedSkills[index])
@@ -472,7 +598,9 @@ export const inspectInstalledAskGinaPlugin = (
       return yield* fail(
         "inspection",
         "invalid-plugin",
-        "installed Ask Gina skill inventory does not match the canonical catalog",
+        canonical
+          ? `installed ${pluginName} skill inventory does not match the canonical catalog`
+          : `installed ${pluginName} skill inventory does not match its marketplace checkout`,
       );
     }
     yield* Effect.forEach(
@@ -726,10 +854,17 @@ esac
           environment: commandEnvironment,
           timeoutMs: options.timeoutMs,
         });
+      // Filled once the repository marketplace file is read; cleanup removes whatever is known.
+      let pluginNames: readonly string[] = [];
       const cleanupCommands = Effect.gen(function* () {
-        yield* runCommand("plugin-remove", ["plugin", "remove", PLUGIN_ID, "--json"]).pipe(
-          Effect.ignore,
-        );
+        for (const pluginName of pluginNames) {
+          yield* runCommand("plugin-remove", [
+            "plugin",
+            "remove",
+            pluginIdOf(pluginName),
+            "--json",
+          ]).pipe(Effect.ignore);
+        }
         yield* runCommand("marketplace-remove", [
           "plugin",
           "marketplace",
@@ -773,6 +908,21 @@ esac
           );
         }
 
+        // Every plugin the repository marketplace lists must be available, install, and inspect.
+        const manifestText = yield* fs
+          .readFileString(path.join(marketplaceRoot, ...MARKETPLACE_MANIFEST_SEGMENTS))
+          .pipe(
+            Effect.mapError(
+              () =>
+                new CodexMarketplaceSmokeError({
+                  stage: "marketplace-list",
+                  reason: "io-failed",
+                  detail: `cannot read ${MARKETPLACE_MANIFEST_SEGMENTS.join("/")} from the marketplace checkout`,
+                }),
+            ),
+          );
+        pluginNames = yield* parseRepositoryMarketplaceManifest(manifestText);
+
         const listResult = yield* runCommand("marketplace-list", [
           "plugin",
           "list",
@@ -781,38 +931,55 @@ esac
           "--available",
           "--json",
         ]);
-        yield* parseMarketplaceListOutput(listResult.stdout, marketplaceRoot);
+        yield* parseMarketplaceListOutput(listResult.stdout, { marketplaceRoot, pluginNames });
 
-        const installResult = yield* runCommand("plugin-add", [
-          "plugin",
-          "add",
-          PLUGIN_ID,
-          "--json",
-        ]);
-        const install = yield* parsePluginAddOutput(installResult.stdout);
-        const installedRoot = yield* fs.realPath(install.installedPath).pipe(
-          Effect.mapError(
-            () =>
-              new CodexMarketplaceSmokeError({
-                stage: "plugin-add",
-                reason: "invalid-output",
-                detail: "plugin installed path cannot be resolved",
-              }),
-          ),
-        );
-        if (!isWithin(path, isolation.codexHome, installedRoot)) {
-          return yield* fail(
-            "plugin-add",
-            "invalid-output",
-            "plugin installed outside the isolated Codex home",
+        for (const pluginName of pluginNames) {
+          yield* Effect.gen(function* () {
+            const installResult = yield* runCommand("plugin-add", [
+              "plugin",
+              "add",
+              pluginIdOf(pluginName),
+              "--json",
+            ]);
+            const install = yield* parsePluginAddOutput(installResult.stdout, pluginName);
+            const installedRoot = yield* fs.realPath(install.installedPath).pipe(
+              Effect.mapError(
+                () =>
+                  new CodexMarketplaceSmokeError({
+                    stage: "plugin-add",
+                    reason: "invalid-output",
+                    detail: "plugin installed path cannot be resolved",
+                  }),
+              ),
+            );
+            if (!isWithin(path, isolation.codexHome, installedRoot)) {
+              return yield* fail(
+                "plugin-add",
+                "invalid-output",
+                "plugin installed outside the isolated Codex home",
+              );
+            }
+            yield* inspectInstalledPlugin({
+              pluginName,
+              installedRoot,
+              sourceRoot: path.join(marketplaceRoot, "plugins", pluginName),
+            });
+          }).pipe(
+            Effect.mapError(
+              (error) =>
+                new CodexMarketplaceSmokeError({
+                  stage: error.stage,
+                  reason: error.reason,
+                  detail: `${pluginName}: ${error.detail}`,
+                }),
+            ),
           );
         }
-        yield* inspectInstalledAskGinaPlugin(installedRoot);
         return {
           repository: options.repository,
           ref: options.ref,
           marketplaceName: MARKETPLACE_NAME,
-          pluginId: PLUGIN_ID,
+          pluginIds: pluginNames.map(pluginIdOf),
         };
       }).pipe(Effect.ensuring(cleanup));
     }),
@@ -838,7 +1005,7 @@ const program = parseCodexMarketplaceSmokeArgs(process.argv.slice(2)).pipe(
           repository: result.repository,
           ref: result.ref,
           marketplaceName: result.marketplaceName,
-          pluginId: result.pluginId,
+          pluginIds: result.pluginIds,
         }),
       ).pipe(Effect.as(0)),
   }),

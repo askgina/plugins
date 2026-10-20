@@ -167,6 +167,7 @@ export default defineConfig({
           "node_modules/.bin/tsc --noEmit -p tsconfig.json",
           "bun run check:typescript-imports",
           "bun run skills:index:check",
+          "bun run manifests:check",
         ],
         dependsOn: ["build-packages"],
         output: [],
