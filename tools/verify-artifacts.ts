@@ -22,12 +22,9 @@ import {
   sanitizeEvalReplay,
 } from "../packages/evals/src/index";
 import { copyCheckedRegularFile, extractCheckedTarGz } from "./archive-security";
-import {
-  CURSOR_LISTING_VERSION,
-  OPENAI_LISTING_VERSION,
-  checkGeneratedTargetConformance,
-} from "./check-target-conformance";
+import { checkGeneratedTargetConformance } from "./check-target-conformance";
 import { buildArtifacts } from "./pack-artifacts";
+import { loadPluginSource } from "./plugin-manifests";
 
 const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini", "devin"] as const;
 const SKILLS = [
@@ -991,6 +988,10 @@ const verifyTargets = (
     const receipt = yield* readJson(path.join(dist, "receipts/targets.json")).pipe(
       Effect.flatMap((value) => requiredObject(value, "targets receipt")),
     );
+    const listingVersion = yield* loadPluginSource(path.join(root, "plugins/ask-gina")).pipe(
+      Effect.map((source) => source.listing.version),
+      Effect.mapError((cause) => fail("plugin.yaml listing is unreadable", cause)),
+    );
     yield* exactKeys(
       receipt,
       [
@@ -1054,12 +1055,7 @@ const verifyTargets = (
         const manifest = yield* readJson(path.join(stage, manifestPath)).pipe(
           Effect.flatMap((value) => requiredObject(value, `${host} manifest`)),
         );
-        const manifestVersion =
-          host === "cursor"
-            ? CURSOR_LISTING_VERSION
-            : host === "openai"
-              ? OPENAI_LISTING_VERSION
-              : version;
+        const manifestVersion = host === "cursor" || host === "openai" ? listingVersion : version;
         if (manifest.version !== manifestVersion) {
           return yield* fail(`${host} manifest version is wrong`);
         }

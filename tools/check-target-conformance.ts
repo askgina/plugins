@@ -23,6 +23,7 @@ import {
   Schema,
 } from "effect";
 
+import { loadMarketplaceSource, loadPluginSource } from "./plugin-manifests";
 import {
   TARGET_NAMES,
   createGeneratedPluginTarget,
@@ -289,17 +290,22 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
   ],
 };
 
-export const CURSOR_LISTING_VERSION = "1.0.0";
-export const OPENAI_LISTING_VERSION = "1.0.0";
-export const CODEX_LISTING_VERSION = OPENAI_LISTING_VERSION;
+/** Reads the plugin's listing version, the one source of the Codex and Cursor manifest version. */
+const readListingVersion = (packageRoot: string) =>
+  loadPluginSource(packageRoot).pipe(
+    Effect.map((source) => source.listing.version),
+    Effect.mapError((cause) =>
+      targetConformanceError(packageRoot, "plugin.yaml listing is unreadable", cause),
+    ),
+  );
 
-const validateManifest = (target: TargetName, manifest: unknown): boolean => {
+const validateManifest = (
+  target: TargetName,
+  manifest: unknown,
+  listingVersion: string,
+): boolean => {
   const expectedVersion =
-    target === "cursor"
-      ? CURSOR_LISTING_VERSION
-      : target === "openai"
-        ? OPENAI_LISTING_VERSION
-        : RELEASE_VERSION;
+    target === "cursor" || target === "openai" ? listingVersion : RELEASE_VERSION;
   if (nested(manifest, "name") !== "ask-gina" || nested(manifest, "version") !== expectedVersion) {
     return false;
   }
@@ -470,6 +476,7 @@ export const checkGeneratedTargetConformance: {
       const fs = yield* FileSystem.FileSystem;
       const paths = yield* Path.Path;
       const packageRoot = paths.resolve(options.packageRoot ?? defaultPackageRootFor(paths));
+      const listingVersion = yield* readListingVersion(packageRoot);
       const checks: TargetConformanceCheck[] = [];
       const addCheck = (id: string, title: string, passed: boolean, detail?: string): void => {
         checks.push({ id, target, title, passed, detail });
@@ -487,7 +494,7 @@ export const checkGeneratedTargetConformance: {
         addCheck(
           `${target}.manifest.contract`,
           `${target} host manifest conforms to the public plugin contract`,
-          validateManifest(target, manifest),
+          validateManifest(target, manifest, listingVersion),
         );
         if (target === "gemini") {
           addCheck(
@@ -796,11 +803,18 @@ export const checkRepositoryConformance = (
     const fs = yield* FileSystem.FileSystem;
     const paths = yield* Path.Path;
     const packageRoot = paths.resolve(options.packageRoot ?? defaultPackageRootFor(paths));
+    const listingVersion = yield* readListingVersion(packageRoot);
     const repositoryRoot = paths.resolve(
       options.repositoryRoot ??
         (options.packageRoot === undefined
           ? defaultRepositoryRootFor(paths)
           : paths.join(packageRoot, "..", "..")),
+    );
+    const marketplaceVersion = yield* loadMarketplaceSource(repositoryRoot).pipe(
+      Effect.map((source) => source.version),
+      Effect.mapError((cause) =>
+        targetConformanceError(repositoryRoot, "marketplace.yaml is unreadable", cause),
+      ),
     );
     const canonicalRepositoryRoot = yield* withFileSystemError(
       repositoryRoot,
@@ -969,7 +983,7 @@ export const checkRepositoryConformance = (
       addCheck(
         "repository.root_openai.manifest_contract",
         "Root OpenAI manifest has exact contract and release version",
-        validateManifest("openai", manifest),
+        validateManifest("openai", manifest, listingVersion),
       );
     }
     if (
@@ -1112,7 +1126,7 @@ export const checkRepositoryConformance = (
         hasExactKeys(nested(cursorMarketplace, "owner"), ["name"]) &&
         nested(cursorMarketplace, "owner", "name") === "Ask Gina" &&
         hasExactKeys(nested(cursorMarketplace, "metadata"), ["description", "version"]) &&
-        nested(cursorMarketplace, "metadata", "version") === CURSOR_LISTING_VERSION &&
+        nested(cursorMarketplace, "metadata", "version") === marketplaceVersion &&
         hasExactKeys(cursorPlugin, ["name", "source", "description"]) &&
         nested(cursorPlugin, "name") === "ask-gina" &&
         nested(cursorPlugin, "source") === "./plugins/ask-gina";
@@ -1187,7 +1201,7 @@ export const checkRepositoryConformance = (
       addCheck(
         "repository.root_cursor.manifest_contract",
         "Root Cursor manifest has exact contract and release version",
-        validateManifest("cursor", manifest),
+        validateManifest("cursor", manifest, listingVersion),
       );
     }
     if (
@@ -1239,7 +1253,7 @@ export const checkRepositoryConformance = (
       addCheck(
         "repository.devin.plugin_manifest_contract",
         "Canonical Devin plugin manifest has the exact source and release contract",
-        validateManifest("devin", manifest),
+        validateManifest("devin", manifest, listingVersion),
       );
     }
     if (
@@ -1326,7 +1340,8 @@ export const checkRepositoryConformance = (
       addCheck(
         "repository.claude.overlay_contract",
         "Claude overlay has the release version and production MCP contract",
-        validateManifest("claude", claudeManifest) && validateMcp("claude", claudeMcp),
+        validateManifest("claude", claudeManifest, listingVersion) &&
+          validateMcp("claude", claudeMcp),
       );
     }
 

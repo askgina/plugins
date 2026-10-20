@@ -18,11 +18,8 @@ import {
 
 import { runHermeticEvalReplay, sanitizeEvalReplay } from "../packages/evals/src/index";
 import { copyCheckedRegularFile } from "./archive-security";
-import {
-  CURSOR_LISTING_VERSION,
-  OPENAI_LISTING_VERSION,
-  checkGeneratedTargetConformance,
-} from "./check-target-conformance";
+import { checkGeneratedTargetConformance } from "./check-target-conformance";
+import { loadPluginSource } from "./plugin-manifests";
 
 export const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini", "devin"] as const;
 export type Host = (typeof HOSTS)[number];
@@ -821,15 +818,15 @@ const validateVersions = (root: string) =>
       return yield* fail("plugin.yaml version is inconsistent");
     }
     const pluginRoot = path.join(root, "plugins/ask-gina");
+    const listingVersion = yield* loadPluginSource(pluginRoot).pipe(
+      Effect.map((source) => source.listing.version),
+      Effect.mapError((cause) => fail("plugin.yaml listing is unreadable", cause)),
+    );
     yield* Effect.forEach(HOSTS, (host) =>
       validateTargetVersion(
         pluginRoot,
         host,
-        host === "cursor"
-          ? CURSOR_LISTING_VERSION
-          : host === "openai"
-            ? OPENAI_LISTING_VERSION
-            : version,
+        host === "cursor" || host === "openai" ? listingVersion : version,
       ),
     );
     return version;

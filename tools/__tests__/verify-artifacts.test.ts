@@ -41,6 +41,7 @@ const repositoryFixture = Effect.gen(function* () {
       fs.copy(path.join(repositoryRoot, ".agents"), path.join(root, ".agents")),
       fs.copy(path.join(repositoryRoot, ".claude-plugin"), path.join(root, ".claude-plugin")),
       fs.copy(path.join(repositoryRoot, ".cursor-plugin"), path.join(root, ".cursor-plugin")),
+      fs.copy(path.join(repositoryRoot, "marketplace.yaml"), path.join(root, "marketplace.yaml")),
       fs.copy(
         path.join(repositoryRoot, "plugins", "ask-gina"),
         path.join(root, "plugins", "ask-gina"),

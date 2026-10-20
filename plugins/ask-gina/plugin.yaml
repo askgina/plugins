@@ -14,3 +14,57 @@ skills:
     mcpServed: true
   - id: research-prediction-markets
     mcpServed: true
+listing:
+  version: 1.0.0
+  displayName: Ask Gina
+  author:
+    name: Ask Gina
+    url: https://askgina.ai
+  homepage: https://askgina.ai
+  repository: https://github.com/askgina/plugins
+  license: Apache-2.0
+  category: Finance
+  keywords:
+    - crypto
+    - portfolio
+    - market-data
+    - hyperliquid
+    - polymarket
+    - prediction
+    - perpetuals
+    - research
+    - strategise
+    - mcp
+  icon: assets/icon.svg
+  mcpServerName: gina
+  descriptions:
+    codex: Research assistant for crypto, prediction, and perpetual markets.
+    cursor: Ask Gina is a research assistant for crypto, prediction markets, perpetuals, and equities. Use it to fetch real-time prices and historical data for tokens, Hyperliquid markets, and Polymarket prediction markets, and to analyze your Gina wallet, positions, and accounts. Gina cannot place trades or transfer assets inside Cursor or Grok Bot.
+    devin: Ask Gina is a research assistant for crypto, prediction markets, perpetuals, and equities. Use it to fetch real-time prices and historical data for tokens, Hyperliquid markets, and Polymarket prediction markets, and to analyze your Gina wallet, positions, and accounts. Gina cannot place trades or transfer assets inside Devin.
+    claude: Ask Gina is a research assistant for crypto, prediction markets, perpetuals, and equities. Use it to fetch real-time prices and historical data for tokens, Hyperliquid markets, and Polymarket prediction markets, and to analyze your Gina wallet, positions, and accounts. Gina cannot place trades or transfer assets inside Claude.
+    copilot: Ask Gina is a research assistant for crypto, prediction markets, perpetuals, and equities. Use it to fetch real-time prices and historical data for tokens, Hyperliquid markets, and Polymarket prediction markets, and to analyze your Gina wallet, positions, and accounts. Gina cannot place trades or transfer assets inside GitHub Copilot.
+    gemini: Ask Gina is a research assistant for crypto, prediction markets, perpetuals, and equities. Use it to fetch real-time prices and historical data for tokens, Hyperliquid markets, and Polymarket prediction markets, and to analyze your Gina wallet, positions, and accounts. Gina cannot place trades or transfer assets inside Gemini.
+  codex:
+    shortDescription: Accounts, markets, and charts
+    longDescription: Ask Gina provides read-only research across your linked account, spot tokens, Hyperliquid and HIP-3 perpetuals, and Polymarket prediction markets. Use it to inspect wallets, schedules, token prices and charts, positions, orders, performance, markets, and history. Ask Gina cannot place trades, transfer assets, change leverage, redeem positions, or create automations inside ChatGPT or Codex.
+    capabilities:
+      - Interactive
+      - Read
+    privacyPolicyURL: https://askgina.ai/privacy-policy
+    supportURL: https://askgina.ai/support
+    termsOfServiceURL: https://askgina.ai/terms-and-conditions
+    defaultPrompt:
+      - Show my linked wallets and cross-chain portfolio.
+      - Chart ETH's price over the past week.
+      - Which prediction markets are resolving soon?
+    brandColor: "#B50D00"
+    screenshots:
+      - ./assets/gold-up-or-down-daily.png
+      - ./assets/hyperliquid-chart.png
+      - ./assets/nba-champion-podium.png
+      - ./assets/perpetual-positions.png
+      - ./assets/premier-league-prediction-markets.png
+    policy:
+      installation: AVAILABLE
+      authentication: ON_INSTALL
+  cursorMarketplaceDescription: Read-only Ask Gina research for wallets, spot tokens, Hyperliquid, and Polymarket. Cannot place trades or transfer assets.
