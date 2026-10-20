@@ -55,15 +55,18 @@ Reads only state Gina stores for your account. It calls no outside provider and 
 
 Places, changes, cancels or settles an order, trade or fund movement. It acts at once, repeating it can repeat the effect, and it cannot always be undone.
 
-| Tool                        | Use it for                                     |
-| --------------------------- | ---------------------------------------------- |
-| `placeHyperliquidOrder`     | Place a market or limit order                  |
-| `placeHyperliquidStopOrder` | Place a stop-loss or take-profit trigger order |
-| `cancelHyperliquidOrder`    | Cancel an open order                           |
-| `modifyHyperliquidOrder`    | Modify an open order                           |
-| `adjustHyperliquidLeverage` | Set the leverage of an asset                   |
-| `depositToHyperliquid`      | Deposit USDC to Hyperliquid                    |
-| `hyperliquidWithdraw`       | Withdraw USDC from Hyperliquid                 |
+| Tool                              | Use it for                                     |
+| --------------------------------- | ---------------------------------------------- |
+| `placeHyperliquidOrder`           | Place a market or limit order                  |
+| `placeHyperliquidStopOrder`       | Place a stop-loss or take-profit trigger order |
+| `cancelHyperliquidOrder`          | Cancel an open order                           |
+| `modifyHyperliquidOrder`          | Modify an open order                           |
+| `adjustHyperliquidLeverage`       | Set the leverage of an asset                   |
+| `updateHyperliquidIsolatedMargin` | Add or remove isolated margin on one position  |
+| `depositToHyperliquid`            | Deposit USDC to Hyperliquid                    |
+| `hyperliquidWithdraw`             | Withdraw USDC from Hyperliquid                 |
+| `fundHIP3Dex`                     | Move USDC collateral into a HIP-3 DEX          |
+| `returnHIP3DexFunds`              | Return USDC collateral from a HIP-3 DEX        |
 
 ## Sandbox
 
@@ -98,14 +101,24 @@ Draws a widget and may fetch the data behind it from an outside provider. It wri
 
 These host tools are not native tools. Sandbox-only tools run inside `bash` with `host-tools`.
 
-| Tool                              | Why                                                                                                                     |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `createHyperliquidTable`          | Writes the caller's sandbox scratch table, so it only makes sense inside bash.                                          |
-| `executeSqlQuery`                 | Queries sandbox scratch tables, so it only makes sense inside bash.                                                     |
-| `captureAnalysisDataset`          | Captures a dataset for sandbox SQL and render tools, so it only makes sense inside bash.                                |
-| `updateHyperliquidIsolatedMargin` | The sandbox blocks it until a live confirmation step exists, so it is not a native tool and does not execute from bash. |
-| `fundHIP3Dex`                     | The sandbox blocks it until a live confirmation step exists, so it is not a native tool and does not execute from bash. |
-| `returnHIP3DexFunds`              | The sandbox blocks it until a live confirmation step exists, so it is not a native tool and does not execute from bash. |
+| Tool                     | Why                                                                                      |
+| ------------------------ | ---------------------------------------------------------------------------------------- |
+| `createHyperliquidTable` | Writes the caller's sandbox scratch table, so it only makes sense inside bash.           |
+| `executeSqlQuery`        | Queries sandbox scratch tables, so it only makes sense inside bash.                      |
+| `captureAnalysisDataset` | Captures a dataset for sandbox SQL and render tools, so it only makes sense inside bash. |
+
+## Typed next steps
+
+These tools return a typed `next` list beside their result. Each entry names a tool and arguments your client can offer as a button. Your client still shows the call and waits for your approval before it runs.
+
+| Tool                          | Suggests                | When                                                                                                                                         |
+| ----------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fetchHyperliquidCandles`     | `perps.renderChart`     | Your client renders MCP Apps and the candles were captured. It suggests a candlestick chart of the captured rows.                            |
+| `previewHyperliquidOrderCost` | `placeHyperliquidOrder` | The preview can fill. It suggests a limit order at the recommended price, and you can edit the size, price, order type and reduce-only flag. |
+
+## Native only, blocked in bash
+
+`updateHyperliquidIsolatedMargin`, `fundHIP3Dex`, `returnHIP3DexFunds` are native tools only. Inside `bash`, both `host-tools` and `ts-exec` refuse the call with `HOST_TOOL_LIVE_CONFIRMATION_REQUIRED`, so your MCP client can show the call and ask you first.
 
 ## Check that it works
 

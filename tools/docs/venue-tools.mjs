@@ -49,6 +49,21 @@ function validCatalog(catalog) {
         errors.push(`Venue ${venue} has a tool without a name or a known class: ${tool?.name}`);
       if (typeof tool?.purpose !== "string" || tool.purpose.trim() === "")
         errors.push(`Venue ${venue} tool ${tool?.name} needs a purpose.`);
+      if (
+        tool?.bashBlocked !== undefined &&
+        (tool.bashBlocked !== true || tool.class !== EXECUTE_CLASS)
+      )
+        errors.push(
+          `Venue ${venue} tool ${tool.name} can set bashBlocked only to true in the ${EXECUTE_CLASS} class.`,
+        );
+      if (
+        tool?.next !== undefined &&
+        (typeof tool.next?.tool !== "string" ||
+          tool.next.tool.trim() === "" ||
+          typeof tool.next.when !== "string" ||
+          tool.next.when.trim() === "")
+      )
+        errors.push(`Venue ${venue} tool ${tool.name} needs a next tool and a when.`);
     }
     for (const tool of entry.bashOnly ?? []) {
       if (bashOnly.has(tool?.name) || names.has(tool?.name))
@@ -90,6 +105,10 @@ export function renderVenuePage(catalog, venue) {
     return `## ${title}\n\n${meaning}\n\n${table(["Tool", "Use it for"], rows)}\n`;
   });
   const bashRows = entry.bashOnly.map((tool) => ["`" + tool.name + "`", cell(tool.reason)]);
+  const blocked = entry.tools.filter((tool) => tool.bashBlocked);
+  const nextRows = entry.tools
+    .filter((tool) => tool.next)
+    .map((tool) => ["`" + tool.name + "`", "`" + tool.next.tool + "`", cell(tool.next.when)]);
   const endpoint = "`" + entry.endpoint + "`";
   return [
     `---
@@ -108,6 +127,12 @@ Annotations are the server's own declaration. A client can use them to decide wh
     ...sections,
     bashRows.length
       ? `## Host tools that are not native\n\nThese host tools are not native tools. Sandbox-only tools run inside \`bash\` with \`host-tools\`.\n\n${table(["Tool", "Why"], bashRows)}\n`
+      : "",
+    nextRows.length
+      ? `## Typed next steps\n\nThese tools return a typed \`next\` list beside their result. Each entry names a tool and arguments your client can offer as a button. Your client still shows the call and waits for your approval before it runs.\n\n${table(["Tool", "Suggests", "When"], nextRows)}\n`
+      : "",
+    blocked.length
+      ? `## Native only, blocked in bash\n\n${blocked.map((tool) => "`" + tool.name + "`").join(", ")} ${blocked.length === 1 ? "is a native tool" : "are native tools"} only. Inside \`bash\`, both \`host-tools\` and \`ts-exec\` refuse the call with \`HOST_TOOL_LIVE_CONFIRMATION_REQUIRED\`, so your MCP client can show the call and ask you first.\n`
       : "",
     `## Check that it works
 

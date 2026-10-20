@@ -125,5 +125,6 @@
       }
     ]
   },
-  "include": ["packages", "plugins", "scripts", "tools", "vite.config.ts"]
+  "include": ["packages", "plugins", "scripts", "tools", "vite.config.ts"],
+  "exclude": ["**/dist/**"]
 }

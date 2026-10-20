@@ -142,7 +142,15 @@
           "class": "read-external",
           "purpose": "Your trade history"
         },
-        { "name": "fetchHyperliquidCandles", "class": "read-external", "purpose": "Price candles" },
+        {
+          "name": "fetchHyperliquidCandles",
+          "class": "read-external",
+          "purpose": "Price candles",
+          "next": {
+            "tool": "perps.renderChart",
+            "when": "Your client renders MCP Apps and the candles were captured. It suggests a candlestick chart of the captured rows."
+          }
+        },
         {
           "name": "fetchHyperliquidOrderBook",
           "class": "read-external",
@@ -151,7 +159,11 @@
         {
           "name": "previewHyperliquidOrderCost",
           "class": "read-external",
-          "purpose": "Estimate an order's cost without placing it"
+          "purpose": "Estimate an order's cost without placing it",
+          "next": {
+            "tool": "placeHyperliquidOrder",
+            "when": "The preview can fill. It suggests a limit order at the recommended price, and you can edit the size, price, order type and reduce-only flag."
+          }
         },
         {
           "name": "getHyperliquidAccountHealth",
@@ -181,6 +193,12 @@
           "purpose": "Set the leverage of an asset"
         },
         {
+          "name": "updateHyperliquidIsolatedMargin",
+          "class": "execute",
+          "purpose": "Add or remove isolated margin on one position",
+          "bashBlocked": true
+        },
+        {
           "name": "depositToHyperliquid",
           "class": "execute",
           "purpose": "Deposit USDC to Hyperliquid"
@@ -189,6 +207,18 @@
           "name": "hyperliquidWithdraw",
           "class": "execute",
           "purpose": "Withdraw USDC from Hyperliquid"
+        },
+        {
+          "name": "fundHIP3Dex",
+          "class": "execute",
+          "purpose": "Move USDC collateral into a HIP-3 DEX",
+          "bashBlocked": true
+        },
+        {
+          "name": "returnHIP3DexFunds",
+          "class": "execute",
+          "purpose": "Return USDC collateral from a HIP-3 DEX",
+          "bashBlocked": true
         },
         {
           "name": "bash",
@@ -227,18 +257,6 @@
         {
           "name": "captureAnalysisDataset",
           "reason": "Captures a dataset for sandbox SQL and render tools, so it only makes sense inside bash."
-        },
-        {
-          "name": "updateHyperliquidIsolatedMargin",
-          "reason": "The sandbox blocks it until a live confirmation step exists, so it is not a native tool and does not execute from bash."
-        },
-        {
-          "name": "fundHIP3Dex",
-          "reason": "The sandbox blocks it until a live confirmation step exists, so it is not a native tool and does not execute from bash."
-        },
-        {
-          "name": "returnHIP3DexFunds",
-          "reason": "The sandbox blocks it until a live confirmation step exists, so it is not a native tool and does not execute from bash."
         }
       ]
     },

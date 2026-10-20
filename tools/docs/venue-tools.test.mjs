@@ -54,6 +54,18 @@ test("renders classes, tools by class, bash-only tools and a verification step",
   assert.match(page, /calls `getPrice`/);
 });
 
+test("renders typed next steps and tools blocked in bash from catalog fields", () => {
+  const value = catalog();
+  value.venues.perps.tools[0].next = { tool: "placeOrder", when: "The preview can fill." };
+  value.venues.perps.tools[1].bashBlocked = true;
+  const page = renderVenuePage(value, "perps");
+  assert.match(page, /\n## Typed next steps\n/);
+  assert.match(page, /`getPrice`\s+\| `placeOrder`\s+\| The preview can fill\.\s+\|/);
+  assert.match(page, /\n## Native only, blocked in bash\n\n`placeOrder` is a native tool only/);
+  assert.match(page, /HOST_TOOL_LIVE_CONFIRMATION_REQUIRED/);
+  assert.doesNotMatch(renderVenuePage(catalog(), "perps"), /Typed next steps|blocked in bash/);
+});
+
 test("lists an unset annotation as not set", () => {
   const value = catalog();
   value.classes["read-external"].hints = {
@@ -84,6 +96,24 @@ test("rejects a catalog that breaks its own rules", () => {
     ],
     [{ tools: catalog().venues.perps.tools.filter((tool) => tool.name !== "bash") }, /bash once/],
     [{ bashOnly: [{ name: "getPrice", reason: "x" }] }, /native and bash-only/],
+    [
+      {
+        tools: [
+          { name: "getPrice", class: "read-external", purpose: "x", bashBlocked: true },
+          catalog().venues.perps.tools[2],
+        ],
+      },
+      /bashBlocked only/,
+    ],
+    [
+      {
+        tools: [
+          { name: "getPrice", class: "read-external", purpose: "x", next: { tool: "" } },
+          catalog().venues.perps.tools[2],
+        ],
+      },
+      /next tool and a when/,
+    ],
     [{ verify: { tool: "placeOrder", prompt: "Place it." } }, /read-only tool/],
     [
       {
