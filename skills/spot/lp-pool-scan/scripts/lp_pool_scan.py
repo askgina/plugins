@@ -3,12 +3,12 @@
 lp_pool_scan.py: portable daily LP pool scanner (public data only, read-only, stdlib only).
 Usage: python3 lp_pool_scan.py --universe {allowlist,top,wide} [--allowlist FILE] [--out DIR] [--top N] [--min-tvl X] [--format {md,json,both}]
 Never signs or sends transactions; only HTTP GETs to public APIs and eth_call/eth_getLogs to a public RPC.
-Universe: allowlist.json (Robinhood Chain 4663 Uniswap v3/v4, Solana Raydium CLMM/CPMM).
-Sources: GeckoTerminal, DexScreener, Raydium API v3, Robinhood Chain public RPC (eth_call/eth_getLogs only),
-GoPlus (EVM token security, chain 4663), RugCheck (Solana token risk).
+Universe: allowlist.json (Robinhood Chain 4663 / Base 8453 / Ethereum 1 Uniswap v3/v4, Solana Raydium CLMM/CPMM).
+Sources: GeckoTerminal, DexScreener, Raydium API v3, Robinhood Chain / Base / Ethereum public RPCs (eth_call/eth_getLogs only),
+GoPlus (EVM token security, chains 4663/8453/1), RugCheck (Solana token risk).
 No transactions are ever sent. See README.md for formulas and gaps.
 """
-import json, math, os, sys, time, gzip, datetime as dt, argparse, traceback
+import json, math, os, sys, time, gzip, datetime as dt, argparse, traceback, threading
 import urllib.request, urllib.error, urllib.parse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -31,6 +31,22 @@ GOPLUS = "https://api.gopluslabs.io/api/v1/token_security/4663"
 RUGCHECK = "https://api.rugcheck.xyz/v1/tokens/{}/report/summary"
 V4_POOL_MANAGER = "0x8366a39cc670b4001a1121b8f6a443a643e40951"
 V4_STATE_VIEW = "0xf3334192d15450cdd385c8b70e03f9a6bd9e673b"
+EVM = ("robinhood", "base", "eth")
+CHAINS = ("robinhood", "base", "eth", "solana")      # report order
+CHAIN_CFG = {
+    "robinhood": {"rpc": RH_RPC, "pm": V4_POOL_MANAGER, "sv": V4_STATE_VIEW, "posm": None, "goplus": 4663, "ds": "robinhood",
+                  "label": "Robinhood Chain", "short": "RH", "swap_blocks": 200000},
+    "base": {"rpc": os.environ.get("BASE_RPC", "https://base-rpc.publicnode.com"), "pm": "0x498581ff718922c3f8e6a244956af099b2652b2b",
+             "sv": "0xa3c0c9b65bad0b08107aa264b0f3db444b867a71", "posm": "0x7c5f5a4bbd8fd63184577525326123b519429bdc", "goplus": 8453,
+             "ds": "base", "label": "Base", "short": "BASE", "swap_blocks": 10000},      # publicnode getLogs: <= ~10k blocks
+    "eth": {"rpc": os.environ.get("ETH_RPC", "https://ethereum-rpc.publicnode.com"), "pm": "0x000000000004444c5dc75cb358380d2e3de08a90",
+            "sv": "0x7ffe42c4a5deea5b0fec41c94c136cf115597227", "posm": "0xbd216513d74c8cf14cf4747e6aaa6420ff64ee9e", "goplus": 1,
+            "ds": "ethereum", "label": "Ethereum", "short": "ETH", "swap_blocks": 2000},  # publicnode getLogs: <= ~5k blocks
+    "solana": {"ds": "solana", "label": "Solana", "short": "SOL"},
+}
+_TL = threading.local()   # current EVM chain for rpc_batch (set per worker in fetch_state)
+def cur_chain(): return getattr(_TL, "chain", "robinhood")
+def nkey(chain, a): return a.lower() if (chain in EVM and a) else a
 TOPIC_V4_SWAP = "0x40e9cecb9f5f1f1c5b9c97dec2917b7ee92e57ba5563708daca94dd84ad7112f"
 TOPIC_V4_INIT = "0xdd466e674ea557f56295e2d0218a125ea4b4f0f6f3307b95f85e6110838d6438"
 TRADE_SIZES = [1_000_000, 5_000_000, 10_000_000]
@@ -51,7 +67,8 @@ def log(*a):
 _last_call = {}
 PACE = {"api.geckoterminal.com": 2.1, "api.dexscreener.com": 0.25, "api-v3.raydium.io": 0.3, "api.orca.so": 0.3,
         "dlmm.datapi.meteora.ag": 0.3, "api.xstocks.fi": 0.5, "api.robinhood.com": 0.5,
-        "api.gopluslabs.io": 2.5, "api.rugcheck.xyz": 1.2, "rpc.mainnet.chain.robinhood.com": 0.15}
+        "api.gopluslabs.io": 2.5, "api.rugcheck.xyz": 1.2, "rpc.mainnet.chain.robinhood.com": 0.15,
+        "base-rpc.publicnode.com": 0.15, "ethereum-rpc.publicnode.com": 0.15}
 RAW = {}  # raw responses kept for audit
 
 import threading
@@ -135,7 +152,7 @@ def rpc_batch(calls, chunk=40):
     for i in range(0, len(calls), chunk):
         part = calls[i:i + chunk]
         payload = [{"jsonrpc": "2.0", "id": j, "method": m, "params": p} for j, (m, p) in enumerate(part)]
-        res = http(RH_RPC, data=payload)
+        res = http(CHAIN_CFG[cur_chain()]["rpc"], data=payload)
         if not isinstance(res, list):
             out += [None] * len(part)
             continue
@@ -239,6 +256,10 @@ def load_pools():
     for proto, lst in a.get("robinhood_chain_4663", {}).items():
         for p in lst:
             pools.append({"chain": "robinhood", "protocol": proto, "address": p.lower()})
+    for ch, k in (("base", "base_8453"), ("eth", "ethereum_1")):
+        for proto, lst in a.get(k, {}).items():
+            for p in lst:
+                pools.append({"chain": ch, "protocol": proto, "address": p.lower()})
     for proto, lst in a.get("solana", {}).items():
         for p in lst:
             pools.append({"chain": "solana", "protocol": proto, "address": p})
@@ -261,6 +282,7 @@ def gt_multi(network, addrs):
             at["_dex"] = rel.get("dex", {}).get("data", {}).get("id")
             key = at["address"].lower() if network != "solana" else at["address"]
             out[key] = at
+            learn_evm_stock(network, at["_base"]); learn_evm_stock(network, at["_quote"])
     return out
 
 def ds_pairs(chain, addrs):
@@ -378,25 +400,36 @@ def block_at(ts):
     return lo
 
 def v4_key(pool_id, created_ts, cache):
-    if pool_id in cache:
-        return cache[pool_id]
+    ch = cur_chain(); cfg = CHAIN_CFG[ch]
+    ck = pool_id if ch == "robinhood" else f"{ch}:{pool_id}"
+    if ck in cache:
+        return cache[ck]
+    if cfg.get("posm"):   # Base/Ethereum: PositionManager.poolKeys(bytes25) (eth_call; public RPC getLogs ranges are too small)
+        r = rpc_batch([eth_call(cfg["posm"], "0x86b6be7d" + pool_id[2:52] + "0" * 14)])[0]
+        w = words(r) if r else []
+        if len(w) >= 5 and s256(w[3]) != 0:
+            key = {"currency0": addr_of(w[0]), "currency1": addr_of(w[1]), "fee": u(w[2]), "tickSpacing": s256(w[3]),
+                   "hooks": addr_of(w[4]), "source": "PositionManager.poolKeys"}
+            cache[ck] = key
+            return key
+        return None
     if not created_ts:
         return None
     b = block_at(created_ts)
     for lo, hi in ((b - 300000, b + 300000), (b - 5000000, b + 4999999)):
-        r = rpc_batch([("eth_getLogs", [{"address": V4_POOL_MANAGER, "fromBlock": hex(max(lo, 0)), "toBlock": hex(hi),
+        r = rpc_batch([("eth_getLogs", [{"address": cfg["pm"], "fromBlock": hex(max(lo, 0)), "toBlock": hex(hi),
                                           "topics": [TOPIC_V4_INIT, pool_id]}])])[0]
         if r:
             lg = r[0]; w = words(lg["data"])
             key = {"currency0": "0x" + lg["topics"][2][-40:], "currency1": "0x" + lg["topics"][3][-40:],
                    "fee": u(w[0]), "tickSpacing": s256(w[1]), "hooks": addr_of(w[2]),
                    "init_block": int(lg["blockNumber"], 16), "init_tx": lg["transactionHash"]}
-            cache[pool_id] = key
+            cache[ck] = key
             return key
     return None
 
 def v4_state(pool_id, key):
-    pid = pool_id[2:]
+    pid = pool_id[2:]; V4_STATE_VIEW = CHAIN_CFG[cur_chain()]["sv"]
     r = rpc_batch([eth_call(V4_STATE_VIEW, "0xc815641c" + pid), eth_call(V4_STATE_VIEW, "0xfa6793d5" + pid)])
     if not r[0] or not r[1]:
         return None
@@ -417,12 +450,12 @@ def v4_state(pool_id, key):
     st["words_scanned"] = hi - lo + 1
     return st
 
-def v4_recent_swap_fees(pool_id, blocks=200000):
+def v4_recent_swap_fees(pool_id, blocks=None):
     """Fee (pips) actually charged, from PoolManager Swap events in the last `blocks` blocks (dynamic-fee pools)."""
     bn = rpc_batch([("eth_blockNumber", [])])[0]
     if not bn: return None
-    b = int(bn, 16)
-    r = rpc_batch([("eth_getLogs", [{"address": V4_POOL_MANAGER, "fromBlock": hex(b - blocks), "toBlock": hex(b),
+    b = int(bn, 16); cfg = CHAIN_CFG[cur_chain()]; blocks = blocks or cfg["swap_blocks"]
+    r = rpc_batch([("eth_getLogs", [{"address": cfg["pm"], "fromBlock": hex(b - blocks), "toBlock": hex(b),
                                       "topics": [TOPIC_V4_SWAP, pool_id]}])])[0]
     if not r: return None
     return [u(words(x["data"])[5]) for x in r]
@@ -441,7 +474,8 @@ def erc20_decimals(addrs):
     return out
 
 # ---------------------------------------------------------------- security sources
-def goplus(addrs):
+def goplus(addrs, chain="robinhood"):
+    GOPLUS = f"https://api.gopluslabs.io/api/v1/token_security/{CHAIN_CFG[chain]['goplus']}"
     out = {}
     addrs = sorted(set(a for a in addrs if a and a != "0x" + "0" * 40))
     for i, a in enumerate(addrs):   # free tier: one address per request is reliable
@@ -462,16 +496,30 @@ def rugcheck(mints, cache):
 RAYDIUM_AMM_V4 = "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
 SEC_SKIP = {"So11111111111111111111111111111111111111112", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"}
 RAYDIUM_CPMM = "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
-REG = {"rh": {}, "xstocks": {}, "ondo": {}}
+REG = {"rh": {}, "xstocks": {}, "ondo": {}, "evm": {"base": {}, "eth": {}}}
+BASE_STOCK_PREFIX = "0xb2000000000000000000"   # Base tokenized-equity contracts use this vanity prefix (e.g. AAPL 0xb200…d1fb)
+
+def learn_evm_stock(chain, tk, issuer=None):
+    """Base/Ethereum tokenized-stock detection by token metadata: Ondo Global Markets ('… (Ondo Tokenized …)', symbol …on),
+    xStocks/Backed ('… xStock', symbol …x), Base 0xb2000… stock contracts, or an allowlist 'tokenized-stock' pool leg."""
+    if chain not in ("base", "eth") or not tk or not tk.get("address"): return
+    a = tk["address"].lower(); n = (tk.get("name") or ""); sym = tk.get("symbol") or ""
+    if a in REG["evm"][chain]: return
+    nl = n.lower()
+    if "ondo tokenized" in nl and sym.lower().endswith("on"): issuer = "Ondo Global Markets"
+    elif (nl.endswith("xstock") or "backed" in nl) and sym.endswith("x"): issuer = "xStocks/Backed"
+    elif chain == "base" and a.startswith(BASE_STOCK_PREFIX): issuer = "Base 0xb2000… stock token"
+    if issuer: REG["evm"][chain][a] = [sym, issuer]
 
 def load_registries(wide, ondo_max_age_days=0):
     today = dt.date.today().isoformat()
     cf = os.path.join(CACHE_DIR, "registries.json")
-    old_ondo = None
+    old_ondo = None; evm_old = None
     if os.path.exists(cf):
         c = json.load(open(cf))
-        if c.get("date") == today and (c.get("ondo") or not wide):
-            REG.update({k: c[k] for k in ("rh", "xstocks", "ondo")}); return
+        if c.get("date") == today and (c.get("ondo") or not wide) and "evm" in c:
+            REG.update({k: c[k] for k in ("rh", "xstocks", "ondo", "evm")}); return
+        evm_old = (c.get("evm"), c.get("evm_ondo_date")) if c.get("evm") else None
         od = c.get("ondo_date") or (c.get("date") if c.get("ondo") else None)
         if c.get("ondo") and od:
             old_ondo = (c["ondo"], od)
@@ -492,6 +540,23 @@ def load_registries(wide, ondo_max_age_days=0):
                     REG["xstocks"][dep["address"]] = n.get("symbol")
         if not (d.get("page") or {}).get("hasNextPage"): break
         page += 1
+    for net, ch in (("Ethereum", "eth"), ("Base", "base")):   # xStocks EVM deployments
+        page = 0
+        while page < 20:
+            d = http(f"https://api.xstocks.fi/api/v2/public/assets?page={page}&pageSize=100&network={net}", key=f"xstocks_{net}_{page}")
+            if not d: break
+            for n in d.get("nodes") or []:
+                for dep in n.get("deployments") or []:
+                    if dep.get("network") == net and (n.get("name") or "").endswith("xStock") and dep.get("address", "").startswith("0x"):
+                        REG["evm"][ch][dep["address"].lower()] = [n.get("symbol"), "xStocks/Backed"]
+            if not (d.get("page") or {}).get("hasNextPage"): break
+            page += 1
+    evm_ondo_date = None
+    if evm_old and evm_old[1] and (dt.date.today() - dt.date.fromisoformat(evm_old[1])).days <= 7:
+        for ch in ("base", "eth"):
+            for a_, v_ in (evm_old[0].get(ch) or {}).items():
+                if v_[1] == "Ondo Global Markets": REG["evm"][ch].setdefault(a_, v_)
+        evm_ondo_date = evm_old[1]; log(f"Ondo EVM list reused from {evm_ondo_date}")
     ondo_date = today if wide else None
     if old_ondo:   # keep a previous Ondo list (non-wide runs never search, so they must not wipe it)
         REG["ondo"] = old_ondo[0]; ondo_date = old_ondo[1]; wide = False
@@ -507,25 +572,42 @@ def load_registries(wide, ondo_max_age_days=0):
                 for tk in (p.get("baseToken") or {}, p.get("quoteToken") or {}):
                     if (tk.get("name") or "").endswith("(Ondo Tokenized)") and (tk.get("symbol") or "").endswith("on"):
                         REG["ondo"][tk["address"]] = tk.get("symbol")
-    log(f"registries: Robinhood {len(REG['rh'])}, xStocks(Solana) {len(REG['xstocks'])}, Ondo(Solana, name-matched) {len(REG['ondo'])}")
-    json.dump({"date": today, "ondo_date": ondo_date, **REG}, open(cf, "w"))
+    if evm_ondo_date is None and REG["rh"]:
+        # Ondo Global Markets on Ethereum/Base: DexScreener search "<TICKER>on", keep tokens named "(Ondo Tokenized …)"
+        tick = sorted(set(v for v in REG["rh"].values() if v))
+        log(f"Ondo EVM discovery: {len(tick)} DexScreener searches")
+        for t in tick:
+            res = http(f"{DS}/search?q={urllib.parse.quote(t + 'on')}", retries=2) or {}
+            for p in res.get("pairs") or []:
+                ch = {"ethereum": "eth", "base": "base"}.get(p.get("chainId"))
+                if not ch: continue
+                for tk in (p.get("baseToken") or {}, p.get("quoteToken") or {}):
+                    learn_evm_stock(ch, tk)
+        evm_ondo_date = today
+    log(f"registries: Robinhood {len(REG['rh'])}, xStocks(Solana) {len(REG['xstocks'])}, Ondo(Solana, name-matched) {len(REG['ondo'])}, "
+        f"Base stocks {len(REG['evm']['base'])}, Ethereum stocks {len(REG['evm']['eth'])}")
+    json.dump({"date": today, "ondo_date": ondo_date, "evm_ondo_date": evm_ondo_date, **REG}, open(cf, "w"))
 
 def stock_symbol(chain, addr):
     if not addr: return None
     if chain == "robinhood":
         return REG["rh"].get(addr.lower())
+    if chain in ("base", "eth"):
+        v = REG["evm"][chain].get(addr.lower()); return v[0] if v else None
     return REG["xstocks"].get(addr) or REG["ondo"].get(addr)
 
 def stock_issuer(chain, addr):
     if chain == "robinhood": return "Robinhood" if addr and addr.lower() in REG["rh"] else None
+    if chain in ("base", "eth"):
+        v = REG["evm"][chain].get((addr or "").lower()); return v[1] if v else None
     if addr in REG["xstocks"]: return "xStocks/Backed"
     if addr in REG["ondo"]: return "Ondo(name-matched)"
     return None
 
 # ---------------------------------------------------------------- protocol classification
 def classify(chain, dex_id, labels=None, ray=None):
-    dex_id = (dex_id or "").lower(); labels = [x.lower() for x in (labels or [])]
-    if chain == "robinhood":
+    dex_id = (dex_id or "").lower().replace("_", "-"); labels = [x.lower() for x in (labels or [])]
+    if chain in EVM:
         if dex_id.startswith("uniswap-v3") or (dex_id == "uniswap" and "v3" in labels): return "uniswap-v3"
         if dex_id.startswith("uniswap-v4") or (dex_id == "uniswap" and "v4" in labels): return "uniswap-v4"
         if dex_id.startswith("uniswap-v2") or (dex_id == "uniswap" and "v2" in labels): return "uniswap-v2"
@@ -556,8 +638,9 @@ DEX_LABEL = {"uniswap-v3": "RH / Uni v3", "uniswap-v4": "RH / Uni v4", "uniswap-
 
 def chain_dex(row):
     p = row["protocol"]
+    if row["chain"] in EVM and p.startswith("uniswap-"): return f"{CHAIN_CFG[row['chain']]['short']} / Uni {p.split('-')[1]}"
     if p in DEX_LABEL: return DEX_LABEL[p]
-    return ("RH / " if row["chain"] == "robinhood" else "SOL / ") + p.split(":", 1)[-1].replace("-robinhood", "")
+    return (CHAIN_CFG.get(row["chain"], {}).get("short", "SOL") + " / ") + p.split(":", 1)[-1].replace("-robinhood", "")
 
 CP_PROTOCOLS = {"raydium-cpmm", "raydium-amm", "uniswap-v2", "pumpswap", "meteora-damm"}
 
@@ -573,6 +656,7 @@ def gt_list(path, pages, key):
             at["_base"] = inc.get(rel.get("base_token", {}).get("data", {}).get("id"), {})
             at["_quote"] = inc.get(rel.get("quote_token", {}).get("data", {}).get("id"), {})
             at["_dex"] = rel.get("dex", {}).get("data", {}).get("id")
+            if "/networks/" in f"/{path}": learn_evm_stock(path.split("/")[1], at["_base"]); learn_evm_stock(path.split("/")[1], at["_quote"])
             out.append(at)
         if len(d["data"]) < 20: break
     return out
@@ -582,29 +666,31 @@ def discover_stock_pools(add, stats):
     def ds_token_pairs(chain, tok):
         res = http(f"https://api.dexscreener.com/token-pairs/v1/{chain}/{tok}", retries=3)
         return res if isinstance(res, list) else []
-    rh_tokens = list(REG["rh"]); sol_tokens = list(REG["xstocks"]) + list(REG["ondo"])
-    log(f"discovery: DexScreener presence check for {len(rh_tokens)} RH + {len(sol_tokens)} Solana stock tokens")
-    with_pairs = {"robinhood": [], "solana": []}
-    for chain, toks in (("robinhood", rh_tokens), ("solana", sol_tokens)):
+    toks_by = {"robinhood": list(REG["rh"]), "base": list(REG["evm"]["base"]), "eth": list(REG["evm"]["eth"]),
+               "solana": list(REG["xstocks"]) + list(REG["ondo"])}
+    log("discovery: DexScreener presence check for stock tokens " + ", ".join(f"{k} {len(v)}" for k, v in toks_by.items()))
+    with_pairs = {k: [] for k in toks_by}
+    for chain, toks in toks_by.items():
+        dsn = CHAIN_CFG[chain]["ds"]
         for i in range(0, len(toks), 30):   # batch presence check: which stock tokens have any DEX pair at all
             part = toks[i:i + 30]
-            res = http(f"https://api.dexscreener.com/tokens/v1/{chain}/{','.join(part)}", retries=3)
+            res = http(f"https://api.dexscreener.com/tokens/v1/{dsn}/{','.join(part)}", retries=3)
             seen = set()
             for p in res if isinstance(res, list) else []:
                 for tk in (p.get("baseToken") or {}, p.get("quoteToken") or {}):
-                    a_ = tk.get("address") or ""
-                    seen.add(a_.lower() if chain == "robinhood" else a_)
-            with_pairs[chain] += [t for t in part if (t.lower() if chain == "robinhood" else t) in seen]
+                    seen.add(nkey(chain, tk.get("address") or ""))
+            with_pairs[chain] += [t for t in part if nkey(chain, t) in seen]
     stats["stock_tokens_with_dex_pairs"] = {k: len(v) for k, v in with_pairs.items()}
-    log(f"  stock tokens with DEX pairs: RH {len(with_pairs['robinhood'])}, Solana {len(with_pairs['solana'])}; token-pairs + Raydium-by-mint")
+    log(f"  stock tokens with DEX pairs: " + ", ".join(f"{k} {len(v)}" for k, v in with_pairs.items()) + "; token-pairs + Raydium-by-mint")
     capped = [0]
     def ds_part():
-        for chain in ("robinhood", "solana"):
+        for chain in CHAINS:
+            dsn = CHAIN_CFG[chain]["ds"]
             for t in with_pairs[chain]:
-                prs = ds_token_pairs(chain, t)
+                prs = ds_token_pairs(dsn, t)
                 if len(prs) >= 30: capped[0] += 1
                 for p in prs:
-                    if p.get("chainId") != chain: continue
+                    if p.get("chainId") != dsn: continue
                     add(chain, p["pairAddress"], p.get("dexId"), p.get("labels"), "tokenized_stock", f((p.get("liquidity") or {}).get("usd")),
                         vol24=f((p.get("volume") or {}).get("h24")))
     def ray_part():
@@ -622,12 +708,16 @@ SCOPE_STATS = {"dropped_out_of_scope": 0}
 def dex_in_scope(chain, dex_id):
     """Discovery-time check on a raw DEX id (GeckoTerminal/DexScreener). Unknown id -> True (decided later from the row protocol)."""
     if DEX_SCOPE[0] == "all" or not dex_id: return True
-    d = dex_id.lower()
-    return d.startswith("uniswap") if chain == "robinhood" else d.startswith("raydium")
+    d = dex_id.lower().replace("_", "-")
+    if chain == "robinhood": return d.startswith("uniswap")
+    if chain in EVM: return d.startswith("uniswap") and "v2" not in d     # Base/Ethereum: Uniswap v3/v4 only
+    return d.startswith("raydium")
 
 def proto_in_scope(r):
     p = r.get("protocol") or ""
-    return p in ("uniswap-v2", "uniswap-v3", "uniswap-v4") if r["chain"] == "robinhood" else p.startswith("raydium")
+    if r["chain"] == "robinhood": return p in ("uniswap-v2", "uniswap-v3", "uniswap-v4")
+    if r["chain"] in EVM: return p in ("uniswap-v3", "uniswap-v4")
+    return p.startswith("raydium")
 
 def scope_ok(r, snap):
     return (snap.get("dex_scope") or "all") == "all" or proto_in_scope(r)
@@ -636,7 +726,7 @@ def make_adder(cands):
     lock = threading.Lock()
     def add(chain, addr, dex_id=None, labels=None, cat=None, tvl=None, vol24=None):
         if not addr: return
-        k = (chain, addr.lower() if chain == "robinhood" else addr)
+        k = (chain, nkey(chain, addr))
         if cat not in ("allowlist", "pinned") and not dex_in_scope(chain, dex_id):
             with lock: SCOPE_STATS["dropped_out_of_scope"] += 1
             return
@@ -658,12 +748,12 @@ def discover_top(allow, pins, args):
         add("robinhood" if a.startswith("0x") else "solana", a, cat="pinned")
     th = threading.Thread(target=discover_stock_pools, args=(add, stats)); th.start()
     log(f"discovery: GeckoTerminal top {args.gt_pages * 20} pools by 24h volume per chain; DEX scope {DEX_SCOPE[0]}"
-        + (" (RH Uniswap, Solana Raydium)" if DEX_SCOPE[0] == "core" else "; Raydium/Orca/Meteora volume lists"))
-    for net in ("robinhood", "solana"):
+        + (" (RH Uniswap, Base/Ethereum Uniswap v3/v4, Solana Raydium)" if DEX_SCOPE[0] == "core" else "; Raydium/Orca/Meteora volume lists"))
+    for net in CHAINS:
         lst = gt_list(f"networks/{net}/pools?sort=h24_volume_usd_desc", args.gt_pages, f"gt_{net}_top_vol")
         stats[f"{net}_gt_top_volume"] = len(lst)
         for x in lst:
-            k = (net, x["address"].lower() if net == "robinhood" else x["address"])
+            k = (net, nkey(net, x["address"]))
             GT_PREFETCH[k] = x
             add(net, x["address"], x["_dex"], None, "volume", f(x.get("reserve_in_usd")), vol24=f((x.get("volume_usd") or {}).get("h24")))
             for tk in (x["_base"], x["_quote"]):
@@ -723,7 +813,7 @@ def select_top(cands, ds, prev, args):
         g = GT_PREFETCH.get(k) or {}; d = ds.get(c["address"]) or {}
         if c.get("allow_protocol"): return proto_in_scope({"chain": c["chain"], "protocol": c["allow_protocol"]})
         return dex_in_scope(c["chain"], g.get("_dex") or c.get("dex_id") or d.get("dexId"))
-    for ch in ("robinhood", "solana"):
+    for ch in CHAINS:
         st = [k for k, c in cands.items() if c["chain"] == ch and "tokenized_stock" in c["categories"] and (H[k][0] or 0) >= STOCK_MIN_TVL and insc(k, c)]
         st.sort(key=lambda k: -(H[k][2] if H[k][2] is not None else -1))
         for k in st[:args.stock_candidates]: why.setdefault(k, set()).add("stock_candidate")
@@ -800,6 +890,7 @@ def fetch_state(row, cache_v4):
     """Everything except GeckoTerminal OHLCV (which is rate-limited and done serially)."""
     p, a = row["protocol"], row["address"]
     st = {}
+    _TL.chain = row["chain"] if row["chain"] in EVM else "robinhood"
     try:
         if p == "uniswap-v3" or p.startswith("v3-fork"):
             st["cl"] = v3_state(a)
@@ -920,9 +1011,9 @@ def main(argv=None):
         cands = {(p["chain"], p["address"]): {"chain": p["chain"], "address": p["address"], "categories": {"allowlist"},
                                                "allow_protocol": p["protocol"], "dex_id": None, "labels": None, "hint_tvl": None} for p in allow}
     log(f"candidates: {len(cands)}")
-    rh = [c["address"] for c in cands.values() if c["chain"] == "robinhood"]
-    sol = [c["address"] for c in cands.values() if c["chain"] == "solana"]
-    log("DexScreener pairs..."); ds = {**ds_pairs("robinhood", rh), **ds_pairs("solana", sol)}
+    byc = {ch: [c["address"] for c in cands.values() if c["chain"] == ch] for ch in CHAINS}
+    log("DexScreener pairs..."); ds = {}
+    for ch in CHAINS: ds.update(ds_pairs(CHAIN_CFG[ch]["ds"], byc[ch]))
     # dust floor (wide): use best available TVL hint before spending GeckoTerminal calls
     def tvl_hint(c):
         d = ds.get(c["address"]) or {}
@@ -950,10 +1041,19 @@ def main(argv=None):
                 sub_floor.append({"chain": c["chain"], "address": c["address"], "tvl_hint": th, "categories": sorted(c["categories"])})
         log(f"dust floor ${args.floor:,.0f}: kept {len(keep)}, sub-floor {len(sub_floor)}")
         cands = keep
-    rh = [c["address"] for c in cands.values() if c["chain"] == "robinhood"]
-    sol = [c["address"] for c in cands.values() if c["chain"] == "solana"]
+    byc = {ch: [c["address"] for c in cands.values() if c["chain"] == ch] for ch in CHAINS}
+    sol = byc["solana"]
     pre = {k[1]: v for k, v in GT_PREFETCH.items() if k in cands} if top else {}
-    log("GeckoTerminal multi-pool..."); gt = {**pre, **gt_multi("robinhood", [a for a in rh if a not in pre]), **gt_multi("solana", [a for a in sol if a not in pre])}
+    log("GeckoTerminal multi-pool..."); gt = dict(pre)
+    for ch in CHAINS: gt.update(gt_multi(ch, [a for a in byc[ch] if a not in pre]))
+    for k, v in pre.items(): learn_evm_stock(next((c["chain"] for c in cands.values() if c["address"] == k), None), v.get("_base")); learn_evm_stock(next((c["chain"] for c in cands.values() if c["address"] == k), None), v.get("_quote"))
+    meta = json.load(open(ALLOW)).get("allowlist_meta") or {}
+    for p in allow:   # allowlist 'tokenized-stock' pools on Base/Ethereum: the non-stable, non-major leg is a stock token
+        m = meta.get(p["address"]) or {}
+        if p["chain"] in ("base", "eth") and m.get("category") == "tokenized-stock":
+            g_ = gt.get(p["address"]) or {}
+            for tk in (g_.get("_base") or {}, g_.get("_quote") or {}):
+                if (tk.get("symbol") or "").upper() not in STABLES | MAJOR_SYMS: learn_evm_stock(p["chain"], tk, issuer="allowlist tokenized-stock leg")
     sources["geckoterminal_pools"] = f"{len(gt)}/{len(cands)}"
     sources["dexscreener_pairs"] = f"{len(ds)}/{len(cands)}"
     sol_ray = [a for a in sol if a not in RAY_PREFETCH]
@@ -994,17 +1094,17 @@ def main(argv=None):
     fut_state = {id(row): pool.submit(fetch_state, row, v4cache) for row in rows}
     if top:
         def sec_prefetch():
-            ev, sm = set(), set()
+            ev, sm = {ch: set() for ch in EVM}, set()
             for row in rows:
                 g, r = row["_g"], row["_r"] or {}
-                if row["chain"] == "robinhood":
+                if row["chain"] in EVM:
                     for t in ((g.get("_base") or {}).get("address"), (g.get("_quote") or {}).get("address")):
-                        if t and t.lower() not in REG["rh"]: ev.add(t.lower())
+                        if t and t.lower() not in REG["rh"]: ev[row["chain"]].add(t.lower())
                 else:
                     for t in ((g.get("_base") or {}).get("address"), (g.get("_quote") or {}).get("address"),
                               (r.get("mintA") or {}).get("address"), (r.get("mintB") or {}).get("address")):
                         if t and t not in SEC_SKIP: sm.add(t)
-            t1 = threading.Thread(target=goplus, args=(ev,)); t1.start(); rugcheck(sm, {}); t1.join()
+            t1 = threading.Thread(target=lambda: [goplus(ev[ch], ch) for ch in EVM]); t1.start(); rugcheck(sm, {}); t1.join()
         sec_thread = threading.Thread(target=sec_prefetch, daemon=True); sec_thread.start()
     # OHLCV (GeckoTerminal, serial, paced) runs while on-chain/Raydium/Orca/Meteora fetches proceed in threads
     log(f"GeckoTerminal OHLCV for {sum(1 for r_ in rows if r_['_g'])} pools (~{2.2 * sum(1 for r_ in rows if r_['_g']) / 60:.0f}+ min)")
@@ -1013,7 +1113,7 @@ def main(argv=None):
         if not g: continue
         if not row["_eligible"]:
             row["notes"].append(f"below rank threshold (stock < ${args.rank_min_stock:,.0f} / major < $1M): vol/IL n/a, unranked"); continue
-        net = "robinhood" if row["chain"] == "robinhood" else "solana"
+        net = row["chain"]   # GeckoTerminal network slug: robinhood / base / eth / solana
         row["_oh"] = gt_ohlcv(net, row["address"], "token")
         quote_sym = ((g.get("_quote") or {}).get("symbol") or "").upper()
         need_usd = row["protocol"] not in ("raydium-clmm", "raydium-cpmm", "raydium-amm", "raydium-other", "orca-whirlpool") and quote_sym not in STABLES
@@ -1033,7 +1133,7 @@ def finish(args, rows, states, sources, sub_floor, now, started_utc, london, dat
     from concurrent.futures import ThreadPoolExecutor
     if pool is None: pool = ThreadPoolExecutor(max_workers=args.workers)
 
-    evm_tokens, sol_mints = set(), set()
+    evm_tokens, sol_mints = {ch: set() for ch in EVM}, set()
     for i, row in enumerate(rows):
         try:
             compute_row(row, states[i], now)
@@ -1043,24 +1143,24 @@ def finish(args, rows, states, sources, sub_floor, now, started_utc, london, dat
         row["rank_eligible"] = elig
         for x in ("_g", "_d", "_r", "_oh", "_ohu", "_cts"): row.pop(x, None)
         if not elig: continue
-        if row["chain"] == "robinhood":
+        if row["chain"] in EVM:
             for t in (row.get("token0"), row.get("token1"), (row["base"].get("address") or "").lower(), (row["quote"].get("address") or "").lower()):
-                if t and t not in REG["rh"]: evm_tokens.add(t)    # canonical stock tokens: issuer-known, skip GoPlus
+                if t and t not in REG["rh"]: evm_tokens[row["chain"]].add(t)    # canonical stock tokens: issuer-known, skip GoPlus
         else:
             for t in (row.get("mintA_addr"), row.get("mintB_addr")):
                 if t: sol_mints.add(t)
-    log(f"GoPlus ({len(evm_tokens)} tokens) + RugCheck ({len(sol_mints)} mints) in parallel...")
+    log(f"GoPlus ({sum(len(v) for v in evm_tokens.values())} tokens) + RugCheck ({len(sol_mints)} mints) in parallel...")
     skip = SEC_SKIP
-    f_gp = pool.submit(goplus, evm_tokens)
+    f_gp = {ch: pool.submit(goplus, evm_tokens[ch], ch) for ch in EVM}
     f_rc = pool.submit(rugcheck, [m for m in sol_mints if m not in skip], {})
-    gp, rc = f_gp.result(), f_rc.result()
+    gpc = {ch: f_.result() for ch, f_ in f_gp.items()}; rc = f_rc.result()
     pool.shutdown()
-    sources["goplus_4663"] = f"{len(gp)}/{len(evm_tokens)} non-registry tokens"
+    sources["goplus_4663"] = ", ".join(f"{CHAIN_CFG[ch]['short']} {len(gpc[ch])}/{len(evm_tokens[ch])}" for ch in EVM) + " non-registry tokens"
     sources["rugcheck"] = f"{len(rc)}/{len([m for m in sol_mints if m not in skip])} mints"
     sources["rugcheck_missing"] = sorted(m for m in sol_mints if m not in skip and m not in rc)
-    sources["goplus_missing"] = sorted(t for t in evm_tokens if t not in gp)
+    sources["goplus_missing"] = sorted(f"{ch}:{t}" for ch in EVM for t in evm_tokens[ch] if t not in gpc[ch])
     for row in rows:
-        add_security_flags(row, gp, rc)
+        add_security_flags(row, gpc.get(row["chain"], {}), rc)
         if wide and row.get("tvl_usd") is not None and row["tvl_usd"] < args.floor and not row["in_allowlist"]:
             row["flags"].append("below_floor")
         score_row(row)
@@ -1193,7 +1293,7 @@ def compute_row(row, st, now):
         if decs.get(t0) is not None and decs.get(t1) is not None and p0 and p1:
             lo_e, hi_e = cl["window"]
             depth = depth_metrics(s0, float(cl["liquidity"]), cl["tick"], cl["ticks"], decs[t0], decs[t1], p0, p1, lo_e, hi_e)
-            depth["method"] = f"on-chain tick walk via Robinhood RPC, {cl['words_scanned']} bitmap words, window 1/100x-100x spot"
+            depth["method"] = f"on-chain tick walk via {CHAIN_CFG[chain]['label']} RPC, {cl['words_scanned']} bitmap words, window 1/100x-100x spot"
             row["onchain_price_token1_per_token0"] = s0 * s0 * 10 ** (decs[t0] - decs[t1])
             if tvl:
                 lfull = tvl / p1 * 10 ** decs[t1] / (2 * s0); ce = cl["liquidity"] / lfull if lfull > 0 else None
@@ -1309,7 +1409,7 @@ def compute_row(row, st, now):
                 stocks.append(r[mk]["symbol"]); row["flags"].append(f"tokenized_stock:{r[mk]['symbol']}")
     row["is_tokenized_stock_pool"] = bool(stocks)
     if stocks:
-        majors = STABLES | {"SOL", "WSOL", "WETH", "ETH", "WBTC", "CBBTC", "JITOSOL", "MSOL", "BNSOL"}
+        majors = STABLES | MAJOR_SYMS
         for tk in (row["base"], row["quote"]):
             sym = (tk.get("symbol") or "").upper()
             if not stock_symbol(chain, tk.get("address")) and sym not in majors:
@@ -1320,6 +1420,8 @@ def compute_row(row, st, now):
         for lvl, lab in ((5e6, "tvl_5m"), (2e6, "tvl_2m"), (1e6, "tvl_1m")):
             if tvl >= lvl: row["tier"] = lab; break
     add_basic_flags(row, now)
+
+MAJOR_SYMS = {"SOL", "WSOL", "WETH", "ETH", "WBTC", "CBBTC", "JITOSOL", "MSOL", "BNSOL", "WSTETH", "CBETH", "STETH", "RETH", "WEETH", "TBTC", "LBTC"}
 
 def price_map(row, t0, t1):
     pm = {}
@@ -1416,7 +1518,7 @@ def datetime_is_weekend():
 def add_security_flags(row, gp, rc):
     fl = row["flags"]; stockish = any(x.startswith("tokenized_stock") for x in fl)
     row["security"] = {}
-    if row["chain"] == "robinhood":
+    if row["chain"] in EVM:
         toks = {row.get("token0"), row.get("token1")} - {None} or {(row["base"].get("address") or "").lower(), (row["quote"].get("address") or "").lower()} - {""}
         for t in toks:
             g = gp.get(t)
@@ -1434,7 +1536,12 @@ def add_security_flags(row, gp, rc):
             if g.get("is_mintable") == "1": fl.append(f"mintable:{sym}")
             if g.get("hidden_owner") == "1": fl.append(f"hidden_owner:{sym}")
             if g.get("is_proxy") == "1" and not stockish and sym not in STABLES: fl.append(f"proxy:{sym}")
-            if top_eoa > 0.3: fl.append(f"top_holder>{int(top_eoa * 100)}%:{sym}")
+            if top_eoa > 0.3:
+                if stock_symbol(row["chain"], t):   # registry/issuer stock token: custody concentration is structural (as for xStocks on Solana)
+                    if f"holder_conc:{sym}" not in fl: fl.append(f"holder_conc:{sym}")
+                    row["notes"].append(f"GoPlus top holder {int(top_eoa * 100)}% on issuer stock token {sym}: downgraded to holder_conc")
+                else:
+                    fl.append(f"top_holder>{int(top_eoa * 100)}%:{sym}")
     else:
         syms = {row["base"].get("address"): row["base"].get("symbol"), row["quote"].get("address"): row["quote"].get("symbol")}
         for k in ("mintA_addr", "mintB_addr"):
@@ -1702,7 +1809,7 @@ def major_line(i, r):
 
 def universe_counts(snap):
     rows = snap["pools"]; c = {}
-    for ch in ("robinhood", "solana"):
+    for ch in CHAINS:
         rr = [r for r in rows if r["chain"] == ch]
         c[ch] = {"pools_scanned": len(rr), "tokenized_stock": sum(r["is_tokenized_stock_pool"] for r in rr),
                  "major_tagged": sum("major" in r["categories"] for r in rr),
@@ -1754,18 +1861,28 @@ def render_wide(snap, prev):
     L.append(""); L.append("**What changed:** " + what_changed(snap, prev))
     return "\n".join(L)
 
-# ---------------------------------------------------------------- daily "top" report (4 tables + short allowlist section)
-TOP_HDR = table_hdr()
+# ---------------------------------------------------------------- daily "top" report (8 tables: RH, Base, Ethereum, Solana + short allowlist section)
+TOP_COLS = ["Pool", "APR", "Fee", "TVL", "Fees 7d", "IL 7d", "Net 7d", "Cover", "Break-even vs realized", "Vol 24h", "$1M slip / max fill", "Allowlist"]
+TOP_HDR = ["| " + " | ".join(TOP_COLS) + " |", "|" + "---|" * len(TOP_COLS)]
 LP7_NOTE = ("APR = Fee APR 7d (fees only, annualised; LP share). Fees 7d = Fee APR 7d / 52 (LP share); Net 7d = Fees 7d − Est IL 7d; Fee cover = Fees 7d / Est IL 7d; "
             "Break-even move = 1-sigma 7d move at which Est IL 7d = Fees 7d (σw* = √(8·Fees7d/C), cap-aware), shown vs realized 7d move σd·√7 "
             "(cushion = break-even / realized). Nothing is annualised except Fee APR 7d.")
 
 def top_line(i, r):
-    return table_line(i, r)
+    """Fixed daily column order (TOP_COLS); flags are listed under each table."""
+    m = lp7(r)
+    cells = [f"{i}. {short_name(r)} ({chain_dex(r)}) `{r['address']}`", fmt_pct(r.get("fee_apr_7d")), fmt_pct(r.get("fee_tier_pct"), 2), fmt_usd(r.get("tvl_usd")),
+             fmt_pct(m["fees_7d"], 2), fmt_pct(m["il_7d"], 2), fmt_pct(m["net_7d"], 2), fmt_cover(r), fmt_move(r), fmt_usd(r.get("vol24_usd")),
+             slip_str(r), "Y" if r.get("in_allowlist", True) else "N"]
+    return "| " + " | ".join(cells) + " |"
+
+def flags_block(rows):
+    bits = [f"{i + 1}. {short_name(r)} {fmt_pct(r.get('fee_tier_pct'), 2)}: {key_flags(r, 6)}" for i, r in enumerate(rows) if key_flags(r, 6) != "–"]
+    return "Risk flags: " + ("; ".join(bits) if bits else "none beyond structural ones") + "."
 
 def top_tables(snap, n=10):
     rows = snap["pools"]; out = {}
-    for ch in ("robinhood", "solana"):
+    for ch in CHAINS:
         rr = [r for r in rows if r["chain"] == ch and scope_ok(r, snap)]
         vol_all = [r for r in rr if (r.get("tvl_usd") or 0) >= MAJOR_MIN_TVL]
         vol = sorted([r for r in vol_all if not exclusion(r, "major")], key=lambda r: -(r.get("vol24_usd") or 0))
@@ -1782,17 +1899,19 @@ def render_top(snap, prev, n=10):
     L = [f"# Daily top-pool LP scan {snap['date']}", "",
          f"Data fetched {lon[0][:16].replace('T', ' ')} – {lon[1][11:16]} Europe/London (runtime {round((snap.get('runtime_s') or 0) / 60, 1)} min)", ""]
     core = (snap.get("dex_scope") or "all") == "core"
-    labels = {"robinhood": "Robinhood Chain" + (" Uniswap" if core else ""), "solana": "Solana" + (" Raydium" if core else "")}
+    labels = {"robinhood": "Robinhood Chain" + (" Uniswap" if core else ""), "base": "Base" + (" Uniswap v3/v4" if core else ""),
+              "eth": "Ethereum" + (" Uniswap v3/v4" if core else ""), "solana": "Solana" + (" Raydium" if core else "")}
     k = 0
-    for ch in ("robinhood", "solana"):
+    for ch in CHAINS:
         k += 1; x = t[ch]
         L.append(f"## ({k}) {labels[ch]}: top {n} pools by 24h volume (TVL >= $1M, real pools only)"); L += TOP_HDR
         L += [top_line(i + 1, r) for i, r in enumerate(x["volume"])]
-        L += ["", f"{x['volume_eligible']} of {x['volume_all']} deep-scanned pools with TVL >= $1M pass the filters.", ""]
+        L += ["", flags_block(x["volume"]), f"{x['volume_eligible']} of {x['volume_all']} deep-scanned pools with TVL >= $1M pass the filters.", ""]
         k += 1
         L.append(f"## ({k}) {labels[ch]}: top {n} tokenized-stock pools by fee cover (Fees 7d / Est IL 7d; TVL >= {fmt_usd(STOCK_MIN_TVL)})"); L += TOP_HDR
         L += [top_line(i + 1, r) for i, r in enumerate(x["stock"])]
-        L += ["", f"{x['stock_eligible']} of {x['stock_all']} deep-scanned stock pools with TVL >= {fmt_usd(STOCK_MIN_TVL)} pass the filters with measurable IL."]
+        if not x["stock_eligible"]: L.append(f"| No tokenized-stock pool on {CHAIN_CFG[ch]['label']} passes (TVL >= {fmt_usd(STOCK_MIN_TVL)}, filters, IL measurable) this run |" + " |" * (len(TOP_COLS) - 1))
+        L += ["", flags_block(x["stock"]), f"{x['stock_eligible']} of {x['stock_all']} deep-scanned stock pools with TVL >= {fmt_usd(STOCK_MIN_TVL)} pass the filters with measurable IL."]
         if x["review"]:
             L.append("Needs review (v4 hook / dynamic fee, IL n/a, not ranked): " + ", ".join(
                 f"{short_name(r)} `{r['address']}` (TVL {fmt_usd(r.get('tvl_usd'))}, fee APR 7d {fmt_pct(r.get('fee_apr_7d'))})" for r in x["review"]))
@@ -1822,7 +1941,7 @@ def render_top(snap, prev, n=10):
     src = snap.get("sources") or {}
     sel = src.get("top_selection") or {}
     if core:
-        L.append(f"DEX scope: Robinhood = Uniswap v2/v3/v4, Solana = Raydium AMM/CPMM/CLMM; {(src.get('discovery') or {}).get('dropped_out_of_scope_at_discovery', 'n/a')} "
+        L.append(f"DEX scope: Robinhood = Uniswap v2/v3/v4, Base and Ethereum = Uniswap v3/v4, Solana = Raydium AMM/CPMM/CLMM; {(src.get('discovery') or {}).get('dropped_out_of_scope_at_discovery', 'n/a')} "
                  "out-of-scope pool listings dropped at discovery (allowlist/pinned pools outside scope appear only in the allowlist section). Override: --dex-scope all.")
     L.append(f"Coverage: {sel.get('candidates_discovered')} pools discovered, {sel.get('deep_scanned')} deep-scanned (OHLCV, on-chain depth, security), "
              f"{sel.get('not_deep_scanned_tvl_ge_100k')} other pools with TVL >= $100k not deep-scanned. Selection: {sel.get('rule')}. "
@@ -1846,13 +1965,14 @@ def excl_reasons(rows, kind):
 def top_changes(snap, prev, n=10):
     if not prev: return "first daily top snapshot – no previous run to compare."
     a, b = top_tables(snap, n), top_tables(prev, n); bits = []
-    for ch in ("robinhood", "solana"):
+    for ch in CHAINS:
+        if not any(r["chain"] == ch for r in prev["pools"]): bits.append(f"{ch}: first run on this chain"); continue
         for tb in ("volume", "stock"):
             cur = {r["address"]: short_name(r) for r in a[ch][tb]}; old = {r["address"]: short_name(r) for r in b[ch][tb]}
             new = [v for k_, v in cur.items() if k_ not in old]; out = [v for k_, v in old.items() if k_ not in cur]
             if new or out:
                 bits.append(f"{ch} {tb}: " + ("new " + ", ".join(new) if new else "") + ("; " if new and out else "") + ("out " + ", ".join(out) if out else ""))
-    return f"vs {prev['date']}: " + ("; ".join(bits) if bits else "same pools in all four tables")
+    return f"vs {prev['date']}: " + ("; ".join(bits) if bits else "same pools in all tables")
 
 def cli(argv=None):
     try:
