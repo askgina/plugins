@@ -47,16 +47,16 @@ Authoring rules and page templates are in [`docs/authoring.md`](docs/authoring.m
 
 ## Chatbot mirrors
 
-Two scheduled workflows in `t-y-b-b/nextjs-ai-chatbot` copy from this repository. Both open a pull request with the repository `GITHUB_TOKEN`, so the full test workflow does not run on those pull requests. Run the tests by hand before you merge them.
+Two scheduled workflows in the private Ask Gina app repository copy from this repository. Both open a pull request with the repository `GITHUB_TOKEN`, so the full test workflow does not run on those pull requests. Run the tests by hand before you merge them.
 
-- **Docs.** `mintlify-docs-sync.yml` runs daily at 05:17 UTC and on demand. It mirrors `docs/product-guide/` and `docs/connect/` into `plugins/ask-gina/docs/` and regenerates `lib/mcp/gina-connect-clients.generated.ts`. A new product-guide page reaches the Docs Agent only after it has corpus frontmatter, a reciprocal `relatedSlugs` entry and an entry in the chatbot `lib/docs/corpus.ts`. The assembled corpus stays under 24,000 characters.
-- **Skills.** `plugin-skills-sync.yml` runs daily at 05:37 UTC and on demand. It copies `SKILL.md` files from this repository and fails when upstream has a skill the chatbot does not list.
+- **Docs.** `mintlify-docs-sync.yml` runs daily at 05:17 UTC and on demand. It mirrors `docs/product-guide/` and `docs/connect/` into `plugins/ask-gina/docs/` and regenerates `lib/mcp/gina-connect-clients.generated.ts`. A new product-guide page reaches the Docs Agent only after it has corpus frontmatter, a reciprocal `relatedSlugs` entry and an entry in the chatbot `lib/docs/corpus.ts`. The assembled corpus stays under 28,000 characters.
+- **Skills.** `plugin-skills-sync.yml` runs daily at 05:37 UTC and on demand. It copies the skills that `skills/index.json` lists. It fails when the index is missing or malformed, names a skill file that does not exist, leaves out an upstream skill, or names an MCP endpoint the app does not serve.
 
 After you merge here, trigger the matching workflow from the chatbot repository instead of waiting for the schedule when the release depends on the mirror.
 
 ## Machine-readable surfaces in the chatbot
 
-These live in `t-y-b-b/nextjs-ai-chatbot`, so the release pull request there is the proof.
+These live in the app repository, so the release pull request there is the proof.
 
 - Tool descriptions, input and output schemas, and annotations for read-only and destructive tools are accurate.
 - Guidance sits on the right surface: skills, guide and policy resources, refusal hints and typed next-step prompts.
@@ -75,7 +75,7 @@ These live in `t-y-b-b/nextjs-ai-chatbot`, so the release pull request there is 
 - `docs/robots.txt` keeps `Content-Signal: ai-train=no, search=yes, ai-input=yes`, the training crawler blocks and the sitemap line. `node tools/docs/check.mjs` fails if they disappear.
 - Page titles use the words a user would search. Headings that answer a question use the question as the heading. Names for the same thing match across docs, tool descriptions and listings.
 - After the docs deploy, fetch `https://docs.askgina.ai/llms.txt`, the sitemap and the new page, and confirm the page shows up with its description.
-- `https://askgina.ai/llms.txt` should redirect to the docs `llms.txt`. That work is tracked in the chatbot as [#2521](https://github.com/t-y-b-b/nextjs-ai-chatbot/issues/2521).
+- `https://askgina.ai/llms.txt` and `https://askgina.ai/llms-full.txt` redirect permanently to the docs copies. Check that both still redirect after the release.
 - `docs/mint.json` has no `seo` or `metadata` keys today. Changes to site metadata, social images and listings in MCP registries are tracked on the map, not in this checklist.
 
 ## Proof
