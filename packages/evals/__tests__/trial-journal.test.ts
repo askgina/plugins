@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { catalogSha, PRODUCTION_MCP_URL, publicEvalAttemptIdentityInput } from "@askgina/contracts";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
@@ -19,6 +18,7 @@ import {
   Scope,
 } from "effect";
 
+import { sha256Hex } from "../src/canonical-json";
 import type { PluginEvalObservation } from "../src/contracts";
 import aggregateFixture from "../src/fixtures/sanitized-aggregate.json";
 
@@ -218,12 +218,9 @@ describe("live eval trial journal", () => {
           });
           assert.strictEqual(
             dispatchId,
-            `dispatch-${createHash("sha256")
-              .update(
-                publicEvalAttemptIdentityInput("am-spot-routing-20260910", "simple-spot-price", 1),
-                "utf8",
-              )
-              .digest("hex")}`,
+            `dispatch-${sha256Hex(
+              publicEvalAttemptIdentityInput("am-spot-routing-20260910", "simple-spot-price", 1),
+            )}`,
           );
           const afterStart = parseRecords(yield* fs.readFileString(outputPath));
           assert.strictEqual(afterStart[1]?.kind, "started");
@@ -279,7 +276,7 @@ describe("live eval trial journal", () => {
           assert.deepStrictEqual(records[3], { kind: "finished", dispatchId, status: "completed" });
           assert.deepStrictEqual(records.at(-1), {
             kind: "report-bound",
-            sourceReportSha256: createHash("sha256").update(reportContent, "utf8").digest("hex"),
+            sourceReportSha256: sha256Hex(reportContent),
           });
           assert.notInclude(encodeUnknownJson(records), directory);
         }),
@@ -892,10 +889,7 @@ describe("live eval trial journal", () => {
         yield* journal.bindReport(reportContent, selectedCaseIds);
         const bound = parseRecords(yield* fs.readFileString(outputPath)).at(-1);
         assert.strictEqual(bound?.kind, "report-bound");
-        assert.strictEqual(
-          bound?.sourceReportSha256,
-          createHash("sha256").update(reportContent, "utf8").digest("hex"),
-        );
+        assert.strictEqual(bound?.sourceReportSha256, sha256Hex(reportContent));
       }),
     );
 
@@ -1100,7 +1094,7 @@ describe("OMP transcript writer", () => {
         }
         assert.deepStrictEqual(records.at(-1), {
           kind: "report-bound",
-          sourceReportSha256: createHash("sha256").update(reportContent, "utf8").digest("hex"),
+          sourceReportSha256: sha256Hex(reportContent),
         });
       }),
     );

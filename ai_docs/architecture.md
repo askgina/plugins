@@ -90,6 +90,10 @@ repository YAML inputs.
 
 The patched Effect TSGo compiler and official Vite+ Oxlint preset fail on every
 enabled compiler and Effect diagnostic; there is no baseline or count ratchet.
+The two synchronous SHA-256 helpers (`packages/contracts/src/sha256.ts`,
+`packages/evals/src/canonical-json.ts`) are the only files under the root
+`tsconfig.json` that import `node:crypto`, with `nodeBuiltinImport` suppressed
+there, because Effect `Crypto` is asynchronous.
 
 ## Artifacts
 

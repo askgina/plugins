@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 import {
@@ -22,6 +21,7 @@ import {
   listCatalogToolNames,
   listConnectedToolNames,
 } from "@askgina/contracts";
+import { sha256Hex } from "../src/sha256";
 
 const EXPECTED_TOOL_NAMES = [
   "gina.getCrosschainPortfolio",
@@ -208,9 +208,9 @@ describe("@askgina/contracts", () => {
       assert.strictEqual(READ_SCOPE, "tools:read");
       assert.strictEqual(EXECUTE_SCOPE, "tools:execute");
 
-      const computedCatalogSha = createHash("sha256")
-        .update(yield* Schema.encodeEffect(GinaReadToolCatalogJsonSchema)(GINA_READ_TOOL_CATALOG))
-        .digest("hex");
+      const computedCatalogSha = sha256Hex(
+        yield* Schema.encodeEffect(GinaReadToolCatalogJsonSchema)(GINA_READ_TOOL_CATALOG),
+      );
       assert.match(catalogSha, /^[a-f0-9]{64}$/);
       assert.strictEqual(catalogSha, computedCatalogSha);
     }),

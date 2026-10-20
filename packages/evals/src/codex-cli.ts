@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import {
   Clock,
   Data,
@@ -24,6 +23,7 @@ import type {
   PluginEvalToolCall,
 } from "./contracts";
 import { collectBoundedUtf8Output } from "./bounded-output";
+import { createSha256Stream } from "./canonical-json";
 
 const DEFAULT_TIMEOUT_MS = 120_000;
 const DEFAULT_MODEL = "codex-cli";
@@ -164,7 +164,7 @@ const inspectOpenExecutable = (
       .pipe(
         Effect.mapError(() => new PluginEvalCodexCliExecutableError({ reason: "invalid-file" })),
       );
-    const hash = createHash("sha256");
+    const hash = createSha256Stream();
     const header: number[] = [];
     while (true) {
       const maybeChunk = yield* handle
@@ -201,7 +201,7 @@ const inspectOpenExecutable = (
     const afterIno = Option.getOrUndefined(after.ino);
     const beforeMtime = Option.getOrUndefined(before.mtime)?.getTime();
     const afterMtime = Option.getOrUndefined(after.mtime)?.getTime();
-    const sha256 = hash.digest("hex");
+    const sha256 = hash.digestHex();
     if (
       !isNativeExecutableHeader(header) ||
       sha256 !== expectedSha256 ||

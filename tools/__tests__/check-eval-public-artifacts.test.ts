@@ -1,6 +1,5 @@
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { createHash } from "node:crypto";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, FileSystem, Function, Layer, Path, Schema } from "effect";
 import { build } from "vite-plus";
@@ -11,6 +10,7 @@ import {
   EvalPublicArtifactError,
   validateClaudePublicArtifact,
 } from "../check-eval-public-artifacts";
+import { sha256Hex } from "../../packages/evals/src/canonical-json";
 
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 const WITHHELD = "withheld: privacy_review";
@@ -457,7 +457,7 @@ describe("Claude static public artifact boundary", () => {
           yield* checkEvalPublicArtifacts({
             appRoot: root,
             approvedExecutionArtifacts: {
-              [executionFile]: createHash("sha256").update(bytes).digest("hex"),
+              [executionFile]: sha256Hex(bytes),
             },
           });
           const unapproved = yield* Effect.flip(checkEvalPublicArtifacts({ appRoot: root }));
@@ -484,7 +484,7 @@ describe("Claude static public artifact boundary", () => {
               checkEvalPublicArtifacts({
                 appRoot: root,
                 approvedExecutionArtifacts: {
-                  [executionFile]: createHash("sha256").update(bytes).digest("hex"),
+                  [executionFile]: sha256Hex(bytes),
                 },
               }),
             );

@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import type {
   PublicEvalAttemptSummary,
   PublicEvalDataOrigin,
@@ -18,8 +17,7 @@ import {
   publicEvalPublicationSubjectSha256,
   readPublicEvalIndex,
 } from "../src/publication";
-
-const sha256Hex = (text: string): string => createHash("sha256").update(text, "utf8").digest("hex");
+import { sha256Hex } from "../src/canonical-json";
 
 const RUN_ID = "run-synthetic-routing-001";
 const canonicalAttemptId = (caseId: string, repetition: number): string =>
