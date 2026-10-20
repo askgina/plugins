@@ -52,6 +52,35 @@
         "plugins/ask-gina/skills/review-gina-account/SKILL.md",
         "plugins/ask-gina/skills/review-gina-account/agents/openai.yaml"
       ]
+    },
+    {
+      "id": "lp-pool-scan",
+      "package": "ask-gina-spot",
+      "path": "plugins/ask-gina-spot/skills/lp-pool-scan",
+      "description": "Use when asked to scan, rank or monitor liquidity pools (Uniswap v2/v3/v4 on Robinhood Chain, Raydium on Solana, plus Orca and Meteora with --dex-scope all) for fee APR, impermanent loss, depth/slippage and risk flags, from public data only.",
+      "mcpEndpoint": "spot",
+      "mcpUrl": "https://askgina.ai/ai/spot/mcp",
+      "mcpServed": false,
+      "files": [
+        "plugins/ask-gina-spot/skills/lp-pool-scan/README.md",
+        "plugins/ask-gina-spot/skills/lp-pool-scan/SKILL.md",
+        "plugins/ask-gina-spot/skills/lp-pool-scan/agents/openai.yaml",
+        "plugins/ask-gina-spot/skills/lp-pool-scan/scripts/example_allowlist.json",
+        "plugins/ask-gina-spot/skills/lp-pool-scan/scripts/lp_pool_scan.py"
+      ]
+    },
+    {
+      "id": "lp-rebalancing-playbook",
+      "package": "ask-gina-spot",
+      "path": "plugins/ask-gina-spot/skills/lp-rebalancing-playbook",
+      "description": "Use this when reviewing concentrated or full-range DEX LP positions (Uniswap v3/v4, Raydium CLMM/CPMM, similar) to decide re-range, harvest, compound, trim, exit or size limits with explicit numeric rules, and to log every proposal and decision. Proposals only; never executes.",
+      "mcpEndpoint": "spot",
+      "mcpUrl": "https://askgina.ai/ai/spot/mcp",
+      "mcpServed": true,
+      "files": [
+        "plugins/ask-gina-spot/skills/lp-rebalancing-playbook/SKILL.md",
+        "plugins/ask-gina-spot/skills/lp-rebalancing-playbook/agents/openai.yaml"
+      ]
     }
   ]
 }

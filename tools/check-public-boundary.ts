@@ -14,9 +14,9 @@ import {
   isAttestedPublicSourceAsset,
   type PublicSourceAsset,
 } from "./public-source-assets";
-import { OPENAI_ASSETS } from "./verify-artifacts";
+import { loadArtifactPackages, type ArtifactPackage } from "./pack-artifacts";
+import { HOST_TARGETS } from "./plugin-manifests";
 
-const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini", "devin"];
 const PACKAGES = [
   { slug: "contracts", name: "@askgina/contracts", directory: "packages/contracts" },
   { slug: "sdk", name: "@askgina/sdk", directory: "packages/sdk" },
@@ -24,6 +24,19 @@ const PACKAGES = [
   { slug: "plugin-core", name: "@askgina/plugin-core", directory: "plugins/ask-gina" },
   { slug: "evals", name: "@askgina/evals", directory: "packages/evals" },
 ];
+/**
+ * Reviewed PNG screenshots per plugin package. A package without an entry admits no PNG, so a
+ * new screenshot needs a deliberate entry here.
+ */
+const PLUGIN_PNG_ASSETS: Readonly<Record<string, readonly string[]>> = {
+  "ask-gina": [
+    "gold-up-or-down-daily.png",
+    "hyperliquid-chart.png",
+    "nba-champion-podium.png",
+    "perpetual-positions.png",
+    "premier-league-prediction-markets.png",
+  ],
+};
 const MAX_FINDINGS = 100;
 // Bound full-file scanning while matching the supported archive-member size.
 const MAX_TEXT_BYTES = 16 * 1024 * 1024;
@@ -81,7 +94,7 @@ const RAW_EVAL_FIELDS = new RegExp(
   "iu",
 );
 
-type Finding = Readonly<{ readonly rule: string; readonly path: string }>;
+export type Finding = Readonly<{ readonly rule: string; readonly path: string }>;
 type PackageDefinition = (typeof PACKAGES)[number];
 
 export class PublicBoundaryError extends Data.TaggedError("PublicBoundaryError")<{
@@ -129,10 +142,21 @@ export const isDeclaredPngAsset = ({
   readonly bytes: Uint8Array;
 }): boolean => {
   const filename = label.slice(label.lastIndexOf("/") + 1);
-  const isDeclaredPath =
-    DOCUMENTATION_PNG_ASSETS[label] === true ||
-    (OPENAI_ASSETS.includes(filename as (typeof OPENAI_ASSETS)[number]) &&
-      (label.startsWith("plugins/ask-gina/assets/") || label.includes(":assets/")));
+  // A reviewed screenshot is admitted at its package's source path or inside that package's own
+  // host archives (`dist/targets/<package>-<host>-<version>.tgz:assets/<file>`).
+  const isReviewedPluginPng = Object.entries(PLUGIN_PNG_ASSETS).some(([name, assets]) => {
+    if (!assets.includes(filename)) return false;
+    if (label === `plugins/${name}/assets/${filename}`) return true;
+    const archivePrefix = `dist/targets/${name}-`;
+    const host = label.startsWith(archivePrefix)
+      ? label.slice(archivePrefix.length).split("-")[0]
+      : undefined;
+    return (
+      HOST_TARGETS.some((candidate) => candidate === host) &&
+      label.endsWith(`.tgz:assets/${filename}`)
+    );
+  });
+  const isDeclaredPath = DOCUMENTATION_PNG_ASSETS[label] === true || isReviewedPluginPng;
   return (
     isDeclaredPath &&
     bytes.length >= 8 &&
@@ -324,16 +348,38 @@ const readJson = (file: string) =>
     ),
   );
 
-const expectedArtifacts = (version: string): string[] =>
+/**
+ * Artifacts `bun run artifacts` emits: the npm package archives, every plugin package's host and
+ * skills archives, and the four receipts.
+ */
+export const expectedArtifactPaths = (options: {
+  readonly version: string;
+  readonly packages: ReadonlyArray<Pick<ArtifactPackage, "name" | "hosts">>;
+}): string[] =>
   [
-    ...PACKAGES.map((item) => `packages/askgina-${item.slug}-${version}.tgz`),
-    ...HOSTS.map((host) => `targets/ask-gina-${host}-${version}.tgz`),
-    `skills/ask-gina-skills-${version}.tgz`,
+    ...PACKAGES.map((item) => `packages/askgina-${item.slug}-${options.version}.tgz`),
+    ...options.packages.flatMap((plugin) => [
+      ...plugin.hosts.map((host) => `targets/${plugin.name}-${host}-${options.version}.tgz`),
+      `skills/${plugin.name}-skills-${options.version}.tgz`,
+    ]),
     "receipts/contract.json",
     "receipts/packages.json",
     "receipts/targets.json",
     "receipts/evals.json",
   ].sort();
+
+/** Findings for artifacts missing from, or not expected in, the emitted `dist/` tree. */
+export const findArtifactInventoryViolations = (options: {
+  readonly expected: readonly string[];
+  readonly actual: readonly string[];
+}): readonly Finding[] => [
+  ...options.expected
+    .filter((file) => !options.actual.includes(file))
+    .map((file) => ({ rule: "missing-artifact", path: `dist/${file}` })),
+  ...options.actual
+    .filter((file) => !options.expected.includes(file))
+    .map((file) => ({ rule: "extra-artifact", path: `dist/${file}` })),
+];
 
 const filesBelow = (directory: string, excluded: ReadonlySet<string> = new Set()) =>
   Effect.gen(function* () {
@@ -393,6 +439,9 @@ const program = Effect.scoped(
       return yield* fail("root package version is invalid");
     }
     const version = rootJson.version;
+    const packages = yield* loadArtifactPackages({ root }).pipe(
+      Effect.mapError((cause) => fail("cannot load plugin packages", cause)),
+    );
     const findings: Finding[] = [];
     let findingCount = 0;
     let scannedFiles = 0;
@@ -447,7 +496,7 @@ const program = Effect.scoped(
       addFinding("symbolic-link-or-unsupported-file", unsupported);
     yield* Effect.forEach(sourceTree.files, (file) => scanFile(path.join(root, file), file, false));
 
-    const expected = expectedArtifacts(version);
+    const expected = expectedArtifactPaths({ version, packages });
     const artifactTree = yield* filesBelow(dist).pipe(
       Effect.catchIf(
         () => true,
@@ -457,10 +506,9 @@ const program = Effect.scoped(
     const actual = artifactTree.files.sort();
     for (const unsupported of artifactTree.unsupported)
       addFinding("unsupported-file", `dist/${unsupported}`);
-    for (const file of expected)
-      if (!actual.includes(file)) addFinding("missing-artifact", `dist/${file}`);
-    for (const file of actual)
-      if (!expected.includes(file)) addFinding("extra-artifact", `dist/${file}`);
+    for (const finding of findArtifactInventoryViolations({ expected, actual })) {
+      addFinding(finding.rule, finding.path);
+    }
 
     yield* Effect.forEach(
       ["contract.json", "packages.json", "targets.json", "evals.json"],

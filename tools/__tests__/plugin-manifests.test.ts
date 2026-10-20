@@ -46,7 +46,12 @@ describe("plugin manifests", () => {
         const path = yield* Path.Path;
         const files = yield* generateAllManifests(repositoryRoot);
 
-        assert.strictEqual(Object.keys(files).length, 13);
+        assert.strictEqual(Object.keys(files).length, 22);
+        assert.include(Object.keys(files), "plugins/ask-gina-spot/.codex-plugin/plugin.json");
+        assert.notInclude(
+          Object.keys(files),
+          "plugins/ask-gina-spot/targets/gemini/gemini-extension.json",
+        );
         for (const [relative, content] of Object.entries(files)) {
           assert.strictEqual(
             yield* fs.readFileString(path.join(repositoryRoot, relative)),

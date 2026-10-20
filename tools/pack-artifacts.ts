@@ -19,16 +19,15 @@ import {
 import { runHermeticEvalReplay, sanitizeEvalReplay } from "../packages/evals/src/index";
 import { copyCheckedRegularFile } from "./archive-security";
 import { checkGeneratedTargetConformance } from "./check-target-conformance";
-import { loadPluginSource } from "./plugin-manifests";
+import {
+  hostsOf,
+  loadPluginSources,
+  skillIdsOf,
+  type HostTarget,
+  type PluginSource,
+} from "./plugin-manifests";
+import { SKILL_INDEX_PATH } from "./skill-index";
 
-export const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini", "devin"] as const;
-export type Host = (typeof HOSTS)[number];
-const SKILLS = [
-  "research-hyperliquid",
-  "research-prediction-markets",
-  "research-spot-tokens",
-  "review-gina-account",
-];
 const PACKAGES = [
   {
     slug: "contracts",
@@ -121,7 +120,7 @@ const PACKAGES = [
     ],
   },
 ];
-const TARGET_MANIFESTS: Readonly<Record<Host, string>> = {
+export const TARGET_MANIFESTS: Readonly<Record<HostTarget, string>> = {
   openai: ".codex-plugin/plugin.json",
   cursor: ".cursor-plugin/plugin.json",
   claude: ".claude-plugin/plugin.json",
@@ -777,12 +776,149 @@ const assertLiveSourceBoundary = (root: string, snapshot: string) =>
       ),
     );
   });
+const SkillIndexFile = Schema.Struct({
+  version: Schema.Literal(1),
+  skills: Schema.Array(
+    Schema.Struct({
+      id: Schema.String,
+      package: Schema.String,
+      path: Schema.String,
+      files: Schema.Array(Schema.String),
+    }),
+  ),
+});
+
+/** The OpenAI-only metadata file inside a skill directory. */
+export const OPENAI_OVERLAY = "agents/openai.yaml";
+
+export interface ArtifactSkill {
+  readonly id: string;
+  /** Files of the skill directory, relative to it, exactly as skills/index.json lists them. */
+  readonly files: readonly string[];
+}
+
+/** One plugin package under plugins/ and everything the packer and verifier derive from it. */
+export interface ArtifactPackage {
+  readonly name: string;
+  /** Repository-relative package directory, `plugins/<name>`. */
+  readonly directory: string;
+  readonly source: PluginSource;
+  readonly hosts: readonly HostTarget[];
+  readonly skills: readonly ArtifactSkill[];
+  /** Files the OpenAI archive carries under assets/: the listing icon and Codex screenshots. */
+  readonly openAiAssets: readonly string[];
+}
+
+/**
+ * Version a host manifest carries. The Codex and Cursor listings version independently from the
+ * release; every other host follows the release version in plugin.yaml.
+ */
+export const targetManifestVersion = (options: {
+  readonly source: PluginSource;
+  readonly host: HostTarget;
+}): string =>
+  options.host === "cursor" || options.host === "openai"
+    ? options.source.listing.version
+    : options.source.version;
+
+/**
+ * Files a host archive carries for one skill. The OpenAI metadata overlay ships in the OpenAI
+ * archive only; every other archive and the skills candidate omit `agents/`.
+ */
+export const skillArchiveFiles = (options: {
+  readonly skill: ArtifactSkill;
+  readonly overlay: boolean;
+}): readonly string[] =>
+  options.skill.files.filter((file) => options.overlay || !file.startsWith("agents/")).sort();
+
+const assetFile = (reference: string, label: string) => {
+  const [directory, file, ...rest] = (
+    reference.startsWith("./") ? reference.slice(2) : reference
+  ).split("/");
+  return directory === "assets" &&
+    file !== undefined &&
+    file.length > 0 &&
+    file !== "." &&
+    file !== ".." &&
+    rest.length === 0
+    ? Effect.succeed(file)
+    : Effect.fail(fail(`${label} must name a file directly under assets/`));
+};
+
+/**
+ * Loads every plugin package under plugins/ with its hosts, skills and OpenAI assets. Skill files
+ * come from skills/index.json so non-SKILL files (scripts, READMEs) ship with the skill that owns
+ * them.
+ */
+export const loadArtifactPackages = (options: { readonly root: string }) =>
+  Effect.gen(function* () {
+    const path = yield* Path.Path;
+    const plugins = yield* loadPluginSources(options.root).pipe(
+      Effect.mapError((cause) => fail("plugin sources are unreadable", cause)),
+    );
+    if (plugins.length === 0) return yield* fail("no plugin packages found under plugins/");
+    const index = yield* readText(path.join(options.root, SKILL_INDEX_PATH)).pipe(
+      Effect.flatMap((text) =>
+        Schema.decodeEffect(Schema.fromJsonString(SkillIndexFile))(text).pipe(
+          Effect.mapError((cause) => fail(`cannot parse ${SKILL_INDEX_PATH}`, cause)),
+        ),
+      ),
+    );
+    return yield* Effect.forEach(plugins, ({ source }) =>
+      Effect.gen(function* () {
+        const directory = `plugins/${source.name}`;
+        const declared = skillIdsOf(source);
+        const entries = index.skills.filter((entry) => entry.package === source.name);
+        if (
+          entries
+            .map(({ id }) => id)
+            .sort()
+            .join("\n") !== declared.join("\n")
+        ) {
+          return yield* fail(
+            `${SKILL_INDEX_PATH} does not list exactly the skills declared by ${directory}/plugin.yaml`,
+          );
+        }
+        const skills = yield* Effect.forEach(declared, (id) =>
+          Effect.gen(function* () {
+            const skillDirectory = `${directory}/skills/${id}`;
+            const entry = entries.find((candidate) => candidate.id === id);
+            if (entry === undefined || entry.path !== skillDirectory) {
+              return yield* fail(`${SKILL_INDEX_PATH} has a wrong path for ${source.name}:${id}`);
+            }
+            const files = entry.files.map((file) =>
+              file.startsWith(`${skillDirectory}/`) ? file.slice(skillDirectory.length + 1) : "",
+            );
+            if (files.some((file) => file.length === 0) || !files.includes("SKILL.md")) {
+              return yield* fail(
+                `${SKILL_INDEX_PATH} lists unusable files for ${source.name}:${id}`,
+              );
+            }
+            return { id, files: files.sort() } satisfies ArtifactSkill;
+          }),
+        );
+        const assets = yield* Effect.forEach(
+          [source.listing.icon, ...(source.listing.codex.screenshots ?? [])],
+          (reference) => assetFile(reference, `${directory}/plugin.yaml asset ${reference}`),
+        );
+        return {
+          name: source.name,
+          directory,
+          source,
+          hosts: hostsOf(source),
+          skills,
+          openAiAssets: [...new Set(assets)].sort(),
+        } satisfies ArtifactPackage;
+      }),
+    );
+  });
+
 type PluginTargetEffect = Effect.Effect<void, ArtifactPackError, FileSystem.FileSystem | Path.Path>;
 
 export const validateTargetVersion: {
-  (host: Host, version: string): (pluginRoot: string) => PluginTargetEffect;
-  (pluginRoot: string, host: Host, version: string): PluginTargetEffect;
-} = Function.dual(3, (pluginRoot: string, host: Host, version: string): PluginTargetEffect =>
+  (host: HostTarget, version: string): (pluginRoot: string) => PluginTargetEffect;
+  (pluginRoot: string, host: HostTarget, version: string): PluginTargetEffect;
+} = Function.dual(3, (pluginRoot: string, host: HostTarget, version: string): PluginTargetEffect =>
   Effect.gen(function* () {
     const path = yield* Path.Path;
     const manifestRoot =
@@ -795,7 +931,7 @@ export const validateTargetVersion: {
     }
   }),
 );
-const validateVersions = (root: string) =>
+const validateVersions = (root: string, plugins: readonly ArtifactPackage[]) =>
   Effect.gen(function* () {
     const path = yield* Path.Path;
     const rootJson = yield* readJson(path.join(root, "package.json"));
@@ -813,21 +949,19 @@ const validateVersions = (root: string) =>
         yield* normalizedPackageFiles(metadata.files, `${definition.name} files`);
       }),
     );
-    const pluginManifest = yield* readText(path.join(root, "plugins/ask-gina/plugin.yaml"));
-    if (pluginManifest.match(/^version:\s*([^\s]+)$/mu)?.[1] !== version) {
-      return yield* fail("plugin.yaml version is inconsistent");
-    }
-    const pluginRoot = path.join(root, "plugins/ask-gina");
-    const listingVersion = yield* loadPluginSource(pluginRoot).pipe(
-      Effect.map((source) => source.listing.version),
-      Effect.mapError((cause) => fail("plugin.yaml listing is unreadable", cause)),
-    );
-    yield* Effect.forEach(HOSTS, (host) =>
-      validateTargetVersion(
-        pluginRoot,
-        host,
-        host === "cursor" || host === "openai" ? listingVersion : version,
-      ),
+    yield* Effect.forEach(plugins, (plugin) =>
+      Effect.gen(function* () {
+        if (plugin.source.version !== version) {
+          return yield* fail(`${plugin.directory}/plugin.yaml version is inconsistent`);
+        }
+        yield* Effect.forEach(plugin.hosts, (host) =>
+          validateTargetVersion(
+            path.join(root, plugin.directory),
+            host,
+            targetManifestVersion({ source: plugin.source, host }),
+          ),
+        );
+      }),
     );
     return version;
   });
@@ -851,98 +985,269 @@ const buildEvalReceipt = (root: string, version: string, sourceCommit: string) =
     return { releaseVersion: version, sourceCommit, aggregate };
   });
 
+/**
+ * Stages one host archive of a plugin package. `skills` names the skill directories to copy from
+ * `<plugin>/skills`; the caller proves the staged tree against skills/index.json.
+ */
 export const stagePluginTarget: {
-  (plugin: string, stage: string): (host: Host) => PluginTargetEffect;
-  (host: Host, plugin: string, stage: string): PluginTargetEffect;
-} = Function.dual(3, (host: Host, plugin: string, stage: string): PluginTargetEffect =>
+  (
+    plugin: string,
+    stage: string,
+    skills: readonly string[],
+  ): (host: HostTarget) => PluginTargetEffect;
+  (host: HostTarget, plugin: string, stage: string, skills: readonly string[]): PluginTargetEffect;
+} = Function.dual(
+  4,
+  (
+    host: HostTarget,
+    plugin: string,
+    stage: string,
+    skills: readonly string[],
+  ): PluginTargetEffect =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+      const fs = yield* FileSystem.FileSystem;
+
+      if (host === "openai") {
+        yield* fs
+          .makeDirectory(stage, { recursive: true })
+          .pipe(Effect.mapError((cause) => fail("cannot create openai target stage", cause)));
+        yield* Effect.forEach([".codex-plugin", "assets"] as const, (entry) =>
+          Effect.gen(function* () {
+            const source = path.join(plugin, entry);
+            yield* filesBelow(source);
+            yield* fs
+              .copy(source, path.join(stage, entry), { overwrite: true })
+              .pipe(Effect.mapError((cause) => fail(`cannot stage openai ${entry}`, cause)));
+          }),
+        );
+        yield* copyCheckedRegularFile(
+          path.join(plugin, ".mcp.json"),
+          path.join(stage, ".mcp.json"),
+        ).pipe(Effect.mapError((cause) => fail("cannot stage openai .mcp.json", cause)));
+      } else if (host === "cursor") {
+        yield* fs
+          .makeDirectory(stage, { recursive: true })
+          .pipe(Effect.mapError((cause) => fail("cannot create cursor target stage", cause)));
+        // rules/ and commands/ are optional Cursor extras: staged when the package ships them.
+        yield* Effect.forEach([".cursor-plugin", "assets", "rules", "commands"] as const, (entry) =>
+          Effect.gen(function* () {
+            const source = path.join(plugin, entry);
+            const optional = entry === "rules" || entry === "commands";
+            if (
+              optional &&
+              !(yield* fs
+                .exists(source)
+                .pipe(Effect.mapError((cause) => fail(`cannot inspect cursor ${entry}`, cause))))
+            ) {
+              return;
+            }
+            yield* filesBelow(source);
+            yield* fs
+              .copy(source, path.join(stage, entry), { overwrite: true })
+              .pipe(Effect.mapError((cause) => fail(`cannot stage cursor ${entry}`, cause)));
+          }),
+        );
+        yield* copyCheckedRegularFile(
+          path.join(plugin, "mcp.json"),
+          path.join(stage, "mcp.json"),
+        ).pipe(Effect.mapError((cause) => fail("cannot stage cursor mcp.json", cause)));
+        yield* copyCheckedRegularFile(
+          path.join(plugin, "README.md"),
+          path.join(stage, "README.md"),
+        ).pipe(Effect.mapError((cause) => fail("cannot stage cursor README.md", cause)));
+      } else if (host === "devin") {
+        yield* fs
+          .makeDirectory(stage, { recursive: true })
+          .pipe(Effect.mapError((cause) => fail("cannot create devin target stage", cause)));
+        const source = path.join(plugin, ".devin-plugin");
+        yield* filesBelow(source);
+        yield* fs
+          .copy(source, path.join(stage, ".devin-plugin"), { overwrite: true })
+          .pipe(Effect.mapError((cause) => fail("cannot stage devin manifest", cause)));
+        yield* copyCheckedRegularFile(
+          path.join(plugin, ".mcp.json"),
+          path.join(stage, ".mcp.json"),
+        ).pipe(Effect.mapError((cause) => fail("cannot stage devin .mcp.json", cause)));
+        yield* fs
+          .makeDirectory(path.join(stage, "assets"), { recursive: true })
+          .pipe(Effect.mapError((cause) => fail("cannot create devin assets", cause)));
+        yield* copyCheckedRegularFile(
+          path.join(plugin, "assets", "icon.svg"),
+          path.join(stage, "assets", "icon.svg"),
+        ).pipe(Effect.mapError((cause) => fail("cannot stage devin icon", cause)));
+      } else {
+        const sourceOverlay = path.join(plugin, "targets", host);
+        yield* filesBelow(sourceOverlay);
+        yield* fs
+          .copy(sourceOverlay, stage, { overwrite: true })
+          .pipe(Effect.mapError((cause) => fail(`cannot stage ${host} target`, cause)));
+      }
+
+      yield* fs
+        .makeDirectory(path.join(stage, "skills"), { recursive: true })
+        .pipe(Effect.mapError((cause) => fail(`cannot create ${host} skills`, cause)));
+      yield* Effect.forEach(skills, (skill) =>
+        Effect.gen(function* () {
+          const destination = path.join(stage, "skills", skill);
+          yield* fs
+            .copy(path.join(plugin, "skills", skill), destination, { overwrite: true })
+            .pipe(Effect.mapError((cause) => fail(`cannot stage ${host}:${skill}`, cause)));
+          if (host !== "openai") {
+            yield* fs
+              .remove(path.join(destination, "agents"), { recursive: true, force: true })
+              .pipe(Effect.mapError((cause) => fail(`cannot remove ${host} overlay`, cause)));
+          }
+        }),
+      );
+    }),
+);
+const assertSkillFiles = (options: {
+  readonly skillsRoot: string;
+  readonly skills: readonly ArtifactSkill[];
+  readonly overlay: boolean;
+  readonly label: string;
+}) =>
+  Effect.forEach(options.skills, (skill) =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+      const actual = [...(yield* filesBelow(path.join(options.skillsRoot, skill.id)))].sort();
+      if (
+        stableJson(actual) !== stableJson(skillArchiveFiles({ skill, overlay: options.overlay }))
+      ) {
+        return yield* fail(`${options.label} skill ${skill.id} does not match ${SKILL_INDEX_PATH}`);
+      }
+    }),
+  );
+
+/**
+ * Builds the host archives and the skills candidate of one plugin package into `dist`. Archives
+ * are named `<package>-<host>-<version>.tgz` and `<package>-skills-<version>.tgz`; every receipt
+ * entry names its package.
+ */
+export const packPluginPackage = (options: {
+  readonly root: string;
+  readonly source: string;
+  readonly dist: string;
+  readonly temporary: string;
+  readonly plugin: ArtifactPackage;
+  readonly version: string;
+}) =>
   Effect.gen(function* () {
+    const { root, dist, temporary, plugin, version } = options;
     const path = yield* Path.Path;
     const fs = yield* FileSystem.FileSystem;
-
-    if (host === "openai") {
-      yield* fs
-        .makeDirectory(stage, { recursive: true })
-        .pipe(Effect.mapError((cause) => fail("cannot create openai target stage", cause)));
-      yield* Effect.forEach([".codex-plugin", "assets"] as const, (entry) =>
-        Effect.gen(function* () {
-          const source = path.join(plugin, entry);
-          yield* filesBelow(source);
-          yield* fs
-            .copy(source, path.join(stage, entry), { overwrite: true })
-            .pipe(Effect.mapError((cause) => fail(`cannot stage openai ${entry}`, cause)));
-        }),
-      );
-      yield* copyCheckedRegularFile(
-        path.join(plugin, ".mcp.json"),
-        path.join(stage, ".mcp.json"),
-      ).pipe(Effect.mapError((cause) => fail("cannot stage openai .mcp.json", cause)));
-    } else if (host === "cursor") {
-      yield* fs
-        .makeDirectory(stage, { recursive: true })
-        .pipe(Effect.mapError((cause) => fail("cannot create cursor target stage", cause)));
-      yield* Effect.forEach([".cursor-plugin", "assets", "rules", "commands"] as const, (entry) =>
-        Effect.gen(function* () {
-          const source = path.join(plugin, entry);
-          yield* filesBelow(source);
-          yield* fs
-            .copy(source, path.join(stage, entry), { overwrite: true })
-            .pipe(Effect.mapError((cause) => fail(`cannot stage cursor ${entry}`, cause)));
-        }),
-      );
-      yield* copyCheckedRegularFile(
-        path.join(plugin, "mcp.json"),
-        path.join(stage, "mcp.json"),
-      ).pipe(Effect.mapError((cause) => fail("cannot stage cursor mcp.json", cause)));
-      yield* copyCheckedRegularFile(
-        path.join(plugin, "README.md"),
-        path.join(stage, "README.md"),
-      ).pipe(Effect.mapError((cause) => fail("cannot stage cursor README.md", cause)));
-    } else if (host === "devin") {
-      yield* fs
-        .makeDirectory(stage, { recursive: true })
-        .pipe(Effect.mapError((cause) => fail("cannot create devin target stage", cause)));
-      const source = path.join(plugin, ".devin-plugin");
-      yield* filesBelow(source);
-      yield* fs
-        .copy(source, path.join(stage, ".devin-plugin"), { overwrite: true })
-        .pipe(Effect.mapError((cause) => fail("cannot stage devin manifest", cause)));
-      yield* copyCheckedRegularFile(
-        path.join(plugin, ".mcp.json"),
-        path.join(stage, ".mcp.json"),
-      ).pipe(Effect.mapError((cause) => fail("cannot stage devin .mcp.json", cause)));
-      yield* fs
-        .makeDirectory(path.join(stage, "assets"), { recursive: true })
-        .pipe(Effect.mapError((cause) => fail("cannot create devin assets", cause)));
-      yield* copyCheckedRegularFile(
-        path.join(plugin, "assets", "icon.svg"),
-        path.join(stage, "assets", "icon.svg"),
-      ).pipe(Effect.mapError((cause) => fail("cannot stage devin icon", cause)));
-    } else {
-      const sourceOverlay = path.join(plugin, "targets", host);
-      yield* filesBelow(sourceOverlay);
-      yield* fs
-        .copy(sourceOverlay, stage, { overwrite: true })
-        .pipe(Effect.mapError((cause) => fail(`cannot stage ${host} target`, cause)));
-    }
-
-    yield* fs
-      .makeDirectory(path.join(stage, "skills"), { recursive: true })
-      .pipe(Effect.mapError((cause) => fail(`cannot create ${host} skills`, cause)));
-    yield* Effect.forEach(SKILLS, (skill) =>
+    const packageRoot = path.join(options.source, plugin.directory);
+    const skillIds = plugin.skills.map(({ id }) => id);
+    const overlaySkills = plugin.skills.filter((skill) => skill.files.includes(OPENAI_OVERLAY));
+    const sourceSkills = (yield* Effect.forEach(skillIds, (skill) =>
+      fileProofs(path.join(packageRoot, "skills", skill), skill),
+    ))
+      .flat()
+      .sort((left, right) => left.path.localeCompare(right.path));
+    const skillSourceSha = yield* hash(stableJson(sourceSkills));
+    const targets = yield* Effect.forEach(plugin.hosts, (host) =>
       Effect.gen(function* () {
-        const destination = path.join(stage, "skills", skill);
-        yield* fs
-          .copy(path.join(plugin, "skills", skill), destination, { overwrite: true })
-          .pipe(Effect.mapError((cause) => fail(`cannot stage ${host}:${skill}`, cause)));
-        if (host !== "openai") {
-          yield* fs
-            .remove(path.join(destination, "agents"), { recursive: true, force: true })
-            .pipe(Effect.mapError((cause) => fail(`cannot remove ${host} overlay`, cause)));
+        const label = `${plugin.name} ${host}`;
+        const stage = path.join(temporary, `target-${plugin.name}-${host}`);
+        yield* stagePluginTarget(host, packageRoot, stage, skillIds);
+        const staged = (yield* fs
+          .readDirectory(path.join(stage, "skills"))
+          .pipe(Effect.mapError((cause) => fail(`cannot list ${label} skills`, cause)))).sort();
+        if (staged.join("\n") !== skillIds.join("\n")) {
+          return yield* fail(`${label} target has the wrong skills`);
         }
+        yield* assertSkillFiles({
+          skillsRoot: path.join(stage, "skills"),
+          skills: plugin.skills,
+          overlay: host === "openai",
+          label,
+        });
+        const files = yield* filesBelow(stage);
+        const overlays = files.filter((file) => file.endsWith(`/${OPENAI_OVERLAY}`));
+        if (host === "openai" ? overlays.length !== overlaySkills.length : overlays.length !== 0) {
+          return yield* fail(`${label} target violates the OpenAI overlay rule`);
+        }
+        const conformance = yield* checkGeneratedTargetConformance(host, stage, {
+          packageRoot,
+        }).pipe(
+          Effect.mapError((cause) => fail(`${label} staged target conformance failed`, cause)),
+        );
+        if (!conformance.passed) {
+          return yield* fail(`${label} staged target is not conformant`);
+        }
+        const conformanceReceipt = {
+          passed: conformance.passed,
+          skillCount: conformance.checks.filter((check) => check.id.includes(".skill.")).length,
+          openAiOverlayOnly: conformance.checks
+            .filter(
+              (check) =>
+                check.id.endsWith(".openai_metadata") || check.id.endsWith(".no_openai_metadata"),
+            )
+            .every((check) => check.passed),
+        };
+        const filename = `${plugin.name}-${host}-${version}.tgz`;
+        const output = path.join(dist, "targets", filename);
+        yield* archive(root, stage, output, ["."]);
+        return {
+          package: plugin.name,
+          host,
+          version,
+          archive: `targets/${filename}`,
+          sha256: yield* hashFile(output),
+          skillSourceSha,
+          skills: skillIds,
+          files: yield* fileProofs(stage),
+          conformance: conformanceReceipt,
+        };
       }),
     );
-  }),
-);
+
+    const skillsStage = path.join(temporary, `skills-${plugin.name}`);
+    yield* fs
+      .makeDirectory(skillsStage, { recursive: true })
+      .pipe(
+        Effect.mapError((cause) => fail(`cannot create ${plugin.name} skills candidate`, cause)),
+      );
+    yield* Effect.forEach(["README.md", "LICENSE"], (file) =>
+      copyCheckedRegularFile(path.join(packageRoot, file), path.join(skillsStage, file)).pipe(
+        Effect.mapError((cause) => fail(`cannot stage ${plugin.name} skills ${file}`, cause)),
+      ),
+    );
+    yield* Effect.forEach(skillIds, (skill) =>
+      Effect.gen(function* () {
+        const destination = path.join(skillsStage, skill);
+        yield* fs
+          .copy(path.join(packageRoot, "skills", skill), destination, { overwrite: true })
+          .pipe(Effect.mapError((cause) => fail(`cannot stage candidate ${skill}`, cause)));
+        yield* fs
+          .remove(path.join(destination, "agents"), { recursive: true, force: true })
+          .pipe(
+            Effect.mapError((cause) => fail(`cannot remove candidate overlay ${skill}`, cause)),
+          );
+      }),
+    );
+    yield* assertSkillFiles({
+      skillsRoot: skillsStage,
+      skills: plugin.skills,
+      overlay: false,
+      label: `${plugin.name} skills candidate`,
+    });
+    const skillsFilename = `${plugin.name}-skills-${version}.tgz`;
+    const skillsOutput = path.join(dist, "skills", skillsFilename);
+    yield* archive(root, skillsStage, skillsOutput, ["."]);
+    const candidate = {
+      package: plugin.name,
+      skillSourceSha,
+      version,
+      archive: `skills/${skillsFilename}`,
+      sha256: yield* hashFile(skillsOutput),
+      skills: skillIds,
+      files: yield* fileProofs(skillsStage),
+    };
+    return { targets, candidate };
+  });
+
 export interface BuildArtifactsOptions {
   readonly root: string;
   readonly dist: string;
@@ -961,8 +1266,8 @@ export const buildArtifacts = ({ root, dist }: BuildArtifactsOptions) =>
       if (!GIT_COMMIT.test(sourceCommit)) return yield* fail("source commit is invalid");
       const source = yield* snapshotAtCommit(root, sourceCommit);
       yield* assertLiveSourceBoundary(root, source);
-      const plugin = path.join(source, "plugins/ask-gina");
-      const version = yield* validateVersions(source);
+      const plugins = yield* loadArtifactPackages({ root: source });
+      const version = yield* validateVersions(source, plugins);
       const sourceDirty: boolean = yield* commandHasBoundedOutput(
         "git",
         ["status", "--porcelain=v1", "--untracked-files=all"],
@@ -1014,86 +1319,11 @@ export const buildArtifacts = ({ root, dist }: BuildArtifactsOptions) =>
         "packages/contracts/dist",
       );
 
-      const sourceSkills = (yield* Effect.forEach(SKILLS, (skill) =>
-        fileProofs(path.join(plugin, "skills", skill), skill),
-      ))
-        .flat()
-        .sort((left, right) => left.path.localeCompare(right.path));
-      const skillSourceSha = yield* hash(stableJson(sourceSkills));
-      const targetReceipts = yield* Effect.forEach(HOSTS, (host) =>
-        Effect.gen(function* () {
-          const stage = path.join(temporary, `target-${host}`);
-          yield* stagePluginTarget(host, plugin, stage);
-          const skills = (yield* fs
-            .readDirectory(path.join(stage, "skills"))
-            .pipe(Effect.mapError((cause) => fail(`cannot list ${host} skills`, cause)))).sort();
-          if (skills.join("\n") !== [...SKILLS].sort().join("\n")) {
-            return yield* fail(`${host} target has the wrong skills`);
-          }
-          const files = yield* filesBelow(stage);
-          const overlays = files.filter((file) => file.endsWith("/agents/openai.yaml"));
-          if (host === "openai" ? overlays.length !== SKILLS.length : overlays.length !== 0) {
-            return yield* fail(`${host} target violates the OpenAI overlay rule`);
-          }
-          const conformance = yield* checkGeneratedTargetConformance(host, stage, {
-            packageRoot: plugin,
-          }).pipe(
-            Effect.mapError((cause) => fail(`${host} staged target conformance failed`, cause)),
-          );
-          if (!conformance.passed) {
-            return yield* fail(`${host} staged target is not conformant`);
-          }
-          const conformanceReceipt = {
-            passed: conformance.passed,
-            skillCount: conformance.checks.filter((check) => check.id.includes(".skill.")).length,
-            openAiOverlayOnly: conformance.checks
-              .filter(
-                (check) =>
-                  check.id.endsWith(".openai_metadata") || check.id.endsWith(".no_openai_metadata"),
-              )
-              .every((check) => check.passed),
-          };
-          const filename = `ask-gina-${host}-${version}.tgz`;
-          const output = path.join(dist, "targets", filename);
-          yield* archive(root, stage, output, ["."]);
-          return {
-            host,
-            version,
-            archive: `targets/${filename}`,
-            sha256: yield* hashFile(output),
-            skillSourceSha,
-            skills: [...SKILLS].sort(),
-            files: yield* fileProofs(stage),
-            conformance: conformanceReceipt,
-          };
-        }),
+      const pluginReceipts = yield* Effect.forEach(plugins, (plugin) =>
+        packPluginPackage({ root, source, dist, temporary, plugin, version }),
       );
-
-      const skillsStage = path.join(temporary, "skills");
-      yield* fs
-        .makeDirectory(skillsStage, { recursive: true })
-        .pipe(Effect.mapError((cause) => fail("cannot create skills candidate", cause)));
-      yield* Effect.forEach(["README.md", "LICENSE"], (file) =>
-        copyCheckedRegularFile(path.join(plugin, file), path.join(skillsStage, file)).pipe(
-          Effect.mapError((cause) => fail(`cannot stage skills ${file}`, cause)),
-        ),
-      );
-      yield* Effect.forEach(SKILLS, (skill) =>
-        Effect.gen(function* () {
-          const destination = path.join(skillsStage, skill);
-          yield* fs
-            .copy(path.join(plugin, "skills", skill), destination, { overwrite: true })
-            .pipe(Effect.mapError((cause) => fail(`cannot stage candidate ${skill}`, cause)));
-          yield* fs
-            .remove(path.join(destination, "agents"), { recursive: true, force: true })
-            .pipe(
-              Effect.mapError((cause) => fail(`cannot remove candidate overlay ${skill}`, cause)),
-            );
-        }),
-      );
-      const skillsFilename = `ask-gina-skills-${version}.tgz`;
-      const skillsOutput = path.join(dist, "skills", skillsFilename);
-      yield* archive(root, skillsStage, skillsOutput, ["."]);
+      const targetReceipts = pluginReceipts.flatMap(({ targets }) => targets);
+      const skillsCandidates = pluginReceipts.map(({ candidate }) => candidate);
 
       const receipts: readonly [string, unknown][] = [
         [
@@ -1120,19 +1350,12 @@ export const buildArtifacts = ({ root, dist }: BuildArtifactsOptions) =>
         [
           "targets.json",
           {
-            schemaVersion: "v1",
+            schemaVersion: "v2",
             releaseVersion: version,
             sourceCommit,
             sourceDirty,
-            skillSourceSha,
             targets: targetReceipts,
-            skillsCandidate: {
-              version,
-              archive: `skills/${skillsFilename}`,
-              sha256: yield* hashFile(skillsOutput),
-              skills: [...SKILLS].sort(),
-              files: yield* fileProofs(skillsStage),
-            },
+            skillsCandidates,
           },
         ],
         [

@@ -23,24 +23,26 @@ import {
 } from "../packages/evals/src/index";
 import { copyCheckedRegularFile, extractCheckedTarGz } from "./archive-security";
 import { checkGeneratedTargetConformance } from "./check-target-conformance";
-import { buildArtifacts } from "./pack-artifacts";
-import { loadPluginSource } from "./plugin-manifests";
+import {
+  OPENAI_OVERLAY,
+  TARGET_MANIFESTS,
+  buildArtifacts,
+  loadArtifactPackages,
+  skillArchiveFiles,
+  targetManifestVersion,
+  type ArtifactPackage,
+  type ArtifactSkill,
+} from "./pack-artifacts";
+import type { HostTarget } from "./plugin-manifests";
 
-const HOSTS = ["openai", "cursor", "claude", "copilot", "gemini", "devin"] as const;
-const SKILLS = [
-  "research-hyperliquid",
-  "research-prediction-markets",
-  "research-spot-tokens",
-  "review-gina-account",
-];
-export const OPENAI_ASSETS = [
-  "gold-up-or-down-daily.png",
-  "hyperliquid-chart.png",
-  "icon.svg",
-  "nba-champion-podium.png",
-  "perpetual-positions.png",
-  "premier-league-prediction-markets.png",
-] as const;
+/** MCP configuration file of each host archive. Gemini carries its servers inside the manifest. */
+const MCP_CONFIGS: Readonly<Partial<Record<HostTarget, string>>> = {
+  openai: ".mcp.json",
+  cursor: "mcp.json",
+  claude: ".mcp.json",
+  copilot: "mcp.json",
+  devin: ".mcp.json",
+};
 const PACKAGES = [
   { slug: "contracts", name: "@askgina/contracts", directory: "packages/contracts", internal: [] },
   {
@@ -63,14 +65,6 @@ const PACKAGES = [
     internal: ["@askgina/contracts", "@askgina/plugin-core", "@askgina/sdk"],
   },
 ];
-const TARGET_MANIFESTS: Readonly<Record<string, string>> = {
-  openai: ".codex-plugin/plugin.json",
-  cursor: ".cursor-plugin/plugin.json",
-  claude: ".claude-plugin/plugin.json",
-  copilot: "plugin.json",
-  gemini: "gemini-extension.json",
-  devin: ".devin-plugin/plugin.json",
-};
 const SHA_256 = /^[a-f0-9]{64}$/u;
 const GIT_COMMIT = /^[a-f0-9]{40}$/u;
 const NODE_24_VERSION = /^v24\.\d+\.\d+$/u;
@@ -467,48 +461,69 @@ const exactDirectory = (directory: string, expected: readonly string[], label: s
     }
   });
 
-export const verifyOpenAiArchivePayload = (directory: string) =>
+/**
+ * Requires `root` to hold exactly `files`: every directory on the way lists exactly the expected
+ * children, so empty or foreign directories fail as well as foreign files.
+ */
+const exactTree = (root: string, files: readonly string[], label: string) =>
   Effect.gen(function* () {
     const path = yield* Path.Path;
-    yield* exactDirectory(
-      directory,
-      [".codex-plugin", ".mcp.json", "assets", "skills"],
-      "OpenAI archive root",
-    );
-    yield* exactDirectory(
-      path.join(directory, ".codex-plugin"),
-      ["plugin.json"],
-      "OpenAI manifest directory",
-    );
-    yield* exactDirectory(path.join(directory, "assets"), OPENAI_ASSETS, "OpenAI assets directory");
-    yield* exactDirectory(path.join(directory, "skills"), SKILLS, "OpenAI skills directory");
-    yield* Effect.forEach(SKILLS, (skill) =>
-      Effect.all(
-        [
-          exactDirectory(
-            path.join(directory, "skills", skill),
-            ["SKILL.md", "agents"],
-            `OpenAI ${skill} skill directory`,
-          ),
-          exactDirectory(
-            path.join(directory, "skills", skill, "agents"),
-            ["openai.yaml"],
-            `OpenAI ${skill} agents directory`,
-          ),
-        ],
-        { concurrency: "unbounded" },
+    const children = new Map<string, Set<string>>();
+    for (const file of files) {
+      const segments = file.split("/");
+      for (const [depth, segment] of segments.entries()) {
+        const parent = segments.slice(0, depth).join("/");
+        const names = children.get(parent) ?? new Set<string>();
+        names.add(segment);
+        children.set(parent, names);
+      }
+    }
+    yield* Effect.forEach([...children], ([parent, names]) =>
+      exactDirectory(
+        path.join(root, parent),
+        [...names],
+        `${label} ${parent === "" ? "root" : parent}`,
       ),
     );
+  });
+
+const verifySkillTrees = (options: {
+  readonly skillsRoot: string;
+  readonly skills: readonly ArtifactSkill[];
+  readonly overlay: boolean;
+  readonly label: string;
+}) =>
+  Effect.forEach(options.skills, (skill) =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+      yield* exactTree(
+        path.join(options.skillsRoot, skill.id),
+        skillArchiveFiles({ skill, overlay: options.overlay }),
+        `${options.label} skill ${skill.id}`,
+      );
+    }),
+  );
+
+/**
+ * Requires the OpenAI archive of one package to be its exact lean payload: the Codex manifest, the
+ * MCP configuration, the package's listing assets and every skill file with its OpenAI overlay.
+ */
+export const verifyOpenAiArchivePayload = (options: {
+  readonly directory: string;
+  readonly assets: readonly string[];
+  readonly skills: readonly ArtifactSkill[];
+}) =>
+  Effect.gen(function* () {
     const expected = [
       ".codex-plugin/plugin.json",
       ".mcp.json",
-      ...OPENAI_ASSETS.map((asset) => `assets/${asset}`),
-      ...SKILLS.flatMap((skill) => [
-        `skills/${skill}/SKILL.md`,
-        `skills/${skill}/agents/openai.yaml`,
-      ]),
+      ...options.assets.map((asset) => `assets/${asset}`),
+      ...options.skills.flatMap((skill) =>
+        skillArchiveFiles({ skill, overlay: true }).map((file) => `skills/${skill.id}/${file}`),
+      ),
     ].sort();
-    const actual = [...(yield* filesBelow(directory))].sort();
+    yield* exactTree(options.directory, expected, "OpenAI archive");
+    const actual = [...(yield* filesBelow(options.directory))].sort();
     if (stableJson(actual) !== stableJson(expected)) {
       return yield* fail("OpenAI archive payload is not the exact lean host payload");
     }
@@ -966,61 +981,63 @@ const verifyPackages = (
     });
   });
 
-const verifyTargets = (
-  root: string,
-  dist: string,
-  version: string,
-  sourceDirty: boolean,
-  temporary: string,
-) =>
+const targetArchiveNames = (plugins: readonly ArtifactPackage[], version: string) =>
+  plugins.flatMap((plugin) => plugin.hosts.map((host) => `${plugin.name}-${host}-${version}.tgz`));
+const skillsArchiveNames = (plugins: readonly ArtifactPackage[], version: string) =>
+  plugins.map((plugin) => `${plugin.name}-skills-${version}.tgz`);
+
+/**
+ * Plugin packages that no npm archive backs. `ask-gina` is also the `@askgina/plugin-core` npm
+ * package and is covered by the package verification; the rest are only host archives.
+ */
+const hostOnlyPlugins = (plugins: readonly ArtifactPackage[]) =>
+  plugins.filter((plugin) => !PACKAGES.some((item) => item.directory === plugin.directory));
+
+const verifyPluginTargets = (options: {
+  readonly root: string;
+  readonly dist: string;
+  readonly version: string;
+  readonly temporary: string;
+  readonly plugin: ArtifactPackage;
+  readonly targets: readonly unknown[];
+  readonly candidates: readonly unknown[];
+}) =>
   Effect.gen(function* () {
+    const { root, dist, version, temporary, plugin } = options;
     const path = yield* Path.Path;
-    yield* exactDirectory(
-      path.join(dist, "targets"),
-      HOSTS.map((host) => `ask-gina-${host}-${version}.tgz`),
-      "target artifacts",
-    );
-    yield* exactDirectory(
-      path.join(dist, "skills"),
-      [`ask-gina-skills-${version}.tgz`],
-      "skills artifacts",
-    );
-    const receipt = yield* readJson(path.join(dist, "receipts/targets.json")).pipe(
-      Effect.flatMap((value) => requiredObject(value, "targets receipt")),
-    );
-    const listingVersion = yield* loadPluginSource(path.join(root, "plugins/ask-gina")).pipe(
-      Effect.map((source) => source.listing.version),
-      Effect.mapError((cause) => fail("plugin.yaml listing is unreadable", cause)),
+    const skillIds = plugin.skills.map(({ id }) => id);
+    const overlaySkills = plugin.skills.filter((skill) => skill.files.includes(OPENAI_OVERLAY));
+    const candidate = yield* requiredObject(
+      options.candidates.find((item) => isObject(item) && item.package === plugin.name),
+      `${plugin.name} skills candidate receipt`,
     );
     yield* exactKeys(
-      receipt,
-      [
-        "schemaVersion",
-        "releaseVersion",
-        "sourceCommit",
-        "sourceDirty",
-        "skillSourceSha",
-        "targets",
-        "skillsCandidate",
-      ],
-      "targets receipt",
+      candidate,
+      ["package", "skillSourceSha", "version", "archive", "sha256", "skills", "files"],
+      `${plugin.name} skills candidate receipt`,
     );
-    const targets = yield* requiredArray(receipt.targets, "targets receipt targets");
-    yield* verifySourceDirty(receipt.sourceDirty, sourceDirty, "targets receipt sourceDirty");
-    if (receipt.schemaVersion !== "v1" || receipt.releaseVersion !== version) {
-      return yield* fail("targets receipt release version is stale");
+    const skillsArchive = `skills/${plugin.name}-skills-${version}.tgz`;
+    if (
+      candidate.version !== version ||
+      candidate.archive !== skillsArchive ||
+      candidate.sha256 !== (yield* hashFile(path.join(dist, skillsArchive))) ||
+      stableJson(candidate.skills) !== stableJson(skillIds)
+    ) {
+      return yield* fail(`${plugin.name} skills candidate receipt is stale`);
     }
-    if (targets.length !== HOSTS.length)
-      return yield* fail("targets receipt has the wrong host count");
-    yield* Effect.forEach(HOSTS, (host) =>
+    yield* Effect.forEach(plugin.hosts, (host) =>
       Effect.gen(function* () {
+        const label = `${plugin.name} ${host}`;
         const entry = yield* requiredObject(
-          targets.find((item) => isObject(item) && item.host === host),
-          `${host} receipt`,
+          options.targets.find(
+            (item) => isObject(item) && item.package === plugin.name && item.host === host,
+          ),
+          `${label} receipt`,
         );
         yield* exactKeys(
           entry,
           [
+            "package",
             "host",
             "version",
             "archive",
@@ -1030,83 +1047,199 @@ const verifyTargets = (
             "files",
             "conformance",
           ],
-          `${host} receipt`,
+          `${label} receipt`,
         );
-        const relativeArchive = `targets/ask-gina-${host}-${version}.tgz`;
+        const relativeArchive = `targets/${plugin.name}-${host}-${version}.tgz`;
         const archive = path.join(dist, relativeArchive);
         if (
           entry.version !== version ||
           entry.archive !== relativeArchive ||
           entry.sha256 !== (yield* hashFile(archive)) ||
-          entry.skillSourceSha !== receipt.skillSourceSha
+          entry.skillSourceSha !== candidate.skillSourceSha ||
+          stableJson(entry.skills) !== stableJson(skillIds)
         ) {
-          return yield* fail(`${host} receipt is stale`);
+          return yield* fail(`${label} receipt is stale`);
         }
-        const stage = path.join(temporary, `target-${host}`);
+        const stage = path.join(temporary, `target-${plugin.name}-${host}`);
         yield* extract(archive, stage);
-        if (host === "openai") yield* verifyOpenAiArchivePayload(stage);
-        yield* verifyProofs(
-          yield* parseProofs(entry.files, `${host} receipt files`),
-          yield* fileProofs(stage),
-          host,
-        );
-        const manifestPath = TARGET_MANIFESTS[host];
-        if (manifestPath === undefined) return yield* fail(`unknown target ${host}`);
-        const manifest = yield* readJson(path.join(stage, manifestPath)).pipe(
-          Effect.flatMap((value) => requiredObject(value, `${host} manifest`)),
-        );
-        const manifestVersion = host === "cursor" || host === "openai" ? listingVersion : version;
-        if (manifest.version !== manifestVersion) {
-          return yield* fail(`${host} manifest version is wrong`);
+        if (host === "openai") {
+          yield* verifyOpenAiArchivePayload({
+            directory: stage,
+            assets: plugin.openAiAssets,
+            skills: plugin.skills,
+          });
         }
-        yield* exactDirectory(path.join(stage, "skills"), SKILLS, `${host} skills`);
-        const overlays = (yield* filesBelow(stage)).filter((file) =>
-          file.endsWith("/agents/openai.yaml"),
+        yield* verifyProofs(
+          yield* parseProofs(entry.files, `${label} receipt files`),
+          yield* fileProofs(stage),
+          label,
         );
-        if (host === "openai" ? overlays.length !== SKILLS.length : overlays.length !== 0) {
-          return yield* fail(`${host} violates the OpenAI overlay rule`);
+        const manifest = yield* readJson(path.join(stage, TARGET_MANIFESTS[host])).pipe(
+          Effect.flatMap((value) => requiredObject(value, `${label} manifest`)),
+        );
+        if (manifest.version !== targetManifestVersion({ source: plugin.source, host })) {
+          return yield* fail(`${label} manifest version is wrong`);
+        }
+        yield* exactDirectory(path.join(stage, "skills"), skillIds, `${label} skills`);
+        yield* verifySkillTrees({
+          skillsRoot: path.join(stage, "skills"),
+          skills: plugin.skills,
+          overlay: host === "openai",
+          label,
+        });
+        const overlays = (yield* filesBelow(stage)).filter((file) =>
+          file.endsWith(`/${OPENAI_OVERLAY}`),
+        );
+        if (host === "openai" ? overlays.length !== overlaySkills.length : overlays.length !== 0) {
+          return yield* fail(`${label} violates the OpenAI overlay rule`);
         }
         const report = yield* checkGeneratedTargetConformance(host, stage, {
-          packageRoot: path.join(root, "plugins/ask-gina"),
+          packageRoot: path.join(root, plugin.directory),
         }).pipe(
-          Effect.mapError((cause) => fail(`${host} archive conformance check failed`, cause)),
+          Effect.mapError((cause) => fail(`${label} archive conformance check failed`, cause)),
         );
-        if (!report.passed) return yield* fail(`${host} archive payload is not conformant`);
-        const conformance = yield* requiredObject(entry.conformance, `${host} conformance`);
-        if (conformance.passed !== true) return yield* fail(`${host} is not conformant`);
+        if (!report.passed) return yield* fail(`${label} archive payload is not conformant`);
+        const conformance = yield* requiredObject(entry.conformance, `${label} conformance`);
+        if (conformance.passed !== true) return yield* fail(`${label} is not conformant`);
       }),
     );
-    const candidate = yield* requiredObject(receipt.skillsCandidate, "skills candidate receipt");
-    yield* exactKeys(
-      candidate,
-      ["version", "archive", "sha256", "skills", "files"],
-      "skills candidate receipt",
-    );
-    const archive = path.join(dist, `skills/ask-gina-skills-${version}.tgz`);
-    if (
-      candidate.version !== version ||
-      candidate.archive !== `skills/ask-gina-skills-${version}.tgz` ||
-      candidate.sha256 !== (yield* hashFile(archive))
-    ) {
-      return yield* fail("skills candidate receipt is stale");
-    }
-    const stage = path.join(temporary, "skills-candidate");
-    yield* extract(archive, stage);
+    const stage = path.join(temporary, `skills-candidate-${plugin.name}`);
+    yield* extract(path.join(dist, skillsArchive), stage);
     yield* verifyProofs(
-      yield* parseProofs(candidate.files, "skills candidate files"),
+      yield* parseProofs(candidate.files, `${plugin.name} skills candidate files`),
       yield* fileProofs(stage),
-      "skills candidate",
+      `${plugin.name} skills candidate`,
     );
-    yield* exactDirectory(stage, ["LICENSE", "README.md", ...SKILLS], "skills candidate root");
+    yield* exactDirectory(
+      stage,
+      ["LICENSE", "README.md", ...skillIds],
+      `${plugin.name} skills candidate root`,
+    );
+    yield* verifySkillTrees({
+      skillsRoot: stage,
+      skills: plugin.skills,
+      overlay: false,
+      label: `${plugin.name} skills candidate`,
+    });
     if (
       (yield* filesBelow(stage)).some(
         (file) =>
           file.includes("/agents/") || file.includes("mcp.json") || file.includes("plugin.json"),
       )
     ) {
-      return yield* fail("skills candidate contains host configuration");
+      return yield* fail(`${plugin.name} skills candidate contains host configuration`);
     }
   });
+
+/** Verifies every package's host archives, skills archive and the targets receipt. */
+export const verifyTargets = (options: {
+  readonly root: string;
+  readonly dist: string;
+  readonly version: string;
+  readonly sourceDirty: boolean;
+  readonly temporary: string;
+  readonly plugins: readonly ArtifactPackage[];
+}) =>
+  Effect.gen(function* () {
+    const { root, dist, version, temporary, plugins } = options;
+    const path = yield* Path.Path;
+    yield* exactDirectory(
+      path.join(dist, "targets"),
+      targetArchiveNames(plugins, version),
+      "target artifacts",
+    );
+    yield* exactDirectory(
+      path.join(dist, "skills"),
+      skillsArchiveNames(plugins, version),
+      "skills artifacts",
+    );
+    const receipt = yield* readJson(path.join(dist, "receipts/targets.json")).pipe(
+      Effect.flatMap((value) => requiredObject(value, "targets receipt")),
+    );
+    yield* exactKeys(
+      receipt,
+      [
+        "schemaVersion",
+        "releaseVersion",
+        "sourceCommit",
+        "sourceDirty",
+        "targets",
+        "skillsCandidates",
+      ],
+      "targets receipt",
+    );
+    const targets = yield* requiredArray(receipt.targets, "targets receipt targets");
+    const candidates = yield* requiredArray(
+      receipt.skillsCandidates,
+      "targets receipt skills candidates",
+    );
+    yield* verifySourceDirty(
+      receipt.sourceDirty,
+      options.sourceDirty,
+      "targets receipt sourceDirty",
+    );
+    if (receipt.schemaVersion !== "v2" || receipt.releaseVersion !== version) {
+      return yield* fail("targets receipt release version is stale");
+    }
+    if (targets.length !== targetArchiveNames(plugins, version).length) {
+      return yield* fail("targets receipt has the wrong host count");
+    }
+    if (candidates.length !== plugins.length) {
+      return yield* fail("targets receipt has the wrong package count");
+    }
+    yield* Effect.forEach(plugins, (plugin) =>
+      verifyPluginTargets({ root, dist, version, temporary, plugin, targets, candidates }),
+    );
+  });
+
+/**
+ * Cheap offline smoke for the host-only plugin packages: extracts each host archive, parses its
+ * manifest and MCP configuration, and checks the declared skills exist. Part of `--packages`, so
+ * `smoke:install` covers packages that no npm archive installs.
+ */
+export const smokePluginArchives = (options: {
+  readonly dist: string;
+  readonly version: string;
+  readonly temporary: string;
+  readonly plugins: readonly ArtifactPackage[];
+}) =>
+  Effect.forEach(hostOnlyPlugins(options.plugins), (plugin) =>
+    Effect.forEach(plugin.hosts, (host) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const label = `${plugin.name} ${host}`;
+        const stage = path.join(options.temporary, `smoke-${plugin.name}-${host}`);
+        yield* extract(
+          path.join(options.dist, `targets/${plugin.name}-${host}-${options.version}.tgz`),
+          stage,
+        );
+        const manifest = yield* readJson(path.join(stage, TARGET_MANIFESTS[host])).pipe(
+          Effect.flatMap((value) => requiredObject(value, `${label} manifest`)),
+        );
+        if (
+          manifest.name !== plugin.name ||
+          manifest.version !== targetManifestVersion({ source: plugin.source, host })
+        ) {
+          return yield* fail(`${label} manifest identity is wrong`);
+        }
+        const configuration = yield* readJson(
+          path.join(stage, MCP_CONFIGS[host] ?? TARGET_MANIFESTS[host]),
+        );
+        if (!stableJson(configuration).includes(plugin.source.mcp.url)) {
+          return yield* fail(`${label} does not configure ${plugin.source.mcp.url}`);
+        }
+        yield* Effect.forEach(plugin.skills, (skill) =>
+          Effect.gen(function* () {
+            const present = yield* fs
+              .exists(path.join(stage, "skills", skill.id, "SKILL.md"))
+              .pipe(Effect.mapError((cause) => fail(`cannot inspect ${label} skill`, cause)));
+            if (!present) return yield* fail(`${label} is missing skill ${skill.id}`);
+          }),
+        );
+      }),
+    ),
+  );
 
 const verifyEvals = (
   root: string,
@@ -1204,21 +1337,27 @@ const program = Effect.scoped(
     const temporary = yield* fs
       .makeTempDirectoryScoped({ prefix: "askgina-verify-" })
       .pipe(Effect.mapError((cause) => fail("cannot create verification directory", cause)));
-    const selectedArtifacts = ["receipts/contract.json"];
+    const plugins = yield* loadArtifactPackages({ root }).pipe(
+      Effect.mapError((cause) => fail("cannot load plugin packages", cause)),
+    );
+    const selectedList = ["receipts/contract.json"];
     if (selected.has("--packages")) {
-      selectedArtifacts.push(
+      selectedList.push(
         "receipts/packages.json",
         ...PACKAGES.map((item) => `packages/askgina-${item.slug}-${version}.tgz`),
+        ...targetArchiveNames(hostOnlyPlugins(plugins), version).map((name) => `targets/${name}`),
       );
     }
     if (selected.has("--targets")) {
-      selectedArtifacts.push(
+      selectedList.push(
         "receipts/targets.json",
-        ...HOSTS.map((host) => `targets/ask-gina-${host}-${version}.tgz`),
-        `skills/ask-gina-skills-${version}.tgz`,
+        ...targetArchiveNames(plugins, version).map((name) => `targets/${name}`),
+        ...skillsArchiveNames(plugins, version).map((name) => `skills/${name}`),
       );
     }
-    if (selected.has("--evals")) selectedArtifacts.push("receipts/evals.json");
+    if (selected.has("--evals")) selectedList.push("receipts/evals.json");
+    // `--packages` and `--targets` both select the host-only plugin archives.
+    const selectedArtifacts = [...new Set(selectedList)];
     if (selected.has("--packages")) {
       yield* exactDirectory(
         path.join(dist, "packages"),
@@ -1229,12 +1368,12 @@ const program = Effect.scoped(
     if (selected.has("--targets")) {
       yield* exactDirectory(
         path.join(dist, "targets"),
-        HOSTS.map((host) => `ask-gina-${host}-${version}.tgz`),
+        targetArchiveNames(plugins, version),
         "target artifacts",
       );
       yield* exactDirectory(
         path.join(dist, "skills"),
-        [`ask-gina-skills-${version}.tgz`],
+        skillsArchiveNames(plugins, version),
         "skills artifacts",
       );
     }
@@ -1261,9 +1400,17 @@ const program = Effect.scoped(
     yield* verifyContract(root, artifactSnapshot, version, sourceCommit, sourceDirty);
     if (selected.has("--packages")) {
       yield* verifyPackages(root, artifactSnapshot, version, sourceDirty, temporary);
+      yield* smokePluginArchives({ dist: artifactSnapshot, version, temporary, plugins });
     }
     if (selected.has("--targets")) {
-      yield* verifyTargets(root, artifactSnapshot, version, sourceDirty, temporary);
+      yield* verifyTargets({
+        root,
+        dist: artifactSnapshot,
+        version,
+        sourceDirty,
+        temporary,
+        plugins,
+      });
     }
     if (selected.has("--evals")) {
       yield* verifyEvals(root, artifactSnapshot, version, sourceCommit, sourceDirty);

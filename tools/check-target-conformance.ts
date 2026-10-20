@@ -6,6 +6,7 @@ import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import {
   ASK_GINA_SKILL_DEFINITIONS,
+  EXECUTE_SCOPE,
   PRODUCTION_MCP_URL,
   RELEASE_VERSION,
   isGinaReadToolName,
@@ -23,10 +24,18 @@ import {
   Schema,
 } from "effect";
 
-import { loadMarketplaceSource, loadPluginSource } from "./plugin-manifests";
+import {
+  hostsOf,
+  loadMarketplaceSource,
+  loadPluginSource,
+  loadPluginSources,
+  skillIdsOf,
+  type PluginSource,
+} from "./plugin-manifests";
 import {
   TARGET_NAMES,
   createGeneratedPluginTarget,
+  isReadOnlyListing,
   type PluginSkillSyncError,
   type TargetName,
 } from "./sync-plugin-skills";
@@ -47,6 +56,8 @@ export interface TargetConformanceCheck {
 
 export interface TargetSummary {
   readonly target: TargetName;
+  /** Name of the plugin package the target was generated from. */
+  readonly package: string;
   readonly passed: boolean;
   readonly checks: readonly TargetConformanceCheck[];
 }
@@ -57,7 +68,8 @@ export interface RepositorySummary {
   readonly checks: readonly TargetConformanceCheck[];
 }
 export interface TargetConformanceReport {
-  readonly targets: Partial<Record<TargetName, TargetSummary>>;
+  /** Target summaries keyed by host for `ask-gina` and by `<package>:<host>` for every other package. */
+  readonly targets: Readonly<Record<string, TargetSummary>>;
   readonly repository?: RepositorySummary;
   readonly totalChecks: number;
   readonly totalPassed: number;
@@ -66,6 +78,10 @@ export interface TargetConformanceReport {
 }
 
 export interface TargetConformanceOptions {
+  /**
+   * Package directory to check. Defaults to `plugins/ask-gina`, except for `runTargetConformanceChecks`
+   * and `checkRepositoryConformance`, which check every package under `<repositoryRoot>/plugins`.
+   */
   readonly packageRoot?: string;
   readonly repositoryRoot?: string;
   readonly checkRepository?: boolean;
@@ -176,6 +192,13 @@ const advertisedToolIdentifiers = (markdown: string): readonly string[] =>
 
 const productionSupportUrl = "https://askgina.ai/support";
 
+/** The package whose check ids, report keys and titles stay unprefixed. Every other package is prefixed with its name. */
+const DEFAULT_PACKAGE_NAME = "ask-gina";
+
+const idPrefixOf = (packageName: string): string =>
+  packageName === DEFAULT_PACKAGE_NAME ? "" : `${packageName}:`;
+
+/** Exact OpenAI display metadata of the read-only contract skills. */
 const openAiSkillInterfaces = {
   "review-gina-account": {
     display_name: "Review Gina Account",
@@ -202,6 +225,12 @@ const openAiSkillInterfaces = {
     }>
   >
 >;
+const contractSkillInterfaces: Readonly<
+  Record<string, Readonly<{ display_name: string; short_description: string }>>
+> = openAiSkillInterfaces;
+/** Display metadata shape required of a skill outside the read-only contract. */
+const genericOpenAiInterface =
+  /^interface:\n {2}display_name: "[^"\n]+"\n {2}short_description: "[^"\n]+"\ndependencies:\n/u;
 
 const targetManifestPath: Readonly<Record<TargetName, string>> = {
   openai: ".codex-plugin/plugin.json",
@@ -290,23 +319,48 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
   ],
 };
 
-/** Reads the plugin's listing version, the one source of the Codex and Cursor manifest version. */
-const readListingVersion = (packageRoot: string) =>
+/** A plugin package under test: its directory and the plugin.yaml that is the source of truth for it. */
+interface ResolvedPackage {
+  readonly packageRoot: string;
+  readonly source: PluginSource;
+}
+
+const loadPackage = (
+  packageRoot: string,
+): Effect.Effect<ResolvedPackage, TargetConformanceError, ConformanceEnvironment> =>
   loadPluginSource(packageRoot).pipe(
-    Effect.map((source) => source.listing.version),
+    Effect.map((source) => ({ packageRoot, source })),
     Effect.mapError((cause) =>
-      targetConformanceError(packageRoot, "plugin.yaml listing is unreadable", cause),
+      targetConformanceError(packageRoot, "plugin.yaml is unreadable", cause),
     ),
   );
 
-const validateManifest = (
-  target: TargetName,
-  manifest: unknown,
-  listingVersion: string,
-): boolean => {
+/** Every package under `<repositoryRoot>/plugins`, in directory order. */
+const loadRepositoryPackages = (
+  repositoryRoot: string,
+): Effect.Effect<readonly ResolvedPackage[], TargetConformanceError, ConformanceEnvironment> =>
+  Effect.gen(function* () {
+    const paths = yield* Path.Path;
+    const plugins = yield* loadPluginSources(repositoryRoot).pipe(
+      Effect.mapError((cause) =>
+        targetConformanceError(repositoryRoot, "plugins are unreadable", cause),
+      ),
+    );
+    return plugins.map(({ directory, source }) => ({
+      packageRoot: paths.join(repositoryRoot, "plugins", directory),
+      source,
+    }));
+  });
+
+/** The MCP URL a package's manifests must bind. The read-only listing is pinned to the public contract. */
+const expectedMcpUrl = (source: PluginSource): string =>
+  isReadOnlyListing(source) ? PRODUCTION_MCP_URL : source.mcp.url;
+
+const validateManifest = (target: TargetName, manifest: unknown, source: PluginSource): boolean => {
+  const { listing } = source;
   const expectedVersion =
-    target === "cursor" || target === "openai" ? listingVersion : RELEASE_VERSION;
-  if (nested(manifest, "name") !== "ask-gina" || nested(manifest, "version") !== expectedVersion) {
+    target === "cursor" || target === "openai" ? listing.version : RELEASE_VERSION;
+  if (nested(manifest, "name") !== source.name || nested(manifest, "version") !== expectedVersion) {
     return false;
   }
 
@@ -329,8 +383,8 @@ const validateManifest = (
       nested(manifest, "repository") === "https://github.com/askgina/plugins" &&
       nested(manifest, "skills") === "./skills/" &&
       nested(manifest, "mcpServers") === "./.mcp.json" &&
-      nested(manifest, "interface", "composerIcon") === "./assets/icon.svg" &&
-      nested(manifest, "interface", "logo") === "./assets/icon.svg" &&
+      nested(manifest, "interface", "composerIcon") === `./${listing.icon}` &&
+      nested(manifest, "interface", "logo") === `./${listing.icon}` &&
       nested(manifest, "interface", "supportURL") === productionSupportUrl
     );
   }
@@ -350,11 +404,11 @@ const validateManifest = (
         "logo",
       ]) &&
       hasExactKeys(nested(manifest, "author"), ["name"]) &&
-      nested(manifest, "displayName") === "Ask Gina" &&
+      nested(manifest, "displayName") === listing.displayName &&
       nested(manifest, "homepage") === "https://askgina.ai" &&
       nested(manifest, "repository") === "https://github.com/askgina/plugins" &&
       nested(manifest, "license") === "Apache-2.0" &&
-      nested(manifest, "logo") === "assets/icon.svg"
+      nested(manifest, "logo") === listing.icon
     );
   }
 
@@ -369,8 +423,8 @@ const validateManifest = (
   if (target === "gemini") {
     return (
       hasExactKeys(manifest, ["name", "version", "description", "mcpServers"]) &&
-      hasExactKeys(nested(manifest, "mcpServers"), ["gina"]) &&
-      hasExactKeys(nested(manifest, "mcpServers", "gina"), ["httpUrl"])
+      hasExactKeys(nested(manifest, "mcpServers"), [listing.mcpServerName]) &&
+      hasExactKeys(nested(manifest, "mcpServers", listing.mcpServerName), ["httpUrl"])
     );
   }
 
@@ -391,11 +445,11 @@ const validateManifest = (
         "mcpServers",
       ]) &&
       hasExactKeys(nested(manifest, "author"), ["name"]) &&
-      nested(manifest, "displayName") === "Ask Gina" &&
+      nested(manifest, "displayName") === listing.displayName &&
       nested(manifest, "homepage") === "https://askgina.ai" &&
       nested(manifest, "repository") === "https://github.com/askgina/plugins" &&
       nested(manifest, "license") === "Apache-2.0" &&
-      nested(manifest, "logo") === "assets/icon.svg" &&
+      nested(manifest, "logo") === listing.icon &&
       nested(manifest, "skills") === "skills" &&
       nested(manifest, "mcpServers") === ".mcp.json"
     );
@@ -407,8 +461,10 @@ const validateManifest = (
   );
 };
 
-const validateMcp = (target: TargetName, manifest: unknown): boolean => {
-  const serverName = target === "openai" || target === "devin" ? "ask-gina" : "gina";
+const validateMcp = (target: TargetName, manifest: unknown, source: PluginSource): boolean => {
+  const serverName =
+    target === "openai" || target === "devin" ? source.name : source.listing.mcpServerName;
+  const url = expectedMcpUrl(source);
   const server = nested(manifest, "mcpServers", serverName);
   const rootKeys =
     target === "copilot"
@@ -428,8 +484,8 @@ const validateMcp = (target: TargetName, manifest: unknown): boolean => {
     return false;
   }
 
-  if (target === "gemini") return nested(server, "httpUrl") === PRODUCTION_MCP_URL;
-  if (nested(server, "url") !== PRODUCTION_MCP_URL) return false;
+  if (target === "gemini") return nested(server, "httpUrl") === url;
+  if (nested(server, "url") !== url) return false;
   if (target === "cursor") return true;
   if (
     target === "copilot" &&
@@ -475,11 +531,25 @@ export const checkGeneratedTargetConformance: {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const paths = yield* Path.Path;
-      const packageRoot = paths.resolve(options.packageRoot ?? defaultPackageRootFor(paths));
-      const listingVersion = yield* readListingVersion(packageRoot);
+      const { packageRoot, source } = yield* loadPackage(
+        paths.resolve(options.packageRoot ?? defaultPackageRootFor(paths)),
+      );
+      // Read-only invariants (contract skills, Cursor rule and commands, read-only skill boundary)
+      // apply only to a listing whose single scope is tools:read.
+      const readOnly = isReadOnlyListing(source);
+      const skillIds = skillIdsOf(source);
+      const url = expectedMcpUrl(source);
+      const prefix = idPrefixOf(source.name);
+      const titlePrefix = prefix === "" ? "" : `${source.name}: `;
       const checks: TargetConformanceCheck[] = [];
       const addCheck = (id: string, title: string, passed: boolean, detail?: string): void => {
-        checks.push({ id, target, title, passed, detail });
+        checks.push({
+          id: `${prefix}${id}`,
+          target,
+          title: `${titlePrefix}${title}`,
+          passed,
+          detail,
+        });
       };
 
       const manifestPath = paths.join(generatedTargetRoot, targetManifestPath[target]);
@@ -494,13 +564,13 @@ export const checkGeneratedTargetConformance: {
         addCheck(
           `${target}.manifest.contract`,
           `${target} host manifest conforms to the public plugin contract`,
-          validateManifest(target, manifest, listingVersion),
+          validateManifest(target, manifest, source),
         );
         if (target === "gemini") {
           addCheck(
             "gemini.mcp.contract",
             "Gemini manifest binds the production Gina MCP endpoint",
-            validateMcp(target, manifest),
+            validateMcp(target, manifest, source),
           );
         }
       }
@@ -519,7 +589,7 @@ export const checkGeneratedTargetConformance: {
           addCheck(
             `${target}.mcp.contract`,
             `${target} MCP overlay binds the production Gina MCP endpoint`,
-            validateMcp(target, mcp),
+            validateMcp(target, mcp, source),
           );
         }
       }
@@ -555,45 +625,45 @@ export const checkGeneratedTargetConformance: {
           "Cursor listing README exists",
           yield* withFileSystemError(readmePath, "cannot be inspected", fs.exists(readmePath)),
         );
-        const rulePath = paths.join(generatedTargetRoot, "rules", "gina-read-only.mdc");
-        addCheck(
-          "cursor.rules.read_only_exists",
-          "Cursor read-only rule exists",
-          yield* withFileSystemError(rulePath, "cannot be inspected", fs.exists(rulePath)),
-        );
-        if (yield* withFileSystemError(rulePath, "cannot be inspected", fs.exists(rulePath))) {
-          const rule = yield* withFileSystemError(
-            rulePath,
-            "cannot be read",
-            fs.readFileString(rulePath),
-          );
+        if (readOnly) {
+          const rulePath = paths.join(generatedTargetRoot, "rules", "gina-read-only.mdc");
           addCheck(
-            "cursor.rules.read_only_always_apply",
-            "Cursor read-only rule is always applied",
-            /^alwaysApply:\s*true\s*$/m.test(rule),
+            "cursor.rules.read_only_exists",
+            "Cursor read-only rule exists",
+            yield* withFileSystemError(rulePath, "cannot be inspected", fs.exists(rulePath)),
+          );
+          if (yield* withFileSystemError(rulePath, "cannot be inspected", fs.exists(rulePath))) {
+            const rule = yield* withFileSystemError(
+              rulePath,
+              "cannot be read",
+              fs.readFileString(rulePath),
+            );
+            addCheck(
+              "cursor.rules.read_only_always_apply",
+              "Cursor read-only rule is always applied",
+              /^alwaysApply:\s*true\s*$/m.test(rule),
+            );
+          }
+          const expectedCommands = skillIds.map((skill) => `${skill}.md`).sort();
+          const commandsRoot = paths.join(generatedTargetRoot, "commands");
+          const commandsExist = yield* withFileSystemError(
+            commandsRoot,
+            "cannot be inspected",
+            fs.exists(commandsRoot),
+          );
+          const actualCommands = commandsExist
+            ? (yield* withFileSystemError(
+                commandsRoot,
+                "cannot be read",
+                fs.readDirectory(commandsRoot),
+              )).sort()
+            : [];
+          addCheck(
+            "cursor.commands.directory_set",
+            "Cursor commands match the four canonical skills",
+            sameSortedStrings(actualCommands, expectedCommands),
           );
         }
-        const expectedCommands = ASK_GINA_SKILL_DEFINITIONS.map(
-          (skill) => `${skill.name}.md`,
-        ).sort();
-        const commandsRoot = paths.join(generatedTargetRoot, "commands");
-        const commandsExist = yield* withFileSystemError(
-          commandsRoot,
-          "cannot be inspected",
-          fs.exists(commandsRoot),
-        );
-        const actualCommands = commandsExist
-          ? (yield* withFileSystemError(
-              commandsRoot,
-              "cannot be read",
-              fs.readDirectory(commandsRoot),
-            )).sort()
-          : [];
-        addCheck(
-          "cursor.commands.directory_set",
-          "Cursor commands match the four canonical skills",
-          sameSortedStrings(actualCommands, expectedCommands),
-        );
       }
 
       const foreignResults = yield* Effect.forEach(
@@ -611,7 +681,7 @@ export const checkGeneratedTargetConformance: {
       );
 
       const generatedSkillsRoot = paths.join(generatedTargetRoot, "skills");
-      const expectedSkillNames = ASK_GINA_SKILL_DEFINITIONS.map((skill) => skill.name).sort();
+      const expectedSkillNames = [...skillIds].sort();
       const generatedSkillsExist = yield* withFileSystemError(
         generatedSkillsRoot,
         "cannot be inspected",
@@ -637,31 +707,33 @@ export const checkGeneratedTargetConformance: {
         : [];
       addCheck(
         `${target}.skills.directory_set`,
-        `${target} contains exactly the four canonical skills`,
+        `${target} contains exactly ${readOnly ? "the four canonical" : "the declared"} skills`,
         sameSortedStrings(actualSkillNames, expectedSkillNames),
       );
 
-      addCheck(
-        `${target}.skills.contract_catalog`,
-        `${target} skill definitions use only public catalog or renderer tools`,
-        ASK_GINA_SKILL_DEFINITIONS.every((skill) =>
-          skill.tools.every((tool) => isGinaReadToolName(tool) || isGinaRenderToolName(tool)),
-        ),
-      );
+      if (readOnly) {
+        addCheck(
+          `${target}.skills.contract_catalog`,
+          `${target} skill definitions use only public catalog or renderer tools`,
+          ASK_GINA_SKILL_DEFINITIONS.every((skill) =>
+            skill.tools.every((tool) => isGinaReadToolName(tool) || isGinaRenderToolName(tool)),
+          ),
+        );
+      }
 
       let skillsHandoffFree = true;
-      for (const skill of ASK_GINA_SKILL_DEFINITIONS) {
-        const generatedSkillRoot = paths.join(generatedSkillsRoot, skill.name);
+      for (const skillName of skillIds) {
+        const generatedSkillRoot = paths.join(generatedSkillsRoot, skillName);
         const generatedSkillPath = paths.join(generatedSkillRoot, "SKILL.md");
-        const canonicalSkillPath = paths.join(packageRoot, "skills", skill.name, "SKILL.md");
+        const canonicalSkillPath = paths.join(packageRoot, "skills", skillName, "SKILL.md");
         const skillExists = yield* withFileSystemError(
           generatedSkillPath,
           "cannot be inspected",
           fs.exists(generatedSkillPath),
         );
         addCheck(
-          `${target}.skill.${skill.name}.exists`,
-          `${target}: ${skill.name}/SKILL.md exists`,
+          `${target}.skill.${skillName}.exists`,
+          `${target}: ${skillName}/SKILL.md exists`,
           skillExists,
         );
 
@@ -682,33 +754,38 @@ export const checkGeneratedTargetConformance: {
             { concurrency: "unbounded" },
           );
           addCheck(
-            `${target}.skill.${skill.name}.canonical_parity`,
-            `${target}: ${skill.name} matches canonical source exactly`,
+            `${target}.skill.${skillName}.canonical_parity`,
+            `${target}: ${skillName} matches canonical source exactly`,
             content === canonical,
           );
           const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(content)?.[1];
           addCheck(
-            `${target}.skill.${skill.name}.frontmatter`,
-            `${target}: ${skill.name} declares canonical name and description frontmatter`,
+            `${target}.skill.${skillName}.frontmatter`,
+            `${target}: ${skillName} declares canonical name and description frontmatter`,
             frontmatter !== undefined &&
-              new RegExp(`^name:\\s*${skill.name}\\s*$`, "m").test(frontmatter) &&
+              new RegExp(`^name:\\s*${skillName}\\s*$`, "m").test(frontmatter) &&
               /^description:\s*\S.+$/m.test(frontmatter),
           );
-          addCheck(
-            `${target}.skill.${skill.name}.read_only_boundary`,
-            `${target}: ${skill.name} excludes bash and sibling MCP routes`,
-            !content.toLowerCase().includes("bash") &&
-              !content.includes("/ai/perps/mcp") &&
-              !content.includes("/ai/predictions/mcp"),
-          );
+          if (readOnly) {
+            addCheck(
+              `${target}.skill.${skillName}.read_only_boundary`,
+              `${target}: ${skillName} excludes bash and sibling MCP routes`,
+              !content.toLowerCase().includes("bash") &&
+                !content.includes("/ai/perps/mcp") &&
+                !content.includes("/ai/predictions/mcp"),
+            );
 
-          const actualTools = advertisedToolIdentifiers(content);
-          const expectedTools = [...skill.tools].sort();
-          addCheck(
-            `${target}.skill.${skill.name}.tool_advertisements`,
-            `${target}: ${skill.name} advertises exactly its owned tools`,
-            sameSortedStrings(actualTools, expectedTools),
-          );
+            const contractSkill = ASK_GINA_SKILL_DEFINITIONS.find(
+              (definition) => definition.name === skillName,
+            );
+            const actualTools = advertisedToolIdentifiers(content);
+            addCheck(
+              `${target}.skill.${skillName}.tool_advertisements`,
+              `${target}: ${skillName} advertises exactly its owned tools`,
+              contractSkill !== undefined &&
+                sameSortedStrings(actualTools, [...contractSkill.tools].sort()),
+            );
+          }
           if (content.includes("https://askgina.ai/new")) {
             skillsHandoffFree = false;
           }
@@ -723,7 +800,7 @@ export const checkGeneratedTargetConformance: {
             const canonicalMetadataPath = paths.join(
               packageRoot,
               "skills",
-              skill.name,
+              skillName,
               "agents",
               "openai.yaml",
             );
@@ -741,26 +818,33 @@ export const checkGeneratedTargetConformance: {
                   fs.readFileString(canonicalMetadataPath),
                 )
               : "";
-            const expectedInterface = openAiSkillInterfaces[skill.name];
+            // Read-only listings pin the exact display strings; other listings pin their shape.
+            const expectedInterface = Object.hasOwn(contractSkillInterfaces, skillName)
+              ? contractSkillInterfaces[skillName]
+              : undefined;
+            const interfaceMatches = readOnly
+              ? expectedInterface !== undefined &&
+                metadata.startsWith(
+                  `interface:\n  display_name: "${expectedInterface.display_name}"\n  short_description: "${expectedInterface.short_description}"\ndependencies:\n`,
+                )
+              : genericOpenAiInterface.test(metadata);
             const metadataMatches =
               metadataExists &&
               metadata === canonicalMetadata &&
-              metadata.startsWith(
-                `interface:\n  display_name: "${expectedInterface.display_name}"\n  short_description: "${expectedInterface.short_description}"\ndependencies:\n`,
-              ) &&
+              interfaceMatches &&
               metadata.includes('type: "mcp"') &&
-              metadata.includes('value: "ask-gina"') &&
+              metadata.includes(`value: "${source.name}"`) &&
               metadata.includes('transport: "streamable_http"') &&
-              metadata.includes(`url: "${PRODUCTION_MCP_URL}"`);
+              metadata.includes(`url: "${url}"`);
             addCheck(
-              `${target}.skill.${skill.name}.openai_metadata`,
-              `${target}: ${skill.name} retains canonical OpenAI metadata`,
+              `${target}.skill.${skillName}.openai_metadata`,
+              `${target}: ${skillName} retains canonical OpenAI metadata`,
               metadataMatches,
             );
           } else {
             addCheck(
-              `${target}.skill.${skill.name}.no_openai_metadata`,
-              `${target}: ${skill.name} excludes OpenAI metadata`,
+              `${target}.skill.${skillName}.no_openai_metadata`,
+              `${target}: ${skillName} excludes OpenAI metadata`,
               !metadataExists,
             );
           }
@@ -773,7 +857,12 @@ export const checkGeneratedTargetConformance: {
         skillsHandoffFree,
       );
 
-      return { target, passed: checks.every((check) => check.passed), checks };
+      return {
+        target,
+        package: source.name,
+        passed: checks.every((check) => check.passed),
+        checks,
+      };
     }),
 );
 
@@ -796,164 +885,22 @@ export const checkTargetConformance: {
     ),
 );
 
-export const checkRepositoryConformance = (
-  options: TargetConformanceOptions = {},
-): Effect.Effect<RepositorySummary, TargetConformanceError, ConformanceEnvironment> =>
+type AddCheck = (id: string, title: string, passed: boolean, detail?: string) => void;
+type PathRequirement = readonly [
+  candidate: string,
+  id: string,
+  title: string,
+  expectedType: "File" | "Directory",
+];
+
+/** Records one existence-and-type check per requirement. */
+const checkRequiredPaths = (
+  requirements: readonly PathRequirement[],
+  addCheck: AddCheck,
+): Effect.Effect<void, TargetConformanceError, FileSystem.FileSystem> =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
-    const paths = yield* Path.Path;
-    const packageRoot = paths.resolve(options.packageRoot ?? defaultPackageRootFor(paths));
-    const listingVersion = yield* readListingVersion(packageRoot);
-    const repositoryRoot = paths.resolve(
-      options.repositoryRoot ??
-        (options.packageRoot === undefined
-          ? defaultRepositoryRootFor(paths)
-          : paths.join(packageRoot, "..", "..")),
-    );
-    const marketplaceVersion = yield* loadMarketplaceSource(repositoryRoot).pipe(
-      Effect.map((source) => source.version),
-      Effect.mapError((cause) =>
-        targetConformanceError(repositoryRoot, "marketplace.yaml is unreadable", cause),
-      ),
-    );
-    const canonicalRepositoryRoot = yield* withFileSystemError(
-      repositoryRoot,
-      "cannot be resolved",
-      fs.realPath(repositoryRoot),
-    );
-    const checks: TargetConformanceCheck[] = [];
-    const addCheck = (id: string, title: string, passed: boolean, detail?: string): void => {
-      checks.push({ id, target: "repository", title, passed, detail });
-    };
-
-    const marketplacePath = paths.join(repositoryRoot, ".agents", "plugins", "marketplace.json");
-    const marketplaceExists = yield* withFileSystemError(
-      marketplacePath,
-      "cannot be inspected",
-      fs.exists(marketplacePath),
-    );
-    addCheck("marketplace.exists", ".agents/plugins/marketplace.json exists", marketplaceExists);
-    if (marketplaceExists) {
-      const marketplace = yield* readJson(fs, marketplacePath);
-      const plugins = nested(marketplace, "plugins");
-      const plugin = Array.isArray(plugins) && plugins.length === 1 ? plugins[0] : undefined;
-      const source = nested(plugin, "source");
-      const policy = nested(plugin, "policy");
-      const marketplaceContract =
-        hasExactKeys(marketplace, ["name", "interface", "plugins"]) &&
-        nested(marketplace, "name") === "ask-gina-plugins" &&
-        hasExactKeys(nested(marketplace, "interface"), ["displayName"]) &&
-        nested(marketplace, "interface", "displayName") === "Ask Gina Plugins" &&
-        Array.isArray(plugins) &&
-        plugins.length === 1 &&
-        hasExactKeys(plugin, ["name", "source", "policy", "category"]) &&
-        nested(plugin, "name") === "ask-gina" &&
-        hasExactKeys(source, ["source", "path"]) &&
-        nested(source, "source") === "local" &&
-        nested(source, "path") === "./plugins/ask-gina" &&
-        hasExactKeys(policy, ["installation", "authentication"]) &&
-        nested(policy, "installation") === "AVAILABLE" &&
-        nested(policy, "authentication") === "ON_INSTALL" &&
-        nested(plugin, "category") === "Finance";
-      addCheck(
-        "marketplace.schema",
-        "Repository marketplace has exact schema and values",
-        marketplaceContract,
-        marketplaceContract
-          ? undefined
-          : "marketplace name, interface, plugin, policy, category, or source is malformed",
-      );
-      const descriptorVersioned =
-        nested(marketplace, "version") !== undefined || nested(plugin, "version") !== undefined;
-      addCheck(
-        "marketplace.no_version",
-        "Repository marketplace descriptor is unversioned",
-        !descriptorVersioned,
-        descriptorVersioned ? "marketplace descriptor must not declare version" : undefined,
-      );
-
-      const sourceValue = nested(source, "path");
-      let sourceContained = false;
-      let sourceDetail: string | undefined;
-      if (typeof sourceValue !== "string") {
-        sourceDetail = "plugin source path must be a string";
-      } else {
-        const segments = sourceValue.split(/[\\/]/u);
-        const normalized = paths.normalize(sourceValue);
-        const resolvedSource = paths.resolve(repositoryRoot, sourceValue);
-        const normalizedExpected = paths.normalize("plugins/ask-gina");
-        if (
-          paths.isAbsolute(sourceValue) ||
-          segments.some((segment) => segment === "..") ||
-          normalized !== normalizedExpected ||
-          !isWithin(paths, repositoryRoot, resolvedSource)
-        ) {
-          sourceDetail = `plugin source path escapes or is not canonical: ${sourceValue}`;
-        } else {
-          const exists = yield* withFileSystemError(
-            resolvedSource,
-            "cannot be inspected",
-            fs.exists(resolvedSource),
-          );
-          if (!exists) {
-            sourceDetail = `declared plugin source is missing: ${sourceValue}`;
-          } else {
-            const sourceIsLink = yield* fs
-              .readLink(resolvedSource)
-              .pipe(Effect.match({ onFailure: () => false, onSuccess: () => true }));
-            if (sourceIsLink) {
-              sourceDetail = `declared plugin source is a symbolic link: ${sourceValue}`;
-            } else {
-              const realSource = yield* withFileSystemError(
-                resolvedSource,
-                "cannot be resolved",
-                fs.realPath(resolvedSource),
-              );
-              sourceContained = isWithin(paths, canonicalRepositoryRoot, realSource);
-              if (!sourceContained) sourceDetail = `declared plugin source escapes: ${sourceValue}`;
-            }
-          }
-        }
-      }
-      addCheck(
-        "marketplace.source_containment",
-        "Repository marketplace source exists inside the repository without symlink indirection",
-        sourceContained,
-        sourceDetail,
-      );
-    }
-
-    const openAiManifestPath = paths.join(packageRoot, ".codex-plugin", "plugin.json");
-    const openAiMcpPath = paths.join(packageRoot, ".mcp.json");
-    const openAiIconPath = paths.join(packageRoot, "assets", "icon.svg");
-    const canonicalSkillsRoot = paths.join(packageRoot, "skills");
-    const requiredOpenAiPaths = [
-      [
-        openAiManifestPath,
-        "repository.root_openai.manifest_exists",
-        "Root OpenAI manifest exists as a regular file",
-        "File",
-      ],
-      [
-        openAiMcpPath,
-        "repository.root_openai.mcp_exists",
-        "Root OpenAI MCP configuration exists as a regular file",
-        "File",
-      ],
-      [
-        openAiIconPath,
-        "repository.root_openai.icon_exists",
-        "Root OpenAI icon exists as a regular file",
-        "File",
-      ],
-      [
-        canonicalSkillsRoot,
-        "repository.root_openai.skills_exists",
-        "Root canonical skills directory exists",
-        "Directory",
-      ],
-    ] as const;
-    for (const [candidate, id, title, expectedType] of requiredOpenAiPaths) {
+    for (const [candidate, id, title, expectedType] of requirements) {
       const exists = yield* withFileSystemError(
         candidate,
         "cannot be inspected",
@@ -971,6 +918,110 @@ export const checkRepositoryConformance = (
           : undefined,
       );
     }
+  });
+
+/**
+ * Why a marketplace entry's `path` is not an acceptable source for `./plugins/<name>`, or
+ * `undefined` when it is a canonical, existing, contained, link-free directory.
+ */
+const marketplaceSourceProblem = (options: {
+  readonly sourceValue: unknown;
+  readonly name: string;
+  readonly repositoryRoot: string;
+  readonly canonicalRepositoryRoot: string;
+}): Effect.Effect<string | undefined, TargetConformanceError, ConformanceEnvironment> =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const paths = yield* Path.Path;
+    const { sourceValue, name, repositoryRoot, canonicalRepositoryRoot } = options;
+    if (typeof sourceValue !== "string") return "plugin source path must be a string";
+    const segments = sourceValue.split(/[\\/]/u);
+    const normalized = paths.normalize(sourceValue);
+    const resolvedSource = paths.resolve(repositoryRoot, sourceValue);
+    if (
+      paths.isAbsolute(sourceValue) ||
+      segments.some((segment) => segment === "..") ||
+      normalized !== paths.normalize(`plugins/${name}`) ||
+      !isWithin(paths, repositoryRoot, resolvedSource)
+    ) {
+      return `plugin source path escapes or is not canonical: ${sourceValue}`;
+    }
+    const exists = yield* withFileSystemError(
+      resolvedSource,
+      "cannot be inspected",
+      fs.exists(resolvedSource),
+    );
+    if (!exists) return `declared plugin source is missing: ${sourceValue}`;
+    const sourceIsLink = yield* fs
+      .readLink(resolvedSource)
+      .pipe(Effect.match({ onFailure: () => false, onSuccess: () => true }));
+    if (sourceIsLink) return `declared plugin source is a symbolic link: ${sourceValue}`;
+    const realSource = yield* withFileSystemError(
+      resolvedSource,
+      "cannot be resolved",
+      fs.realPath(resolvedSource),
+    );
+    return isWithin(paths, canonicalRepositoryRoot, realSource)
+      ? undefined
+      : `declared plugin source escapes: ${sourceValue}`;
+  });
+
+/** True when `entries` has exactly one entry per expected package, in order, and each one matches. */
+const entriesMatchPackages = (
+  entries: unknown,
+  packages: readonly PluginSource[],
+  matches: (entry: unknown, source: PluginSource) => boolean,
+): boolean =>
+  Array.isArray(entries) &&
+  entries.length === packages.length &&
+  packages.every((source, index) => matches(entries[index], source));
+
+/** Per-package source checks: root manifests, overlays, legacy trees, symlinks and MCP binding. */
+const checkPackageSource = (
+  pkg: ResolvedPackage,
+  addCheck: AddCheck,
+): Effect.Effect<void, TargetConformanceError, ConformanceEnvironment> =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const paths = yield* Path.Path;
+    const { packageRoot, source } = pkg;
+    const readOnly = isReadOnlyListing(source);
+    const hosts = hostsOf(source);
+    const expectedSkillNames = [...skillIdsOf(source)].sort();
+
+    const openAiManifestPath = paths.join(packageRoot, ".codex-plugin", "plugin.json");
+    const openAiMcpPath = paths.join(packageRoot, ".mcp.json");
+    const openAiIconPath = paths.join(packageRoot, "assets", "icon.svg");
+    const canonicalSkillsRoot = paths.join(packageRoot, "skills");
+    yield* checkRequiredPaths(
+      [
+        [
+          openAiManifestPath,
+          "repository.root_openai.manifest_exists",
+          "Root OpenAI manifest exists as a regular file",
+          "File",
+        ],
+        [
+          openAiMcpPath,
+          "repository.root_openai.mcp_exists",
+          "Root OpenAI MCP configuration exists as a regular file",
+          "File",
+        ],
+        [
+          openAiIconPath,
+          "repository.root_openai.icon_exists",
+          "Root OpenAI icon exists as a regular file",
+          "File",
+        ],
+        [
+          canonicalSkillsRoot,
+          "repository.root_openai.skills_exists",
+          "Root canonical skills directory exists",
+          "Directory",
+        ],
+      ],
+      addCheck,
+    );
 
     if (
       yield* withFileSystemError(
@@ -983,7 +1034,7 @@ export const checkRepositoryConformance = (
       addCheck(
         "repository.root_openai.manifest_contract",
         "Root OpenAI manifest has exact contract and release version",
-        validateManifest("openai", manifest, listingVersion),
+        validateManifest("openai", manifest, source),
       );
     }
     if (
@@ -993,11 +1044,10 @@ export const checkRepositoryConformance = (
       addCheck(
         "repository.root_openai.mcp_contract",
         "Root OpenAI MCP configuration binds the production endpoint",
-        validateMcp("openai", mcp),
+        validateMcp("openai", mcp, source),
       );
     }
 
-    const expectedSkillNames = ASK_GINA_SKILL_DEFINITIONS.map((skill) => skill.name).sort();
     const skillsExist = yield* withFileSystemError(
       canonicalSkillsRoot,
       "cannot be inspected",
@@ -1104,92 +1154,48 @@ export const checkRepositoryConformance = (
       legacyDevinExists ? "legacy Devin overlay must be removed" : undefined,
     );
 
-    const cursorMarketplacePath = paths.join(repositoryRoot, ".cursor-plugin", "marketplace.json");
-    const cursorMarketplaceExists = yield* withFileSystemError(
-      cursorMarketplacePath,
-      "cannot be inspected",
-      fs.exists(cursorMarketplacePath),
-    );
-    addCheck(
-      "repository.cursor.marketplace_exists",
-      "Cursor marketplace descriptor exists",
-      cursorMarketplaceExists,
-    );
-    if (cursorMarketplaceExists) {
-      const cursorMarketplace = yield* readJson(fs, cursorMarketplacePath);
-      const cursorPlugins = nested(cursorMarketplace, "plugins");
-      const cursorPlugin =
-        Array.isArray(cursorPlugins) && cursorPlugins.length === 1 ? cursorPlugins[0] : undefined;
-      const cursorMarketplaceContract =
-        hasExactKeys(cursorMarketplace, ["name", "owner", "metadata", "plugins"]) &&
-        nested(cursorMarketplace, "name") === "ask-gina-plugins" &&
-        hasExactKeys(nested(cursorMarketplace, "owner"), ["name"]) &&
-        nested(cursorMarketplace, "owner", "name") === "Ask Gina" &&
-        hasExactKeys(nested(cursorMarketplace, "metadata"), ["description", "version"]) &&
-        nested(cursorMarketplace, "metadata", "version") === marketplaceVersion &&
-        hasExactKeys(cursorPlugin, ["name", "source", "description"]) &&
-        nested(cursorPlugin, "name") === "ask-gina" &&
-        nested(cursorPlugin, "source") === "./plugins/ask-gina";
-      addCheck(
-        "repository.cursor.marketplace_contract",
-        "Cursor marketplace points at the plugin root without overlay overrides",
-        cursorMarketplaceContract,
-      );
-    }
-
     const cursorManifestPath = paths.join(packageRoot, ".cursor-plugin", "plugin.json");
     const cursorMcpPath = paths.join(packageRoot, "mcp.json");
     const cursorReadmePath = paths.join(packageRoot, "README.md");
-    const requiredCursorPaths = [
+    yield* checkRequiredPaths(
       [
-        cursorManifestPath,
-        "repository.root_cursor.manifest_exists",
-        "Root Cursor manifest exists as a regular file",
-        "File",
+        [
+          cursorManifestPath,
+          "repository.root_cursor.manifest_exists",
+          "Root Cursor manifest exists as a regular file",
+          "File",
+        ],
+        [
+          cursorMcpPath,
+          "repository.root_cursor.mcp_exists",
+          "Root Cursor MCP configuration exists as a regular file",
+          "File",
+        ],
+        [
+          cursorReadmePath,
+          "repository.root_cursor.readme_exists",
+          "Root Cursor listing README exists as a regular file",
+          "File",
+        ],
+        ...(readOnly
+          ? ([
+              [
+                paths.join(packageRoot, "rules", "gina-read-only.mdc"),
+                "repository.root_cursor.rule_exists",
+                "Root Cursor read-only rule exists as a regular file",
+                "File",
+              ],
+              [
+                paths.join(packageRoot, "commands"),
+                "repository.root_cursor.commands_exists",
+                "Root Cursor commands directory exists",
+                "Directory",
+              ],
+            ] as const satisfies readonly PathRequirement[])
+          : []),
       ],
-      [
-        cursorMcpPath,
-        "repository.root_cursor.mcp_exists",
-        "Root Cursor MCP configuration exists as a regular file",
-        "File",
-      ],
-      [
-        cursorReadmePath,
-        "repository.root_cursor.readme_exists",
-        "Root Cursor listing README exists as a regular file",
-        "File",
-      ],
-      [
-        paths.join(packageRoot, "rules", "gina-read-only.mdc"),
-        "repository.root_cursor.rule_exists",
-        "Root Cursor read-only rule exists as a regular file",
-        "File",
-      ],
-      [
-        paths.join(packageRoot, "commands"),
-        "repository.root_cursor.commands_exists",
-        "Root Cursor commands directory exists",
-        "Directory",
-      ],
-    ] as const;
-    for (const [candidate, id, title, expectedType] of requiredCursorPaths) {
-      const exists = yield* withFileSystemError(
-        candidate,
-        "cannot be inspected",
-        fs.exists(candidate),
-      );
-      const actualType = exists
-        ? (yield* withFileSystemError(candidate, "cannot be inspected", fs.stat(candidate))).type
-        : undefined;
-      addCheck(
-        id,
-        title,
-        exists && actualType === expectedType,
-        exists && actualType !== expectedType
-          ? `expected ${expectedType}, found ${actualType ?? "unknown"}`
-          : undefined,
-      );
-    }
+      addCheck,
+    );
     if (
       yield* withFileSystemError(
         cursorManifestPath,
@@ -1201,7 +1207,7 @@ export const checkRepositoryConformance = (
       addCheck(
         "repository.root_cursor.manifest_contract",
         "Root Cursor manifest has exact contract and release version",
-        validateManifest("cursor", manifest, listingVersion),
+        validateManifest("cursor", manifest, source),
       );
     }
     if (
@@ -1211,60 +1217,47 @@ export const checkRepositoryConformance = (
       addCheck(
         "repository.root_cursor.mcp_contract",
         "Root Cursor MCP configuration binds the production endpoint",
-        validateMcp("cursor", mcp),
+        validateMcp("cursor", mcp, source),
       );
     }
 
-    const rootDevinManifestPath = paths.join(repositoryRoot, ".devin-plugin", "plugin.json");
-    const rootDevinManifestExists = yield* withFileSystemError(
-      rootDevinManifestPath,
-      "cannot be inspected",
-      fs.exists(rootDevinManifestPath),
-    );
-    addCheck(
-      "repository.devin.root_manifest_absent",
-      "Repository root does not install contributor instructions as a Devin plugin",
-      !rootDevinManifestExists,
-      rootDevinManifestExists
-        ? "distribute plugins/ask-gina directly; the repository root contains contributor instructions"
-        : undefined,
-    );
-
-    const devinManifestPath = paths.join(packageRoot, ".devin-plugin", "plugin.json");
-    const devinManifestExists = yield* withFileSystemError(
-      devinManifestPath,
-      "cannot be inspected",
-      fs.exists(devinManifestPath),
-    );
-    const devinManifestType = devinManifestExists
-      ? (yield* withFileSystemError(
-          devinManifestPath,
-          "cannot be inspected",
-          fs.stat(devinManifestPath),
-        )).type
-      : undefined;
-    addCheck(
-      "repository.devin.plugin_manifest_exists",
-      "Canonical Devin plugin manifest exists as a regular file",
-      devinManifestExists && devinManifestType === "File",
-    );
-    if (devinManifestExists) {
-      const manifest = yield* readJson(fs, devinManifestPath);
-      addCheck(
-        "repository.devin.plugin_manifest_contract",
-        "Canonical Devin plugin manifest has the exact source and release contract",
-        validateManifest("devin", manifest, listingVersion),
+    if (hosts.includes("devin")) {
+      const devinManifestPath = paths.join(packageRoot, ".devin-plugin", "plugin.json");
+      const devinManifestExists = yield* withFileSystemError(
+        devinManifestPath,
+        "cannot be inspected",
+        fs.exists(devinManifestPath),
       );
-    }
-    if (
-      yield* withFileSystemError(openAiMcpPath, "cannot be inspected", fs.exists(openAiMcpPath))
-    ) {
-      const mcp = yield* readJson(fs, openAiMcpPath);
+      const devinManifestType = devinManifestExists
+        ? (yield* withFileSystemError(
+            devinManifestPath,
+            "cannot be inspected",
+            fs.stat(devinManifestPath),
+          )).type
+        : undefined;
       addCheck(
-        "repository.devin.plugin_mcp_contract",
-        "Canonical Devin plugin MCP configuration binds the production endpoint",
-        validateMcp("devin", mcp),
+        "repository.devin.plugin_manifest_exists",
+        "Canonical Devin plugin manifest exists as a regular file",
+        devinManifestExists && devinManifestType === "File",
       );
+      if (devinManifestExists) {
+        const manifest = yield* readJson(fs, devinManifestPath);
+        addCheck(
+          "repository.devin.plugin_manifest_contract",
+          "Canonical Devin plugin manifest has the exact source and release contract",
+          validateManifest("devin", manifest, source),
+        );
+      }
+      if (
+        yield* withFileSystemError(openAiMcpPath, "cannot be inspected", fs.exists(openAiMcpPath))
+      ) {
+        const mcp = yield* readJson(fs, openAiMcpPath);
+        addCheck(
+          "repository.devin.plugin_mcp_contract",
+          "Canonical Devin plugin MCP configuration binds the production endpoint",
+          validateMcp("devin", mcp, source),
+        );
+      }
     }
 
     const symlinks = yield* findSymbolicLinks(fs, paths, packageRoot).pipe(
@@ -1278,35 +1271,6 @@ export const checkRepositoryConformance = (
       symlinks.length === 0,
       symlinks.length === 0 ? undefined : `symbolic links: ${symlinks.join(", ")}`,
     );
-
-    const claudeMarketplacePath = paths.join(repositoryRoot, ".claude-plugin", "marketplace.json");
-    const claudeMarketplaceExists = yield* withFileSystemError(
-      claudeMarketplacePath,
-      "cannot be inspected",
-      fs.exists(claudeMarketplacePath),
-    );
-    addCheck(
-      "repository.claude.marketplace_exists",
-      "Independent Claude marketplace descriptor exists",
-      claudeMarketplaceExists,
-    );
-    if (claudeMarketplaceExists) {
-      const claudeMarketplace = yield* readJson(fs, claudeMarketplacePath);
-      const claudePlugins = nested(claudeMarketplace, "plugins");
-      const claudePlugin =
-        Array.isArray(claudePlugins) && claudePlugins.length === 1 ? claudePlugins[0] : undefined;
-      const claudeContract =
-        nested(claudeMarketplace, "name") === "ask-gina-plugins" &&
-        nested(claudePlugin, "name") === "ask-gina" &&
-        nested(claudePlugin, "source") === "./plugins/ask-gina" &&
-        nested(claudePlugin, "skills") === "./skills" &&
-        nested(claudePlugin, "mcpServers") === "./targets/claude/.mcp.json";
-      addCheck(
-        "repository.claude.marketplace_contract",
-        "Claude marketplace independently references the Claude MCP overlay",
-        claudeContract,
-      );
-    }
 
     const claudeManifestPath = paths.join(
       packageRoot,
@@ -1340,10 +1304,219 @@ export const checkRepositoryConformance = (
       addCheck(
         "repository.claude.overlay_contract",
         "Claude overlay has the release version and production MCP contract",
-        validateManifest("claude", claudeManifest, listingVersion) &&
-          validateMcp("claude", claudeMcp),
+        validateManifest("claude", claudeManifest, source) &&
+          validateMcp("claude", claudeMcp, source),
       );
     }
+
+    if (!readOnly) {
+      // A write-capable listing binds an askgina.ai MCP route and declares exactly the execute scope.
+      addCheck(
+        "repository.plugin.mcp_contract",
+        `plugin.yaml binds an askgina.ai MCP route with only the ${EXECUTE_SCOPE} scope`,
+        /^https:\/\/askgina\.ai\/ai\/[a-z0-9-]+\/mcp$/u.test(source.mcp.url) &&
+          source.mcp.scopes.length === 1 &&
+          source.mcp.scopes[0] === EXECUTE_SCOPE,
+      );
+    }
+  });
+
+export const checkRepositoryConformance = (
+  options: TargetConformanceOptions = {},
+): Effect.Effect<RepositorySummary, TargetConformanceError, ConformanceEnvironment> =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const paths = yield* Path.Path;
+    const explicitPackageRoot =
+      options.packageRoot === undefined ? undefined : paths.resolve(options.packageRoot);
+    const repositoryRoot = paths.resolve(
+      options.repositoryRoot ??
+        (explicitPackageRoot === undefined
+          ? defaultRepositoryRootFor(paths)
+          : paths.join(explicitPackageRoot, "..", "..")),
+    );
+    const marketplaceVersion = yield* loadMarketplaceSource(repositoryRoot).pipe(
+      Effect.map((source) => source.version),
+      Effect.mapError((cause) =>
+        targetConformanceError(repositoryRoot, "marketplace.yaml is unreadable", cause),
+      ),
+    );
+    // The marketplaces list every package under plugins/; the package checks cover the requested one.
+    const repositoryPackages = yield* loadRepositoryPackages(repositoryRoot);
+    const marketplacePlugins = repositoryPackages.map(({ source }) => source);
+    const packages =
+      explicitPackageRoot === undefined
+        ? repositoryPackages
+        : [yield* loadPackage(explicitPackageRoot)];
+    const canonicalRepositoryRoot = yield* withFileSystemError(
+      repositoryRoot,
+      "cannot be resolved",
+      fs.realPath(repositoryRoot),
+    );
+    const checks: TargetConformanceCheck[] = [];
+    const addCheck: AddCheck = (id, title, passed, detail) => {
+      checks.push({ id, target: "repository", title, passed, detail });
+    };
+
+    const marketplacePath = paths.join(repositoryRoot, ".agents", "plugins", "marketplace.json");
+    const marketplaceExists = yield* withFileSystemError(
+      marketplacePath,
+      "cannot be inspected",
+      fs.exists(marketplacePath),
+    );
+    addCheck("marketplace.exists", ".agents/plugins/marketplace.json exists", marketplaceExists);
+    if (marketplaceExists) {
+      const marketplace = yield* readJson(fs, marketplacePath);
+      const plugins = nested(marketplace, "plugins");
+      const marketplaceContract =
+        hasExactKeys(marketplace, ["name", "interface", "plugins"]) &&
+        nested(marketplace, "name") === "ask-gina-plugins" &&
+        hasExactKeys(nested(marketplace, "interface"), ["displayName"]) &&
+        nested(marketplace, "interface", "displayName") === "Ask Gina Plugins" &&
+        entriesMatchPackages(
+          plugins,
+          marketplacePlugins,
+          (plugin, source) =>
+            hasExactKeys(plugin, ["name", "source", "policy", "category"]) &&
+            nested(plugin, "name") === source.name &&
+            hasExactKeys(nested(plugin, "source"), ["source", "path"]) &&
+            nested(plugin, "source", "source") === "local" &&
+            nested(plugin, "source", "path") === `./plugins/${source.name}` &&
+            hasExactKeys(nested(plugin, "policy"), ["installation", "authentication"]) &&
+            nested(plugin, "policy", "installation") === source.listing.codex.policy.installation &&
+            nested(plugin, "policy", "authentication") ===
+              source.listing.codex.policy.authentication &&
+            nested(plugin, "category") === source.listing.category,
+        );
+      addCheck(
+        "marketplace.schema",
+        "Repository marketplace has exact schema and values",
+        marketplaceContract,
+        marketplaceContract
+          ? undefined
+          : "marketplace name, interface, plugin, policy, category, or source is malformed",
+      );
+      const descriptorVersioned =
+        nested(marketplace, "version") !== undefined ||
+        (Array.isArray(plugins) &&
+          plugins.some((plugin) => nested(plugin, "version") !== undefined));
+      addCheck(
+        "marketplace.no_version",
+        "Repository marketplace descriptor is unversioned",
+        !descriptorVersioned,
+        descriptorVersioned ? "marketplace descriptor must not declare version" : undefined,
+      );
+
+      const sourceProblems = yield* Effect.forEach(marketplacePlugins, (source, index) =>
+        marketplaceSourceProblem({
+          sourceValue: nested(
+            Array.isArray(plugins) ? plugins[index] : undefined,
+            "source",
+            "path",
+          ),
+          name: source.name,
+          repositoryRoot,
+          canonicalRepositoryRoot,
+        }),
+      );
+      const sourceDetail = sourceProblems.find((problem) => problem !== undefined);
+      addCheck(
+        "marketplace.source_containment",
+        "Repository marketplace source exists inside the repository without symlink indirection",
+        sourceDetail === undefined,
+        sourceDetail,
+      );
+    }
+
+    const cursorMarketplacePath = paths.join(repositoryRoot, ".cursor-plugin", "marketplace.json");
+    const cursorMarketplaceExists = yield* withFileSystemError(
+      cursorMarketplacePath,
+      "cannot be inspected",
+      fs.exists(cursorMarketplacePath),
+    );
+    addCheck(
+      "repository.cursor.marketplace_exists",
+      "Cursor marketplace descriptor exists",
+      cursorMarketplaceExists,
+    );
+    if (cursorMarketplaceExists) {
+      const cursorMarketplace = yield* readJson(fs, cursorMarketplacePath);
+      const cursorMarketplaceContract =
+        hasExactKeys(cursorMarketplace, ["name", "owner", "metadata", "plugins"]) &&
+        nested(cursorMarketplace, "name") === "ask-gina-plugins" &&
+        hasExactKeys(nested(cursorMarketplace, "owner"), ["name"]) &&
+        nested(cursorMarketplace, "owner", "name") === "Ask Gina" &&
+        hasExactKeys(nested(cursorMarketplace, "metadata"), ["description", "version"]) &&
+        nested(cursorMarketplace, "metadata", "version") === marketplaceVersion &&
+        entriesMatchPackages(
+          nested(cursorMarketplace, "plugins"),
+          marketplacePlugins,
+          (plugin, source) =>
+            hasExactKeys(plugin, ["name", "source", "description"]) &&
+            nested(plugin, "name") === source.name &&
+            nested(plugin, "source") === `./plugins/${source.name}`,
+        );
+      addCheck(
+        "repository.cursor.marketplace_contract",
+        "Cursor marketplace points at the plugin root without overlay overrides",
+        cursorMarketplaceContract,
+      );
+    }
+
+    const rootDevinManifestPath = paths.join(repositoryRoot, ".devin-plugin", "plugin.json");
+    const rootDevinManifestExists = yield* withFileSystemError(
+      rootDevinManifestPath,
+      "cannot be inspected",
+      fs.exists(rootDevinManifestPath),
+    );
+    addCheck(
+      "repository.devin.root_manifest_absent",
+      "Repository root does not install contributor instructions as a Devin plugin",
+      !rootDevinManifestExists,
+      rootDevinManifestExists
+        ? "distribute the plugin directories under plugins/ directly; the repository root contains contributor instructions"
+        : undefined,
+    );
+
+    const claudeMarketplacePath = paths.join(repositoryRoot, ".claude-plugin", "marketplace.json");
+    const claudeMarketplaceExists = yield* withFileSystemError(
+      claudeMarketplacePath,
+      "cannot be inspected",
+      fs.exists(claudeMarketplacePath),
+    );
+    addCheck(
+      "repository.claude.marketplace_exists",
+      "Independent Claude marketplace descriptor exists",
+      claudeMarketplaceExists,
+    );
+    if (claudeMarketplaceExists) {
+      const claudeMarketplace = yield* readJson(fs, claudeMarketplacePath);
+      const claudeContract =
+        nested(claudeMarketplace, "name") === "ask-gina-plugins" &&
+        entriesMatchPackages(
+          nested(claudeMarketplace, "plugins"),
+          marketplacePlugins,
+          (plugin, source) =>
+            nested(plugin, "name") === source.name &&
+            nested(plugin, "source") === `./plugins/${source.name}` &&
+            nested(plugin, "version") === source.listing.version &&
+            nested(plugin, "skills") === "./skills" &&
+            nested(plugin, "mcpServers") === "./targets/claude/.mcp.json",
+        );
+      addCheck(
+        "repository.claude.marketplace_contract",
+        "Claude marketplace independently references the Claude MCP overlay",
+        claudeContract,
+      );
+    }
+
+    yield* Effect.forEach(packages, (pkg) => {
+      const prefix = idPrefixOf(pkg.source.name);
+      const titlePrefix = prefix === "" ? "" : `${pkg.source.name}: `;
+      return checkPackageSource(pkg, (id, title, passed, detail) =>
+        addCheck(`${prefix}${id}`, `${titlePrefix}${title}`, passed, detail),
+      );
+    });
 
     return {
       target: "repository",
@@ -1359,14 +1532,30 @@ export const runTargetConformanceChecks = (
   ConformanceEnvironment
 > =>
   Effect.gen(function* () {
-    const targetsToRun = options.target === undefined ? TARGET_NAMES : [options.target];
-    const summaries = yield* Effect.forEach(
-      targetsToRun,
-      (target) => checkTargetConformance(target, options),
+    const paths = yield* Path.Path;
+    // Without a package option every package under plugins/ is checked, each for the hosts it publishes.
+    const packages =
+      options.packageRoot === undefined
+        ? yield* loadRepositoryPackages(
+            paths.resolve(options.repositoryRoot ?? defaultRepositoryRootFor(paths)),
+          )
+        : [yield* loadPackage(paths.resolve(options.packageRoot))];
+    const summaries = (yield* Effect.forEach(
+      packages,
+      (pkg) =>
+        Effect.forEach(
+          hostsOf(pkg.source).filter(
+            (host) => options.target === undefined || host === options.target,
+          ),
+          (host) => checkTargetConformance(host, { ...options, packageRoot: pkg.packageRoot }),
+          { concurrency: "unbounded" },
+        ),
       { concurrency: "unbounded" },
-    );
-    const targets: Partial<Record<TargetName, TargetSummary>> = {};
-    for (const summary of summaries) targets[summary.target] = summary;
+    )).flat();
+    const targets: Record<string, TargetSummary> = {};
+    for (const summary of summaries) {
+      targets[`${idPrefixOf(summary.package)}${summary.target}`] = summary;
+    }
     const shouldCheckRepository = options.checkRepository ?? options.target === undefined;
     const repository = shouldCheckRepository
       ? yield* checkRepositoryConformance(options)
@@ -1417,10 +1606,8 @@ const cliArguments = (
 };
 
 const printHumanReport = (report: TargetConformanceReport): void => {
-  for (const target of TARGET_NAMES) {
-    const summary = report.targets[target];
-    if (summary === undefined) continue;
-    process.stdout.write(`\n${target.toUpperCase()}: ${summary.passed ? "PASS" : "FAIL"}\n`);
+  for (const [key, summary] of Object.entries(report.targets)) {
+    process.stdout.write(`\n${key.toUpperCase()}: ${summary.passed ? "PASS" : "FAIL"}\n`);
     for (const check of summary.checks) {
       process.stdout.write(`  ${check.passed ? "PASS" : "FAIL"} ${check.title}\n`);
     }

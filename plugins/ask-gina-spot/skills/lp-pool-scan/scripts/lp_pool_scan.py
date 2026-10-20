@@ -2,27 +2,68 @@
 """
 lp_pool_scan.py: portable daily LP pool scanner (public data only, read-only, stdlib only).
 Usage: python3 lp_pool_scan.py --universe {allowlist,top,wide} [--allowlist FILE] [--out DIR] [--top N] [--min-tvl X] [--format {md,json,both}]
-Never signs or sends transactions; only HTTP GETs to public APIs and eth_call/eth_getLogs to a public RPC.
+Never signs or sends transactions. It makes HTTPS GETs to public APIs and read-only JSON-RPC POSTs
+(eth_call, eth_getLogs, eth_getBlockByNumber) to a public RPC. Names and symbols in the output come from
+third-party APIs and are untrusted text; every outside string goes through clean() before it is rendered.
 Universe: allowlist.json (Robinhood Chain 4663 Uniswap v3/v4, Solana Raydium CLMM/CPMM).
 Sources: GeckoTerminal, DexScreener, Raydium API v3, Robinhood Chain public RPC (eth_call/eth_getLogs only),
 GoPlus (EVM token security, chain 4663), RugCheck (Solana token risk).
 No transactions are ever sent. See README.md for formulas and gaps.
 """
-import json, math, os, sys, time, gzip, datetime as dt, argparse, traceback
+import json, math, os, re, sys, time, gzip, datetime as dt, argparse, traceback
 import urllib.request, urllib.error, urllib.parse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ALLOW = os.environ.get("LP_SCAN_ALLOWLIST") or os.path.join(HERE, "example_allowlist.json")
 OUT_DIR = SNAP_DIR = REPORT_DIR = CACHE_DIR = None
 
+def _mkdir(path):
+    """Create a folder only the current user can use."""
+    os.makedirs(path, mode=0o700, exist_ok=True)
+
 def set_paths(out_dir, allowlist=None):
     global OUT_DIR, SNAP_DIR, REPORT_DIR, CACHE_DIR, ALLOW
     OUT_DIR = os.path.abspath(out_dir)
+    _mkdir(OUT_DIR)
+    if hasattr(os, "getuid") and os.stat(OUT_DIR).st_uid != os.getuid():
+        raise SystemExit(f"lp_pool_scan: error: output folder is owned by another user: {OUT_DIR}")
     SNAP_DIR, REPORT_DIR, CACHE_DIR = (os.path.join(OUT_DIR, x) for x in ("snapshots", "reports", "cache"))
     for d in (SNAP_DIR, REPORT_DIR, CACHE_DIR):
-        os.makedirs(d, exist_ok=True)
+        _mkdir(d)
     if allowlist:
         ALLOW = os.path.abspath(allowlist)
+
+# ---------------------------------------------------------------- untrusted text
+# Pool and token names, symbols and risk labels come from third-party APIs, and anyone can deploy a token
+# with any name. clean() is the single place that makes such text safe to print in a markdown table.
+_CONTROL = re.compile(r"[\x00-\x1f\x7f-\x9f\u2028\u2029]+")
+_NAME_CAP, _TEXT_CAP, _LOG_CAP = 40, 120, 200
+_CAP_BY_KEY = {"name": _NAME_CAP, "symbol": _NAME_CAP, "flags": _TEXT_CAP, "notes": _TEXT_CAP, "log_tail": _LOG_CAP}
+
+def clean(value, cap=None):
+    s = _CONTROL.sub(" ", str(value)).replace("`", "'").replace("|", "\\|")
+    s = " ".join(s.split())
+    return s if cap is None or len(s) <= cap else s[:cap - 1] + "\u2026"
+
+def scrub(obj, key=None):
+    """Return a copy of a snapshot with every string passed through clean()."""
+    if isinstance(obj, dict):
+        return {k: scrub(v, k) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [scrub(v, key) for v in obj]
+    if isinstance(obj, str):
+        return clean(obj, _CAP_BY_KEY.get(key))
+    return obj
+
+def valid_date(s):
+    """Snapshot labels become file names, so only a real YYYY-MM-DD date is accepted."""
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", s):
+        return False
+    try:
+        dt.date.fromisoformat(s)
+    except ValueError:
+        return False
+    return True
 GT = "https://api.geckoterminal.com/api/v2"
 DS = "https://api.dexscreener.com/latest/dex"
 RAY = "https://api-v3.raydium.io"
@@ -71,6 +112,23 @@ CACHE_TTL = [120 * 60]          # seconds; GET responses are cached on disk so a
 LONG_TTL = {"api.gopluslabs.io": [36 * 3600], "api.rugcheck.xyz": [36 * 3600]}   # token security changes slowly (--security-ttl)
 CACHE_STATS = {"hits": 0, "oldest": None}
 
+MAX_BODY = 32 * 1024 * 1024     # bytes; larger responses are dropped
+
+class _HttpsOnlyRedirect(urllib.request.HTTPRedirectHandler):
+    """Follow redirects, but never from https to another scheme."""
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if urllib.parse.urlparse(newurl).scheme != "https":
+            raise urllib.error.URLError(f"refused redirect to a non-https URL ({urllib.parse.urlparse(newurl).netloc})")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+_OPENER = urllib.request.build_opener(_HttpsOnlyRedirect)
+
+def _shown(url):
+    """URL for log lines. The RPC URL may carry an API key, so only its host is shown."""
+    if url == RH_RPC:
+        return "rpc:" + urllib.parse.urlparse(url).netloc.rsplit("@", 1)[-1]
+    return url[:120]
+
 def _cache_path(url):
     import hashlib
     return os.path.join(CACHE_DIR, "http", hashlib.sha1(url.encode()).hexdigest() + ".json")
@@ -97,26 +155,30 @@ def http(url, data=None, headers=None, retries=5, key=None):
                 h["Content-Type"] = "application/json"
             h.update(headers or {})
             req = urllib.request.Request(url, data=json.dumps(data).encode() if data is not None else None, headers=h)
-            with urllib.request.urlopen(req, timeout=40) as r:
-                body = json.loads(r.read().decode())
+            with _OPENER.open(req, timeout=40) as r:
+                raw = r.read(MAX_BODY + 1)
+                if len(raw) > MAX_BODY:
+                    log(f"  TOO LARGE {_shown(url)} (over {MAX_BODY >> 20} MiB, dropped)")
+                    return None
+                body = json.loads(raw.decode())
             if key:
                 RAW[key] = body
             if cp:
-                os.makedirs(os.path.dirname(cp), exist_ok=True)
+                _mkdir(os.path.dirname(cp))
                 tmp = cp + f".{threading.get_ident()}.tmp"
                 json.dump(body, open(tmp, "w")); os.replace(tmp, cp)
             return body
         except urllib.error.HTTPError as e:
             wait = (65 if "geckoterminal" in host else 20) if e.code == 429 else 3 * (attempt + 1)
             if e.code in (400, 404) and attempt >= 1:
-                log(f"  HTTP {e.code} {url[:120]} (giving up)")
+                log(f"  HTTP {e.code} {_shown(url)} (giving up)")
                 return None
-            log(f"  HTTP {e.code} {url[:120]} retry in {wait}s")
+            log(f"  HTTP {e.code} {_shown(url)} retry in {wait}s")
             time.sleep(wait)
         except Exception as e:
-            log(f"  ERR {type(e).__name__} {url[:120]}: {e} retry")
+            log(f"  ERR {type(e).__name__} {_shown(url)}: {e} retry")
             time.sleep(3 * (attempt + 1))
-    log(f"  FAILED {url[:140]}")
+    log(f"  FAILED {_shown(url)}")
     return None
 
 def f(x):
@@ -850,8 +912,11 @@ def main(argv=None):
                     help="top/wide: core = Robinhood Uniswap v2/v3/v4 + Solana Raydium AMM/CPMM/CLMM only (default); all = every DEX")
     ap.add_argument("--security-ttl", type=float, default=36, help="hours to reuse cached GoPlus/RugCheck responses")
     ap.add_argument("--render-only", action="store_true", help="re-score and re-render the latest (or --date) snapshot; no network")
-    ap.add_argument("--from-cache", action="store_true", help="recompute from the last fetch pickle (debug; no network for pool data)")
     args = ap.parse_args(argv)
+    if args.date is not None and not valid_date(args.date):
+        ap.error("--date must be a real date in YYYY-MM-DD form")
+    if not RH_RPC.startswith("https://"):
+        ap.error("RH_RPC must be an https:// URL")
     set_paths(args.out, args.allowlist)
     if args.quiet: QUIET[0] = True
     if not os.path.exists(ALLOW):
@@ -867,7 +932,7 @@ def main(argv=None):
         name = f"{args.date}.json" if args.date else (c_[-1] if c_ else None)
         if not name or not os.path.exists(os.path.join(sd, name)):
             raise SystemExit(f"lp_pool_scan: error: no snapshot to re-render in {sd}")
-        snap = json.load(open(os.path.join(sd, name)))
+        snap = scrub(json.load(open(os.path.join(sd, name))))
         for r_ in snap["pools"]:
             score_row(r_)
             if not r_.get("rank_eligible", True): r_["score"] = None
@@ -876,7 +941,7 @@ def main(argv=None):
         json.dump(snap, open(os.path.join(sd, name), "w"), indent=1, default=str)
         pv = previous_snapshot(snap["date"], sd)
         md = render_wide(snap, pv) if wide else render_top(snap, pv, args.top) if top else render(snap, args.top, pv)
-        os.makedirs(rd, exist_ok=True); open(os.path.join(rd, name[:-5] + ".md"), "w").write(md)
+        _mkdir(rd); open(os.path.join(rd, name[:-5] + ".md"), "w").write(md)
         if args.format == "json":
             keep = ("rank", "name", "chain", "protocol", "address", "in_allowlist", "fee_tier_pct", "tvl_usd", "vol7d_usd", "fee_apr_7d", "il7d_pool_avg_pct", "score", "flags")
             print(json.dumps({"date": snap["date"], "universe": args.universe, "data_fetched_london": snap["data_fetched_london"],
@@ -885,15 +950,6 @@ def main(argv=None):
         else:
             print(md)
         return
-    if args.from_cache:
-        import pickle
-        c = pickle.load(open(os.path.join(CACHE_DIR, f"fetch_{args.universe}.pkl"), "rb"))
-        RAW.update(c["RAW"]); load_registries(False)
-        st_utc = dt.datetime.fromtimestamp(c["now"], dt.timezone.utc)
-        from zoneinfo import ZoneInfo
-        lon = st_utc.astimezone(ZoneInfo("Europe/London")); date = args.date or lon.strftime("%Y-%m-%d")
-        sd = SNAP_DIR if not sub else os.path.join(SNAP_DIR, sub); rd = REPORT_DIR if not sub else os.path.join(REPORT_DIR, sub)
-        return finish(args, c["rows"], c["states"], c["sources"], c["sub_floor"], c["now"], st_utc, lon, date, sd, rd, wide)
     now = time.time()
     started_utc = dt.datetime.now(dt.timezone.utc)
     try:
@@ -1023,10 +1079,7 @@ def main(argv=None):
     states = {k: v.result() for k, v in fut_state.items()}
     if top: sec_thread.join()
     json.dump(v4cache, open(v4cache_f, "w"), indent=1)
-    import pickle
     states = {i: states[id(row)] for i, row in enumerate(rows)}
-    pickle.dump({"rows": rows, "states": states, "sources": sources, "sub_floor": sub_floor, "RAW": RAW, "now": now},
-                open(os.path.join(CACHE_DIR, f"fetch_{args.universe}.pkl"), "wb"))
     return finish(args, rows, states, sources, sub_floor, now, started_utc, london, date, snap_dir, rep_dir, wide, pool)
 
 def finish(args, rows, states, sources, sub_floor, now, started_utc, london, date, snap_dir, rep_dir, wide, pool=None):
@@ -1076,18 +1129,19 @@ def finish(args, rows, states, sources, sub_floor, now, started_utc, london, dat
             "unresolved": [r_["address"] for r_ in rows if not (r_["src"]["gt"] or r_["src"]["ds"] or r_["src"]["raydium"])],
             "log_tail": LOG[-80:],
             "http_cache": {"hits": CACHE_STATS["hits"], "oldest_cached_response_utc": dt.datetime.fromtimestamp(CACHE_STATS["oldest"], dt.timezone.utc).isoformat() if CACHE_STATS["oldest"] else None}}
+    snap = scrub(snap)
     snap["runtime_s"] = round((finished_utc - started_utc).total_seconds())
     snap["dex_scope"] = DEX_SCOPE[0]
     if wide: snap["universe_counts"] = universe_counts(snap)
-    os.makedirs(snap_dir, exist_ok=True)
+    _mkdir(snap_dir)
     prev = previous_snapshot(date, snap_dir)
     snap_path = os.path.join(snap_dir, f"{date}.json")
     json.dump(snap, open(snap_path, "w"), indent=1, default=str)
-    rawdir = os.path.join(snap_dir, "raw"); os.makedirs(rawdir, exist_ok=True)
+    rawdir = os.path.join(snap_dir, "raw"); _mkdir(rawdir)
     with gzip.open(os.path.join(rawdir, f"{date}.json.gz"), "wt") as fh:
         json.dump(RAW, fh)
     md = render_wide(snap, prev) if wide else render_top(snap, prev, args.top) if args.universe == "top" else render(snap, args.top, prev)
-    os.makedirs(rep_dir, exist_ok=True)
+    _mkdir(rep_dir)
     if args.format in ("md", "both"):
         open(os.path.join(rep_dir, f"{date}.md"), "w").write(md)
     if args.format == "json":
@@ -1665,7 +1719,7 @@ def previous_snapshot(date, snap_dir=None):
     if not os.path.isdir(snap_dir): return None
     c = sorted(x for x in os.listdir(snap_dir) if x.endswith(".json") and x[:-5] < date)
     if not c: return None
-    try: return json.load(open(os.path.join(snap_dir, c[-1])))
+    try: return scrub(json.load(open(os.path.join(snap_dir, c[-1]))))
     except Exception: return None
 
 def what_changed(snap, prev):

@@ -6,7 +6,6 @@ import { Console, Data, Effect, FileSystem, Layer, Path, Schema } from "effect";
 import { parse } from "yaml";
 
 export const SKILL_INDEX_PATH = "skills/index.json";
-export const PENDING_RELOCATION_PATH = "tools/skill-index-pending-relocation.yaml";
 
 const IGNORED_DIRECTORIES = new Set([".git", ".agents", "node_modules", "dist"]);
 const MCP_ENDPOINT = /^https:\/\/[^/]+\/ai\/([a-z0-9-]+)\/mcp$/u;
@@ -44,8 +43,6 @@ const PluginDeclaration = Schema.Struct({
   mcp: Schema.Struct({ url: Schema.String }),
   skills: Schema.Array(Schema.Struct({ id: Schema.String, mcpServed: Schema.Boolean })),
 });
-
-const PendingRelocation = Schema.Struct({ paths: Schema.Array(Schema.String) });
 
 const problem = (message: string): SkillIndexError => new SkillIndexError({ problems: [message] });
 
@@ -120,20 +117,6 @@ const findSkillDocuments = (root: string) =>
         return nested.flat();
       });
     return yield* visit("");
-  });
-
-const loadPendingRelocation = (root: string) =>
-  Effect.gen(function* () {
-    const path = yield* Path.Path;
-    if (!(yield* exists(path.join(root, PENDING_RELOCATION_PATH)))) return [] as string[];
-    const source = yield* parseYaml(
-      PENDING_RELOCATION_PATH,
-      yield* readText(root, PENDING_RELOCATION_PATH),
-    );
-    const decoded = yield* Schema.decodeUnknownEffect(PendingRelocation)(source).pipe(
-      Effect.mapError(() => problem(`${PENDING_RELOCATION_PATH} must contain a paths list`)),
-    );
-    return [...decoded.paths];
   });
 
 const parseFrontmatter = (relative: string, content: string) =>
@@ -247,19 +230,8 @@ export const buildSkillIndex = (root: string) =>
       }
     }
 
-    const found = yield* findSkillDocuments(root);
-    const foundSet = new Set(found);
-    const pending = yield* loadPendingRelocation(root);
-    for (const entry of pending) {
-      if (!foundSet.has(entry)) {
-        problems.push(`${PENDING_RELOCATION_PATH} lists ${entry}, which does not exist; remove it`);
-      } else if (declaredDocuments.has(entry)) {
-        problems.push(`${PENDING_RELOCATION_PATH} lists ${entry}, which is declared; remove it`);
-      }
-    }
-    const allowed = new Set(pending);
-    for (const document of found) {
-      if (declaredDocuments.has(document) || allowed.has(document)) continue;
+    for (const document of yield* findSkillDocuments(root)) {
+      if (declaredDocuments.has(document)) continue;
       problems.push(
         `${document} is not declared by any plugin. Move its directory to plugins/<package>/skills/<id>/ and list <id> under skills: in plugins/<package>/plugin.yaml.`,
       );
