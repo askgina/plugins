@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import { validateLpContract } from "./lp-contract.mjs";
 import { validateSkillsCatalog } from "./skills-catalog.mjs";
+import { validateVenueTools } from "./venue-tools.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -435,6 +436,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
     ...validateGina(root),
     ...validateLpContract(root),
     ...validateSkillsCatalog(path.dirname(root)),
+    ...validateVenueTools(path.dirname(root)),
     ...validateReleaseGate(root, {
       missingHeading: baseline("gate-baseline.json"),
       skillCounts: baseline("skill-count-allowlist.json"),

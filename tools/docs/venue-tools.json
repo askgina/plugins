@@ -1,0 +1,374 @@
+{
+  "version": 1,
+  "classes": {
+    "read-external": {
+      "title": "Read, external provider",
+      "hints": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "meaning": "Reads live data from a market, blockchain or other provider. It changes nothing and can be repeated."
+    },
+    "read-local": {
+      "title": "Read, Gina account",
+      "hints": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "meaning": "Reads only state Gina stores for your account. It calls no outside provider and can be repeated."
+    },
+    "execute": {
+      "title": "Execute",
+      "hints": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "meaning": "Places, changes, cancels or settles an order, trade or fund movement. It acts at once, repeating it can repeat the effect, and it cannot always be undone."
+    },
+    "mutate-schedule": {
+      "title": "Change a schedule",
+      "hints": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "meaning": "Creates or changes a scheduled prompt that Gina runs later. It touches only Gina-held schedule state."
+    },
+    "delete-schedule": {
+      "title": "Delete a schedule",
+      "hints": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "meaning": "Deletes or archives a scheduled prompt so it stops running. It touches only Gina-held schedule state, and it is marked destructive because it ends a recurring automation."
+    },
+    "sandbox": {
+      "title": "Sandbox",
+      "hints": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "meaning": "Runs commands in a sandbox that can call every host tool the venue allows, including the execute class, so it carries the strictest class of the tools it can reach."
+    },
+    "render": {
+      "title": "Render",
+      "hints": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
+      "meaning": "Draws a widget from data an earlier read already fetched. It makes no outside call and writes nothing."
+    },
+    "render-external": {
+      "title": "Render, may fetch",
+      "hints": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "meaning": "Draws a widget and may fetch the data behind it from an outside provider. It writes nothing."
+    }
+  },
+  "venues": {
+    "perps": {
+      "title": "Perps",
+      "package": "ask-gina-perps",
+      "endpoint": "https://askgina.ai/ai/perps/mcp",
+      "verify": { "tool": "getHyperliquidPositions", "prompt": "Show my Hyperliquid positions." },
+      "tools": [
+        {
+          "name": "getAccountAddresses",
+          "class": "read-local",
+          "purpose": "Your Gina wallet addresses"
+        },
+        {
+          "name": "getHyperliquidAccount",
+          "class": "read-external",
+          "purpose": "Account value, margin and balances"
+        },
+        {
+          "name": "getHyperliquidPositions",
+          "class": "read-external",
+          "purpose": "Open perpetual positions"
+        },
+        {
+          "name": "getHyperliquidOpenOrders",
+          "class": "read-external",
+          "purpose": "Resting orders"
+        },
+        {
+          "name": "getHyperliquidPortfolio",
+          "class": "read-external",
+          "purpose": "Account value and profit and loss history"
+        },
+        {
+          "name": "getHyperliquidMarkets",
+          "class": "read-external",
+          "purpose": "Hyperliquid markets and asset metadata"
+        },
+        {
+          "name": "getHyperliquidPrice",
+          "class": "read-external",
+          "purpose": "One live perpetual price"
+        },
+        {
+          "name": "getHyperliquidPrices",
+          "class": "read-external",
+          "purpose": "Several live perpetual prices"
+        },
+        {
+          "name": "getHyperliquidAssetData",
+          "class": "read-external",
+          "purpose": "Leverage settings, trade size limits and available margin for one asset"
+        },
+        {
+          "name": "getHyperliquidPerpDexes",
+          "class": "read-external",
+          "purpose": "HIP-3 DEXes that deploy perpetual markets"
+        },
+        {
+          "name": "fetchHyperliquidTrades",
+          "class": "read-external",
+          "purpose": "Your trade history"
+        },
+        { "name": "fetchHyperliquidCandles", "class": "read-external", "purpose": "Price candles" },
+        {
+          "name": "fetchHyperliquidOrderBook",
+          "class": "read-external",
+          "purpose": "Order book snapshot"
+        },
+        {
+          "name": "previewHyperliquidOrderCost",
+          "class": "read-external",
+          "purpose": "Estimate an order's cost without placing it"
+        },
+        {
+          "name": "getHyperliquidAccountHealth",
+          "class": "read-external",
+          "purpose": "Snapshot of account exposure and margin"
+        },
+        {
+          "name": "fetchHyperliquidMarketRadar",
+          "class": "read-external",
+          "purpose": "Rank markets by activity and compare retained samples"
+        },
+        {
+          "name": "placeHyperliquidOrder",
+          "class": "execute",
+          "purpose": "Place a market or limit order"
+        },
+        {
+          "name": "placeHyperliquidStopOrder",
+          "class": "execute",
+          "purpose": "Place a stop-loss or take-profit trigger order"
+        },
+        { "name": "cancelHyperliquidOrder", "class": "execute", "purpose": "Cancel an open order" },
+        { "name": "modifyHyperliquidOrder", "class": "execute", "purpose": "Modify an open order" },
+        {
+          "name": "adjustHyperliquidLeverage",
+          "class": "execute",
+          "purpose": "Set the leverage of an asset"
+        },
+        {
+          "name": "depositToHyperliquid",
+          "class": "execute",
+          "purpose": "Deposit USDC to Hyperliquid"
+        },
+        {
+          "name": "hyperliquidWithdraw",
+          "class": "execute",
+          "purpose": "Withdraw USDC from Hyperliquid"
+        },
+        {
+          "name": "bash",
+          "class": "sandbox",
+          "purpose": "Scripts, files, SQL over captured data and composed workflows"
+        },
+        { "name": "perps.renderChart", "class": "render", "purpose": "Chart a captured dataset" },
+        {
+          "name": "perps.renderDataView",
+          "class": "render-external",
+          "purpose": "Show a captured dataset as a table or view"
+        },
+        { "name": "perps.renderPositions", "class": "render", "purpose": "Show open positions" },
+        {
+          "name": "perps.renderAccountOverview",
+          "class": "render",
+          "purpose": "Show an account overview"
+        },
+        { "name": "perps.renderMarkets", "class": "render", "purpose": "Show markets" },
+        { "name": "perps.renderOpenOrders", "class": "render", "purpose": "Show open orders" },
+        {
+          "name": "perps.renderPerformance",
+          "class": "render",
+          "purpose": "Show account performance"
+        }
+      ],
+      "bashOnly": [
+        {
+          "name": "createHyperliquidTable",
+          "reason": "Writes the caller's sandbox scratch table, so it only makes sense inside bash."
+        },
+        {
+          "name": "executeSqlQuery",
+          "reason": "Queries sandbox scratch tables, so it only makes sense inside bash."
+        },
+        {
+          "name": "captureAnalysisDataset",
+          "reason": "Captures a dataset for sandbox SQL and render tools, so it only makes sense inside bash."
+        },
+        {
+          "name": "updateHyperliquidIsolatedMargin",
+          "reason": "The sandbox blocks it until a live confirmation step exists, so it is not a native tool and does not execute from bash."
+        },
+        {
+          "name": "fundHIP3Dex",
+          "reason": "The sandbox blocks it until a live confirmation step exists, so it is not a native tool and does not execute from bash."
+        },
+        {
+          "name": "returnHIP3DexFunds",
+          "reason": "The sandbox blocks it until a live confirmation step exists, so it is not a native tool and does not execute from bash."
+        }
+      ]
+    },
+    "predictions": {
+      "title": "Predictions",
+      "package": "ask-gina-predictions",
+      "endpoint": "https://askgina.ai/ai/predictions/mcp",
+      "verify": {
+        "tool": "getExpiringMarkets",
+        "prompt": "Show Polymarket markets that end today."
+      },
+      "tools": [
+        {
+          "name": "getAccountAddresses",
+          "class": "read-local",
+          "purpose": "Your Gina wallet addresses"
+        },
+        {
+          "name": "listScheduledPrompts",
+          "class": "read-local",
+          "purpose": "Your scheduled prompts"
+        },
+        {
+          "name": "searchPredictionMarkets",
+          "class": "read-external",
+          "purpose": "Search Polymarket markets"
+        },
+        {
+          "name": "getExpiringMarkets",
+          "class": "read-external",
+          "purpose": "Markets that end soon"
+        },
+        {
+          "name": "getPredictionOrderbook",
+          "class": "read-external",
+          "purpose": "Order book of one market"
+        },
+        {
+          "name": "getSeriesMarket",
+          "class": "read-external",
+          "purpose": "The current or next market of a recurring series"
+        },
+        {
+          "name": "getPolymarketPositions",
+          "class": "read-external",
+          "purpose": "Your open and redeemable positions"
+        },
+        {
+          "name": "getPolymarketOrderHistory",
+          "class": "read-external",
+          "purpose": "Your order history"
+        },
+        {
+          "name": "getCrosschainPortfolio",
+          "class": "read-external",
+          "purpose": "Your balances across chains"
+        },
+        { "name": "webSearch", "class": "read-external", "purpose": "Search the web for context" },
+        { "name": "fetchUrl", "class": "read-external", "purpose": "Fetch a web page for context" },
+        {
+          "name": "tradePredictionMarket",
+          "class": "execute",
+          "purpose": "Execute an immediate Polymarket trade"
+        },
+        {
+          "name": "managePredictionOrders",
+          "class": "execute",
+          "purpose": "List, create, replace and cancel orders"
+        },
+        {
+          "name": "redeemPredictionMarket",
+          "class": "execute",
+          "purpose": "Redeem winning positions of resolved markets"
+        },
+        {
+          "name": "splitMergePredictionPosition",
+          "class": "execute",
+          "purpose": "Split pUSD into YES and NO sets, or merge sets back into pUSD, on one Polymarket market"
+        },
+        {
+          "name": "topUpPredictionsBalance",
+          "class": "execute",
+          "purpose": "Top up your Predictions balance from a source asset"
+        },
+        {
+          "name": "withdrawPredictionsBalance",
+          "class": "execute",
+          "purpose": "Withdraw ready Predictions balance to your own wallet"
+        },
+        {
+          "name": "createScheduledPrompt",
+          "class": "mutate-schedule",
+          "purpose": "Create a scheduled prompt"
+        },
+        {
+          "name": "toggleScheduledPrompt",
+          "class": "mutate-schedule",
+          "purpose": "Enable or disable a scheduled prompt"
+        },
+        {
+          "name": "updateScheduledAgentConfig",
+          "class": "mutate-schedule",
+          "purpose": "Update the agent configuration of a scheduled prompt"
+        },
+        {
+          "name": "updateScheduledPromptCondition",
+          "class": "mutate-schedule",
+          "purpose": "Update a conditional Polymarket scheduled prompt in place"
+        },
+        {
+          "name": "deleteScheduledPrompt",
+          "class": "delete-schedule",
+          "purpose": "Archive (disable) a scheduled prompt"
+        },
+        {
+          "name": "bash",
+          "class": "sandbox",
+          "purpose": "Scripts, files, SQL over fetched market data and composed workflows"
+        }
+      ],
+      "bashOnly": [
+        {
+          "name": "fetchPolymarketData",
+          "reason": "Loads rows into sandbox SQL tables and returns a table handle, so it only makes sense inside bash."
+        },
+        {
+          "name": "fetchPolymarketHistory",
+          "reason": "Loads rows into sandbox SQL tables and returns a table handle, so it only makes sense inside bash."
+        }
+      ]
+    }
+  }
+}

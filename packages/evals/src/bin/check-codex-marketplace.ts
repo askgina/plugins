@@ -509,7 +509,8 @@ export interface InspectInstalledPluginOptions {
 /**
  * Checks one installed plugin against its Codex root contract. The read-only `ask-gina` listing is
  * pinned to the contracts catalog (four goal-led skills, production MCP URL). Every other package
- * must install exactly the skills and MCP URL its own checkout declares.
+ * must install exactly the skills and MCP URL its own checkout declares. A package whose checkout
+ * has no skills directory declares no skills path and must install none.
  */
 export const inspectInstalledPlugin = (
   options: InspectInstalledPluginOptions,
@@ -519,13 +520,30 @@ export const inspectInstalledPlugin = (
     const path = yield* Path.Path;
     const { installedRoot, pluginName, sourceRoot } = options;
     const canonical = pluginName === CANONICAL_PLUGIN_NAME;
+    const listSkills = (root: string) =>
+      fs.exists(root).pipe(
+        Effect.flatMap((present) => (present ? fs.readDirectory(root) : Effect.succeed([]))),
+        Effect.map((names) => names.toSorted()),
+        Effect.mapError(
+          () =>
+            new CodexMarketplaceSmokeError({
+              stage: "inspection",
+              reason: "io-failed",
+              detail: `cannot list ${pluginName} skills in ${root}`,
+            }),
+        ),
+      );
+    const skillsRoot = path.join(installedRoot, "skills");
+    const expectedSkills = canonical
+      ? ASK_GINA_SKILL_DEFINITIONS.map((skill) => skill.name).toSorted()
+      : yield* listSkills(path.join(sourceRoot, "skills"));
     const manifest = yield* readJsonObject(
       path.join(installedRoot, ".codex-plugin", "plugin.json"),
     );
     const pluginInterface = manifest.interface;
     if (
       manifest.name !== pluginName ||
-      manifest.skills !== "./skills/" ||
+      manifest.skills !== (expectedSkills.length > 0 ? "./skills/" : undefined) ||
       manifest.mcpServers !== "./.mcp.json" ||
       !isJsonObject(pluginInterface) ||
       pluginInterface.composerIcon !== "./assets/icon.svg" ||
@@ -574,23 +592,7 @@ export const inspectInstalledPlugin = (
     }
 
     yield* requireNonEmptyRegularFile(path.join(installedRoot, "assets", "icon.svg"));
-    const skillsRoot = path.join(installedRoot, "skills");
-    const listSkills = (root: string) =>
-      fs.readDirectory(root).pipe(
-        Effect.map((names) => names.toSorted()),
-        Effect.mapError(
-          () =>
-            new CodexMarketplaceSmokeError({
-              stage: "inspection",
-              reason: "io-failed",
-              detail: `cannot list ${pluginName} skills in ${root}`,
-            }),
-        ),
-      );
     const actualSkills = yield* listSkills(skillsRoot);
-    const expectedSkills = canonical
-      ? ASK_GINA_SKILL_DEFINITIONS.map((skill) => skill.name).toSorted()
-      : yield* listSkills(path.join(sourceRoot, "skills"));
     if (
       actualSkills.length !== expectedSkills.length ||
       !actualSkills.every((skill, index) => skill === expectedSkills[index])

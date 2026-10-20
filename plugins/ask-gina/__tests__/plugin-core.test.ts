@@ -31,7 +31,7 @@ const ClaudeMarketplaceJson = Schema.fromJsonString(
         name: Schema.String,
         source: Schema.String,
         strict: Schema.Boolean,
-        skills: Schema.String,
+        skills: Schema.optional(Schema.String),
         mcpServers: Schema.String,
         displayName: Schema.String,
         author: Schema.Struct({ name: Schema.String, url: Schema.String }),
@@ -150,7 +150,10 @@ describe("Ask Gina portable plugin core", () => {
 
         assert.strictEqual(marketplace.name, "ask-gina-plugins");
         assert.deepStrictEqual(marketplace.interface, { displayName: "Ask Gina Plugins" });
-        assert.strictEqual(marketplace.plugins.length, 2);
+        assert.deepStrictEqual(
+          marketplace.plugins.map(({ name }) => name),
+          ["ask-gina", "ask-gina-perps", "ask-gina-predictions", "ask-gina-spot"],
+        );
         const plugin = marketplace.plugins[0];
         assert.isDefined(plugin);
         assert.deepStrictEqual(plugin, {
@@ -160,6 +163,12 @@ describe("Ask Gina portable plugin core", () => {
           category: "Finance",
         });
         assert.deepStrictEqual(marketplace.plugins[1], {
+          name: "ask-gina-perps",
+          source: { source: "local", path: "./plugins/ask-gina-perps" },
+          policy: { installation: "AVAILABLE", authentication: "ON_INSTALL" },
+          category: "Finance",
+        });
+        assert.deepStrictEqual(marketplace.plugins[3], {
           name: "ask-gina-spot",
           source: { source: "local", path: "./plugins/ask-gina-spot" },
           policy: { installation: "AVAILABLE", authentication: "ON_INSTALL" },
@@ -189,8 +198,15 @@ describe("Ask Gina portable plugin core", () => {
           name: "Ask Gina",
           url: "https://askgina.ai",
         });
-        assert.strictEqual(marketplace.plugins.length, 2);
-        assert.deepNestedInclude(marketplace.plugins[1] as object, {
+        assert.strictEqual(marketplace.plugins.length, 4);
+        // Packages without skills carry no skills path.
+        for (const index of [1, 2]) {
+          const venue = marketplace.plugins[index];
+          assert.isDefined(venue);
+          assert.isUndefined(venue?.skills);
+          assert.strictEqual(venue?.mcpServers, "./targets/claude/.mcp.json");
+        }
+        assert.deepNestedInclude(marketplace.plugins[3] as object, {
           name: "ask-gina-spot",
           source: "./plugins/ask-gina-spot",
           strict: false,
@@ -305,6 +321,25 @@ describe("Ask Gina portable plugin core", () => {
           "ask-gina-spot:devin",
         ]);
       }),
+    );
+
+    it.effect("passes conformance for every skill-less write host target", () =>
+      Effect.forEach(["ask-gina-perps", "ask-gina-predictions"], (name) =>
+        Effect.gen(function* () {
+          const report = yield* runTargetConformanceChecks({
+            packageRoot: fileURLToPath(new URL(`../../${name}/`, import.meta.url)),
+          });
+
+          assert.isTrue(report.allPassed);
+          assert.deepStrictEqual(Object.keys(report.targets), [
+            `${name}:openai`,
+            `${name}:cursor`,
+            `${name}:claude`,
+            `${name}:copilot`,
+            `${name}:devin`,
+          ]);
+        }),
+      ),
     );
 
     it.effect("rejects loss of canonical OpenAI support and skill metadata", () =>

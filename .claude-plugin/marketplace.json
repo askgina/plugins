@@ -37,6 +37,40 @@
       ]
     },
     {
+      "name": "ask-gina-perps",
+      "source": "./plugins/ask-gina-perps",
+      "strict": false,
+      "mcpServers": "./targets/claude/.mcp.json",
+      "displayName": "Ask Gina Perps",
+      "description": "Ask Gina Perps lets an agent read Hyperliquid account and market data and, with your approval, place, change and cancel perpetual-futures orders, adjust leverage, and deposit or withdraw funds from your Gina wallet. It also renders charts, positions and account overviews. Orders and funding move real money, so review every action before you approve it.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Ask Gina",
+        "url": "https://askgina.ai"
+      },
+      "homepage": "https://askgina.ai",
+      "repository": "https://github.com/askgina/plugins",
+      "license": "Apache-2.0",
+      "keywords": ["crypto", "perps", "perpetuals", "hyperliquid", "hip-3", "trading", "mcp"]
+    },
+    {
+      "name": "ask-gina-predictions",
+      "source": "./plugins/ask-gina-predictions",
+      "strict": false,
+      "mcpServers": "./targets/claude/.mcp.json",
+      "displayName": "Ask Gina Predictions",
+      "description": "Ask Gina Predictions lets an agent search Polymarket markets, read your positions and order history, and, with your approval, place trades, manage orders, redeem winning positions, and top up or withdraw your prediction balance from your Gina wallet. It also manages scheduled prompts. Trades and balance changes move real funds, so review every action before you approve it.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Ask Gina",
+        "url": "https://askgina.ai"
+      },
+      "homepage": "https://askgina.ai",
+      "repository": "https://github.com/askgina/plugins",
+      "license": "Apache-2.0",
+      "keywords": ["crypto", "predictions", "prediction-markets", "polymarket", "trading", "mcp"]
+    },
+    {
       "name": "ask-gina-spot",
       "source": "./plugins/ask-gina-spot",
       "strict": false,

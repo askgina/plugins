@@ -260,8 +260,23 @@ const assertSourceIsPortable = (
     }
 
     const canonicalSkills = paths.join(packageRoot, "skills");
-    yield* assertDirectoryNames(canonicalSkills, skillIds);
-    yield* assertNoSymbolicLinks(canonicalSkills);
+    if (skillIds.length === 0) {
+      // A package that declares no skills ships no skills/ directory and no skills path in its manifests.
+      const skillsDirectoryExists = yield* withFileSystemError(
+        canonicalSkills,
+        "cannot be inspected",
+        fs.exists(canonicalSkills),
+      );
+      if (skillsDirectoryExists) {
+        return yield* pluginSkillSyncError(
+          canonicalSkills,
+          "plugin.yaml declares no skills, so the package must not have a skills directory",
+        );
+      }
+    } else {
+      yield* assertDirectoryNames(canonicalSkills, skillIds);
+      yield* assertNoSymbolicLinks(canonicalSkills);
+    }
 
     const legacyOpenAiOverlay = paths.join(packageRoot, "targets", "openai");
     const legacyOpenAiOverlayExists = yield* withFileSystemError(

@@ -1,0 +1,102 @@
+---
+title: "Predictions native tools"
+description: "Every Predictions MCP native tool, grouped by annotation class, with what each class can change."
+pageType: reference
+---
+
+{/* Generated from tools/docs/venue-tools.json by tools/docs/venue-tools.mjs. Edit the catalog, then run `node tools/docs/venue-tools.mjs`. */}
+
+Predictions MCP at `https://askgina.ai/ai/predictions/mcp` publishes each tool below as a native MCP tool beside `bash`. Native tools add no authority, because `bash` can already call the host tools behind them. They let your client show and gate each action by its own annotation instead of treating one `bash` call as a single risk.
+
+Annotations are the server's own declaration. A client can use them to decide when to ask you before a call. They are hints, not enforcement, so keep approving every money-moving action yourself. Run `tools/list` on your connection to see what your deployment advertises.
+
+## Annotation classes
+
+| Class                   | `readOnlyHint` | `destructiveHint` | `idempotentHint` | `openWorldHint` |
+| ----------------------- | -------------- | ----------------- | ---------------- | --------------- |
+| Read, external provider | true           | false             | true             | true            |
+| Read, Gina account      | true           | false             | true             | false           |
+| Execute                 | false          | true              | false            | true            |
+| Change a schedule       | false          | false             | false            | false           |
+| Delete a schedule       | false          | true              | false            | false           |
+| Sandbox                 | false          | true              | false            | true            |
+
+## Read, external provider
+
+Reads live data from a market, blockchain or other provider. It changes nothing and can be repeated.
+
+| Tool                        | Use it for                                       |
+| --------------------------- | ------------------------------------------------ |
+| `searchPredictionMarkets`   | Search Polymarket markets                        |
+| `getExpiringMarkets`        | Markets that end soon                            |
+| `getPredictionOrderbook`    | Order book of one market                         |
+| `getSeriesMarket`           | The current or next market of a recurring series |
+| `getPolymarketPositions`    | Your open and redeemable positions               |
+| `getPolymarketOrderHistory` | Your order history                               |
+| `getCrosschainPortfolio`    | Your balances across chains                      |
+| `webSearch`                 | Search the web for context                       |
+| `fetchUrl`                  | Fetch a web page for context                     |
+
+## Read, Gina account
+
+Reads only state Gina stores for your account. It calls no outside provider and can be repeated.
+
+| Tool                   | Use it for                 |
+| ---------------------- | -------------------------- |
+| `getAccountAddresses`  | Your Gina wallet addresses |
+| `listScheduledPrompts` | Your scheduled prompts     |
+
+## Execute
+
+Places, changes, cancels or settles an order, trade or fund movement. It acts at once, repeating it can repeat the effect, and it cannot always be undone.
+
+| Tool                           | Use it for                                                                              |
+| ------------------------------ | --------------------------------------------------------------------------------------- |
+| `tradePredictionMarket`        | Execute an immediate Polymarket trade                                                   |
+| `managePredictionOrders`       | List, create, replace and cancel orders                                                 |
+| `redeemPredictionMarket`       | Redeem winning positions of resolved markets                                            |
+| `splitMergePredictionPosition` | Split pUSD into YES and NO sets, or merge sets back into pUSD, on one Polymarket market |
+| `topUpPredictionsBalance`      | Top up your Predictions balance from a source asset                                     |
+| `withdrawPredictionsBalance`   | Withdraw ready Predictions balance to your own wallet                                   |
+
+## Change a schedule
+
+Creates or changes a scheduled prompt that Gina runs later. It touches only Gina-held schedule state.
+
+| Tool                             | Use it for                                                |
+| -------------------------------- | --------------------------------------------------------- |
+| `createScheduledPrompt`          | Create a scheduled prompt                                 |
+| `toggleScheduledPrompt`          | Enable or disable a scheduled prompt                      |
+| `updateScheduledAgentConfig`     | Update the agent configuration of a scheduled prompt      |
+| `updateScheduledPromptCondition` | Update a conditional Polymarket scheduled prompt in place |
+
+## Delete a schedule
+
+Deletes or archives a scheduled prompt so it stops running. It touches only Gina-held schedule state, and it is marked destructive because it ends a recurring automation.
+
+| Tool                    | Use it for                           |
+| ----------------------- | ------------------------------------ |
+| `deleteScheduledPrompt` | Archive (disable) a scheduled prompt |
+
+## Sandbox
+
+Runs commands in a sandbox that can call every host tool the venue allows, including the execute class, so it carries the strictest class of the tools it can reach.
+
+| Tool   | Use it for                                                          |
+| ------ | ------------------------------------------------------------------- |
+| `bash` | Scripts, files, SQL over fetched market data and composed workflows |
+
+## Host tools that are not native
+
+These host tools are not native tools. Sandbox-only tools run inside `bash` with `host-tools`.
+
+| Tool                     | Why                                                                                                |
+| ------------------------ | -------------------------------------------------------------------------------------------------- |
+| `fetchPolymarketData`    | Loads rows into sandbox SQL tables and returns a table handle, so it only makes sense inside bash. |
+| `fetchPolymarketHistory` | Loads rows into sandbox SQL tables and returns a table handle, so it only makes sense inside bash. |
+
+## Check that it works
+
+1. Open your client's tool list for `https://askgina.ai/ai/predictions/mcp`.
+2. Confirm `bash` and the tools above appear, and that every tool in the Execute class is marked destructive.
+3. Ask “Show Polymarket markets that end today.” and check that the assistant calls `getExpiringMarkets`. Do not approve an Execute call you did not ask for.

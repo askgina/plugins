@@ -1084,9 +1084,12 @@ export const stagePluginTarget: {
           .pipe(Effect.mapError((cause) => fail(`cannot stage ${host} target`, cause)));
       }
 
-      yield* fs
-        .makeDirectory(path.join(stage, "skills"), { recursive: true })
-        .pipe(Effect.mapError((cause) => fail(`cannot create ${host} skills`, cause)));
+      // A package without skills ships no skills directory.
+      if (skills.length > 0) {
+        yield* fs
+          .makeDirectory(path.join(stage, "skills"), { recursive: true })
+          .pipe(Effect.mapError((cause) => fail(`cannot create ${host} skills`, cause)));
+      }
       yield* Effect.forEach(skills, (skill) =>
         Effect.gen(function* () {
           const destination = path.join(stage, "skills", skill);
@@ -1151,9 +1154,14 @@ export const packPluginPackage = (options: {
         const label = `${plugin.name} ${host}`;
         const stage = path.join(temporary, `target-${plugin.name}-${host}`);
         yield* stagePluginTarget(host, packageRoot, stage, skillIds);
-        const staged = (yield* fs
-          .readDirectory(path.join(stage, "skills"))
-          .pipe(Effect.mapError((cause) => fail(`cannot list ${label} skills`, cause)))).sort();
+        const staged =
+          skillIds.length === 0
+            ? []
+            : (yield* fs
+                .readDirectory(path.join(stage, "skills"))
+                .pipe(
+                  Effect.mapError((cause) => fail(`cannot list ${label} skills`, cause)),
+                )).sort();
         if (staged.join("\n") !== skillIds.join("\n")) {
           return yield* fail(`${label} target has the wrong skills`);
         }
@@ -1202,6 +1210,9 @@ export const packPluginPackage = (options: {
         };
       }),
     );
+
+    // A skills candidate carries skills for skill registries; a package without skills has none.
+    if (skillIds.length === 0) return { targets, candidate: undefined };
 
     const skillsStage = path.join(temporary, `skills-${plugin.name}`);
     yield* fs
@@ -1323,7 +1334,9 @@ export const buildArtifacts = ({ root, dist }: BuildArtifactsOptions) =>
         packPluginPackage({ root, source, dist, temporary, plugin, version }),
       );
       const targetReceipts = pluginReceipts.flatMap(({ targets }) => targets);
-      const skillsCandidates = pluginReceipts.map(({ candidate }) => candidate);
+      const skillsCandidates = pluginReceipts.flatMap(({ candidate }) =>
+        candidate === undefined ? [] : [candidate],
+      );
 
       const receipts: readonly [string, unknown][] = [
         [

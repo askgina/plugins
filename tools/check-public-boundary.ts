@@ -349,18 +349,18 @@ const readJson = (file: string) =>
   );
 
 /**
- * Artifacts `bun run artifacts` emits: the npm package archives, every plugin package's host and
- * skills archives, and the four receipts.
+ * Artifacts `bun run artifacts` emits: the npm package archives, every plugin package's host
+ * archives, a skills archive for each package that declares skills, and the four receipts.
  */
 export const expectedArtifactPaths = (options: {
   readonly version: string;
-  readonly packages: ReadonlyArray<Pick<ArtifactPackage, "name" | "hosts">>;
+  readonly packages: ReadonlyArray<Pick<ArtifactPackage, "name" | "hosts" | "skills">>;
 }): string[] =>
   [
     ...PACKAGES.map((item) => `packages/askgina-${item.slug}-${options.version}.tgz`),
     ...options.packages.flatMap((plugin) => [
       ...plugin.hosts.map((host) => `targets/${plugin.name}-${host}-${options.version}.tgz`),
-      `skills/${plugin.name}-skills-${options.version}.tgz`,
+      ...(plugin.skills.length > 0 ? [`skills/${plugin.name}-skills-${options.version}.tgz`] : []),
     ]),
     "receipts/contract.json",
     "receipts/packages.json",

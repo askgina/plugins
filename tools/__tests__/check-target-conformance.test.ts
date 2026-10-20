@@ -18,6 +18,10 @@ import {
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const spotRoot = fileURLToPath(new URL("../../plugins/ask-gina-spot/", import.meta.url));
+const perpsRoot = fileURLToPath(new URL("../../plugins/ask-gina-perps/", import.meta.url));
+const predictionsRoot = fileURLToPath(
+  new URL("../../plugins/ask-gina-predictions/", import.meta.url),
+);
 const UnknownJsonString = Schema.fromJsonString(Schema.Unknown);
 const decodeUnknownJson = Schema.decodeUnknownSync(UnknownJsonString);
 const encodeUnknownJson = Schema.encodeUnknownSync(
@@ -37,7 +41,7 @@ const makeSpotTargets = Effect.acquireRelease(
   (generated) => generated.cleanup.pipe(Effect.orDie),
 );
 
-/** A repository holding both marketplaces' descriptors, the Ask Gina manifest source and the whole Spot package. */
+/** A repository holding every marketplace descriptor, the Ask Gina manifest source and the whole Spot, Perps and Predictions packages. */
 const marketplaceFixture = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -57,6 +61,8 @@ const marketplaceFixture = Effect.gen(function* () {
         path.join(root, "plugins", "ask-gina", "plugin.yaml"),
       ),
       fs.copy(spotRoot, path.join(root, "plugins", "ask-gina-spot")),
+      fs.copy(perpsRoot, path.join(root, "plugins", "ask-gina-perps")),
+      fs.copy(predictionsRoot, path.join(root, "plugins", "ask-gina-predictions")),
     ],
     { concurrency: "unbounded" },
   );
@@ -65,7 +71,7 @@ const marketplaceFixture = Effect.gen(function* () {
 
 describe("target conformance across packages", () => {
   it.layer(BunServices.layer)((it) => {
-    it.effect("passes for the repository and reports both packages", () =>
+    it.effect("passes for the repository and reports every package", () =>
       Effect.gen(function* () {
         const report = yield* runTargetConformanceChecks();
         const ids = [
@@ -83,6 +89,16 @@ describe("target conformance across packages", () => {
           "copilot",
           "gemini",
           "devin",
+          "ask-gina-perps:openai",
+          "ask-gina-perps:cursor",
+          "ask-gina-perps:claude",
+          "ask-gina-perps:copilot",
+          "ask-gina-perps:devin",
+          "ask-gina-predictions:openai",
+          "ask-gina-predictions:cursor",
+          "ask-gina-predictions:claude",
+          "ask-gina-predictions:copilot",
+          "ask-gina-predictions:devin",
           "ask-gina-spot:openai",
           "ask-gina-spot:cursor",
           "ask-gina-spot:claude",
@@ -94,6 +110,11 @@ describe("target conformance across packages", () => {
         assert.include(ids, "ask-gina-spot:openai.manifest.contract");
         assert.include(ids, "ask-gina-spot:repository.root_openai.manifest_contract");
         assert.include(ids, "ask-gina-spot:repository.plugin.mcp_contract");
+        assert.include(ids, "ask-gina-perps:repository.plugin.mcp_contract");
+        assert.include(ids, "ask-gina-predictions:repository.plugin.mcp_contract");
+        // A package without skills still proves its empty skill set.
+        assert.include(ids, "ask-gina-perps:repository.root_openai.skills_contract");
+        assert.notInclude(ids, "ask-gina-perps:repository.root_openai.skills_exists");
         // Ids stay unique and the read-only invariants are not demanded of Spot.
         assert.strictEqual(new Set(ids).size, ids.length);
         assert.notInclude(ids, "ask-gina-spot:cursor.rules.read_only_exists");
@@ -164,6 +185,22 @@ describe("target conformance across packages", () => {
       ),
     );
 
+    it.effect("rejects a skill-less package that ships a skills directory", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fixture = yield* marketplaceFixture;
+          const perps = path.join(fixture.root, "plugins", "ask-gina-perps");
+          yield* fs.makeDirectory(path.join(perps, "skills", "stray"), { recursive: true });
+          yield* fs.writeFileString(path.join(perps, "skills", "stray", "SKILL.md"), "stray\n");
+
+          const error = yield* Effect.flip(createGeneratedPluginTargets({ packageRoot: perps }));
+          assert.include(error.reason, "declares no skills");
+        }),
+      ),
+    );
+
     it.effect("accepts a repository whose marketplaces list every package", () =>
       Effect.scoped(
         Effect.gen(function* () {
@@ -197,7 +234,7 @@ describe("target conformance across packages", () => {
               marketplace.plugins = marketplace.plugins.filter(
                 (plugin) => plugin.name !== "ask-gina-spot",
               );
-              assert.strictEqual(marketplace.plugins.length, 1);
+              assert.strictEqual(marketplace.plugins.length, 3);
               yield* fs.writeFileString(marketplacePath, `${encodeUnknownJson(marketplace)}\n`);
 
               const report = yield* checkRepositoryConformance({

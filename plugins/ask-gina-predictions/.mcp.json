@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ask-gina-predictions": {
+      "type": "http",
+      "url": "https://askgina.ai/ai/predictions/mcp"
+    }
+  }
+}

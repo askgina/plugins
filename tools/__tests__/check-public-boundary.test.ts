@@ -208,9 +208,10 @@ const scanTextFixture = (text: string) =>
 
 const GINA_HOSTS = ["openai", "cursor", "claude", "copilot", "gemini", "devin"] as const;
 const SPOT_HOSTS = ["openai", "cursor", "claude", "copilot", "devin"] as const;
+const SKILLS = [{ id: "example", files: ["SKILL.md"] }] as const;
 const bothPackages = [
-  { name: "ask-gina", hosts: GINA_HOSTS },
-  { name: "ask-gina-spot", hosts: SPOT_HOSTS },
+  { name: "ask-gina", hosts: GINA_HOSTS, skills: SKILLS },
+  { name: "ask-gina-spot", hosts: SPOT_HOSTS, skills: SKILLS },
 ] as const;
 
 describe("artifact inventory", () => {
@@ -230,6 +231,15 @@ describe("artifact inventory", () => {
       5 + GINA_HOSTS.length + SPOT_HOSTS.length + 2 + 4,
       "five npm archives, host archives, two skills archives, four receipts",
     );
+  });
+
+  it("expects no skills archive for a package that declares no skills", () => {
+    const expected = expectedArtifactPaths({
+      version: "1.0.0",
+      packages: [{ name: "ask-gina-perps", hosts: SPOT_HOSTS, skills: [] }],
+    });
+    assert.include(expected, "targets/ask-gina-perps-openai-1.0.0.tgz");
+    assert.notInclude(expected, "skills/ask-gina-perps-skills-1.0.0.tgz");
   });
 
   it("flags a spot archive missing from dist", () => {
@@ -260,11 +270,14 @@ describe("artifact inventory", () => {
         const packages = yield* loadArtifactPackages({ root: repositoryRoot });
         assert.deepStrictEqual(
           packages.map(({ name }) => name),
-          ["ask-gina", "ask-gina-spot"],
+          ["ask-gina", "ask-gina-perps", "ask-gina-predictions", "ask-gina-spot"],
         );
         const expected = expectedArtifactPaths({ version: "1.0.0", packages });
         for (const plugin of packages) {
-          assert.include(expected, `skills/${plugin.name}-skills-1.0.0.tgz`);
+          assert.strictEqual(
+            expected.includes(`skills/${plugin.name}-skills-1.0.0.tgz`),
+            plugin.skills.length > 0,
+          );
           for (const host of plugin.hosts) {
             assert.include(expected, `targets/${plugin.name}-${host}-1.0.0.tgz`);
           }

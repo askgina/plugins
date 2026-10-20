@@ -1,0 +1,52 @@
+name: ask-gina-predictions
+version: 0.1.0
+description: Ask Gina Predictions MCP tools to search Polymarket and, with your approval, trade prediction markets and manage your prediction balance.
+mcp:
+  url: https://askgina.ai/ai/predictions/mcp
+  scopes:
+    - tools:execute
+skills: []
+listing:
+  version: 1.0.0
+  displayName: Ask Gina Predictions
+  author:
+    name: Ask Gina
+    url: https://askgina.ai
+  homepage: https://askgina.ai
+  repository: https://github.com/askgina/plugins
+  license: Apache-2.0
+  category: Finance
+  keywords:
+    - crypto
+    - predictions
+    - prediction-markets
+    - polymarket
+    - trading
+    - mcp
+  icon: assets/icon.svg
+  mcpServerName: predictions
+  descriptions:
+    codex: Search Polymarket and, with your approval, trade prediction markets from your Gina wallet.
+    cursor: Ask Gina Predictions lets an agent search Polymarket markets, read your positions and order history, and, with your approval, place trades, manage orders, redeem winning positions, and top up or withdraw your prediction balance from your Gina wallet. It also manages scheduled prompts. Trades and balance changes move real funds, so review every action before you approve it.
+    claude: Ask Gina Predictions lets an agent search Polymarket markets, read your positions and order history, and, with your approval, place trades, manage orders, redeem winning positions, and top up or withdraw your prediction balance from your Gina wallet. It also manages scheduled prompts. Trades and balance changes move real funds, so review every action before you approve it.
+    devin: Ask Gina Predictions lets an agent search Polymarket markets, read your positions and order history, and, with your approval, place trades, manage orders, redeem winning positions, and top up or withdraw your prediction balance from your Gina wallet. It also manages scheduled prompts. Trades and balance changes move real funds, so review every action before you approve it.
+    copilot: Ask Gina Predictions lets an agent search Polymarket markets, read your positions and order history, and, with your approval, place trades, manage orders, redeem winning positions, and top up or withdraw your prediction balance from your Gina wallet. It also manages scheduled prompts. Trades and balance changes move real funds, so review every action before you approve it.
+  codex:
+    shortDescription: Polymarket prediction trading
+    longDescription: Ask Gina Predictions connects your Ask Gina account to the Predictions MCP server. It can search Polymarket markets, read order books, your positions and order history and, with your approval, place trades, manage orders, redeem winning positions, and top up or withdraw your prediction balance from your Gina wallet. It can also create and manage scheduled prompts. Trades and balance changes move real funds, so review each action before you approve it. The plugin bundles no skills.
+    capabilities:
+      - Interactive
+      - Read
+      - Write
+    privacyPolicyURL: https://askgina.ai/privacy-policy
+    supportURL: https://askgina.ai/support
+    termsOfServiceURL: https://askgina.ai/terms-and-conditions
+    defaultPrompt:
+      - Search Polymarket for markets that end today.
+      - Show my open prediction positions.
+      - Show the order book for a market that ends today.
+    brandColor: "#B50D00"
+    policy:
+      installation: AVAILABLE
+      authentication: ON_INSTALL
+  cursorMarketplaceDescription: Ask Gina Predictions searches Polymarket and, with your approval, trades prediction markets and manages your prediction balance. Trades move real funds.

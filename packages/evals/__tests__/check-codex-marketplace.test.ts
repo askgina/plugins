@@ -75,7 +75,7 @@ const writeInstalledPluginFixture = (
         path.join(installedRoot, ".codex-plugin", "plugin.json"),
         encodeJson({
           name: fixture.name,
-          skills: "./skills/",
+          ...(fixture.skills.length > 0 ? { skills: "./skills/" } : {}),
           mcpServers: "./.mcp.json",
           interface: {
             composerIcon: "./assets/icon.svg",
@@ -731,6 +731,53 @@ describe("Codex marketplace smoke lifecycle", () => {
           assert.strictEqual(result.failure.reason, "invalid-plugin");
           assert.include(result.failure.detail, "ask-gina");
         }
+      }),
+    );
+
+    it.effect("checks a plugin without skills against a checkout that has no skills", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "marketplace-inspection-test-" });
+        const perps: PluginFixture = {
+          name: "ask-gina-perps",
+          mcpUrl: "https://askgina.ai/ai/perps/mcp",
+          skills: [],
+        };
+        const sourceRoot = path.join(root, "checkout", "plugins", perps.name);
+        const installedRoot = path.join(root, "installed");
+        yield* fs.makeDirectory(sourceRoot, { recursive: true });
+        yield* fs.writeFileString(
+          path.join(sourceRoot, ".mcp.json"),
+          encodeJson({ mcpServers: { [perps.name]: { type: "http", url: perps.mcpUrl } } }),
+        );
+        yield* writeInstalledPluginFixture(installedRoot, perps);
+        const inspect = inspectInstalledPlugin({
+          pluginName: perps.name,
+          installedRoot,
+          sourceRoot,
+        });
+        yield* inspect;
+
+        // An installed skill the checkout never declared is rejected.
+        yield* fs.makeDirectory(path.join(installedRoot, "skills", "stray"), { recursive: true });
+        const stray = yield* Effect.result(inspect);
+        assert.strictEqual(stray._tag, "Failure");
+
+        // A manifest that still names a skills path is rejected.
+        yield* fs.remove(path.join(installedRoot, "skills"), { recursive: true });
+        yield* inspect;
+        yield* fs.writeFileString(
+          path.join(installedRoot, ".codex-plugin", "plugin.json"),
+          encodeJson({
+            name: perps.name,
+            skills: "./skills/",
+            mcpServers: "./.mcp.json",
+            interface: { composerIcon: "./assets/icon.svg", logo: "./assets/icon.svg" },
+          }),
+        );
+        const named = yield* Effect.result(inspect);
+        assert.strictEqual(named._tag, "Failure");
       }),
     );
 

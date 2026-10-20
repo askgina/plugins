@@ -57,6 +57,14 @@ const repositoryFixture = Effect.gen(function* () {
         path.join(repositoryRoot, "plugins", "ask-gina-spot"),
         path.join(root, "plugins", "ask-gina-spot"),
       ),
+      fs.copy(
+        path.join(repositoryRoot, "plugins", "ask-gina-perps"),
+        path.join(root, "plugins", "ask-gina-perps"),
+      ),
+      fs.copy(
+        path.join(repositoryRoot, "plugins", "ask-gina-predictions"),
+        path.join(root, "plugins", "ask-gina-predictions"),
+      ),
     ],
     { concurrency: "unbounded" },
   );
@@ -130,41 +138,44 @@ const makeLeanOpenAiPayload = (
     );
   });
 
-/** Packs the real ask-gina-spot package into a temporary dist and builds its targets receipt. */
-const packSpot = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const packages = yield* loadArtifactPackages({ root: repositoryRoot });
-  const spot = packages.find(({ name }) => name === "ask-gina-spot");
-  if (spot === undefined) {
-    return yield* new ArtifactVerificationError({ message: "ask-gina-spot package is missing" });
-  }
-  const temporary = yield* fs.makeTempDirectoryScoped({ prefix: "verify-spot-test-" });
-  const dist = path.join(temporary, "dist");
-  const stages = path.join(temporary, "stages");
-  yield* Effect.forEach(
-    [path.join(dist, "targets"), path.join(dist, "skills"), stages],
-    (directory) => fs.makeDirectory(directory, { recursive: true }),
-  );
-  const version = spot.source.version;
-  const packed = yield* packPluginPackage({
-    root: repositoryRoot,
-    source: repositoryRoot,
-    dist,
-    temporary: stages,
-    plugin: spot,
-    version,
+/** Packs one real plugin package into a temporary dist and builds its targets receipt. */
+const packPackage = (name: string) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const packages = yield* loadArtifactPackages({ root: repositoryRoot });
+    const spot = packages.find((candidate) => candidate.name === name);
+    if (spot === undefined) {
+      return yield* new ArtifactVerificationError({ message: `${name} package is missing` });
+    }
+    const temporary = yield* fs.makeTempDirectoryScoped({ prefix: "verify-spot-test-" });
+    const dist = path.join(temporary, "dist");
+    const stages = path.join(temporary, "stages");
+    yield* Effect.forEach(
+      [path.join(dist, "targets"), path.join(dist, "skills"), stages],
+      (directory) => fs.makeDirectory(directory, { recursive: true }),
+    );
+    const version = spot.source.version;
+    const packed = yield* packPluginPackage({
+      root: repositoryRoot,
+      source: repositoryRoot,
+      dist,
+      temporary: stages,
+      plugin: spot,
+      version,
+    });
+    const receipt = {
+      schemaVersion: "v2",
+      releaseVersion: version,
+      sourceCommit: "0".repeat(40),
+      sourceDirty: false,
+      targets: packed.targets,
+      skillsCandidates: packed.candidate === undefined ? [] : [packed.candidate],
+    };
+    return { spot, dist, version, receipt };
   });
-  const receipt = {
-    schemaVersion: "v2",
-    releaseVersion: version,
-    sourceCommit: "0".repeat(40),
-    sourceDirty: false,
-    targets: packed.targets,
-    skillsCandidates: [packed.candidate],
-  };
-  return { spot, dist, version, receipt };
-});
+
+const packSpot = packPackage("ask-gina-spot");
 type SpotArtifacts = Effect.Success<typeof packSpot>;
 
 const verifySpotTargets = (artifacts: SpotArtifacts, receipt: unknown = artifacts.receipt) =>
@@ -700,6 +711,19 @@ describe("artifact and source conformance verification", () => {
           yield* verifySpotTargets(artifacts);
           yield* smokeSpot(artifacts);
         }),
+      ),
+    );
+
+    it.effect("verifies the skill-less Perps and Predictions archives and package smoke", () =>
+      Effect.forEach(["ask-gina-perps", "ask-gina-predictions"], (name) =>
+        Effect.scoped(
+          Effect.gen(function* () {
+            const artifacts = yield* packPackage(name);
+            assert.deepStrictEqual(artifacts.spot.skills, []);
+            yield* verifySpotTargets(artifacts);
+            yield* smokeSpot(artifacts);
+          }),
+        ),
       ),
     );
 

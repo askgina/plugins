@@ -136,6 +136,7 @@
               "predictions-mcp/features-trading",
               "predictions-mcp/features-portfolio",
               "predictions-mcp/features-advanced",
+              "predictions-mcp/tools",
               "predictions-mcp/troubleshooting",
               "predictions-mcp/faq"
             ]
@@ -148,6 +149,7 @@
               "perps-mcp/quick-start",
               "perps-mcp/client-setup",
               "perps-mcp/features",
+              "perps-mcp/tools",
               "perps-mcp/troubleshooting",
               "perps-mcp/faq"
             ]

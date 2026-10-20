@@ -25,6 +25,7 @@ import {
 } from "effect";
 
 import {
+  declaresSkills,
   hostsOf,
   loadMarketplaceSource,
   loadPluginSource,
@@ -364,6 +365,9 @@ const validateManifest = (target: TargetName, manifest: unknown, source: PluginS
     return false;
   }
 
+  // A package that declares no skills has no skills path in its manifests.
+  const skillsKeys = declaresSkills(source) ? ["skills"] : [];
+
   if (target === "openai") {
     return (
       hasExactKeys(manifest, [
@@ -375,13 +379,13 @@ const validateManifest = (target: TargetName, manifest: unknown, source: PluginS
         "repository",
         "license",
         "keywords",
-        "skills",
+        ...skillsKeys,
         "mcpServers",
         "interface",
       ]) &&
       hasExactKeys(nested(manifest, "author"), ["name", "url"]) &&
       nested(manifest, "repository") === "https://github.com/askgina/plugins" &&
-      nested(manifest, "skills") === "./skills/" &&
+      nested(manifest, "skills") === (declaresSkills(source) ? "./skills/" : undefined) &&
       nested(manifest, "mcpServers") === "./.mcp.json" &&
       nested(manifest, "interface", "composerIcon") === `./${listing.icon}` &&
       nested(manifest, "interface", "logo") === `./${listing.icon}` &&
@@ -441,7 +445,7 @@ const validateManifest = (target: TargetName, manifest: unknown, source: PluginS
         "license",
         "logo",
         "keywords",
-        "skills",
+        ...skillsKeys,
         "mcpServers",
       ]) &&
       hasExactKeys(nested(manifest, "author"), ["name"]) &&
@@ -450,7 +454,7 @@ const validateManifest = (target: TargetName, manifest: unknown, source: PluginS
       nested(manifest, "repository") === "https://github.com/askgina/plugins" &&
       nested(manifest, "license") === "Apache-2.0" &&
       nested(manifest, "logo") === listing.icon &&
-      nested(manifest, "skills") === "skills" &&
+      nested(manifest, "skills") === (declaresSkills(source) ? "skills" : undefined) &&
       nested(manifest, "mcpServers") === ".mcp.json"
     );
   }
@@ -1013,12 +1017,16 @@ const checkPackageSource = (
           "Root OpenAI icon exists as a regular file",
           "File",
         ],
-        [
-          canonicalSkillsRoot,
-          "repository.root_openai.skills_exists",
-          "Root canonical skills directory exists",
-          "Directory",
-        ],
+        ...(declaresSkills(source)
+          ? ([
+              [
+                canonicalSkillsRoot,
+                "repository.root_openai.skills_exists",
+                "Root canonical skills directory exists",
+                "Directory",
+              ],
+            ] satisfies readonly PathRequirement[])
+          : []),
       ],
       addCheck,
     );
@@ -1054,7 +1062,7 @@ const checkPackageSource = (
       fs.exists(canonicalSkillsRoot),
     );
     let actualSkillNames: readonly string[] = [];
-    let skillFilesComplete = false;
+    let skillFilesComplete = expectedSkillNames.length === 0;
     if (skillsExist) {
       actualSkillNames = (yield* withFileSystemError(
         canonicalSkillsRoot,
@@ -1500,7 +1508,7 @@ export const checkRepositoryConformance = (
             nested(plugin, "name") === source.name &&
             nested(plugin, "source") === `./plugins/${source.name}` &&
             nested(plugin, "version") === source.listing.version &&
-            nested(plugin, "skills") === "./skills" &&
+            nested(plugin, "skills") === (declaresSkills(source) ? "./skills" : undefined) &&
             nested(plugin, "mcpServers") === "./targets/claude/.mcp.json",
         );
       addCheck(

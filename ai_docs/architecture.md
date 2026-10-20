@@ -25,7 +25,10 @@ lists every declared skill. A `SKILL.md` that no plugin declares fails the check
 
 There is one marketplace per host, named `ask-gina-plugins`, and each lists every
 plugin package: the read-only `ask-gina` and the transaction-capable
-`ask-gina-spot`. `.agents/plugins/marketplace.json` is the Codex marketplace
+`ask-gina-spot`, `ask-gina-perps` and `ask-gina-predictions`. The Perps and
+Predictions packages declare no skills, so their manifests carry no skills path.
+`tools/docs/venue-tools.json` lists their native tools by annotation class and
+renders the native tools pages. `.agents/plugins/marketplace.json` is the Codex marketplace
 descriptor. It points directly at `plugins/<name>/`, so a clean checkout exposes
 the OpenAI source without a generation step. `.cursor-plugin/marketplace.json` is
 the template-native Cursor marketplace descriptor and points at the same plugin
@@ -100,8 +103,9 @@ there, because Effect `Crypto` is asynchronous.
 `vp pack` writes each package's ignored compiled JavaScript, declarations, and
 source maps; every map embeds committed TypeScript through relative paths. The
 repository's custom packer stages those validated outputs with metadata and assets
-as five npm-style package archives, one set of host archives and one skills
-candidate per plugin package (`ask-gina` and `ask-gina-spot`), and four bounded
+as five npm-style package archives, one set of host archives per plugin package
+(`ask-gina`, `ask-gina-spot`, `ask-gina-perps` and `ask-gina-predictions`), one
+skills candidate for each package that declares skills, and four bounded
 receipts under ignored `dist/`. Host archives remain lean: each
 contains only the selected host surface and skills, never repository workspace
 files or foreign-host overlays. Verification clean-installs package tarballs in
