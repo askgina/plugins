@@ -1,9 +1,9 @@
 ---
 title: "LP operations"
-description: "One MCP to manage and execute liquidity operations on Uniswap (Robinhood Chain EVM) and Raydium (Solana)."
+description: "One MCP to manage and execute liquidity operations on Uniswap (Robinhood Chain, Base and Ethereum) and Raydium (Solana)."
 ---
 
-Spot MCP brings **Uniswap on Robinhood Chain (EVM)** and **Raydium on Solana** into one connection. Discover positions, add or remove liquidity, collect fees where supported, and execute quoted operations through the same MCP. For an end-to-end agent loop with proposals and approvals, see the [LP agent workflow](/spot-mcp/lp-agent-workflow).
+Spot MCP brings **Uniswap on Robinhood Chain, Base and Ethereum (EVM)** and **Raydium on Solana** into one connection. Discover positions, add or remove liquidity, collect fees where supported, and execute quoted operations through the same MCP. For an end-to-end agent loop with proposals and approvals, see the [LP agent workflow](/spot-mcp/lp-agent-workflow).
 
 ## Manage all your LP positions from an agent of your choice.
 
@@ -25,25 +25,31 @@ Use [Spot client setup](/spot-mcp/client-setup) to connect to `https://askgina.a
 
 ## Capability and access
 
-Reviewed September 28, 2026 against application revision `2e847ae3dd0523e7ea3e3b9944c9b6bcc232fd37`. The matrix describes implemented contracts; production rollout and funded execution were not independently verified. A registered operation still needs a successful current quote and settlement evidence.
+Reviewed September 28, 2026 against application revision `2e847ae3dd0523e7ea3e3b9944c9b6bcc232fd37`. The Base (8453) and Ethereum (1) rows and the per-chain notes below were rechecked October 20, 2026 against application revision `343f262cfa844710f1172d37f2008559914d9c25`. The matrix describes implemented contracts; production rollout and funded execution were not independently verified. A registered operation still needs a successful current quote and settlement evidence.
 
 | Network / protocol                 | Spot operation kinds                               | Wallet Yield controls       | Restrictions                                                                               |
 | ---------------------------------- | -------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------ |
 | Robinhood Chain, 4663 / Uniswap v3 | open, increase, decrease, collect, close, recenter | Collect fees, Remove, Close | Delegated EVM wallet; pool admission for new exposure                                      |
 | Robinhood Chain, 4663 / Uniswap v4 | open, increase, decrease, collect, close, recenter | Collect fees, Remove, Close | Full v4 pool key; delta-returning hooks cannot be admitted                                 |
+| Base, 8453 / Uniswap v3            | open, increase, decrease, collect, close, recenter | Collect fees, Remove, Close | Delegated EVM wallet; pool admission for new exposure                                      |
+| Base, 8453 / Uniswap v4            | open, increase, decrease, collect, close, recenter | Collect fees, Remove, Close | Full v4 pool key; delta-returning hooks cannot be admitted                                 |
+| Ethereum, 1 / Uniswap v3           | open, increase, decrease, collect, close, recenter | Collect fees, Remove, Close | Delegated EVM wallet; pool admission for new exposure                                      |
+| Ethereum, 1 / Uniswap v4           | open, increase, decrease, collect, close, recenter | Collect fees, Remove, Close | Full v4 pool key; delta-returning hooks cannot be admitted                                 |
 | Solana / Raydium CLMM              | open, increase, decrease, collect, close, recenter | Collect fees, Remove, Close | Supported token programs; close requires an empty position; funded full exit uses decrease |
 | Solana / Raydium CPMM              | deposit, withdraw                                  | Withdraw, Close             | LP-token share; no separate collect or range management                                    |
 
 All rows are source-verified, with deployment availability unverified. Recenter is implemented as a composite operation, subject to quote guards and reconciliation of both the retired position and its replacement. Schema acceptance alone does not prove a successful lifecycle.
+
+A write follows the chain of its pool (open) or position (every other operation) and never crosses chains. EVM gas is sponsored on all three chains, with one limit described under [Fund and quote](#fund-and-quote).
 
 These tools are registered natively on Spot MCP and through its sandbox host-tool interface. Wallet Yield has the narrower exit controls above. Web chat's **Manage with Gina** is a context handoff; do not assume it exposes all these operations. Gina Read is a separate connection with its own [public catalog](/mcp-access/gina-read); an internal tool allowlist does not grant public Gina Read access to LP tools.
 
 ## Discover and select
 
 1. Read `getAccountAddresses` and `getCrosschainPortfolio` for wallet identity and available balances.
-2. Read `getLpPositions` for Robinhood Chain, or `getSolanaLpPositions` for Solana. Follow returned inventory cursors and preserve partial coverage, unread positions and source times.
+2. Read `getLpPositions` for EVM, or `getSolanaLpPositions` for Solana. Without `chainId`, `getLpPositions` reads Robinhood Chain, Base and Ethereum and returns one entry per chain, in that order. A chain that could not be read is reported as an error, not as empty. Pass `chainId` to read one chain. A cursor or `tokenIds` needs the `chainId` of the page or chain it came from. Follow returned inventory cursors and preserve partial coverage, unread positions and source times.
 3. Select the exact pool and position. `resolveSolanaLpPool` returns candidates from a mint or pool address; it neither selects one nor admits it.
-4. Check `getLpAllowlist` or `getSolanaLpAllowlist`. Each user has separate EVM and Solana admission lists and revisions.
+4. Check `getLpAllowlist` or `getSolanaLpAllowlist`. Each user has a separate admission list and revision for each EVM chain, and another for Solana. `getLpAllowlist` lists all three EVM chains unless you pass `chainId`.
 
 Admission updates use different identity fields:
 
@@ -56,7 +62,7 @@ Keep chain ID, wallet, protocol, pool and position identifiers intact. Uniswap t
 
 ## Allowlists end to end
 
-The Spot MCP allowlists decide which pools can receive new exposure. They are per user, with one list and revision for EVM and another for Solana. A pool found by discovery, `resolveSolanaLpPool` or the [pool scanner](/spot-mcp/lp-skills#lp-pool-scan) is not admitted until it is added here.
+The Spot MCP allowlists decide which pools can receive new exposure. They are per user, with one list and revision for each EVM chain (Robinhood Chain, Base and Ethereum) and another for Solana. Each EVM list starts as a starter set of major and tokenized-stock pools for its chain. It is not a limit: any other pool can be added. Approval is per pool and per chain, so a grant on one chain never admits the same address on another. A pool found by discovery, `resolveSolanaLpPool` or the [pool scanner](/spot-mcp/lp-skills#lp-pool-scan) is not admitted until it is added here.
 
 ### From a scanned pool to an admitted pool
 
@@ -74,7 +80,7 @@ Request the quote after admission. A Solana quote binds the allowlist revision: 
 
 ### Revision conflicts
 
-Every update must carry the current `expectedRevision`. If another change landed first, the update is refused as a revision conflict. Re-read the list, check that the intended change still applies, and retry with the new revision. Do not reuse a stale revision.
+Every update must carry the current `expectedRevision`. For EVM, that is the revision of the pool's own chain. If another change landed first, the update is refused as a revision conflict. Re-read the list, check that the intended change still applies, and retry with the new revision. Do not reuse a stale revision.
 
 ### Remove a pool
 
@@ -91,7 +97,9 @@ Removing a pool does not close existing positions. Use the reductions above to e
 
 Both assets must cover the intended operation. LP quotes do not swap into the desired ratio. Preparatory swaps are separate transactions: reconcile them before requesting a fresh LP quote. Uncollected position assets are not spendable wallet balances.
 
-For EVM, `quoteLpOperation` requires `funding`: delegated `account`, `chainId: 4663`, authorized `fee` alternatives, `assetCeilings` and retained-balance `reserves`. A fee alternative is `sponsored` or `fee-token` with `asset` and `maxWeiAmount`. There is no implicit paid fallback. Duplicate assets or a different wallet/chain are refused. Unknown costs are not zero fees.
+For EVM, `quoteLpOperation` requires `funding`: delegated `account`, the pool's `chainId` (4663, 8453 or 1), authorized `fee` alternatives, `assetCeilings` and retained-balance `reserves`. A fee alternative is `sponsored` or `fee-token` with `asset` and `maxWeiAmount`. There is no implicit paid fallback. Duplicate assets or a different wallet/chain are refused. Unknown costs are not zero fees.
+
+Sponsored sends that touch Ethereum mainnet count against a daily dollar budget, per user and for all users. Sends that do not touch Ethereum are not counted. When that budget is spent, a quote that lists a `fee-token` alternative falls back to it. A quote that no listed fee alternative can cover is refused with a `details.reason` of `sponsorship-limit-fee`, `sponsorship-limit-user`, `sponsorship-limit-global` or `sponsorship-limit-unavailable`, and its hint says what to do. Add a `fee-token` alternative that the wallet holds, or retry after the budget resets at midnight UTC.
 
 For Solana, `quoteSolanaLpOperation` binds the selected pool, position, wallet, allowlist revision and slot window. Supply the last read `expectedRevision` to detect admission changes. Review token maximums, receive minimums and other returned constraints. Keep SOL for fees and account creation. The compiler can wrap native SOL to cover a WSOL funding shortfall; inspect `wrapsNativeSol`. Receiving native SOL instead of WSOL requires `unwrapWsolToNative: true`, supported for withdraw, decrease, collect and recenter. Review `unwrapsWsolToNative` in the quote.
 
@@ -117,7 +125,7 @@ Call `getLpPositions` with the input above; use `"uniswap-v4"` for v4. Call `get
 { "analytics": true }
 ```
 
-Quote an EVM increase with `quoteLpOperation`. Copy the position reference returned by discovery; the same shape supports v4 with `protocol: "uniswap-v4"` and its actual manager/token ID. Amounts below are illustrative ceilings, not recommended sizes.
+Quote an EVM increase with `quoteLpOperation`. Copy the position reference returned by discovery, including its `chainId`; the same shape supports v4 with `protocol: "uniswap-v4"` and its actual manager/token ID. The `4663` below is Robinhood Chain; use `8453` for Base or `1` for Ethereum, in both the position and `funding`. Amounts below are illustrative ceilings, not recommended sizes.
 
 {/* lp-example: evm-increase */}
 

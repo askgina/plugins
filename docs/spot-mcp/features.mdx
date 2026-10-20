@@ -5,7 +5,7 @@ description: "List every Spot MCP native tool and the host tools that bash can c
 
 The native tool inventory below is checked against a pinned application registry. Run `tools/list` to verify your deployed connection. `bash` provides scripts, files, SQL, short waits and composed workflows; its host-tool allowlist includes these tools plus the sandbox-only analysis helpers `spot.captureDataset` and `spot.sql`.
 
-For protocols, actions, restrictions and release evidence, use the [LP support matrix](/spot-mcp/liquidity-positions#capability-and-access). The inventory matches application revision `2e847ae3dd0523e7ea3e3b9944c9b6bcc232fd37`, reviewed September 28, 2026; a deployed connection can list tools added later.
+For protocols, actions, restrictions and release evidence, use the [LP support matrix](/spot-mcp/liquidity-positions#capability-and-access). The inventory matches application revision `2e847ae3dd0523e7ea3e3b9944c9b6bcc232fd37`, reviewed September 28, 2026; a deployed connection can list tools added later. Chain coverage of the pool and Uniswap LP tools was rechecked against application revision `343f262cfa844710f1172d37f2008559914d9c25` on October 20, 2026.
 
 {/* TODO(confirm with app owner): newer client catalogs list renderLpPositions, renderPortfolio, renderChart and renderDataView. They are not in the pinned snapshot, so they are not listed here. Refresh the snapshot before adding them. */}
 
@@ -23,25 +23,25 @@ For protocols, actions, restrictions and release evidence, use the [LP support m
 
 ## Pool reads
 
-| Host tool            | Purpose                                                             |
-| -------------------- | ------------------------------------------------------------------- |
-| `getPoolState`       | Pinned-block Uniswap V2/V3 compatible pool state on Robinhood Chain |
-| `getRecentPoolSwaps` | Recent swaps for a pool address                                     |
+| Host tool            | Purpose                                                                                  |
+| -------------------- | ---------------------------------------------------------------------------------------- |
+| `getPoolState`       | Pinned-block Uniswap V2, V3 or V4 pool state on Robinhood Chain, Base or Ethereum        |
+| `getRecentPoolSwaps` | Recent swaps for a Uniswap V2/V3 pair or V4 pool ID on Robinhood Chain, Base or Ethereum |
 
-{/* TODO(confirm with app owner): whether getPoolState and getRecentPoolSwaps read Uniswap v4 pools and which chains getRecentPoolSwaps covers. Not verifiable from the pinned snapshot. */}
+Both take an optional `chainId`. Without it the pool is looked up on every chain, and a pool found on more than one chain is refused until `chainId` is given.
 
 The [pool scanner skill](/spot-mcp/lp-skills#lp-pool-scan) reads public pool data outside Spot MCP and needs no connection.
 
 ## Liquidity positions (Uniswap v3/v4)
 
-| Host tool              | Purpose                                                                  |
-| ---------------------- | ------------------------------------------------------------------------ |
-| `getLpPositions`       | List LP positions owned by the delegated wallet on Robinhood Chain       |
-| `quoteLpOperation`     | Quote an open, increase, decrease, collect, close, or recenter operation |
-| `executeLpOperation`   | Execute a previously quoted operation                                    |
-| `getLpOperationStatus` | Read an operation's durable settlement status                            |
-| `getLpAllowlist`       | List allowlisted pools and the current revision                          |
-| `updateLpAllowlist`    | Grant or revoke a pool on the allowlist                                  |
+| Host tool              | Purpose                                                                               |
+| ---------------------- | ------------------------------------------------------------------------------------- |
+| `getLpPositions`       | List LP positions owned by the delegated wallet on Robinhood Chain, Base and Ethereum |
+| `quoteLpOperation`     | Quote an open, increase, decrease, collect, close, or recenter operation              |
+| `executeLpOperation`   | Execute a previously quoted operation                                                 |
+| `getLpOperationStatus` | Read an operation's durable settlement status                                         |
+| `getLpAllowlist`       | List allowlisted pools and each chain's current revision                              |
+| `updateLpAllowlist`    | Grant or revoke a pool on the allowlist of the pool's chain                           |
 
 ## Liquidity positions (Raydium)
 
