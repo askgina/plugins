@@ -54,13 +54,19 @@ the same `https://askgina.ai/ai/predictions/mcp` endpoint.
 
 ## What it can do
 
-| Group      | Tools                                                                         |
-| ---------- | ----------------------------------------------------------------------------- |
-| Reads      | Market search, expiring markets, order book, series, positions, order history |
-| Execution  | Trade, manage orders, redeem, split and merge positions, top up and withdraw  |
-| Scheduling | Create, list, toggle, update and delete scheduled prompts                     |
-| Context    | Cross-chain portfolio, wallet addresses, web search and URL fetch             |
-| Sandbox    | `bash`, for scripts, SQL over fetched market data and composed workflows      |
+| Group      | Tools                                                                                                                              |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Reads      | Market search, expiring markets, sports events, subject markets, exact market lookup, order book, series, positions, order history |
+| Execution  | Trade, manage orders, redeem, split and merge positions, top up and withdraw                                                       |
+| Scheduling | Create, list, toggle, update and delete scheduled prompts                                                                          |
+| Context    | Cross-chain portfolio, wallet addresses, web search and URL fetch                                                                  |
+| Sandbox    | `bash`, for scripts, SQL over fetched market data and composed workflows                                                           |
+
+The server lists 26 tools: 25 native tools and `bash`. `fetchPolymarketData` and
+`fetchPolymarketHistory` fill sandbox SQL tables, so they work only inside `bash`.
+A `splitMergePredictionPosition` split preview suggests the same split with
+`authorized: true`, and `getPolymarketPositions` suggests `redeemPredictionMarket`
+for redeemable positions. The server never runs a suggestion. Your host asks first.
 
 The [native tools page](https://docs.askgina.ai/predictions-mcp/tools) lists
 every tool and its annotation class.

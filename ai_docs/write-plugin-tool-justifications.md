@@ -121,7 +121,9 @@ Only `createHyperliquidTable`, `executeSqlQuery` and `captureAnalysisDataset` ar
 
 ## ask-gina-predictions
 
-Endpoint: `https://askgina.ai/ai/predictions/mcp`. The server lists 23 tools: `bash` and 22 native tools. `fetchPolymarketData` and `fetchPolymarketHistory` are `bash`-only, because they load rows into sandbox SQL tables.
+Endpoint: `https://askgina.ai/ai/predictions/mcp`. The server lists 26 tools: `bash` and 25 native tools. `fetchPolymarketData` and `fetchPolymarketHistory` are `bash`-only, because they load rows into sandbox SQL tables.
+
+A `splitMergePredictionPosition` split preview returns a typed `next` suggestion for the same split with `authorized: true`, and `getPolymarketPositions` returns one for `redeemPredictionMarket` when a position is redeemable. The server never executes a suggestion. The host shows the call and asks first.
 
 | Tool                             | readOnlyHint, destructiveHint, openWorldHint | Reviewer justification                                                                                                                                                              |
 | -------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -130,9 +132,12 @@ Endpoint: `https://askgina.ai/ai/predictions/mcp`. The server lists 23 tools: `b
 | `listScheduledPrompts`           | true, false, false                           | Lists your scheduled prompts from Gina account state. It changes nothing and calls no outside provider, so it is read only and closed world.                                        |
 | `searchPredictionMarkets`        | true, false, true                            | Searches Polymarket markets. It places no order and changes nothing, so it is read only and open world.                                                                             |
 | `getExpiringMarkets`             | true, false, true                            | Reads Polymarket markets that end soon. It changes nothing, so it is read only and open world.                                                                                      |
+| `getPredictionSportsEvents`      | true, false, true                            | Reads Polymarket sports events and their markets by league, team or date. It places no order and changes nothing, so it is read only and open world.                                |
+| `getPredictionSubjectMarkets`    | true, false, true                            | Reads Polymarket markets about one subject, such as a person, company or asset. It changes nothing, so it is read only and open world.                                              |
+| `resolvePredictionMarketExact`   | true, false, true                            | Resolves one market and its outcome token ids from an exact slug, condition id, token id or URL. It changes nothing, so it is read only and open world.                             |
 | `getPredictionOrderbook`         | true, false, true                            | Reads the order book of one Polymarket market. It changes nothing, so it is read only and open world.                                                                               |
 | `getSeriesMarket`                | true, false, true                            | Reads the current or next market of a recurring Polymarket series. It changes nothing, so it is read only and open world.                                                           |
-| `getPolymarketPositions`         | true, false, true                            | Reads your open and redeemable Polymarket positions. It changes no position, so it is read only and open world.                                                                     |
+| `getPolymarketPositions`         | true, false, true                            | Reads your open and redeemable Polymarket positions. It changes no position, so it is read only and open world. It suggests redeemPredictionMarket as a next step.                  |
 | `getPolymarketOrderHistory`      | true, false, true                            | Reads your Polymarket order history. It changes nothing, so it is read only and open world.                                                                                         |
 | `getCrosschainPortfolio`         | true, false, true                            | Reads your balances across chains from outside providers. It moves no funds, so it is read only and open world.                                                                     |
 | `webSearch`                      | true, false, true                            | Searches the web for context. It changes nothing in your account, so it is read only and open world.                                                                                |

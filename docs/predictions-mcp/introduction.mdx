@@ -9,7 +9,9 @@ For Ask Gina's broader user-facing capabilities, including wallets, market resea
 
 ## How It Works
 
-The server exposes native tools for prediction-market discovery, pricing, trading, portfolio and schedule operations, and a `bash` tool. Your client calls them from your prompt; inside the `bash` sandbox, `host-tools` commands reach the same host tools and add SQL over fetched market data. [Native tools](/predictions-mcp/tools) lists every native tool by annotation class.
+The server lists 26 tools: 25 native tools for prediction-market discovery, pricing, trading, portfolio and schedule operations, plus a `bash` tool. Your client calls the native tools from your prompt. Inside the `bash` sandbox, `host-tools` commands reach the same host tools and add SQL over fetched market data. Two loaders, `fetchPolymarketData` and `fetchPolymarketHistory`, fill sandbox SQL tables and work only inside `bash`. [Native tools](/predictions-mcp/tools) lists every native tool by annotation class.
+
+Two results carry a typed `next` suggestion. A `splitMergePredictionPosition` split preview suggests the same split with `authorized: true`, and `getPolymarketPositions` suggests `redeemPredictionMarket` when a position is redeemable. The server never runs a suggestion. Your client shows the call and waits for your approval.
 
 <CardGroup cols={3}>
   <Card title="Discover" icon="magnifying-glass">
@@ -47,7 +49,7 @@ The server exposes native tools for prediction-market discovery, pricing, tradin
 
 ## Check that it works
 
-After you connect, ask your assistant "What tools do you have from the predictions server?" It should list `bash`. Then call `bash` with:
+After you connect, ask your assistant "What tools do you have from the predictions server?" It should list `bash` and the 25 native tools. Call `searchPredictionMarkets` with `{"query":"NBA"}`, or call `bash` with:
 
 ```json
 { "command": "host-tools searchPredictionMarkets '{\"query\":\"NBA\"}'" }
