@@ -5,3 +5,12 @@ mcp:
   url: https://askgina.ai/ai/gina/mcp
   scopes:
     - tools:read
+skills:
+  - id: review-gina-account
+    mcpServed: true
+  - id: research-spot-tokens
+    mcpServed: true
+  - id: research-hyperliquid
+    mcpServed: true
+  - id: research-prediction-markets
+    mcpServed: true

@@ -27,6 +27,8 @@
     "check:public-boundary": "vp run public-boundary",
     "check:target-conformance": "vp run target-conformance",
     "check:typescript-imports": "bun tools/check-typescript-imports.ts",
+    "skills:index": "bun tools/skill-index.ts",
+    "skills:index:check": "bun tools/skill-index.ts --check",
     "verify:packages": "bun tools/verify-artifacts.ts --packages",
     "verify:targets": "bun tools/verify-artifacts.ts --targets",
     "smoke:install": "bun tools/verify-artifacts.ts --packages",
@@ -59,7 +61,8 @@
     "typescript": "7.0.2",
     "typescript-api": "npm:typescript@5.9.3",
     "vite-plus": "0.3.0",
-    "vitest": "4.1.11"
+    "vitest": "4.1.11",
+    "yaml": "2.8.3"
   },
   "overrides": {
     "@effect/platform-node-shared": "4.0.0-rc.111",

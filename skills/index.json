@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "skills": [
+    {
+      "id": "research-hyperliquid",
+      "package": "ask-gina",
+      "path": "plugins/ask-gina/skills/research-hyperliquid",
+      "description": "Research live Hyperliquid and HIP-3 markets, prices, charts, account state, positions, orders, fills, performance, and bounded analytics with Ask Gina. Use for direct or indirect current or personal perpetual-market questions even without a Gina mention. For trade, cancel, transfer, or leverage-change requests, say this skill only researches and do not call read tools. Do not use for general perpetuals education or unrelated venues.",
+      "mcpEndpoint": "gina",
+      "mcpUrl": "https://askgina.ai/ai/gina/mcp",
+      "mcpServed": true,
+      "files": [
+        "plugins/ask-gina/skills/research-hyperliquid/SKILL.md",
+        "plugins/ask-gina/skills/research-hyperliquid/agents/openai.yaml"
+      ]
+    },
+    {
+      "id": "research-prediction-markets",
+      "package": "ask-gina",
+      "path": "plugins/ask-gina/skills/research-prediction-markets",
+      "description": "Research live Polymarket discovery, expiry, recurring series, outcome order books, public rows, and the authenticated user's positions or history with Ask Gina. Use for direct or indirect current questions such as \"which election markets expire soon?\" even without a Gina mention. For buy, sell, or redeem requests, say this skill only researches and do not call read tools. Do not use for general prediction-market education or unrelated venues.",
+      "mcpEndpoint": "gina",
+      "mcpUrl": "https://askgina.ai/ai/gina/mcp",
+      "mcpServed": true,
+      "files": [
+        "plugins/ask-gina/skills/research-prediction-markets/SKILL.md",
+        "plugins/ask-gina/skills/research-prediction-markets/agents/openai.yaml"
+      ]
+    },
+    {
+      "id": "research-spot-tokens",
+      "package": "ask-gina",
+      "path": "plugins/ask-gina/skills/research-spot-tokens",
+      "description": "Research live spot-token prices, metadata, historical charts, and the authenticated user's completed swap history with Ask Gina. Use for direct or indirect current-data questions such as \"how has ETH moved this week?\" even without a Gina mention. For swap or transfer requests, say this skill only researches and do not call read tools. Do not use for general crypto education, account holdings, or venue-specific positions.",
+      "mcpEndpoint": "gina",
+      "mcpUrl": "https://askgina.ai/ai/gina/mcp",
+      "mcpServed": true,
+      "files": [
+        "plugins/ask-gina/skills/research-spot-tokens/SKILL.md",
+        "plugins/ask-gina/skills/research-spot-tokens/agents/openai.yaml"
+      ]
+    },
+    {
+      "id": "review-gina-account",
+      "package": "ask-gina",
+      "path": "plugins/ask-gina/skills/review-gina-account",
+      "description": "Review the user's live Ask Gina account across cross-chain holdings, linked wallets, and scheduled prompts or recent runs. Use for direct or indirect personal questions such as \"what do I hold?\" or \"which wallets are connected?\", even when signed out so Gina can authenticate. For schedule creation or changes and asset-movement requests, say this skill only researches and do not call read tools. Do not use for general education or venue-specific positions or history.",
+      "mcpEndpoint": "gina",
+      "mcpUrl": "https://askgina.ai/ai/gina/mcp",
+      "mcpServed": true,
+      "files": [
+        "plugins/ask-gina/skills/review-gina-account/SKILL.md",
+        "plugins/ask-gina/skills/review-gina-account/agents/openai.yaml"
+      ]
+    }
+  ]
+}

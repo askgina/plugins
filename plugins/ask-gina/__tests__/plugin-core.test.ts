@@ -98,6 +98,10 @@ describe("Ask Gina portable plugin core", () => {
         assert.strictEqual(manifest.name, "ask-gina");
         assert.strictEqual(manifest.mcp.url, PRODUCTION_MCP_URL);
         assert.deepStrictEqual(manifest.mcp.scopes, [READ_SCOPE]);
+        assert.deepStrictEqual(
+          manifest.skills,
+          ASK_GINA_SKILL_DEFINITIONS.map((skill) => ({ id: skill.name, mcpServed: true })),
+        );
       }),
     );
 
