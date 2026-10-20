@@ -258,6 +258,7 @@ def load_pools():
             pools.append({"chain": "robinhood", "protocol": proto, "address": p.lower()})
     for ch, k in (("base", "base_8453"), ("eth", "ethereum_1")):
         for proto, lst in a.get(k, {}).items():
+            if ch == "base" and proto not in ("uniswap-v3", "uniswap-v4"): continue   # Base: Uniswap v3/v4 only (no Aerodrome etc., not even watch-only)
             for p in lst:
                 pools.append({"chain": ch, "protocol": proto, "address": p.lower()})
     for proto, lst in a.get("solana", {}).items():
@@ -498,6 +499,35 @@ SEC_SKIP = {"So11111111111111111111111111111111111111112", "EPjFWdd5AufqSSqeM2qN
 RAYDIUM_CPMM = "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
 REG = {"rh": {}, "xstocks": {}, "ondo": {}, "evm": {"base": {}, "eth": {}}}
 BASE_STOCK_PREFIX = "0xb2000000000000000000"   # Base tokenized-equity contracts use this vanity prefix (e.g. AAPL 0xb200…d1fb)
+COINBASE_STOCKS_URL = "https://api.coinbase.com/v1/tokenized-stocks"   # official Coinbase Tokenized Stock list (Base; ticker + 'c', e.g. NVDAc)
+COINBASE_STOCKS_CACHE = os.environ.get("LP_SCAN_CB_CACHE", "/workspace/cb_all.json")   # list of token dicts; refreshed on every successful fetch
+CB_ISSUER = "Coinbase Tokenized Stock"
+
+def load_coinbase_stocks():
+    """Seed REG['evm']['base'] from Coinbase's official list (paginated via next_page_token). Falls back to the cached JSON.
+    The BASE_STOCK_PREFIX rule in learn_evm_stock stays as a backup for tokens missing from the list."""
+    toks, tok, ok = [], None, True
+    for _ in range(50):
+        url = COINBASE_STOCKS_URL + (f"?page_token={urllib.parse.quote(tok)}" if tok else "")
+        d = http(url, retries=3)
+        if not isinstance(d, dict) or not isinstance(d.get("tokens"), list): ok = False; break
+        toks += d["tokens"]; tok = d.get("next_page_token")
+        if not tok: break
+    src = "api"
+    if ok and toks:
+        try:
+            tmp = COINBASE_STOCKS_CACHE + ".tmp"; json.dump(toks, open(tmp, "w")); os.replace(tmp, COINBASE_STOCKS_CACHE)
+        except OSError as e: log(f"Coinbase stock cache write failed: {e}")
+    else:
+        try: toks = json.load(open(COINBASE_STOCKS_CACHE)); src = f"cache {COINBASE_STOCKS_CACHE}"
+        except (OSError, ValueError): toks = []; src = "unavailable"
+    n = 0
+    for t in toks:
+        a = (t.get("contract_address") or "").lower(); sym = t.get("symbol") or ""
+        if a.startswith(BASE_STOCK_PREFIX) and sym.endswith("c"):
+            REG["evm"]["base"][a] = [sym, CB_ISSUER]; n += 1
+    log(f"Coinbase tokenized stocks (Base): {n} from {src}")
+    return n
 
 def learn_evm_stock(chain, tk, issuer=None):
     """Base/Ethereum tokenized-stock detection by token metadata: Ondo Global Markets ('… (Ondo Tokenized …)', symbol …on),
@@ -518,7 +548,7 @@ def load_registries(wide, ondo_max_age_days=0):
     if os.path.exists(cf):
         c = json.load(open(cf))
         if c.get("date") == today and (c.get("ondo") or not wide) and "evm" in c:
-            REG.update({k: c[k] for k in ("rh", "xstocks", "ondo", "evm")}); return
+            REG.update({k: c[k] for k in ("rh", "xstocks", "ondo", "evm")}); load_coinbase_stocks(); return
         evm_old = (c.get("evm"), c.get("evm_ondo_date")) if c.get("evm") else None
         od = c.get("ondo_date") or (c.get("date") if c.get("ondo") else None)
         if c.get("ondo") and od:
@@ -584,6 +614,7 @@ def load_registries(wide, ondo_max_age_days=0):
                 for tk in (p.get("baseToken") or {}, p.get("quoteToken") or {}):
                     learn_evm_stock(ch, tk)
         evm_ondo_date = today
+    load_coinbase_stocks()
     log(f"registries: Robinhood {len(REG['rh'])}, xStocks(Solana) {len(REG['xstocks'])}, Ondo(Solana, name-matched) {len(REG['ondo'])}, "
         f"Base stocks {len(REG['evm']['base'])}, Ethereum stocks {len(REG['evm']['eth'])}")
     json.dump({"date": today, "ondo_date": ondo_date, "evm_ondo_date": evm_ondo_date, **REG}, open(cf, "w"))
@@ -669,6 +700,7 @@ def discover_stock_pools(add, stats):
     toks_by = {"robinhood": list(REG["rh"]), "base": list(REG["evm"]["base"]), "eth": list(REG["evm"]["eth"]),
                "solana": list(REG["xstocks"]) + list(REG["ondo"])}
     log("discovery: DexScreener presence check for stock tokens " + ", ".join(f"{k} {len(v)}" for k, v in toks_by.items()))
+    toks_by = {k: v for k, v in toks_by.items() if k in CHAINS}
     with_pairs = {k: [] for k in toks_by}
     for chain, toks in toks_by.items():
         dsn = CHAIN_CFG[chain]["ds"]
@@ -694,7 +726,7 @@ def discover_stock_pools(add, stats):
                     add(chain, p["pairAddress"], p.get("dexId"), p.get("labels"), "tokenized_stock", f((p.get("liquidity") or {}).get("usd")),
                         vol24=f((p.get("volume") or {}).get("h24")))
     def ray_part():
-        for t in with_pairs["solana"]:
+        for t in with_pairs.get("solana", []):
             d = http(f"{RAY}/pools/info/mint?mint1={t}&poolType=all&poolSortField=liquidity&sortType=desc&pageSize=100&page=1", retries=2) or {}
             for p in ((d.get("data") or {}).get("data") or []):
                 RAY_PREFETCH.setdefault(p["id"], p)
@@ -707,7 +739,7 @@ SCOPE_STATS = {"dropped_out_of_scope": 0}
 
 def dex_in_scope(chain, dex_id):
     """Discovery-time check on a raw DEX id (GeckoTerminal/DexScreener). Unknown id -> True (decided later from the row protocol)."""
-    if DEX_SCOPE[0] == "all" or not dex_id: return True
+    if (DEX_SCOPE[0] == "all" and chain != "base") or not dex_id: return True   # Base: Uniswap v3/v4 only in every mode
     d = dex_id.lower().replace("_", "-")
     if chain == "robinhood": return d.startswith("uniswap")
     if chain in EVM: return d.startswith("uniswap") and "v2" not in d     # Base/Ethereum: Uniswap v3/v4 only
@@ -720,14 +752,15 @@ def proto_in_scope(r):
     return p.startswith("raydium")
 
 def scope_ok(r, snap):
+    if r.get("chain") == "base": return proto_in_scope(r)   # Base: Uniswap v3/v4 only, not even allowlist/watch-only rows elsewhere
     return (snap.get("dex_scope") or "all") == "all" or proto_in_scope(r)
 
 def make_adder(cands):
     lock = threading.Lock()
     def add(chain, addr, dex_id=None, labels=None, cat=None, tvl=None, vol24=None):
-        if not addr: return
+        if not addr or chain not in CHAINS: return   # --chains subset
         k = (chain, nkey(chain, addr))
-        if cat not in ("allowlist", "pinned") and not dex_in_scope(chain, dex_id):
+        if (cat not in ("allowlist", "pinned") or chain == "base") and not dex_in_scope(chain, dex_id):
             with lock: SCOPE_STATS["dropped_out_of_scope"] += 1
             return
         with lock:
@@ -814,7 +847,7 @@ def select_top(cands, ds, prev, args):
         if c.get("allow_protocol"): return proto_in_scope({"chain": c["chain"], "protocol": c["allow_protocol"]})
         return dex_in_scope(c["chain"], g.get("_dex") or c.get("dex_id") or d.get("dexId"))
     for ch in CHAINS:
-        st = [k for k, c in cands.items() if c["chain"] == ch and "tokenized_stock" in c["categories"] and (H[k][0] or 0) >= STOCK_MIN_TVL and insc(k, c)]
+        st = [k for k, c in cands.items() if c["chain"] == ch and "tokenized_stock" in c["categories"] and (H[k][0] or 0) >= stock_min_tvl(ch) and insc(k, c)]
         st.sort(key=lambda k: -(H[k][2] if H[k][2] is not None else -1))
         for k in st[:args.stock_candidates]: why.setdefault(k, set()).add("stock_candidate")
         vo = [k for k, c in cands.items() if c["chain"] == ch and (H[k][0] or 0) >= MAJOR_MIN_TVL and insc(k, c)]
@@ -829,7 +862,7 @@ def select_top(cands, ds, prev, args):
             c["selected_as"] = sorted(why[k]); sel[k] = c
         elif not insc(k, c):
             continue
-        elif (H[k][0] or 0) >= STOCK_MIN_TVL and ("tokenized_stock" in c["categories"] or (H[k][0] or 0) >= MAJOR_MIN_TVL or "allowlist" in c["categories"]):
+        elif (H[k][0] or 0) >= (stock_min_tvl(c["chain"]) if "tokenized_stock" in c["categories"] else STOCK_MIN_TVL) and ("tokenized_stock" in c["categories"] or (H[k][0] or 0) >= MAJOR_MIN_TVL or "allowlist" in c["categories"]):
             skipped.append({"chain": c["chain"], "address": c["address"], "categories": sorted(c["categories"]), "tvl_hint": H[k][0],
                             "vol24_hint": H[k][1], "fee_apr_proxy": H[k][2]})
     return sel, skipped
@@ -940,9 +973,16 @@ def main(argv=None):
     ap.add_argument("--dex-scope", choices=["core", "all"], default="core",
                     help="top/wide: core = Robinhood Uniswap v2/v3/v4 + Solana Raydium AMM/CPMM/CLMM only (default); all = every DEX")
     ap.add_argument("--security-ttl", type=float, default=36, help="hours to reuse cached GoPlus/RugCheck responses")
+    ap.add_argument("--chains", help="comma-separated subset of robinhood,base,eth,solana for top/wide discovery and report tables (default: all)")
     ap.add_argument("--render-only", action="store_true", help="re-score and re-render the latest (or --date) snapshot; no network")
     ap.add_argument("--from-cache", action="store_true", help="recompute from the last fetch pickle (debug; no network for pool data)")
     args = ap.parse_args(argv)
+    if args.chains:
+        global CHAINS
+        want = [c.strip() for c in args.chains.split(",") if c.strip()]
+        bad = [c for c in want if c not in CHAINS]
+        if bad: raise SystemExit(f"lp_pool_scan: error: unknown chain(s) {bad}; choose from {list(CHAINS)}")
+        CHAINS = tuple(c for c in CHAINS if c in want)
     set_paths(args.out, args.allowlist)
     if args.quiet: QUIET[0] = True
     if not os.path.exists(ALLOW):
@@ -997,6 +1037,9 @@ def main(argv=None):
     rep_dir = REPORT_DIR if not sub else os.path.join(REPORT_DIR, sub)
     allow = load_pools()
     pins = [a.lower() if a.startswith("0x") else a for a in (args.pin + (json.load(open(ALLOW)).get("pinned") or []))]
+    if args.chains:   # --chains subset: keep only allowlist pools / pins on the selected chains
+        allow = [p for p in allow if p["chain"] in CHAINS]
+        pins = [a for a in pins if ("robinhood" if a.startswith("0x") else "solana") in CHAINS]
     allow_set = {(p["chain"], p["address"]) for p in allow}
     log(f"universe={args.universe} start {started_utc.isoformat()} (London {london.strftime('%Y-%m-%d %H:%M %Z')})")
     load_registries(wide or top, ondo_max_age_days=7 if top else 0)
@@ -1042,7 +1085,7 @@ def main(argv=None):
         log(f"dust floor ${args.floor:,.0f}: kept {len(keep)}, sub-floor {len(sub_floor)}")
         cands = keep
     byc = {ch: [c["address"] for c in cands.values() if c["chain"] == ch] for ch in CHAINS}
-    sol = byc["solana"]
+    sol = byc.get("solana", [])
     pre = {k[1]: v for k, v in GT_PREFETCH.items() if k in cands} if top else {}
     log("GeckoTerminal multi-pool..."); gt = dict(pre)
     for ch in CHAINS: gt.update(gt_multi(ch, [a for a in byc[ch] if a not in pre]))
@@ -1630,6 +1673,8 @@ EXCLUDE_FLAG_PREFIXES = ("meme_vs_stock", "dead_volume", "rugcheck_danger", "unv
 FAKE_TVL_MIN_DEPTH = {"stock": 5_000, "major": 50_000}   # min USD to move price 2% (either side)
 MAJOR_MIN_VOL7D_TVL = 0.10
 STOCK_MIN_TVL, MAJOR_MIN_TVL = 100_000, 1_000_000
+STOCK_MIN_TVL_BY_CHAIN = {"base": 25_000}   # stock-pool TVL floor overrides (other chains: STOCK_MIN_TVL)
+def stock_min_tvl(chain): return STOCK_MIN_TVL_BY_CHAIN.get(chain, STOCK_MIN_TVL)
 
 def net_apr(r):
     if r.get("fee_apr_7d") is None or r.get("il7d_pool_avg_pct") is None: return None
@@ -1685,7 +1730,7 @@ def lp7_cells(r):
 
 LP7_COLS = "Fee APR 7d | Fees 7d | Est IL 7d | Net 7d | Fee cover | Break-even vs realized 7d move (cushion)"
 
-# Column order for every report table:
+# Column order for every report table (Sid, 2026-10-19):
 # # | Pool | APR | Fee | TVL | [Tier] | Fees 7d | IL 7d | Net 7d | Cover | Break-even vs realized | Vol ... | $1M slip / max fill | Flags | Allowlist
 def table_hdr(vols=("24h", "7d"), tier=False):
     cols = ["#", "Pool", "APR", "Fee", "TVL"] + (["Tier"] if tier else []) + \
@@ -1823,7 +1868,7 @@ def universe_counts(snap):
 def wide_tables(snap):
     rows = snap["pools"]
     rows = [r for r in rows if scope_ok(r, snap)]
-    stock_all = [r for r in rows if r["is_tokenized_stock_pool"] and (r.get("tvl_usd") or 0) >= STOCK_MIN_TVL]
+    stock_all = [r for r in rows if r["is_tokenized_stock_pool"] and (r.get("tvl_usd") or 0) >= stock_min_tvl(r["chain"])]
     stock = stock_rank([r for r in stock_all if not exclusion(r, "stock")])
     maj_all = [r for r in rows if (r.get("tvl_usd") or 0) >= MAJOR_MIN_TVL]
     major = sorted([r for r in maj_all if not exclusion(r, "major") and not needs_review(r)], key=lambda r: -(r.get("tvl_usd") or 0))
@@ -1843,9 +1888,9 @@ def render_wide(snap, prev):
     L = [f"# Wide LP scan {snap['date']}", "", f"Data fetched {snap['data_fetched_london'][0][:16].replace('T', ' ')} – {snap['data_fetched_london'][1][:16].replace('T', ' ')} Europe/London", ""]
     uc = snap.get("universe_counts") or universe_counts(snap)
     L += ["## Universe", "```", json.dumps(uc, indent=1), "```", ""]
-    L.append(f"## (a) Top 15 tokenized-stock pools (TVL >= {fmt_usd(STOCK_MIN_TVL)}, real depth, IL measurable), by fee cover (Fees 7d / Est IL 7d)"); L += STOCK_HDR
+    L.append(f"## (a) Top 15 tokenized-stock pools (TVL >= {fmt_usd(STOCK_MIN_TVL)} (Base {fmt_usd(stock_min_tvl('base'))}), real depth, IL measurable), by fee cover (Fees 7d / Est IL 7d)"); L += STOCK_HDR
     L += [stock_line(i + 1, r) for i, r in enumerate(t["stock"][:15])]
-    L += ["", f"Eligible stock pools: {len(t['stock'])} of {len(t['stock_all'])} stock pools with TVL >= {fmt_usd(STOCK_MIN_TVL)}.", ""]
+    L += ["", f"Eligible stock pools: {len(t['stock'])} of {len(t['stock_all'])} stock pools with TVL >= {fmt_usd(STOCK_MIN_TVL)} (Base {fmt_usd(stock_min_tvl('base'))}).", ""]
     L.append(f"## (b) Top 20 major pools (TVL >= $1M, real depth, 7d volume >= 10% TVL), by TVL"); L += MAJOR_HDR
     L += [major_line(i + 1, r) for i, r in enumerate(t["major"][:20])]
     L += ["", f"Eligible majors: {len(t['major'])} of {len(t['major_all'])} pools with TVL >= $1M "
@@ -1886,7 +1931,7 @@ def top_tables(snap, n=10):
         rr = [r for r in rows if r["chain"] == ch and scope_ok(r, snap)]
         vol_all = [r for r in rr if (r.get("tvl_usd") or 0) >= MAJOR_MIN_TVL]
         vol = sorted([r for r in vol_all if not exclusion(r, "major")], key=lambda r: -(r.get("vol24_usd") or 0))
-        st_all = [r for r in rr if r.get("is_tokenized_stock_pool") and (r.get("tvl_usd") or 0) >= STOCK_MIN_TVL]
+        st_all = [r for r in rr if r.get("is_tokenized_stock_pool") and (r.get("tvl_usd") or 0) >= stock_min_tvl(ch)]
         st = stock_rank([r for r in st_all if not exclusion(r, "stock")])
         rv = [r for r in st_all if needs_review(r) and not exclusion(r, "stock")]
         out[ch] = {"volume": vol[:n], "volume_eligible": len(vol), "volume_all": len(vol_all),
@@ -1908,10 +1953,10 @@ def render_top(snap, prev, n=10):
         L += [top_line(i + 1, r) for i, r in enumerate(x["volume"])]
         L += ["", flags_block(x["volume"]), f"{x['volume_eligible']} of {x['volume_all']} deep-scanned pools with TVL >= $1M pass the filters.", ""]
         k += 1
-        L.append(f"## ({k}) {labels[ch]}: top {n} tokenized-stock pools by fee cover (Fees 7d / Est IL 7d; TVL >= {fmt_usd(STOCK_MIN_TVL)})"); L += TOP_HDR
+        L.append(f"## ({k}) {labels[ch]}: top {n} tokenized-stock pools by fee cover (Fees 7d / Est IL 7d; TVL >= {fmt_usd(stock_min_tvl(ch))})"); L += TOP_HDR
         L += [top_line(i + 1, r) for i, r in enumerate(x["stock"])]
-        if not x["stock_eligible"]: L.append(f"| No tokenized-stock pool on {CHAIN_CFG[ch]['label']} passes (TVL >= {fmt_usd(STOCK_MIN_TVL)}, filters, IL measurable) this run |" + " |" * (len(TOP_COLS) - 1))
-        L += ["", flags_block(x["stock"]), f"{x['stock_eligible']} of {x['stock_all']} deep-scanned stock pools with TVL >= {fmt_usd(STOCK_MIN_TVL)} pass the filters with measurable IL."]
+        if not x["stock_eligible"]: L.append(f"| No tokenized-stock pool on {CHAIN_CFG[ch]['label']} passes (TVL >= {fmt_usd(stock_min_tvl(ch))}, filters, IL measurable) this run |" + " |" * (len(TOP_COLS) - 1))
+        L += ["", flags_block(x["stock"]), f"{x['stock_eligible']} of {x['stock_all']} deep-scanned stock pools with TVL >= {fmt_usd(stock_min_tvl(ch))} pass the filters with measurable IL."]
         if x["review"]:
             L.append("Needs review (v4 hook / dynamic fee, IL n/a, not ranked): " + ", ".join(
                 f"{short_name(r)} `{r['address']}` (TVL {fmt_usd(r.get('tvl_usd'))}, fee APR 7d {fmt_pct(r.get('fee_apr_7d'))})" for r in x["review"]))
