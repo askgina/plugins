@@ -14,7 +14,7 @@ The sources are in [askgina/plugins](https://github.com/askgina/plugins/tree/mai
 
 ## lp-pool-scan
 
-The scanner only reads. It makes HTTP GET requests to public APIs and read calls to a public Robinhood Chain RPC. It never signs, sends or simulates a transaction for execution, and it needs no wallet, keys or API keys. Do not wire it to a trading or wallet connector.
+The scanner only reads. It makes HTTP GET requests to public APIs and read calls to public Robinhood Chain, Base and Ethereum RPCs. It never signs, sends or simulates a transaction for execution, and it needs no wallet, keys or API keys. Do not wire it to a trading or wallet connector.
 
 ### Run it
 
@@ -28,8 +28,10 @@ python3 scripts/lp_pool_scan.py --universe allowlist --format json --quiet
 | Universe    | Scope                                                                                                  | Typical runtime             |
 | ----------- | ------------------------------------------------------------------------------------------------------ | --------------------------- |
 | `allowlist` | Pools listed in a local allowlist file (default)                                                       | Short                       |
-| `top`       | Daily mode: top pools by 24h volume per chain, tokenized-stock pools, allowlist pools and pinned pools | About 5 to 10 minutes       |
+| `top`       | Daily mode: top pools by 24h volume per chain, tokenized-stock pools, allowlist pools and pinned pools | About 10 to 20 minutes      |
 | `wide`      | Allowlist, every tokenized-stock pool and the top pools above $1M TVL per chain                        | About 45 minutes; resumable |
+
+The daily report has two tables per chain (top pools by 24h volume, and tokenized-stock pools by fee cover) for Robinhood Chain, Base, Ethereum and Solana. `--chains base,eth` limits `top` and `wide` to a subset of `robinhood`, `base`, `eth` and `solana`. Set `$RH_RPC`, `$BASE_RPC` or `$ETH_RPC` to use your own RPC instead of the public default.
 
 Exit code 0 means success, 1 a runtime error and 2 bad arguments or a missing allowlist file. Each rerun prints a one-line diff against the previous snapshot. `--render-only` re-scores and re-renders the latest snapshot without network access. See `SKILL.md` for every flag.
 
@@ -48,9 +50,9 @@ A pool with no measurable IL is never ranked. Uniswap v4 hook or dynamic-fee poo
 
 ### Scope differs from Spot MCP support
 
-The scanner's default `--dex-scope core` covers Uniswap v2, v3 and v4 on Robinhood Chain and Raydium AMM, CPMM and CLMM on Solana. `--dex-scope all` adds other DEXes such as Orca and Meteora. Spot MCP LP operations support a narrower set: Uniswap v3 and v4 on Robinhood Chain, and Raydium CLMM and CPMM on Solana. See the [LP support matrix](/spot-mcp/liquidity-positions#capability-and-access).
+The scanner's default `--dex-scope core` covers Uniswap v2, v3 and v4 on Robinhood Chain, Uniswap v3 and v4 on Base and Ethereum, and Raydium AMM, CPMM and CLMM on Solana. `--dex-scope all` adds other DEXes such as Orca and Meteora; Base stays Uniswap v3 and v4 only. Spot MCP LP operations support a narrower set: Uniswap v3 and v4 on Robinhood Chain, and Raydium CLMM and CPMM on Solana. See the [LP support matrix](/spot-mcp/liquidity-positions#capability-and-access).
 
-A well-ranked Uniswap v2, Raydium AMM, Orca or Meteora pool cannot be operated through Spot MCP. Check the protocol in the **Pool** column before proposing an action.
+A well-ranked Base or Ethereum pool, or a Uniswap v2, Raydium AMM, Orca or Meteora pool, cannot be operated through Spot MCP. Check the protocol in the **Pool** column before proposing an action.
 
 ### The scanner allowlist is a local file
 
@@ -59,6 +61,8 @@ A well-ranked Uniswap v2, Raydium AMM, Orca or Meteora pool cannot be operated t
 ```json
 {
   "robinhood_chain_4663": { "uniswap-v3": ["<pool-address>"], "uniswap-v4": ["<pool-id>"] },
+  "base_8453": { "uniswap-v3": ["<pool-address>"], "uniswap-v4": ["<pool-id>"] },
+  "ethereum_1": { "uniswap-v3": ["<pool-address>"], "uniswap-v4": ["<pool-id>"] },
   "solana": { "raydium-clmm": ["<pool-address>"], "raydium-cpmm": ["<pool-address>"] }
 }
 ```
