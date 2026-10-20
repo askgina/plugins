@@ -1,0 +1,1640 @@
+{
+  "hash": "a9c0bd91699f",
+  "ref": "0805b519820874c392474bb445610437cded284c",
+  "partialLackingHeading": 52,
+  "errors": {},
+  "verdicts": {
+    "docs/agents/plugins-and-skills.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0,
+          "partial": 0.57,
+          "no_task": 0.43
+        },
+        "confidence": 0.35
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.2
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.76
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.77
+      }
+    },
+    "docs/connect/claude.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.33,
+          "partial": 0.67,
+          "no_task": 0
+        },
+        "confidence": 0.51
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.35
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.07
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.75
+      }
+    },
+    "docs/perps-mcp/index.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "self_serve",
+        "probabilities": {
+          "self_serve": 0.82,
+          "partial": 0.17,
+          "no_task": 0.01
+        },
+        "confidence": 0.73
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.11
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.1
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.81
+      }
+    },
+    "docs/connect/perplexity.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.25,
+          "partial": 0.75,
+          "no_task": 0
+        },
+        "confidence": 0.62
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.3
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.05
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.74
+      }
+    },
+    "docs/mcp-access/gina-read.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.02,
+          "partial": 0.66,
+          "no_task": 0.32
+        },
+        "confidence": 0.49
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.22
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.12
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.64
+      }
+    },
+    "docs/connect/grok-bot.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.06,
+          "partial": 0.94,
+          "no_task": 0
+        },
+        "confidence": 0.91
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.27
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.06
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.75
+      }
+    },
+    "docs/predictions-mcp/client-setup.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.05,
+          "partial": 0.95,
+          "no_task": 0
+        },
+        "confidence": 0.92
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.28
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.03
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.74
+      }
+    },
+    "docs/product-guide/index.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.04,
+          "partial": 0.71,
+          "no_task": 0.25
+        },
+        "confidence": 0.56
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.13
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.05
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.67
+      }
+    },
+    "docs/connect/hermes.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.4,
+          "partial": 0.6,
+          "no_task": 0
+        },
+        "confidence": 0.4
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.2
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.05
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.76
+      }
+    },
+    "docs/perps-mcp/quick-start.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.1,
+          "partial": 0.9,
+          "no_task": 0
+        },
+        "confidence": 0.85
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.16
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.05
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.81
+      }
+    },
+    "docs/agents/authentication.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.15,
+          "partial": 0.85,
+          "no_task": 0
+        },
+        "confidence": 0.77
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.25
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.07
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.73
+      }
+    },
+    "docs/predictions-mcp/features.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "no_task",
+        "probabilities": {
+          "self_serve": 0,
+          "partial": 0.09,
+          "no_task": 0.91
+        },
+        "confidence": 0.86
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.12
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.12
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.71
+      }
+    },
+    "docs/perps-mcp/features.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "no_task",
+        "probabilities": {
+          "self_serve": 0.02,
+          "partial": 0.39,
+          "no_task": 0.59
+        },
+        "confidence": 0.38
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.1
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.71
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.78
+      }
+    },
+    "docs/agents/start.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.02,
+          "partial": 0.96,
+          "no_task": 0.02
+        },
+        "confidence": 0.94
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.15
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.32
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.75
+      }
+    },
+    "docs/evaluations.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "no_task",
+        "probabilities": {
+          "self_serve": 0,
+          "partial": 0.12,
+          "no_task": 0.88
+        },
+        "confidence": 0.82
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.12
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.04
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.8
+      }
+    },
+    "docs/predictions-mcp/features-advanced.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0,
+          "partial": 0.8,
+          "no_task": 0.2
+        },
+        "confidence": 0.7
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.09
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.18
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.61
+      }
+    },
+    "docs/perps-mcp/troubleshooting.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "self_serve",
+        "probabilities": {
+          "self_serve": 0.82,
+          "partial": 0.18,
+          "no_task": 0
+        },
+        "confidence": 0.73
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.2
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.12
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.73
+      }
+    },
+    "docs/connect/other-clients.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.43,
+          "partial": 0.5700000000000001,
+          "no_task": 0
+        },
+        "confidence": 0.36
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.26
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.89
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.72
+      }
+    },
+    "docs/connect/index.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0,
+          "partial": 0.9,
+          "no_task": 0.1
+        },
+        "confidence": 0.85
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.21
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.06
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.79
+      }
+    },
+    "docs/predictions-mcp/features-discovery.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.01,
+          "partial": 0.6,
+          "no_task": 0.39
+        },
+        "confidence": 0.4
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.08
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.12
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.75
+      }
+    },
+    "docs/perps-mcp/introduction.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.01,
+          "partial": 0.55,
+          "no_task": 0.44
+        },
+        "confidence": 0.33
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.14
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.19
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.57
+      }
+    },
+    "docs/mcp-access/index.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.01,
+          "partial": 0.91,
+          "no_task": 0.08
+        },
+        "confidence": 0.86
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.2
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.08
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.77
+      }
+    },
+    "docs/connect/codex.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "self_serve",
+        "probabilities": {
+          "self_serve": 0.5,
+          "partial": 0.5,
+          "no_task": 0
+        },
+        "confidence": 0.25
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.14
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.81
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.79
+      }
+    },
+    "docs/predictions-mcp/features-trading.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0,
+          "partial": 0.83,
+          "no_task": 0.17
+        },
+        "confidence": 0.74
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.1
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.05
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.79
+      }
+    },
+    "docs/help/connections.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.01,
+          "partial": 0.9,
+          "no_task": 0.09
+        },
+        "confidence": 0.85
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.28
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.05
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.79
+      }
+    },
+    "docs/predictions-mcp/faq.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "no_task",
+        "probabilities": {
+          "self_serve": 0.07,
+          "partial": 0.38,
+          "no_task": 0.55
+        },
+        "confidence": 0.33
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.3
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.11
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.62
+      }
+    },
+    "docs/connect/openclaw.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.34,
+          "partial": 0.66,
+          "no_task": 0
+        },
+        "confidence": 0.49
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.23
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.84
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.68
+      }
+    },
+    "docs/connect/chatgpt.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.4,
+          "partial": 0.6,
+          "no_task": 0
+        },
+        "confidence": 0.4
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.2
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.06
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.81
+      }
+    },
+    "docs/predictions-mcp/features-portfolio.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0,
+          "partial": 0.86,
+          "no_task": 0.14
+        },
+        "confidence": 0.79
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.13
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.05
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.79
+      }
+    },
+    "docs/predictions-mcp/quick-start.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.09,
+          "partial": 0.91,
+          "no_task": 0
+        },
+        "confidence": 0.86
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.23
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.13
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.75
+      }
+    },
+    "docs/predictions-mcp/troubleshooting.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "self_serve",
+        "probabilities": {
+          "self_serve": 0.91,
+          "partial": 0.09,
+          "no_task": 0
+        },
+        "confidence": 0.86
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.32
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.16
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.73
+      }
+    },
+    "docs/spot-mcp/lp-skills.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.03,
+          "partial": 0.62,
+          "no_task": 0.35
+        },
+        "confidence": 0.43
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.07
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.68
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.72
+      }
+    },
+    "docs/perps-mcp/client-setup.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.06,
+          "partial": 0.94,
+          "no_task": 0
+        },
+        "confidence": 0.91
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.3
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.03
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.74
+      }
+    },
+    "docs/predictions-mcp/index.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "self_serve",
+        "probabilities": {
+          "self_serve": 0.78,
+          "partial": 0.22,
+          "no_task": 0
+        },
+        "confidence": 0.67
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.13
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.15
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.83
+      }
+    },
+    "docs/start/first-request.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.25,
+          "partial": 0.75,
+          "no_task": 0
+        },
+        "confidence": 0.62
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.18
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.45
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.8
+      }
+    },
+    "docs/predictions-mcp/introduction.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0,
+          "partial": 0.66,
+          "no_task": 0.34
+        },
+        "confidence": 0.49
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.13
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.17
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.8
+      }
+    },
+    "docs/product-guide/memory.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.28,
+          "partial": 0.69,
+          "no_task": 0.03
+        },
+        "confidence": 0.53
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.14
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.04
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.81
+      }
+    },
+    "docs/product-guide/automations/webhooks.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0,
+          "partial": 0.84,
+          "no_task": 0.16
+        },
+        "confidence": 0.76
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.17
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.03
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.79
+      }
+    },
+    "docs/product-guide/liquidity-positions.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0,
+          "partial": 0.94,
+          "no_task": 0.06
+        },
+        "confidence": 0.91
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.29
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.36
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.86
+      }
+    },
+    "docs/product-guide/predictions.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0,
+          "partial": 0.95,
+          "no_task": 0.05
+        },
+        "confidence": 0.92
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.2
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.05
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.7
+      }
+    },
+    "docs/product-guide/transactions-and-portfolio.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.01,
+          "partial": 0.96,
+          "no_task": 0.03
+        },
+        "confidence": 0.94
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.34
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.14
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.8
+      }
+    },
+    "docs/product-guide/safety-support-and-limitations.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "no_task",
+        "probabilities": {
+          "self_serve": 0.02,
+          "partial": 0.26,
+          "no_task": 0.72
+        },
+        "confidence": 0.58
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.09
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.04
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.47
+      }
+    },
+    "docs/product-guide/networks-fees-and-pricing.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.01,
+          "partial": 0.6,
+          "no_task": 0.39
+        },
+        "confidence": 0.4
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.51
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.66
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.77
+      }
+    },
+    "docs/read-only/predictions.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.01,
+          "partial": 0.86,
+          "no_task": 0.13
+        },
+        "confidence": 0.79
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.24
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.09
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.82
+      }
+    },
+    "docs/read-only/perps.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.01,
+          "partial": 0.81,
+          "no_task": 0.17
+        },
+        "confidence": 0.72
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.22
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.08
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.84
+      }
+    },
+    "docs/spot-mcp/client-setup.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.07,
+          "partial": 0.93,
+          "no_task": 0
+        },
+        "confidence": 0.89
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.28
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.04
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.75
+      }
+    },
+    "docs/spot-mcp/features.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "no_task",
+        "probabilities": {
+          "self_serve": 0,
+          "partial": 0.09,
+          "no_task": 0.91
+        },
+        "confidence": 0.86
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.13
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.5
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.67
+      }
+    },
+    "docs/spot-mcp/faq.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "no_task",
+        "probabilities": {
+          "self_serve": 0,
+          "partial": 0.06,
+          "no_task": 0.94
+        },
+        "confidence": 0.91
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.11
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.61
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.67
+      }
+    },
+    "docs/spot-mcp/introduction.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "no_task",
+        "probabilities": {
+          "self_serve": 0.01,
+          "partial": 0.3,
+          "no_task": 0.69
+        },
+        "confidence": 0.53
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.17
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.35
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.58
+      }
+    },
+    "docs/product-guide/recipes-and-webhooks.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.01,
+          "partial": 0.95,
+          "no_task": 0.04
+        },
+        "confidence": 0.92
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.49
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.06
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.76
+      }
+    },
+    "docs/read-only/spot.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.01,
+          "partial": 0.89,
+          "no_task": 0.1
+        },
+        "confidence": 0.83
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.16
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.08
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.85
+      }
+    },
+    "docs/spot-mcp/index.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0,
+          "partial": 0.56,
+          "no_task": 0.44
+        },
+        "confidence": 0.34
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.17
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.29
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.75
+      }
+    },
+    "docs/read-only/account.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.09,
+          "partial": 0.89,
+          "no_task": 0.02
+        },
+        "confidence": 0.83
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.15
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.15
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.83
+      }
+    },
+    "docs/spot-mcp/lp-analytics.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.02,
+          "partial": 0.62,
+          "no_task": 0.36
+        },
+        "confidence": 0.43
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.12
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.22
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.66
+      }
+    },
+    "docs/write-access/index.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.01,
+          "partial": 0.96,
+          "no_task": 0.03
+        },
+        "confidence": 0.94
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.16
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.12
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.69
+      }
+    },
+    "docs/spot-mcp/troubleshooting.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "self_serve",
+        "probabilities": {
+          "self_serve": 0.62,
+          "partial": 0.37,
+          "no_task": 0.01
+        },
+        "confidence": 0.43
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.14
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.17
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.79
+      }
+    },
+    "docs/spot-mcp/lp-agent-workflow.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.02,
+          "partial": 0.82,
+          "no_task": 0.16
+        },
+        "confidence": 0.73
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.06
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.1
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.8
+      }
+    },
+    "docs/product-guide/wallet-and-account.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.05,
+          "partial": 0.94,
+          "no_task": 0.01
+        },
+        "confidence": 0.91
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.21
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.11
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.84
+      }
+    },
+    "docs/spot-mcp/liquidity-positions.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.25,
+          "partial": 0.7,
+          "no_task": 0.05
+        },
+        "confidence": 0.55
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.27
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.33
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.74
+      }
+    },
+    "docs/spot-mcp/quick-start.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.2,
+          "partial": 0.8,
+          "no_task": 0
+        },
+        "confidence": 0.7
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.2
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.26
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.69
+      }
+    },
+    "docs/what-is-gina.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "no_task",
+        "probabilities": {
+          "self_serve": 0.01,
+          "partial": 0.48,
+          "no_task": 0.51
+        },
+        "confidence": 0.27
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.26
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.47
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.6
+      }
+    },
+    "docs/spot-mcp/lp-scheduled-monitoring.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0,
+          "partial": 0.97,
+          "no_task": 0.03
+        },
+        "confidence": 0.95
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.18
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.17
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.77
+      }
+    },
+    "docs/product-guide/automations/copy-trading.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0,
+          "partial": 0.96,
+          "no_task": 0.04
+        },
+        "confidence": 0.94
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.27
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.03
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.76
+      }
+    },
+    "docs/product-guide/automations/recipes.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.01,
+          "partial": 0.99,
+          "no_task": 0
+        },
+        "confidence": 0.98
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.2
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.04
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.82
+      }
+    },
+    "docs/product-guide/market-research.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.01,
+          "partial": 0.93,
+          "no_task": 0.06
+        },
+        "confidence": 0.89
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.06
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.04
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.7
+      }
+    },
+    "docs/product-guide/automations/schedules.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0,
+          "partial": 1,
+          "no_task": 0
+        },
+        "confidence": 1
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.4
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.04
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.8
+      }
+    },
+    "docs/product-guide/perps.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "partial",
+        "probabilities": {
+          "self_serve": 0.01,
+          "partial": 0.93,
+          "no_task": 0.06
+        },
+        "confidence": 0.89
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.19
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.05
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.72
+      }
+    },
+    "docs/perps-mcp/faq.mdx": {
+      "onboarding": {
+        "type": "choice",
+        "choice": "no_task",
+        "probabilities": {
+          "self_serve": 0.04,
+          "partial": 0.34,
+          "no_task": 0.62
+        },
+        "confidence": 0.43
+      },
+      "ui_only": {
+        "type": "bool",
+        "bool": 0.26
+      },
+      "drift_risk": {
+        "type": "bool",
+        "bool": 0.09
+      },
+      "description_ok": {
+        "type": "bool",
+        "bool": 0.59
+      }
+    }
+  }
+}

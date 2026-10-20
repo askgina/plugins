@@ -45,7 +45,7 @@ jobs:
           node-version: "24.7.0"
 
       - name: Test docs checks
-        run: node --test tools/docs/check.test.mjs
+        run: node --test tools/docs/check.test.mjs tools/docs/sweep/compare.test.mjs
 
       - name: Validate docs, assets, access, and corpus compatibility
         run: node tools/docs/check.mjs --external

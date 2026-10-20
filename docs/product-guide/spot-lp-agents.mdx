@@ -1,0 +1,36 @@
+---
+title: "Spot LP for agents"
+description: "How an agent scans pools, proposes LP actions and runs the quote, execute and status loop on Spot MCP."
+owner: "Ask Gina web team"
+lastReviewed: "2026-10-20"
+kind: "guide"
+includeInDocsAgent: true
+relatedSlugs:
+  - overview
+  - liquidity-positions
+---
+
+# Spot LP for agents
+
+An agent connected to Spot MCP at `https://askgina.ai/ai/spot/mcp` with `tools:execute` can manage liquidity positions on Robinhood Chain (4663) with Uniswap v3 and v4, and on Solana with Raydium CLMM and CPMM. Other DEXes are out of scope.
+
+## The LP skills
+
+- `lp-pool-scan` ranks pools from public data by fee yield, estimated impermanent loss, depth and slippage. It only reads and needs no wallet or keys. A ranked pool is not always supported or allowlisted.
+- `lp-rebalancing-playbook` applies numeric rules for re-range, harvest, compound, trim and exit. Every rule yields a proposal, never an action.
+
+Full rules are in [LP skills](/spot-mcp/lp-skills).
+
+## The loop
+
+1. Read positions with `getLpPositions` or `getSolanaLpPositions`. Missing values are unknown, not zero.
+2. Quote one action with `quoteLpOperation` or `quoteSolanaLpOperation`. Quoting sends nothing.
+3. The owner approves that exact quote in chat. One approval covers one action.
+4. Execute with `executeLpOperation` or `executeSolanaLpOperation` using the approved `quoteId` and `planHash`.
+5. Check `getLpOperationStatus` or `getSolanaLpOperationStatus`. Submitted and pending are not settled, and an unclear result never authorizes a resend.
+
+A swap to fix the token ratio is a separate quote and approval. See the [LP agent workflow](/spot-mcp/lp-agent-workflow), [LP operations](/spot-mcp/liquidity-positions) and [scheduled LP monitoring](/spot-mcp/lp-scheduled-monitoring). Scheduled runs only flag and propose.
+
+## Check that it works
+
+Ask an agent on Spot MCP **"List my LP positions and propose one action. Do not execute."** You should see positions with coverage and a quote showing amounts, slippage, fees and expiry, with no transaction sent. Back to the [Product Guide](/product-guide).

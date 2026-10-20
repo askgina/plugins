@@ -13,7 +13,7 @@ Your MCP client connects to:
 https://askgina.ai/ai/perps/mcp
 ```
 
-After OAuth sign-in, the client receives one MCP tool: `bash`. Inside that sandbox, use commands such as `capabilities`, `host-tools`, `sql`, and `ts-exec` to inspect the tool surface and run perps workflows.
+After OAuth sign-in, the client receives the `bash` tool and seven render-only tools such as `perps.renderChart`. Inside the `bash` sandbox, use commands such as `capabilities`, `host-tools`, `sql`, and `ts-exec` to inspect the tool surface and run perps workflows.
 
 <CardGroup cols={3}>
   <Card title="Discover" icon="search">
@@ -42,3 +42,19 @@ Perps MCP is default enabled for authenticated Gina users. Runtime access is con
     See the full feature reference with example prompts and direct commands.
   </Card>
 </CardGroup>
+
+## Check that it works
+
+After you connect, call `bash` with:
+
+```json
+{ "command": "echo ok" }
+```
+
+Expected: `ok`. Then call `bash` with:
+
+```json
+{ "command": "host-tools getHyperliquidPrice '{\"asset\":\"BTC\"}'" }
+```
+
+Expected: JSON with the current BTC perpetual futures price under `data.payload`. Both calls only read data.

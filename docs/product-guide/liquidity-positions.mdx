@@ -7,6 +7,7 @@ kind: "guide"
 includeInDocsAgent: false
 relatedSlugs:
   - transactions-and-portfolio
+  - spot-lp-agents
 ---
 
 # Liquidity positions and Yield
@@ -59,3 +60,7 @@ The Yield panel provides exit controls. Opening, adding liquidity and recenterin
 The wallet Yield contract requests sponsored EVM exits. Sponsorship must be available for the actual quote; a refusal does not authorize a paid fallback. Solana exits pay network fees from the wallet's SOL, so keep enough SOL available for the quoted action. See [network fees](/product-guide/networks-fees-and-pricing).
 
 Prepared, submitted and pending describe progress, not settlement. **Partial** means only part of the intended result is established; **unknown** means the outcome remains unresolved. Neither a timeout nor a missing receipt authorizes another send. Keep the operation details and follow [status recovery](/spot-mcp/liquidity-positions#recover-an-uncertain-operation) before trying another action.
+
+## Check that it works
+
+Open **Wallet → Spot → Yield** and choose **Refresh**. You should see your LP positions, or an empty list that states its coverage. **No wallet** means no wallet is configured. Select a position to see its token amounts, fees and range status.
