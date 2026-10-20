@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import {
+  checkExternal,
   linksIn,
   resolveRoute,
   validateDocs,
@@ -74,6 +75,25 @@ test("checks first-party absolute URLs locally before deployment", (t) => {
   const root = fixture(t);
   fs.appendFileSync(path.join(root, "index.mdx"), "[New page](https://docs.askgina.ai/new-page)");
   assert.ok(validateDocs(root).errors.some((x) => x.includes("/new-page")));
+});
+
+test("checks links into this repository against the checkout, not live main", async (t) => {
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), "gina-repo-"));
+  t.after(() => fs.rmSync(repo, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(repo, "plugins/new-plugin/skills"), { recursive: true });
+  const base = "https://github.com/askgina/plugins";
+  const errors = await checkExternal(
+    [
+      `${base}/tree/main/plugins/new-plugin/skills`,
+      `${base}/tree/main/plugins/missing`,
+      `${base}/blob/main/%2E%2E/outside`,
+    ],
+    repo,
+  );
+  assert.deepEqual(errors, [
+    `Repository link points to a missing path: ${base}/tree/main/plugins/missing`,
+    `Repository link points to a missing path: ${base}/blob/main/%2E%2E/outside`,
+  ]);
 });
 
 test("corpus rejects rich MDX but accepts Markdown images and matching H1", () => {

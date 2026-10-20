@@ -305,13 +305,28 @@ const BOT_CHALLENGE_403_URLS = new Set([
   "https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=Ask%20Gina&connectorUrl=https%3A%2F%2Faskgina.ai%2Fai%2Fgina%2Fmcp",
 ]);
 
-async function checkExternal(urls) {
+// Links into this repository's main branch are checked against the checkout, so a pull
+// request can link to a file it adds. A live fetch would 404 until the merge.
+const SAME_REPO_MAIN = /^https:\/\/github\.com\/askgina\/plugins\/(?:tree|blob)\/main\/([^?#]+)/;
+export function sameRepoPath(url) {
+  const match = SAME_REPO_MAIN.exec(url);
+  return match ? decodeURIComponent(match[1]).replace(/\/+$/, "") : null;
+}
+
+export async function checkExternal(urls, repoRoot) {
   const errors = [];
   let index = 0;
   await Promise.all(
     Array.from({ length: 4 }, async () => {
       while (index < urls.length) {
         const url = urls[index++];
+        const repoPath = sameRepoPath(url);
+        if (repoPath !== null) {
+          const resolved = path.resolve(repoRoot, repoPath);
+          if (!resolved.startsWith(repoRoot + path.sep) || !fs.existsSync(resolved))
+            errors.push(`Repository link points to a missing path: ${url}`);
+          continue;
+        }
         try {
           let result = await fetch(url, { method: "HEAD", signal: AbortSignal.timeout(10000) });
           if ([403, 405, 501].includes(result.status))
@@ -332,7 +347,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   const result = validateDocs(root);
   result.errors.push(...validateGina(root), ...validateLpContract(root));
   if (process.argv.includes("--external"))
-    result.errors.push(...(await checkExternal(result.external)));
+    result.errors.push(...(await checkExternal(result.external, path.dirname(root))));
   if (result.errors.length) {
     console.error(result.errors.join("\n"));
     process.exitCode = 1;
