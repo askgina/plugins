@@ -1,0 +1,53 @@
+name: ask-gina-perps
+version: 0.1.0
+description: Ask Gina Perps MCP tools to read Hyperliquid markets and, with your approval, place and manage perpetual-futures orders and funding.
+mcp:
+  url: https://askgina.ai/ai/perps/mcp
+  scopes:
+    - tools:execute
+skills: []
+listing:
+  version: 1.0.0
+  displayName: Ask Gina Perps
+  author:
+    name: Ask Gina
+    url: https://askgina.ai
+  homepage: https://askgina.ai
+  repository: https://github.com/askgina/plugins
+  license: Apache-2.0
+  category: Finance
+  keywords:
+    - crypto
+    - perps
+    - perpetuals
+    - hyperliquid
+    - hip-3
+    - trading
+    - mcp
+  icon: assets/icon.svg
+  mcpServerName: perps
+  descriptions:
+    codex: Read Hyperliquid markets and, with your approval, place and manage perpetual-futures orders.
+    cursor: Ask Gina Perps lets an agent read Hyperliquid account and market data and, with your approval, place, change and cancel perpetual-futures orders, adjust leverage, and deposit or withdraw funds from your Gina wallet. It also renders charts, positions and account overviews. Orders and funding move real money, so review every action before you approve it.
+    claude: Ask Gina Perps lets an agent read Hyperliquid account and market data and, with your approval, place, change and cancel perpetual-futures orders, adjust leverage, and deposit or withdraw funds from your Gina wallet. It also renders charts, positions and account overviews. Orders and funding move real money, so review every action before you approve it.
+    devin: Ask Gina Perps lets an agent read Hyperliquid account and market data and, with your approval, place, change and cancel perpetual-futures orders, adjust leverage, and deposit or withdraw funds from your Gina wallet. It also renders charts, positions and account overviews. Orders and funding move real money, so review every action before you approve it.
+    copilot: Ask Gina Perps lets an agent read Hyperliquid account and market data and, with your approval, place, change and cancel perpetual-futures orders, adjust leverage, and deposit or withdraw funds from your Gina wallet. It also renders charts, positions and account overviews. Orders and funding move real money, so review every action before you approve it.
+  codex:
+    shortDescription: Hyperliquid perps trading
+    longDescription: Ask Gina Perps connects your Ask Gina account to the Perps MCP server. It can read Hyperliquid account, position, order, market and HIP-3 data and, with your approval, place, change and cancel perpetual-futures orders, adjust leverage, and deposit or withdraw funds from your Gina wallet. It also renders charts, positions and account overviews. Orders and funding move real money, so review each action before you approve it. The plugin bundles no skills.
+    capabilities:
+      - Interactive
+      - Read
+      - Write
+    privacyPolicyURL: https://askgina.ai/privacy-policy
+    supportURL: https://askgina.ai/support
+    termsOfServiceURL: https://askgina.ai/terms-and-conditions
+    defaultPrompt:
+      - Show my Hyperliquid positions and open orders.
+      - Preview the cost of a small ETH long without placing it.
+      - Check my perps account health.
+    brandColor: "#B50D00"
+    policy:
+      installation: AVAILABLE
+      authentication: ON_INSTALL
+  cursorMarketplaceDescription: Ask Gina Perps reads Hyperliquid markets and, with your approval, places and manages perpetual-futures orders and funding. Orders and funding move real money.

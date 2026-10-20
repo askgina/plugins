@@ -24,14 +24,14 @@ A skill marked as served over MCP is also returned by its MCP server, so a clien
 
 // Markdown table cells cannot hold newlines or bare pipes, and MDX treats braces and angle
 // brackets as JSX.
-function cell(text) {
+export function cell(text) {
   return String(text)
     .replace(/\s+/g, " ")
     .trim()
     .replace(/[\\|{}<>]/g, (char) => "\\" + char);
 }
 
-function table(header, rows) {
+export function table(header, rows) {
   const widths = header.map((title, column) =>
     Math.max(3, title.length, ...rows.map((row) => row[column].length)),
   );

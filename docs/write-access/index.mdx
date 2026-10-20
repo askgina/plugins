@@ -23,7 +23,7 @@ Choose the venue you need:
 
 1. Choose a venue using the [access comparison](/mcp-access/index).
 2. Follow that venue's setup page and authenticate with `tools:execute`.
-3. Inspect available tools and current schemas. Spot provides native tools plus `bash`; Predictions and Perps provide `bash` with venue-specific host-tool allowlists.
+3. Inspect available tools and current schemas. Each venue provides native tools plus `bash`. Native tools carry per-tool annotations, so your client can tell a read from an order.
 4. Start with a read operation to check the account and market.
 5. Follow the venue's execution workflow for the requested action, including result verification.
 
@@ -32,7 +32,7 @@ A direct request to send or swap can authorize execution. If you only want a pro
 ## References
 
 - [Spot tools and execution behavior](/spot-mcp/features)
-- [Predictions capabilities](/predictions-mcp/features)
-- [Perps capabilities](/perps-mcp/features)
+- [Predictions capabilities](/predictions-mcp/features) and [native tools](/predictions-mcp/tools)
+- [Perps capabilities](/perps-mcp/features) and [native tools](/perps-mcp/tools)
 
 For research without execution, use [Gina Read](/mcp-access/gina-read).

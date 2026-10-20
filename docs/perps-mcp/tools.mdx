@@ -1,0 +1,114 @@
+---
+title: "Perps native tools"
+description: "Every Perps MCP native tool, grouped by annotation class, with what each class can change."
+pageType: reference
+---
+
+{/* Generated from tools/docs/venue-tools.json by tools/docs/venue-tools.mjs. Edit the catalog, then run `node tools/docs/venue-tools.mjs`. */}
+
+Perps MCP at `https://askgina.ai/ai/perps/mcp` publishes each tool below as a native MCP tool beside `bash`. Native tools add no authority, because `bash` can already call the host tools behind them. They let your client show and gate each action by its own annotation instead of treating one `bash` call as a single risk.
+
+Annotations are the server's own declaration. A client can use them to decide when to ask you before a call. They are hints, not enforcement, so keep approving every money-moving action yourself. Run `tools/list` on your connection to see what your deployment advertises.
+
+## Annotation classes
+
+| Class                   | `readOnlyHint` | `destructiveHint` | `idempotentHint` | `openWorldHint` |
+| ----------------------- | -------------- | ----------------- | ---------------- | --------------- |
+| Read, external provider | true           | false             | true             | true            |
+| Read, Gina account      | true           | false             | true             | false           |
+| Execute                 | false          | true              | false            | true            |
+| Sandbox                 | false          | true              | false            | true            |
+| Render                  | true           | false             | not set          | false           |
+| Render, may fetch       | true           | false             | not set          | true            |
+
+## Read, external provider
+
+Reads live data from a market, blockchain or other provider. It changes nothing and can be repeated.
+
+| Tool                          | Use it for                                                              |
+| ----------------------------- | ----------------------------------------------------------------------- |
+| `getHyperliquidAccount`       | Account value, margin and balances                                      |
+| `getHyperliquidPositions`     | Open perpetual positions                                                |
+| `getHyperliquidOpenOrders`    | Resting orders                                                          |
+| `getHyperliquidPortfolio`     | Account value and profit and loss history                               |
+| `getHyperliquidMarkets`       | Hyperliquid markets and asset metadata                                  |
+| `getHyperliquidPrice`         | One live perpetual price                                                |
+| `getHyperliquidPrices`        | Several live perpetual prices                                           |
+| `getHyperliquidAssetData`     | Leverage settings, trade size limits and available margin for one asset |
+| `getHyperliquidPerpDexes`     | HIP-3 DEXes that deploy perpetual markets                               |
+| `fetchHyperliquidTrades`      | Your trade history                                                      |
+| `fetchHyperliquidCandles`     | Price candles                                                           |
+| `fetchHyperliquidOrderBook`   | Order book snapshot                                                     |
+| `previewHyperliquidOrderCost` | Estimate an order's cost without placing it                             |
+| `getHyperliquidAccountHealth` | Snapshot of account exposure and margin                                 |
+| `fetchHyperliquidMarketRadar` | Rank markets by activity and compare retained samples                   |
+
+## Read, Gina account
+
+Reads only state Gina stores for your account. It calls no outside provider and can be repeated.
+
+| Tool                  | Use it for                 |
+| --------------------- | -------------------------- |
+| `getAccountAddresses` | Your Gina wallet addresses |
+
+## Execute
+
+Places, changes, cancels or settles an order, trade or fund movement. It acts at once, repeating it can repeat the effect, and it cannot always be undone.
+
+| Tool                        | Use it for                                     |
+| --------------------------- | ---------------------------------------------- |
+| `placeHyperliquidOrder`     | Place a market or limit order                  |
+| `placeHyperliquidStopOrder` | Place a stop-loss or take-profit trigger order |
+| `cancelHyperliquidOrder`    | Cancel an open order                           |
+| `modifyHyperliquidOrder`    | Modify an open order                           |
+| `adjustHyperliquidLeverage` | Set the leverage of an asset                   |
+| `depositToHyperliquid`      | Deposit USDC to Hyperliquid                    |
+| `hyperliquidWithdraw`       | Withdraw USDC from Hyperliquid                 |
+
+## Sandbox
+
+Runs commands in a sandbox that can call every host tool the venue allows, including the execute class, so it carries the strictest class of the tools it can reach.
+
+| Tool   | Use it for                                                    |
+| ------ | ------------------------------------------------------------- |
+| `bash` | Scripts, files, SQL over captured data and composed workflows |
+
+## Render
+
+Draws a widget from data an earlier read already fetched. It makes no outside call and writes nothing.
+
+| Tool                          | Use it for               |
+| ----------------------------- | ------------------------ |
+| `perps.renderChart`           | Chart a captured dataset |
+| `perps.renderPositions`       | Show open positions      |
+| `perps.renderAccountOverview` | Show an account overview |
+| `perps.renderMarkets`         | Show markets             |
+| `perps.renderOpenOrders`      | Show open orders         |
+| `perps.renderPerformance`     | Show account performance |
+
+## Render, may fetch
+
+Draws a widget and may fetch the data behind it from an outside provider. It writes nothing.
+
+| Tool                   | Use it for                                 |
+| ---------------------- | ------------------------------------------ |
+| `perps.renderDataView` | Show a captured dataset as a table or view |
+
+## Host tools that are not native
+
+These host tools are not native tools. Sandbox-only tools run inside `bash` with `host-tools`.
+
+| Tool                              | Why                                                                                                                     |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `createHyperliquidTable`          | Writes the caller's sandbox scratch table, so it only makes sense inside bash.                                          |
+| `executeSqlQuery`                 | Queries sandbox scratch tables, so it only makes sense inside bash.                                                     |
+| `captureAnalysisDataset`          | Captures a dataset for sandbox SQL and render tools, so it only makes sense inside bash.                                |
+| `updateHyperliquidIsolatedMargin` | The sandbox blocks it until a live confirmation step exists, so it is not a native tool and does not execute from bash. |
+| `fundHIP3Dex`                     | The sandbox blocks it until a live confirmation step exists, so it is not a native tool and does not execute from bash. |
+| `returnHIP3DexFunds`              | The sandbox blocks it until a live confirmation step exists, so it is not a native tool and does not execute from bash. |
+
+## Check that it works
+
+1. Open your client's tool list for `https://askgina.ai/ai/perps/mcp`.
+2. Confirm `bash` and the tools above appear, and that every tool in the Execute class is marked destructive.
+3. Ask “Show my Hyperliquid positions.” and check that the assistant calls `getHyperliquidPositions`. Do not approve an Execute call you did not ask for.

@@ -14,6 +14,16 @@
       "description": "Read-only Ask Gina research for wallets, spot tokens, Hyperliquid, and Polymarket. Cannot place trades or transfer assets."
     },
     {
+      "name": "ask-gina-perps",
+      "source": "./plugins/ask-gina-perps",
+      "description": "Ask Gina Perps reads Hyperliquid markets and, with your approval, places and manages perpetual-futures orders and funding. Orders and funding move real money."
+    },
+    {
+      "name": "ask-gina-predictions",
+      "source": "./plugins/ask-gina-predictions",
+      "description": "Ask Gina Predictions searches Polymarket and, with your approval, trades prediction markets and manages your prediction balance. Trades move real funds."
+    },
+    {
       "name": "ask-gina-spot",
       "source": "./plugins/ask-gina-spot",
       "description": "Ask Gina Spot quotes and, with your approval, executes spot swaps, transfers, and liquidity-pool operations. Transactions move real funds."

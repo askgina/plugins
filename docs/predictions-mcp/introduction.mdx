@@ -9,7 +9,7 @@ For Ask Gina's broader user-facing capabilities, including wallets, market resea
 
 ## How It Works
 
-The server exposes one MCP tool, `bash`. Your client invokes it from your prompt; inside that sandbox, `host-tools` commands provide prediction-market discovery, pricing, trading, and portfolio operations.
+The server exposes native tools for prediction-market discovery, pricing, trading, portfolio and schedule operations, and a `bash` tool. Your client calls them from your prompt; inside the `bash` sandbox, `host-tools` commands reach the same host tools and add SQL over fetched market data. [Native tools](/predictions-mcp/tools) lists every native tool by annotation class.
 
 <CardGroup cols={3}>
   <Card title="Discover" icon="magnifying-glass">

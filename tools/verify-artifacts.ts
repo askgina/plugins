@@ -983,8 +983,11 @@ const verifyPackages = (
 
 const targetArchiveNames = (plugins: readonly ArtifactPackage[], version: string) =>
   plugins.flatMap((plugin) => plugin.hosts.map((host) => `${plugin.name}-${host}-${version}.tgz`));
+/** Skills candidates exist only for packages that declare skills. */
 const skillsArchiveNames = (plugins: readonly ArtifactPackage[], version: string) =>
-  plugins.map((plugin) => `${plugin.name}-skills-${version}.tgz`);
+  plugins
+    .filter((plugin) => plugin.skills.length > 0)
+    .map((plugin) => `${plugin.name}-skills-${version}.tgz`);
 
 /**
  * Plugin packages that no npm archive backs. `ask-gina` is also the `@askgina/plugin-core` npm
@@ -1004,27 +1007,38 @@ const verifyPluginTargets = (options: {
 }) =>
   Effect.gen(function* () {
     const { root, dist, version, temporary, plugin } = options;
+    const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const skillIds = plugin.skills.map(({ id }) => id);
     const overlaySkills = plugin.skills.filter((skill) => skill.files.includes(OPENAI_OVERLAY));
-    const candidate = yield* requiredObject(
-      options.candidates.find((item) => isObject(item) && item.package === plugin.name),
-      `${plugin.name} skills candidate receipt`,
-    );
-    yield* exactKeys(
-      candidate,
-      ["package", "skillSourceSha", "version", "archive", "sha256", "skills", "files"],
-      `${plugin.name} skills candidate receipt`,
-    );
     const skillsArchive = `skills/${plugin.name}-skills-${version}.tgz`;
-    if (
-      candidate.version !== version ||
-      candidate.archive !== skillsArchive ||
-      candidate.sha256 !== (yield* hashFile(path.join(dist, skillsArchive))) ||
-      stableJson(candidate.skills) !== stableJson(skillIds)
-    ) {
-      return yield* fail(`${plugin.name} skills candidate receipt is stale`);
+    const hasSkills = skillIds.length > 0;
+    const candidateReceipt = options.candidates.find(
+      (item) => isObject(item) && item.package === plugin.name,
+    );
+    if (!hasSkills && candidateReceipt !== undefined) {
+      return yield* fail(`${plugin.name} declares no skills but has a skills candidate receipt`);
     }
+    const candidate = hasSkills
+      ? yield* requiredObject(candidateReceipt, `${plugin.name} skills candidate receipt`)
+      : undefined;
+    if (candidate !== undefined) {
+      yield* exactKeys(
+        candidate,
+        ["package", "skillSourceSha", "version", "archive", "sha256", "skills", "files"],
+        `${plugin.name} skills candidate receipt`,
+      );
+      if (
+        candidate.version !== version ||
+        candidate.archive !== skillsArchive ||
+        candidate.sha256 !== (yield* hashFile(path.join(dist, skillsArchive))) ||
+        stableJson(candidate.skills) !== stableJson(skillIds)
+      ) {
+        return yield* fail(`${plugin.name} skills candidate receipt is stale`);
+      }
+    }
+    // Host receipts bind the hash of the skill sources; a package without skills hashes an empty list.
+    const skillSourceSha = candidate?.skillSourceSha ?? (yield* hash(stableJson([])));
     yield* Effect.forEach(plugin.hosts, (host) =>
       Effect.gen(function* () {
         const label = `${plugin.name} ${host}`;
@@ -1055,7 +1069,7 @@ const verifyPluginTargets = (options: {
           entry.version !== version ||
           entry.archive !== relativeArchive ||
           entry.sha256 !== (yield* hashFile(archive)) ||
-          entry.skillSourceSha !== candidate.skillSourceSha ||
+          entry.skillSourceSha !== skillSourceSha ||
           stableJson(entry.skills) !== stableJson(skillIds)
         ) {
           return yield* fail(`${label} receipt is stale`);
@@ -1080,7 +1094,11 @@ const verifyPluginTargets = (options: {
         if (manifest.version !== targetManifestVersion({ source: plugin.source, host })) {
           return yield* fail(`${label} manifest version is wrong`);
         }
-        yield* exactDirectory(path.join(stage, "skills"), skillIds, `${label} skills`);
+        if (hasSkills) {
+          yield* exactDirectory(path.join(stage, "skills"), skillIds, `${label} skills`);
+        } else if (yield* fs.exists(path.join(stage, "skills"))) {
+          return yield* fail(`${label} ships a skills directory but declares no skills`);
+        }
         yield* verifySkillTrees({
           skillsRoot: path.join(stage, "skills"),
           skills: plugin.skills,
@@ -1103,6 +1121,7 @@ const verifyPluginTargets = (options: {
         if (conformance.passed !== true) return yield* fail(`${label} is not conformant`);
       }),
     );
+    if (candidate === undefined) return;
     const stage = path.join(temporary, `skills-candidate-${plugin.name}`);
     yield* extract(path.join(dist, skillsArchive), stage);
     yield* verifyProofs(
@@ -1184,7 +1203,7 @@ export const verifyTargets = (options: {
     if (targets.length !== targetArchiveNames(plugins, version).length) {
       return yield* fail("targets receipt has the wrong host count");
     }
-    if (candidates.length !== plugins.length) {
+    if (candidates.length !== plugins.filter((plugin) => plugin.skills.length > 0).length) {
       return yield* fail("targets receipt has the wrong package count");
     }
     yield* Effect.forEach(plugins, (plugin) =>

@@ -653,14 +653,19 @@ describe("pack artifact source snapshot", () => {
 
 describe("plugin package data", () => {
   it.layer(BunServices.layer)((it) => {
-    it.effect("loads ask-gina and ask-gina-spot with their hosts, skills and assets", () =>
+    it.effect("loads every plugin package with its hosts, skills and assets", () =>
       Effect.gen(function* () {
         const packages = yield* loadArtifactPackages({ root: repositoryRoot });
         assert.deepStrictEqual(
           packages.map(({ name }) => name),
-          ["ask-gina", "ask-gina-spot"],
+          ["ask-gina", "ask-gina-perps", "ask-gina-predictions", "ask-gina-spot"],
         );
-        const [gina, spot] = packages;
+        const [gina, perps, predictions, spot] = packages;
+        for (const venue of [perps, predictions]) {
+          assert.deepStrictEqual(venue?.hosts, ["openai", "cursor", "claude", "copilot", "devin"]);
+          assert.deepStrictEqual(venue?.skills, []);
+          assert.deepStrictEqual(venue?.openAiAssets, ["icon.svg"]);
+        }
         assert.deepStrictEqual(gina?.hosts, [
           "openai",
           "cursor",
@@ -893,14 +898,14 @@ describe("plugin package data", () => {
               archive: `targets/ask-gina-spot-${host}-${version}.tgz`,
             })),
           );
-          assert.strictEqual(packed.candidate.package, "ask-gina-spot");
-          assert.strictEqual(
-            packed.candidate.archive,
-            `skills/ask-gina-spot-skills-${version}.tgz`,
-          );
+          const { candidate } = packed;
+          assert.isDefined(candidate);
+          if (candidate === undefined) return;
+          assert.strictEqual(candidate.package, "ask-gina-spot");
+          assert.strictEqual(candidate.archive, `skills/ask-gina-spot-skills-${version}.tgz`);
           for (const target of packed.targets) {
             assert.isTrue(target.conformance.passed);
-            assert.strictEqual(target.skillSourceSha, packed.candidate.skillSourceSha);
+            assert.strictEqual(target.skillSourceSha, candidate.skillSourceSha);
             const overlays = target.files.filter(({ path: file }) =>
               file.endsWith("/agents/openai.yaml"),
             );
@@ -910,7 +915,7 @@ describe("plugin package data", () => {
             );
           }
           assert.isFalse(
-            packed.candidate.files.some(
+            candidate.files.some(
               ({ path: file }) => file.includes("/agents/") || file.startsWith("agents/"),
             ),
           );

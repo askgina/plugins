@@ -117,6 +117,12 @@ const mcpServers = (key: string, server: Json): { readonly mcpServers: Json } =>
   mcpServers: { [key]: server },
 });
 
+/**
+ * True when plugin.yaml declares at least one skill. A package without skills has no `skills/`
+ * directory, so its manifests and marketplace entries carry no skills path.
+ */
+export const declaresSkills = (source: PluginSource): boolean => source.skills.length > 0;
+
 const codexManifest = (source: PluginSource): Json => {
   const { listing } = source;
   return {
@@ -128,7 +134,7 @@ const codexManifest = (source: PluginSource): Json => {
     repository: listing.repository,
     license: listing.license,
     keywords: listing.keywords,
-    skills: "./skills/",
+    ...(declaresSkills(source) ? { skills: "./skills/" } : {}),
     mcpServers: "./.mcp.json",
     interface: {
       displayName: listing.displayName,
@@ -181,7 +187,7 @@ const devinManifest = (source: PluginSource, description: string): Json => {
     license: listing.license,
     logo: listing.icon,
     keywords: [listing.category],
-    skills: "skills",
+    ...(declaresSkills(source) ? { skills: "skills" } : {}),
     mcpServers: ".mcp.json",
   };
 };
@@ -269,20 +275,20 @@ export const generateMarketplaceFiles = (options: {
       owner: { name: marketplace.owner.name, url: marketplace.owner.url },
       description: marketplace.claudeDescription,
       version: marketplace.version,
-      plugins: plugins.map(({ name, listing }) => ({
-        name,
-        source: `./plugins/${name}`,
+      plugins: plugins.map((plugin) => ({
+        name: plugin.name,
+        source: `./plugins/${plugin.name}`,
         strict: false,
-        skills: "./skills",
+        ...(declaresSkills(plugin) ? { skills: "./skills" } : {}),
         mcpServers: "./targets/claude/.mcp.json",
-        displayName: listing.displayName,
-        description: listing.descriptions.claude,
-        version: listing.version,
-        author: { name: listing.author.name, url: listing.author.url },
-        homepage: listing.homepage,
-        repository: listing.repository,
-        license: listing.license,
-        keywords: listing.keywords,
+        displayName: plugin.listing.displayName,
+        description: plugin.listing.descriptions.claude,
+        version: plugin.listing.version,
+        author: { name: plugin.listing.author.name, url: plugin.listing.author.url },
+        homepage: plugin.listing.homepage,
+        repository: plugin.listing.repository,
+        license: plugin.listing.license,
+        keywords: plugin.listing.keywords,
       })),
     }),
     ".cursor-plugin/marketplace.json": renderJson({

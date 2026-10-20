@@ -6,7 +6,9 @@ import { Effect, FileSystem, Path } from "effect";
 
 import {
   generateAllManifests,
+  generateMarketplaceFiles,
   generatePluginFiles,
+  loadMarketplaceSource,
   loadPluginSource,
   PluginManifestError,
   renderJson,
@@ -46,8 +48,13 @@ describe("plugin manifests", () => {
         const path = yield* Path.Path;
         const files = yield* generateAllManifests(repositoryRoot);
 
-        assert.strictEqual(Object.keys(files).length, 22);
+        assert.strictEqual(Object.keys(files).length, 40);
         assert.include(Object.keys(files), "plugins/ask-gina-spot/.codex-plugin/plugin.json");
+        assert.include(Object.keys(files), "plugins/ask-gina-perps/.codex-plugin/plugin.json");
+        assert.include(
+          Object.keys(files),
+          "plugins/ask-gina-predictions/targets/claude/.claude-plugin/plugin.json",
+        );
         assert.notInclude(
           Object.keys(files),
           "plugins/ask-gina-spot/targets/gemini/gemini-extension.json",
@@ -83,6 +90,31 @@ describe("plugin manifests", () => {
           "targets/claude/.claude-plugin/plugin.json",
           "targets/claude/.mcp.json",
         ]);
+      }),
+    );
+
+    it.effect("omits the skills path of a package that declares no skills", () =>
+      Effect.gen(function* () {
+        const source = yield* loadPluginSource(`${repositoryRoot}plugins/ask-gina-perps`);
+        assert.deepStrictEqual(source.skills, []);
+
+        const files = generatePluginFiles(source);
+        for (const relative of [".codex-plugin/plugin.json", ".devin-plugin/plugin.json"]) {
+          assert.notInclude(files[relative] ?? "", '"skills"', `${relative} names a skills path`);
+        }
+
+        const withSkill = generatePluginFiles({
+          ...source,
+          skills: [{ id: "example", mcpServed: false }],
+        });
+        assert.include(withSkill[".codex-plugin/plugin.json"] ?? "", '"skills": "./skills/"');
+        assert.include(withSkill[".devin-plugin/plugin.json"] ?? "", '"skills": "skills"');
+
+        const marketplace = generateMarketplaceFiles({
+          marketplace: yield* loadMarketplaceSource(repositoryRoot),
+          plugins: [source],
+        });
+        assert.notInclude(marketplace[".claude-plugin/marketplace.json"] ?? "", '"skills"');
       }),
     );
 

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "ai.askgina/perps",
+  "title": "Ask Gina Perps",
+  "description": "Trade Hyperliquid perpetual futures from your Ask Gina wallet. Moves real funds.",
+  "version": "1.0.0",
+  "websiteUrl": "https://docs.askgina.ai/perps-mcp",
+  "repository": {
+    "url": "https://github.com/askgina/plugins",
+    "source": "github"
+  },
+  "icons": [
+    {
+      "src": "https://docs.askgina.ai/favicon.svg",
+      "mimeType": "image/svg+xml"
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://askgina.ai/ai/perps/mcp"
+    }
+  ]
+}
