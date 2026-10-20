@@ -48,3 +48,13 @@ When a market resolves and you won, redeem your shares for $1 each.
 "what positions can I redeem?"
 "do I have any resolved markets to claim?"
 ```
+
+## Check that it works
+
+Call `bash` with:
+
+```json
+{ "command": "host-tools getPolymarketPositions '{\"includeClosed\":false}'" }
+```
+
+Expected: JSON with your open `positions` and a `summary` that has `totalPositions`, `totalValue`, `totalUnrealizedPnl` and `walletAddress`. A position with `isRedeemable: true` can be redeemed. The call only reads data.
