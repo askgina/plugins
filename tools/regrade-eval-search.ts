@@ -2,9 +2,9 @@
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { createHash } from "node:crypto";
 import { Effect, FileSystem, Layer, Schema } from "effect";
 import { originalCanonicalRuns } from "../apps/evals/src/canonical/canonical";
+import { sha256Hex as hash } from "../packages/evals/src/canonical-json";
 import {
   type GradingRevisionEntry,
   SEARCH_GRADING_POLICY,
@@ -41,7 +41,6 @@ const aliases: Readonly<Record<string, string>> = {
 };
 const json = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Unknown));
 const object = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Json));
-const hash = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 
 const main = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;

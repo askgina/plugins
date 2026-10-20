@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { assert, describe, it } from "@effect/vitest";
@@ -22,6 +21,7 @@ import {
   type PublicEvalGradedAttempt,
   writePublicEvalAttemptCapture,
 } from "../src/public-attempts";
+import { sha256Hex } from "../src/canonical-json";
 import { SanitizedEvalRunReportSchema, type SanitizedEvalRunReport } from "../src/report";
 
 const encodeUnknownJson = Schema.encodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
@@ -476,14 +476,11 @@ describe("public eval attempt writer", () => {
           assert.deepStrictEqual(saved, {
             schemaVersion: "eval-attempts.v1",
             runId: "synthetic-capture-run",
-            sourceReportSha256: createHash("sha256").update(savedReport).digest("hex"),
+            sourceReportSha256: sha256Hex(savedReport),
             attempts,
           });
           assert.strictEqual(savedReport[savedReport.length - 1], 10);
-          assert.notStrictEqual(
-            saved.sourceReportSha256,
-            createHash("sha256").update(savedReport.subarray(0, -1)).digest("hex"),
-          );
+          assert.notStrictEqual(saved.sourceReportSha256, sha256Hex(savedReport.subarray(0, -1)));
 
           const overwrite = yield* Effect.result(
             writePublicEvalAttemptCapture({ outputPath, reportPath, capture }),

@@ -170,26 +170,30 @@ export default defineConfig({
           "bun run manifests:check",
         ],
         dependsOn: ["build-packages"],
-        output: [],
+        cache: { output: [] },
       },
       "build-packages": {
         command: "vp run --filter '@askgina/*' --fail-if-no-match build",
-        input: [{ auto: true }, "!packages/*/dist/**", "!plugins/*/dist/**"],
-        output: [
-          { pattern: "packages/*/dist/**", base: "workspace" },
-          { pattern: "plugins/*/dist/**", base: "workspace" },
-        ],
+        cache: {
+          input: [{ auto: true }, "!packages/*/dist/**", "!plugins/*/dist/**"],
+          output: [
+            { pattern: "packages/*/dist/**", base: "workspace" },
+            { pattern: "plugins/*/dist/**", base: "workspace" },
+          ],
+        },
       },
       tests: {
-        command: "bun --bun node_modules/.bin/vp test --run",
+        command: "vp test --run",
         dependsOn: ["quality"],
-        output: [],
+        cache: { output: [] },
       },
       "build-artifacts": {
         command: "bun tools/pack-artifacts.ts",
         dependsOn: ["tests"],
-        input: [{ auto: true }, "!dist/**"],
-        output: [{ pattern: "dist/**", base: "workspace" }],
+        cache: {
+          input: [{ auto: true }, "!dist/**"],
+          output: [{ pattern: "dist/**", base: "workspace" }],
+        },
       },
       "verify-artifacts": {
         command: "bun tools/verify-artifacts.ts",

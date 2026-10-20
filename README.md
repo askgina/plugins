@@ -67,7 +67,11 @@ Things that surprise people:
   feature adds the steps in
   [`ai_docs/release-docs-checklist.md`](ai_docs/release-docs-checklist.md).
 - **Fix Effect diagnostics at the source.** Don't suppress them or add
-  baselines.
+  baselines. The one exception is `nodeBuiltinImport` on the two synchronous
+  SHA-256 helpers (`packages/contracts/src/sha256.ts` and
+  `packages/evals/src/canonical-json.ts`): Effect `Crypto` is asynchronous, and
+  schema filters and streamed file hashes need a synchronous digest. Import
+  `sha256Hex` from those helpers instead of `node:crypto`.
 
 ### Map of the repository
 

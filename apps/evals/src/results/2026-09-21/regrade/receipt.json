@@ -40,7 +40,7 @@
     },
     {
       "path": "tools/regrade-eval-search.ts",
-      "sha256": "4bbe5bacba1a5262515765526aeae9336995d41ec36612cb002e5ed306814952"
+      "sha256": "273f853f1de007b398cf9a46fa6d28769f807a51a3e7cd8c51ff30c72d913310"
     }
   ],
   "reviewedAttempts": 841,
