@@ -21,7 +21,7 @@ The [ChatGPT detail widget example](/spot-mcp/liquidity-positions#position-detai
 
 ## Preview a concentrated position
 
-`previewConcentratedPosition` covers Uniswap v3/v4 on Robinhood Chain at the reviewed application revision. Supply an owned position identity, or an explicit pool, tick range and raw token budgets for a hypothetical position. Do not infer Raydium preview support from the presence of Raydium inventory tools.
+`previewConcentratedPosition` covers Uniswap v3/v4 on Robinhood Chain, Base and Ethereum. Supply an owned position identity with its `chainId`, or an explicit pool, tick range and raw token budgets for a hypothetical position. The pool carries its own `chainId`, and the chain is never defaulted. Do not infer Raydium preview support from the presence of Raydium inventory tools.
 
 The preview reports liquidity, rounded token requirements, unused budget, current and boundary prices, and composition at the current price and range boundaries. Ticks must match the pool's tick spacing. A budget too small for one unit of liquidity can produce zero with a reported minimum usable budget. Optional USD marks retain their own evidence.
 
@@ -29,7 +29,7 @@ The tool does not choose a range, store an executable quote, mint liquidity or p
 
 ## Read historical performance
 
-`getLpPerformance` reads a bounded interval for Uniswap v3/v4 on Robinhood Chain or Raydium CPMM/CLMM on Solana. It uses acquired history and endpoint evidence to attribute contributions, withdrawals, collections, rewards and costs, and to calculate available performance measures and a matched holding baseline.
+`getLpPerformance` reads a bounded interval for Uniswap v3/v4 on Robinhood Chain, Base or Ethereum, or Raydium CPMM/CLMM on Solana. For a Uniswap position, pass `chainId` when you know it. Without it the chain is found from the position managers, and a token ID owned on more than one chain is refused until `chainId` is given. It uses acquired history and endpoint evidence to attribute contributions, withdrawals, collections, rewards and costs, and to calculate available performance measures and a matched holding baseline.
 
 Preserve source times, the observation window and coverage. A current balance cannot establish historical inventory; Solana's `minContextSlot` is a lower bound on a live read, not a historical snapshot. Externally opened, transferred or closed positions require acquired evidence too.
 

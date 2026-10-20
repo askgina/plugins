@@ -50,9 +50,9 @@ A pool with no measurable IL is never ranked. Uniswap v4 hook or dynamic-fee poo
 
 ### Scope differs from Spot MCP support
 
-The scanner's default `--dex-scope core` covers Uniswap v2, v3 and v4 on Robinhood Chain, Uniswap v3 and v4 on Base and Ethereum, and Raydium AMM, CPMM and CLMM on Solana. `--dex-scope all` adds other DEXes such as Orca and Meteora; Base stays Uniswap v3 and v4 only. Spot MCP LP operations support a narrower set: Uniswap v3 and v4 on Robinhood Chain, and Raydium CLMM and CPMM on Solana. See the [LP support matrix](/spot-mcp/liquidity-positions#capability-and-access).
+The scanner's default `--dex-scope core` covers Uniswap v2, v3 and v4 on Robinhood Chain, Uniswap v3 and v4 on Base and Ethereum, and Raydium AMM, CPMM and CLMM on Solana. `--dex-scope all` adds other DEXes such as Orca and Meteora; Base stays Uniswap v3 and v4 only. Spot MCP LP operations support a narrower set: Uniswap v3 and v4 on Robinhood Chain, Base and Ethereum, and Raydium CLMM and CPMM on Solana. See the [LP support matrix](/spot-mcp/liquidity-positions#capability-and-access).
 
-A well-ranked Base or Ethereum pool, or a Uniswap v2, Raydium AMM, Orca or Meteora pool, cannot be operated through Spot MCP. Check the protocol in the **Pool** column before proposing an action.
+A pool on any other protocol cannot be operated through Spot MCP, however well it ranks. That includes Uniswap v2, Raydium AMM, Orca and Meteora pools. Check the protocol in the **Pool** column before proposing an action.
 
 ### The scanner allowlist is a local file
 
