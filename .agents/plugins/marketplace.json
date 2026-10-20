@@ -15,6 +15,18 @@
         "authentication": "ON_INSTALL"
       },
       "category": "Finance"
+    },
+    {
+      "name": "ask-gina-spot",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ask-gina-spot"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Finance"
     }
   ]
 }

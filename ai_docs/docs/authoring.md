@@ -27,8 +27,9 @@ Essential instructions must remain understandable in Markdown without images. Si
 ## Checks and preview
 
 ```sh
-node --test tools/docs/check.test.mjs
+node --test tools/docs/*.test.mjs
 node tools/docs/check.mjs
+bun run docs:catalog   # regenerate docs/agents/skills-catalog.mdx after editing skills/index.json
 node tools/docs/check.mjs --external
 cd docs
 mint dev --port 3005
@@ -36,7 +37,9 @@ mint dev --port 3005
 
 Inspect desktop and mobile navigation, code blocks, tables, screenshots, and one path from homepage to first request. In the Mintlify preview, check affected pages and redirects; after deployment, verify `/llms.txt`, supported full-text/Markdown exports, and removal of retired content. The production index remains unchanged until deployment.
 
-CI covers navigation, component and Markdown links, local images, redirects, retired instructions, tool-catalog parity, scopes, skill names, corpus metadata, and the approved crawler policy. External URL checks can fail because of host access controls; investigate the result instead of declaring the target nonexistent.
+Site settings live in `docs/docs.json`. The site `description` becomes the summary line of `/llms.txt`, and each page's frontmatter `description` becomes that page's line there and its search snippet, so write it as one sentence on what the reader can do. Mintlify generates each page's Open Graph image from the logo, title and description, so no static `og:image` is set.
+
+CI covers navigation, component and Markdown links, local images, redirects, retired instructions, tool-catalog parity, scopes, skill names, corpus metadata, the approved crawler policy, and the site description and indexing settings. External URL checks can fail because of host access controls; investigate the result instead of declaring the target nonexistent.
 
 ## Moving or retiring content
 

@@ -4,22 +4,24 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import {
+  checkExternal,
   isTaskPage,
   linksIn,
   resolveRoute,
   validateCorpusBody,
   validateDocs,
   validateReleaseGate,
+  validateSkillCoverage,
 } from "./check.mjs";
 
 function fixture(t, options = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "gina-docs-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   fs.writeFileSync(
-    path.join(root, "mint.json"),
+    path.join(root, "docs.json"),
     JSON.stringify({
-      topbarCtaButton: { name: "Open Gina" },
-      navigation: [{ group: "Start", pages: ["index"] }],
+      navbar: { primary: { type: "button", label: "Open Gina", href: "https://askgina.ai" } },
+      navigation: { groups: [{ group: "Start", pages: ["index"] }] },
       ...options,
     }),
   );
@@ -51,7 +53,7 @@ test("requires an index for directories and rejects path traversal", (t) => {
 });
 test("catches duplicate nested navigation and published redirect sources", (t) => {
   const root = fixture(t, {
-    navigation: [{ group: "A", pages: ["index", { group: "B", pages: ["index"] }] }],
+    navigation: { groups: [{ group: "A", pages: ["index", { group: "B", pages: ["index"] }] }] },
     redirects: [{ source: "/index", destination: "/absent" }],
   });
   const errors = validateDocs(root).errors;
@@ -75,6 +77,25 @@ test("checks first-party absolute URLs locally before deployment", (t) => {
   const root = fixture(t);
   fs.appendFileSync(path.join(root, "index.mdx"), "[New page](https://docs.askgina.ai/new-page)");
   assert.ok(validateDocs(root).errors.some((x) => x.includes("/new-page")));
+});
+
+test("checks links into this repository against the checkout, not live main", async (t) => {
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), "gina-repo-"));
+  t.after(() => fs.rmSync(repo, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(repo, "plugins/new-plugin/skills"), { recursive: true });
+  const base = "https://github.com/askgina/plugins";
+  const errors = await checkExternal(
+    [
+      `${base}/tree/main/plugins/new-plugin/skills`,
+      `${base}/tree/main/plugins/missing`,
+      `${base}/blob/main/%2E%2E/outside`,
+    ],
+    repo,
+  );
+  assert.deepEqual(errors, [
+    `Repository link points to a missing path: ${base}/tree/main/plugins/missing`,
+    `Repository link points to a missing path: ${base}/blob/main/%2E%2E/outside`,
+  ]);
 });
 
 test("corpus rejects rich MDX but accepts Markdown images and matching H1", () => {
@@ -203,4 +224,65 @@ test("LP contract gate detects inventory and validated-example drift", async (t)
   const guide = path.join(spot, "liquidity-positions.mdx");
   fs.writeFileSync(guide, fs.readFileSync(guide, "utf8").replace('"limit": 10', '"limit": 999'));
   assert.ok(validateLpContract(root).some((error) => error.includes("examples changed")));
+});
+
+function skillsFixture(t, { indexed, onDisk }) {
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), "gina-skills-"));
+  t.after(() => fs.rmSync(repo, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(repo, "skills"), { recursive: true });
+  fs.writeFileSync(
+    path.join(repo, "skills/index.json"),
+    JSON.stringify({ version: 1, skills: indexed.map(([pkg, id]) => ({ id, package: pkg })) }),
+  );
+  for (const [pkg, id] of onDisk)
+    fs.mkdirSync(path.join(repo, "plugins", pkg, "skills", id), { recursive: true });
+  return repo;
+}
+
+test("skill coverage requires every indexed skill of every package in backticks", (t) => {
+  const skills = [
+    ["ask-gina", "research-spot-tokens"],
+    ["ask-gina-spot", "lp-pool-scan"],
+    ["ask-gina-spot", "lp-rebalancing-playbook"],
+  ];
+  const repo = skillsFixture(t, { indexed: skills, onDisk: skills });
+  const page = "`research-spot-tokens` `lp-pool-scan` `lp-rebalancing-playbook`";
+  assert.deepEqual(validateSkillCoverage(repo, page), []);
+  assert.deepEqual(validateSkillCoverage(repo, "`research-spot-tokens` `lp-pool-scan`"), [
+    "Undocumented skill: lp-rebalancing-playbook",
+  ]);
+  // A bare mention without backticks does not count.
+  assert.deepEqual(
+    validateSkillCoverage(repo, "`research-spot-tokens` lp-pool-scan `lp-rebalancing-playbook`"),
+    ["Undocumented skill: lp-pool-scan"],
+  );
+});
+
+test("skill coverage also catches skill directories missing from a stale index", (t) => {
+  const repo = skillsFixture(t, {
+    indexed: [["ask-gina", "research-spot-tokens"]],
+    onDisk: [
+      ["ask-gina", "research-spot-tokens"],
+      ["ask-gina-spot", "lp-pool-scan"],
+    ],
+  });
+  assert.deepEqual(validateSkillCoverage(repo, "`research-spot-tokens`"), [
+    "Undocumented skill: lp-pool-scan",
+  ]);
+});
+
+test("skill coverage fails closed on a missing or malformed index", (t) => {
+  const repo = skillsFixture(t, { indexed: [], onDisk: [] });
+  fs.writeFileSync(path.join(repo, "skills/index.json"), "{}");
+  assert.match(validateSkillCoverage(repo, "")[0], /skills array/);
+  fs.rmSync(path.join(repo, "skills/index.json"));
+  assert.match(validateSkillCoverage(repo, "")[0], /Cannot read skills\/index\.json/);
+});
+
+test("the checked-in skills index is fully documented", () => {
+  const repo = path.resolve(".");
+  const page = ["plugins-and-skills", "skills-catalog"]
+    .map((name) => fs.readFileSync(path.join(repo, `docs/agents/${name}.mdx`), "utf8"))
+    .join("\n");
+  assert.deepEqual(validateSkillCoverage(repo, page), []);
 });

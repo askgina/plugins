@@ -12,6 +12,11 @@
       "name": "ask-gina",
       "source": "./plugins/ask-gina",
       "description": "Read-only Ask Gina research for wallets, spot tokens, Hyperliquid, and Polymarket. Cannot place trades or transfer assets."
+    },
+    {
+      "name": "ask-gina-spot",
+      "source": "./plugins/ask-gina-spot",
+      "description": "Ask Gina Spot quotes and, with your approval, executes spot swaps, transfers, and liquidity-pool operations. Transactions move real funds."
     }
   ]
 }

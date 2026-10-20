@@ -177,8 +177,8 @@ bun run check:public-boundary
 It then smokes the Codex marketplace with a pinned Codex CLI at the published
 revision. The docs workflow (`.github/workflows/docs.yml`) runs on pull requests
 that touch `docs/`, `tools/docs/`, the plugin skills or `.mcp.json`, or the
-contracts entry point: it runs the docs check tests and sweep comparison tests
-(`bun run docs:test`) and `node tools/docs/check.mjs --external`.
+contracts entry point: it runs the docs check, skills catalog and sweep comparison
+tests (`bun run docs:test`) and `node tools/docs/check.mjs --external`.
 
 ## Public evals app
 

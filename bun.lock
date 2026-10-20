@@ -18,6 +18,7 @@
         "typescript-api": "npm:typescript@5.9.3",
         "vite-plus": "0.3.0",
         "vitest": "4.1.11",
+        "yaml": "2.8.3",
       },
     },
     "apps/evals": {

@@ -6,8 +6,11 @@ on:
     paths:
       - "docs/**"
       - "tools/docs/**"
-      - "plugins/ask-gina/skills/**"
-      - "plugins/ask-gina/.mcp.json"
+      - "plugins/*/skills/**"
+      - "plugins/*/.mcp.json"
+      - "plugins/*/plugin.yaml"
+      - "skills/index.json"
+      - "marketplace.yaml"
       - "packages/contracts/src/index.ts"
       - ".github/workflows/docs.yml"
   push:
@@ -16,8 +19,11 @@ on:
     paths:
       - "docs/**"
       - "tools/docs/**"
-      - "plugins/ask-gina/skills/**"
-      - "plugins/ask-gina/.mcp.json"
+      - "plugins/*/skills/**"
+      - "plugins/*/.mcp.json"
+      - "plugins/*/plugin.yaml"
+      - "skills/index.json"
+      - "marketplace.yaml"
       - "packages/contracts/src/index.ts"
       - ".github/workflows/docs.yml"
   workflow_dispatch:
@@ -45,7 +51,7 @@ jobs:
           node-version: "24.7.0"
 
       - name: Test docs checks
-        run: node --test tools/docs/check.test.mjs tools/docs/sweep/compare.test.mjs
+        run: node --test tools/docs/*.test.mjs tools/docs/sweep/compare.test.mjs
 
       - name: Validate docs, assets, access, and corpus compatibility
         run: node tools/docs/check.mjs --external
@@ -111,9 +117,9 @@ jobs:
             };
 
             let navGroups = [];
-            if (fs.existsSync('docs/mint.json')) {
-              const mint = JSON.parse(fs.readFileSync('docs/mint.json', 'utf8'));
-              navGroups = (mint.navigation ?? [])
+            if (fs.existsSync('docs/docs.json')) {
+              const mint = JSON.parse(fs.readFileSync('docs/docs.json', 'utf8'));
+              navGroups = (mint.navigation?.groups ?? [])
                 .filter((group) =>
                   collectPagesFromEntries(group.pages).some((page) =>
                     changedDocsPages.includes(page)
@@ -122,7 +128,7 @@ jobs:
                 .map((group) => group.group);
             }
 
-            const mintChanged = changedPaths.includes('docs/mint.json');
+            const mintChanged = changedPaths.includes('docs/docs.json');
             const bodyLines = [
               marker,
               '### Docs Preview',

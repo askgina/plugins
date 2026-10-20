@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { validateLpContract } from "./lp-contract.mjs";
+import { validateSkillsCatalog } from "./skills-catalog.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -51,10 +52,10 @@ export function linksIn(source) {
 export function validateDocs(root) {
   const errors = [];
   const external = new Set();
-  const cfg = JSON.parse(fs.readFileSync(path.join(root, "mint.json"), "utf8"));
-  const pages = navPages(cfg.navigation);
-  if (cfg.tabs?.length) errors.push("Topic tabs must not split the sidebar.");
-  if (cfg.topbarLinks?.length || cfg.topbarCtaButton?.name !== "Open Gina")
+  const cfg = JSON.parse(fs.readFileSync(path.join(root, "docs.json"), "utf8"));
+  const pages = navPages(cfg.navigation?.groups);
+  if (cfg.navigation?.tabs?.length) errors.push("Topic tabs must not split the sidebar.");
+  if (cfg.navbar?.links?.length || cfg.navbar?.primary?.label !== "Open Gina")
     errors.push("Header must have one Open Gina action.");
   const seen = new Set();
   for (const route of pages) {
@@ -222,6 +223,37 @@ export function validateCorpusBody(source, slug) {
   return errors;
 }
 
+/**
+ * Every skill any package ships must be named in backticks on the plugins-and-skills page. The
+ * list comes from `skills/index.json` (plain JSON, so this check needs no installed dependencies),
+ * plus any skill directory under `plugins/<package>/skills` so a stale index cannot hide one.
+ */
+export function validateSkillCoverage(repo, pluginsAndSkillsSource) {
+  let index;
+  try {
+    index = JSON.parse(fs.readFileSync(path.join(repo, "skills/index.json"), "utf8"));
+  } catch {
+    return ["Cannot read skills/index.json; run bun run skills:index."];
+  }
+  if (!Array.isArray(index?.skills)) return ["skills/index.json must contain a skills array."];
+  const errors = [];
+  const ids = new Set();
+  for (const skill of index.skills) {
+    if (typeof skill?.id === "string" && skill.id.length > 0) ids.add(skill.id);
+    else errors.push("skills/index.json has a skill without an id.");
+  }
+  const pluginsRoot = path.join(repo, "plugins");
+  for (const pkg of fs.readdirSync(pluginsRoot, { withFileTypes: true })) {
+    const skillsRoot = path.join(pluginsRoot, pkg.name, "skills");
+    if (!pkg.isDirectory() || !fs.existsSync(skillsRoot)) continue;
+    for (const skill of fs.readdirSync(skillsRoot, { withFileTypes: true }))
+      if (skill.isDirectory()) ids.add(skill.name);
+  }
+  for (const id of [...ids].sort())
+    if (!pluginsAndSkillsSource.includes("`" + id + "`")) errors.push(`Undocumented skill: ${id}`);
+  return errors;
+}
+
 export function validateGina(root) {
   const errors = [];
   const repo = path.dirname(root);
@@ -261,10 +293,12 @@ export function validateGina(root) {
   const auth = read("agents/authentication");
   if (!auth.includes("Read-only — view data") || !auth.includes("Full access — view and execute"))
     errors.push("Authentication guide must match app access labels.");
-  const skills = fs.readdirSync(path.join(repo, "plugins/ask-gina/skills"));
-  for (const skill of skills)
-    if (!read("agents/plugins-and-skills").includes("`" + skill + "`"))
-      errors.push(`Undocumented skill: ${skill}`);
+  errors.push(
+    ...validateSkillCoverage(
+      repo,
+      read("agents/plugins-and-skills") + read("agents/skills-catalog"),
+    ),
+  );
 
   // Every product-guide page the chatbot Docs Agent corpus consumes, with reciprocal relatedSlugs.
   const corpus = [
@@ -331,6 +365,15 @@ export function validateGina(root) {
     ),
   ])
     if (!robots.includes(rule)) errors.push(`Missing crawler policy: ${rule}`);
+  // Search indexing stays on for navigation pages, matching `search=yes` in robots.txt.
+  const config = JSON.parse(fs.readFileSync(path.join(root, "docs.json"), "utf8"));
+  if (!config.description?.trim()) errors.push("docs.json needs a site description.");
+  if (config.seo?.indexing !== "navigable")
+    errors.push('docs.json seo.indexing must be "navigable".');
+  if (/noindex/i.test(config.seo?.metatags?.robots ?? ""))
+    errors.push("docs.json must not set a site-wide noindex robots tag.");
+  if (config.seo?.metatags?.["twitter:card"] !== "summary_large_image")
+    errors.push("docs.json needs the summary_large_image twitter card.");
   return errors;
 }
 
@@ -344,13 +387,28 @@ const BOT_CHALLENGE_403_URLS = new Set([
   "https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=Ask%20Gina&connectorUrl=https%3A%2F%2Faskgina.ai%2Fai%2Fgina%2Fmcp",
 ]);
 
-async function checkExternal(urls) {
+// Links into this repository's main branch are checked against the checkout, so a pull
+// request can link to a file it adds. A live fetch would 404 until the merge.
+const SAME_REPO_MAIN = /^https:\/\/github\.com\/askgina\/plugins\/(?:tree|blob)\/main\/([^?#]+)/;
+export function sameRepoPath(url) {
+  const match = SAME_REPO_MAIN.exec(url);
+  return match ? decodeURIComponent(match[1]).replace(/\/+$/, "") : null;
+}
+
+export async function checkExternal(urls, repoRoot) {
   const errors = [];
   let index = 0;
   await Promise.all(
     Array.from({ length: 4 }, async () => {
       while (index < urls.length) {
         const url = urls[index++];
+        const repoPath = sameRepoPath(url);
+        if (repoPath !== null) {
+          const resolved = path.resolve(repoRoot, repoPath);
+          if (!resolved.startsWith(repoRoot + path.sep) || !fs.existsSync(resolved))
+            errors.push(`Repository link points to a missing path: ${url}`);
+          continue;
+        }
         try {
           let result = await fetch(url, { method: "HEAD", signal: AbortSignal.timeout(10000) });
           if ([403, 405, 501].includes(result.status))
@@ -376,13 +434,14 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   result.errors.push(
     ...validateGina(root),
     ...validateLpContract(root),
+    ...validateSkillsCatalog(path.dirname(root)),
     ...validateReleaseGate(root, {
       missingHeading: baseline("gate-baseline.json"),
       skillCounts: baseline("skill-count-allowlist.json"),
     }),
   );
   if (process.argv.includes("--external"))
-    result.errors.push(...(await checkExternal(result.external)));
+    result.errors.push(...(await checkExternal(result.external, path.dirname(root))));
   if (result.errors.length) {
     console.error(result.errors.join("\n"));
     process.exitCode = 1;

@@ -6,13 +6,14 @@ import { Effect, FileSystem, Path, Schema } from "effect";
 import {
   buildCodexMarketplaceEnvironment,
   CodexMarketplaceSmokeError,
-  inspectInstalledAskGinaPlugin,
+  inspectInstalledPlugin,
   type MarketplaceCommandInput,
   type MarketplaceCommandRunner,
   parseCodexMarketplaceSmokeArgs,
   parseMarketplaceAddOutput,
   parseMarketplaceListOutput,
   parsePluginAddOutput,
+  parseRepositoryMarketplaceManifest,
   runCodexMarketplaceSmoke,
   type CodexMarketplaceIsolation,
 } from "../src/bin/check-codex-marketplace";
@@ -27,8 +28,39 @@ const OPTIONS = {
 const JsonString = Schema.fromJsonString(Schema.Unknown);
 const encodeJson = Schema.encodeUnknownSync(JsonString);
 
+interface PluginFixture {
+  readonly name: string;
+  readonly mcpUrl: string;
+  readonly skills: readonly string[];
+}
+
+const SPOT_MCP_URL = "https://askgina.ai/ai/spot/mcp";
+const ASK_GINA_FIXTURE: PluginFixture = {
+  name: "ask-gina",
+  mcpUrl: PRODUCTION_MCP_URL,
+  skills: ASK_GINA_SKILL_DEFINITIONS.map((skill) => skill.name),
+};
+const SPOT_FIXTURE: PluginFixture = {
+  name: "ask-gina-spot",
+  mcpUrl: SPOT_MCP_URL,
+  skills: ["lp-pool-scan", "lp-rebalancing-playbook"],
+};
+const FIXTURES = [ASK_GINA_FIXTURE, SPOT_FIXTURE] as const;
+const PLUGIN_NAMES = FIXTURES.map((fixture) => fixture.name);
+
+const marketplaceManifest = (names: readonly string[] = PLUGIN_NAMES): string =>
+  encodeJson({
+    name: "ask-gina-plugins",
+    plugins: names.map((name) => ({
+      name,
+      source: { source: "local", path: `./plugins/${name}` },
+      policy: { installation: "AVAILABLE", authentication: "ON_INSTALL" },
+    })),
+  });
+
 const writeInstalledPluginFixture = (
   installedRoot: string,
+  fixture: PluginFixture = ASK_GINA_FIXTURE,
 ): Effect.Effect<void, never, FileSystem.FileSystem | Path.Path> =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
@@ -42,7 +74,7 @@ const writeInstalledPluginFixture = (
       fs.writeFileString(
         path.join(installedRoot, ".codex-plugin", "plugin.json"),
         encodeJson({
-          name: "ask-gina",
+          name: fixture.name,
           skills: "./skills/",
           mcpServers: "./.mcp.json",
           interface: {
@@ -55,20 +87,20 @@ const writeInstalledPluginFixture = (
         path.join(installedRoot, ".mcp.json"),
         encodeJson({
           mcpServers: {
-            "ask-gina": { type: "http", url: PRODUCTION_MCP_URL },
+            [fixture.name]: { type: "http", url: fixture.mcpUrl },
           },
         }),
       ),
       fs.writeFileString(path.join(installedRoot, "assets", "icon.svg"), "<svg></svg>"),
     ]);
     yield* Effect.forEach(
-      ASK_GINA_SKILL_DEFINITIONS,
+      fixture.skills,
       (skill) =>
         Effect.gen(function* () {
-          const skillRoot = path.join(installedRoot, "skills", skill.name);
+          const skillRoot = path.join(installedRoot, "skills", skill);
           yield* fs.makeDirectory(path.join(skillRoot, "agents"), { recursive: true });
           yield* Effect.all([
-            fs.writeFileString(path.join(skillRoot, "SKILL.md"), `# ${skill.name}\n`),
+            fs.writeFileString(path.join(skillRoot, "SKILL.md"), `# ${skill}\n`),
             fs.writeFileString(path.join(skillRoot, "agents", "openai.yaml"), "name: Ask Gina\n"),
           ]);
         }),
@@ -76,28 +108,71 @@ const writeInstalledPluginFixture = (
     );
   }).pipe(Effect.orDie);
 
-const marketplaceListing = (marketplaceRoot: string, authenticationPolicy = "ON_INSTALL"): string =>
+// The marketplace checkout Codex clones: the marketplace file plus each package's own sources.
+const writeMarketplaceCheckoutFixture = (
+  marketplaceRoot: string,
+): Effect.Effect<void, never, FileSystem.FileSystem | Path.Path> =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    yield* fs.makeDirectory(path.join(marketplaceRoot, ".agents", "plugins"), { recursive: true });
+    yield* fs.writeFileString(
+      path.join(marketplaceRoot, ".agents", "plugins", "marketplace.json"),
+      marketplaceManifest(),
+    );
+    yield* Effect.forEach(
+      FIXTURES,
+      (fixture) =>
+        Effect.gen(function* () {
+          const sourceRoot = path.join(marketplaceRoot, "plugins", fixture.name);
+          yield* fs.makeDirectory(sourceRoot, { recursive: true });
+          yield* fs.writeFileString(
+            path.join(sourceRoot, ".mcp.json"),
+            encodeJson({ mcpServers: { [fixture.name]: { type: "http", url: fixture.mcpUrl } } }),
+          );
+          yield* Effect.forEach(
+            fixture.skills,
+            (skill) =>
+              fs
+                .makeDirectory(path.join(sourceRoot, "skills", skill), { recursive: true })
+                .pipe(
+                  Effect.andThen(
+                    fs.writeFileString(path.join(sourceRoot, "skills", skill, "SKILL.md"), "# s\n"),
+                  ),
+                ),
+            { discard: true },
+          );
+        }),
+      { discard: true },
+    );
+  }).pipe(Effect.orDie);
+
+const marketplaceListing = (
+  marketplaceRoot: string,
+  authenticationPolicy = "ON_INSTALL",
+  names: readonly string[] = PLUGIN_NAMES,
+): string =>
   encodeJson({
     installed: [],
-    available: [
-      {
-        pluginId: "ask-gina@ask-gina-plugins",
-        name: "ask-gina",
-        marketplaceName: "ask-gina-plugins",
-        version: "0.1.0",
-        installed: false,
-        enabled: false,
-        source: { source: "local", path: `${marketplaceRoot}/plugins/ask-gina` },
-        marketplaceSource: { sourceType: "git", source: "askgina/plugins" },
-        installPolicy: "AVAILABLE",
-        authPolicy: authenticationPolicy,
-      },
-    ],
+    available: names.map((name) => ({
+      pluginId: `${name}@ask-gina-plugins`,
+      name,
+      marketplaceName: "ask-gina-plugins",
+      version: "0.1.0",
+      installed: false,
+      enabled: false,
+      source: { source: "local", path: `${marketplaceRoot}/plugins/${name}` },
+      marketplaceSource: { sourceType: "git", source: "askgina/plugins" },
+      installPolicy: "AVAILABLE",
+      authPolicy: authenticationPolicy,
+    })),
   });
 
 const makeFakeRunner = (
   commands: MarketplaceCommandInput[],
   failStage?: MarketplaceCommandInput["stage"],
+  // A plugin whose install is missing its last skill, to prove failures name the plugin.
+  incompletePlugin?: string,
 ): MarketplaceCommandRunner => ({
   run: (input) =>
     Effect.gen(function* () {
@@ -136,7 +211,7 @@ const makeFakeRunner = (
       const isolationRoot = path.dirname(codexHome);
       if (input.stage === "marketplace-add") {
         const marketplaceRoot = path.join(isolationRoot, "remote", "askgina-plugins");
-        yield* fs.makeDirectory(marketplaceRoot, { recursive: true }).pipe(Effect.orDie);
+        yield* writeMarketplaceCheckoutFixture(marketplaceRoot);
         return {
           stdout: encodeJson({
             marketplaceName: "ask-gina-plugins",
@@ -153,19 +228,35 @@ const makeFakeRunner = (
         };
       }
       if (input.stage === "plugin-add") {
+        const pluginId = input.args[2] ?? "";
+        const fixture = FIXTURES.find(
+          (candidate) => `${candidate.name}@ask-gina-plugins` === pluginId,
+        );
+        if (fixture === undefined) {
+          return yield* new CodexMarketplaceSmokeError({
+            stage: input.stage,
+            reason: "command-failed",
+            detail: `fake runner has no plugin ${pluginId}`,
+          });
+        }
         const installedRoot = path.join(
           codexHome,
           "plugins",
           "cache",
           "ask-gina-plugins",
-          "ask-gina",
+          fixture.name,
           "0.1.0",
         );
-        yield* writeInstalledPluginFixture(installedRoot);
+        yield* writeInstalledPluginFixture(
+          installedRoot,
+          fixture.name === incompletePlugin
+            ? { ...fixture, skills: fixture.skills.slice(0, -1) }
+            : fixture,
+        );
         return {
           stdout: encodeJson({
-            pluginId: "ask-gina@ask-gina-plugins",
-            name: "ask-gina",
+            pluginId,
+            name: fixture.name,
             marketplaceName: "ask-gina-plugins",
             version: "0.1.0",
             installedPath: installedRoot,
@@ -221,7 +312,8 @@ describe("Codex marketplace smoke arguments and JSON", () => {
         ),
         { marketplaceName: "ask-gina-plugins", installedRoot: "/tmp/marketplace" },
       );
-      yield* parseMarketplaceListOutput(marketplaceListing("/tmp/marketplace"), "/tmp/marketplace");
+      const expected = { marketplaceRoot: "/tmp/marketplace", pluginNames: PLUGIN_NAMES };
+      yield* parseMarketplaceListOutput(marketplaceListing("/tmp/marketplace"), expected);
       assert.deepStrictEqual(
         yield* parsePluginAddOutput(
           encodeJson({
@@ -232,15 +324,13 @@ describe("Codex marketplace smoke arguments and JSON", () => {
             installedPath: "/tmp/plugin",
             authPolicy: "ON_INSTALL",
           }),
+          "ask-gina",
         ),
         { installedPath: "/tmp/plugin" },
       );
 
       const oauth = yield* Effect.result(
-        parseMarketplaceListOutput(
-          marketplaceListing("/tmp/marketplace", "OAUTH"),
-          "/tmp/marketplace",
-        ),
+        parseMarketplaceListOutput(marketplaceListing("/tmp/marketplace", "OAUTH"), expected),
       );
       assert.strictEqual(oauth._tag, "Failure");
       if (oauth._tag === "Failure") {
@@ -250,6 +340,107 @@ describe("Codex marketplace smoke arguments and JSON", () => {
       assert.strictEqual(malformed._tag, "Failure");
       if (malformed._tag === "Failure") {
         assert.strictEqual(malformed.failure.reason, "invalid-json");
+      }
+    }),
+  );
+
+  it.effect("reads every plugin name from the repository marketplace file", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* parseRepositoryMarketplaceManifest(marketplaceManifest()),
+        PLUGIN_NAMES,
+      );
+      assert.deepStrictEqual(
+        yield* parseRepositoryMarketplaceManifest(marketplaceManifest(["ask-gina"])),
+        ["ask-gina"],
+      );
+
+      const wrongSource = yield* Effect.result(
+        parseRepositoryMarketplaceManifest(
+          encodeJson({
+            name: "ask-gina-plugins",
+            plugins: [
+              {
+                name: "ask-gina-spot",
+                source: { source: "local", path: "./plugins/ask-gina" },
+              },
+            ],
+          }),
+        ),
+      );
+      assert.strictEqual(wrongSource._tag, "Failure");
+      if (wrongSource._tag === "Failure") {
+        assert.include(wrongSource.failure.detail, "ask-gina-spot");
+        assert.include(wrongSource.failure.detail, "./plugins/ask-gina-spot");
+      }
+      const duplicate = yield* Effect.result(
+        parseRepositoryMarketplaceManifest(marketplaceManifest(["ask-gina", "ask-gina"])),
+      );
+      assert.strictEqual(duplicate._tag, "Failure");
+      const empty = yield* Effect.result(
+        parseRepositoryMarketplaceManifest(marketplaceManifest([])),
+      );
+      assert.strictEqual(empty._tag, "Failure");
+      const otherMarketplace = yield* Effect.result(
+        parseRepositoryMarketplaceManifest(encodeJson({ name: "other", plugins: [] })),
+      );
+      assert.strictEqual(otherMarketplace._tag, "Failure");
+    }),
+  );
+
+  it.effect("requires the available listing to contain exactly the marketplace plugins", () =>
+    Effect.gen(function* () {
+      const expected = { marketplaceRoot: "/tmp/marketplace", pluginNames: PLUGIN_NAMES };
+      const missingSpot = yield* Effect.result(
+        parseMarketplaceListOutput(
+          marketplaceListing("/tmp/marketplace", "ON_INSTALL", ["ask-gina"]),
+          expected,
+        ),
+      );
+      assert.strictEqual(missingSpot._tag, "Failure");
+      if (missingSpot._tag === "Failure") {
+        assert.include(missingSpot.failure.detail, "ask-gina-spot");
+      }
+      const unlisted = yield* Effect.result(
+        parseMarketplaceListOutput(marketplaceListing("/tmp/marketplace"), {
+          marketplaceRoot: "/tmp/marketplace",
+          pluginNames: ["ask-gina"],
+        }),
+      );
+      assert.strictEqual(unlisted._tag, "Failure");
+      const swapped = yield* Effect.result(
+        parseMarketplaceListOutput(
+          marketplaceListing("/tmp/marketplace", "ON_INSTALL", ["ask-gina", "ask-gina-other"]),
+          expected,
+        ),
+      );
+      assert.strictEqual(swapped._tag, "Failure");
+      if (swapped._tag === "Failure") {
+        assert.include(swapped.failure.detail, "ask-gina-spot@ask-gina-plugins");
+      }
+      const wrongSource = yield* Effect.result(
+        parseMarketplaceListOutput(marketplaceListing("/tmp/elsewhere"), expected),
+      );
+      assert.strictEqual(wrongSource._tag, "Failure");
+      if (wrongSource._tag === "Failure") {
+        assert.include(wrongSource.failure.detail, "must resolve to plugins/ask-gina");
+      }
+      const wrongInstall = yield* Effect.result(
+        parsePluginAddOutput(
+          encodeJson({
+            pluginId: "ask-gina@ask-gina-plugins",
+            name: "ask-gina",
+            marketplaceName: "ask-gina-plugins",
+            version: "0.1.0",
+            installedPath: "/tmp/plugin",
+            authPolicy: "ON_INSTALL",
+          }),
+          "ask-gina-spot",
+        ),
+      );
+      assert.strictEqual(wrongInstall._tag, "Failure");
+      if (wrongInstall._tag === "Failure") {
+        assert.include(wrongInstall.failure.detail, "ask-gina-spot@ask-gina-plugins");
       }
     }),
   );
@@ -325,7 +516,7 @@ describe("Codex marketplace smoke lifecycle", () => {
           repository: "askgina/plugins",
           ref: IMMUTABLE_REF,
           marketplaceName: "ask-gina-plugins",
-          pluginId: "ask-gina@ask-gina-plugins",
+          pluginIds: ["ask-gina@ask-gina-plugins", "ask-gina-spot@ask-gina-plugins"],
         });
         assert.deepStrictEqual(
           commands.map((command) => command.stage),
@@ -333,9 +524,26 @@ describe("Codex marketplace smoke lifecycle", () => {
             "marketplace-add",
             "marketplace-list",
             "plugin-add",
+            "plugin-add",
+            "plugin-remove",
             "plugin-remove",
             "marketplace-remove",
           ],
+        );
+        assert.deepStrictEqual(
+          commands
+            .filter((command) => command.stage === "plugin-add")
+            .map((command) => command.args),
+          [
+            ["plugin", "add", "ask-gina@ask-gina-plugins", "--json"],
+            ["plugin", "add", "ask-gina-spot@ask-gina-plugins", "--json"],
+          ],
+        );
+        assert.deepStrictEqual(
+          commands
+            .filter((command) => command.stage === "plugin-remove")
+            .map((command) => command.args[2]),
+          ["ask-gina@ask-gina-plugins", "ask-gina-spot@ask-gina-plugins"],
         );
         assert.deepStrictEqual(commands[0]?.args, [
           "plugin",
@@ -385,13 +593,74 @@ describe("Codex marketplace smoke lifecycle", () => {
         }
         assert.deepStrictEqual(
           commands.map((command) => command.stage),
-          ["marketplace-add", "marketplace-list", "plugin-remove", "marketplace-remove"],
+          [
+            "marketplace-add",
+            "marketplace-list",
+            "plugin-remove",
+            "plugin-remove",
+            "marketplace-remove",
+          ],
         );
         const codexHome = commands[0]?.environment.CODEX_HOME;
         if (codexHome === undefined) return yield* Effect.die("fake runner did not capture home");
         assert.isFalse(yield* fs.exists(path.dirname(codexHome)));
       }),
     );
+    it.effect("names the plugin whose install fails inspection and still cleans every plugin", () =>
+      Effect.gen(function* () {
+        const commands: MarketplaceCommandInput[] = [];
+        const result = yield* Effect.result(
+          runCodexMarketplaceSmoke({
+            ...OPTIONS,
+            runner: makeFakeRunner(commands, undefined, "ask-gina-spot"),
+            parentEnvironment: { PATH: "/usr/bin:/bin" },
+          }),
+        );
+
+        assert.strictEqual(result._tag, "Failure");
+        if (result._tag === "Failure") {
+          assert.strictEqual(result.failure.stage, "inspection");
+          assert.strictEqual(result.failure.reason, "invalid-plugin");
+          assert.include(result.failure.detail, "ask-gina-spot:");
+          assert.include(result.failure.detail, "marketplace checkout");
+        }
+        assert.deepStrictEqual(
+          commands.map((command) => command.stage),
+          [
+            "marketplace-add",
+            "marketplace-list",
+            "plugin-add",
+            "plugin-add",
+            "plugin-remove",
+            "plugin-remove",
+            "marketplace-remove",
+          ],
+        );
+      }),
+    );
+
+    it.effect("names the plugin whose install command fails", () =>
+      Effect.gen(function* () {
+        const commands: MarketplaceCommandInput[] = [];
+        const result = yield* Effect.result(
+          runCodexMarketplaceSmoke({
+            ...OPTIONS,
+            runner: makeFakeRunner(commands, "plugin-add"),
+            parentEnvironment: { PATH: "/usr/bin:/bin" },
+          }),
+        );
+
+        assert.strictEqual(result._tag, "Failure");
+        if (result._tag === "Failure") {
+          assert.strictEqual(result.failure.stage, "plugin-add");
+          assert.strictEqual(
+            result.failure.detail,
+            "ask-gina: plugin-add failed (exit 7): synthetic diagnostic",
+          );
+        }
+      }),
+    );
+
     it.effect("does not run Codex cleanup when repository credential removal fails", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -444,7 +713,7 @@ describe("Codex marketplace smoke lifecycle", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "marketplace-inspection-test-" });
-        yield* writeInstalledPluginFixture(root);
+        yield* writeInstalledPluginFixture(root, ASK_GINA_FIXTURE);
         yield* fs.writeFileString(
           path.join(root, ".mcp.json"),
           encodeJson({
@@ -454,11 +723,59 @@ describe("Codex marketplace smoke lifecycle", () => {
           }),
         );
 
-        const result = yield* Effect.result(inspectInstalledAskGinaPlugin(root));
+        const result = yield* Effect.result(
+          inspectInstalledPlugin({ pluginName: "ask-gina", installedRoot: root, sourceRoot: root }),
+        );
         assert.strictEqual(result._tag, "Failure");
         if (result._tag === "Failure") {
           assert.strictEqual(result.failure.reason, "invalid-plugin");
           assert.include(result.failure.detail, "ask-gina");
+        }
+      }),
+    );
+
+    it.effect("checks a non-canonical plugin against its own checkout", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "marketplace-inspection-test-" });
+        const marketplaceRoot = path.join(root, "checkout");
+        const installedRoot = path.join(root, "installed");
+        yield* writeMarketplaceCheckoutFixture(marketplaceRoot);
+        yield* writeInstalledPluginFixture(installedRoot, SPOT_FIXTURE);
+        const sourceRoot = path.join(marketplaceRoot, "plugins", "ask-gina-spot");
+        const inspect = inspectInstalledPlugin({
+          pluginName: "ask-gina-spot",
+          installedRoot,
+          sourceRoot,
+        });
+        yield* inspect;
+
+        // A manifest named for another plugin is rejected, so one package cannot stand in for another.
+        const asCanonical = yield* Effect.result(
+          inspectInstalledPlugin({ pluginName: "ask-gina", installedRoot, sourceRoot }),
+        );
+        assert.strictEqual(asCanonical._tag, "Failure");
+
+        yield* fs.writeFileString(
+          path.join(installedRoot, ".mcp.json"),
+          encodeJson({
+            mcpServers: { "ask-gina-spot": { type: "http", url: PRODUCTION_MCP_URL } },
+          }),
+        );
+        const wrongUrl = yield* Effect.result(inspect);
+        assert.strictEqual(wrongUrl._tag, "Failure");
+        if (wrongUrl._tag === "Failure") {
+          assert.include(wrongUrl.failure.detail, SPOT_MCP_URL);
+        }
+
+        yield* writeInstalledPluginFixture(installedRoot, SPOT_FIXTURE);
+        yield* fs.remove(path.join(installedRoot, "skills", "lp-pool-scan"), { recursive: true });
+        const missingSkill = yield* Effect.result(inspect);
+        assert.strictEqual(missingSkill._tag, "Failure");
+        if (missingSkill._tag === "Failure") {
+          assert.include(missingSkill.failure.detail, "ask-gina-spot");
+          assert.include(missingSkill.failure.detail, "marketplace checkout");
         }
       }),
     );

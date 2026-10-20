@@ -3,14 +3,14 @@ title: "LP skills"
 description: "Scan public pool data and apply numeric rebalancing rules that only produce proposals."
 ---
 
-Two agent skills support LP work alongside Spot MCP. Neither one executes anything.
+The LP skills ship in the `ask-gina-spot` plugin and are listed in the [skills catalog](/agents/skills-catalog). They support LP work alongside Spot MCP, and neither one executes anything.
 
 | Skill                     | What it does                                                                                   | Needs                       |
 | ------------------------- | ---------------------------------------------------------------------------------------------- | --------------------------- |
 | `lp-pool-scan`            | Ranks pools from public data by fee yield, estimated impermanent loss (IL), depth and slippage | Python 3.9+; no keys        |
 | `lp-rebalancing-playbook` | Applies numeric rules for re-range, harvest, compound, trim, exit and size caps                | Live position and pool data |
 
-The sources are in [askgina/plugins](https://github.com/askgina/plugins/tree/main/skills/spot), under `skills/spot/<skill-name>/`. Each skill has a `SKILL.md` with its full rules, flags and formulas. Use those files rather than copies of this page. The [LP agent workflow](/spot-mcp/lp-agent-workflow) shows how the skills fit with the Spot MCP quote, execute and status tools.
+To install them, follow [install for your host](/agents/plugins-and-skills#install-for-your-host). Each skill has a `SKILL.md` with its full rules, flags and formulas in [askgina/plugins](https://github.com/askgina/plugins/tree/main/plugins/ask-gina-spot/skills). Use those files rather than copies of this page. The [LP agent workflow](/spot-mcp/lp-agent-workflow) shows how the skills fit with the Spot MCP quote, execute and status tools.
 
 ## lp-pool-scan
 
@@ -19,7 +19,7 @@ The scanner only reads. It makes HTTP GET requests to public APIs and read calls
 ### Run it
 
 ```bash
-cd skills/spot/lp-pool-scan
+cd plugins/ask-gina-spot/skills/lp-pool-scan
 python3 scripts/lp_pool_scan.py --universe top --out ./lp-scan-output
 python3 scripts/lp_pool_scan.py --universe allowlist --allowlist my_pools.json --top 10
 python3 scripts/lp_pool_scan.py --universe allowlist --format json --quiet
@@ -103,6 +103,6 @@ Re-range has a 72-hour cooldown per position. For session-bound assets such as t
 
 ### Logging
 
-The playbook keeps one row per proposal with the rule, trigger values, action, amounts, range, slippage, total cost, quote ID, decision and outcome. Decisions are Pending, Approved, Declined, Expired or Superseded. A row not approved within 24 hours is Expired. It also keeps a daily position log for blended APR. See the [LP agent workflow](/spot-mcp/lp-agent-workflow#log-every-proposal) for the identifiers to record.
+The playbook keeps one row per proposal and a daily position log for blended APR. The [LP agent workflow](/spot-mcp/lp-agent-workflow#log-every-proposal) lists the fields, decisions and Spot MCP identifiers to record.
 
 The playbook is not financial advice and does not run a hosted strategy. [LP analytics](/spot-mcp/lp-analytics) explains what Spot MCP measurements can and cannot establish.

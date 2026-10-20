@@ -34,7 +34,7 @@ The heading is exactly `## Check that it works`. Under it, give one concrete pro
 - Counts and lists that change, such as skills, tools, clients and chains, link to a generated or canonical page.
 - The page says whether the feature reads or writes, what approval it needs, what it costs and what it does not do. Give refusal codes with their recovery step.
 - "Try asking" prompts are real prompts. They can double as eval cases.
-- The page is in `docs/mint.json` navigation. `node tools/docs/check.mjs` fails on orphan pages and broken links.
+- The page is in `docs/docs.json` navigation. `node tools/docs/check.mjs` fails on orphan pages and broken links.
 
 Authoring rules and page templates are in [`docs/authoring.md`](docs/authoring.md).
 
@@ -76,7 +76,7 @@ These live in the app repository, so the release pull request there is the proof
 - Page titles use the words a user would search. Headings that answer a question use the question as the heading. Names for the same thing match across docs, tool descriptions and listings.
 - After the docs deploy, fetch `https://docs.askgina.ai/llms.txt`, the sitemap and the new page, and confirm the page shows up with its description.
 - `https://askgina.ai/llms.txt` and `https://askgina.ai/llms-full.txt` redirect permanently to the docs copies. Check that both still redirect after the release.
-- `docs/mint.json` has no `seo` or `metadata` keys today. Changes to site metadata, social images and listings in MCP registries are tracked on the map, not in this checklist.
+- `docs/docs.json` holds the site `description`, `seo.indexing` and the social metatags. `node tools/docs/check.mjs` fails without a site description, when `seo.indexing` is not `navigable`, on a site-wide `noindex` and without the `summary_large_image` card. Listings in MCP registries are tracked on the map, not in this checklist.
 
 ## Proof
 

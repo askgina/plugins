@@ -1,44 +1,87 @@
 ---
 title: "Plugins and skills"
-description: "Understand the research plugin, its four research skills and the Spot LP skills."
+description: "Install the Ask Gina plugins, read-only or Spot execution, and find the agent skills each one includes."
 ---
 
-The Ask Gina plugin bundles a read-only MCP connection with four research skills. Separate Spot LP skills cover pool scanning and rebalancing proposals. A **connection** makes tools available; a **skill** tells the agent when and how to use them. Authentication is still required.
+Ask Gina publishes two plugins from one repository, [askgina/plugins](https://github.com/askgina/plugins). Each plugin bundles an MCP connection with agent skills. A **connection** makes tools available. A **skill** tells the agent when and how to use them. Authentication is still required.
 
-## Choose a research skill
+| Plugin          | MCP server                       | Access                                     | Install it to                                                                              |
+| --------------- | -------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `ask-gina`      | `https://askgina.ai/ai/gina/mcp` | Read-only, `tools:read`                    | Research wallets, spot tokens, Hyperliquid and Polymarket. It cannot trade or move assets. |
+| `ask-gina-spot` | `https://askgina.ai/ai/spot/mcp` | Write access (Degen mode), `tools:execute` | Quote and, with your approval, execute spot swaps, transfers and LP operations from Gina.  |
 
-| Skill                         | Use it for                                                       | Example                                 |
-| ----------------------------- | ---------------------------------------------------------------- | --------------------------------------- |
-| `review-gina-account`         | Linked wallets, cross-chain holdings, scheduled prompts and runs | “Show my linked wallets.”               |
-| `research-spot-tokens`        | Spot prices, token metadata, charts, completed swap history      | “Chart ETH over the past week.”         |
-| `research-hyperliquid`        | Hyperliquid and HIP-3 markets, positions, orders, fills          | “Show my Hyperliquid positions.”        |
-| `research-prediction-markets` | Polymarket discovery, order books, positions                     | “Which prediction markets expire soon?” |
+Install `ask-gina`, `ask-gina-spot` or both. They are separate plugins, so installing the research plugin never adds trading tools. The [skills catalog](/agents/skills-catalog) lists every skill, the plugin that ships it and whether the MCP server also serves it.
 
-These skills cannot place trades, transfer assets, change leverage, redeem positions, or create/edit schedules. Adding another MCP server does not change that boundary.
-
-## Spot LP skills
-
-These skills are not part of the read-only plugin. They live in [askgina/plugins](https://github.com/askgina/plugins/tree/main/skills/spot) under `skills/spot/<skill-name>/`.
-
-| Skill                     | Use it for                                                                   | Example                                        |
-| ------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------- |
-| `lp-pool-scan`            | Rank pools from public data by fee APR, impermanent loss, depth and slippage | “Scan the top LP pools on Base and Solana.”    |
-| `lp-rebalancing-playbook` | Propose re-range, harvest, compound, trim or exit with numeric rules         | “Review my LP positions against the playbook.” |
-
-Neither skill executes. The scanner needs no wallet or keys. The playbook reads live positions through [Spot MCP](/spot-mcp/liquidity-positions) and only proposes; each action needs approval of its exact quote. See [LP skills](/spot-mcp/lp-skills) and the [LP agent workflow](/spot-mcp/lp-agent-workflow).
+A skill that is not served over MCP is not available from a direct MCP connection alone. Install the plugin or copy the skill directory.
 
 ## Install for your host
 
-Follow [your host's setup page](/connect/index). A host-specific plugin can include extra features, such as Cursor slash commands; direct MCP connections provide tools without automatically installing skills.
+Both plugins live in one marketplace per host. Add the marketplace once, then install one or both plugins. Spot moves real funds, so review every quote before you approve it, and read [Write access (Degen mode)](/write-access/index) first.
 
-The canonical skill sources are in [askgina/plugins](https://github.com/askgina/plugins/tree/main/plugins/ask-gina/skills). Each skill has a `SKILL.md` under `plugins/ask-gina/skills/<skill-name>/`. Use those sources rather than copying older skill bodies from documentation.
+### Claude Code
 
-For hosts with manual skill loading, install only the desired skill directories into the host's documented skill location, then start a new session. The repository's contributor instructions and build internals are not user skills.
+```text
+/plugin marketplace add askgina/plugins
+/plugin install ask-gina@ask-gina-plugins
+/plugin install ask-gina-spot@ask-gina-plugins
+```
 
-## OpenClaw and other clients
+Restart the session if prompted, then use `/mcp` to authenticate each included connection. Choose this route instead of adding a duplicate direct connection.
 
-OpenClaw is one client, not a separate Gina skill family. Follow [OpenClaw setup](/connect/openclaw) for the connection and skill-loading route. Legacy ClawHub commands are not the installation source for these four research skills.
+### Codex
+
+```text
+codex plugin marketplace add askgina/plugins
+codex plugin add ask-gina@ask-gina-plugins
+codex plugin add ask-gina-spot@ask-gina-plugins
+```
+
+Start a new session and complete OAuth when Codex asks you to sign in. See [Codex setup](/connect/codex) for the direct connection route.
+
+### Cursor and Grok Bot
+
+Load a plugin folder as a local Cursor plugin: clone [askgina/plugins](https://github.com/askgina/plugins) and copy `plugins/<plugin-name>` to `~/.cursor/plugins/local/<plugin-name>`. Use a real directory, not an external symlink. Open the connector and choose **Connect** to complete OAuth. Grok Bot loads plugins only from the Cursor marketplace, and a live listing for either plugin has not been verified there. See [Grok Bot](/connect/grok-bot) and [other clients](/connect/other-clients) for the direct route.
+
+### Devin
+
+Add a `git-subdir` source to your Devin account or enterprise manifest. Use `plugins/ask-gina` for the research plugin and `plugins/ask-gina-spot` for Spot:
+
+```json
+{
+  "requiredPlugins": [
+    {
+      "source": "git-subdir",
+      "url": "https://github.com/askgina/plugins.git",
+      "path": "plugins/ask-gina-spot"
+    }
+  ]
+}
+```
+
+### GitHub Copilot
+
+Copilot reads the manifest in each plugin's `targets/copilot` folder in the repository.
+
+### Gemini
+
+The Gemini extension includes only `ask-gina`. `ask-gina-spot` is not available as a Gemini extension. To use Spot from another client, connect the [Spot MCP server](/spot-mcp/client-setup) directly.
+
+### Hosts with manual skill loading
+
+Install only the skill directories you want into the host's documented skill location, then start a new session. Take them from `plugins/<plugin>/skills/<skill-name>/` in the [source repository](https://github.com/askgina/plugins/tree/main/plugins). Use those sources rather than older skill bodies copied from documentation. Contributor instructions and build internals are not user skills.
+
+[OpenClaw](/connect/openclaw) is one client, not a separate Gina skill family. Legacy ClawHub commands are not the installation source for Gina skills.
+
+## Spot skills and LP work
+
+The Spot plugin carries the LP skills. The scanner `lp-pool-scan` reads public data and needs no wallet or keys. The playbook `lp-rebalancing-playbook` reads live positions through [Spot MCP](/spot-mcp/liquidity-positions) and only proposes. Neither executes. [LP skills](/spot-mcp/lp-skills) explains how to run and read them, and the [LP agent workflow](/spot-mcp/lp-agent-workflow) shows how they combine with the Spot tools.
 
 ## Package availability
 
-Source code and host adapters do not establish marketplace approval. Check [your client's setup guide](/connect/index#choose-your-client) for its direct connection route and marketplace availability. Do not assume SDK/CLI source can be installed from a public package registry.
+Source code and host adapters do not establish marketplace approval. Check [your client's setup guide](/connect/index#choose-your-client) for its direct connection route and marketplace availability. Do not assume SDK or CLI source can be installed from a public package registry.
+
+## Check that it works
+
+1. Start a new session and open the host's MCP or tools list. Confirm a connection appears for each installed plugin, `ask-gina` and `spot`, and finish OAuth if it asks.
+2. Ask the host to list its skills. Every skill the [catalog](/agents/skills-catalog) shows for your installed plugins should appear.
+3. Ask **“Use Gina to show ETH in USD over the past seven days.”** A Gina tool should run. With `ask-gina-spot`, ask for a quote only, such as “Quote swapping 10 USDC for ETH,” and do not approve it.
