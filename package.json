@@ -50,7 +50,7 @@
     "docs:check": "node tools/docs/check.mjs",
     "docs:catalog": "node tools/docs/skills-catalog.mjs",
     "docs:catalog:check": "node tools/docs/skills-catalog.mjs --check",
-    "docs:test": "node --test tools/docs/*.test.mjs"
+    "docs:test": "node --test tools/docs/*.test.mjs tools/docs/sweep/compare.test.mjs"
   },
   "devDependencies": {
     "@askgina/contracts": "workspace:*",

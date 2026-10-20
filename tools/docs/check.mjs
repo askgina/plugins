@@ -130,6 +130,72 @@ export function validateDocs(root) {
   return { errors, external: [...external], pages: files.length, images: images.size };
 }
 
+export const TASK_HEADING = "## Check that it works";
+const SKILL_COUNT =
+  /\b(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+(?:(?!(?:of|the|a|an|and|or|to|in|for|your)\b)[a-z-]+\s+){0,2}skills?\b/gi;
+
+export function frontmatterOf(source) {
+  return source.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? "";
+}
+function frontmatterValue(front, key) {
+  const raw = front.match(new RegExp("^" + key + ":[ \\t]*(.*)$", "m"))?.[1]?.trim();
+  return raw?.replace(/^(["'])([\s\S]*)\1$/, "$2");
+}
+// A task page is any page inside a section folder. Top-level pages (what-is-gina, evaluations)
+// are overviews. A page leaves the task set with `pageType: reference`, or with `kind: reference`
+// or `kind: policy`, because product-guide corpus pages cannot add frontmatter keys.
+export function isTaskPage(relative, source) {
+  if (!relative.includes("/")) return false;
+  const front = frontmatterOf(source);
+  if (frontmatterValue(front, "pageType") === "reference") return false;
+  return !["reference", "policy"].includes(frontmatterValue(front, "kind"));
+}
+const stripFences = (source) => source.replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1\s*$/gm, "");
+
+// Release gate for agent-readable docs. `missingHeading` and `skillCounts` are ratchet baselines:
+// pages listed there may still fail a rule, and a listed page that now passes must be removed.
+export function validateReleaseGate(root, { missingHeading = [], skillCounts = [] } = {}) {
+  const errors = [];
+  const missing = new Set(missingHeading);
+  const counted = new Set(skillCounts);
+  for (const [name, list] of [
+    ["gate-baseline.json", missingHeading],
+    ["skill-count-allowlist.json", skillCounts],
+  ])
+    if (list.join("\n") !== [...new Set(list)].sort().join("\n"))
+      errors.push(`${name} must be a sorted list without duplicates.`);
+  const seen = new Set();
+  for (const file of filesUnder(root).filter((entry) => /\.mdx?$/.test(entry))) {
+    const relative = path.relative(root, file).split(path.sep).join("/");
+    seen.add(relative);
+    const source = fs.readFileSync(file, "utf8");
+    const front = frontmatterOf(source);
+    const description = frontmatterValue(front, "description");
+    if (description !== undefined && description !== "") {
+      if (/^[>|]/.test(description) || /[.!?]["')\]]*\s+\S/.test(description))
+        errors.push(`Description must be one sentence on one line: ${relative}`);
+    }
+    const found = [...stripFences(source).matchAll(SKILL_COUNT)].map((match) => match[0]);
+    if (found.length && !counted.has(relative))
+      errors.push(
+        `Hardcoded skill count, link to the skills list instead: ${relative}: "${found[0]}"`,
+      );
+    if (!found.length && counted.has(relative))
+      errors.push(`Remove ${relative} from skill-count-allowlist.json: it has no skill count.`);
+    if (isTaskPage(relative, source)) {
+      const has = new RegExp("^" + TASK_HEADING + "\\s*$", "m").test(source);
+      if (!has && !missing.has(relative))
+        errors.push(`Task page needs a "${TASK_HEADING}" section: ${relative}`);
+      if (has && missing.has(relative))
+        errors.push(`Remove ${relative} from gate-baseline.json: it has "${TASK_HEADING}".`);
+    } else if (missing.has(relative))
+      errors.push(`Remove ${relative} from gate-baseline.json: it is not a task page.`);
+  }
+  for (const relative of [...missing, ...counted])
+    if (!seen.has(relative)) errors.push(`Baseline lists a page that does not exist: ${relative}`);
+  return errors;
+}
+
 export function validateCorpusBody(source, slug) {
   const errors = [];
   const [, front = "", ...parts] = source.split("---");
@@ -240,6 +306,7 @@ export function validateGina(root) {
     "wallet-and-account",
     "transactions-and-portfolio",
     "liquidity-positions",
+    "spot-lp-agents",
     "market-research",
     "predictions",
     "perps",
@@ -287,8 +354,8 @@ export function validateGina(root) {
         errors.push(`Broken corpus relationship: ${slug} ↔ ${other}`);
     }
   const corpusLength = corpusParts.join("\n\n---\n\n").length;
-  if (corpusLength > 24_000)
-    errors.push(`Chatbot corpus exceeds 24000 characters: ${corpusLength}`);
+  if (corpusLength > 28_000)
+    errors.push(`Chatbot corpus exceeds 28000 characters: ${corpusLength}`);
   const robots = fs.readFileSync(path.join(root, "robots.txt"), "utf8");
   for (const rule of [
     "Content-Signal: ai-train=no, search=yes, ai-input=yes",
@@ -351,10 +418,18 @@ export async function checkExternal(urls, repoRoot) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const root = path.resolve("docs");
   const result = validateDocs(root);
+  const baseline = (name) =>
+    JSON.parse(
+      fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), name), "utf8"),
+    );
   result.errors.push(
     ...validateGina(root),
     ...validateLpContract(root),
     ...validateSkillsCatalog(path.dirname(root)),
+    ...validateReleaseGate(root, {
+      missingHeading: baseline("gate-baseline.json"),
+      skillCounts: baseline("skill-count-allowlist.json"),
+    }),
   );
   if (process.argv.includes("--external"))
     result.errors.push(...(await checkExternal(result.external, path.dirname(root))));

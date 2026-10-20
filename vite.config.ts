@@ -87,7 +87,7 @@ export default defineConfig({
       {
         // The docs workflow runs these standalone Node checks without installing
         // workspace dependencies. The refresh utility shares their Node conventions.
-        files: ["tools/docs/*.mjs"],
+        files: ["tools/docs/**/*.mjs"],
         rules: {
           "effecttsgo/node-builtin-import": "off",
           "effecttsgo/async-function": "off",

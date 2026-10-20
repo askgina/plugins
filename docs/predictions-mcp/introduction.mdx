@@ -44,3 +44,13 @@ The server exposes one MCP tool, `bash`. Your client invokes it from your prompt
     Explore the Predictions MCP feature reference and example prompts.
   </Card>
 </CardGroup>
+
+## Check that it works
+
+After you connect, ask your assistant "What tools do you have from the predictions server?" It should list `bash`. Then call `bash` with:
+
+```json
+{ "command": "host-tools searchPredictionMarkets '{\"query\":\"NBA\"}'" }
+```
+
+Expected: JSON with live Polymarket market rows under `data.payload`. Setup steps are in [Predictions client setup](/predictions-mcp/client-setup).

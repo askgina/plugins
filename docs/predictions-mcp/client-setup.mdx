@@ -50,3 +50,13 @@ Use a [Streamable HTTP client](/connect/other-clients) with this venue URL. Chec
 The credential must be valid for this venue and carry `tools:execute`. A read-only token or an old Gina execute grant is not a substitute. Complete a fresh connection if the grant is rejected.
 
 Next: run the [read-only connection checks](/predictions-mcp/quick-start) before attempting execution.
+
+## Check that it works
+
+Restart the client and complete Gina OAuth. In Claude Code, `/mcp` should list `predictions` as connected, and `bash` should appear in the tool list. Call `bash` with:
+
+```json
+{ "command": "host-tools searchPredictionMarkets '{\"query\":\"NBA\"}'" }
+```
+
+Expected: JSON with live Polymarket market rows under `data.payload`. This only reads data. If `bash` is missing, remove the server, add it again and reconnect.

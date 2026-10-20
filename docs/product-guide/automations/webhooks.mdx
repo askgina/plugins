@@ -28,3 +28,7 @@ Test the recipe before enabling event-triggered execution. Keep webhook credenti
 5. Inspect the recipe's steps and final output separately. Receiving a webhook does not prove the task completed.
 
 If the expected run is missing, check the provider's delivery result and the configured event and payload. If a run exists but failed, inspect that run's error before retrying, especially when the workflow can execute transactions.
+
+## Check that it works
+
+Open a run that a webhook started. The **Webhook Trigger** panel should show the provider, event type and received time. Choose **Ask assistant about this trigger**. Gina should explain why the run fired. A received webhook does not show that the task finished, so check the steps and output too.

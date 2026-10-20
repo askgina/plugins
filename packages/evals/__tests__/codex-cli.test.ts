@@ -306,7 +306,9 @@ describe("Codex CLI trial adapter", () => {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "codex-descriptor-test-" });
         const executablePath = `${root}/codex`;
-        const trustedBytes = yield* fs.readFile("/bin/echo");
+        // Not /bin/echo: multicall coreutils (Ubuntu 26.04 runners) dispatch on
+        // argv[0], so a copy named `codex` would not run as echo.
+        const trustedBytes = yield* fs.readFile(process.execPath);
         const substituteBytes = yield* fs.readFile("/bin/false");
         yield* fs.writeFile(executablePath, trustedBytes);
         yield* fs.chmod(executablePath, 0o755);
@@ -316,11 +318,15 @@ describe("Codex CLI trial adapter", () => {
         });
 
         yield* fs.writeFile(executablePath, substituteBytes);
-        const child = yield* ChildProcess.make(opened.command, ["descriptor-ok"], {
-          stdin: "ignore",
-          stdout: "pipe",
-          stderr: "ignore",
-        });
+        const child = yield* ChildProcess.make(
+          opened.command,
+          ["-e", "process.stdout.write('descriptor-ok\\n')"],
+          {
+            stdin: "ignore",
+            stdout: "pipe",
+            stderr: "ignore",
+          },
+        );
         const [stdout, exitCode] = yield* Effect.all([
           collectBoundedUtf8Output(child.stdout, 1024),
           child.exitCode,

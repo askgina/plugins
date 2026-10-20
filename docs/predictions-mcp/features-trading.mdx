@@ -52,3 +52,13 @@ If you buy 100 Yes shares at $0.40 each:
 - **Cost:** $40
 - **If Yes wins:** you get $100 → **$60 profit**
 - **If No wins:** shares worth $0 → **$40 loss**
+
+## Check that it works
+
+Check the trade tool without placing a trade. Call `bash` with:
+
+```json
+{ "command": "host-tools schema tradePredictionMarket" }
+```
+
+Expected: the input contract for `tradePredictionMarket`, and no order. Placing a trade needs an explicit instruction from you. Prices use real USDC on Polygon.

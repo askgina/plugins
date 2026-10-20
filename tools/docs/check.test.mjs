@@ -5,10 +5,12 @@ import os from "node:os";
 import path from "node:path";
 import {
   checkExternal,
+  isTaskPage,
   linksIn,
   resolveRoute,
-  validateDocs,
   validateCorpusBody,
+  validateDocs,
+  validateReleaseGate,
   validateSkillCoverage,
 } from "./check.mjs";
 
@@ -114,6 +116,92 @@ test("LP examples reject duplicate identities", async () => {
   const { lpExamples } = await import("./lp-contract.mjs");
   const example = "{/* lp-example: sample */}\n```json\n{}\n```";
   assert.throws(() => lpExamples(example + "\n" + example), /Duplicate/);
+});
+
+function page(root, name, description, body = "") {
+  const file = path.join(root, name);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, `---\ntitle: "T"\ndescription: ${description}\n---\n${body}`);
+}
+const WORKS = "\n## Check that it works\n\nAsk for a price. Expect a quote.\n";
+
+test("release gate requires the verification heading on task pages", (t) => {
+  const root = fixture(t);
+  page(root, "start/first.mdx", '"Run a first request."');
+  const errors = validateReleaseGate(root);
+  assert.deepEqual(errors, ['Task page needs a "## Check that it works" section: start/first.mdx']);
+  page(root, "start/first.mdx", '"Run a first request."', WORKS);
+  assert.deepEqual(validateReleaseGate(root), []);
+});
+
+test("release gate exempts top-level and reference pages", (t) => {
+  const root = fixture(t);
+  page(root, "start/ref.mdx", '"List the tools."\npageType: reference');
+  page(root, "product-guide/policy.mdx", '"Explain limits."\nkind: policy');
+  assert.equal(isTaskPage("index.mdx", ""), false);
+  assert.deepEqual(validateReleaseGate(root), []);
+});
+
+test("release gate baseline lets known pages pass and forces it to shrink", (t) => {
+  const root = fixture(t);
+  page(root, "start/old.mdx", '"Run an old request."');
+  assert.deepEqual(validateReleaseGate(root, { missingHeading: ["start/old.mdx"] }), []);
+  page(root, "start/old.mdx", '"Run an old request."', WORKS);
+  assert.deepEqual(validateReleaseGate(root, { missingHeading: ["start/old.mdx"] }), [
+    'Remove start/old.mdx from gate-baseline.json: it has "## Check that it works".',
+  ]);
+  assert.ok(
+    validateReleaseGate(root, { missingHeading: ["start/gone.mdx", "start/old.mdx"] }).some((e) =>
+      e.includes("does not exist"),
+    ),
+  );
+  assert.ok(
+    validateReleaseGate(root, { missingHeading: ["start/old.mdx", "start/gone.mdx"] }).some((e) =>
+      e.includes("sorted"),
+    ),
+  );
+});
+
+test("release gate wants one-sentence descriptions", (t) => {
+  const root = fixture(t);
+  page(root, "start/two.mdx", '"Do one thing. Then do another."', WORKS);
+  page(root, "start/block.mdx", ">", WORKS);
+  page(root, "start/ok.mdx", '"Connect Gina, then run a first request."', WORKS);
+  const errors = validateReleaseGate(root);
+  assert.deepEqual(errors, [
+    "Description must be one sentence on one line: start/block.mdx",
+    "Description must be one sentence on one line: start/two.mdx",
+  ]);
+});
+
+test("release gate rejects hardcoded skill counts outside the allowlist", (t) => {
+  const root = fixture(t);
+  page(
+    root,
+    "start/count.mdx",
+    '"Add the skills."',
+    WORKS + "\nThe plugin ships four research skills.\n",
+  );
+  page(
+    root,
+    "start/list.mdx",
+    '"Add the skills."',
+    WORKS + "\nUse one of the skills. Install 2 skills.\n",
+  );
+  page(root, "start/fence.mdx", '"Add the skills."', WORKS + "\n```\nfour skills\n```\n");
+  const errors = validateReleaseGate(root);
+  assert.equal(errors.length, 2);
+  assert.ok(errors[0].includes("start/count.mdx") && errors[0].includes("four research skills"));
+  assert.ok(errors[1].includes("start/list.mdx") && errors[1].includes("2 skills"));
+  assert.deepEqual(
+    validateReleaseGate(root, { skillCounts: ["start/count.mdx", "start/list.mdx"] }),
+    [],
+  );
+  assert.ok(
+    validateReleaseGate(root, {
+      skillCounts: ["start/count.mdx", "start/fence.mdx", "start/list.mdx"],
+    }).some((e) => e.includes("Remove start/fence.mdx")),
+  );
 });
 
 test("LP contract gate detects inventory and validated-example drift", async (t) => {
