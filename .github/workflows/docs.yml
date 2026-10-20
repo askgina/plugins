@@ -111,9 +111,9 @@ jobs:
             };
 
             let navGroups = [];
-            if (fs.existsSync('docs/mint.json')) {
-              const mint = JSON.parse(fs.readFileSync('docs/mint.json', 'utf8'));
-              navGroups = (mint.navigation ?? [])
+            if (fs.existsSync('docs/docs.json')) {
+              const mint = JSON.parse(fs.readFileSync('docs/docs.json', 'utf8'));
+              navGroups = (mint.navigation?.groups ?? [])
                 .filter((group) =>
                   collectPagesFromEntries(group.pages).some((page) =>
                     changedDocsPages.includes(page)
@@ -122,7 +122,7 @@ jobs:
                 .map((group) => group.group);
             }
 
-            const mintChanged = changedPaths.includes('docs/mint.json');
+            const mintChanged = changedPaths.includes('docs/docs.json');
             const bodyLines = [
               marker,
               '### Docs Preview',

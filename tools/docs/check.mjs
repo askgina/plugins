@@ -51,10 +51,10 @@ export function linksIn(source) {
 export function validateDocs(root) {
   const errors = [];
   const external = new Set();
-  const cfg = JSON.parse(fs.readFileSync(path.join(root, "mint.json"), "utf8"));
-  const pages = navPages(cfg.navigation);
-  if (cfg.tabs?.length) errors.push("Topic tabs must not split the sidebar.");
-  if (cfg.topbarLinks?.length || cfg.topbarCtaButton?.name !== "Open Gina")
+  const cfg = JSON.parse(fs.readFileSync(path.join(root, "docs.json"), "utf8"));
+  const pages = navPages(cfg.navigation?.groups);
+  if (cfg.navigation?.tabs?.length) errors.push("Topic tabs must not split the sidebar.");
+  if (cfg.navbar?.links?.length || cfg.navbar?.primary?.label !== "Open Gina")
     errors.push("Header must have one Open Gina action.");
   const seen = new Set();
   for (const route of pages) {
@@ -264,6 +264,15 @@ export function validateGina(root) {
     ),
   ])
     if (!robots.includes(rule)) errors.push(`Missing crawler policy: ${rule}`);
+  // Search indexing stays on for navigation pages, matching `search=yes` in robots.txt.
+  const config = JSON.parse(fs.readFileSync(path.join(root, "docs.json"), "utf8"));
+  if (!config.description?.trim()) errors.push("docs.json needs a site description.");
+  if (config.seo?.indexing !== "navigable")
+    errors.push('docs.json seo.indexing must be "navigable".');
+  if (/noindex/i.test(config.seo?.metatags?.robots ?? ""))
+    errors.push("docs.json must not set a site-wide noindex robots tag.");
+  if (config.seo?.metatags?.["twitter:card"] !== "summary_large_image")
+    errors.push("docs.json needs the summary_large_image twitter card.");
   return errors;
 }
 
