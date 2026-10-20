@@ -18,10 +18,10 @@ function fixture(t, options = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "gina-docs-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   fs.writeFileSync(
-    path.join(root, "mint.json"),
+    path.join(root, "docs.json"),
     JSON.stringify({
-      topbarCtaButton: { name: "Open Gina" },
-      navigation: [{ group: "Start", pages: ["index"] }],
+      navbar: { primary: { type: "button", label: "Open Gina", href: "https://askgina.ai" } },
+      navigation: { groups: [{ group: "Start", pages: ["index"] }] },
       ...options,
     }),
   );
@@ -53,7 +53,7 @@ test("requires an index for directories and rejects path traversal", (t) => {
 });
 test("catches duplicate nested navigation and published redirect sources", (t) => {
   const root = fixture(t, {
-    navigation: [{ group: "A", pages: ["index", { group: "B", pages: ["index"] }] }],
+    navigation: { groups: [{ group: "A", pages: ["index", { group: "B", pages: ["index"] }] }] },
     redirects: [{ source: "/index", destination: "/absent" }],
   });
   const errors = validateDocs(root).errors;
