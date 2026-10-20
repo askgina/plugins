@@ -18,3 +18,9 @@ Research access cannot open or close a position, change leverage, cancel orders,
 _Perps positions in ChatGPT dark mode, captured September 7, 2026. Account values are shown as captured. Liquidation is marked unavailable, and the host displays a CSP off badge._
 
 Start with [Gina Read](/mcp-access/gina-read) and [connect your assistant](/connect/index). See [Plugins and skills](/agents/plugins-and-skills) for the canonical instructions.
+
+## Check that it works
+
+Ask **"Use Gina to show my Hyperliquid positions."**
+
+Expected: a call to `getHyperliquidPositions` (the host may add a prefix). The result lists each position with size, entry price and unrealized P&L, or says you have none. It cannot open or close a position.

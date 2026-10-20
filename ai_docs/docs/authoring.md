@@ -2,6 +2,8 @@
 
 The public Mintlify source is `docs/`. Track changes in [askgina/plugins issues](https://github.com/askgina/plugins/issues); this overhaul is [#42](https://github.com/askgina/plugins/issues/42). Internal research, verification evidence, templates, and inventories belong in `ai_docs/`.
 
+For a user-facing feature release, follow the [release docs checklist](../release-docs-checklist.md). Its gate also requires a one-sentence `description` on every page, no hardcoded skill counts, and a `## Check that it works` section on every task page.
+
 ## Write for the task
 
 Lead with what the reader can accomplish. Explain Gina before its protocols. Use one primary purpose per page: a guided tutorial, task instructions, conceptual explanation, or factual reference. Keep this classification editorial; do not add another navigation layer.
@@ -13,7 +15,7 @@ Use sentence-case headings and actual UI labels. Define MCP, plugin, skill, and 
 - Check tool names against `packages/contracts/src/index.ts` for Gina Read and the current server registry for each write venue. Do not infer write tools from the research plugin.
 - Check host setup against primary host documentation. Record evidence in `ai_docs/docs-host-verification.md`. Source adapters do not prove marketplace approval. Mark unverified availability and authenticated tests explicitly.
 - Store installation instructions once per client or venue; link quickstarts to them.
-- Preserve product-guide routes and existing frontmatter. The chatbot's Docs Agent consumes every product-guide page listed in `tools/docs/check.mjs`, with reciprocal `relatedSlugs` and a 24,000-character corpus cap. A new product-guide page needs the corpus frontmatter, an H1 matching its title, a reciprocal `relatedSlugs` entry, and a matching chatbot `lib/docs/corpus.ts` entry before it reaches the Docs Agent.
+- Preserve product-guide routes and existing frontmatter. The chatbot's Docs Agent consumes every product-guide page listed in `tools/docs/check.mjs`, with reciprocal `relatedSlugs` and a 28,000-character corpus cap. A new product-guide page needs the corpus frontmatter, an H1 matching its title, a reciprocal `relatedSlugs` entry, and a matching chatbot `lib/docs/corpus.ts` entry before it reaches the Docs Agent.
 - Do not call a proposed flow “tested” until it was run. Keep UI-source verification separate from authenticated end-to-end verification.
 
 ## Screenshots
@@ -75,4 +77,4 @@ Begin with the task or capability. For a guide, list prerequisites, exact steps,
 
 ## Chatbot corpus compatibility
 
-Every corpus page listed in `tools/docs/check.mjs` requires a source H1 matching frontmatter and an exact set of seven metadata keys. Included pages must be plain Markdown, and the assembled included corpus must stay under 24,000 characters. Use Markdown image syntax and text captions in those pages. `docs/style.css` hides the redundant source H1 in the web rendering because Mintlify already renders the page title. Recheck the selector when upgrading Mintlify.
+Every corpus page listed in `tools/docs/check.mjs` requires a source H1 matching frontmatter and an exact set of seven metadata keys. Included pages must be plain Markdown, and the assembled included corpus must stay under 28,000 characters. Use Markdown image syntax and text captions in those pages. `docs/style.css` hides the redundant source H1 in the web rendering because Mintlify already renders the page title. Recheck the selector when upgrading Mintlify.
