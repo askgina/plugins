@@ -2,9 +2,9 @@
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { createHash } from "node:crypto";
 import { Effect, FileSystem, Layer, Schema } from "effect";
 import { originalCanonicalRuns } from "../apps/evals/src/canonical/canonical";
+import { sha256Hex as hash } from "../packages/evals/src/canonical-json";
 import {
   type GradingRevisionEntry,
   PERPS_GRADING_POLICY,
@@ -42,7 +42,6 @@ const sourcePaths = [
 ];
 const json = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Unknown));
 const object = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown));
-const hash = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 // This receipt audits retained historical transcripts. Later campaigns apply
 // the price policy during execution and publish their own evidence.
 const campaigns = new Set([

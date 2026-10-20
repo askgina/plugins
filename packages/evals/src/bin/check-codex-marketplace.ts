@@ -874,7 +874,7 @@ esac
         ]).pipe(Effect.ignore);
       });
       const cleanup = removeRepositoryCredentials.pipe(
-        Effect.flatMap(() => cleanupCommands),
+        Effect.andThen(cleanupCommands),
         Effect.ignore,
       );
 

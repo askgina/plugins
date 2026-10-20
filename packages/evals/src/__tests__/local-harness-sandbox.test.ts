@@ -41,10 +41,8 @@ const openSession = (provider: HarnessV1SandboxProvider) =>
       try: () => provider.createSession(),
       catch: (error) => fail("createSession failed", error),
     }).pipe(
-      Effect.flatMap((session) =>
-        isLocalSession(session)
-          ? Effect.succeed(session)
-          : Effect.fail(fail("local sandbox session did not expose layout paths")),
+      Effect.filterOrFail(isLocalSession, () =>
+        fail("local sandbox session did not expose layout paths"),
       ),
     ),
     // `destroy` is idempotent (`destroyPromise ??=`), so a scope-close

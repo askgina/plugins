@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { listCatalogToolNames } from "@askgina/contracts";
 import { assert, describe, it } from "@effect/vitest";
@@ -23,6 +21,7 @@ import {
   runCodexCliPluginEvalTrial,
 } from "../src/codex-cli";
 import { collectBoundedUtf8Output } from "../src/bounded-output";
+import { sha256Hex } from "../src/canonical-json";
 import type { PluginEvalCase } from "../src/contracts";
 
 const ASK_GINA_SKILL_PATH =
@@ -314,7 +313,7 @@ describe("Codex CLI trial adapter", () => {
         yield* fs.chmod(executablePath, 0o755);
         const opened = yield* openAttestedCodexExecutable({
           executablePath,
-          expectedSha256: createHash("sha256").update(trustedBytes).digest("hex"),
+          expectedSha256: sha256Hex(trustedBytes),
         });
 
         yield* fs.writeFile(executablePath, substituteBytes);
@@ -352,7 +351,7 @@ describe("Codex CLI trial adapter", () => {
         yield* fs.chmod(trustedPath, 0o755);
         const attested = yield* attestCodexExecutable({
           executablePath: trustedPath,
-          expectedSha256: createHash("sha256").update(trustedBytes).digest("hex"),
+          expectedSha256: sha256Hex(trustedBytes),
         });
         yield* fs.writeFileString(
           forgedPath,
@@ -386,7 +385,7 @@ describe("Codex CLI trial adapter", () => {
         const result = yield* Effect.result(
           openAttestedCodexExecutable({
             executablePath,
-            expectedSha256: createHash("sha256").update(bytes).digest("hex"),
+            expectedSha256: sha256Hex(bytes),
           }),
         );
 
