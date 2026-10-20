@@ -57,7 +57,7 @@
       "id": "lp-pool-scan",
       "package": "ask-gina-spot",
       "path": "plugins/ask-gina-spot/skills/lp-pool-scan",
-      "description": "Use when asked to scan, rank or monitor liquidity pools (Uniswap v2/v3/v4 on Robinhood Chain, Raydium on Solana, plus Orca and Meteora with --dex-scope all) for fee APR, impermanent loss, depth/slippage and risk flags, from public data only.",
+      "description": "Use when asked to scan, rank or monitor liquidity pools (Uniswap v2/v3/v4 on Robinhood Chain, Uniswap v3/v4 on Base and Ethereum, Raydium on Solana, plus Orca and Meteora with --dex-scope all) for fee APR, impermanent loss, depth/slippage and risk flags, from public data only.",
       "mcpEndpoint": "spot",
       "mcpUrl": "https://askgina.ai/ai/spot/mcp",
       "mcpServed": false,
