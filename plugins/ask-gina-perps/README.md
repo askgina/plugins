@@ -53,15 +53,23 @@ the same `https://askgina.ai/ai/perps/mcp` endpoint.
 
 ## What it can do
 
-| Group     | Tools                                                                                            |
-| --------- | ------------------------------------------------------------------------------------------------ |
-| Reads     | Account, positions, open orders, portfolio, markets, prices, trades, candles, order book, health |
-| Execution | Place and stop orders, cancel and modify orders, leverage, deposit, withdraw                     |
-| Sandbox   | `bash`, for scripts, SQL over captured data and composed workflows                               |
-| Render    | Charts, positions, account overview, markets, open orders, performance                           |
+| Group     | Tools                                                                                                      |
+| --------- | ---------------------------------------------------------------------------------------------------------- |
+| Reads     | Account, positions, open orders, portfolio, markets, prices, trades, candles, order book, health           |
+| Execution | Place and stop orders, cancel and modify orders, leverage, isolated margin, deposit, withdraw, HIP-3 funds |
+| Sandbox   | `bash`, for scripts, SQL over captured data and composed workflows                                         |
+| Render    | Charts, positions, account overview, markets, open orders, performance                                     |
 
+The server lists 34 tools: `bash`, 26 native tools and 7 `perps.render*` tools.
 The [native tools page](https://docs.askgina.ai/perps-mcp/tools) lists every
-tool and its annotation class.
+native tool and its annotation class.
+
+Only `createHyperliquidTable`, `executeSqlQuery` and `captureAnalysisDataset`
+are `bash`-only, because they use sandbox scratch tables.
+`previewHyperliquidOrderCost` returns a typed `next` suggestion for
+`placeHyperliquidOrder` when the order can fill, and `fetchHyperliquidCandles`
+returns one for `perps.renderChart`. Your client shows each suggested call and
+waits for your approval.
 
 Try:
 
@@ -71,10 +79,17 @@ Try:
 
 ## Money-moving actions
 
-Order, leverage, deposit and withdraw tools are marked destructive. They act at
-once and cannot always be undone. Your agent must show you the exact order and
-wait for your approval in chat before it calls one. Leveraged positions can be
-liquidated and lose more than a spot position would.
+Order, leverage, isolated margin, deposit, withdraw and HIP-3 funding tools are
+marked destructive (`readOnlyHint: false`, `destructiveHint: true`,
+`openWorldHint: true`). They act at once and cannot always be undone. Your agent
+must show you the exact order and wait for your approval in chat before it calls
+one. Leveraged positions can be liquidated and lose more than a spot position
+would.
+
+`updateHyperliquidIsolatedMargin`, `fundHIP3Dex` and `returnHIP3DexFunds` are
+native tools only. `host-tools` and `ts-exec` inside `bash` refuse them with
+`HOST_TOOL_LIVE_CONFIRMATION_REQUIRED`, so your MCP client can prompt you before
+the call runs.
 
 ## Privacy, terms, and support
 
