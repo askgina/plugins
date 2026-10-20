@@ -3,7 +3,8 @@
 **What this is:** the Ask Gina Predictions MCP server for agents. Use it to
 search Polymarket markets, read order books, positions and order history and,
 with your approval, to place trades, manage orders, redeem winning positions,
-and top up or withdraw your prediction balance from your Gina wallet. It can
+split or merge positions, and top up or withdraw your prediction balance from
+your Gina wallet. It can
 move real funds, so review every action before you approve it.
 
 - Production MCP: `https://askgina.ai/ai/predictions/mcp`
@@ -56,7 +57,7 @@ the same `https://askgina.ai/ai/predictions/mcp` endpoint.
 | Group      | Tools                                                                         |
 | ---------- | ----------------------------------------------------------------------------- |
 | Reads      | Market search, expiring markets, order book, series, positions, order history |
-| Execution  | Trade, manage orders, redeem, top up and withdraw your prediction balance     |
+| Execution  | Trade, manage orders, redeem, split and merge positions, top up and withdraw  |
 | Scheduling | Create, list, toggle, update and delete scheduled prompts                     |
 | Context    | Cross-chain portfolio, wallet addresses, web search and URL fetch             |
 | Sandbox    | `bash`, for scripts, SQL over fetched market data and composed workflows      |
@@ -72,7 +73,7 @@ Try:
 
 ## Money-moving actions
 
-Trade, order-management, redeem, top-up and withdraw tools are marked
+Trade, order-management, redeem, split-and-merge, top-up and withdraw tools are marked
 destructive. They act at once and cannot always be undone. Your agent must show
 you the exact action and wait for your approval in chat before it calls one.
 Prediction markets can resolve against you, and you can lose the whole stake.

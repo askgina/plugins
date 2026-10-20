@@ -314,6 +314,11 @@
           "purpose": "Redeem winning positions of resolved markets"
         },
         {
+          "name": "splitMergePredictionPosition",
+          "class": "execute",
+          "purpose": "Split pUSD into YES and NO sets, or merge sets back into pUSD, on one Polymarket market"
+        },
+        {
           "name": "topUpPredictionsBalance",
           "class": "execute",
           "purpose": "Top up your Predictions balance from a source asset"

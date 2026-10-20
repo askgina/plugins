@@ -103,7 +103,7 @@ test("the committed catalog lists bash and every execute tool as destructive", (
   for (const entry of Object.values(value.venues))
     for (const tool of entry.tools)
       if (
-        /^(place|cancel|modify|adjust|deposit|trade|manage|redeem|topUp|withdraw|hyperliquidWithdraw)/.test(
+        /^(place|cancel|modify|adjust|deposit|trade|manage|redeem|split|topUp|withdraw|hyperliquidWithdraw)/.test(
           tool.name,
         )
       )
