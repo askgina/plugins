@@ -46,10 +46,10 @@ Then inspect the sandbox and host tools:
 
 ## 4. Get a Perps Price
 
-Run a live Hyperliquid price lookup:
+Ask your assistant to call `getHyperliquidPrice`, or call the native tool with:
 
 ```json
-{ "command": "host-tools getHyperliquidPrice '{\"asset\":\"BTC\"}'" }
+{ "coin": "BTC" }
 ```
 
 You should see JSON output with current BTC perpetual futures price data.

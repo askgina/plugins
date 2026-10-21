@@ -29,12 +29,6 @@ Choose the venue you need:
 
 A direct request to send or swap can authorize execution. If you only want a proposal, say **“prepare”**, **“quote”**, or **“do not execute.”** Preparation and settlement are different states: a returned transaction hash can still be pending.
 
-## Perps tool surface
-
-Perps MCP lists 34 tools: `bash`, 26 native tools and 7 `perps.render*` tools. Every Perps order, leverage, isolated margin, deposit, withdraw and HIP-3 funding tool is native and annotated `readOnlyHint: false`, `destructiveHint: true`, `openWorldHint: true`, so your client can prompt before each call.
-
-Only `createHyperliquidTable`, `executeSqlQuery` and `captureAnalysisDataset` are `bash`-only. `updateHyperliquidIsolatedMargin`, `fundHIP3Dex` and `returnHIP3DexFunds` are native tools that `host-tools` and `ts-exec` inside `bash` refuse, so the confirmation always happens in your MCP client. `previewHyperliquidOrderCost` and `fetchHyperliquidCandles` return typed `next` suggestions for `placeHyperliquidOrder` and `perps.renderChart`.
-
 ## References
 
 - [Spot tools and execution behavior](/spot-mcp/features)

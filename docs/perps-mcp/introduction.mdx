@@ -45,16 +45,10 @@ Perps MCP is default enabled for authenticated Gina users. Runtime access is con
 
 ## Check that it works
 
-After you connect, call `bash` with:
+After you connect, ask your assistant to call `getHyperliquidPrice`, or call the native tool with:
 
 ```json
-{ "command": "echo ok" }
+{ "coin": "BTC" }
 ```
 
-Expected: `ok`. Then call `bash` with:
-
-```json
-{ "command": "host-tools getHyperliquidPrice '{\"asset\":\"BTC\"}'" }
-```
-
-Expected: JSON with the current BTC perpetual futures price under `data.payload`. Both calls only read data.
+Expected: JSON with the current BTC perpetual futures price under `data.payload`. The call only reads data. To check the sandbox too, call `bash` with `{ "command": "echo ok" }` and expect `ok`.

@@ -60,7 +60,7 @@ the same `https://askgina.ai/ai/perps/mcp` endpoint.
 | Sandbox   | `bash`, for scripts, SQL over captured data and composed workflows                                         |
 | Render    | Charts, positions, account overview, markets, open orders, performance                                     |
 
-The server lists 34 tools: `bash`, 26 native tools and 7 `perps.render*` tools.
+The server exposes native Perps tools, `perps.render*` tools and `bash`.
 The [native tools page](https://docs.askgina.ai/perps-mcp/tools) lists every
 native tool and its annotation class.
 

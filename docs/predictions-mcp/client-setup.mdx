@@ -55,10 +55,10 @@ Next: run the [read-only connection checks](/predictions-mcp/quick-start) before
 
 ## Check that it works
 
-Restart the client and complete Gina OAuth. In Claude Code, `/mcp` should list `predictions` as connected, and `bash` should appear in the tool list. Call `bash` with:
+Restart the client and complete Gina OAuth. In Claude Code, `/mcp` should list `predictions` as connected, and `bash` and the native tools should appear in the tool list. Call the native `searchPredictionMarkets` tool with:
 
 ```json
-{ "command": "host-tools searchPredictionMarkets '{\"query\":\"NBA\"}'" }
+{ "query": "NBA" }
 ```
 
-Expected: JSON with live Polymarket market rows under `data.payload`. This only reads data. If `bash` is missing, remove the server, add it again and reconnect.
+Expected: JSON with live Polymarket market rows under `data.payload`. This only reads data. If the tools are missing, remove the server, add it again and reconnect.

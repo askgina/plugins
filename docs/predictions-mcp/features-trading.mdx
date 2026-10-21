@@ -55,14 +55,16 @@ If you buy 100 Yes shares at $0.40 each:
 
 ## Check that it works
 
-Check the trade tool without placing a trade. Call `bash` with:
+Check the trade tools without placing a trade. Call the native `splitMergePredictionPosition` tool without `authorized`, using a `conditionId` from `getPolymarketPositions` or `resolvePredictionMarketExact`:
 
 ```json
-{ "command": "host-tools schema tradePredictionMarket" }
+{ "operation": "split", "conditionId": "0x...", "amount": "1" }
 ```
 
-Expected: the input contract for `tradePredictionMarket`, and no order. Placing a trade needs an explicit instruction from you. Prices use real USDC on Polygon.
+Expected: a preview that sends nothing and carries a `next` suggestion for the confirmed split. A native `tradePredictionMarket` call places an order only after you give an explicit instruction. Prices use real USDC on Polygon.
 
 ## Split previews
 
 `splitMergePredictionPosition` previews a split before it moves funds. The preview returns a typed `next` suggestion: the same split with `authorized: true`. You can edit the amount before you approve it. The server never runs the suggestion. Merges need no confirmation.
+
+If the market has already resolved, the tool refuses the split with `POLYMARKET_MARKET_RESOLVED`. The result then carries a typed `next` suggestion for `redeemPredictionMarket` on that `conditionId`.

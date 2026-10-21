@@ -356,7 +356,7 @@
           "purpose": "Split pUSD into YES and NO sets, or merge sets back into pUSD, on one Polymarket market",
           "next": {
             "tool": "splitMergePredictionPosition",
-            "when": "A split preview needs confirmation. It suggests the same split with `authorized: true`, and you can edit the amount."
+            "when": "A split preview needs confirmation. It suggests the same split with `authorized: true`, and you can edit the amount. If the market has already resolved, it suggests `redeemPredictionMarket` for that condition id instead."
           }
         },
         {
