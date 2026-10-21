@@ -6,26 +6,27 @@ description: "Complete reference of Perps MCP capabilities with example prompts 
 Complete reference of Perps MCP capabilities. You can prompt naturally, or ask your client to call the native tool shown.
 
 <Info>
-Call the [native Perps tools](/perps-mcp/tools) directly for one-off reads, previews and orders. Use `host-tools --brief` and `host-tools schema <toolName>` inside `bash` when you compose scripts or SQL workflows.
+  Call the [native Perps tools](/perps-mcp/tools) directly for reads, previews and orders. Use
+  `bash` only for scripts, sandbox tables and SQL.
 </Info>
 
-| Feature               | What It Does                                                | Example Prompts                                             | Native Tool                                                                                                          |
-| --------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| **Account State**     | View account, margin, positions, open orders, and portfolio | `"show my perps positions"` `"what open orders do I have?"` | `getHyperliquidPositions` with `{}`                                                                                  |
-| **Account Health**    | Snapshot authenticated account exposure and margin          | `"check my perps account health"`                           | `getHyperliquidAccountHealth` with `{"includeExitEstimates":true}`                                                   |
-| **Markets**           | List canonical Hyperliquid markets and asset metadata       | `"show Hyperliquid markets"` `"what is BTC funding?"`       | `getHyperliquidMarkets` with `{}`                                                                                    |
-| **Market Radar**      | Rank markets by activity and compare retained samples       | `"radar for active perp markets"`                           | `fetchHyperliquidMarketRadar` with `{"limit":10}`                                                                    |
-| **Prices**            | Fetch one or many live perps prices                         | `"BTC perps price"` `"price BTC ETH SOL"`                   | `getHyperliquidPrice` with `{"coin":"BTC"}`                                                                          |
-| **HIP-3 Discovery**   | Search HIP-3 markets and list builder-deployed DEXes        | `"search HIP-3 markets for CL"` `"list HIP-3 DEXes"`        | `getHyperliquidMarkets` with `{"query":"CL"}`, `getHyperliquidPerpDexes` with `{}`                                   |
-| **HIP-3 Prices**      | Read venue-scoped HIP-3 prices                              | `"price CL on xyz"`                                         | `getHyperliquidPrice` with `{"coin":"CL","providerContext":{"providerId":"hip3:xyz"}}`                               |
-| **Orders**            | Place market or limit orders                                | `"place a BTC limit order"` `"open a small ETH short"`      | `placeHyperliquidOrder` with `{"coin":"BTC","side":"buy","orderType":"market","size":"0.01"}`                        |
-| **Stops**             | Place stop-loss or take-profit style trigger orders         | `"set a BTC stop loss"`                                     | `placeHyperliquidStopOrder` with `{"coin":"BTC","side":"sell","triggerPrice":95000,"size":"0.01","reduceOnly":true}` |
-| **Order Management**  | Cancel or modify open orders                                | `"cancel my open ETH order"` `"modify that limit order"`    | `cancelHyperliquidOrder` with `{"coin":"ETH","orderId":123456}`, `modifyHyperliquidOrder`                            |
-| **Leverage & Margin** | Adjust leverage and isolated margin                         | `"set BTC leverage to 5x"` `"add isolated margin"`          | `adjustHyperliquidLeverage` with `{"coin":"BTC","leverage":5}`, `updateHyperliquidIsolatedMargin`                    |
-| **Funding**           | Deposit or withdraw Hyperliquid USDC                        | `"deposit to Hyperliquid"` `"withdraw from Hyperliquid"`    | `depositToHyperliquid`, `hyperliquidWithdraw`                                                                        |
-| **HIP-3 Funds**       | Move collateral into or out of a selected HIP-3 DEX         | `"fund xyz HIP-3 with 100 USDC"`                            | `fundHIP3Dex` with `{"providerContext":{"providerId":"hip3:xyz"},"amount":"100"}`, `returnHIP3DexFunds`              |
-| **Data Fetching**     | Fetch trades, candles, and order books into sandbox tables  | `"fetch BTC candles into SQL"`                              | `fetchHyperliquidCandles` with `{"coin":"BTC","interval":"1h"}`                                                      |
-| **SQL Analysis**      | Query fetched perps data with DuckDB/SQLite-style workflows | `"query large BTC trades"`                                  | `sql query "SELECT * FROM <table> LIMIT 10"` inside `bash`                                                           |
+| Feature               | What It Does                                                | Example Prompts                                             | Native Tool                                                                                                            |
+| --------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Account State**     | View account, margin, positions, open orders, and portfolio | `"show my perps positions"` `"what open orders do I have?"` | `getHyperliquidPositions` with `{}`                                                                                    |
+| **Account Health**    | Snapshot authenticated account exposure and margin          | `"check my perps account health"`                           | `getHyperliquidAccountHealth` with `{"includeExitEstimates":true}`                                                     |
+| **Markets**           | List canonical Hyperliquid markets and asset metadata       | `"show Hyperliquid markets"` `"what is BTC funding?"`       | `getHyperliquidMarkets` with `{}`                                                                                      |
+| **Market Radar**      | Rank markets by activity and compare retained samples       | `"radar for active perp markets"`                           | `fetchHyperliquidMarketRadar` with `{"limit":10}`                                                                      |
+| **Prices**            | Fetch one or many live perps prices                         | `"BTC perps price"` `"price BTC ETH SOL"`                   | `getHyperliquidPrice` with `{"coin":"BTC"}`                                                                            |
+| **HIP-3 Discovery**   | Search HIP-3 markets and list builder-deployed DEXes        | `"search HIP-3 markets for CL"` `"list HIP-3 DEXes"`        | `getHyperliquidMarkets` with `{"query":"CL"}`, `getHyperliquidPerpDexes` with `{}`                                     |
+| **HIP-3 Prices**      | Read venue-scoped HIP-3 prices                              | `"price CL on xyz"`                                         | `getHyperliquidPrice` with `{"coin":"CL","providerContext":{"providerId":"hip3:xyz"}}`                                 |
+| **Orders**            | Place market or limit orders                                | `"place a BTC limit order"` `"open a small ETH short"`      | `placeHyperliquidOrder` with `{"coin":"BTC","side":"buy","orderType":"market","size":"0.01"}`                          |
+| **Stops**             | Place stop-loss or take-profit style trigger orders         | `"set a BTC stop loss"`                                     | `placeHyperliquidStopOrder` with `{"coin":"BTC","side":"sell","triggerPrice":95000,"size":"0.01","reduceOnly":true}`   |
+| **Order Management**  | Cancel or modify open orders                                | `"cancel my open ETH order"` `"modify that limit order"`    | `cancelHyperliquidOrder` with `{"coin":"ETH","orderId":123456}`, `modifyHyperliquidOrder`                              |
+| **Leverage & Margin** | Adjust leverage and isolated margin                         | `"set BTC leverage to 5x"` `"add isolated margin"`          | `adjustHyperliquidLeverage` with `{"coin":"BTC","leverage":5}`, `updateHyperliquidIsolatedMargin`                      |
+| **Funding**           | Deposit or withdraw Hyperliquid USDC                        | `"deposit to Hyperliquid"` `"withdraw from Hyperliquid"`    | `depositToHyperliquid`, `hyperliquidWithdraw`                                                                          |
+| **HIP-3 Funds**       | Move collateral into or out of a selected HIP-3 DEX         | `"fund xyz HIP-3 with 100 USDC"`                            | `fundHIP3Dex` with `{"providerContext":{"providerId":"hip3:xyz"},"amount":"100"}`, `returnHIP3DexFunds`                |
+| **Market Data**       | Fetch price candles, your trades and order book snapshots   | `"BTC 1h candles"` `"show the ETH order book"`              | `fetchHyperliquidCandles` with `{"coin":"BTC","interval":"1h"}`, `fetchHyperliquidTrades`, `fetchHyperliquidOrderBook` |
+| **SQL Analysis**      | Load perps data into a sandbox table and query it           | `"query large BTC trades"`                                  | `createHyperliquidTable`, then `sql query "SELECT * FROM <table> LIMIT 10"`, both inside `bash`                        |
 
 <Note>
   Account health and market radar require a separately authorized [Perps MCP
@@ -35,34 +36,26 @@ Call the [native Perps tools](/perps-mcp/tools) directly for one-off reads, prev
 
 ## Account health
 
-`perps.accountHealth` requires an authenticated account. It defaults to canonical Hyperliquid. Pass `providerContext` with `{"providerId":"hip3:xyz"}` for an enabled HIP-3 venue.
+`getHyperliquidAccountHealth` requires an authenticated account. It defaults to canonical Hyperliquid. Pass `providerContext` with `{"providerId":"hip3:xyz"}` for an enabled HIP-3 venue.
 
-The response includes at most 64 positions. Set `includeExitEstimates=true` for indicative exit estimates on at most eight positions, not fill guarantees. The tool does not assign a health score or calculate historical performance.
+Set `includeExitEstimates=true` for indicative exit estimates on a capped number of positions. They are not fill guarantees. The tool does not assign a health score or calculate historical performance.
 
 ## Market radar
 
-`perps.marketRadar` accepts `limit` from 1 to 50, defaulting to 10, and an optional `dex`, such as `dex=xyz`. Omit `dex` for canonical Hyperliquid.
+`fetchHyperliquidMarketRadar` accepts an optional `limit` (its input schema gives the range) and an optional `dex`, such as `{"dex":"xyz"}`. Omit `dex` for canonical Hyperliquid.
 
-Eligible markets rank by descending 24-hour traded volume, then open interest, then absolute 24-hour price change, with coin name breaking ties. This measures activity and exposure, not liquidity, depth, or executable size. Excluded-market details are capped at 100.
+Eligible markets rank by descending 24-hour traded volume, then open interest, then absolute 24-hour price change, with coin name breaking ties. This measures activity and exposure, not liquidity, depth, or executable size.
 
-Rank, volume, open-interest, and mark-price deltas compare with a shared sample for that venue, not the caller's previous request. Samples rotate no more often than every five minutes and expire after seven days. Rows without a prior entry are marked `firstSeen`.
+Rank, volume, open-interest, and mark-price deltas compare with a shared sample for that venue, not the caller's previous request. Samples rotate on a fixed minimum interval and expire after a retention window. Rows without a prior entry are marked `firstSeen`.
 
 Radar returns the complete JSON response inline or in an artifact. It does not automatically extract the rows into SQL tables.
 
-## Discovery Flow
+## Finding the right tool
 
-Use this sequence when you are unsure which tool to call:
-
-```json
-{ "command": "capabilities --json" }
-```
+Your client's tool list shows every native tool with its input schema, and [Native tools](/perps-mcp/tools) groups them by what they do. For a `bash` script, list the host tools the sandbox can call:
 
 ```json
 { "command": "host-tools --brief" }
-```
-
-```json
-{ "command": "host-tools schema getHyperliquidPrice" }
 ```
 
 ## HIP-3 Provider Context
@@ -78,3 +71,13 @@ For HIP-3 tools, prefer provider context over legacy venue-only inputs:
 ```
 
 This keeps pricing, orders, margin, funding, and SQL analysis scoped to the selected HIP-3 provider.
+
+## Check that it works
+
+Call the native `getHyperliquidPrice` tool with:
+
+```json
+{ "coin": "BTC" }
+```
+
+Expected: JSON with the live BTC perpetual price. Or ask "BTC perps price" and check that the assistant calls `getHyperliquidPrice` instead of answering from memory.
