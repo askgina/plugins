@@ -62,11 +62,12 @@ the same `https://askgina.ai/ai/predictions/mcp` endpoint.
 | Context    | Cross-chain portfolio, wallet addresses, web search and URL fetch                                                                  |
 | Sandbox    | `bash`, for scripts, SQL over fetched market data and composed workflows                                                           |
 
-The server lists 26 tools: 25 native tools and `bash`. `fetchPolymarketData` and
+The server exposes native Predictions tools and `bash`. `fetchPolymarketData` and
 `fetchPolymarketHistory` fill sandbox SQL tables, so they work only inside `bash`.
 A `splitMergePredictionPosition` split preview suggests the same split with
-`authorized: true`, and `getPolymarketPositions` suggests `redeemPredictionMarket`
-for redeemable positions. The server never runs a suggestion. Your host asks first.
+`authorized: true`, or `redeemPredictionMarket` when the market has already resolved.
+`getPolymarketPositions` suggests `redeemPredictionMarket` for redeemable positions.
+The server never runs a suggestion. Your host asks first.
 
 The [native tools page](https://docs.askgina.ai/predictions-mcp/tools) lists
 every tool and its annotation class.

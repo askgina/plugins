@@ -24,7 +24,7 @@ Follow [Predictions client setup](/predictions-mcp/client-setup) to add the serv
 
   </Step>
   <Step title="Verify">
-    Once authenticated, `bash` and 25 native tools appear alongside your client's built-in tools. Try asking your AI assistant: *"What tools do you have from the predictions server?"*
+    Once authenticated, `bash` and the native prediction-market tools (listed on [Native tools](/predictions-mcp/tools)) appear alongside your client's built-in tools. Try asking your AI assistant: *"What tools do you have from the predictions server?"*
   </Step>
 </Steps>
 
@@ -40,13 +40,13 @@ You should see `ok` in the output. You're connected! 🎉
 
 ## 4. Search a Market
 
-Now try a real prediction market search. Call the native `searchPredictionMarkets` tool with `{"query":"NBA"}`, or call `bash` with:
+Now try a real prediction market search. Call the native `searchPredictionMarkets` tool with:
 
 ```json
-{ "command": "host-tools searchPredictionMarkets '{\"query\":\"NBA\"}'" }
+{ "query": "NBA" }
 ```
 
-You should see JSON output with live market data. Use `bash` for scripts, SQL over fetched data, and the `fetchPolymarketData` and `fetchPolymarketHistory` loaders, which have no native form.
+You should see JSON output with live market data. `bash` is for scripts, SQL over fetched data, and the `fetchPolymarketData` and `fetchPolymarketHistory` loaders, which have no native form.
 
 ## Troubleshooting
 

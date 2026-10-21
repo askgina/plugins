@@ -102,10 +102,10 @@ These host tools are not native tools. Sandbox-only tools run inside `bash` with
 
 These tools return a typed `next` list beside their result. Each entry names a tool and arguments your client can offer as a button. Your client still shows the call and waits for your approval before it runs.
 
-| Tool                           | Suggests                       | When                                                                                                                                     |
-| ------------------------------ | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `getPolymarketPositions`       | `redeemPredictionMarket`       | You hold redeemable winning positions. With one, it fills that position's condition and token ids. With several, it redeems all of them. |
-| `splitMergePredictionPosition` | `splitMergePredictionPosition` | A split preview needs confirmation. It suggests the same split with `authorized: true`, and you can edit the amount.                     |
+| Tool                           | Suggests                       | When                                                                                                                                                                                                                         |
+| ------------------------------ | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getPolymarketPositions`       | `redeemPredictionMarket`       | You hold redeemable winning positions. With one, it fills that position's condition and token ids. With several, it redeems all of them.                                                                                     |
+| `splitMergePredictionPosition` | `splitMergePredictionPosition` | A split preview needs confirmation. It suggests the same split with `authorized: true`, and you can edit the amount. If the market has already resolved, it suggests `redeemPredictionMarket` for that condition id instead. |
 
 ## Check that it works
 

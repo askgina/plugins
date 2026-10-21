@@ -33,8 +33,9 @@ description: "Verify your connection and fix common issues with Gina Perps MCP"
     <Check>Expected: JSON output including `getHyperliquidPrice` tool details</Check>
   </Step>
   <Step title="Fetch a price">
+    Call the native `getHyperliquidPrice` tool with `{"coin":"BTC"}`, or inside `bash`:
     ```json
-    { "command": "host-tools getHyperliquidPrice '{\"asset\":\"BTC\"}'" }
+    { "command": "host-tools getHyperliquidPrice '{\"coin\":\"BTC\"}'" }
     ```
     <Check>Expected: JSON output with live BTC perps price data</Check>
   </Step>
@@ -86,7 +87,7 @@ Check the schema before retrying:
 
 ### 5. Trading or Funding Is Not What You Intended
 
-Stop and inspect state before continuing:
+Stop and inspect state before continuing by calling the native `getHyperliquidPositions` and `getHyperliquidOpenOrders` tools (or inside `bash`):
 
 ```json
 { "command": "host-tools getHyperliquidPositions" }
