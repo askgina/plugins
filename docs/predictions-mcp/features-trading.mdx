@@ -62,3 +62,7 @@ Check the trade tool without placing a trade. Call `bash` with:
 ```
 
 Expected: the input contract for `tradePredictionMarket`, and no order. Placing a trade needs an explicit instruction from you. Prices use real USDC on Polygon.
+
+## Split previews
+
+`splitMergePredictionPosition` previews a split before it moves funds. The preview returns a typed `next` suggestion: the same split with `authorized: true`. You can edit the amount before you approve it. The server never runs the suggestion. Merges need no confirmation.

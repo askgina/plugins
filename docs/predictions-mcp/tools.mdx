@@ -25,17 +25,20 @@ Annotations are the server's own declaration. A client can use them to decide wh
 
 Reads live data from a market, blockchain or other provider. It changes nothing and can be repeated.
 
-| Tool                        | Use it for                                       |
-| --------------------------- | ------------------------------------------------ |
-| `searchPredictionMarkets`   | Search Polymarket markets                        |
-| `getExpiringMarkets`        | Markets that end soon                            |
-| `getPredictionOrderbook`    | Order book of one market                         |
-| `getSeriesMarket`           | The current or next market of a recurring series |
-| `getPolymarketPositions`    | Your open and redeemable positions               |
-| `getPolymarketOrderHistory` | Your order history                               |
-| `getCrosschainPortfolio`    | Your balances across chains                      |
-| `webSearch`                 | Search the web for context                       |
-| `fetchUrl`                  | Fetch a web page for context                     |
+| Tool                           | Use it for                                                                             |
+| ------------------------------ | -------------------------------------------------------------------------------------- |
+| `searchPredictionMarkets`      | Search Polymarket markets                                                              |
+| `getExpiringMarkets`           | Markets that end soon                                                                  |
+| `getPredictionSportsEvents`    | Sports events and their markets by league, team or date                                |
+| `getPredictionSubjectMarkets`  | Markets about one subject, such as a person, company or asset                          |
+| `resolvePredictionMarketExact` | One market and its outcome token ids from an exact slug, condition id, token id or URL |
+| `getPredictionOrderbook`       | Order book of one market                                                               |
+| `getSeriesMarket`              | The current or next market of a recurring series                                       |
+| `getPolymarketPositions`       | Your open and redeemable positions                                                     |
+| `getPolymarketOrderHistory`    | Your order history                                                                     |
+| `getCrosschainPortfolio`       | Your balances across chains                                                            |
+| `webSearch`                    | Search the web for context                                                             |
+| `fetchUrl`                     | Fetch a web page for context                                                           |
 
 ## Read, Gina account
 
@@ -94,6 +97,15 @@ These host tools are not native tools. Sandbox-only tools run inside `bash` with
 | ------------------------ | -------------------------------------------------------------------------------------------------- |
 | `fetchPolymarketData`    | Loads rows into sandbox SQL tables and returns a table handle, so it only makes sense inside bash. |
 | `fetchPolymarketHistory` | Loads rows into sandbox SQL tables and returns a table handle, so it only makes sense inside bash. |
+
+## Typed next steps
+
+These tools return a typed `next` list beside their result. Each entry names a tool and arguments your client can offer as a button. Your client still shows the call and waits for your approval before it runs.
+
+| Tool                           | Suggests                       | When                                                                                                                                     |
+| ------------------------------ | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `getPolymarketPositions`       | `redeemPredictionMarket`       | You hold redeemable winning positions. With one, it fills that position's condition and token ids. With several, it redeems all of them. |
+| `splitMergePredictionPosition` | `splitMergePredictionPosition` | A split preview needs confirmation. It suggests the same split with `authorized: true`, and you can edit the amount.                     |
 
 ## Check that it works
 

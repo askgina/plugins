@@ -290,6 +290,21 @@
           "purpose": "Markets that end soon"
         },
         {
+          "name": "getPredictionSportsEvents",
+          "class": "read-external",
+          "purpose": "Sports events and their markets by league, team or date"
+        },
+        {
+          "name": "getPredictionSubjectMarkets",
+          "class": "read-external",
+          "purpose": "Markets about one subject, such as a person, company or asset"
+        },
+        {
+          "name": "resolvePredictionMarketExact",
+          "class": "read-external",
+          "purpose": "One market and its outcome token ids from an exact slug, condition id, token id or URL"
+        },
+        {
           "name": "getPredictionOrderbook",
           "class": "read-external",
           "purpose": "Order book of one market"
@@ -302,7 +317,11 @@
         {
           "name": "getPolymarketPositions",
           "class": "read-external",
-          "purpose": "Your open and redeemable positions"
+          "purpose": "Your open and redeemable positions",
+          "next": {
+            "tool": "redeemPredictionMarket",
+            "when": "You hold redeemable winning positions. With one, it fills that position's condition and token ids. With several, it redeems all of them."
+          }
         },
         {
           "name": "getPolymarketOrderHistory",
@@ -334,7 +353,11 @@
         {
           "name": "splitMergePredictionPosition",
           "class": "execute",
-          "purpose": "Split pUSD into YES and NO sets, or merge sets back into pUSD, on one Polymarket market"
+          "purpose": "Split pUSD into YES and NO sets, or merge sets back into pUSD, on one Polymarket market",
+          "next": {
+            "tool": "splitMergePredictionPosition",
+            "when": "A split preview needs confirmation. It suggests the same split with `authorized: true`, and you can edit the amount."
+          }
         },
         {
           "name": "topUpPredictionsBalance",

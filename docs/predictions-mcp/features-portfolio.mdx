@@ -58,3 +58,5 @@ Call `bash` with:
 ```
 
 Expected: JSON with your open `positions` and a `summary` that has `totalPositions`, `totalValue`, `totalUnrealizedPnl` and `walletAddress`. A position with `isRedeemable: true` can be redeemed. The call only reads data.
+
+When positions are redeemable, the result carries a typed `next` suggestion for `redeemPredictionMarket`. With one redeemable position it fills that position's condition and token ids. With several, it suggests redeeming them all. Your client asks for your approval before it runs.

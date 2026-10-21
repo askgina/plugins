@@ -104,9 +104,17 @@ Discover markets that are about to resolve — great for finding last-minute opp
 "entertainment markets ending today"
 ```
 
+## Native discovery tools
+
+Three native tools cover lookups that a text search handles badly. All three are read only.
+
+- `getPredictionSportsEvents` lists sports events and their markets by league, team or date.
+- `getPredictionSubjectMarkets` lists markets about one subject, such as a person, company or asset.
+- `resolvePredictionMarketExact` resolves one market and its outcome token ids from an exact slug, condition id, token id or URL. Use it before a trade when you already hold an identifier.
+
 ## Check that it works
 
-Call `bash` with:
+Call the native `getExpiringMarkets` tool, or call `bash` with:
 
 ```json
 { "command": "host-tools getExpiringMarkets '{\"timeWindow\":\"today\",\"limit\":5}'" }
