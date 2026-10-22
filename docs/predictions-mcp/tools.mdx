@@ -12,14 +12,16 @@ Annotations are the server's own declaration. A client can use them to decide wh
 
 ## Annotation classes
 
-| Class                   | `readOnlyHint` | `destructiveHint` | `idempotentHint` | `openWorldHint` |
-| ----------------------- | -------------- | ----------------- | ---------------- | --------------- |
-| Read, external provider | true           | false             | true             | true            |
-| Read, Gina account      | true           | false             | true             | false           |
-| Execute                 | false          | true              | false            | true            |
-| Change a schedule       | false          | false             | false            | false           |
-| Delete a schedule       | false          | true              | false            | false           |
-| Sandbox                 | false          | true              | false            | true            |
+| Class                        | `readOnlyHint` | `destructiveHint` | `idempotentHint` | `openWorldHint` |
+| ---------------------------- | -------------- | ----------------- | ---------------- | --------------- |
+| Read, external provider      | true           | false             | true             | true            |
+| Read, Gina account           | true           | false             | true             | false           |
+| Execute                      | false          | true              | false            | true            |
+| Change a schedule            | false          | false             | false            | false           |
+| Change an event subscription | false          | false             | false            | false           |
+| Delete an event subscription | false          | true              | false            | false           |
+| Delete a schedule            | false          | true              | false            | false           |
+| Sandbox                      | false          | true              | false            | true            |
 
 ## Read, external provider
 
@@ -44,10 +46,13 @@ Reads live data from a market, blockchain or other provider. It changes nothing 
 
 Reads only state Gina stores for your account. It calls no outside provider and can be repeated.
 
-| Tool                   | Use it for                 |
-| ---------------------- | -------------------------- |
-| `getAccountAddresses`  | Your Gina wallet addresses |
-| `listScheduledPrompts` | Your scheduled prompts     |
+| Tool                               | Use it for                                                                      |
+| ---------------------------------- | ------------------------------------------------------------------------------- |
+| `getAccountAddresses`              | Your Gina wallet addresses                                                      |
+| `listScheduledPrompts`             | Your scheduled prompts                                                          |
+| `listPredictionEventSubscriptions` | Your prediction event subscriptions, their filters and status                   |
+| `getPredictionEvents`              | Read order, trade and health events from your account's event log with a cursor |
+| `listWebhookDestinations`          | Your registered webhook destinations, without URLs or secrets                   |
 
 ## Execute
 
@@ -72,6 +77,23 @@ Creates or changes a scheduled prompt that Gina runs later. It touches only Gina
 | `toggleScheduledPrompt`          | Enable or disable a scheduled prompt                      |
 | `updateScheduledAgentConfig`     | Update the agent configuration of a scheduled prompt      |
 | `updateScheduledPromptCondition` | Update a conditional Polymarket scheduled prompt in place |
+
+## Change an event subscription
+
+Creates, changes, pauses or resumes a prediction event subscription. It changes only the subscription Gina stores for your account and moves no funds.
+
+| Tool                                | Use it for                                                                  |
+| ----------------------------------- | --------------------------------------------------------------------------- |
+| `createPredictionEventSubscription` | Subscribe to order and trade events on your Polymarket account              |
+| `updatePredictionEventSubscription` | Rename, refilter, pause, resume or change the destination of a subscription |
+
+## Delete an event subscription
+
+Deletes a prediction event subscription so it stops delivering. It moves no funds, and it is marked destructive because it cannot be undone.
+
+| Tool                                | Use it for                                                 |
+| ----------------------------------- | ---------------------------------------------------------- |
+| `deletePredictionEventSubscription` | Delete a subscription; it sends one final terminated event |
 
 ## Delete a schedule
 
