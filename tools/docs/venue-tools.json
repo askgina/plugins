@@ -61,6 +61,33 @@
       },
       "meaning": "Deletes a prediction event subscription so it stops delivering. It moves no funds, and it is marked destructive because it cannot be undone."
     },
+    "register-destination": {
+      "title": "Register a webhook destination",
+      "hints": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      },
+      "meaning": "Registers a webhook destination for prediction events and can return a generated signing secret once. It changes only the destination Gina stores for your account and moves no funds. It is marked destructive so your client asks you first, and a secret it passes or returns appears in your client's transcript."
+    },
+    "change-destination": {
+      "title": "Change a webhook destination",
+      "hints": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      },
+      "meaning": "Replaces the signing secret of a webhook destination or disables it. It moves no funds and is marked destructive so your client asks you first. Disabling cannot be undone."
+    },
+    "test-destination": {
+      "title": "Test a webhook destination",
+      "hints": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": true
+      },
+      "meaning": "Sends one signed test event to a webhook destination you registered and records the result. It starts a real automation on receivers such as Grok, so it is not a read."
+    },
     "delete-schedule": {
       "title": "Delete a schedule",
       "hints": {
@@ -313,6 +340,26 @@
           "name": "listWebhookDestinations",
           "class": "read-local",
           "purpose": "Your registered webhook destinations, without URLs or secrets"
+        },
+        {
+          "name": "createWebhookDestination",
+          "class": "register-destination",
+          "purpose": "Register a webhook destination from a label, a URL and an optional `whsec_` secret; a generated secret is returned once"
+        },
+        {
+          "name": "rotateWebhookDestinationSecret",
+          "class": "change-destination",
+          "purpose": "Replace the signing secret of an active destination; a generated secret is returned once and the previous one keeps signing for 24 hours"
+        },
+        {
+          "name": "disableWebhookDestination",
+          "class": "change-destination",
+          "purpose": "Disable a destination for good and pause the subscriptions that use it"
+        },
+        {
+          "name": "sendWebhookTestEvent",
+          "class": "test-destination",
+          "purpose": "Send one signed test event to a destination and return the HTTP status and an outcome"
         },
         {
           "name": "searchPredictionMarkets",
