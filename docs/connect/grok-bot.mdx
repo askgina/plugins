@@ -22,14 +22,14 @@ Prediction trading and prediction events use a second connection, separate from 
 
 ### Connect prediction events to a routine
 
-[Grok Bot routines](https://cursor.com/help/grok-bot/routines) use a webhook URL and an `Authorization: Bearer <key>` header. They are different from [grok.com automation webhooks](https://docs.x.ai/grok/automations/webhooks), which use Standard Webhooks HMAC-SHA256 signatures with a `whsec_` signing secret and return `202 Accepted`.
+[Grok Bot routines](https://cursor.com/help/grok-bot/routines) use a webhook URL and a key, sent as a Bearer token in the `Authorization` header. They are different from [grok.com automation webhooks](https://docs.x.ai/grok/automations/webhooks), which use Standard Webhooks HMAC-SHA256 signatures with a `whsec_` signing secret and return `202 Accepted`.
 
 Use the tool schemas exposed by your Predictions connection. For this setup, `createWebhookDestination` must accept `kind: "grok_bot_routine"`. A saved destination proves configuration, not delivery or a completed routine run.
 
 You need the Predictions connector with `tools:execute` and a finished Predictions account in Ask Gina. The connector can also trade, so keep placing, changing and cancelling orders behind your approval.
 
 1. Ask Grok Bot in chat to create a routine with a webhook trigger. Instruct it to read the JSON `events` array, report each distinct `eventId` once and never treat a notification as permission to trade. Save the routine first.
-2. On desktop, click the Bot's name, open **Details → Routines**, and select the routine. In its **Webhook** section, copy the **POST to** URL and **key**. The **header** field also provides the full `Authorization: Bearer <key>` value. Treat the key as a secret.
+2. On desktop, click the Bot's name, open **Details → Routines**, and select the routine. In its **Webhook** section, copy the **POST to** URL and **key**. The **header** field also provides the full `Authorization` header value. Treat the key as a secret.
 3. Open [Ask Gina profile/webhooks settings](https://askgina.ai/profile/webhooks). Under **Receiver type**, choose **Grok Bot routine**, enter a label and the copied URL, supply the key in **Routine key**, and choose **Add destination**. Enter the key yourself in Gina, not in Grok chat or a sandbox command. In Grok, call `listWebhookDestinations` to find the saved destination's `id` by its label.
 4. Only if you deliberately want a real routine run, call `sendWebhookTestEvent` with that `id` as `destinationId`, or choose **Send test event** in Gina settings. Creating a destination never tests it automatically. A test spends Grok Bot usage and can perform the routine's work. Only `200` counts as delivered; check Grok Bot chat or the mobile **Run history** to see whether the run finished, not just Gina's status.
 5. Call `createPredictionEventSubscription` with that `destinationId` and your desired events and filter. Save the returned `subscriptionId` and initial cursor. To attach an existing subscription, call `updatePredictionEventSubscription` with its `id` and `patch: { destinationId: "<destination id>" }`.
@@ -46,13 +46,13 @@ For MCP clients, `createWebhookDestination` uses this argument shape and returns
 }
 ```
 
-The kind must be explicit; Ask Gina never infers it from the URL. The key may be bare, prefixed with `Bearer`, or supplied as the full `Authorization: Bearer <key>` header. Gina requires the key, stores it encrypted, and never generates or returns it. Missing or invalid keys are rejected. Follow the deployed tool schema; a host may reject invalid arguments before the tool runs.
+The kind must be explicit; Ask Gina never infers it from the URL. The key may be bare, prefixed with `Bearer`, or supplied as the full `Authorization` header line. Gina requires the key, stores it encrypted, and never generates or returns it. Missing or invalid keys are rejected. Follow the deployed tool schema; a host may reject invalid arguments before the tool runs.
 
 A test sends `source: "askgina.prediction-events"`, a test notice, `events: []` and `test: true`. It does not mean an account event happened and does not authorize a trade.
 
 #### What the Grok Bot routine receives
 
-Ask Gina posts JSON with `Authorization: Bearer <key>` and `Content-Type: application/json`. It sends no Standard Webhooks or Anthropic headers. The body contains complete [event envelopes](/predictions-mcp/events#what-you-get) in sequence. This example shows the shape only; the event-specific `data` is omitted:
+Ask Gina posts JSON with the key as a Bearer token in the `Authorization` header and `Content-Type: application/json`. It sends no Standard Webhooks or Anthropic headers. The body contains complete [event envelopes](/predictions-mcp/events#what-you-get) in sequence. This example shows the shape only; the event-specific `data` is omitted:
 
 ```json
 {
