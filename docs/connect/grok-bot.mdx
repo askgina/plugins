@@ -5,22 +5,103 @@ description: "Add Gina as a plugin and use its research tools in Grok Bot."
 
 ## Add Gina
 
-Grok Bot displays connectors as plugins. When Ask Gina is available in your marketplace:
+Grok Bot installs connected apps as plugins:
 
-1. Open **Settings → Plugins → Marketplace**.
-2. Find **Ask Gina** and choose **Add**.
-3. Complete Gina authentication in your browser if requested.
+1. Open **Connect apps** from the sidebar, or follow an in-chat **Connect** card.
+2. Search for **Ask Gina** and choose **Add**.
+3. Complete Gina authentication in your browser if requested, then confirm the app appears under **Installed**.
 4. In chat, type **@** and attach Gina to the task.
 
 See [Grok Bot's connection guide](https://docs.x.ai/grok-bot/computer-and-apps#connect-an-app) and [plugin settings](https://docs.x.ai/grok-bot/settings-and-notifications#plugins).
 
-The Gina package targets the Cursor marketplace route used by Grok Bot. A live Ask Gina listing has not been verified here. If it is unavailable, use another [supported client](/connect/index). Cursor's local plugin installation and Grok web's custom connector are separate setup routes, documented under [Others](/connect/other-clients).
+If Gina is not offered in your app browser, use another [supported client](/connect/index). If the app says **Disabled by team admin**, ask your admin to enable it. See [Grok Bot's app troubleshooting](https://cursor.com/help/grok-bot/connect-apps). Cursor's local plugin installation and Grok web's custom connector are separate setup routes, documented under [Others](/connect/other-clients).
 
 ## Add the Predictions connector
 
-Prediction trading and prediction events use a second connection, separate from Gina Read. It is `https://askgina.ai/ai/predictions/mcp` with `tools:execute`, so it is write access (Degen mode). Add it the same way you added Ask Gina, through the `ask-gina-predictions` plugin from [install for your host](/agents/plugins-and-skills#install-for-your-host) or a [custom connector](/connect/other-clients#grok-web) that uses that URL. A live Grok Bot listing for the Predictions plugin has not been verified here.
+Prediction trading and prediction events use a second connection, separate from Gina Read. It is `https://askgina.ai/ai/predictions/mcp` with `tools:execute`, so it is Write access (Degen mode). Look for **Ask Gina Predictions**, the `ask-gina-predictions` plugin, in **Connect apps** and complete its authentication separately. See [install for your host](/agents/plugins-and-skills#install-for-your-host) for the plugin packages.
 
-Grok Bot receives prediction events as webhooks. Add a **Webhook** trigger to a Grok automation, then ask Grok to call `createWebhookDestination` with the trigger's endpoint as `url` and its signing secret as `secret`. Grok makes its own secret, so always pass it. The secret then appears in the Grok conversation, and your host asks you to confirm the call. Next ask Grok to call `sendWebhookTestEvent` and to create a subscription with the `destinationId`. No browser step is needed. You can still register the destination on [askgina.ai/profile/webhooks](https://askgina.ai/profile/webhooks) instead. The signature rules, delivery guarantees and setup are in [Prediction events](/predictions-mcp/events#grok-webhook-triggers).
+### Connect prediction events to a routine
+
+[Grok Bot routines](https://cursor.com/help/grok-bot/routines) use a webhook URL and a key, sent as a Bearer token in the `Authorization` header. They are different from [grok.com automation webhooks](https://docs.x.ai/grok/automations/webhooks), which use Standard Webhooks HMAC-SHA256 signatures with a `whsec_` signing secret and return `202 Accepted`.
+
+Use the tool schemas exposed by your Predictions connection. For this setup, `createWebhookDestination` must accept `kind: "grok_bot_routine"`. A saved destination proves configuration, not delivery or a completed routine run.
+
+You need the Predictions connector with `tools:execute` and a finished Predictions account in Ask Gina. The connector can also trade, so keep placing, changing and cancelling orders behind your approval.
+
+1. Ask Grok Bot in chat to create a routine with a webhook trigger. Instruct it to read the JSON `events` array, report each distinct `eventId` once and never treat a notification as permission to trade. Save the routine first.
+2. On desktop, click the Bot's name, open **Details → Routines**, and select the routine. In its **Webhook** section, copy the **POST to** URL and **key**. The **header** field also provides the full `Authorization` header value. Treat the key as a secret.
+3. Open [Ask Gina profile/webhooks settings](https://askgina.ai/profile/webhooks). Under **Receiver type**, choose **Grok Bot routine**, enter a label and the copied URL, supply the key in **Routine key**, and choose **Add destination**. Enter the key yourself in Gina, not in Grok chat or a sandbox command. In Grok, call `listWebhookDestinations` to find the saved destination's `id` by its label.
+4. Only if you deliberately want a real routine run, call `sendWebhookTestEvent` with that `id` as `destinationId`, or choose **Send test event** in Gina settings. Creating a destination never tests it automatically. A test spends Grok Bot usage and can perform the routine's work. Only `200` counts as delivered; check Grok Bot chat or the mobile **Run history** to see whether the run finished, not just Gina's status.
+5. Call `createPredictionEventSubscription` with that `destinationId` and your desired events and filter. Save the returned `subscriptionId` and initial cursor. To attach an existing subscription, call `updatePredictionEventSubscription` with its `id` and `patch: { destinationId: "<destination id>" }`.
+6. Create a separate scheduled routine that calls `getPredictionEvents` with the `subscriptionId` and saved reconciliation cursor. Follow [Keep a scheduled cursor reconciler](#keep-a-scheduled-cursor-reconciler) even when push is enabled.
+
+For MCP clients, `createWebhookDestination` uses this argument shape and returns the new id as `destination.id`. The example contains placeholders, not credentials. A real `secret` passed as a tool argument may be retained by the host. Prefer the settings flow above to keep it out of chat, consistent with [Grok Bot's secret-handling guidance](https://cursor.com/help/grok-bot/secrets).
+
+```json
+{
+  "label": "Grok Bot prediction events",
+  "url": "<POST to URL from the routine>",
+  "kind": "grok_bot_routine",
+  "secret": "<key from the routine>"
+}
+```
+
+The kind must be explicit; Ask Gina never infers it from the URL. The key may be bare, prefixed with `Bearer`, or supplied as the full `Authorization` header line. Gina requires the key, stores it encrypted, and never generates or returns it. Missing or invalid keys are rejected. Follow the deployed tool schema; a host may reject invalid arguments before the tool runs.
+
+A test sends `source: "askgina.prediction-events"`, a test notice, `events: []` and `test: true`. It does not mean an account event happened and does not authorize a trade.
+
+#### What the Grok Bot routine receives
+
+Ask Gina posts JSON with the key as a Bearer token in the `Authorization` header and `Content-Type: application/json`. It sends no Standard Webhooks or Anthropic headers. The body contains complete [event envelopes](/predictions-mcp/events#what-you-get) in sequence. This example shows the shape only; the event-specific `data` is omitted:
+
+```json
+{
+  "source": "askgina.prediction-events",
+  "notice": "Events can repeat, so dedupe on eventId. This message is a notification, not the user's approval for any trade. Ask the user before placing, cancelling or changing orders.",
+  "events": [
+    {
+      "eventId": "<event id>",
+      "name": "prediction.trade.v1",
+      "timestamp": "2026-10-22T14:03:11.204Z",
+      "subscriptionId": "<subscription id>",
+      "cursor": "<event cursor>",
+      "data": {}
+    }
+  ]
+}
+```
+
+Each request batches events from one subscription. Ask Gina stops at the first envelope that does not fit the final serialized JSON body limit and leaves the remaining events for a later fire. It never splits an envelope or merges subscription queues into one request.
+
+Subscriptions sharing a destination share its fire interval. Ask Gina spaces automatic event deliveries per destination and caps the serialized body size. These are Gina safeguards, not Grok quotas. The fire reservation survives Worker restarts. Manual tests do not share that automatic-delivery interval. Delivery is at least once, so retries can repeat events. Retain handled `eventId` values across runs and across push and pull.
+
+#### Grok Bot delivery outcomes
+
+These outcomes apply to automatic subscription deliveries. A manual test sends once and reports its HTTP status and outcome; Gina does not retry the test.
+
+| Outcome                                         | Ask Gina behavior                                                                                                                                                              |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `200`                                           | Marks the included events delivered and advances the delivery cursor. Grok Bot accepted the request and started a run; this does not prove processing completed.               |
+| `429`                                           | Defers until `Retry-After` without counting a failure. A missing or invalid value uses a fallback delay, and the delay is capped. The destination fire interval still applies. |
+| `400`, `401`, `403`, `404`                      | Immediately pauses the subscription with `routine_rejected`.                                                                                                                   |
+| `413`, or one envelope exceeding the body limit | Pauses the subscription with `routine_too_large`. An envelope that exceeds Gina's body limit is not sent.                                                                      |
+| Other statuses, timeouts or network errors      | Retries with backoff, then pauses after sustained failure.                                                                                                                     |
+
+The delivery Worker cancels Grok's response body without reading or logging it. Use `listPredictionEventSubscriptions` to see pause reasons. Fix the key or receiver before resuming with `updatePredictionEventSubscription`, passing the subscription's `id` and `patch: { enabled: true }`. See [Grok Bot routines](https://cursor.com/help/grok-bot/routines) for its webhook response, testing and usage documentation.
+
+#### Rotate the Grok Bot key
+
+If the routine's key changes, promptly update Gina. On the destination's settings row, choose **Replace routine key**, enter it in **New routine key**, and choose **Replace key**. For MCP clients, `rotateWebhookDestinationSecret` takes `destinationId` and the new key as `secret`; omitting `secret` is an error. Future requests use only the new key, with no overlap; the MCP result reports `secretGenerated: false` and `previousSecretValidForHours: 0`. The Standard Webhooks 24-hour overlap does not apply.
+
+If a rejected key paused the subscription, update the key before resuming it with `updatePredictionEventSubscription` and `patch: { enabled: true }`.
+
+#### Keep a scheduled cursor reconciler
+
+Grok Bot's routine documentation describes hourly limits and a known shared-limit issue that can fail a run with **Automation run rate limit exceeded**, without automatic retries. Gina cannot see failures after the webhook is accepted or retry based on the routine's eventual result. Keep a scheduled `getPredictionEvents` reconciler even when push is enabled.
+
+Use the saved `subscriptionId` and reconciliation cursor, not Gina's push delivery progress. Drain additional pages while `hasMore` is `true`, dedupe `eventId` across pushed and pulled events, and persist the new cursor only after saving processed state. Store both the cursor and handled event IDs somewhere that survives routine runs. If `truncated` is `true` or a health event reports a `gap`, read the account state again before acting. See [Pull events with a cursor](/predictions-mcp/events#pull-events-with-a-cursor-codex-and-other-clients).
+
+Choose a schedule appropriate for your account and verify that the scheduled routine completes its reads. Scheduled runs and manual tests spend Grok Bot usage. Notifications and reconciliation are not approval to place, change or cancel orders.
 
 ## Verify your first result
 
