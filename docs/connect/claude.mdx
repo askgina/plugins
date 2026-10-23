@@ -95,7 +95,7 @@ A Claude Code routine is a saved prompt that runs as a cloud session. Its API tr
 
 You need a Claude plan with Claude Code on the web (Pro, Max, Team or Enterprise), the [Predictions connector](#add-the-predictions-connector) in the Claude session where you create the subscription, and a finished Predictions account in Ask Gina.
 
-1. **Create the routine.** Open [claude.ai/code/routines](https://claude.ai/code/routines), choose **New task** and write the prompt. Claude hands the fired text to the routine as untrusted data, so the prompt has to tell Claude to read it. For example:
+1. **Create the routine.** Open `claude.ai/code/routines`, choose **New task** and write the prompt. Claude hands the fired text to the routine as untrusted data, so the prompt has to tell Claude to read it. For example:
 
    ```text
    Ask Gina sent prediction events in the routine-fire-payload block, as a JSON array. List each distinct eventId once with the event name and the order or trade it describes. Do not place, change or cancel any order. If the block holds no events, say so and stop.
@@ -138,7 +138,7 @@ A routine can instead run on a schedule and read the event log with a pull subsc
 
 Every run starts with no memory, so the cursor has to live somewhere the routine can read and write, such as a file in a repository the routine clones or a note in another connector. Without a stored cursor, each run would read from the subscription's start. Reading the subscription counts as activity, so an hourly routine also keeps it from pausing after 7 days unread.
 
-Anthropic says routines can call the connectors on your Claude account, and that servers added at [claude.ai/customize/connectors](https://claude.ai/customize/connectors) count. A server you added only with `claude mcp add` is stored on your machine and does not. Ask Gina has not run a routine against the Predictions connector, so open the first run and check that the `getPredictionEvents` call succeeded before you rely on it.
+Anthropic says routines can call the connectors on your Claude account, and that servers added at `claude.ai/customize/connectors` count. A server you added only with `claude mcp add` is stored on your machine and does not. Ask Gina has not run a routine against the Predictions connector, so open the first run and check that the `getPredictionEvents` call succeeded before you rely on it.
 
 ## Verify your first result
 
