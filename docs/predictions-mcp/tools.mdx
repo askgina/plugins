@@ -12,16 +12,19 @@ Annotations are the server's own declaration. A client can use them to decide wh
 
 ## Annotation classes
 
-| Class                        | `readOnlyHint` | `destructiveHint` | `idempotentHint` | `openWorldHint` |
-| ---------------------------- | -------------- | ----------------- | ---------------- | --------------- |
-| Read, external provider      | true           | false             | true             | true            |
-| Read, Gina account           | true           | false             | true             | false           |
-| Execute                      | false          | true              | false            | true            |
-| Change a schedule            | false          | false             | false            | false           |
-| Change an event subscription | false          | false             | false            | false           |
-| Delete an event subscription | false          | true              | false            | false           |
-| Delete a schedule            | false          | true              | false            | false           |
-| Sandbox                      | false          | true              | false            | true            |
+| Class                          | `readOnlyHint` | `destructiveHint` | `idempotentHint` | `openWorldHint` |
+| ------------------------------ | -------------- | ----------------- | ---------------- | --------------- |
+| Read, external provider        | true           | false             | true             | true            |
+| Read, Gina account             | true           | false             | true             | false           |
+| Execute                        | false          | true              | false            | true            |
+| Change a schedule              | false          | false             | false            | false           |
+| Change an event subscription   | false          | false             | false            | false           |
+| Delete an event subscription   | false          | true              | false            | false           |
+| Register a webhook destination | false          | true              | not set          | true            |
+| Change a webhook destination   | false          | true              | not set          | false           |
+| Test a webhook destination     | false          | false             | not set          | true            |
+| Delete a schedule              | false          | true              | false            | false           |
+| Sandbox                        | false          | true              | false            | true            |
 
 ## Read, external provider
 
@@ -94,6 +97,31 @@ Deletes a prediction event subscription so it stops delivering. It moves no fund
 | Tool                                | Use it for                                                 |
 | ----------------------------------- | ---------------------------------------------------------- |
 | `deletePredictionEventSubscription` | Delete a subscription; it sends one final terminated event |
+
+## Register a webhook destination
+
+Registers a webhook destination for prediction events and can return a generated signing secret once. It changes only the destination Gina stores for your account and moves no funds. It is marked destructive so your client asks you first, and a secret it passes or returns appears in your client's transcript.
+
+| Tool                       | Use it for                                                                                                              |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `createWebhookDestination` | Register a webhook destination from a label, a URL and an optional `whsec_` secret; a generated secret is returned once |
+
+## Change a webhook destination
+
+Replaces the signing secret of a webhook destination or disables it. It moves no funds and is marked destructive so your client asks you first. Disabling cannot be undone.
+
+| Tool                             | Use it for                                                                                                                               |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `rotateWebhookDestinationSecret` | Replace the signing secret of an active destination; a generated secret is returned once and the previous one keeps signing for 24 hours |
+| `disableWebhookDestination`      | Disable a destination for good and pause the subscriptions that use it                                                                   |
+
+## Test a webhook destination
+
+Sends one signed test event to a webhook destination you registered and records the result. It starts a real automation on receivers such as Grok, so it is not a read.
+
+| Tool                   | Use it for                                                                            |
+| ---------------------- | ------------------------------------------------------------------------------------- |
+| `sendWebhookTestEvent` | Send one signed test event to a destination and return the HTTP status and an outcome |
 
 ## Delete a schedule
 
