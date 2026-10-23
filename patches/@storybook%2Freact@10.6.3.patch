@@ -1,0 +1,48 @@
+diff --git a/dist/_node-chunks/chunk-LDQQZLE2.js b/dist/_node-chunks/chunk-LDQQZLE2.js
+index 162c546..18cdd40 100644
+--- a/dist/_node-chunks/chunk-LDQQZLE2.js
++++ b/dist/_node-chunks/chunk-LDQQZLE2.js
+@@ -16153,7 +16153,7 @@ function transformArgsSpreadsInJsx(node, merged) {
+ // src/componentManifest/reactDocgenTypescript.ts
+ import { dirname as dirname5, join as join4, resolve as resolve4 } from "node:path";
+ import { logger as logger4 } from "storybook/internal/node-logger";
+-var typeScriptPromise, reactDocgenTypescriptPromise, loadTypeScript = () => typeScriptPromise ??= import("typescript"), loadReactDocgenTypescript = () => reactDocgenTypescriptPromise ??= import("react-docgen-typescript"), LARGE_NON_USER_SOURCE_THRESHOLD = 30, getPropSource = (prop) => prop.parent?.fileName ?? prop.declarations?.[0]?.fileName, getLargeNonUserPropSources = (props) => {
++var typeScriptPromise, reactDocgenTypescriptPromise, loadTypeScript = () => typeScriptPromise ??= import("typescript-api"), loadReactDocgenTypescript = () => reactDocgenTypescriptPromise ??= import("react-docgen-typescript"), LARGE_NON_USER_SOURCE_THRESHOLD = 30, getPropSource = (prop) => prop.parent?.fileName ?? prop.declarations?.[0]?.fileName, getLargeNonUserPropSources = (props) => {
+   let countBySource = /* @__PURE__ */ new Map();
+   for (let prop of Object.values(props)) {
+     let source = getPropSource(prop);
+diff --git a/dist/docgen/docgen-worker.js b/dist/docgen/docgen-worker.js
+index 8f53246..e166792 100644
+--- a/dist/docgen/docgen-worker.js
++++ b/dist/docgen/docgen-worker.js
+@@ -81,7 +81,7 @@ async function buildDocgenPayload(input, context) {
+ var createDocgenProvider = () => createLazyDocgenMiddleware({
+   createManager: async () => {
+     try {
+-      let ts = await import("typescript");
++      let ts = await import("typescript-api");
+       return new ComponentMetaManager(ts);
+     } catch {
+       return;
+diff --git a/dist/preset.js b/dist/preset.js
+index 52df2a1..6d62d54 100644
+--- a/dist/preset.js
++++ b/dist/preset.js
+@@ -298,7 +298,7 @@ var REACT_NODE_TYPES = /* @__PURE__ */ new Set([
+ ]);
+ var getTsConfig = async (componentFilePath) => {
+   try {
+-    let ts = await import("typescript"), tsconfigPath = componentFilePath ? findTsconfigPathForFile(dirname2(componentFilePath), componentFilePath) : ts.findConfigFile(process.cwd(), ts.sys.fileExists);
++    let ts = await import("typescript-api"), tsconfigPath = componentFilePath ? findTsconfigPathForFile(dirname2(componentFilePath), componentFilePath) : ts.findConfigFile(process.cwd(), ts.sys.fileExists);
+     if (tsconfigPath === void 0)
+       return {};
+     let basePath = dirname2(tsconfigPath), { config, error } = ts.readConfigFile(tsconfigPath, ts.sys.readFile);
+@@ -362,7 +362,7 @@ var componentMetaManagerPromise;
+ function getSharedComponentMetaManager() {
+   return componentMetaManagerPromise || (componentMetaManagerPromise = (async () => {
+     try {
+-      let ts = await import("typescript");
++      let ts = await import("typescript-api");
+       return new ComponentMetaManager(ts);
+     } catch {
+       logger3.debug(
