@@ -68,7 +68,7 @@
         "destructiveHint": true,
         "openWorldHint": true
       },
-      "meaning": "Registers a webhook destination for prediction events and can return a generated signing secret once. It changes only the destination Gina stores for your account and moves no funds. It is marked destructive so your client asks you first, and a secret it passes or returns appears in your client's transcript."
+      "meaning": "Registers a webhook destination, or a Claude routine's fire URL, for prediction events and can return a generated signing secret once. A routine needs its own token instead of a generated secret. It changes only the destination Gina stores for your account and moves no funds. It is marked destructive so your client asks you first, and a secret it passes or returns appears in your client's transcript."
     },
     "change-destination": {
       "title": "Change a webhook destination",
@@ -86,7 +86,7 @@
         "destructiveHint": false,
         "openWorldHint": true
       },
-      "meaning": "Sends one signed test event to a webhook destination you registered and records the result. It starts a real automation on receivers such as Grok, so it is not a read."
+      "meaning": "Sends one test event to a webhook destination you registered and records the result. It starts a real automation on receivers such as Grok and a real Claude Code session for a routine, so it is not a read."
     },
     "delete-schedule": {
       "title": "Delete a schedule",
@@ -344,12 +344,12 @@
         {
           "name": "createWebhookDestination",
           "class": "register-destination",
-          "purpose": "Register a webhook destination from a label, a URL and an optional `whsec_` secret; a generated secret is returned once"
+          "purpose": "Register a webhook destination from a label, a URL and an optional `whsec_` secret, or a Claude routine fire URL with its token; a generated secret is returned once"
         },
         {
           "name": "rotateWebhookDestinationSecret",
           "class": "change-destination",
-          "purpose": "Replace the signing secret of an active destination; a generated secret is returned once and the previous one keeps signing for 24 hours"
+          "purpose": "Replace the signing secret of an active destination; a generated secret is returned once and the previous one keeps signing for 24 hours, except a Claude routine, which needs its new token"
         },
         {
           "name": "disableWebhookDestination",
@@ -359,7 +359,7 @@
         {
           "name": "sendWebhookTestEvent",
           "class": "test-destination",
-          "purpose": "Send one signed test event to a destination and return the HTTP status and an outcome"
+          "purpose": "Send one test event to a destination and return the HTTP status and an outcome; a Claude routine starts a real session"
         },
         {
           "name": "searchPredictionMarkets",

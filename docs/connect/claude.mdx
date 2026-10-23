@@ -83,11 +83,62 @@ Prediction trading and prediction events use a second connector, separate from G
 - **Claude web and Desktop:** open **Customize → Connectors → + → Add custom connector**, enter **Ask Gina Predictions** and `https://askgina.ai/ai/predictions/mcp`, add it, choose **Connect** and complete Gina OAuth.
 - **Claude Code:** the [Predictions client setup](/predictions-mcp/client-setup#claude-code) has the `claude mcp add` command for the `predictions` server.
 
-Ask Gina does not push events into a Claude conversation. Claude can create a pull subscription with `createPredictionEventSubscription` and no `destinationId`, then call `getPredictionEvents` with the returned `subscriptionId` and `cursor` when you ask it to check. Always pass the `subscriptionId`, because without it the call reads the whole retained account log instead of the subscription's events. Save the returned `cursor`, call again while `hasMore` is `true`, dedupe on `eventId`, and read your account state again when `truncated` is `true`. A pull subscription that nobody reads for 7 days pauses. Resume it with `updatePredictionEventSubscription`, passing its `id` and `patch.enabled: true`.
+Ask Gina cannot push events into a Claude chat or a Claude Code session that is already open. A Claude Code routine can receive them instead, as described in [Push events into Claude Code (routine)](#push-events-into-claude-code-routine). To read events inside a chat, Claude can create a pull subscription with `createPredictionEventSubscription` and no `destinationId`, then call `getPredictionEvents` with the returned `subscriptionId` and `cursor` when you ask it to check. Always pass the `subscriptionId`, because without it the call reads the whole retained account log instead of the subscription's events. Save the returned `cursor`, call again while `hasMore` is `true`, dedupe on `eventId`, and read your account state again when `truncated` is `true`. A pull subscription that nobody reads for 7 days pauses. Resume it with `updatePredictionEventSubscription`, passing its `id` and `patch.enabled: true`.
 
 In Claude Code, `/loop 5m` followed by that read prompt checks on an interval while the session is open. The [Prediction events](/predictions-mcp/events#poll-from-claude-code) page has the prompt and its limits.
 
-A Claude agent can now create its own webhook destination with `createWebhookDestination` and test it with `sendWebhookTestEvent`, without a browser step. Delivering events to that URL does not start a Claude turn by itself, so a receiver you run has to do something with them. See [Prediction events](/predictions-mcp/events).
+A Claude agent can create its own webhook destination with `createWebhookDestination` and test it with `sendWebhookTestEvent`, without a browser step. A plain webhook URL does not start a Claude turn by itself, so a receiver you run has to act on the events. A routine's fire URL is the exception, because Claude Code starts a session for each call. See [Prediction events](/predictions-mcp/events).
+
+## Push events into Claude Code (routine)
+
+A Claude Code routine is a saved prompt that runs as a cloud session. Its API trigger is a URL that starts a new session when called. Register that URL as an Ask Gina destination and Ask Gina starts a session whenever your Polymarket orders or trades change. You run no receiver. Anthropic's docs now call routines scheduled tasks and label them a research preview, so their behavior and limits can change. See [Automate work with scheduled tasks](https://code.claude.com/docs/en/routines).
+
+You need a Claude plan with Claude Code on the web (Pro, Max, Team or Enterprise), the [Predictions connector](#add-the-predictions-connector) in the Claude session where you create the subscription, and a finished Predictions account in Ask Gina.
+
+1. **Create the routine.** Open [claude.ai/code/routines](https://claude.ai/code/routines), choose **New task** and write the prompt. Claude hands the fired text to the routine as untrusted data, so the prompt has to tell Claude to read it. For example:
+
+   ```text
+   Ask Gina sent prediction events in the routine-fire-payload block, as a JSON array. List each distinct eventId once with the event name and the order or trade it describes. Do not place, change or cancel any order. If the block holds no events, say so and stop.
+   ```
+
+2. **Choose its connectors.** A new routine includes every connector on your Claude account. Remove the ones it does not need. Keep the Predictions connector out unless the routine must read your account, because that connector also carries the trading tools. See [Safety](#safety-for-routine-push).
+3. **Add an API trigger.** Edit the routine, click **+** in the **Trigger** row and choose **API**. Copy the **Fire URL**. Click **Generate token** and copy the token straight away. Claude shows it once and cannot show it again.
+4. **Register it with Ask Gina.** On the [settings page](https://askgina.ai/profile/webhooks), choose **Add destination**, enter a label, paste the Fire URL as the **Webhook URL** and paste the token as the **Signing secret**. The Fire URL looks like `https://api.anthropic.com/v1/claude_code/routines/trig_.../fire` and the token starts with `sk-ant-oat01-`. The settings page is the better path because the token goes from you to Ask Gina without passing through a chat. A Claude agent can instead call `createWebhookDestination` with the same URL as `url` and the token as `secret`. Then the token sits in that conversation's transcript, and anyone who can read it can start your routine until you regenerate the token. Ask Gina cannot generate this token for you, so a create call with no `secret` is refused.
+5. **Subscribe.** Ask Claude to call `createPredictionEventSubscription` with the `destinationId` from step 4. Add a filter if the routine should only hear about some markets or orders.
+6. **Send a test.** Press **Send test event** on the settings page or ask Claude to call `sendWebhookTestEvent`. It starts a real session, so expect a new run in the routine's history. A test uses one of the routine's fires for the hour.
+
+### What the routine receives
+
+Ask Gina fires a routine at most once every 150 seconds per destination. Each fire carries every event waiting at that moment, as a JSON array of the [event envelopes](/predictions-mcp/events#what-you-get) in order, behind a short note. The note tells Claude that events can repeat, that it should dedupe on `eventId` and that the message is not your approval to trade. Events that do not fit in one fire wait for the next one. Delivery is at least once.
+
+Each fire is a new session with no memory of earlier ones. The routine can drop repeats inside one fire, but it cannot know that an earlier fire carried the same `eventId`. A repeated notification is usually harmless. If it is not for your use, keep the ids you have handled somewhere the routine can write.
+
+The [Prediction events](/predictions-mcp/events#claude-code-routines) page lists what happens on each Anthropic error, how to rotate the token and the limits. In short, a regenerated token stops working at once, so rotate it in Ask Gina right after you regenerate it. A routine you paused or deleted pauses delivery.
+
+### Safety for routine push
+
+A fire is a notification. It is not approval to trade, and Claude runs a routine without you in the loop. Anthropic starts the session in auto mode, where a classifier decides which actions proceed, so no prompt appears for you to answer unless an ask rule or repeated blocks stop the run. Ask Gina's trading tools are marked destructive, which makes a normal client ask you first, but a routine that holds the Predictions connector can reach them.
+
+The only limit that does not depend on the prompt is the connector list. Leave the Predictions connector off a routine that should only notify you, and let it report through another connector such as email or chat. If the routine does need the Predictions connector, say in the prompt that it must never place, change or cancel orders, and treat that as a request, not a guarantee. Ask the routine to tell you what it found and let you place the order in Gina yourself.
+
+Each fire uses your Claude subscription, like an interactive session. Ask Gina does not charge for deliveries. Anthropic limits fires per routine and per account each hour, and Ask Gina keeps one destination under the routine limit. See [Limits and billing](/predictions-mcp/events#claude-code-routines).
+
+### No push: poll from a scheduled routine
+
+A routine can instead run on a schedule and read the event log with a pull subscription. This needs no destination, no token and no browser step.
+
+1. Ask Claude to call `createPredictionEventSubscription` without a `destinationId`, and note the `subscriptionId` and `cursor`.
+2. Create a routine with a **Schedule** trigger and the Predictions connector. For example:
+
+   ```text
+   Call getPredictionEvents with subscriptionId <subscription id> and the cursor stored at <where you keep it>. If hasMore is true, call again with the new cursor until it is false. Store the latest cursor. List each new eventId once with the event name and the order or trade it describes. If truncated is true, say so and read my account state again before you report. Do not place, change or cancel any order.
+   ```
+
+3. Pick a schedule. Anthropic rejects cron expressions that run more often than once per hour, so the shortest interval is hourly. A run at the top of the hour can start several minutes late, so pick a few minutes past it.
+
+Every run starts with no memory, so the cursor has to live somewhere the routine can read and write, such as a file in a repository the routine clones or a note in another connector. Without a stored cursor, each run would read from the subscription's start. Reading the subscription counts as activity, so an hourly routine also keeps it from pausing after 7 days unread.
+
+Anthropic says routines can call the connectors on your Claude account, and that servers added at [claude.ai/customize/connectors](https://claude.ai/customize/connectors) count. A server you added only with `claude mcp add` is stored on your machine and does not. Ask Gina has not run a routine against the Predictions connector, so open the first run and check that the `getPredictionEvents` call succeeded before you rely on it.
 
 ## Verify your first result
 

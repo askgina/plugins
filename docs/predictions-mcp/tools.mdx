@@ -100,28 +100,28 @@ Deletes a prediction event subscription so it stops delivering. It moves no fund
 
 ## Register a webhook destination
 
-Registers a webhook destination for prediction events and can return a generated signing secret once. It changes only the destination Gina stores for your account and moves no funds. It is marked destructive so your client asks you first, and a secret it passes or returns appears in your client's transcript.
+Registers a webhook destination, or a Claude routine's fire URL, for prediction events and can return a generated signing secret once. A routine needs its own token instead of a generated secret. It changes only the destination Gina stores for your account and moves no funds. It is marked destructive so your client asks you first, and a secret it passes or returns appears in your client's transcript.
 
-| Tool                       | Use it for                                                                                                              |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `createWebhookDestination` | Register a webhook destination from a label, a URL and an optional `whsec_` secret; a generated secret is returned once |
+| Tool                       | Use it for                                                                                                                                                           |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createWebhookDestination` | Register a webhook destination from a label, a URL and an optional `whsec_` secret, or a Claude routine fire URL with its token; a generated secret is returned once |
 
 ## Change a webhook destination
 
 Replaces the signing secret of a webhook destination or disables it. It moves no funds and is marked destructive so your client asks you first. Disabling cannot be undone.
 
-| Tool                             | Use it for                                                                                                                               |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `rotateWebhookDestinationSecret` | Replace the signing secret of an active destination; a generated secret is returned once and the previous one keeps signing for 24 hours |
-| `disableWebhookDestination`      | Disable a destination for good and pause the subscriptions that use it                                                                   |
+| Tool                             | Use it for                                                                                                                                                                                   |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `rotateWebhookDestinationSecret` | Replace the signing secret of an active destination; a generated secret is returned once and the previous one keeps signing for 24 hours, except a Claude routine, which needs its new token |
+| `disableWebhookDestination`      | Disable a destination for good and pause the subscriptions that use it                                                                                                                       |
 
 ## Test a webhook destination
 
-Sends one signed test event to a webhook destination you registered and records the result. It starts a real automation on receivers such as Grok, so it is not a read.
+Sends one test event to a webhook destination you registered and records the result. It starts a real automation on receivers such as Grok and a real Claude Code session for a routine, so it is not a read.
 
-| Tool                   | Use it for                                                                            |
-| ---------------------- | ------------------------------------------------------------------------------------- |
-| `sendWebhookTestEvent` | Send one signed test event to a destination and return the HTTP status and an outcome |
+| Tool                   | Use it for                                                                                                             |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `sendWebhookTestEvent` | Send one test event to a destination and return the HTTP status and an outcome; a Claude routine starts a real session |
 
 ## Delete a schedule
 
