@@ -344,7 +344,7 @@
         {
           "name": "createWebhookDestination",
           "class": "register-destination",
-          "purpose": "Register a webhook destination from a label, a URL and an optional `whsec_` secret, or a Claude routine fire URL with its token; a generated secret is returned once"
+          "purpose": "Register a label and URL, optional `whsec_` secret and optional `kind: webhook | claude_routine`; routines need a fire URL and token. Generated secret returned once"
         },
         {
           "name": "rotateWebhookDestinationSecret",

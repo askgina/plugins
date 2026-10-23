@@ -102,9 +102,9 @@ Deletes a prediction event subscription so it stops delivering. It moves no fund
 
 Registers a webhook destination, or a Claude routine's fire URL, for prediction events and can return a generated signing secret once. A routine needs its own token instead of a generated secret. It changes only the destination Gina stores for your account and moves no funds. It is marked destructive so your client asks you first, and a secret it passes or returns appears in your client's transcript.
 
-| Tool                       | Use it for                                                                                                                                                           |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `createWebhookDestination` | Register a webhook destination from a label, a URL and an optional `whsec_` secret, or a Claude routine fire URL with its token; a generated secret is returned once |
+| Tool                       | Use it for                                                                                                                                                            |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createWebhookDestination` | Register a label and URL, optional `whsec_` secret and optional `kind: webhook \| claude_routine`; routines need a fire URL and token. Generated secret returned once |
 
 ## Change a webhook destination
 
