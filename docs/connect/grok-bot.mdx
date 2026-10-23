@@ -16,6 +16,12 @@ See [Grok Bot's connection guide](https://docs.x.ai/grok-bot/computer-and-apps#c
 
 The Gina package targets the Cursor marketplace route used by Grok Bot. A live Ask Gina listing has not been verified here. If it is unavailable, use another [supported client](/connect/index). Cursor's local plugin installation and Grok web's custom connector are separate setup routes, documented under [Others](/connect/other-clients).
 
+## Add the Predictions connector
+
+Prediction trading and prediction events use a second connection, separate from Gina Read. It is `https://askgina.ai/ai/predictions/mcp` with `tools:execute`, so it is write access (Degen mode). Add it the same way you added Ask Gina, through the `ask-gina-predictions` plugin from [install for your host](/agents/plugins-and-skills#install-for-your-host) or a [custom connector](/connect/other-clients#grok-web) that uses that URL. A live Grok Bot listing for the Predictions plugin has not been verified here.
+
+Grok Bot receives prediction events as webhooks. Add a **Webhook** trigger to a Grok automation, register its endpoint and signing secret on [askgina.ai/profile/webhooks](https://askgina.ai/profile/webhooks), and never give the secret to the agent. Then ask Grok to create a subscription with that destination's id. The signature rules, delivery guarantees and setup are in [Prediction events](/predictions-mcp/events#grok-webhook-triggers).
+
 ## Verify your first result
 
 Ask **“Use Gina to show ETH in USD over the past seven days.”** Confirm a Gina tool ran and the response identifies ETH and the requested period. Follow [First successful request](/start/first-request) if tools are missing or authentication fails.

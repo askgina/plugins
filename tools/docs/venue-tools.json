@@ -41,6 +41,26 @@
       },
       "meaning": "Creates or changes a scheduled prompt that Gina runs later. It touches only Gina-held schedule state."
     },
+    "mutate-subscription": {
+      "title": "Change an event subscription",
+      "hints": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "meaning": "Creates, changes, pauses or resumes a prediction event subscription. It changes only the subscription Gina stores for your account and moves no funds."
+    },
+    "delete-subscription": {
+      "title": "Delete an event subscription",
+      "hints": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "meaning": "Deletes a prediction event subscription so it stops delivering. It moves no funds, and it is marked destructive because it cannot be undone."
+    },
     "delete-schedule": {
       "title": "Delete a schedule",
       "hints": {
@@ -280,6 +300,21 @@
           "purpose": "Your scheduled prompts"
         },
         {
+          "name": "listPredictionEventSubscriptions",
+          "class": "read-local",
+          "purpose": "Your prediction event subscriptions, their filters and status"
+        },
+        {
+          "name": "getPredictionEvents",
+          "class": "read-local",
+          "purpose": "Read order, trade and health events from your account's event log with a cursor"
+        },
+        {
+          "name": "listWebhookDestinations",
+          "class": "read-local",
+          "purpose": "Your registered webhook destinations, without URLs or secrets"
+        },
+        {
           "name": "searchPredictionMarkets",
           "class": "read-external",
           "purpose": "Search Polymarket markets"
@@ -393,6 +428,21 @@
           "name": "deleteScheduledPrompt",
           "class": "delete-schedule",
           "purpose": "Archive (disable) a scheduled prompt"
+        },
+        {
+          "name": "createPredictionEventSubscription",
+          "class": "mutate-subscription",
+          "purpose": "Subscribe to order and trade events on your Polymarket account"
+        },
+        {
+          "name": "updatePredictionEventSubscription",
+          "class": "mutate-subscription",
+          "purpose": "Rename, refilter, pause, resume or change the destination of a subscription"
+        },
+        {
+          "name": "deletePredictionEventSubscription",
+          "class": "delete-subscription",
+          "purpose": "Delete a subscription; it sends one final terminated event"
         },
         {
           "name": "bash",

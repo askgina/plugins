@@ -17,6 +17,12 @@ Gina Read requests `tools:read`. Do not add an execution URL as a substitute for
 
 The host's current instructions are in [Connect from ChatGPT](https://developers.openai.com/plugins/deploy/connect-chatgpt). If developer mode is unavailable, use another [supported client](/connect/index).
 
+## Add the Predictions connector
+
+Prediction trading and prediction events use a second connection, separate from Gina Read. Repeat the steps above with the name **Ask Gina Predictions** and `https://askgina.ai/ai/predictions/mcp`. It requests `tools:execute`, so it is write access (Degen mode) and can place orders. Keep it as a separate connection and keep Gina Read for research.
+
+ChatGPT can receive prediction events through MCP Events, a webhook delivery that ChatGPT sets up by itself when you ask it to monitor an event. Ask Gina implements that path on the Predictions endpoint, but it has not been verified end to end with ChatGPT, and MCP Events is a draft specification. See [ChatGPT MCP Events](/predictions-mcp/events#chatgpt-mcp-events) for the behavior. You do not register a webhook destination for it, and you never paste a secret into a chat.
+
 ## Verify your first result
 
 Ask **“Use Gina to show ETH in USD over the past seven days.”** Confirm a Gina tool ran and the response identifies ETH and the requested period. Follow [First successful request](/start/first-request) for the expected tool boundary and recovery steps.

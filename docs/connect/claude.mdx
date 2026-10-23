@@ -76,6 +76,15 @@ To install the research skills together with their MCP configuration, use the re
 
 Restart the session if prompted, then use `/mcp` to authenticate the included connection. Choose this route instead of adding a duplicate direct connection. The repository marketplace is distinct from a listing in Anthropic's public directory. To add Spot execution from the same marketplace, see [install for your host](/agents/plugins-and-skills#claude-code).
 
+## Add the Predictions connector
+
+Prediction trading and prediction events use a second connector, separate from Gina Read. It requests `tools:execute`, so it is write access (Degen mode) and can place orders. Add it by hand with these steps. The one-tap buttons above add Gina Read only.
+
+- **Claude web and Desktop:** open **Customize → Connectors → + → Add custom connector**, enter **Ask Gina Predictions** and `https://askgina.ai/ai/predictions/mcp`, add it, choose **Connect** and complete Gina OAuth.
+- **Claude Code:** the [Predictions client setup](/predictions-mcp/client-setup#claude-code) has the `claude mcp add` command for the `predictions` server.
+
+Ask Gina does not push events into a Claude conversation. Claude can create a pull subscription with `createPredictionEventSubscription` and no `destinationId`, then call `getPredictionEvents` with the returned `subscriptionId` and `cursor` when you ask it to check. See [Prediction events](/predictions-mcp/events).
+
 ## Verify your first result
 
 Ask **“Use Gina to show ETH in USD over the past seven days.”** Confirm a Gina tool ran and the response identifies ETH and the requested period. Follow [First successful request](/start/first-request) for the expected tool boundary and recovery steps.
