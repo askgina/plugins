@@ -113,6 +113,8 @@ A receiver that makes its own secret, such as a Grok trigger, needs that secret,
 }
 ```
 
+If your host retries `createWebhookDestination` and a second destination appears, call `listWebhookDestinations` and call `disableWebhookDestination` on the extra one. Disabling cannot be undone, so check the ids first.
+
 To replace a secret later, call `rotateWebhookDestinationSecret` with the `destinationId` and an optional new `secret`. It works on active destinations only and, like creation, returns a generated secret once. To end a destination, call `disableWebhookDestination` with the `destinationId`.
 
 The secret passes through your client's transcript on this path either way: you pass it in as `secret`, or Ask Gina returns it once in the result. Treat that transcript as holding a credential for this destination. Create, rotate and disable are marked destructive, so hosts ask you to confirm each call before it runs. `sendWebhookTestEvent` is not destructive, but it reaches your receiver.
@@ -132,7 +134,7 @@ These rules apply the same way on both paths.
 - The URL must be `https`, use the default port, carry no credentials and name a public DNS host. IP addresses, `localhost` and internal names are refused, and so is a host that resolves to a private, loopback, link-local or metadata address. Redirects are never followed, and a `3xx` answer counts as a failed delivery.
 - The secret is stored encrypted and is never shown again. Tools and the page show the host, not the full URL, because a trigger URL can itself be a bearer credential.
 - Each account has a cap on active destinations. The settings page and the tools count against the same cap. Past it, `createWebhookDestination` fails with `WEBHOOK_DESTINATION_LIMIT_REACHED`, and `details.limit` states the cap.
-- Adding destinations and sending test events are each limited per hour, and both paths share that limit. A refused call names the `action` and the `limit`.
+- Adding destinations and sending test events are each limited to 10 per hour. Both paths share those limits: `sendWebhookTestEvent` and the settings page's **Send test event** button draw on the same test limit. A refused call names the `action` and the `limit`.
 - To replace a secret, use **Rotate secret** on the row or `rotateWebhookDestinationSecret`. The previous secret keeps signing alongside the new one for 24 hours, so you can update the receiver without losing deliveries.
 - Disabling ends the destination and cannot be reversed. Register a new destination instead. It pauses the subscriptions that use it, and it works from the page (**Disable**) or from `disableWebhookDestination`.
 - A test event signs `prediction.subscription.health.v1` with `kind: "test"`. Ask Gina sends it once, retries nothing and does not store it in the event log. It starts a real automation on receivers such as Grok, so expect it to run.
