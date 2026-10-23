@@ -1,9 +1,9 @@
 ---
 title: "Prediction events"
-description: "Subscribe an agent to order and trade events on your Polymarket account and receive them as signed webhooks, in a Claude Code routine or by cursor pull."
+description: "Subscribe to Polymarket order and trade events through signed webhooks, Claude Code or Grok Bot routines, or cursor pull."
 ---
 
-Prediction events let an agent find out what happened to an order without asking again. Ask Gina watches your Polymarket account and records each order and trade transition in an event log. Your agent either reads that log with a cursor or has Ask Gina push events to a webhook you registered. A Claude Code routine can also receive them, and Ask Gina starts a session for it.
+Prediction events let an agent find out what happened to an order without asking again. Ask Gina watches your Polymarket account and records each order and trade transition in an event log. Your agent either reads that log with a cursor or has Ask Gina push events to a registered destination. Destinations include signed webhooks, [Claude Code routines](#claude-code-routines) and [Grok Bot routines](#grok-bot-routines).
 
 ## Connect the Predictions connector
 
@@ -52,20 +52,7 @@ Every event arrives in the same envelope:
 
 ## The event tools
 
-These tools are native tools on the Predictions connector. The [native tools reference](/predictions-mcp/tools) lists their annotation classes. Read each tool's input schema from `tools/list` for argument limits and rely on it instead of this page.
-
-| Tool                                | Use it for                                                                                                                                                                                                                                                |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `listWebhookDestinations`           | Read the destinations you registered: id, label, host, status and last test. It never returns a URL or a secret.                                                                                                                                          |
-| `createWebhookDestination`          | Register a destination. Returns a generated secret once when you pass none. A Claude routine's fire URL needs the routine's token as `secret`.                                                                                                            |
-| `rotateWebhookDestinationSecret`    | Replace the secret of an active destination. A Claude routine destination needs its new token.                                                                                                                                                            |
-| `disableWebhookDestination`         | End a destination for good. This cannot be undone.                                                                                                                                                                                                        |
-| `sendWebhookTestEvent`              | Send one test event and return the HTTP `status` and an `outcome`. A signed event for a webhook, a short unsigned message that starts a real session for a Claude routine. A routine still waiting for its fire slot returns `WEBHOOK_ROUTINE_NOT_READY`. |
-| `createPredictionEventSubscription` | Subscribe to order and trade events, optionally filtered, with a `destinationId` for webhook delivery or without one to pull.                                                                                                                             |
-| `listPredictionEventSubscriptions`  | Read subscriptions, their filter, status and why one is paused.                                                                                                                                                                                           |
-| `updatePredictionEventSubscription` | Change the name, filter, destination or pause state with one partial patch. `patch.enabled: true` resumes a paused subscription. It cannot change a subscription an MCP Events client created; delete that one instead.                                   |
-| `deletePredictionEventSubscription` | Stop a subscription. A subscription made with these tools sends one final `terminated` health event to its webhook destination. This cannot be undone.                                                                                                    |
-| `getPredictionEvents`               | Read events oldest first with a cursor. Always pass `subscriptionId` to read that subscription's view.                                                                                                                                                    |
+The Predictions connector exposes event tools as native tools. Use the generated [native tools reference](/predictions-mcp/tools) for the tool inventory and annotation classes. Read each tool's input schema from `tools/list` for arguments and limits.
 
 A filter can narrow by `conditionIds`, `assetIds`, `orderIds`, `clientRefs`, `orderEventTypes` and `tradeStatuses`. Fields combine with AND and the values inside one field combine with OR. Empty arrays are rejected, and an omitted filter means everything. Strategy filters such as side or price do not exist.
 
@@ -86,63 +73,66 @@ Read a pull subscription's events with the `subscriptionId` and `cursor` that `c
 { "subscriptionId": "<subscription id>", "cursor": "<cursor>" }
 ```
 
+Use `updatePredictionEventSubscription` with a partial patch to change a tool-created subscription's name, filter, destination or pause state. It cannot change subscriptions created through MCP Events. `deletePredictionEventSubscription` permanently ends a subscription; a tool-created one sends a final `terminated` health event to its destination.
+
 Each call to an event tool is metered like a read tool. Deliveries to your webhook are not charged per event. Accounts have caps on subscriptions and destinations, and a subscription that exceeds its hourly delivery cap is paused with a `limit_exceeded` health event. The error `details.limit` states the current cap.
 
 ## Register a webhook destination
 
-A destination is the HTTPS endpoint that receives your events, plus the secret Ask Gina signs them with. For a Claude routine, the endpoint is the routine's fire URL and the secret is its token, which Ask Gina sends as a bearer token in place of a signature. You can register one through MCP tools or the settings page. Both paths share the same caps and rate limits, and each destination shows up in `listWebhookDestinations` and on the settings page.
+A destination stores an HTTPS endpoint and the credential Ask Gina uses to deliver events. Registration through MCP and through the settings page shares the same destination cap and rate limits. Destinations from either path appear in `listWebhookDestinations` and on the settings page.
 
-Create the receiver first. For Grok, that is a webhook trigger on an automation. Copy its endpoint and signing secret. Grok shows the secret only when the trigger is created or rotated.
+The two registration paths below are for `kind: "webhook"`, which uses a Standard Webhooks signing secret. Create the receiver first and copy its endpoint and signing secret if it provides one. This includes [grok.com automations](#grok-webhook-triggers), not Grok Bot routines. For bearer-authenticated triggers, follow [Claude Code routines](#claude-code-routines) or [Grok Bot routines](#grok-bot-routines) instead.
 
 ### With MCP tools
 
 Your agent can set up a destination without a browser.
 
-1. Call `createWebhookDestination` with a `label`, the receiver's `url` and, if the webhook receiver gave you one, its `secret`, which starts with `whsec_`. The optional `kind` is `webhook` or `claude_routine`; omit it to infer the kind from the URL. A kind that contradicts the URL fails with `INVALID_ARGUMENTS` on `kind`. A routine requires its API trigger token as `secret`; see [Register a routine](#register-a-routine).
+1. Call `createWebhookDestination` with a `label`, the receiver's `url`, `kind: "webhook"` and, if the receiver gave you one, its `whsec_` signing secret as `secret`.
 2. Read the result. It holds the `destination` (id, label, host, status and last test), `secretGenerated` and a `next` list. When you passed no `secret`, Ask Gina generates a `whsec_` secret and returns it once in `secret`. Store it in your receiver straight away, because no tool or page shows it again. If you lose it, rotate the secret.
-3. Call `sendWebhookTestEvent` with the `destinationId`. It returns the HTTP `status` your endpoint answered and an `outcome`.
+3. If you want to start a test on your receiver, call `sendWebhookTestEvent` with the `destinationId`. It returns the HTTP `status` your endpoint answered and an `outcome`.
 4. Call `createPredictionEventSubscription` with the same `destinationId`.
 
-A receiver that makes its own secret, such as a Grok trigger, needs that secret, so pass it as `secret`. A secret Ask Gina generated would not match the receiver.
+A receiver that makes its own signing secret, such as a grok.com automation trigger, needs that secret, so pass it as `secret`. A secret Ask Gina generated would not match the receiver.
 
 ```json
 {
-  "label": "Grok trigger",
+  "label": "grok.com automation",
   "url": "https://<your receiver endpoint>",
+  "kind": "webhook",
   "secret": "whsec_…"
 }
 ```
 
 If your host retries `createWebhookDestination` and a second destination appears, call `listWebhookDestinations` and call `disableWebhookDestination` on the extra one. Disabling cannot be undone, so check the ids first.
 
-To replace a webhook secret later, call `rotateWebhookDestinationSecret` with the `destinationId` and an optional new `secret`. It works on active destinations only and, like webhook creation, returns a generated secret once when you omit `secret`. For a routine, always pass the new API trigger token as `secret`; Ask Gina cannot generate one. To end a destination, call `disableWebhookDestination` with the `destinationId`.
+For `kind: "webhook"`, replace a signing secret with `rotateWebhookDestinationSecret`, passing the `destinationId` and an optional new `secret`. It works on active destinations only and returns a generated secret once if you omit `secret`. A receiver that supplies its own secret needs its replacement value. To end a destination, call `disableWebhookDestination` with the `destinationId`.
 
 The secret passes through your client's transcript on this path either way: you pass it in as `secret`, or Ask Gina returns it once in the result. Treat that transcript as holding a credential for this destination. Create, rotate and disable are marked destructive, so hosts ask you to confirm each call before it runs. `sendWebhookTestEvent` is not destructive, but it reaches your receiver.
 
 ### On the settings page
 
 1. Open [askgina.ai/profile/webhooks](https://askgina.ai/profile/webhooks) and choose **Add destination**.
-2. Enter a **Label** and the **Webhook or routine URL**. Under **Receiver type**, choose **Detect from the address**, the default, **Webhook** or **Claude routine**. For a webhook, enter the **Signing secret**, which starts with `whsec_`. For a routine, the secret field is **Routine API trigger token**. Routine rows show a **Claude routine** badge.
-3. Press **Send test event**. For a webhook, Ask Gina signs a `prediction.subscription.health.v1` event with `kind: "test"` and shows the HTTP status your endpoint returned. For a routine, it sends a short unsigned test message that starts a real session. If the destination's fire slot is not ready, the page tells you to wait N seconds and sends nothing.
+2. Enter a **Label** and the **Webhook or routine URL**. Under **Receiver type**, choose **Webhook** and enter the receiver's **Signing secret**, which starts with `whsec_`. For a routine, follow its setup section instead.
+3. If you want to run a test, press **Send test event**. Ask Gina signs a `prediction.subscription.health.v1` event with `kind: "test"` and shows the HTTP status your endpoint returned. A test can start real work on the receiver.
 
 On the page, the secret goes from you to Ask Gina without passing through an agent.
 
 ### Rules for a destination
 
-These rules apply the same way on both paths.
+The URL, storage, destination limits and disabling rules apply to every destination kind on both registration paths. Signing, rotation and test bodies depend on the kind.
 
-- The URL must be `https`, use the default port, carry no credentials and name a public DNS host. IP addresses, `localhost` and internal names are refused, and so is a host that resolves to a private, loopback, link-local or metadata address. Redirects are never followed, and a `3xx` answer counts as a failed delivery.
+- The URL must be `https`, use the default port, carry no credentials and name a public DNS host. IP addresses, `localhost` and internal names are refused, and so is a host that resolves to a private, loopback, link-local or metadata address. Redirects are never followed and count as failed deliveries.
 - The secret is stored encrypted and is never shown again. Tools and the page show the host, not the full URL, because a trigger URL can itself be a bearer credential.
 - The settings page and tools share the same active-destination cap and rate limits for adding destinations and sending test events. At the destination cap, `createWebhookDestination` fails with `WEBHOOK_DESTINATION_LIMIT_REACHED`; `details.limit` states the current cap. A rate-limited call names the `action` and the `limit`.
 - To replace a webhook secret, use **Rotate secret** on the row or `rotateWebhookDestinationSecret`. The previous secret keeps signing alongside the new one for 24 hours, so you can update the receiver without losing deliveries. A Claude routine row uses **Replace token** and has no such overlap. See [Rotate the routine token](#rotate-the-routine-token).
 - Disabling ends the destination and cannot be reversed. Register a new destination instead. It pauses the subscriptions that use it, and it works from the page (**Disable**) or from `disableWebhookDestination`.
-- A webhook test signs `prediction.subscription.health.v1` with `kind: "test"`. Ask Gina sends it once, retries nothing and does not store it in the event log. It starts a real automation on receivers such as Grok, so expect it to run. A Claude routine gets a short unsigned test message instead. It starts a real session, uses the routine's fire quota and takes the destination's 150-second fire slot. If the routine was fired less than 150 seconds ago, nothing is sent. `sendWebhookTestEvent` returns `WEBHOOK_ROUTINE_NOT_READY` with `details.retryAfterSeconds`, and the settings page tells you to wait N seconds.
+- A webhook test signs `prediction.subscription.health.v1` with `kind: "test"`. Ask Gina sends it once, retries nothing and does not store it in the event log. It starts a real automation on receivers such as grok.com, so expect it to run. A Claude routine gets a short unsigned test message instead. It starts a real session, uses the routine's fire quota and takes the destination's 150-second fire slot. If the routine was fired less than 150 seconds ago, nothing is sent. `sendWebhookTestEvent` returns `WEBHOOK_ROUTINE_NOT_READY` with `details.retryAfterSeconds`, and the settings page tells you to wait N seconds. Tests are optional, and creating a destination never sends one automatically.
 
 Then ask your agent to list the destinations and create a subscription with the `destinationId`. The agent sees labels and ids only.
 
 ## Verify Standard Webhooks signatures
 
-Ask Gina signs every webhook delivery with the [Standard Webhooks](https://www.standardwebhooks.com) scheme and sends one event per request. A Claude routine destination works differently and is covered in [Claude Code routines](#claude-code-routines).
+This section applies only to `kind: "webhook"`. Ask Gina signs those deliveries with the [Standard Webhooks](https://www.standardwebhooks.com) scheme and sends one event per request. [Claude Code routines](#claude-code-routines) and [Grok Bot routines](#grok-bot-routines) use Bearer authentication instead, with no Standard Webhooks signature headers.
 
 | Header                  | Value                                                                                                      |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------- |
@@ -161,13 +151,15 @@ To verify a request:
 5. Reject a timestamp more than five minutes from your clock.
 6. Return a `2xx` status to acknowledge the event.
 
-Use a Standard Webhooks library where you can. Grok verifies the same scheme on its side, so a destination that points at a Grok trigger needs no code of yours.
+Use a Standard Webhooks library where you can. A grok.com automation verifies this scheme itself, so its trigger needs no receiver code of yours. This does not apply to Grok Bot routines.
 
 ### Delivery guarantees
 
+These acknowledgement and retry rules apply to `kind: "webhook"`, not routine destinations.
+
 - Delivery is at least once. Dedupe on `eventId`, which equals the `webhook-id` header. The same transition seen live and again during a backfill has one `eventId`.
 - Events for one order or trade arrive in order. There is no global order across orders.
-- A `2xx` acknowledges the event. A `410` disables the destination and pauses the subscription. A `413` skips that event and is never retried. Other failures are retried with exponential backoff, the same `webhook-id` and a new signature each time.
+- A `2xx` acknowledges the event. A `410` disables the destination and pauses its subscriptions; register a replacement destination and attach it before resuming. A `413` skips that event and is never retried. Other failures are retried with exponential backoff, the same `webhook-id` and a new signature each time.
 - A subscription that keeps failing is paused and emits a `paused` health event. Resume it with `updatePredictionEventSubscription` after you fix the receiver.
 - An order event and a trade event can describe the same fill. Count a fill once: do not add an order event's `sizeMatched` to a trade event's `size` for the same fill.
 
@@ -188,7 +180,7 @@ If `truncated` is `true`, the cursor is older than the retained log, so some eve
 
 A pull client can still register an HTTPS receiver that you run for another process. Follow [With MCP tools](#with-mcp-tools) from Codex, then create a subscription with that `destinationId`. Codex itself still reads by cursor.
 
-A pull subscription that nobody reads for 7 days is paused with a `paused` health event whose reason is `idle`. Calling `getPredictionEvents` with its `subscriptionId` counts as reading it. Resume a paused one with `updatePredictionEventSubscription`, passing its `id` and `patch.enabled: true`.
+An unread pull subscription is eventually paused with a `paused` health event whose reason is `idle`. Calling `getPredictionEvents` with its `subscriptionId` counts as reading it. Resume a paused one with `updatePredictionEventSubscription`, passing its `id` and `patch.enabled: true`.
 
 ### Poll from Claude Code
 
@@ -202,14 +194,14 @@ A `/loop` task runs only while Claude Code is running and idle, so closing the s
 
 ## Grok webhook triggers
 
-Grok Bot starts an automation from a webhook trigger, so it receives events by push.
+This section is for automations on **grok.com**, not [Grok Bot routines](#grok-bot-routines). The two products use different credentials and acknowledgement statuses.
 
-1. In Grok, add a **Webhook** trigger to an automation, save it and copy the endpoint and signing secret. See [Grok webhook triggers](https://docs.x.ai/grok/automations/webhooks).
-2. Ask Grok to call `createWebhookDestination` with a `label`, the trigger endpoint as `url` and the trigger's signing secret as `secret`. Grok makes its own secret, so always pass it. Ask Gina cannot sign for a trigger with a secret it generated. Your host asks you to confirm the call. You can register the same endpoint and secret on [askgina.ai/profile/webhooks](https://askgina.ai/profile/webhooks) instead.
-3. Ask Grok to call `sendWebhookTestEvent` with the `destinationId`. Grok answers `202` when it accepts the request, and `sendWebhookTestEvent` returns that `status`.
-4. Ask Grok to create a subscription with the destination. A filter such as `clientRefs` limits it to orders your bot placed with that reference.
+1. In grok.com, add a **Webhook** trigger to an automation, save it and copy the endpoint and signing secret. See [Grok webhook triggers](https://docs.x.ai/grok/automations/webhooks).
+2. Call `createWebhookDestination` with a `label`, the trigger endpoint as `url`, `kind: "webhook"` and the trigger's `whsec_` signing secret as `secret`. Always supply that secret; one generated by Ask Gina would not match the receiver. You can register the same endpoint and signing secret on [askgina.ai/profile/webhooks](https://askgina.ai/profile/webhooks) instead.
+3. If you want to start a real automation test, call `sendWebhookTestEvent` with the `destinationId`. Grok's automation documentation specifies `202 Accepted`, which confirms acceptance, not completion.
+4. Call `createPredictionEventSubscription` with the destination's `destinationId`. A filter such as `clientRefs` limits it to orders your bot placed with that reference.
 
-The signing secret appears in the Grok conversation when Grok passes it to `createWebhookDestination`. If you rotate the secret in Grok, call `rotateWebhookDestinationSecret` with the new `secret`, or use **Rotate secret** on the same settings row, before the next event.
+If an agent supplies the signing secret, it enters that conversation's transcript. If you rotate the secret in grok.com, call `rotateWebhookDestinationSecret` with the new `secret`, or use **Rotate secret** on the same settings row, before the next event.
 
 ## Claude Code routines
 
@@ -219,7 +211,7 @@ Anthropic marks routines as a research preview and the fire endpoint as experime
 
 ### Register a routine
 
-`createWebhookDestination` accepts an optional `kind`, either `webhook` or `claude_routine`. When you omit it, Ask Gina infers the kind from the URL. A Claude routine's `url` must be exactly `https://api.anthropic.com/v1/claude_code/routines/trig_.../fire`, with the routine's own id in place of the dots. Any other `api.anthropic.com` address is refused. A `kind` that contradicts the URL fails with `INVALID_ARGUMENTS` on `kind`.
+For a Claude routine, pass `kind: "claude_routine"` to `createWebhookDestination` or omit `kind` to infer it from the URL. A Claude routine's `url` must be exactly `https://api.anthropic.com/v1/claude_code/routines/trig_.../fire`, with the routine's own id in place of the dots. Any other `api.anthropic.com` address is refused. A `kind` that contradicts the URL fails with `INVALID_ARGUMENTS` on `kind`.
 
 For a routine, the `secret` is required and must be the routine's API trigger token, which starts with `sk-ant-oat01-`. Ask Gina cannot generate one, so `createWebhookDestination` without a `secret` fails with `INVALID_ARGUMENTS`. Register it on [askgina.ai/profile/webhooks](https://askgina.ai/profile/webhooks) when you can. Leave **Receiver type** as **Detect from the address** or choose **Claude routine**. The token then never enters a chat. If an agent registers it with the tool, the token stays in that transcript, and the tool result never echoes it. Then create a subscription with the `destinationId` as for any other destination.
 
@@ -263,6 +255,10 @@ Each session draws on your Claude subscription like an interactive session. Ask 
 
 An event that starts a session is a notification, not a request to trade. The note says so, and Anthropic wraps the text as untrusted data in the session. Treat the fired text that way yourself. A routine that holds the Predictions connector can place orders without you present, because Claude runs it in auto mode. For a routine that only needs to tell you what happened, remove the Predictions connector and report through another one. Orders you want placed still go through Gina in a session where you can confirm them.
 
+## Grok Bot routines
+
+Grok Bot routines receive events through a bearer-authenticated webhook trigger, not a grok.com automation's signed webhook. Follow [Grok Bot connection setup](/connect/grok-bot#connect-prediction-events-to-a-routine) for registration, test behavior and scheduled cursor reconciliation. An accepted delivery does not prove the routine completed its work.
+
 ## ChatGPT MCP Events
 
 <Note>
@@ -292,12 +288,12 @@ ChatGPT requires MCP protocol version `2026-07-28` and the draft MCP Events spec
 
 ## Check that it works
 
-Run these in order. Steps 1 and 2 only read. Steps 3 and 5 create a destination and a subscription, and your host asks you to confirm step 3.
+Steps 1 and 2 only read. Steps 3 and 5 create a destination and a subscription, and your host asks you to confirm step 3. Step 4 is optional: routine tests start real runs and spend usage. Choose the receiver kind before registering it.
 
 1. In your client, open the tool list for `https://askgina.ai/ai/predictions/mcp` and confirm `createWebhookDestination`, `sendWebhookTestEvent` and `getPredictionEvents` appear. Confirm that your client marks the create, rotate and disable tools as destructive.
 2. Ask **“Use Gina to list my webhook destinations.”** Expected: a `destinations` list that has labels, hosts and a `next` link to the settings page, and no URLs or secrets.
-3. Ask **“Use Gina to register my webhook receiver as a destination.”** Give the agent the receiver URL, plus its `whsec_` secret if the receiver made one. Expected: a `destination` with status `active`. When you gave no secret, the result has `secretGenerated: true` and a `secret` that you copy into the receiver now.
-4. Ask **“Use Gina to send a test event to that destination.”** Expected: `sendWebhookTestEvent` returns an HTTP `status` and an `outcome`, and your receiver shows one signed test event.
+3. Ask **"Use Gina to register my receiver as a destination."** For `kind: "webhook"`, supply its URL and its `whsec_` signing secret if the receiver made one. For routines, follow the [Claude](#claude-code-routines) or [Grok Bot setup](/connect/grok-bot#connect-prediction-events-to-a-routine) for the URL, kind and credential. Expected: a `destination` with status `active`. Only `kind: "webhook"` with no supplied secret returns `secretGenerated: true` and a secret to install in the receiver; routines never generate a credential.
+4. If you want a real test, ask **"Use Gina to send a test event to that destination."** Expected: `sendWebhookTestEvent` returns an HTTP `status` and an `outcome`. A `kind: "webhook"` receiver gets one signed test event. Routine tests start real runs and spend usage; inspect the run to learn whether it finished.
 5. Ask **“Create a prediction event subscription for this destination.”** Expected: a subscription with status `active` and a `cursor`. Then, if you choose to, place an order yourself. Confirm that your receiver gets an `eventId` for each transition and that a repeated `eventId` is the same event.
 
 For a Claude routine, the receiver in step 3 is the routine's fire URL and its token as `secret`. You can pass `kind: "claude_routine"` or omit `kind` to infer it from the URL. Step 4 sends a short unsigned test message, starts a real session, uses the routine's fire quota and takes the destination's 150-second fire slot. Expect one new run in the routine's history instead of a signed request. If the slot is not ready, nothing is sent: `sendWebhookTestEvent` returns `WEBHOOK_ROUTINE_NOT_READY` with `details.retryAfterSeconds`. Wait that long before trying again. If you prefer the settings page, register the destination and press **Send test event** there instead of steps 3 and 4; a refusal tells you to wait N seconds. If a tool is missing, remove the connection and add it again. If you see `PREDICTION_EVENTS_ACCOUNT_NOT_READY`, finish Predictions account setup in Ask Gina first.
