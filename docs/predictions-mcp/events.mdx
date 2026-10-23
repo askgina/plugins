@@ -54,18 +54,18 @@ Every event arrives in the same envelope:
 
 These tools are native tools on the Predictions connector. The [native tools reference](/predictions-mcp/tools) lists their annotation classes. Read each tool's input schema from `tools/list` for argument limits and rely on it instead of this page.
 
-| Tool                                | Use it for                                                                                                                                                                                                        |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `listWebhookDestinations`           | Read the destinations you registered: id, label, host, status and last test. It never returns a URL or a secret.                                                                                                  |
-| `createWebhookDestination`          | Register a destination from a `label`, a `url` and an optional `whsec_` `secret`. When you pass no secret, Ask Gina generates one and returns it once. Hosts ask you to confirm the call.                         |
-| `rotateWebhookDestinationSecret`    | Replace the secret of an active destination, with one you pass or one Ask Gina generates and returns once. Hosts ask you to confirm the call.                                                                     |
-| `disableWebhookDestination`         | End a destination for good and pause the subscriptions that use it. This cannot be undone. Hosts ask you to confirm the call.                                                                                     |
-| `sendWebhookTestEvent`              | Send one signed test event to a destination and return the HTTP `status` and an `outcome`. It starts a real automation on receivers such as Grok.                                                                 |
-| `createPredictionEventSubscription` | Subscribe to order and trade events, optionally filtered, with a `destinationId` for webhook delivery or without one to pull.                                                                                     |
-| `listPredictionEventSubscriptions`  | Read subscriptions, their filter, status and why one is paused.                                                                                                                                                   |
-| `updatePredictionEventSubscription` | Change the name, filter, destination or pause state with one partial patch. `enabled: true` resumes a paused subscription. It cannot change a subscription an MCP Events client created; delete that one instead. |
-| `deletePredictionEventSubscription` | Stop a subscription. A subscription made with these tools sends one final `terminated` health event to its webhook destination. This cannot be undone.                                                            |
-| `getPredictionEvents`               | Read events oldest first with a cursor. Pass `subscriptionId` to read one subscription's filtered view.                                                                                                           |
+| Tool                                | Use it for                                                                                                                                                                                                              |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `listWebhookDestinations`           | Read the destinations you registered: id, label, host, status and last test. It never returns a URL or a secret.                                                                                                        |
+| `createWebhookDestination`          | Register a destination. Returns a generated secret once when you pass none.                                                                                                                                             |
+| `rotateWebhookDestinationSecret`    | Replace the secret of an active destination.                                                                                                                                                                            |
+| `disableWebhookDestination`         | End a destination for good. This cannot be undone.                                                                                                                                                                      |
+| `sendWebhookTestEvent`              | Send one signed test event and return the HTTP `status` and an `outcome`.                                                                                                                                               |
+| `createPredictionEventSubscription` | Subscribe to order and trade events, optionally filtered, with a `destinationId` for webhook delivery or without one to pull.                                                                                           |
+| `listPredictionEventSubscriptions`  | Read subscriptions, their filter, status and why one is paused.                                                                                                                                                         |
+| `updatePredictionEventSubscription` | Change the name, filter, destination or pause state with one partial patch. `patch.enabled: true` resumes a paused subscription. It cannot change a subscription an MCP Events client created; delete that one instead. |
+| `deletePredictionEventSubscription` | Stop a subscription. A subscription made with these tools sends one final `terminated` health event to its webhook destination. This cannot be undone.                                                                  |
+| `getPredictionEvents`               | Read events oldest first with a cursor. Always pass `subscriptionId` to read that subscription's view.                                                                                                                  |
 
 A filter can narrow by `conditionIds`, `assetIds`, `orderIds`, `clientRefs`, `orderEventTypes` and `tradeStatuses`. Fields combine with AND and the values inside one field combine with OR. Empty arrays are rejected, and an omitted filter means everything. Strategy filters such as side or price do not exist.
 
@@ -133,8 +133,7 @@ These rules apply the same way on both paths.
 
 - The URL must be `https`, use the default port, carry no credentials and name a public DNS host. IP addresses, `localhost` and internal names are refused, and so is a host that resolves to a private, loopback, link-local or metadata address. Redirects are never followed, and a `3xx` answer counts as a failed delivery.
 - The secret is stored encrypted and is never shown again. Tools and the page show the host, not the full URL, because a trigger URL can itself be a bearer credential.
-- Each account has a cap on active destinations. The settings page and the tools count against the same cap. Past it, `createWebhookDestination` fails with `WEBHOOK_DESTINATION_LIMIT_REACHED`, and `details.limit` states the cap.
-- Adding destinations and sending test events are each limited to 10 per hour. Both paths share those limits: `sendWebhookTestEvent` and the settings page's **Send test event** button draw on the same test limit. A refused call names the `action` and the `limit`.
+- Limits: 5 active destinations per account, shared by the settings page and the tools. Past it, `createWebhookDestination` fails with `WEBHOOK_DESTINATION_LIMIT_REACHED` and `details.limit`. Adding destinations and sending test events are each limited to 10 per hour, shared the same way. A refused call names the `action` and the `limit`.
 - To replace a secret, use **Rotate secret** on the row or `rotateWebhookDestinationSecret`. The previous secret keeps signing alongside the new one for 24 hours, so you can update the receiver without losing deliveries.
 - Disabling ends the destination and cannot be reversed. Register a new destination instead. It pauses the subscriptions that use it, and it works from the page (**Disable**) or from `disableWebhookDestination`.
 - A test event signs `prediction.subscription.health.v1` with `kind: "test"`. Ask Gina sends it once, retries nothing and does not store it in the event log. It starts a real automation on receivers such as Grok, so expect it to run.
@@ -176,16 +175,30 @@ Use a Standard Webhooks library where you can. Grok verifies the same scheme on 
 
 A client that cannot receive a webhook reads events instead. Codex is the main case. Pull needs no destination, so it needs no browser and no secret.
 
-1. Call `createPredictionEventSubscription` without a `destinationId`. This is a pull subscription. It also keeps Ask Gina's stream for your account open, so events are recorded. The response includes a `cursor`.
-2. Call `getPredictionEvents` with `subscriptionId` and that `cursor`. You get `events`, a new `cursor` and `hasMore`.
-3. Pass the returned `cursor` on the next call to read only newer events. If `hasMore` is `true`, call again now.
+1. Call `createPredictionEventSubscription` without a `destinationId`. This is a pull subscription. It also keeps Ask Gina's stream for your account open, so events are recorded. The response includes a `subscriptionId` and a `cursor`.
+2. Call `getPredictionEvents` with that `subscriptionId` and `cursor`. You get `events`, a new `cursor`, `hasMore` and `truncated`.
+3. Save the returned `cursor` and pass it on the next call to read only newer events. If `hasMore` is `true`, call again now with the new cursor until it is `false`.
 4. Dedupe on `eventId` across calls, because delivery is at least once.
 
-If `truncated` is `true`, the cursor is older than the retained log, so some events were lost. Read the account state again, then continue from the returned cursor. A cursor belongs to one user and one subscription; a cursor from elsewhere fails with `PREDICTION_EVENTS_CURSOR_INVALID`. Drop the cursor to restart from the oldest retained event.
+Always pass `subscriptionId`. Without it, `getPredictionEvents` does not read the subscription's events. It reads the whole retained account log from its oldest event, including events dated before the subscription existed. With `subscriptionId`, the read starts at the subscription's start and returns only the events its filter selects, plus its health events.
+
+Keep the cursor where the next call can find it. If your client can lose its conversation, write the cursor to a file. A cursor belongs to one user and one subscription; a cursor from elsewhere fails with `PREDICTION_EVENTS_CURSOR_INVALID`. Omit the cursor to restart from the subscription's start.
+
+If `truncated` is `true`, the cursor is older than the retained log, so some events were lost. Read the account state again, then continue from the returned cursor.
 
 A pull client can still register an HTTPS receiver that you run for another process. Follow [With MCP tools](#with-mcp-tools) from Codex, then create a subscription with that `destinationId`. Codex itself still reads by cursor.
 
-A pull subscription that nobody reads for a while is paused with a `paused` health event whose reason is `idle`. Calling `getPredictionEvents` with its `subscriptionId` counts as reading it. Resume a paused one with `updatePredictionEventSubscription` and `enabled: true`.
+A pull subscription that nobody reads for 7 days is paused with a `paused` health event whose reason is `idle`. Calling `getPredictionEvents` with its `subscriptionId` counts as reading it. Resume a paused one with `updatePredictionEventSubscription`, passing its `id` and `patch.enabled: true`.
+
+### Poll from Claude Code
+
+Claude Code can run the read on an interval while a session is open. The `/loop` command re-runs a prompt on a fixed schedule. See [Run prompts on a schedule](https://code.claude.com/docs/en/scheduled-tasks).
+
+```text
+/loop 5m Call getPredictionEvents with subscriptionId <subscription id> and the cursor you saved last. If hasMore is true, call again with the new cursor. Save the latest cursor to .gina-events-cursor. Report each new eventId once and say nothing if there are none.
+```
+
+A `/loop` task runs only while Claude Code is running and idle, so closing the session stops it. A recurring task also expires on its own, so check the expiry on that page and recreate the task before it ends. If Claude Code stops, start a new `/loop` that reads the saved cursor. For polling that does not depend on an open session, the same page points to cloud scheduled tasks. Polling is a read only. It does not place orders, and an event that arrives is not approval to act on it.
 
 ## Grok webhook triggers
 
@@ -229,7 +242,7 @@ ChatGPT requires MCP protocol version `2026-07-28` and the draft MCP Events spec
 
 Run these in order. Steps 1 and 2 only read. Steps 3 and 5 create a destination and a subscription, and your host asks you to confirm step 3.
 
-1. In your client, open the tool list for `https://askgina.ai/ai/predictions/mcp` and confirm `listWebhookDestinations`, `createWebhookDestination`, `rotateWebhookDestinationSecret`, `disableWebhookDestination`, `sendWebhookTestEvent` and `getPredictionEvents` appear. Confirm that your client marks create, rotate and disable as destructive.
+1. In your client, open the tool list for `https://askgina.ai/ai/predictions/mcp` and confirm `createWebhookDestination`, `sendWebhookTestEvent` and `getPredictionEvents` appear. Confirm that your client marks the create, rotate and disable tools as destructive.
 2. Ask **“Use Gina to list my webhook destinations.”** Expected: a `destinations` list that has labels, hosts and a `next` link to the settings page, and no URLs or secrets.
 3. Ask **“Use Gina to register my webhook receiver as a destination.”** Give the agent the receiver URL, plus its `whsec_` secret if the receiver made one. Expected: a `destination` with status `active`. When you gave no secret, the result has `secretGenerated: true` and a `secret` that you copy into the receiver now.
 4. Ask **“Use Gina to send a test event to that destination.”** Expected: `sendWebhookTestEvent` returns an HTTP `status` and an `outcome`, and your receiver shows one signed test event.

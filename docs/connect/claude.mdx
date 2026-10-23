@@ -83,7 +83,11 @@ Prediction trading and prediction events use a second connector, separate from G
 - **Claude web and Desktop:** open **Customize → Connectors → + → Add custom connector**, enter **Ask Gina Predictions** and `https://askgina.ai/ai/predictions/mcp`, add it, choose **Connect** and complete Gina OAuth.
 - **Claude Code:** the [Predictions client setup](/predictions-mcp/client-setup#claude-code) has the `claude mcp add` command for the `predictions` server.
 
-Ask Gina does not push events into a Claude conversation. Claude can create a pull subscription with `createPredictionEventSubscription` and no `destinationId`, then call `getPredictionEvents` with the returned `subscriptionId` and `cursor` when you ask it to check. To push events to an HTTPS receiver you run, Claude can register it with `createWebhookDestination` and test it with `sendWebhookTestEvent`, without a browser step. See [Prediction events](/predictions-mcp/events).
+Ask Gina does not push events into a Claude conversation. Claude can create a pull subscription with `createPredictionEventSubscription` and no `destinationId`, then call `getPredictionEvents` with the returned `subscriptionId` and `cursor` when you ask it to check. Always pass the `subscriptionId`, because without it the call reads the whole retained account log instead of the subscription's events. Save the returned `cursor`, call again while `hasMore` is `true`, dedupe on `eventId`, and read your account state again when `truncated` is `true`. A pull subscription that nobody reads for 7 days pauses. Resume it with `updatePredictionEventSubscription`, passing its `id` and `patch.enabled: true`.
+
+In Claude Code, `/loop 5m` followed by that read prompt checks on an interval while the session is open. The [Prediction events](/predictions-mcp/events#poll-from-claude-code) page has the prompt and its limits.
+
+A Claude agent can now create its own webhook destination with `createWebhookDestination` and test it with `sendWebhookTestEvent`, without a browser step. Delivering events to that URL does not start a Claude turn by itself, so a receiver you run has to do something with them. See [Prediction events](/predictions-mcp/events).
 
 ## Verify your first result
 
