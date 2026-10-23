@@ -64,25 +64,26 @@
     "effect": "4.0.0-rc.111",
     "typescript": "7.0.2",
     "typescript-api": "npm:typescript@5.9.3",
-    "vite": "npm:@voidzero-dev/vite-plus-core@1.1.0",
-    "vite-plus": "1.1.0",
-    "vitest": "5.0.3",
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.3.0",
+    "vite-plus": "1.3.0",
+    "vitest": "5.0.5",
     "yaml": "2.8.3"
   },
   "overrides": {
     "@effect/platform-node-shared": "4.0.0-rc.111",
     "esbuild": "0.28.1",
-    "oxlint": "1.87.0",
+    "ip-address": "10.7.4",
+    "oxlint": "1.88.0",
     "qs": "6.16.0",
     "tinypool": "2.1.2",
-    "vite": "npm:@voidzero-dev/vite-plus-core@1.1.0"
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.3.0"
   },
   "engines": {
     "bun": "1.4.x"
   },
   "packageManager": "bun@1.4.0",
   "patchedDependencies": {
-    "@storybook/react@10.3.6": "patches/@storybook%2Freact@10.3.6.patch",
+    "@storybook/react@10.6.3": "patches/@storybook%2Freact@10.6.3.patch",
     "react-docgen-typescript@2.4.0": "patches/react-docgen-typescript@2.4.0.patch"
   }
 }
