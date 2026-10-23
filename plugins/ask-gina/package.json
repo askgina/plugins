@@ -29,6 +29,6 @@
     "@askgina/contracts": "workspace:*",
     "effect": "4.0.0-rc.111",
     "yaml": "2.8.3",
-    "zod": "4.4.3"
+    "zod": "4.6.6"
   }
 }
