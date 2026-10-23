@@ -83,7 +83,7 @@ Prediction trading and prediction events use a second connector, separate from G
 - **Claude web and Desktop:** open **Customize → Connectors → + → Add custom connector**, enter **Ask Gina Predictions** and `https://askgina.ai/ai/predictions/mcp`, add it, choose **Connect** and complete Gina OAuth.
 - **Claude Code:** the [Predictions client setup](/predictions-mcp/client-setup#claude-code) has the `claude mcp add` command for the `predictions` server.
 
-Ask Gina does not push events into a Claude conversation. Claude can create a pull subscription with `createPredictionEventSubscription` and no `destinationId`, then call `getPredictionEvents` with the returned `subscriptionId` and `cursor` when you ask it to check. See [Prediction events](/predictions-mcp/events). The event tools are rolling out account by account.
+Ask Gina does not push events into a Claude conversation. Claude can create a pull subscription with `createPredictionEventSubscription` and no `destinationId`, then call `getPredictionEvents` with the returned `subscriptionId` and `cursor` when you ask it to check. See [Prediction events](/predictions-mcp/events).
 
 ## Verify your first result
 

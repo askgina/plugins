@@ -5,13 +5,6 @@ description: "Subscribe an agent to order and trade events on your Polymarket ac
 
 Prediction events let an agent find out what happened to an order without asking again. Ask Gina watches your Polymarket account and records each order and trade transition in an event log. Your agent either reads that log with a cursor or has Ask Gina push each event to a webhook you registered.
 
-<Warning>
-  Prediction events are rolling out account by account and are not generally available. While your
-  account is not enabled, the event tools return `PREDICTION_EVENTS_NOT_ENABLED`. Deleting a
-  subscription and disabling a webhook destination still work. Nothing on this page changes the
-  availability of the Predictions connector itself.
-</Warning>
-
 ## Connect the Predictions connector
 
 Events live on the Predictions connector, which is a second connector next to Gina Read. They are not on the read-only connection.
@@ -36,8 +29,8 @@ Subscriptions deliver three event names. Each name carries a version.
 | `prediction.subscription.health.v1` | The stream or the subscription itself changed state, such as a gap, a pause or an end.    |
 
 - The scope is the whole Polymarket trading account, including orders placed outside Ask Gina. For those, `clientRef` is `null`.
-- A new subscription only sees events recorded after it was created.
-- Health events are always delivered and are never removed by a filter.
+- A new subscription only sees transitions dated after it was created, with a few seconds of grace. Earlier ones are never delivered, including ones Ask Gina learns about later while it catches up.
+- A subscription made with the event tools always receives health events, by webhook and by pull, and a filter never removes them. A subscription an MCP Events client creates receives them only if it subscribed to `prediction.subscription.health.v1`.
 - Decimal values are strings.
 
 Health events carry a `kind` such as `gap`, `auth`, `source_disconnected`, `source_reconnected`, `delivery_failing`, `paused`, `terminated` or `limit_exceeded`. Treat an unknown kind as informational. A `gap` means a transition could not be recovered, so read the account state again before you act on it.
@@ -61,16 +54,33 @@ Every event arrives in the same envelope:
 
 These tools are native tools on the Predictions connector. The [native tools reference](/predictions-mcp/tools) lists their annotation classes. Read each tool's input schema from `tools/list` for argument limits and rely on it instead of this page.
 
-| Tool                                | Use it for                                                                                                                    |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `listWebhookDestinations`           | Read the destinations you registered: id, label, host, status and last test. It never returns a URL or a secret.              |
-| `createPredictionEventSubscription` | Subscribe to order and trade events, optionally filtered, with a `destinationId` for webhook delivery or without one to pull. |
-| `listPredictionEventSubscriptions`  | Read subscriptions, their filter, status and why one is paused.                                                               |
-| `updatePredictionEventSubscription` | Change the name, filter, destination or pause state with one partial patch. `enabled: true` resumes a paused subscription.    |
-| `deletePredictionEventSubscription` | Stop a subscription. A webhook destination receives one final `terminated` health event. This cannot be undone.               |
-| `getPredictionEvents`               | Read events oldest first with a cursor. Pass `subscriptionId` to read one subscription's filtered view.                       |
+| Tool                                | Use it for                                                                                                                                                                                                        |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `listWebhookDestinations`           | Read the destinations you registered: id, label, host, status and last test. It never returns a URL or a secret.                                                                                                  |
+| `createPredictionEventSubscription` | Subscribe to order and trade events, optionally filtered, with a `destinationId` for webhook delivery or without one to pull.                                                                                     |
+| `listPredictionEventSubscriptions`  | Read subscriptions, their filter, status and why one is paused.                                                                                                                                                   |
+| `updatePredictionEventSubscription` | Change the name, filter, destination or pause state with one partial patch. `enabled: true` resumes a paused subscription. It cannot change a subscription an MCP Events client created; delete that one instead. |
+| `deletePredictionEventSubscription` | Stop a subscription. A subscription made with these tools sends one final `terminated` health event to its webhook destination. This cannot be undone.                                                            |
+| `getPredictionEvents`               | Read events oldest first with a cursor. Pass `subscriptionId` to read one subscription's filtered view.                                                                                                           |
 
 A filter can narrow by `conditionIds`, `assetIds`, `orderIds`, `clientRefs`, `orderEventTypes` and `tradeStatuses`. Fields combine with AND and the values inside one field combine with OR. Empty arrays are rejected, and an omitted filter means everything. Strategy filters such as side or price do not exist.
+
+Example arguments. Create a webhook subscription for one market's trades, with a `destinationId` from `listWebhookDestinations`:
+
+```json
+{
+  "name": "Trades on one market",
+  "events": ["prediction.trade.v1"],
+  "filter": { "conditionIds": ["0x…"] },
+  "destinationId": "<destination id>"
+}
+```
+
+Read a pull subscription's events with the `subscriptionId` and `cursor` that `createPredictionEventSubscription` returned:
+
+```json
+{ "subscriptionId": "<subscription id>", "cursor": "<cursor>" }
+```
 
 Each call to an event tool is metered like a read tool. Deliveries to your webhook are not charged per event. Accounts have caps on subscriptions and destinations, and a subscription that exceeds its hourly delivery cap is paused with a `limit_exceeded` health event. The error `details.limit` states the current cap.
 
@@ -85,9 +95,9 @@ A secret must never pass through a tool argument, because it would land in the m
 
 Rules for a destination:
 
-- The URL must be `https`, use the default port and must not contain credentials. Private, loopback, link-local and metadata addresses are refused, and redirects are not followed.
+- The URL must be `https`, use the default port, carry no credentials and name a public DNS host. IP addresses, `localhost` and internal names are refused, and so is a host that resolves to a private, loopback, link-local or metadata address. Redirects are never followed, and a `3xx` answer counts as a failed delivery.
 - The secret is stored encrypted and is never shown again. The page shows the host, not the full URL, because a trigger URL can itself be a bearer credential.
-- To replace a secret, use **Rotate** on the row. The previous secret keeps signing alongside the new one for a short window, so you can update the receiver without losing deliveries.
+- To replace a secret, use **Rotate secret** on the row. The previous secret keeps signing alongside the new one for a short window, so you can update the receiver without losing deliveries.
 - **Disable** ends the destination and cannot be reversed. Add a new destination instead. Disabling pauses the subscriptions that use it.
 - The test event starts a real automation on receivers such as Grok. Expect it to run.
 
@@ -150,32 +160,36 @@ If you rotate the secret in Grok, rotate it on the same settings row before the 
 ## ChatGPT MCP Events
 
 <Note>
-  This section describes behavior that is not available yet. ChatGPT cannot subscribe to Ask Gina
-  events today. The section will be confirmed when the protocol adapter ships and the account gate
-  opens.
+  Ask Gina implements these methods on the Predictions endpoint. ChatGPT's use of them with Ask Gina
+  has not been verified end to end, and the MCP Events specification is a draft, so method details
+  can change.
 </Note>
 
-ChatGPT subscribes through the MCP Events protocol on the same Predictions endpoint instead of through the tools. The Predictions server will advertise `events` in its capabilities and handle these methods:
+ChatGPT subscribes through the MCP Events protocol on the same Predictions endpoint instead of through the tools. The Predictions server advertises `events` in its capabilities and handles these methods:
 
-| Method               | Behavior                                                                                       |
-| -------------------- | ---------------------------------------------------------------------------------------------- |
-| `events/list`        | Describes the three event names, their filter arguments, payload schemas and delivery modes.   |
-| `events/subscribe`   | Creates or refreshes a webhook subscription from a callback URL and a ChatGPT-supplied secret. |
-| `events/unsubscribe` | Ends the subscription.                                                                         |
-| `events/poll`        | Reads events with a cursor, the same read as `getPredictionEvents`.                            |
+| Method               | Behavior                                                                                                                                                                                               |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `events/list`        | Describes the three event names, their filter arguments, payload schemas and delivery modes.                                                                                                           |
+| `events/subscribe`   | Creates or refreshes a webhook subscription from a callback URL and a ChatGPT-supplied secret. Only `delivery.mode` `webhook` is accepted. It returns `id`, `refreshBefore`, `cursor` and `truncated`. |
+| `events/unsubscribe` | Ends the subscription that matches the event name, arguments and callback URL. When nothing matches it still succeeds.                                                                                 |
+| `events/poll`        | Reads events for one event name with a cursor, like `getPredictionEvents`. Without a cursor it starts from now. It returns `events`, `cursor`, `hasMore`, `truncated` and `nextPollMs`.                |
+
+The first `events/poll` from a client also creates a pull subscription for it, which keeps Ask Gina's stream for your account open.
 
 For subscribe, ChatGPT sends the callback URL and a `whsec_` secret itself, so you do not register a destination on the settings page. Ask Gina first posts a signed verification challenge to the callback and requires ChatGPT to echo it, then activates delivery. A failed verification returns the JSON-RPC error `-32015`.
 
-A protocol subscription has an expiry. Ask Gina grants a lifetime, returns `refreshBefore`, and ChatGPT refreshes the subscription before that time. The planned default lifetime is seven days with a maximum of thirty days. A refresh with a new secret keeps signing with the old and new secrets for a short window. Ask Gina rechecks that your grant and delegated wallet still exist on every delivery batch and stops delivering if they do not. Streaming is not offered, and ChatGPT does not act on protocol control notifications, so gaps and endings reach it as `prediction.subscription.health.v1` events.
+A protocol subscription has an expiry. Ask Gina grants a lifetime, returns `refreshBefore`, and ChatGPT refreshes the subscription before that time. A subscription that is not refreshed before `refreshBefore` ends. Revoking the token or OAuth grant that created it ends it too. A refresh with a new secret keeps signing with the old and new secrets for a short window.
 
-ChatGPT requires MCP protocol version `2026-07-28` and the draft MCP Events specification. Because that specification is a draft, method details can change before release.
+Streaming is not offered, and ChatGPT does not act on protocol control notifications. Gaps and endings reach a protocol subscription only as `prediction.subscription.health.v1` events, and only if it subscribed to that name, which takes no arguments. A subscription to `prediction.order.v1` or `prediction.trade.v1` receives order or trade events and no health events, so subscribe to the health name as well when you need to learn about gaps and endings.
+
+ChatGPT requires MCP protocol version `2026-07-28` and the draft MCP Events specification.
 
 ## Check that it works
 
 Run these in order. They only read, except for the subscription you choose to create.
 
 1. In your client, open the tool list for `https://askgina.ai/ai/predictions/mcp` and confirm `listWebhookDestinations` and `getPredictionEvents` appear.
-2. Ask **“Use Gina to list my webhook destinations.”** Expected: a `destinations` list that has labels, hosts and a `next` link to the settings page, and no URLs or secrets. If your account is not enabled, expect the error `PREDICTION_EVENTS_NOT_ENABLED`.
+2. Ask **“Use Gina to list my webhook destinations.”** Expected: a `destinations` list that has labels, hosts and a `next` link to the settings page, and no URLs or secrets.
 3. Register a destination, press **Send test event** and confirm the HTTP status your receiver returned.
 4. Ask **“Create a prediction event subscription for this destination.”** Expected: a subscription with status `active` and a `cursor`. Then, if you choose to, place an order yourself. Confirm that your receiver gets an `eventId` for each transition and that a repeated `eventId` is the same event.
 
