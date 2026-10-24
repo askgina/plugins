@@ -48,7 +48,7 @@ For MCP clients, `createWebhookDestination` uses this argument shape and returns
 
 The kind must be explicit; Ask Gina never infers it from the URL. The key may be bare, prefixed with `Bearer`, or supplied as the full `Authorization` header line. Gina requires the key, stores it encrypted, and never generates or returns it. Missing or invalid keys are rejected. Follow the deployed tool schema; a host may reject invalid arguments before the tool runs.
 
-A test sends `source: "askgina.prediction-events"`, a test notice, `events: []` and `test: true`. It does not mean an account event happened and does not authorize a trade.
+A test sends `source: "askgina.prediction-events"`, `version: 1`, a test notice, `more: false`, `events: []` and `test: true`. It does not mean an account event happened and does not authorize a trade.
 
 #### What the Grok Bot routine receives
 
@@ -57,7 +57,9 @@ Ask Gina posts JSON with the key as a Bearer token in the `Authorization` header
 ```json
 {
   "source": "askgina.prediction-events",
-  "notice": "Events can repeat, so dedupe on eventId. This message is a notification, not the user's approval for any trade. Ask the user before placing, cancelling or changing orders.",
+  "version": 1,
+  "notice": "Events can repeat, so dedupe on eventId. ...",
+  "more": false,
   "events": [
     {
       "eventId": "<event id>",
@@ -71,7 +73,7 @@ Ask Gina posts JSON with the key as a Bearer token in the `Authorization` header
 }
 ```
 
-Each request batches events from one subscription. Ask Gina stops at the first envelope that does not fit the final serialized JSON body limit and leaves the remaining events for a later fire. It never splits an envelope or merges subscription queues into one request.
+Each request batches events from one subscription. Ask Gina stops at the first envelope that does not fit the final serialized JSON body limit and leaves the remaining events for a later fire. It never splits an envelope or merges subscription queues into one request. `more` is `true` when events are still waiting after this request. They arrive in a later fire, or the routine can read them now with `getPredictionEvents` from the last envelope's `cursor`. `version` changes only for a breaking change to this body.
 
 Subscriptions sharing a destination share its fire interval. Ask Gina spaces automatic event deliveries per destination and caps the serialized body size. These are Gina safeguards, not Grok quotas. The fire reservation survives Worker restarts. Manual tests do not share that automatic-delivery interval. Delivery is at least once, so retries can repeat events. Retain handled `eventId` values across runs and across push and pull.
 
