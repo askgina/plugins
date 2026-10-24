@@ -54,7 +54,7 @@ Every event arrives in the same envelope:
 
 The Predictions connector exposes event tools as native tools. Use the generated [native tools reference](/predictions-mcp/tools) for the tool inventory and annotation classes. Read each tool's input schema from `tools/list` for arguments and limits.
 
-A filter can narrow by `conditionIds`, `assetIds`, `orderIds`, `clientRefs`, `orderEventTypes` and `tradeStatuses`. Fields combine with AND and the values inside one field combine with OR. Empty arrays are rejected, and an omitted filter means everything. Strategy filters such as side or price do not exist.
+A filter can narrow by `conditionIds`, `assetIds`, `orderIds`, `clientRefs`, `clientRefPrefixes`, `orderEventTypes` and `tradeStatuses`. `clientRefPrefixes` matches any `clientRef` that starts with one of its values, so a bot that labels every order `bot-<n>` can subscribe once with `bot-`. Fields combine with AND and the values inside one field combine with OR. Empty arrays are rejected, and an omitted filter means everything. Strategy filters such as side or price do not exist.
 
 Example arguments. Create a webhook subscription for one market's trades, with a `destinationId` from `listWebhookDestinations` or from the `destination` that `createWebhookDestination` returned:
 
@@ -217,7 +217,7 @@ For a routine, the `secret` is required and must be the routine's API trigger to
 
 ### What Ask Gina sends
 
-- **Batching.** Ask Gina fires a destination at most once every 150 seconds. Each fire carries every event waiting at that moment, oldest first, so a burst of fills becomes one session. Events that do not fit wait for the next fire.
+- **Batching.** Ask Gina fires a destination at most once every 150 seconds. Each fire carries every event waiting at that moment, oldest first, so a burst of fills becomes one session. Events that do not fit wait for the next fire, and the fire's text then says that more events are waiting.
 - **Text.** The fire body has one `text` field. It holds a short note, then a JSON array of [event envelopes](#what-you-get). The text stays under Anthropic's 65,536-character limit, and an envelope is never split.
 - **Note.** The note says that events can repeat, that the reader should dedupe on `eventId` and that the message is not your approval for any trade.
 - **Authentication.** Ask Gina sends the token as a bearer token. There are no Standard Webhooks headers, because the receiver is Anthropic and nothing on your side verifies a signature.
