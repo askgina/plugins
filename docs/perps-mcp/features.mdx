@@ -82,7 +82,7 @@ Within one subscription, ordinary webhook delivery follows account recording seq
 
 [Claude routines](/connect/claude#push-events-into-claude-code-routine) and [Grok Bot routines](/connect/grok-bot) reuse the same destination credentials and share a fire allowance across both products. A batch contains one product and one subscription; preserve its `source`, `version`, `more` and each event cursor. Receiver tests are optional and can start paid work. A notification is never permission to trade.
 
-Destinations are shared. Rename only the label with `updateWebhookDestination` and the current version from the list. URLs and destination kinds are immutable; register a replacement and retarget instead. Delete with `deleteWebhookDestination` only after checking attachments across Perps and Predictions. Do not disable another product's subscriptions to make room without the user's choice.
+Destinations are shared. Rename only the label with `updateWebhookDestination` and the current version from the list. URLs and destination kinds are immutable; register a replacement and retarget instead. Before deleting, check attachments across Perps and Predictions. Once the destination is unattached, call `disableWebhookDestination`, list it again, then pass its new version to `deleteWebhookDestination`. Do not disable another product's subscriptions to make room without the user's choice.
 
 Native event calls are metered; protocol calls and event delivery are not charged per event. Receiver or routine usage can cost extra. Admission and delivery limits are independent of trading authority. If creation returns `PERPS_EVENTS_NOT_ENABLED` or `PERPS_EVENTS_CAPACITY_EXHAUSTED`, do not loop requests or claim a subscription was created.
 

@@ -120,13 +120,13 @@ Registers a webhook or routine destination shared by Perps and Predictions. Only
 
 ## Change a webhook destination
 
-Replaces a destination's signing secret or routine credential, disables it, or deletes an unattached destination. It moves no funds and is marked destructive so your client asks you first. Disabling and deletion cannot be undone; attachments across Perps and Predictions prevent deletion.
+Replaces a destination's signing secret or routine credential, disables it, or deletes a disabled, unattached destination. It moves no funds and is marked destructive so your client asks you first. Disabling and deletion cannot be undone. Check both products for attachments before disabling, then list the destination again to get its current version before deletion.
 
-| Tool                             | Use it for                                                                                          |
-| -------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `deleteWebhookDestination`       | Delete an unattached destination with its current version; cross-product attachments block deletion |
-| `rotateWebhookDestinationSecret` | Replace a webhook signing secret or routine credential using the destination's rotation policy      |
-| `disableWebhookDestination`      | Disable a shared destination and pause subscriptions that use it                                    |
+| Tool                             | Use it for                                                                                     |
+| -------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `deleteWebhookDestination`       | Delete a disabled, unattached destination using the version returned after disabling           |
+| `rotateWebhookDestinationSecret` | Replace a webhook signing secret or routine credential using the destination's rotation policy |
+| `disableWebhookDestination`      | Disable a shared destination and pause subscriptions that use it                               |
 
 ## Test a webhook destination
 

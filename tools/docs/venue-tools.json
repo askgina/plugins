@@ -117,7 +117,7 @@
         "destructiveHint": true,
         "openWorldHint": false
       },
-      "meaning": "Replaces a destination's signing secret or routine credential, disables it, or deletes an unattached destination. It moves no funds and is marked destructive so your client asks you first. Disabling and deletion cannot be undone; attachments across Perps and Predictions prevent deletion."
+      "meaning": "Replaces a destination's signing secret or routine credential, disables it, or deletes a disabled, unattached destination. It moves no funds and is marked destructive so your client asks you first. Disabling and deletion cannot be undone. Check both products for attachments before disabling, then list the destination again to get its current version before deletion."
     },
     "test-destination": {
       "title": "Test a webhook destination",
@@ -305,7 +305,7 @@
         {
           "name": "deleteWebhookDestination",
           "class": "change-destination",
-          "purpose": "Delete an unattached destination with its current version; cross-product attachments block deletion"
+          "purpose": "Delete a disabled, unattached destination using the version returned after disabling"
         },
         {
           "name": "rotateWebhookDestinationSecret",
@@ -449,7 +449,7 @@
         {
           "name": "deleteWebhookDestination",
           "class": "change-destination",
-          "purpose": "Delete an unattached destination with its current version; Perps and Predictions attachments block deletion"
+          "purpose": "Delete a disabled, unattached destination using the version returned after disabling"
         },
         {
           "name": "createWebhookDestination",
