@@ -61,14 +61,15 @@ Reads only state Gina stores for your account. It calls no outside provider and 
 
 Places, changes, cancels or settles an order, trade or fund movement. It acts at once, repeating it can repeat the effect, and it cannot always be undone.
 
-| Tool                           | Use it for                                                                              |
-| ------------------------------ | --------------------------------------------------------------------------------------- |
-| `tradePredictionMarket`        | Execute an immediate Polymarket trade                                                   |
-| `managePredictionOrders`       | List, create, replace and cancel orders                                                 |
-| `redeemPredictionMarket`       | Redeem winning positions of resolved markets                                            |
-| `splitMergePredictionPosition` | Split pUSD into YES and NO sets, or merge sets back into pUSD, on one Polymarket market |
-| `topUpPredictionsBalance`      | Top up your Predictions balance from a source asset                                     |
-| `withdrawPredictionsBalance`   | Withdraw ready Predictions balance to your own wallet                                   |
+| Tool                           | Use it for                                                                                 |
+| ------------------------------ | ------------------------------------------------------------------------------------------ |
+| `tradePredictionMarket`        | Execute an immediate Polymarket trade                                                      |
+| `managePredictionOrders`       | List, create, replace and cancel orders                                                    |
+| `redeemPredictionMarket`       | Redeem winning positions of resolved markets                                               |
+| `splitMergePredictionPosition` | Split pUSD into YES and NO sets, or merge sets back into pUSD, on one Polymarket market    |
+| `convertPredictionPosition`    | Convert NO shares into YES shares on the other outcomes of an eligible negative-risk event |
+| `topUpPredictionsBalance`      | Top up your Predictions balance from a source asset                                        |
+| `withdrawPredictionsBalance`   | Withdraw ready Predictions balance to your own wallet                                      |
 
 ## Change a schedule
 
@@ -152,10 +153,11 @@ These host tools are not native tools. Sandbox-only tools run inside `bash` with
 
 These tools return a typed `next` list beside their result. Each entry names a tool and arguments your client can offer as a button. Your client still shows the call and waits for your approval before it runs.
 
-| Tool                           | Suggests                       | When                                                                                                                                                                                                                         |
-| ------------------------------ | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `getPolymarketPositions`       | `redeemPredictionMarket`       | You hold redeemable winning positions. With one, it fills that position's condition and token ids. With several, it redeems all of them.                                                                                     |
-| `splitMergePredictionPosition` | `splitMergePredictionPosition` | A split preview needs confirmation. It suggests the same split with `authorized: true`, and you can edit the amount. If the market has already resolved, it suggests `redeemPredictionMarket` for that condition id instead. |
+| Tool                           | Suggests                       | When                                                                                                                                                                                                                                 |
+| ------------------------------ | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `getPolymarketPositions`       | `redeemPredictionMarket`       | You hold redeemable winning positions. With one, it fills that position's condition and token ids. With several, it redeems all of them.                                                                                             |
+| `splitMergePredictionPosition` | `splitMergePredictionPosition` | A split preview needs confirmation. It suggests the same split with `authorized: true`, and you can edit the amount. If the market has already resolved, it suggests `redeemPredictionMarket` for that condition id instead.         |
+| `convertPredictionPosition`    | `convertPredictionPosition`    | A conversion preview suggests the same conversion with `authorized: true`; the amount is editable and host approval is required. If the source market is closed, it can suggest `redeemPredictionMarket` for that condition instead. |
 
 ## Check that it works
 

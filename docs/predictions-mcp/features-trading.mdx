@@ -63,8 +63,14 @@ Check the trade tools without placing a trade. Call the native `splitMergePredic
 
 Expected: a preview that sends nothing and carries a `next` suggestion for the confirmed split. A native `tradePredictionMarket` call places an order only after you give an explicit instruction. Prices use real USDC on Polygon.
 
-## Split previews
+## Split, merge, and convert positions
 
-`splitMergePredictionPosition` previews a split before it moves funds. The preview returns a typed `next` suggestion: the same split with `authorized: true`. You can edit the amount before you approve it. The server never runs the suggestion. Merges need no confirmation.
+- **Split** uses `splitMergePredictionPosition` to turn pUSD into equal YES and NO shares on one market. A split without `authorized` previews the action and sends nothing.
+- **Merge** uses the same tool to turn equal YES and NO shares on one market back into pUSD. A direct merge request is execution intent; it does not have the split's `authorized` preview requirement. The tool is destructive and host approval still applies.
+- **Convert** uses `convertPredictionPosition` to turn NO shares on one market of an eligible negative-risk, one-winner event into YES shares on every other market in that event. Each receives the converted amount less any event fee; this is not a merge into pUSD.
 
-If the market has already resolved, the tool refuses the split with `POLYMARKET_MARKET_RESOLVED`. The result then carries a typed `next` suggestion for `redeemPredictionMarket` on that `conditionId`.
+For conversion, use the source market's `conditionId` from `getPolymarketPositions` and an `amount` as a decimal string or `"max"` for all held NO shares. Call without `authorized` to preview without sending. Review the source, each output, the fee and any included approvals. After confirmation, call again with `authorized: true`. The preview carries a typed `next` suggestion for that call with an editable amount and host approval. A split preview similarly suggests the authorized split. The server never executes a suggestion.
+
+The tool checks eligibility rather than assuming every multi-outcome event qualifies. Conversion requires held NO shares and a supported negative-risk position system; Polymarket V2 markets are not supported. It refuses closed or resolved source markets and events whose outcomes cannot all be verified as named, active, open and matching their onchain tokens, including placeholders. If the source market is closed, the result can suggest `redeemPredictionMarket` for its condition instead. Redemption is for eligible winning shares, not a conversion.
+
+If an operation reports an unknown outcome, it may have landed: check `getPolymarketPositions` before trying again. Also check positions before acting again if conversion succeeds but reports `verified: false`. When retrying after a timeout or error, use the same `idempotencyKey` as the original attempt.
