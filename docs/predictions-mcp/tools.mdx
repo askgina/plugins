@@ -20,10 +20,9 @@ Annotations are the server's own declaration. A client can use them to decide wh
 | Change a schedule              | false          | false             | false            | false           |
 | Change an event subscription   | false          | false             | false            | false           |
 | Delete an event subscription   | false          | true              | false            | false           |
-| Rename a destination           | false          | false             | false            | false           |
-| Register a webhook destination | false          | true              | not set          | true            |
-| Change a webhook destination   | false          | true              | not set          | false           |
-| Test a webhook destination     | false          | false             | not set          | true            |
+| Register a webhook destination | false          | true              | false            | true            |
+| Change a webhook destination   | false          | true              | false            | false           |
+| Test a webhook destination     | false          | false             | false            | true            |
 | Delete a schedule              | false          | true              | false            | false           |
 | Sandbox                        | false          | true              | false            | true            |
 
@@ -99,14 +98,6 @@ Deletes a prediction event subscription so it stops delivering. It moves no fund
 | ----------------------------------- | ---------------------------------------------------------- |
 | `deletePredictionEventSubscription` | Delete a subscription; it sends one final terminated event |
 
-## Rename a destination
-
-Changes only a destination's label using its current version. It does not change the receiver URL, kind or credential and sends no request.
-
-| Tool                       | Use it for                                                  |
-| -------------------------- | ----------------------------------------------------------- |
-| `updateWebhookDestination` | Change only the destination label using its current version |
-
 ## Register a webhook destination
 
 Registers a webhook or routine destination shared by Perps and Predictions. Only webhooks can return a generated signing secret once. Routines require their own credentials. It changes only the destination Gina stores for your account and moves no funds. It is marked destructive so your client asks you first, and a secret it passes or returns appears in your client's transcript.
@@ -117,10 +108,11 @@ Registers a webhook or routine destination shared by Perps and Predictions. Only
 
 ## Change a webhook destination
 
-Replaces a destination's signing secret or routine credential, disables it, or deletes a disabled, unattached destination. It moves no funds and is marked destructive so your client asks you first. Disabling and deletion cannot be undone. Check both products for attachments before disabling, then list the destination again to get its current version before deletion.
+Renames a destination through Predictions, replaces its signing secret or routine credential, disables it, or deletes a disabled destination with no active or paused attachments. It moves no funds and is marked destructive so your client asks you first. Disabling and deletion cannot be undone. Check both products for attachments before disabling, then list the destination again to get its current version before deletion.
 
 | Tool                             | Use it for                                                                                                                                             |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `updateWebhookDestination`       | Change only the destination label using its current version                                                                                            |
 | `deleteWebhookDestination`       | Delete a disabled, unattached destination using the version returned after disabling                                                                   |
 | `rotateWebhookDestinationSecret` | Replace a webhook signing secret with 24-hour overlap, or supply a new routine credential with no overlap. A generated webhook secret is returned once |
 | `disableWebhookDestination`      | Disable a destination for good and pause the subscriptions that use it                                                                                 |

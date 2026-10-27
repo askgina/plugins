@@ -64,15 +64,15 @@ A new subscription can have `baselineStatus: "pending"`. Continue from each retu
 
 Save the returned cursor after processing a page. If `hasMore` is true, continue with that cursor. Dedupe by `eventId`; retries are nondestructive but delivery is at least once. Keep sequence values as decimal strings and cursors opaque. A cursor belongs to its account, subscription and filter history.
 
-When `truncated` is true, report the `gap`, refresh current account state and use `earliestCursor` to continue from retained history. Do not claim the missing interval was empty. Current retention, subscription limits and supported filter fields are in the event catalogue and tool input schemas.
+When `truncated` is true, report the `gap`, refresh current account state and use `earliestCursor` to continue from retained history. Do not claim the missing interval was empty. Use `events/list` and `tools/list` for current retention, subscription limits, tool descriptions and input schemas.
 
 ### Change or stop a subscription
 
 Use `updatePerpsEventSubscription` with an `id` and `patch`. For example, `{"id":"<subscription.id>","patch":{"enabled":false}}` pauses it; `enabled: true` resumes a paused subscription. A retention-related resume preserves the still-retained backlog and requests a fresh baseline. A terminated subscription cannot be reopened.
 
-Filter changes apply only after the returned `filterBoundary`. Older backlog keeps its original selection, including when read with an older valid cursor. Check the schema before combining filters: not every financial kind has an order or coin identity. To stop permanently, call `deletePerpsEventSubscription` with the `id`.
+Filter changes apply only after the returned `filterBoundary`. Older backlog keeps its original selection, including when read with an older valid cursor. Check the schema before combining filters: not every financial kind has an order or coin identity. To stop permanently, call `deletePerpsEventSubscription` with the `id`. This ends that subscription's observation demand and future financial delivery. A final health notification may still reach an eligible native receiver.
 
-Native tools cannot edit a protocol-managed subscription. Clients implementing MCP Events use `events/list`, `events/subscribe`, `events/poll` and `events/unsubscribe` for the same named stream. Other clients should use the native pull flow above.
+Native tools cannot edit a protocol-managed subscription. Clients implementing MCP Events use `events/list`, `events/subscribe`, `events/poll` and `events/unsubscribe` for the same named stream. Protocol expiry or unsubscribe disables its callback; do not expect a terminal webhook. Other clients should use the native pull flow above.
 
 ### Push to a receiver
 
@@ -80,7 +80,7 @@ Reuse an active destination from `listWebhookDestinations`, then pass its `desti
 
 Within one subscription, ordinary webhook delivery follows account recording sequence, not a guaranteed venue-wide chronology. Verify the raw-body Standard Webhooks signature before accepting it and dedupe by `eventId`. Perps pauses without advancing the cursor when a receiver rejects an oversized event. Unlike Predictions, it does not skip that event. Fix or replace the receiver before resuming.
 
-[Claude routines](/connect/claude#push-events-into-claude-code-routine) and [Grok Bot routines](/connect/grok-bot) reuse the same destination credentials and share a fire allowance across both products. A batch contains one product and one subscription; preserve its `source`, `version`, `more` and each event cursor. Receiver tests are optional and can start paid work. A notification is never permission to trade.
+[Claude routines](/connect/claude#push-events-into-claude-code-routine) and [Grok Bot routines](/connect/grok-bot) reuse the same destination credentials and share a fire allowance across both products. Each batch contains one product and one subscription. Grok Bot receives an object with `source`, `version`, `notice`, `more` and `events`. Claude receives a prose notice followed by a JSON array, with any backlog warning in the notice. Preserve each event's cursor and the receiver's backlog indication. Receiver tests are optional and can start paid work. A notification is never permission to trade.
 
 Destinations are shared. Rename only the label with `updateWebhookDestination` and the current version from the list. URLs and destination kinds are immutable; register a replacement and retarget instead. Before deleting, check attachments across Perps and Predictions. Once the destination is unattached, call `disableWebhookDestination`, list it again, then pass its new version to `deleteWebhookDestination`. Do not disable another product's subscriptions to make room without the user's choice.
 

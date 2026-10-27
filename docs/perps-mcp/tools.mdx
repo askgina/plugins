@@ -21,9 +21,9 @@ Annotations are the server's own declaration. A client can use them to decide wh
 | Change account observation     | false          | true              | false            | true            |
 | Account replay and lifecycle   | false          | true              | true             | true            |
 | Rename a destination           | false          | false             | false            | false           |
-| Register a webhook destination | false          | true              | not set          | true            |
-| Change a webhook destination   | false          | true              | not set          | false           |
-| Test a webhook destination     | false          | false             | not set          | true            |
+| Register a webhook destination | false          | true              | false            | true            |
+| Change a webhook destination   | false          | true              | false            | false           |
+| Test a webhook destination     | false          | false             | false            | true            |
 | Sandbox                        | false          | true              | false            | true            |
 | Render                         | true           | false             | not set          | false           |
 | Render, may fetch              | true           | false             | not set          | true            |
@@ -120,7 +120,7 @@ Registers a webhook or routine destination shared by Perps and Predictions. Only
 
 ## Change a webhook destination
 
-Replaces a destination's signing secret or routine credential, disables it, or deletes a disabled, unattached destination. It moves no funds and is marked destructive so your client asks you first. Disabling and deletion cannot be undone. Check both products for attachments before disabling, then list the destination again to get its current version before deletion.
+Renames a destination through Predictions, replaces its signing secret or routine credential, disables it, or deletes a disabled destination with no active or paused attachments. It moves no funds and is marked destructive so your client asks you first. Disabling and deletion cannot be undone. Check both products for attachments before disabling, then list the destination again to get its current version before deletion.
 
 | Tool                             | Use it for                                                                                     |
 | -------------------------------- | ---------------------------------------------------------------------------------------------- |

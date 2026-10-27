@@ -106,6 +106,7 @@
       "hints": {
         "readOnlyHint": false,
         "destructiveHint": true,
+        "idempotentHint": false,
         "openWorldHint": true
       },
       "meaning": "Registers a webhook or routine destination shared by Perps and Predictions. Only webhooks can return a generated signing secret once. Routines require their own credentials. It changes only the destination Gina stores for your account and moves no funds. It is marked destructive so your client asks you first, and a secret it passes or returns appears in your client's transcript."
@@ -115,15 +116,17 @@
       "hints": {
         "readOnlyHint": false,
         "destructiveHint": true,
+        "idempotentHint": false,
         "openWorldHint": false
       },
-      "meaning": "Replaces a destination's signing secret or routine credential, disables it, or deletes a disabled, unattached destination. It moves no funds and is marked destructive so your client asks you first. Disabling and deletion cannot be undone. Check both products for attachments before disabling, then list the destination again to get its current version before deletion."
+      "meaning": "Renames a destination through Predictions, replaces its signing secret or routine credential, disables it, or deletes a disabled destination with no active or paused attachments. It moves no funds and is marked destructive so your client asks you first. Disabling and deletion cannot be undone. Check both products for attachments before disabling, then list the destination again to get its current version before deletion."
     },
     "test-destination": {
       "title": "Test a webhook destination",
       "hints": {
         "readOnlyHint": false,
         "destructiveHint": false,
+        "idempotentHint": false,
         "openWorldHint": true
       },
       "meaning": "Sends one optional test event to a registered destination and records the result. It can start a real automation or routine session and use the receiver's quota or paid usage, so it is not a read."
@@ -443,7 +446,7 @@
         },
         {
           "name": "updateWebhookDestination",
-          "class": "update-destination-label",
+          "class": "change-destination",
           "purpose": "Change only the destination label using its current version"
         },
         {
