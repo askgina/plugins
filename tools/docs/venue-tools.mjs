@@ -119,7 +119,7 @@ pageType: reference
 
 {/* Generated from ${CATALOG_FILE} by tools/docs/venue-tools.mjs. Edit the catalog, then run \`node tools/docs/venue-tools.mjs\`. */}
 
-${entry.title} MCP at ${endpoint} publishes each tool below as a native MCP tool beside \`bash\`. Native tools add no authority, because \`bash\` can already call the host tools behind them. They let your client show and gate each action by its own annotation instead of treating one \`bash\` call as a single risk.
+${entry.title} MCP at ${endpoint} publishes each tool below as a native MCP tool beside \`bash\`. They use the same authenticated account, and your client can show and gate each action by its own annotations. Call native tools directly. Credential-bearing destination calls must not be wrapped in \`bash\`.
 
 Annotations are the server's own declaration. A client can use them to decide when to ask you before a call. They are hints, not enforcement, so keep approving every money-moving action yourself. Run \`tools/list\` on your connection to see what your deployment advertises.
 `,

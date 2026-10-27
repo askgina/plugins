@@ -61,29 +61,72 @@
       },
       "meaning": "Deletes a prediction event subscription so it stops delivering. It moves no funds, and it is marked destructive because it cannot be undone."
     },
+    "create-account-subscription": {
+      "title": "Start account observation",
+      "hints": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "meaning": "Creates a linked-account event subscription and requests collection after wallet and credential checks. It moves no funds and does not grant trading permission."
+    },
+    "change-account-subscription": {
+      "title": "Change account observation",
+      "hints": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "meaning": "Changes a Perps subscription's filters, destination or lifecycle after external wallet and credential checks. It can replace delivery configuration or close an invalid binding, but moves no funds."
+    },
+    "account-subscription-lifecycle": {
+      "title": "Account replay and lifecycle",
+      "hints": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "meaning": "Reads retained Perps events and updates activity, or permanently ends a subscription. Wallet and credential checks can close an invalid binding. These calls move no funds; replay is nondestructive even though its lifecycle effects require a destructive annotation."
+    },
+    "update-destination-label": {
+      "title": "Rename a destination",
+      "hints": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "meaning": "Changes only a destination's label using its current version. It does not change the receiver URL, kind or credential and sends no request."
+    },
     "register-destination": {
       "title": "Register a webhook destination",
       "hints": {
         "readOnlyHint": false,
         "destructiveHint": true,
+        "idempotentHint": false,
         "openWorldHint": true
       },
-      "meaning": "Registers a webhook or routine destination for prediction events. Only webhooks can return a generated signing secret once. Routines require their own credentials. It changes only the destination Gina stores for your account and moves no funds. It is marked destructive so your client asks you first, and a secret it passes or returns appears in your client's transcript."
+      "meaning": "Registers a webhook or routine destination shared by Perps and Predictions. Only webhooks can return a generated signing secret once. Routines require their own credentials. It changes only the destination Gina stores for your account and moves no funds. It is marked destructive so your client asks you first, and a secret it passes or returns appears in your client's transcript."
     },
     "change-destination": {
       "title": "Change a webhook destination",
       "hints": {
         "readOnlyHint": false,
         "destructiveHint": true,
+        "idempotentHint": false,
         "openWorldHint": false
       },
-      "meaning": "Replaces a destination's signing secret or routine credential, or disables it. It moves no funds and is marked destructive so your client asks you first. Disabling cannot be undone."
+      "meaning": "Renames a destination through Predictions, replaces its signing secret or routine credential, disables it, or deletes a disabled destination with no active or paused attachments. It moves no funds and is marked destructive so your client asks you first. Disabling and deletion cannot be undone. Check both products for attachments before disabling, then list the destination again to get its current version before deletion."
     },
     "test-destination": {
       "title": "Test a webhook destination",
       "hints": {
         "readOnlyHint": false,
         "destructiveHint": false,
+        "idempotentHint": false,
         "openWorldHint": true
       },
       "meaning": "Sends one optional test event to a registered destination and records the result. It can start a real automation or routine session and use the receiver's quota or paid usage, so it is not a read."
@@ -223,6 +266,66 @@
           "purpose": "Rank markets by activity and compare retained samples"
         },
         {
+          "name": "createPerpsEventSubscription",
+          "class": "create-account-subscription",
+          "purpose": "Observe linked-wallet account changes with a labelled baseline, cursor replay and optional destination"
+        },
+        {
+          "name": "listPerpsEventSubscriptions",
+          "class": "read-local",
+          "purpose": "Your Perps subscriptions, filters and lifecycle status"
+        },
+        {
+          "name": "updatePerpsEventSubscription",
+          "class": "change-account-subscription",
+          "purpose": "Rename, change future filters, retarget, pause or resume a native subscription"
+        },
+        {
+          "name": "deletePerpsEventSubscription",
+          "class": "account-subscription-lifecycle",
+          "purpose": "Permanently end a native subscription without moving funds"
+        },
+        {
+          "name": "getPerpsEvents",
+          "class": "account-subscription-lifecycle",
+          "purpose": "Replay retained account events with an opaque cursor, explicit gaps and mandatory snapshot and health records"
+        },
+        {
+          "name": "listWebhookDestinations",
+          "class": "read-local",
+          "purpose": "Shared destinations and attachment counts, without receiver URLs or secrets"
+        },
+        {
+          "name": "createWebhookDestination",
+          "class": "register-destination",
+          "purpose": "Register a shared webhook or routine destination; only webhooks can return a generated signing secret"
+        },
+        {
+          "name": "updateWebhookDestination",
+          "class": "update-destination-label",
+          "purpose": "Change a destination label using the version returned by the list"
+        },
+        {
+          "name": "deleteWebhookDestination",
+          "class": "change-destination",
+          "purpose": "Delete a disabled, unattached destination using the version returned after disabling"
+        },
+        {
+          "name": "rotateWebhookDestinationSecret",
+          "class": "change-destination",
+          "purpose": "Replace a webhook signing secret or routine credential using the destination's rotation policy"
+        },
+        {
+          "name": "disableWebhookDestination",
+          "class": "change-destination",
+          "purpose": "Disable a shared destination and pause subscriptions that use it"
+        },
+        {
+          "name": "sendWebhookTestEvent",
+          "class": "test-destination",
+          "purpose": "Send an optional receiver test; it can start a real automation or paid routine session"
+        },
+        {
           "name": "placeHyperliquidOrder",
           "class": "execute",
           "purpose": "Place a market or limit order"
@@ -340,6 +443,16 @@
           "name": "listWebhookDestinations",
           "class": "read-local",
           "purpose": "Your registered webhook destinations, without URLs or secrets"
+        },
+        {
+          "name": "updateWebhookDestination",
+          "class": "change-destination",
+          "purpose": "Change only the destination label using its current version"
+        },
+        {
+          "name": "deleteWebhookDestination",
+          "class": "change-destination",
+          "purpose": "Delete a disabled, unattached destination using the version returned after disabling"
         },
         {
           "name": "createWebhookDestination",

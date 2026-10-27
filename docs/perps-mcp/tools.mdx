@@ -6,20 +6,27 @@ pageType: reference
 
 {/* Generated from tools/docs/venue-tools.json by tools/docs/venue-tools.mjs. Edit the catalog, then run `node tools/docs/venue-tools.mjs`. */}
 
-Perps MCP at `https://askgina.ai/ai/perps/mcp` publishes each tool below as a native MCP tool beside `bash`. Native tools add no authority, because `bash` can already call the host tools behind them. They let your client show and gate each action by its own annotation instead of treating one `bash` call as a single risk.
+Perps MCP at `https://askgina.ai/ai/perps/mcp` publishes each tool below as a native MCP tool beside `bash`. They use the same authenticated account, and your client can show and gate each action by its own annotations. Call native tools directly. Credential-bearing destination calls must not be wrapped in `bash`.
 
 Annotations are the server's own declaration. A client can use them to decide when to ask you before a call. They are hints, not enforcement, so keep approving every money-moving action yourself. Run `tools/list` on your connection to see what your deployment advertises.
 
 ## Annotation classes
 
-| Class                   | `readOnlyHint` | `destructiveHint` | `idempotentHint` | `openWorldHint` |
-| ----------------------- | -------------- | ----------------- | ---------------- | --------------- |
-| Read, external provider | true           | false             | true             | true            |
-| Read, Gina account      | true           | false             | true             | false           |
-| Execute                 | false          | true              | false            | true            |
-| Sandbox                 | false          | true              | false            | true            |
-| Render                  | true           | false             | not set          | false           |
-| Render, may fetch       | true           | false             | not set          | true            |
+| Class                          | `readOnlyHint` | `destructiveHint` | `idempotentHint` | `openWorldHint` |
+| ------------------------------ | -------------- | ----------------- | ---------------- | --------------- |
+| Read, external provider        | true           | false             | true             | true            |
+| Read, Gina account             | true           | false             | true             | false           |
+| Execute                        | false          | true              | false            | true            |
+| Start account observation      | false          | false             | false            | true            |
+| Change account observation     | false          | true              | false            | true            |
+| Account replay and lifecycle   | false          | true              | true             | true            |
+| Rename a destination           | false          | false             | false            | false           |
+| Register a webhook destination | false          | true              | false            | true            |
+| Change a webhook destination   | false          | true              | false            | false           |
+| Test a webhook destination     | false          | false             | false            | true            |
+| Sandbox                        | false          | true              | false            | true            |
+| Render                         | true           | false             | not set          | false           |
+| Render, may fetch              | true           | false             | not set          | true            |
 
 ## Read, external provider
 
@@ -47,9 +54,11 @@ Reads live data from a market, blockchain or other provider. It changes nothing 
 
 Reads only state Gina stores for your account. It calls no outside provider and can be repeated.
 
-| Tool                  | Use it for                 |
-| --------------------- | -------------------------- |
-| `getAccountAddresses` | Your Gina wallet addresses |
+| Tool                          | Use it for                                                                  |
+| ----------------------------- | --------------------------------------------------------------------------- |
+| `getAccountAddresses`         | Your Gina wallet addresses                                                  |
+| `listPerpsEventSubscriptions` | Your Perps subscriptions, filters and lifecycle status                      |
+| `listWebhookDestinations`     | Shared destinations and attachment counts, without receiver URLs or secrets |
 
 ## Execute
 
@@ -67,6 +76,65 @@ Places, changes, cancels or settles an order, trade or fund movement. It acts at
 | `hyperliquidWithdraw`             | Withdraw USDC from Hyperliquid                 |
 | `fundHIP3Dex`                     | Move USDC collateral into a HIP-3 DEX          |
 | `returnHIP3DexFunds`              | Return USDC collateral from a HIP-3 DEX        |
+
+## Start account observation
+
+Creates a linked-account event subscription and requests collection after wallet and credential checks. It moves no funds and does not grant trading permission.
+
+| Tool                           | Use it for                                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `createPerpsEventSubscription` | Observe linked-wallet account changes with a labelled baseline, cursor replay and optional destination |
+
+## Change account observation
+
+Changes a Perps subscription's filters, destination or lifecycle after external wallet and credential checks. It can replace delivery configuration or close an invalid binding, but moves no funds.
+
+| Tool                           | Use it for                                                                     |
+| ------------------------------ | ------------------------------------------------------------------------------ |
+| `updatePerpsEventSubscription` | Rename, change future filters, retarget, pause or resume a native subscription |
+
+## Account replay and lifecycle
+
+Reads retained Perps events and updates activity, or permanently ends a subscription. Wallet and credential checks can close an invalid binding. These calls move no funds; replay is nondestructive even though its lifecycle effects require a destructive annotation.
+
+| Tool                           | Use it for                                                                                                    |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `deletePerpsEventSubscription` | Permanently end a native subscription without moving funds                                                    |
+| `getPerpsEvents`               | Replay retained account events with an opaque cursor, explicit gaps and mandatory snapshot and health records |
+
+## Rename a destination
+
+Changes only a destination's label using its current version. It does not change the receiver URL, kind or credential and sends no request.
+
+| Tool                       | Use it for                                                        |
+| -------------------------- | ----------------------------------------------------------------- |
+| `updateWebhookDestination` | Change a destination label using the version returned by the list |
+
+## Register a webhook destination
+
+Registers a webhook or routine destination shared by Perps and Predictions. Only webhooks can return a generated signing secret once. Routines require their own credentials. It changes only the destination Gina stores for your account and moves no funds. It is marked destructive so your client asks you first, and a secret it passes or returns appears in your client's transcript.
+
+| Tool                       | Use it for                                                                                            |
+| -------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `createWebhookDestination` | Register a shared webhook or routine destination; only webhooks can return a generated signing secret |
+
+## Change a webhook destination
+
+Renames a destination through Predictions, replaces its signing secret or routine credential, disables it, or deletes a disabled destination with no active or paused attachments. It moves no funds and is marked destructive so your client asks you first. Disabling and deletion cannot be undone. Check both products for attachments before disabling, then list the destination again to get its current version before deletion.
+
+| Tool                             | Use it for                                                                                     |
+| -------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `deleteWebhookDestination`       | Delete a disabled, unattached destination using the version returned after disabling           |
+| `rotateWebhookDestinationSecret` | Replace a webhook signing secret or routine credential using the destination's rotation policy |
+| `disableWebhookDestination`      | Disable a shared destination and pause subscriptions that use it                               |
+
+## Test a webhook destination
+
+Sends one optional test event to a registered destination and records the result. It can start a real automation or routine session and use the receiver's quota or paid usage, so it is not a read.
+
+| Tool                   | Use it for                                                                             |
+| ---------------------- | -------------------------------------------------------------------------------------- |
+| `sendWebhookTestEvent` | Send an optional receiver test; it can start a real automation or paid routine session |
 
 ## Sandbox
 
