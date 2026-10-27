@@ -442,6 +442,15 @@
           }
         },
         {
+          "name": "convertPredictionPosition",
+          "class": "execute",
+          "purpose": "Convert NO shares into YES shares on the other outcomes of an eligible negative-risk event",
+          "next": {
+            "tool": "convertPredictionPosition",
+            "when": "A conversion preview suggests the same conversion with `authorized: true`; the amount is editable and host approval is required. If the source market is closed, it can suggest `redeemPredictionMarket` for that condition instead."
+          }
+        },
+        {
           "name": "topUpPredictionsBalance",
           "class": "execute",
           "purpose": "Top up your Predictions balance from a source asset"

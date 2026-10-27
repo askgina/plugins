@@ -11,7 +11,7 @@ For Ask Gina's broader user-facing capabilities, including wallets, market resea
 
 The server exposes native tools for prediction-market discovery, pricing, trading, portfolio and schedule operations, alongside a `bash` tool. Your client calls the native tools from your prompt. Inside the `bash` sandbox, `host-tools` commands reach the same host tools and add SQL over fetched market data. Two loaders, `fetchPolymarketData` and `fetchPolymarketHistory`, fill sandbox SQL tables and work only inside `bash`. [Native tools](/predictions-mcp/tools) lists every native tool by annotation class.
 
-Some results carry a typed `next` suggestion. On a split preview, `splitMergePredictionPosition` suggests the confirmed split with `authorized: true`. When the market has already resolved, it suggests `redeemPredictionMarket` instead. `getPolymarketPositions` also suggests `redeemPredictionMarket` when a position is redeemable. The server never runs a suggestion. Your client shows the call and waits for your approval.
+Some results carry a typed `next` suggestion. Split and conversion previews suggest their respective calls with `authorized: true` and an editable amount. For a closed source market they can suggest `redeemPredictionMarket` instead; `getPolymarketPositions` also suggests redemption for redeemable positions. The server never runs a suggestion. Your client shows the call and waits for your approval. See [Trading](/predictions-mcp/features-trading) for the differences and eligibility.
 
 <CardGroup cols={3}>
   <Card title="Discover" icon="magnifying-glass">
