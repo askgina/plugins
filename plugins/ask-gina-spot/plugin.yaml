@@ -34,6 +34,7 @@ listing:
   icon: assets/icon.svg
   mcpServerName: spot
   descriptions:
+    antigravity: Research spot tokens and liquidity pools with Ask Gina. Quote swaps, transfers, and LP operations, then execute only with your confirmation.
     codex: Quote and execute spot swaps, transfers, and liquidity-pool operations with your approval.
     cursor: Ask Gina Spot lets an agent quote and, with your approval, execute spot token swaps, transfers, and liquidity-pool operations from your Gina wallet. It also reads swap history, wallet addresses, LP positions, and operation status, and it includes skills for scanning liquidity pools and rebalancing LP positions. Transactions move real funds, so review every quote before you approve it.
     claude: Ask Gina Spot lets an agent quote and, with your approval, execute spot token swaps, transfers, and liquidity-pool operations from your Gina wallet. It also reads swap history, wallet addresses, LP positions, and operation status, and it includes skills for scanning liquidity pools and rebalancing LP positions. Transactions move real funds, so review every quote before you approve it.

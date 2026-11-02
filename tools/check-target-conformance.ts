@@ -240,6 +240,7 @@ const targetManifestPath: Readonly<Record<TargetName, string>> = {
   copilot: "plugin.json",
   gemini: "gemini-extension.json",
   devin: ".devin-plugin/plugin.json",
+  antigravity: ".antigravity-plugin/plugin.json",
 };
 
 const targetMcpPath: Readonly<Partial<Record<TargetName, string>>> = {
@@ -248,54 +249,65 @@ const targetMcpPath: Readonly<Partial<Record<TargetName, string>>> = {
   claude: ".mcp.json",
   copilot: "mcp.json",
   devin: ".mcp.json",
+  antigravity: "mcp_config.json",
 };
 
 const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
   openai: [
     ".app.json",
     ".agent-plugin",
+    ".antigravity-plugin",
     ".claude-plugin",
     ".cursor-plugin",
     ".devin-plugin",
     "plugin.json",
     "mcp.json",
+    "mcp_config.json",
     "gemini-extension.json",
     "rules",
     "commands",
   ],
   cursor: [
     ".app.json",
+    ".antigravity-plugin",
     ".claude-plugin",
     ".codex-plugin",
     ".devin-plugin",
     "plugin.json",
     ".mcp.json",
+    "mcp_config.json",
     "gemini-extension.json",
+    "rules/GEMINI.md",
   ],
   claude: [
     ".app.json",
+    ".antigravity-plugin",
     ".cursor-plugin",
     ".codex-plugin",
     ".devin-plugin",
     "plugin.json",
     "mcp.json",
+    "mcp_config.json",
     "gemini-extension.json",
     "rules",
     "commands",
   ],
   copilot: [
     ".app.json",
+    ".antigravity-plugin",
     ".claude-plugin",
     ".cursor-plugin",
     ".codex-plugin",
     ".devin-plugin",
     ".mcp.json",
+    "mcp_config.json",
     "gemini-extension.json",
     "rules",
     "commands",
   ],
   gemini: [
     ".app.json",
+    ".antigravity-plugin",
     ".claude-plugin",
     ".cursor-plugin",
     ".codex-plugin",
@@ -303,19 +315,36 @@ const foreignArtifacts: Readonly<Record<TargetName, readonly string[]>> = {
     "plugin.json",
     "mcp.json",
     ".mcp.json",
+    "mcp_config.json",
     "rules",
     "commands",
   ],
   devin: [
     ".app.json",
     ".agent-plugin",
+    ".antigravity-plugin",
     ".claude-plugin",
     ".codex-plugin",
     ".cursor-plugin",
     "plugin.json",
     "mcp.json",
+    "mcp_config.json",
     "gemini-extension.json",
     "rules",
+    "commands",
+  ],
+  antigravity: [
+    ".app.json",
+    ".agent-plugin",
+    ".claude-plugin",
+    ".codex-plugin",
+    ".cursor-plugin",
+    ".devin-plugin",
+    "plugin.json",
+    "mcp.json",
+    ".mcp.json",
+    "gemini-extension.json",
+    "rules/gina-read-only.mdc",
     "commands",
   ],
 };
@@ -360,7 +389,9 @@ const expectedMcpUrl = (source: PluginSource): string =>
 const validateManifest = (target: TargetName, manifest: unknown, source: PluginSource): boolean => {
   const { listing } = source;
   const expectedVersion =
-    target === "cursor" || target === "openai" ? listing.version : RELEASE_VERSION;
+    target === "cursor" || target === "openai" || target === "antigravity"
+      ? listing.version
+      : RELEASE_VERSION;
   if (nested(manifest, "name") !== source.name || nested(manifest, "version") !== expectedVersion) {
     return false;
   }
@@ -413,6 +444,45 @@ const validateManifest = (target: TargetName, manifest: unknown, source: PluginS
       nested(manifest, "repository") === "https://github.com/askgina/plugins" &&
       nested(manifest, "license") === "Apache-2.0" &&
       nested(manifest, "logo") === listing.icon
+    );
+  }
+
+  if (target === "antigravity") {
+    const description = listing.descriptions.antigravity;
+    const prompts = nested(manifest, "suggestedPrompts");
+    const keywords = nested(manifest, "keywords");
+    return (
+      hasExactKeys(manifest, [
+        "$schema",
+        "name",
+        "displayName",
+        "description",
+        "version",
+        "logo",
+        "suggestedPrompts",
+        "author",
+        "homepage",
+        "repository",
+        "license",
+        "keywords",
+      ]) &&
+      nested(manifest, "$schema") === "https://antigravity.google/schemas/v1/plugin.json" &&
+      nested(manifest, "displayName") === listing.displayName &&
+      description !== undefined &&
+      description.length >= 120 &&
+      description.length <= 160 &&
+      nested(manifest, "description") === description &&
+      nested(manifest, "logo") === listing.icon &&
+      hasExactKeys(nested(manifest, "author"), ["name", "url"]) &&
+      nested(manifest, "author", "name") === listing.author.name &&
+      nested(manifest, "author", "url") === listing.author.url &&
+      nested(manifest, "homepage") === listing.homepage &&
+      nested(manifest, "repository") === listing.repository &&
+      nested(manifest, "license") === listing.license &&
+      Array.isArray(prompts) &&
+      sameSortedStrings(prompts, listing.codex.defaultPrompt.slice(0, 3)) &&
+      Array.isArray(keywords) &&
+      sameSortedStrings(keywords, listing.keywords)
     );
   }
 
@@ -477,7 +547,7 @@ const validateMcp = (target: TargetName, manifest: unknown, source: PluginSource
         ? ["name", "version", "description", "mcpServers"]
         : ["mcpServers"];
   const serverKeys =
-    target === "cursor" || target === "gemini"
+    target === "cursor" || target === "gemini" || target === "antigravity"
       ? [target === "gemini" ? "httpUrl" : "url"]
       : ["type", "url"];
   if (
@@ -490,7 +560,7 @@ const validateMcp = (target: TargetName, manifest: unknown, source: PluginSource
 
   if (target === "gemini") return nested(server, "httpUrl") === url;
   if (nested(server, "url") !== url) return false;
-  if (target === "cursor") return true;
+  if (target === "cursor" || target === "antigravity") return true;
   if (
     target === "copilot" &&
     nested(manifest, "$schema") !== "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json"
@@ -613,6 +683,34 @@ export const checkGeneratedTargetConformance: {
           "devin.assets.icon_exists",
           "Devin manifest logo asset exists",
           yield* withFileSystemError(iconPath, "cannot be inspected", fs.exists(iconPath)),
+        );
+      }
+
+      if (target === "antigravity") {
+        yield* checkAntigravityContent(
+          generatedTargetRoot,
+          packageRoot,
+          source,
+          "antigravity",
+          addCheck,
+        );
+        const rulesRoot = paths.join(generatedTargetRoot, "rules");
+        const rulesExist = yield* withFileSystemError(
+          rulesRoot,
+          "cannot be inspected",
+          fs.exists(rulesRoot),
+        );
+        const rules = rulesExist
+          ? (yield* withFileSystemError(
+              rulesRoot,
+              "cannot be read",
+              fs.readDirectory(rulesRoot),
+            )).sort()
+          : [];
+        addCheck(
+          "antigravity.rules.directory_set",
+          "Antigravity contains only its read-only GEMINI rule, or no rules for venue listings",
+          readOnly ? sameSortedStrings(rules, ["GEMINI.md"]) : !rulesExist,
         );
       }
 
@@ -924,6 +1022,80 @@ const checkRequiredPaths = (
     }
   });
 
+/** Missing or non-file content is a failed conformance check, not a failed read. */
+const readRegularFileIfPresent = (
+  fs: FileSystem.FileSystem,
+  candidate: string,
+): Effect.Effect<string | undefined, TargetConformanceError> =>
+  Effect.gen(function* () {
+    if (!(yield* withFileSystemError(candidate, "cannot be inspected", fs.exists(candidate)))) {
+      return undefined;
+    }
+    const info = yield* withFileSystemError(candidate, "cannot be inspected", fs.stat(candidate));
+    return info.type === "File"
+      ? yield* withFileSystemError(candidate, "cannot be read", fs.readFileString(candidate))
+      : undefined;
+  });
+
+/** Shared source and archive checks: README parity and the frontmatter-free, always-on rule. */
+const checkAntigravityContent = (
+  root: string,
+  packageRoot: string,
+  source: PluginSource,
+  prefix: string,
+  addCheck: AddCheck,
+): Effect.Effect<void, TargetConformanceError, ConformanceEnvironment> =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const paths = yield* Path.Path;
+    yield* checkRequiredPaths(
+      [
+        [
+          paths.join(root, source.listing.icon),
+          `${prefix}.assets.icon_exists`,
+          "Antigravity manifest logo exists as a regular file",
+          "File",
+        ],
+      ],
+      addCheck,
+    );
+    const files = [
+      ["README.md", "readme"],
+      ...(isReadOnlyListing(source) ? [["rules/GEMINI.md", "rules.read_only"] as const] : []),
+    ] as const;
+    for (const [relative, id] of files) {
+      const content = yield* readRegularFileIfPresent(fs, paths.join(root, relative));
+      addCheck(
+        `${prefix}.${id}_exists`,
+        `Antigravity ${relative} exists as a regular file`,
+        content !== undefined,
+      );
+      if (root !== packageRoot) {
+        const canonical = yield* readRegularFileIfPresent(fs, paths.join(packageRoot, relative));
+        addCheck(
+          `${prefix}.${id}.canonical_parity`,
+          `Antigravity ${relative} matches canonical source exactly`,
+          content !== undefined && canonical !== undefined && content === canonical,
+        );
+      }
+      if (relative === "rules/GEMINI.md") {
+        const cursorRule = yield* readRegularFileIfPresent(
+          fs,
+          paths.join(packageRoot, "rules", "gina-read-only.mdc"),
+        );
+        const body = /^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)([\s\S]*)$/u.exec(cursorRule ?? "")?.[1];
+        addCheck(
+          `${prefix}.rules.read_only_cursor_parity`,
+          "Antigravity GEMINI rule matches the Cursor read-only rule without frontmatter",
+          content !== undefined &&
+            body !== undefined &&
+            body.trim().length > 0 &&
+            content.trim() === body.trim(),
+        );
+      }
+    }
+  });
+
 /**
  * Why a marketplace entry's `path` is not an acceptable source for `./plugins/<name>`, or
  * `undefined` when it is a canonical, existing, contained, link-free directory.
@@ -1226,6 +1398,51 @@ const checkPackageSource = (
         "repository.root_cursor.mcp_contract",
         "Root Cursor MCP configuration binds the production endpoint",
         validateMcp("cursor", mcp, source),
+      );
+    }
+
+    if (hosts.includes("antigravity")) {
+      const manifestPath = paths.join(packageRoot, ".antigravity-plugin", "plugin.json");
+      const mcpPath = paths.join(packageRoot, "mcp_config.json");
+      yield* checkRequiredPaths(
+        [
+          [
+            manifestPath,
+            "repository.root_antigravity.manifest_exists",
+            "Root Antigravity manifest exists as a regular file",
+            "File",
+          ],
+          [
+            mcpPath,
+            "repository.root_antigravity.mcp_exists",
+            "Root Antigravity MCP configuration exists as a regular file",
+            "File",
+          ],
+        ],
+        addCheck,
+      );
+      if (
+        yield* withFileSystemError(manifestPath, "cannot be inspected", fs.exists(manifestPath))
+      ) {
+        addCheck(
+          "repository.root_antigravity.manifest_contract",
+          "Root Antigravity manifest has the exact plugin.yaml listing contract",
+          validateManifest("antigravity", yield* readJson(fs, manifestPath), source),
+        );
+      }
+      if (yield* withFileSystemError(mcpPath, "cannot be inspected", fs.exists(mcpPath))) {
+        addCheck(
+          "repository.root_antigravity.mcp_contract",
+          "Root Antigravity MCP configuration binds only the production endpoint URL",
+          validateMcp("antigravity", yield* readJson(fs, mcpPath), source),
+        );
+      }
+      yield* checkAntigravityContent(
+        packageRoot,
+        packageRoot,
+        source,
+        "repository.root_antigravity",
+        addCheck,
       );
     }
 

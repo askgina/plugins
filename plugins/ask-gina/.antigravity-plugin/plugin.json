@@ -1,0 +1,32 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "ask-gina",
+  "displayName": "Ask Gina",
+  "description": "Read-only research for your Gina wallets, spot tokens, Hyperliquid, and Polymarket. Inspect live markets and accounts without trading or moving funds.",
+  "version": "1.0.0",
+  "logo": "assets/icon.svg",
+  "suggestedPrompts": [
+    "Show my linked wallets and cross-chain portfolio.",
+    "Chart ETH's price over the past week.",
+    "Which prediction markets are resolving soon?"
+  ],
+  "author": {
+    "name": "Ask Gina",
+    "url": "https://askgina.ai"
+  },
+  "homepage": "https://askgina.ai",
+  "repository": "https://github.com/askgina/plugins",
+  "license": "Apache-2.0",
+  "keywords": [
+    "crypto",
+    "portfolio",
+    "market-data",
+    "hyperliquid",
+    "polymarket",
+    "prediction",
+    "perpetuals",
+    "research",
+    "strategise",
+    "mcp"
+  ]
+}

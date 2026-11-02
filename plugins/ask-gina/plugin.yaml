@@ -38,6 +38,7 @@ listing:
   icon: assets/icon.svg
   mcpServerName: gina
   descriptions:
+    antigravity: Read-only research for your Gina wallets, spot tokens, Hyperliquid, and Polymarket. Inspect live markets and accounts without trading or moving funds.
     codex: Research assistant for crypto, prediction, and perpetual markets.
     cursor: Ask Gina is a research assistant for crypto, prediction markets, perpetuals, and equities. Use it to fetch real-time prices and historical data for tokens, Hyperliquid markets, and Polymarket prediction markets, and to analyze your Gina wallet, positions, and accounts. Gina cannot place trades or transfer assets inside Cursor or Grok Bot.
     devin: Ask Gina is a research assistant for crypto, prediction markets, perpetuals, and equities. Use it to fetch real-time prices and historical data for tokens, Hyperliquid markets, and Polymarket prediction markets, and to analyze your Gina wallet, positions, and accounts. Gina cannot place trades or transfer assets inside Devin.

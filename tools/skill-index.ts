@@ -42,6 +42,11 @@ const PluginDeclaration = Schema.Struct({
   name: Schema.String,
   mcp: Schema.Struct({ url: Schema.String }),
   skills: Schema.Array(Schema.Struct({ id: Schema.String, mcpServed: Schema.Boolean })),
+  listing: Schema.optional(
+    Schema.Struct({
+      descriptions: Schema.Struct({ antigravity: Schema.optional(Schema.String) }),
+    }),
+  ),
 });
 
 const problem = (message: string): SkillIndexError => new SkillIndexError({ problems: [message] });
@@ -147,6 +152,7 @@ export const buildSkillIndex = (root: string) =>
     const problems: string[] = [];
     const skills: SkillIndexEntry[] = [];
     const declaredDocuments = new Set<string>();
+    const projectedDocuments = new Map<string, string>();
 
     const pluginsRoot = path.join(root, "plugins");
     const packageNames = (yield* exists(pluginsRoot))
@@ -200,6 +206,12 @@ export const buildSkillIndex = (root: string) =>
           continue;
         }
         declaredDocuments.add(document);
+        if (declaration.listing?.descriptions.antigravity !== undefined) {
+          projectedDocuments.set(
+            `plugins/${packageName}/targets/antigravity/skills/${id}/SKILL.md`,
+            document,
+          );
+        }
         const frontmatter = yield* parseFrontmatter(document, yield* readText(root, document)).pipe(
           Effect.catchTag("SkillIndexError", (error) =>
             Effect.sync(() => {
@@ -232,6 +244,13 @@ export const buildSkillIndex = (root: string) =>
 
     for (const document of yield* findSkillDocuments(root)) {
       if (declaredDocuments.has(document)) continue;
+      const canonical = projectedDocuments.get(document);
+      if (canonical !== undefined) {
+        if ((yield* readText(root, document)) !== (yield* readText(root, canonical))) {
+          problems.push(`${document} differs from ${canonical}; run bun run manifests:generate`);
+        }
+        continue;
+      }
       problems.push(
         `${document} is not declared by any plugin. Move its directory to plugins/<package>/skills/<id>/ and list <id> under skills: in plugins/<package>/plugin.yaml.`,
       );

@@ -6,6 +6,7 @@ import {
   createGeneratedPluginTarget,
   createGeneratedPluginTargets,
   SKILL_NAMES,
+  syncAntigravityTargets,
   TARGET_NAMES,
   targetsForPackage,
   type GeneratedPluginTargets,
@@ -24,7 +25,7 @@ const targetPath = (generated: GeneratedPluginTargets, host: TargetName): string
 
 describe("sync-plugin-skills", () => {
   it.layer(BunServices.layer)((it) => {
-    it.effect("loads OpenAI, Cursor, and Devin from the plugin root", () =>
+    it.effect("loads OpenAI, Cursor, Devin, and Antigravity from the plugin root", () =>
       Effect.scoped(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -104,13 +105,47 @@ describe("sync-plugin-skills", () => {
           }
 
           for (const hostName of TARGET_NAMES.filter(
-            (hostName) => hostName !== "openai" && hostName !== "cursor" && hostName !== "devin",
+            (hostName) =>
+              hostName !== "openai" &&
+              hostName !== "cursor" &&
+              hostName !== "devin" &&
+              hostName !== "antigravity",
           )) {
             assert.deepStrictEqual(
               (yield* fs.readDirectory(targetPath(generatedTargets, hostName)))
                 .filter((entry) => entry !== "skills")
                 .sort(),
               (yield* fs.readDirectory(paths.join(packageRoot, "targets", hostName))).sort(),
+            );
+          }
+
+          const antigravity = targetPath(generatedTargets, "antigravity");
+          assert.deepStrictEqual((yield* fs.readDirectory(antigravity)).sort(), [
+            ".antigravity-plugin",
+            "README.md",
+            "assets",
+            "mcp_config.json",
+            "rules",
+            "skills",
+          ]);
+          assert.deepStrictEqual(yield* fs.readDirectory(paths.join(antigravity, "rules")), [
+            "GEMINI.md",
+          ]);
+          assert.isFalse(
+            yield* fs.exists(
+              paths.join(targetPath(generatedTargets, "cursor"), "rules", "GEMINI.md"),
+            ),
+          );
+          for (const relative of [
+            ".antigravity-plugin/plugin.json",
+            "mcp_config.json",
+            "assets/icon.svg",
+            "README.md",
+            "rules/GEMINI.md",
+          ]) {
+            assert.strictEqual(
+              yield* fs.readFileString(paths.join(antigravity, relative)),
+              yield* fs.readFileString(paths.join(packageRoot, relative)),
             );
           }
 
@@ -183,6 +218,7 @@ describe("sync-plugin-skills", () => {
             "claude",
             "copilot",
             "devin",
+            "antigravity",
           ]);
           assert.deepStrictEqual(yield* targetsForPackage({ packageRoot }), generated.hosts);
           assert.isUndefined(generated.targets.gemini);
@@ -244,6 +280,65 @@ describe("sync-plugin-skills", () => {
               ),
             ),
           );
+        }),
+      ),
+    );
+
+    it.effect(
+      "keeps all committed Antigravity target files byte-identical to canonical sources",
+      () => syncAntigravityTargets({ root: process.cwd(), check: true }),
+    );
+
+    it.effect("detects and repairs missing, mutated, stale and foreign Antigravity copies", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const paths = yield* Path.Path;
+          const root = yield* fs.makeTempDirectoryScoped({
+            prefix: "antigravity-projection-test-",
+          });
+          const packageRoot = paths.join(root, "plugins", "ask-gina");
+          yield* fs.copy(paths.resolve("plugins/ask-gina"), packageRoot);
+          const target = paths.join(packageRoot, "targets", "antigravity");
+          yield* fs.remove(target, { recursive: true });
+          let error = yield* Effect.flip(syncAntigravityTargets({ root, check: true }));
+          assert.include(error.reason, "out of date");
+          yield* syncAntigravityTargets({ root, check: false });
+          yield* syncAntigravityTargets({ root, check: true });
+          for (const relative of [
+            ".antigravity-plugin/plugin.json",
+            "mcp_config.json",
+            "README.md",
+            "assets/icon.svg",
+            "rules/GEMINI.md",
+            "skills/review-gina-account/SKILL.md",
+            ".mcp.json",
+          ]) {
+            yield* fs.writeFileString(paths.join(target, relative), "mutated\n");
+            error = yield* Effect.flip(syncAntigravityTargets({ root, check: true }));
+            assert.include(error.reason, "out of date");
+            yield* syncAntigravityTargets({ root, check: false });
+            yield* syncAntigravityTargets({ root, check: true });
+          }
+          yield* fs.writeFileString(
+            paths.join(packageRoot, "README.md"),
+            "Updated canonical README\n",
+          );
+          error = yield* Effect.flip(syncAntigravityTargets({ root, check: true }));
+          assert.include(error.reason, "out of date");
+          yield* syncAntigravityTargets({ root, check: false });
+          assert.strictEqual(
+            yield* fs.readFileString(paths.join(target, "README.md")),
+            "Updated canonical README\n",
+          );
+          const manifestPath = paths.join(packageRoot, "plugin.yaml");
+          const manifest = yield* fs.readFileString(manifestPath);
+          yield* fs.writeFileString(manifestPath, manifest.replace(/^    antigravity:.*\n/mu, ""));
+          error = yield* Effect.flip(syncAntigravityTargets({ root, check: true }));
+          assert.include(error.reason, "unpublished Antigravity target");
+          yield* syncAntigravityTargets({ root, check: false });
+          assert.isFalse(yield* fs.exists(target));
+          yield* syncAntigravityTargets({ root, check: true });
         }),
       ),
     );

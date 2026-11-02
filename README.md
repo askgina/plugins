@@ -20,17 +20,22 @@ app, or the lint setup.
 
 ### Pick your goal
 
-| I want to...                                                       | Go to                                                                                                                                 |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Call Gina from TypeScript code                                     | [`packages/sdk/README.md`](packages/sdk/README.md)                                                                                    |
-| Call Gina from a terminal                                          | [`packages/cli/README.md`](packages/cli/README.md)                                                                                    |
-| Use the shared catalog and protocol types                          | [`packages/contracts/README.md`](packages/contracts/README.md)                                                                        |
-| Install the plugin in a host (Cursor, Grok Bot, Devin, and others) | [`plugins/ask-gina/README.md`](plugins/ask-gina/README.md#install)                                                                    |
-| Connect ChatGPT, Claude, Codex, or another client                  | Public [Connect guides](https://docs.askgina.ai/connect/index)                                                                        |
-| Run or change the evals                                            | [`packages/evals/README.md`](packages/evals/README.md#start-here). Start with replay: it makes no network calls and needs no secrets. |
-| Work on the public evals app                                       | [Public evals app](#public-evals-app) in Reference                                                                                    |
-| Contribute a change                                                | [`ai_docs/contributing.md`](ai_docs/contributing.md), then the loop below                                                             |
-| Edit the public docs site                                          | `docs/` is the Mintlify source; authoring rules are in [`ai_docs/docs/authoring.md`](ai_docs/docs/authoring.md)                       |
+| I want to...                                                                    | Go to                                                                                                                                 |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Call Gina from TypeScript code                                                  | [`packages/sdk/README.md`](packages/sdk/README.md)                                                                                    |
+| Call Gina from a terminal                                                       | [`packages/cli/README.md`](packages/cli/README.md)                                                                                    |
+| Use the shared catalog and protocol types                                       | [`packages/contracts/README.md`](packages/contracts/README.md)                                                                        |
+| Install the plugin in a host (Antigravity, Cursor, Grok Bot, Devin, and others) | [`plugins/ask-gina/README.md`](plugins/ask-gina/README.md#install)                                                                    |
+| Connect ChatGPT, Claude, Codex, or another client                               | Public [Connect guides](https://docs.askgina.ai/connect/index)                                                                        |
+| Run or change the evals                                                         | [`packages/evals/README.md`](packages/evals/README.md#start-here). Start with replay: it makes no network calls and needs no secrets. |
+| Work on the public evals app                                                    | [Public evals app](#public-evals-app) in Reference                                                                                    |
+| Contribute a change                                                             | [`ai_docs/contributing.md`](ai_docs/contributing.md), then the loop below                                                             |
+| Edit the public docs site                                                       | `docs/` is the Mintlify source; authoring rules are in [`ai_docs/docs/authoring.md`](ai_docs/docs/authoring.md)                       |
+
+Antigravity installs local plugin directories with `agy plugin install`. The
+[Antigravity connect guide](https://docs.askgina.ai/connect/antigravity) covers
+research, Spot, Perps and Predictions, their OAuth scopes, and confirmation for
+venue writes. This source-install route does not imply a Marketplace listing.
 
 ### Contributor loop
 

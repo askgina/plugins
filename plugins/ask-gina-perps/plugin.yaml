@@ -27,6 +27,7 @@ listing:
   icon: assets/icon.svg
   mcpServerName: perps
   descriptions:
+    antigravity: Read Hyperliquid markets, positions, and account health with Ask Gina. Place or manage perps orders and funding only with your confirmation.
     codex: Read Hyperliquid markets and, with your approval, place and manage perpetual-futures orders.
     cursor: Ask Gina Perps lets an agent read Hyperliquid account and market data and, with your approval, place, change and cancel perpetual-futures orders, adjust leverage, and deposit or withdraw funds from your Gina wallet. It also renders charts, positions and account overviews. Orders and funding move real money, so review every action before you approve it.
     claude: Ask Gina Perps lets an agent read Hyperliquid account and market data and, with your approval, place, change and cancel perpetual-futures orders, adjust leverage, and deposit or withdraw funds from your Gina wallet. It also renders charts, positions and account overviews. Orders and funding move real money, so review every action before you approve it.

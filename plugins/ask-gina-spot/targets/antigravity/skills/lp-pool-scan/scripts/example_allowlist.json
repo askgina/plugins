@@ -1,0 +1,10 @@
+{
+  "robinhood_chain_4663": {
+    "uniswap-v3": ["0xd4eb21209c4d6093f80b5b84f5c45cc093ea14a3"],
+    "uniswap-v4": ["0x387bf619da4d3fb62bb276482693dba1b9b3520f573cabdfe033384a24125982"]
+  },
+  "solana": {
+    "raydium-clmm": ["7a8xxAJBELDo6P9dikSYctdw6ce8F4mWr3ahcAD8Ao49"],
+    "raydium-cpmm": ["G19cwhvY4teiUm3jgjrDX5RfzfCnSXe1s5upRXVmTQki"]
+  }
+}

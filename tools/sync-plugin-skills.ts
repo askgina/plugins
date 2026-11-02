@@ -2,13 +2,27 @@
 
 import { fileURLToPath } from "node:url";
 
+import * as BunRuntime from "@effect/platform-bun/BunRuntime";
+import * as BunServices from "@effect/platform-bun/BunServices";
 import { ASK_GINA_SKILL_DEFINITIONS, READ_SCOPE } from "@askgina/contracts";
-import { Data, Effect, Exit, FileSystem, Function, Path, PlatformError, Schema } from "effect";
+import {
+  Console,
+  Data,
+  Effect,
+  Exit,
+  FileSystem,
+  Function,
+  Layer,
+  Path,
+  PlatformError,
+  Schema,
+} from "effect";
 
 import {
   HOST_TARGETS,
   hostsOf,
   loadPluginSource,
+  loadPluginSources,
   skillIdsOf,
   type HostTarget,
   type PluginSource,
@@ -26,6 +40,12 @@ const CURSOR_BASE_ENTRIES = [".cursor-plugin", "mcp.json", "assets", "README.md"
 /** Cursor extras a package may ship beside its manifest. They are copied when present. */
 const CURSOR_OPTIONAL_ENTRIES = ["rules", "commands"] as const;
 const DEVIN_SOURCE_ENTRIES = [".devin-plugin", ".mcp.json", "assets/icon.svg"] as const;
+const ANTIGRAVITY_SOURCE_ENTRIES = [
+  ".antigravity-plugin",
+  "mcp_config.json",
+  "assets/icon.svg",
+  "README.md",
+] as const;
 const here = fileURLToPath(new URL(".", import.meta.url));
 
 type SyncEnvironment = FileSystem.FileSystem | Path.Path;
@@ -194,7 +214,7 @@ const assertNoSymbolicLinks = (
 /** A required source file: not a symbolic link, a regular file, and valid JSON when it is `.json`. */
 const assertRegularSourceFile = (
   candidate: string,
-  label: "OpenAI" | "Cursor",
+  label: "OpenAI" | "Cursor" | "Antigravity",
 ): Effect.Effect<void, PluginSkillSyncError, FileSystem.FileSystem> =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
@@ -361,8 +381,25 @@ const assertSourceIsPortable = (
       yield* assertNoSymbolicLinks(paths.join(packageRoot, ".devin-plugin"));
     }
 
+    if (hosts.includes("antigravity")) {
+      for (const relative of [
+        ".antigravity-plugin/plugin.json",
+        "mcp_config.json",
+        ...(readOnly ? ["rules/GEMINI.md"] : []),
+      ]) {
+        yield* assertRegularSourceFile(paths.join(packageRoot, relative), "Antigravity");
+      }
+      yield* assertNoSymbolicLinks(paths.join(packageRoot, ".antigravity-plugin"));
+    }
+
     yield* Effect.forEach(
-      hosts.filter((target) => target !== "openai" && target !== "cursor" && target !== "devin"),
+      hosts.filter(
+        (target) =>
+          target !== "openai" &&
+          target !== "cursor" &&
+          target !== "devin" &&
+          target !== "antigravity",
+      ),
       (target) =>
         Effect.gen(function* () {
           const overlay = paths.join(packageRoot, "targets", target);
@@ -384,7 +421,7 @@ const assertSourceIsPortable = (
     );
 
     yield* Effect.forEach(
-      TARGET_NAMES,
+      TARGET_NAMES.filter((target) => target !== "antigravity"),
       (target) => {
         const generatedSourcePath = paths.join(packageRoot, "targets", target, "skills");
         return withFileSystemError(
@@ -557,6 +594,16 @@ const materializeTarget = (
         ...CURSOR_BASE_ENTRIES,
         ...(yield* presentCursorExtras(packageRoot)),
       ]);
+      yield* withFileSystemError(
+        destination,
+        "cannot isolate Cursor rules",
+        fs.remove(paths.join(destination, "rules", "GEMINI.md"), { force: true }),
+      );
+    } else if (target === "antigravity") {
+      yield* copyRootSourceSurfaces(packageRoot, destination, [
+        ...ANTIGRAVITY_SOURCE_ENTRIES,
+        ...(isReadOnlyListing(context.source) ? ["rules/GEMINI.md"] : []),
+      ]);
     } else if (target === "devin") {
       yield* copyRootSourceSurfaces(packageRoot, destination, DEVIN_SOURCE_ENTRIES);
     } else {
@@ -667,3 +714,145 @@ export const createGeneratedPluginTargets = (
   });
 
 export const syncPluginSkills = createGeneratedPluginTargets;
+
+/** Publish strict-clean native trees for repository installs; canonical root files remain authoritative. */
+export const syncAntigravityTargets = (options: {
+  readonly root: string;
+  readonly check: boolean;
+}) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const paths = yield* Path.Path;
+    const plugins = yield* loadPluginSources(options.root).pipe(
+      Effect.mapError((cause) =>
+        pluginSkillSyncError(options.root, "cannot load plugin sources", cause),
+      ),
+    );
+    let count = 0;
+    for (const { directory, source } of plugins) {
+      const packageRoot = paths.join(options.root, "plugins", directory);
+      const destination = paths.join(packageRoot, "targets", "antigravity");
+      if (!hostsOf(source).includes("antigravity")) {
+        if (
+          yield* withFileSystemError(destination, "cannot be inspected", fs.exists(destination))
+        ) {
+          if (options.check)
+            return yield* pluginSkillSyncError(
+              destination,
+              "unpublished Antigravity target is out of date; run bun run manifests:generate",
+            );
+          yield* cleanupDirectory(destination);
+        }
+        continue;
+      }
+      yield* Effect.acquireUseRelease(
+        createGeneratedPluginTarget("antigravity", { packageRoot }),
+        (generated) =>
+          Effect.gen(function* () {
+            const exists = yield* withFileSystemError(
+              destination,
+              "cannot be inspected",
+              fs.exists(destination),
+            );
+            const expected = (yield* withFileSystemError(
+              generated.path,
+              "cannot be read",
+              fs.readDirectory(generated.path, { recursive: true }),
+            )).sort();
+            let matches = exists;
+            if (exists) {
+              const linked = yield* fs
+                .readLink(destination)
+                .pipe(Effect.match({ onFailure: () => false, onSuccess: () => true }));
+              if (linked)
+                return yield* pluginSkillSyncError(
+                  destination,
+                  "generated target must not be a symbolic link",
+                );
+              const actual = (yield* withFileSystemError(
+                destination,
+                "cannot be read",
+                fs.readDirectory(destination, { recursive: true }),
+              )).sort();
+              matches =
+                actual.length === expected.length &&
+                actual.every((entry, index) => entry === expected[index]);
+              if (matches) {
+                for (const entry of expected) {
+                  const wantedPath = paths.join(generated.path, entry);
+                  const actualPath = paths.join(destination, entry);
+                  const entryLinked = yield* fs
+                    .readLink(actualPath)
+                    .pipe(Effect.match({ onFailure: () => false, onSuccess: () => true }));
+                  if (entryLinked) {
+                    matches = false;
+                    break;
+                  }
+                  const wanted = yield* withFileSystemError(
+                    wantedPath,
+                    "cannot be inspected",
+                    fs.stat(wantedPath),
+                  );
+                  const found = yield* withFileSystemError(
+                    actualPath,
+                    "cannot be inspected",
+                    fs.stat(actualPath),
+                  );
+                  if (wanted.type !== found.type) {
+                    matches = false;
+                    break;
+                  }
+                  if (wanted.type !== "File") continue;
+                  const left = yield* withFileSystemError(
+                    wantedPath,
+                    "cannot be read",
+                    fs.readFile(wantedPath),
+                  );
+                  const right = yield* withFileSystemError(
+                    actualPath,
+                    "cannot be read",
+                    fs.readFile(actualPath),
+                  );
+                  if (
+                    left.length !== right.length ||
+                    !left.every((byte, index) => byte === right[index])
+                  ) {
+                    matches = false;
+                    break;
+                  }
+                }
+              }
+            }
+            if (matches) return;
+            if (options.check)
+              return yield* pluginSkillSyncError(
+                destination,
+                "generated Antigravity target is out of date; run bun run manifests:generate",
+              );
+            if (exists) yield* cleanupDirectory(destination);
+            yield* withFileSystemError(
+              destination,
+              "cannot be generated",
+              fs.copy(generated.path, destination),
+            );
+          }),
+        (generated) => generated.cleanup.pipe(Effect.orDie),
+      );
+      count += 1;
+    }
+    yield* Console.log(
+      `${options.check ? "Checked" : "Generated"} ${count} public Antigravity targets`,
+    );
+  });
+
+if (import.meta.main) {
+  const main = Layer.build(BunServices.layer).pipe(
+    Effect.flatMap((context) =>
+      syncAntigravityTargets({ root: process.cwd(), check: process.argv.includes("--check") }).pipe(
+        Effect.provide(context),
+      ),
+    ),
+    Effect.scoped,
+  );
+  BunRuntime.runMain(main);
+}
