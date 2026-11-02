@@ -26,6 +26,7 @@ listing:
   icon: assets/icon.svg
   mcpServerName: predictions
   descriptions:
+    antigravity: Research Polymarket markets, positions, and order history with Ask Gina. Trade and manage your prediction balance only with your confirmation.
     codex: Search Polymarket and, with your approval, trade prediction markets from your Gina wallet.
     cursor: Ask Gina Predictions lets an agent search Polymarket markets, read your positions and order history, and, with your approval, place trades, manage orders, redeem winning positions, and top up or withdraw your prediction balance from your Gina wallet. It also manages scheduled prompts. Trades and balance changes move real funds, so review every action before you approve it.
     claude: Ask Gina Predictions lets an agent search Polymarket markets, read your positions and order history, and, with your approval, place trades, manage orders, redeem winning positions, and top up or withdraw your prediction balance from your Gina wallet. It also manages scheduled prompts. Trades and balance changes move real funds, so review every action before you approve it.

@@ -5,7 +5,7 @@ description: Use when asked to scan, rank or monitor liquidity pools (Uniswap v2
 
 # lp-pool-scan
 
-Read-only LP pool scanner. It ranks pools by risk-adjusted fee yield and writes a markdown report plus a JSON snapshot. On each rerun it prints a one-line diff against the previous snapshot.
+Read-only LP scanner: ranks pools by risk-adjusted fee yield, writes Markdown and JSON snapshots, and prints a one-line diff on reruns.
 
 **Hard rule: read-only.** It makes HTTPS GETs to public APIs and read-only JSON-RPC POSTs (`eth_call`, `eth_getLogs`, `eth_getBlockByNumber`) to public RPCs. It never signs, sends or simulates a transaction for execution. It needs no wallet, keys or API keys. Do not wire it to any trading or wallet connector.
 
@@ -17,7 +17,7 @@ Read-only LP pool scanner. It ranks pools by risk-adjusted fee yield and writes 
 
 ## Run
 
-Use an output folder that only you can read. The script creates it with mode `0700` and refuses a folder owned by another user, so avoid shared locations such as `/tmp`.
+Use a private output folder, not shared locations such as `/tmp`. The script creates it with mode `0700` and refuses folders owned by another user.
 
 ```bash
 python3 scripts/lp_pool_scan.py --universe allowlist --allowlist my_pools.json --out "$HOME/lp-scan-output" --top 10

@@ -48,7 +48,7 @@ describe("plugin manifests", () => {
         const path = yield* Path.Path;
         const files = yield* generateAllManifests(repositoryRoot);
 
-        assert.strictEqual(Object.keys(files).length, 40);
+        assert.strictEqual(Object.keys(files).length, 48);
         assert.include(Object.keys(files), "plugins/ask-gina-spot/.codex-plugin/plugin.json");
         assert.include(Object.keys(files), "plugins/ask-gina-perps/.codex-plugin/plugin.json");
         assert.include(
@@ -72,10 +72,11 @@ describe("plugin manifests", () => {
     it.effect("generates a target only when the plugin gives it a description", () =>
       Effect.gen(function* () {
         const source = yield* loadPluginSource(`${repositoryRoot}plugins/ask-gina`);
-        const { devin, copilot, gemini, ...required } = source.listing.descriptions;
+        const { devin, copilot, gemini, antigravity, ...required } = source.listing.descriptions;
         assert.isDefined(devin);
         assert.isDefined(copilot);
         assert.isDefined(gemini);
+        assert.isDefined(antigravity);
 
         const files = generatePluginFiles({
           ...source,
@@ -90,6 +91,43 @@ describe("plugin manifests", () => {
           "targets/claude/.claude-plugin/plugin.json",
           "targets/claude/.mcp.json",
         ]);
+      }),
+    );
+
+    it.effect("projects Antigravity metadata and limits starter prompts to three", () =>
+      Effect.gen(function* () {
+        const source = yield* loadPluginSource(`${repositoryRoot}plugins/ask-gina`);
+        const listing = source.listing;
+        const prompts = ["First prompt", "Second prompt", "Third prompt", "Omitted prompt"];
+        const files = generatePluginFiles({
+          ...source,
+          listing: { ...listing, codex: { ...listing.codex, defaultPrompt: prompts } },
+        });
+        assert.strictEqual(
+          files[".antigravity-plugin/plugin.json"],
+          renderJson({
+            $schema: "https://antigravity.google/schemas/v1/plugin.json",
+            name: source.name,
+            displayName: listing.displayName,
+            description:
+              listing.descriptions.antigravity ?? assert.fail("Missing Antigravity description"),
+            version: listing.version,
+            logo: listing.icon,
+            suggestedPrompts: prompts.slice(0, 3),
+            author: listing.author,
+            homepage: listing.homepage,
+            repository: listing.repository,
+            license: listing.license,
+            keywords: listing.keywords,
+          }),
+        );
+        assert.strictEqual(
+          files["mcp_config.json"],
+          renderJson({
+            mcpServers: { [listing.mcpServerName]: { url: source.mcp.url } },
+          }),
+        );
+        assert.notEqual(source.version, listing.version);
       }),
     );
 

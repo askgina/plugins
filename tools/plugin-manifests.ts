@@ -25,7 +25,7 @@ const Author = Schema.Struct({ name: Schema.String, url: Schema.String });
 
 /**
  * Per-host descriptions. codex, cursor and claude are required because every plugin appears in
- * the three repository marketplaces. A devin, copilot or gemini description opts the plugin into
+ * the three repository marketplaces. A devin, copilot, gemini or antigravity description opts the plugin into
  * that target; without one the target's manifests are not generated.
  */
 const Descriptions = Schema.Struct({
@@ -35,6 +35,7 @@ const Descriptions = Schema.Struct({
   devin: Schema.optional(Schema.String),
   copilot: Schema.optional(Schema.String),
   gemini: Schema.optional(Schema.String),
+  antigravity: Schema.optional(Schema.String),
 });
 
 /** The `listing` block of plugin.yaml: every value a host manifest needs beyond name and version. */
@@ -193,12 +194,20 @@ const devinManifest = (source: PluginSource, description: string): Json => {
 };
 
 /** Host targets in the order the packer and conformance tools use. */
-export const HOST_TARGETS = ["openai", "cursor", "claude", "copilot", "gemini", "devin"] as const;
+export const HOST_TARGETS = [
+  "openai",
+  "cursor",
+  "claude",
+  "copilot",
+  "gemini",
+  "devin",
+  "antigravity",
+] as const;
 export type HostTarget = (typeof HOST_TARGETS)[number];
 
 /**
  * Hosts a plugin publishes for. openai (Codex), cursor and claude are always included; copilot,
- * gemini and devin only when the listing has a description for them.
+ * gemini, devin and antigravity only when the listing has a description for them.
  */
 export const hostsOf = (source: PluginSource): readonly HostTarget[] =>
   HOST_TARGETS.filter(
@@ -217,8 +226,27 @@ export const skillIdsOf = (source: PluginSource): readonly string[] =>
 export const generatePluginFiles = (source: PluginSource): Readonly<Record<string, string>> => {
   const { listing } = source;
   const url = source.mcp.url;
-  const { devin, copilot, gemini } = listing.descriptions;
+  const { devin, copilot, gemini, antigravity } = listing.descriptions;
   return {
+    ...(antigravity === undefined
+      ? {}
+      : {
+          ".antigravity-plugin/plugin.json": renderJson({
+            $schema: "https://antigravity.google/schemas/v1/plugin.json",
+            name: source.name,
+            displayName: listing.displayName,
+            description: antigravity,
+            version: listing.version,
+            logo: listing.icon,
+            suggestedPrompts: listing.codex.defaultPrompt.slice(0, 3),
+            author: { name: listing.author.name, url: listing.author.url },
+            homepage: listing.homepage,
+            repository: listing.repository,
+            license: listing.license,
+            keywords: listing.keywords,
+          }),
+          "mcp_config.json": renderJson(mcpServers(listing.mcpServerName, { url })),
+        }),
     ".codex-plugin/plugin.json": renderJson(codexManifest(source)),
     ".cursor-plugin/plugin.json": renderJson(cursorManifest(source)),
     ...(devin === undefined

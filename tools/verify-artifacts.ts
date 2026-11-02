@@ -42,6 +42,7 @@ const MCP_CONFIGS: Readonly<Partial<Record<HostTarget, string>>> = {
   claude: ".mcp.json",
   copilot: "mcp.json",
   devin: ".mcp.json",
+  antigravity: "mcp_config.json",
 };
 const PACKAGES = [
   { slug: "contracts", name: "@askgina/contracts", directory: "packages/contracts", internal: [] },

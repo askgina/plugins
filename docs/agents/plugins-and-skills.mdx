@@ -18,7 +18,7 @@ A skill that is not served over MCP is not available from a direct MCP connectio
 
 ## Install for your host
 
-All plugins live in one marketplace per host. Add the marketplace once, then install the ones you need. Spot, Perps and Predictions move real funds, so review every quote and order before you approve it, and read [Write access (Degen mode)](/write-access/index) first.
+Installation depends on the host: some use a repository marketplace, others load plugin directories. Spot, Perps and Predictions move real funds, so review every quote and order before you approve it. See [Write access (Degen mode)](/write-access/index) for their access boundaries.
 
 ### Claude Code
 
@@ -68,9 +68,13 @@ Add a `git-subdir` source to your Devin account or enterprise manifest. Use `plu
 
 Copilot reads the manifest in each plugin's `targets/copilot` folder in the repository.
 
-### Gemini
+### Antigravity
 
-The Gemini extension includes only `ask-gina`. The write plugins are not available as Gemini extensions. To use a write venue from another client, connect the [Spot](/spot-mcp/client-setup), [Perps](/perps-mcp/client-setup) or [Predictions](/predictions-mcp/client-setup) MCP server directly.
+Antigravity installs each plugin's `targets/antigravity` directory with `agy plugin install` from a local checkout. Follow the [Antigravity guide](/connect/antigravity) for the paths, OAuth sign-in and a read-only connection check. This is a source-install route, not a claim of an Antigravity Marketplace listing.
+
+### Gemini CLI
+
+The Gemini CLI extension includes only `ask-gina`. The write plugins are not available as Gemini CLI extensions. Antigravity is a separate target and supports the venue plugins. For other clients, the [Spot](/spot-mcp/client-setup), [Perps](/perps-mcp/client-setup) and [Predictions](/predictions-mcp/client-setup) guides describe direct MCP connections.
 
 ### Hosts with manual skill loading
 

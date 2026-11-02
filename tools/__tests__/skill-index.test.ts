@@ -116,6 +116,39 @@ describe("skill index", () => {
       ),
     );
 
+    it.effect("admits only opted-in, declared, byte-identical Antigravity skill copies", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const root = yield* makeRepository;
+          const projected = "plugins/alpha/targets/antigravity/skills/one/SKILL.md";
+          yield* writeFixtureFile(root, projected, skillDocument("one"));
+          assert.include((yield* problemsOf(buildSkillIndex(root)))[0], "is not declared");
+          yield* writeFixtureFile(
+            root,
+            "plugins/alpha/plugin.yaml",
+            pluginManifest("alpha", "gina", ["one", "two"]) +
+              "listing:\n  descriptions:\n    antigravity: Test target\n",
+          );
+          assert.strictEqual((yield* buildSkillIndex(root)).skills.length, 3);
+          yield* writeFixtureFile(root, projected, skillDocument("one", "Drifted description."));
+          assert.include(
+            (yield* problemsOf(buildSkillIndex(root)))[0],
+            "differs from plugins/alpha/skills/one/SKILL.md",
+          );
+          yield* writeFixtureFile(root, projected, skillDocument("one"));
+          yield* writeFixtureFile(
+            root,
+            "plugins/alpha/targets/antigravity/skills/stray/SKILL.md",
+            skillDocument("stray"),
+          );
+          assert.include(
+            (yield* problemsOf(buildSkillIndex(root)))[0],
+            "stray/SKILL.md is not declared",
+          );
+        }),
+      ),
+    );
+
     it.effect("ignores .agents, node_modules, and dist", () =>
       Effect.scoped(
         Effect.gen(function* () {

@@ -45,6 +45,21 @@ Add the direct `git-subdir` source to a Devin account or enterprise manifest:
 
 The repository is public, so this source needs no GitHub credentials.
 
+### Antigravity
+
+From a local checkout of [askgina/plugins](https://github.com/askgina/plugins),
+run this at the repository root:
+
+```sh
+agy plugin install ./plugins/ask-gina-perps/targets/antigravity
+```
+
+Complete Ask Gina OAuth in the browser for the Perps connection. This plugin uses
+`tools:execute`; sign-in does not approve an order or funding action. Your agent
+shows the exact action and waits for your confirmation before execution. See the
+[Antigravity guide](https://docs.askgina.ai/connect/antigravity) for setup and
+connection checks. This is a local source install, not a Marketplace listing.
+
 ### Other hosts
 
 Claude and Codex read the `ask-gina-plugins` marketplace in this repository.
@@ -107,12 +122,12 @@ manifest in it and of the root marketplace entries. Run
 annotation classes live in `tools/docs/venue-tools.json`; run
 `node tools/docs/venue-tools.mjs` after changing it.
 
-| Path                                                  | What lives there                                                  |
-| ----------------------------------------------------- | ----------------------------------------------------------------- |
-| `plugin.yaml`                                         | Canonical plugin definition and listing data. It lists no skills. |
-| `.codex-plugin/`, `.cursor-plugin/`, `.devin-plugin/` | Generated host manifests.                                         |
-| `targets/`                                            | Generated Claude and Copilot inputs.                              |
-| `.mcp.json`, `mcp.json`                               | Generated MCP server config.                                      |
-| `assets/icon.svg`                                     | Plugin logo.                                                      |
+| Path                                                                          | What lives there                                                            |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `plugin.yaml`                                                                 | Canonical plugin definition and listing data. It lists no skills.           |
+| `.codex-plugin/`, `.cursor-plugin/`, `.devin-plugin/`, `.antigravity-plugin/` | Generated host manifests.                                                   |
+| `targets/`                                                                    | Generated Claude and Copilot inputs, plus the installable Antigravity tree. |
+| `.mcp.json`, `mcp.json`, `mcp_config.json`                                    | Generated MCP server configs; Antigravity uses `mcp_config.json`.           |
+| `assets/icon.svg`                                                             | Plugin logo.                                                                |
 
 The package has no `skills/` directory, so its manifests carry no skills path.

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Favicon generated from beret.svg with padding to avoid cropping -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <title>Ask Gina Favicon</title>
+  <defs>
+    <style>
+      .st0 { fill: #7c0600; }
+      .st1 { fill: #b50d00; }
+    </style>
+  </defs>
+  <!-- Center and scale original beret.svg into a square canvas with padding -->
+  <g transform="translate(1.948,11.386) scale(2.2)">
+    <path class="st1" d="M27.23,6.11c-1.59,9.96-9.11,10.06-14.26,11.4-3.61.94-11.66,2.45-12.9-.5C-.75,15.06,5.74,4.33,15.37.92c5.46-1.94,12.87-1.12,11.86,5.18Z"/>
+    <path class="st0" d="M26.41,8.67c.06,2.17-2.17,5.16-6.06,6.87-5.76,2.54-11.76,2.86-11.76,2.86,0,0,.56-.37,1.33-.84,3.12-1.93,6.78-7.04,11.54-8.8,4.45-1.65,4.92-.93,4.95-.09Z"/>
+    <path class="st1" d="M9.13,4.35l-1.74,1.41c-1.48-.68-3.87-.96-3.09-2.11,1.37-2.03,3.44-.66,4.83.69Z"/>
+  </g>
+</svg>

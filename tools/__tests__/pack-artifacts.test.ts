@@ -662,7 +662,14 @@ describe("plugin package data", () => {
         );
         const [gina, perps, predictions, spot] = packages;
         for (const venue of [perps, predictions]) {
-          assert.deepStrictEqual(venue?.hosts, ["openai", "cursor", "claude", "copilot", "devin"]);
+          assert.deepStrictEqual(venue?.hosts, [
+            "openai",
+            "cursor",
+            "claude",
+            "copilot",
+            "devin",
+            "antigravity",
+          ]);
           assert.deepStrictEqual(venue?.skills, []);
           assert.deepStrictEqual(venue?.openAiAssets, ["icon.svg"]);
         }
@@ -673,8 +680,16 @@ describe("plugin package data", () => {
           "copilot",
           "gemini",
           "devin",
+          "antigravity",
         ]);
-        assert.deepStrictEqual(spot?.hosts, ["openai", "cursor", "claude", "copilot", "devin"]);
+        assert.deepStrictEqual(spot?.hosts, [
+          "openai",
+          "cursor",
+          "claude",
+          "copilot",
+          "devin",
+          "antigravity",
+        ]);
         assert.deepStrictEqual(
           gina?.skills.map(({ id }) => id),
           [...SKILL_NAMES],
@@ -712,7 +727,9 @@ describe("plugin package data", () => {
           for (const host of hosts) {
             assert.strictEqual(
               targetManifestVersion({ source, host }),
-              host === "openai" || host === "cursor" ? source.listing.version : source.version,
+              host === "openai" || host === "cursor" || host === "antigravity"
+                ? source.listing.version
+                : source.version,
             );
           }
         }
@@ -1078,6 +1095,66 @@ describe("plugin target packing", () => {
           }
         }),
       ),
+    );
+
+    it.effect(
+      "stages all Antigravity packages with native components and no foreign metadata",
+      () =>
+        Effect.scoped(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const temporary = yield* fs.makeTempDirectoryScoped({
+              prefix: "pack-antigravity-test-",
+            });
+            const packages = yield* loadArtifactPackages({ root: repositoryRoot });
+            for (const plugin of packages) {
+              const root = path.join(repositoryRoot, plugin.directory);
+              const stage = path.join(temporary, plugin.name);
+              yield* stagePluginTarget(
+                "antigravity",
+                root,
+                stage,
+                plugin.skills.map(({ id }) => id),
+              );
+              assert.deepStrictEqual((yield* fs.readDirectory(stage)).sort(), [
+                ".antigravity-plugin",
+                "README.md",
+                "assets",
+                "mcp_config.json",
+                ...(plugin.name === "ask-gina" ? ["rules"] : []),
+                ...(plugin.skills.length > 0 ? ["skills"] : []),
+              ]);
+              for (const relative of [
+                ".antigravity-plugin/plugin.json",
+                "mcp_config.json",
+                "assets/icon.svg",
+                "README.md",
+              ]) {
+                assert.strictEqual(
+                  yield* fs.readFileString(path.join(stage, relative)),
+                  yield* fs.readFileString(path.join(root, relative)),
+                );
+              }
+              assert.deepStrictEqual(yield* fs.readDirectory(path.join(stage, "assets")), [
+                "icon.svg",
+              ]);
+              if (plugin.name === "ask-gina") {
+                assert.deepStrictEqual(yield* fs.readDirectory(path.join(stage, "rules")), [
+                  "GEMINI.md",
+                ]);
+                assert.strictEqual(
+                  yield* fs.readFileString(path.join(stage, "rules/GEMINI.md")),
+                  yield* fs.readFileString(path.join(root, "rules/GEMINI.md")),
+                );
+              }
+              for (const skill of plugin.skills) {
+                assert.isTrue(yield* fs.exists(path.join(stage, "skills", skill.id, "SKILL.md")));
+                assert.isFalse(yield* fs.exists(path.join(stage, "skills", skill.id, "agents")));
+              }
+            }
+          }),
+        ),
     );
 
     it.effect("stages a lean Devin target from root source files", () =>

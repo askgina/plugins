@@ -1,0 +1,58 @@
+---
+title: "Antigravity"
+description: "Install Ask Gina plugins from local repository paths in Antigravity and sign in to the connections you choose."
+---
+
+Connect Antigravity to Gina for read-only research or to a separate trading venue. This guide uses local plugins from [askgina/plugins](https://github.com/askgina/plugins), not an Antigravity Marketplace listing. It is separate from the [Gemini CLI extension](/agents/plugins-and-skills#gemini-cli).
+
+## Choose a plugin
+
+Each plugin connects to a different MCP server. The OAuth scope applies to that connection, not to every Gina server.
+
+| Plugin                 | OAuth scope     | Access                                                                                            |
+| ---------------------- | --------------- | ------------------------------------------------------------------------------------------------- |
+| `ask-gina`             | `tools:read`    | Research wallets, spot tokens, Hyperliquid and Polymarket. No trading or asset transfers.         |
+| `ask-gina-spot`        | `tools:execute` | Quote and, with your confirmation, execute spot swaps, transfers and liquidity-pool operations.   |
+| `ask-gina-perps`       | `tools:execute` | Read Hyperliquid and, with your confirmation, manage orders, leverage and funding.                |
+| `ask-gina-predictions` | `tools:execute` | Research Polymarket and, with your confirmation, trade and manage positions, orders and balances. |
+
+The research plugin stays read-only even when a venue plugin is also installed. Venue plugins grant separate [write access (Degen mode)](/write-access/index); installing research skills does not grant it. OAuth sign-in is not confirmation of a trade. Before a venue write, your agent must show the exact action and wait for your approval. These actions can move real funds and may not be reversible.
+
+## Install from the repository
+
+You need Git and the Antigravity CLI (`agy`). Clone the repository, then install the research plugin from its directory:
+
+```sh
+git clone https://github.com/askgina/plugins.git
+cd plugins
+agy plugin install ./plugins/ask-gina/targets/antigravity
+```
+
+For venue access, run the command for each plugin you want from the same repository root. These are optional, separate installs:
+
+```sh
+agy plugin install ./plugins/ask-gina-spot/targets/antigravity
+agy plugin install ./plugins/ask-gina-perps/targets/antigravity
+agy plugin install ./plugins/ask-gina-predictions/targets/antigravity
+```
+
+Each `targets/antigravity` directory is a complete plugin. Install that directory rather than the multi-host parent: the parent contains other hosts' rules and commands that Antigravity's installer can convert. Antigravity reads `.antigravity-plugin/plugin.json` and `mcp_config.json` in the isolated target. Research and Spot include skills; Perps and Predictions provide MCP connections without skills. Research also includes the read-only rule `rules/GEMINI.md`. See the [skills catalog](/agents/skills-catalog).
+
+## Sign in
+
+Open Antigravity and complete Ask Gina OAuth in the browser when the installed connection requests sign-in. Each plugin's MCP configuration contains only its server URL; no token or client secret needs to be pasted into the repository. In the CLI, `/mcp` opens the MCP manager to inspect connection status and reload configurations.
+
+Authorize each connection you installed. A successful plugin install does not itself authenticate an account. Google's [plugin guide](https://antigravity.google/docs/build-plugins/) and [MCP guide](https://antigravity.google/docs/mcp/) describe local installation, server discovery and OAuth.
+
+## Check that it works
+
+1. Run `agy plugin list` and confirm the selected plugins are installed and enabled.
+2. Open Antigravity's MCP or tools list and finish any pending sign-in. Confirm tools appear for each installed connection; venue execution tools are marked destructive.
+3. Make a read request for the plugin you installed:
+   - Research: **“Use Gina to show ETH in USD over the past seven days.”** Confirm a Gina tool ran and the result identifies ETH and the requested period.
+   - Spot: **“Show my LP positions.”** Confirm a Spot read ran; an empty account can have no positions.
+   - Perps: **“Show my Hyperliquid positions.”** Confirm `getHyperliquidPositions` ran.
+   - Predictions: **“Show Polymarket markets that end today.”** Confirm `getExpiringMarkets` ran.
+4. For a venue connection, ask its `bash` tool to run `echo ok`. Expect `ok`; this checks the sandbox without placing an order or transferring funds.
+
+Connection checks do not need a trade. If tools are missing, check that the plugin is enabled and authenticated, then reload the MCP configuration. Avoid adding a duplicate manual connection for a server already supplied by the plugin. See [First successful request](/start/first-request) for read-result troubleshooting. Rich charts depend on the host's rendering support.

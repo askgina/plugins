@@ -4,8 +4,7 @@
 markets, perpetuals, and equities. Use it to fetch real-time prices and
 historical data for tokens, Hyperliquid markets, and Polymarket prediction
 markets, and to analyze your Gina wallet, positions, and accounts. It is not a
-trading tool: Gina cannot place trades or transfer assets inside Cursor or Grok
-Bot.
+trading tool: this plugin cannot place trades or transfer assets in any host.
 
 - Production MCP: `https://askgina.ai/ai/gina/mcp`
 - Scope: `tools:read` only. This plugin does not include transaction execution
@@ -30,6 +29,21 @@ prompts in [What it can do](#what-it-can-do). Maintainers can skip to
 
 Grok Bot loads plugins only from the Cursor marketplace. A local
 `~/.cursor/plugins/local` install proves the Cursor IDE loader, not Grok Bot.
+
+### Antigravity
+
+From a local checkout of [askgina/plugins](https://github.com/askgina/plugins),
+run this at the repository root:
+
+```sh
+agy plugin install ./plugins/ask-gina/targets/antigravity
+```
+
+Complete Ask Gina OAuth in the browser when the connection requests sign-in.
+This installs the read-only connection, research skills and `rules/GEMINI.md`;
+it does not grant trading access. See the
+[Antigravity guide](https://docs.askgina.ai/connect/antigravity) for setup and
+connection checks. This is a local source install, not a Marketplace listing.
 
 ### Devin
 
@@ -105,15 +119,16 @@ publication authority.
 
 ## Map of this directory
 
-| Path                                                            | What lives there                                                    |
-| --------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `plugin.yaml`, `src/`, `evals/`                                 | Canonical plugin definition, loaders, and plugin eval cases.        |
-| `skills/`                                                       | The four canonical skills, shared by every host.                    |
-| `.cursor-plugin/plugin.json`, `mcp.json`, `commands/`, `rules/` | Cursor and Grok Bot manifest, MCP config, slash commands, and rule. |
-| `.devin-plugin/plugin.json`, `.mcp.json`                        | Devin manifest and MCP server config.                               |
-| `.codex-plugin/plugin.json`                                     | Codex manifest.                                                     |
-| `targets/`                                                      | Per-host inputs for other hosts.                                    |
-| `assets/icon.svg`                                               | Plugin logo.                                                        |
+| Path                                                                    | What lives there                                                        |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `plugin.yaml`, `src/`, `evals/`                                         | Canonical plugin definition, loaders, and plugin eval cases.            |
+| `skills/`                                                               | The four canonical skills, shared by every host.                        |
+| `.cursor-plugin/plugin.json`, `mcp.json`, `commands/`, `rules/*.mdc`    | Cursor and Grok Bot manifest, MCP config, slash commands, and rule.     |
+| `.devin-plugin/plugin.json`, `.mcp.json`                                | Devin manifest and MCP server config.                                   |
+| `.antigravity-plugin/plugin.json`, `mcp_config.json`, `rules/GEMINI.md` | Antigravity manifest, MCP config and read-only rule.                    |
+| `.codex-plugin/plugin.json`                                             | Codex manifest.                                                         |
+| `targets/`                                                              | Per-host inputs, including the generated, installable Antigravity tree. |
+| `assets/icon.svg`                                                       | Plugin logo.                                                            |
 
 ## Devin `git-subdir` install
 

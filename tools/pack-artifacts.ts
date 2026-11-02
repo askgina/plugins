@@ -21,6 +21,7 @@ import { copyCheckedRegularFile } from "./archive-security";
 import { checkGeneratedTargetConformance } from "./check-target-conformance";
 import {
   hostsOf,
+  loadPluginSource,
   loadPluginSources,
   skillIdsOf,
   type HostTarget,
@@ -127,6 +128,7 @@ export const TARGET_MANIFESTS: Readonly<Record<HostTarget, string>> = {
   copilot: "plugin.json",
   gemini: "gemini-extension.json",
   devin: ".devin-plugin/plugin.json",
+  antigravity: ".antigravity-plugin/plugin.json",
 };
 const SHA_256 = /^[a-f0-9]{64}$/u;
 const GIT_COMMIT = /^[a-f0-9]{40}$/u;
@@ -817,7 +819,7 @@ export const targetManifestVersion = (options: {
   readonly source: PluginSource;
   readonly host: HostTarget;
 }): string =>
-  options.host === "cursor" || options.host === "openai"
+  options.host === "cursor" || options.host === "openai" || options.host === "antigravity"
     ? options.source.listing.version
     : options.source.version;
 
@@ -922,7 +924,7 @@ export const validateTargetVersion: {
   Effect.gen(function* () {
     const path = yield* Path.Path;
     const manifestRoot =
-      host === "openai" || host === "cursor" || host === "devin"
+      host === "openai" || host === "cursor" || host === "devin" || host === "antigravity"
         ? pluginRoot
         : path.join(pluginRoot, "targets", host);
     const value = yield* readJson(path.join(manifestRoot, TARGET_MANIFESTS[host]));
@@ -1056,6 +1058,37 @@ export const stagePluginTarget: {
           path.join(plugin, "README.md"),
           path.join(stage, "README.md"),
         ).pipe(Effect.mapError((cause) => fail("cannot stage cursor README.md", cause)));
+        yield* fs
+          .remove(path.join(stage, "rules", "GEMINI.md"), { force: true })
+          .pipe(Effect.mapError((cause) => fail("cannot isolate Cursor rules", cause)));
+      } else if (host === "antigravity") {
+        yield* fs
+          .makeDirectory(stage, { recursive: true })
+          .pipe(Effect.mapError((cause) => fail("cannot create antigravity target stage", cause)));
+        const source = yield* loadPluginSource(plugin).pipe(
+          Effect.mapError((cause) => fail("cannot read antigravity plugin source", cause)),
+        );
+        for (const relative of [
+          ".antigravity-plugin/plugin.json",
+          "mcp_config.json",
+          source.listing.icon,
+          "README.md",
+          ...(source.mcp.scopes.length === 1 && source.mcp.scopes[0] === "tools:read"
+            ? ["rules/GEMINI.md"]
+            : []),
+        ]) {
+          const destination = path.join(stage, relative);
+          yield* fs
+            .makeDirectory(path.dirname(destination), { recursive: true })
+            .pipe(
+              Effect.mapError((cause) =>
+                fail("cannot create antigravity component directory", cause),
+              ),
+            );
+          yield* copyCheckedRegularFile(path.join(plugin, relative), destination).pipe(
+            Effect.mapError((cause) => fail(`cannot stage antigravity ${relative}`, cause)),
+          );
+        }
       } else if (host === "devin") {
         yield* fs
           .makeDirectory(stage, { recursive: true })

@@ -127,14 +127,15 @@ describe("Ask Gina portable plugin core", () => {
       }),
     );
 
-    it.effect("keeps every SKILL.md under the canonical skills directory", () =>
+    it.effect("keeps skills canonical except for checked Antigravity projections", () =>
       Effect.gen(function* () {
         const paths = yield* Path.Path;
         const skillDocuments = [...(yield* collectSkillDocuments(pluginRoot))].sort();
-        const canonicalSkillsRoot = paths.join(pluginRoot, "skills") + paths.sep;
-
-        assert.strictEqual(skillDocuments.length, 4);
-        assert.isTrue(skillDocuments.every((document) => document.startsWith(canonicalSkillsRoot)));
+        const expected = ASK_GINA_SKILL_DEFINITIONS.flatMap(({ name }) => [
+          paths.join(pluginRoot, "skills", name, "SKILL.md"),
+          paths.join(pluginRoot, "targets", "antigravity", "skills", name, "SKILL.md"),
+        ]).sort();
+        assert.deepStrictEqual(skillDocuments, expected);
       }),
     );
 
@@ -273,7 +274,10 @@ describe("Ask Gina portable plugin core", () => {
           );
 
           for (const target of TARGET_NAMES) {
-            assert.isFalse(yield* fs.exists(paths.join(pluginRoot, "targets", target, "skills")));
+            assert.strictEqual(
+              yield* fs.exists(paths.join(pluginRoot, "targets", target, "skills")),
+              target === "antigravity",
+            );
 
             for (const skill of ASK_GINA_SKILL_DEFINITIONS) {
               const generatedSkillRoot = paths.join(
@@ -319,6 +323,7 @@ describe("Ask Gina portable plugin core", () => {
           "ask-gina-spot:claude",
           "ask-gina-spot:copilot",
           "ask-gina-spot:devin",
+          "ask-gina-spot:antigravity",
         ]);
       }),
     );
@@ -337,6 +342,7 @@ describe("Ask Gina portable plugin core", () => {
             `${name}:claude`,
             `${name}:copilot`,
             `${name}:devin`,
+            `${name}:antigravity`,
           ]);
         }),
       ),
