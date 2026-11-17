@@ -1,6 +1,6 @@
 ---
-title: "Features Table"
-description: "Complete reference of Perps MCP capabilities with example prompts and commands"
+title: "Perps features"
+description: "Use Perps MCP to inspect your account, manage event subscriptions and execute orders."
 ---
 
 Complete reference of Perps MCP capabilities. You can prompt naturally, or ask your client to call the native tool shown.
@@ -39,6 +39,54 @@ Complete reference of Perps MCP capabilities. You can prompt naturally, or ask y
 `getHyperliquidAccountHealth` requires an authenticated account. It defaults to canonical Hyperliquid. Pass `providerContext` with `{"providerId":"hip3:xyz"}` for an enabled HIP-3 venue.
 
 Set `includeExitEstimates=true` for indicative exit estimates on a capped number of positions. They are not fill guarantees. The tool does not assign a health score or calculate historical performance.
+
+## Account events
+
+Connect `https://askgina.ai/ai/perps/mcp` and complete [Perps authentication](/perps-mcp/client-setup) with `tools:execute`. This connector also exposes trading tools, but account observation needs no trading delegation and moves no funds. It watches your Gina-linked embedded Hyperliquid account, not arbitrary addresses. Existing subscriptions keep their original wallet if you change a wallet preference.
+
+Account events cover Main, supported xyz markets and shared collateral in current standard, unified and portfolio-margin accounts. The protocol name is `perps.account.v1`; its payload `kind` distinguishes account changes, labelled initial snapshots and health. This is not a price-tick feed or a complete historical accounting ledger. Unsupported source forms produce explicit coverage gaps and pause the affected source.
+
+### Start with cursor pull
+
+Call `createPerpsEventSubscription` directly, without a destination:
+
+```json
+{ "name": "My account changes", "events": ["order", "fill"] }
+```
+
+Keep `subscription.id` and `cursor` from the result. Then call `getPerpsEvents`:
+
+```json
+{ "subscriptionId": "<subscription.id>", "cursor": "<saved cursor>" }
+```
+
+A new subscription can have `baselineStatus: "pending"`. Continue from each returned cursor until the labelled initial snapshot is ready. Pending does not mean an empty, healthy account. Snapshot and health records always pass financial filters; earlier historical fills are not imported as new activity.
+
+Save the returned cursor after processing a page. If `hasMore` is true, continue with that cursor. Dedupe by `eventId`; retries are nondestructive but delivery is at least once. Keep sequence values as decimal strings and cursors opaque. A cursor belongs to its account, subscription and filter history.
+
+When `truncated` is true, report the `gap`, refresh current account state and use `earliestCursor` to continue from retained history. Do not claim the missing interval was empty. Use `events/list` and `tools/list` for current retention, subscription limits, tool descriptions and input schemas.
+
+### Change or stop a subscription
+
+Use `updatePerpsEventSubscription` with an `id` and `patch`. For example, `{"id":"<subscription.id>","patch":{"enabled":false}}` pauses it; `enabled: true` resumes a paused subscription. A retention-related resume preserves the still-retained backlog and requests a fresh baseline. A terminated subscription cannot be reopened.
+
+Filter changes apply only after the returned `filterBoundary`. Older backlog keeps its original selection, including when read with an older valid cursor. Check the schema before combining filters: not every financial kind has an order or coin identity. To stop permanently, call `deletePerpsEventSubscription` with the `id`. This ends that subscription's observation demand and future financial delivery. A final health notification may still reach an eligible native receiver.
+
+Native tools cannot edit a protocol-managed subscription. Clients implementing MCP Events use `events/list`, `events/subscribe`, `events/poll` and `events/unsubscribe` for the same named stream. Protocol expiry or unsubscribe disables its callback; do not expect a terminal webhook. Other clients should use the native pull flow above.
+
+### Push to a receiver
+
+Reuse an active destination from `listWebhookDestinations`, then pass its `destinationId` when creating a subscription. [Webhook registration and signature verification](/predictions-mcp/events#register-a-webhook-destination) are shared with Predictions. Call destination tools directly, never through `bash`, because their arguments or results can contain secrets.
+
+Within one subscription, ordinary webhook delivery follows account recording sequence, not a guaranteed venue-wide chronology. Verify the raw-body Standard Webhooks signature before accepting it and dedupe by `eventId`. Perps pauses without advancing the cursor when a receiver rejects an oversized event. Unlike Predictions, it does not skip that event. Fix or replace the receiver before resuming.
+
+[Claude routines](/connect/claude#push-events-into-claude-code-routine) and [Grok Bot routines](/connect/grok-bot) reuse the same destination credentials and share a fire allowance across both products. Each batch contains one product and one subscription. Grok Bot receives an object with `source`, `version`, `notice`, `more` and `events`. Claude receives a prose notice followed by a JSON array, with any backlog warning in the notice. Preserve each event's cursor and the receiver's backlog indication. Receiver tests are optional and can start paid work. A notification is never permission to trade.
+
+Destinations are shared. Rename only the label with `updateWebhookDestination` and the current version from the list. URLs and destination kinds are immutable; register a replacement and retarget instead. Before deleting, check attachments across Perps and Predictions. Once the destination is unattached, call `disableWebhookDestination`, list it again, then pass its new version to `deleteWebhookDestination`. Do not disable another product's subscriptions to make room without the user's choice.
+
+Native event calls are metered; protocol calls and event delivery are not charged per event. Receiver or routine usage can cost extra. Admission and delivery limits are independent of trading authority. If creation returns `PERPS_EVENTS_NOT_ENABLED` or `PERPS_EVENTS_CAPACITY_EXHAUSTED`, do not loop requests or claim a subscription was created.
+
+Replay calls update activity and can close an invalid wallet binding, so clients may show a destructive annotation even though they move no money. See the [native tool reference](/perps-mcp/tools) for the emitted annotations.
 
 ## Market radar
 
@@ -81,3 +129,5 @@ Call the native `getHyperliquidPrice` tool with:
 ```
 
 Expected: JSON with the live BTC perpetual price. Or ask "BTC perps price" and check that the assistant calls `getHyperliquidPrice` instead of answering from memory.
+
+To verify account events without trading, ask: "Create a pull subscription for my order and fill changes, save its cursor, and read until its initial snapshot is ready. Report any coverage gaps. Do not place an order or test a paid routine." Check that the assistant uses `createPerpsEventSubscription` and `getPerpsEvents`, receives snapshot or health records, and saves the new cursor. An idle account need not emit a financial event. End the test subscription when you no longer need it.

@@ -53,6 +53,8 @@ The credential must be valid for this venue and carry `tools:execute`. A read-on
 
 Next: run the [read-only connection checks](/perps-mcp/quick-start) before attempting execution.
 
+For account notifications without placing an order, follow [Account events](/perps-mcp/features#account-events). They use this same authenticated connector and its linked wallet, but need no trading delegation. A pull subscription needs no receiver or signing secret.
+
 ## Check that it works
 
 Restart the client and complete Gina OAuth. In Claude Code, `/mcp` should list `perps` as connected, and `bash` should appear in the tool list. Call `bash` with:
