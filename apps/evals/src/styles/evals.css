@@ -49,10 +49,11 @@ body,
 }
 .eval-header {
   width: 100%;
-  max-width: 1440px;
+  max-width: 1336px;
   margin: 0 auto;
-  min-height: 86px;
-  padding: 20px 52px;
+  min-height: 56px;
+  padding: 8px 28px;
+  border-bottom: 1px solid oklch(90% 0.009 85);
   display: flex;
   flex-shrink: 0;
   align-items: center;
@@ -67,7 +68,11 @@ body,
 .eval-wordmark :is(.eval-wordmark-light, .eval-wordmark-dark) {
   width: auto;
   /* Match the visible beret artwork inside its padded 40px canvas. */
-  height: 26px;
+  height: 22px;
+}
+.eval-wordmark > img:first-child {
+  width: 32px;
+  height: 32px;
 }
 .eval-wordmark-light {
   display: var(--eval-wordmark-light-display, block);
@@ -478,9 +483,9 @@ body,
     padding-top: 56px;
   }
 }
-@media (max-width: 1150px) {
+@media (max-width: 1099px) {
   .eval-header {
-    padding: 18px 32px;
+    padding: 8px 24px;
     gap: 22px;
   }
   .eval-header .eval-demo-label {
@@ -493,8 +498,8 @@ body,
 @media (max-width: 760px) {
   .eval-header {
     flex-wrap: wrap;
-    padding: 18px 22px 0;
-    gap: 16px;
+    padding: 8px 16px 0;
+    gap: 4px;
   }
   .eval-nav {
     order: 3;
@@ -503,11 +508,11 @@ body,
     overflow-x: auto;
     justify-content: space-between;
     margin: 0;
-    gap: 15px;
-    border-bottom: 1px solid var(--eval-line);
+    gap: 8px;
   }
   .eval-nav a {
     font-size: 12px;
+    line-height: 36px;
     padding-bottom: 8px;
   }
   .eval-container {

@@ -72,7 +72,8 @@ test("mobile history can be shared and restores earlier campaigns", () => {
 
 test("invalid view parameters recover to usable defaults and empty filters can be cleared", () => {
   const html = render("#/leaderboard?metric=invalid&view=invalid&search=no-such-model");
-  expect(html).toContain("About Overall");
+  expect(html).toContain("Overall");
+  expect(html).not.toContain("lb-evidence-trigger");
   expect(html).toContain("No matching results");
   expect(html).toContain("Clear filters");
 });

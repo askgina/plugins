@@ -1,3 +1,5 @@
+import { ModelProfileOverview } from "../src/components/model-profile-overview";
+import { modelRowHref } from "../src/components/leaderboard-results";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 import { afterEach, expect, test, vi } from "vitest";
@@ -105,7 +107,7 @@ test("retains visible outcomes when a later configuration has incomplete grading
   expect(html).not.toMatch(/>\s*—\s*</u);
   expect(html).toContain("#/models/astra?run=astra-max-spot-1");
   const evidence = renderToStaticMarkup(
-    createElement(LeaderboardPage, { rows: [row], initialExpandedModel: row.model.id }),
+    createElement(ModelProfileOverview, { row, onInspectRun: () => {} }),
   );
   expect(evidence).toContain("run=astra-max-perps-1");
 });
@@ -159,13 +161,15 @@ test("Fable low, medium, high and incomplete max are visible without a setting s
   }
 });
 
-test("expanded evidence uses separate identities for each setting of the same model", () => {
-  const html = renderToStaticMarkup(
-    createElement(LeaderboardPage, { initialExpandedModel: "claude-fable" }),
-  );
+test("leaderboard details link to each recorded setting without expanding the table", () => {
+  vi.stubGlobal("window", { location: { hash: "#/leaderboard?campaign=all" } });
+  const rows = configurationLeaderboardRows().filter((row) => row.model.id === "claude-fable");
+  const html = renderToStaticMarkup(createElement(LeaderboardPage, { rows }));
+  for (const row of rows) expect(html).toContain(`href="${modelRowHref(row)}"`);
   const ids = [...html.matchAll(/ id="([^"]+)"/gu)].map((match) => match[1]);
   expect(new Set(ids).size).toBe(ids.length);
-  expect(html).toContain("Source artifact SHA-256");
-  expect(html).toContain("Recorded tokens");
-  expect(html).toContain("View Predictions tasks and conversations");
+  expect(html).not.toContain("lb-expanded-row");
+  expect(html).not.toContain("lb-evidence-trigger");
+  expect(html).not.toContain("Show evidence");
+  expect(html).toContain("View model details.");
 });

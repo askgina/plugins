@@ -7,18 +7,16 @@ import "../styles/evals.css";
 const meta = {
   title: "Evals/Leaderboard",
   component: LeaderboardPage,
-  render: (args) => (
-    <LeaderboardPage key={`${args.initialSearch}:${args.initialExpandedModel}`} {...args} />
-  ),
+  render: (args) => <LeaderboardPage key={args.initialSearch} {...args} />,
   parameters: { layout: "fullscreen" },
 } satisfies Meta<typeof LeaderboardPage>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
-export const Expanded: Story = { args: { initialExpandedModel: "muse-spark" } };
-export const UnavailableTiming: Story = { args: { initialExpandedModel: "gpt-sol" } };
+export const MuseSettings: Story = { args: { initialSearch: "Muse" } };
+export const UnavailableTiming: Story = { args: { initialSearch: "GPT-5.6 Sol" } };
 export const SpotOnly: Story = {
-  args: { initialSearch: "GPT-5.5", initialExpandedModel: "gpt-5.5" },
+  args: { initialSearch: "GPT-5.5" },
 };
 export const EmptySearch: Story = { args: { initialSearch: "zzzz" } };
 export const PartialCoverage: Story = {
@@ -36,7 +34,7 @@ export const PartialCoverage: Story = {
         run.runId === "sol-perps-1" ? { ...run, dispatchCoverage: "incomplete" as const } : run,
       ),
     ),
-    initialExpandedModel: "gpt-sol",
+    initialSearch: "GPT-5.6 Sol",
   },
 };
 export const Mobile: Story = { globals: { viewport: { value: "mobile", isRotated: false } } };

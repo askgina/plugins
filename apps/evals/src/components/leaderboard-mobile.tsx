@@ -1,18 +1,14 @@
 import { useId, useState } from "react";
-import { ChevronDown, MoreHorizontal } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { SCORED_FAMILIES, type LeaderboardModelRow } from "../canonical/selectors";
 import { useLeaderboard, type LeaderboardController } from "../lib/leaderboard-state";
 import {
-  columns,
   CompactScore,
   followModelRow,
   rowKey,
-  rowLabel,
   rowMetricValue,
   RowIdentity,
 } from "./leaderboard-results";
-import { InfoPopover } from "./results-ui";
-import { LeaderboardEvidence } from "./leaderboard-evidence";
 import { TransactionResult } from "./transaction-results";
 
 /** Standalone entry point for previews; the app supplies its shared controller. */
@@ -29,7 +25,6 @@ export function LeaderboardMobile({
 
 export function LeaderboardMobileView({ controller }: { controller: LeaderboardController }) {
   const { state, shown, clear } = controller;
-  const [selected, setSelected] = useState<string | null>(null);
   const [openGroups, setOpenGroups] = useState<ReadonlySet<string>>(new Set());
   const id = useId();
   const groups = new Map<string, LeaderboardModelRow[]>();
@@ -37,14 +32,9 @@ export function LeaderboardMobileView({ controller }: { controller: LeaderboardC
   const efficiency = state.efficiency;
   function renderRow(row: LeaderboardModelRow, index: number) {
     const key = rowKey(row);
-    const open = selected === key;
     return (
       <li key={key} data-mobile-configuration={key}>
-        <div
-          className="lb-mobile-row"
-          data-selected={open}
-          onClick={(event) => followModelRow(event, row)}
-        >
+        <div className="lb-mobile-row" onClick={(event) => followModelRow(event, row)}>
           <span className="lb-mobile-position" aria-hidden="true">
             {rowMetricValue(row, state.metric) === null ? "·" : index + 1}
           </span>
@@ -55,16 +45,6 @@ export function LeaderboardMobileView({ controller }: { controller: LeaderboardC
               <CompactScore row={row} metric={efficiency} />
             </small>
           </div>
-          <button
-            type="button"
-            className="lb-evidence-trigger"
-            aria-label={`Evidence and sources for ${rowLabel(row)}`}
-            aria-expanded={open}
-            aria-controls={`${id}-evidence-${key}`}
-            onClick={() => setSelected(open ? null : key)}
-          >
-            <MoreHorizontal size={17} />
-          </button>
           <div className="lb-mobile-category-strip">
             {SCORED_FAMILIES.map((family) => (
               <span key={family}>
@@ -74,11 +54,6 @@ export function LeaderboardMobileView({ controller }: { controller: LeaderboardC
             <TransactionResult row={row} compact />
           </div>
         </div>
-        {open && (
-          <div id={`${id}-evidence-${key}`}>
-            <LeaderboardEvidence row={row} />
-          </div>
-        )}
       </li>
     );
   }
@@ -87,9 +62,6 @@ export function LeaderboardMobileView({ controller }: { controller: LeaderboardC
       <div className="lb-mobile-list-heading">
         <span>{`${shown.length} ${state.campaign === "all" ? "records" : "settings"}`}</span>
         <span>Overall</span>
-        <InfoPopover label="About Overall">
-          <p>{columns.find((column) => column.metric === "overall")?.explanation}</p>
-        </InfoPopover>
       </div>
       {state.group === "models" ? (
         <div className="lb-mobile-groups">

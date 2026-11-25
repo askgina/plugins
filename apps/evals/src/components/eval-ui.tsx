@@ -36,7 +36,7 @@ export function PageShell({
       </a>
       <header className="eval-header">
         <a className="eval-wordmark" href="#/leaderboard" aria-label="Ask Gina home">
-          <img src="/favicon.svg" width={40} height={40} alt="" />
+          <img src="/favicon.svg" width={32} height={32} alt="" />
           <img
             className="eval-wordmark-light"
             src="/images/brand/typography-full-blackOnNone-v2.svg"
