@@ -1,12 +1,5 @@
-import { Fragment, useId, useState } from "react";
-import {
-  ArrowDown,
-  ArrowUp,
-  ChevronDown,
-  MoreHorizontal,
-  Search,
-  SlidersHorizontal,
-} from "lucide-react";
+import { useId, useState } from "react";
+import { ArrowDown, ArrowUp, Search, SlidersHorizontal } from "lucide-react";
 import { LeaderboardMobileView } from "../components/leaderboard-mobile";
 import {
   columns,
@@ -14,13 +7,10 @@ import {
   followModelRow,
   RowIdentity,
   rowKey,
-  rowLabel,
   rowMetricValue,
 } from "../components/leaderboard-results";
-import { LeaderboardEvidence } from "../components/leaderboard-evidence";
 import { LeaderboardOverview } from "../components/leaderboard-overview";
 import { PageShell } from "../components/eval-ui";
-import { InfoPopover } from "../components/results-ui";
 import { TransactionResult } from "../components/transaction-results";
 import { useLeaderboard } from "../lib/leaderboard-state";
 import {
@@ -41,19 +31,14 @@ const defaultRows = [...configurationLeaderboardRows()].sort((a, b) =>
 
 export function LeaderboardPage({
   initialSearch = "",
-  initialExpandedModel,
   rows = defaultRows,
 }: {
   initialSearch?: string;
-  initialExpandedModel?: string;
   rows?: readonly LeaderboardModelRow[];
 }) {
   const controller = useLeaderboard(rows, initialSearch);
   const { state, update, sort, shown, clear } = controller;
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(
-    () => new Set(rows.filter((row) => row.model.id === initialExpandedModel).map(rowKey)),
-  );
   const id = useId();
   const campaigns = [...new Set(rows.map((row) => row.campaignId).filter(Boolean))];
   const totals = recordedOutcomes(shown.flatMap((row) => Object.values(row.runs)));
@@ -65,14 +50,6 @@ export function LeaderboardPage({
       : state.campaign === "all"
         ? "All campaigns (history)"
         : campaignDisplayLabel(state.campaign);
-  function toggle(key: string) {
-    setExpanded((current) => {
-      const next = new Set(current);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }
   return (
     <PageShell active="leaderboard" className="lb-page">
       <div className="eval-container results-page lb-content">
@@ -257,7 +234,6 @@ export function LeaderboardPage({
                   }
                 />
               ))}
-              <col className="lb-col-evidence" />
             </colgroup>
             <thead>
               <tr>
@@ -292,73 +268,46 @@ export function LeaderboardPage({
                             : ""}
                         </span>
                       </button>
-                      <InfoPopover label={`About ${column.label}`}>
-                        <p>{column.explanation}</p>
-                      </InfoPopover>
                     </div>
                   </th>
                 ))}
-                <th scope="col">
-                  <span className="results-sr-only">Evidence</span>
-                </th>
               </tr>
             </thead>
             <tbody>
               {shown.map((row, index) => {
                 const key = rowKey(row);
-                const open = expanded.has(key);
                 return (
-                  <Fragment key={key}>
-                    <tr
-                      data-configuration={key}
-                      data-model={row.model.id}
-                      data-campaign={row.campaignId}
-                      className="lb-data-row"
-                      onClick={(event) => followModelRow(event, row)}
-                    >
-                      <td className="lb-position">
-                        {rowMetricValue(row, state.metric) === null ? "·" : index + 1}
+                  <tr
+                    key={key}
+                    data-configuration={key}
+                    data-model={row.model.id}
+                    data-campaign={row.campaignId}
+                    className="lb-data-row"
+                    onClick={(event) => followModelRow(event, row)}
+                  >
+                    <td className="lb-position">
+                      {rowMetricValue(row, state.metric) === null ? "·" : index + 1}
+                    </td>
+                    <th scope="row">
+                      <RowIdentity row={row} />
+                    </th>
+                    {columns.map((column) => (
+                      <td
+                        key={column.metric}
+                        data-column={column.metric}
+                        data-selected={
+                          column.metric === state.category || column.metric === state.efficiency
+                        }
+                      >
+                        <CompactScore row={row} metric={column.metric} />
+                        {column.metric === "Spot" && (
+                          <span className="lb-transactions-note">
+                            <TransactionResult row={row} compact />
+                          </span>
+                        )}
                       </td>
-                      <th scope="row">
-                        <RowIdentity row={row} />
-                      </th>
-                      {columns.map((column) => (
-                        <td
-                          key={column.metric}
-                          data-column={column.metric}
-                          data-selected={
-                            column.metric === state.category || column.metric === state.efficiency
-                          }
-                        >
-                          <CompactScore row={row} metric={column.metric} />
-                          {column.metric === "Spot" && (
-                            <span className="lb-transactions-note">
-                              <TransactionResult row={row} compact />
-                            </span>
-                          )}
-                        </td>
-                      ))}
-                      <td>
-                        <button
-                          type="button"
-                          className="lb-evidence-trigger"
-                          aria-label={`Evidence and sources for ${rowLabel(row)}`}
-                          aria-expanded={open}
-                          aria-controls={`${id}-evidence-${key}`}
-                          onClick={() => toggle(key)}
-                        >
-                          {open ? <ChevronDown size={16} /> : <MoreHorizontal size={17} />}
-                        </button>
-                      </td>
-                    </tr>
-                    {open && (
-                      <tr className="lb-expanded-row">
-                        <td colSpan={9} id={`${id}-evidence-${key}`}>
-                          <LeaderboardEvidence row={row} />
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
+                    ))}
+                  </tr>
                 );
               })}
             </tbody>

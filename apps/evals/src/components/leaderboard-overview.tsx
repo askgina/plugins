@@ -1,138 +1,41 @@
-import { useId, useState, type CSSProperties } from "react";
-import { Popover } from "@base-ui/react/popover";
-import { ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useId, type CSSProperties } from "react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { SCORED_FAMILIES, type LeaderboardModelRow } from "../canonical/selectors";
 import { providerOverviewRows, type LeaderboardController } from "../lib/leaderboard-state";
 import { ModelAvatar } from "./eval-ui";
-import {
-  columns,
-  modelRowHref,
-  RecordedResult,
-  rowKey,
-  rowLabel,
-  rowMetricValue,
-} from "./leaderboard-results";
+import { columns, modelRowHref, rowKey, rowLabel, rowMetricValue } from "./leaderboard-results";
 import { percent } from "./results-ui";
 import { LeaderboardScatter } from "./leaderboard-scatter";
 
 const scoreMetrics = [...SCORED_FAMILIES, "overall"] as const;
 type ScoreMetric = (typeof scoreMetrics)[number];
-type ActiveCell = { key: string; metric: ScoreMetric; surface: string } | null;
-
-function HeatCell({
-  row,
-  metric,
-  surface,
-  active,
-  setActive,
-}: {
-  row: LeaderboardModelRow;
-  metric: ScoreMetric;
-  surface: string;
-  active: ActiveCell;
-  setActive: (active: ActiveCell) => void;
-}) {
-  const key = rowKey(row);
+function HeatCell({ row, metric }: { row: LeaderboardModelRow; metric: ScoreMetric }) {
   const value = rowMetricValue(row, metric);
-  const open = active?.key === key && active.metric === metric && active.surface === surface;
-  const run = metric === "overall" ? undefined : row.runs[metric];
-  const runs = metric === "overall" ? Object.values(row.runs) : run ? [run] : [];
   const label = metric === "overall" ? "Overall" : metric;
   const band = value === null ? "missing" : String(Math.min(9, Math.floor(value * 10)));
   return (
-    <Popover.Root
-      open={open}
-      onOpenChange={(next) => {
-        if (next) setActive({ key, metric, surface });
-        else if (open) setActive(null);
-      }}
+    <a
+      className="lb-heat-cell"
+      href={modelRowHref(row)}
+      data-band={band}
+      data-overall={metric === "overall"}
+      aria-label={`${rowLabel(row)}, ${label}: ${value === null ? "unavailable" : percent(value)}. View model details.`}
     >
-      <Popover.Trigger
-        className="lb-heat-cell"
-        openOnHover
-        delay={120}
-        closeDelay={120}
-        onFocus={(event) => {
-          if (event.currentTarget.matches(":focus-visible")) setActive({ key, metric, surface });
-        }}
-        data-band={band}
-        data-overall={metric === "overall"}
-        data-highlight={active?.key === key || active?.metric === metric}
-        aria-label={`${rowLabel(row)}, ${label}: ${value === null ? "unavailable" : percent(value)}. Show evidence.`}
-      >
-        {value === null ? "N/A" : percent(value)}
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Positioner
-          sideOffset={8}
-          collisionPadding={12}
-          className="results-popover-positioner"
-        >
-          <Popover.Popup className="results-popover lb-heat-popover" initialFocus={false}>
-            <div className="results-popover-heading">
-              <Popover.Title>
-                {row.model.name} · {label}
-              </Popover.Title>
-              <Popover.Close aria-label="Close score details">
-                <X size={16} />
-              </Popover.Close>
-            </div>
-            <div className="results-popover-body">
-              <p>
-                {row.configurationLabel} · {runs[0]?.startedAt.slice(0, 10)}
-              </p>
-              <RecordedResult
-                runs={runs}
-                score={value}
-                overall={metric === "overall"}
-                reason={row.overallReason}
-              />
-              <p>{columns.find((column) => column.metric === metric)?.explanation}</p>
-              <a
-                className="results-score-link"
-                href={
-                  run
-                    ? `#/tasks?category=${metric}&model=${row.model.id}&run=${encodeURIComponent(run.runId)}`
-                    : modelRowHref(row)
-                }
-              >
-                {run ? "View tasks and evidence ↗" : "View model and recorded setting ↗"}
-              </a>
-            </div>
-          </Popover.Popup>
-        </Popover.Positioner>
-      </Popover.Portal>
-    </Popover.Root>
+      {value === null ? "N/A" : percent(value)}
+    </a>
   );
 }
 
 export function LeaderboardOverview({ controller }: { controller: LeaderboardController }) {
   const { state, update, shown, page: requestedPage, pageSize, viewport } = controller;
-  const [selection, setSelection] = useState<{ context: string; cell: ActiveCell } | null>(null);
   const id = useId();
   const overviewRows = providerOverviewRows(shown);
   const lastPage = Math.max(0, Math.ceil(overviewRows.length / pageSize) - 1);
   const page = Math.min(requestedPage, lastPage);
   const start = page * pageSize;
   const windowRows = overviewRows.slice(start, start + pageSize);
-  const context = JSON.stringify([
-    state.search,
-    state.campaign,
-    state.grading,
-    state.metric,
-    state.direction,
-    state.view,
-    page,
-    pageSize,
-    viewport,
-  ]);
-  const active = selection?.context === context ? selection.cell : null;
-  function setActive(cell: ActiveCell) {
-    setSelection({ context, cell });
-  }
   const label = columns.find((column) => column.metric === state.metric)?.label;
   function changePage(next: number) {
-    setActive(null);
     update({ page: next });
   }
   return (
@@ -212,8 +115,8 @@ export function LeaderboardOverview({ controller }: { controller: LeaderboardCon
               <tr>
                 <td />
                 {windowRows.map((row) => (
-                  <th scope="col" key={rowKey(row)} data-active={active?.key === rowKey(row)}>
-                    <a href={modelRowHref(row)} title={rowLabel(row)}>
+                  <th scope="col" key={rowKey(row)}>
+                    <a href={modelRowHref(row)}>
                       <ModelAvatar model={row.model} />
                       <span>
                         {row.model.name}
@@ -229,18 +132,10 @@ export function LeaderboardOverview({ controller }: { controller: LeaderboardCon
             <tbody>
               {scoreMetrics.map((metric) => (
                 <tr key={metric} data-overall={metric === "overall"}>
-                  <th scope="row" data-active={active?.metric === metric}>
-                    {metric === "overall" ? "Overall" : metric}
-                  </th>
+                  <th scope="row">{metric === "overall" ? "Overall" : metric}</th>
                   {windowRows.map((row) => (
                     <td key={rowKey(row)}>
-                      <HeatCell
-                        row={row}
-                        metric={metric}
-                        surface="wide"
-                        active={active}
-                        setActive={setActive}
-                      />
+                      <HeatCell row={row} metric={metric} />
                     </td>
                   ))}
                 </tr>
@@ -250,7 +145,8 @@ export function LeaderboardOverview({ controller }: { controller: LeaderboardCon
           <table className="lb-matrix lb-matrix-narrow">
             <caption className="results-sr-only">
               Success by category for one setting per provider, selected using the active sort. All
-              settings remain in the ranked table. Tap a score for evidence.
+              settings remain in the ranked table. Select a score to view that model and recorded
+              setting.
             </caption>
             <thead>
               <tr>
@@ -282,13 +178,7 @@ export function LeaderboardOverview({ controller }: { controller: LeaderboardCon
                   </th>
                   {scoreMetrics.map((metric) => (
                     <td key={metric} data-overall={metric === "overall"}>
-                      <HeatCell
-                        row={row}
-                        metric={metric}
-                        surface="narrow"
-                        active={active}
-                        setActive={setActive}
-                      />
+                      <HeatCell row={row} metric={metric} />
                     </td>
                   ))}
                 </tr>
