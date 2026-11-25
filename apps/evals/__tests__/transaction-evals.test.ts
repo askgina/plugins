@@ -1,7 +1,12 @@
 import { describe, expect, test } from "vitest";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { parse } from "yaml";
 import { configurationLeaderboardRows } from "../src/canonical/selectors";
 import { TRANSACTION_TASKS } from "../src/lib/transaction-evals";
+import { spotTransactionsHref, TransactionResult } from "../src/components/transaction-results";
+import { TaskExplorerPage } from "../src/pages/task-explorer";
+import { parseRoute } from "../src/router";
 import {
   TRANSACTION_RUNS,
   transactionRunForRow,
@@ -23,6 +28,31 @@ interface TaskFile {
 }
 
 const grok47Low = TRANSACTION_RUNS.find((run) => run.runId === "grok-4.7-low-20260925-v4")!;
+
+test.each(TRANSACTION_RUNS)("transaction links retain the exact setting for $runId", (run) => {
+  const route = parseRoute(spotTransactionsHref(run).slice(1));
+  expect(route.path).toBe("/tasks");
+  expect(route.query.get("run")).toBe(run.runId);
+  expect(route.query.get("model")).toBe(run.canonicalModelId);
+  const html = renderToStaticMarkup(
+    createElement(TaskExplorerPage, {
+      initialFamily: "Spot",
+      initialCaseId: TRANSACTION_TASKS[0]!.id,
+      initialModelId: run.canonicalModelId,
+      initialRunId: run.runId,
+      initialView: "run",
+    }),
+  );
+  expect(html).toContain(`<code>${run.runId}</code>`);
+  const owner = configurationLeaderboardRows().find((row) => transactionRunForRow(row) === run);
+  if (owner) {
+    const compact = renderToStaticMarkup(
+      createElement(TransactionResult, { row: owner, compact: true }),
+    );
+    expect(compact).toContain("Transactions ↗");
+    expect(compact).toContain(`run=${run.runId}`);
+  }
+});
 
 describe("Transactions page catalog", () => {
   test("lists exactly the task files, with their prompt, tier, user reply and outcome", () => {

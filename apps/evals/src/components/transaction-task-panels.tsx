@@ -1,4 +1,5 @@
 import { ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
+import { useRef, useState } from "react";
 import { getModel, type LeaderboardModelRow } from "../canonical/selectors";
 import type { TransactionTask } from "../lib/transaction-evals";
 import {
@@ -16,9 +17,8 @@ const secondsLabel = (ms: number) => `${Math.round(ms / 1000)}s`;
 
 /**
  * Runs and inspector panes for a Spot transaction task, with the same attempt picker and
- * Conversation / Checks / Run details views as the other tasks. Every transaction run is its own
- * entry, whether a leaderboard setting owns it or it is transaction-only; leaderboard models
- * without any run show "Not run". Transaction trials never change the Spot score.
+ * Conversation / Checks / Run details views as the other tasks. Each recorded transaction setting has its own
+ * entry, including transaction-only models. Models without a run show "Not run". Transaction trials never change the Spot score.
  */
 export function TransactionTaskPanels({
   task,
@@ -37,6 +37,15 @@ export function TransactionTaskPanels({
   readonly view: TaskView;
   readonly onMove: (next: Partial<TaskSelection>) => void;
 }) {
+  const [comparisonOpen, setComparisonOpen] = useState(false);
+  const modelSelect = useRef<HTMLSelectElement>(null);
+  function chooseEntry(key: string) {
+    const entry = entries.find((candidate) => candidate.key === key);
+    if (!entry) return;
+    onMove({ modelId: entry.model.id, runId: entry.run?.runId, attempt: undefined });
+    setComparisonOpen(false);
+    modelSelect.current?.focus();
+  }
   // A transaction-only model has no leaderboard row, so each run names its canonical model.
   const entries = [
     ...TRANSACTION_RUNS_BY_MODEL.flatMap((run) => {
@@ -72,74 +81,89 @@ export function TransactionTaskPanels({
   const failed = new Map(trial?.failedChecks.map((check) => [check.id, check.detail]));
   return (
     <>
-      <section className="task-workspace-models" aria-labelledby="workspace-models-heading">
-        <label className="task-workspace-model-select">
-          <span className="results-sr-only">Selected model</span>
-          <select
-            value={selected?.key ?? ""}
-            onChange={(event) => {
-              const entry = entries.find((candidate) => candidate.key === event.target.value);
-              if (entry)
-                onMove({ modelId: entry.model.id, runId: entry.run?.runId, attempt: undefined });
-            }}
-          >
-            {entries.map((entry) => (
-              <option key={entry.key} value={entry.key}>
-                {entry.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="task-workspace-model-tools">
-          <div className="task-workspace-heading">
-            <h2 id="workspace-models-heading">Models</h2>
-            <span>
-              {runCount} {runCount === 1 ? "run" : "runs"} · {modelCount}{" "}
-              {modelCount === 1 ? "model" : "models"}
-            </span>
+      <details
+        className="task-model-comparison"
+        open={comparisonOpen}
+        onToggle={(event) => setComparisonOpen(event.currentTarget.open)}
+      >
+        <summary>
+          Compare model results{" "}
+          <small>
+            {runCount} runs · {modelCount} models
+          </small>
+        </summary>
+        <section className="task-workspace-models" aria-labelledby="workspace-models-heading">
+          <div className="task-workspace-model-tools">
+            <div className="task-workspace-heading results-sr-only">
+              <h2 id="workspace-models-heading">Models</h2>
+              <span>
+                {runCount} runs · {modelCount} models
+              </span>
+            </div>
           </div>
-        </div>
-        <div className="task-workspace-model-list" role="group" aria-label="Model results">
-          {entries.map((entry) => {
-            const own = entry.run?.trials.filter((trial) => trial.taskId === task.id) ?? [];
-            return (
-              <button
-                key={entry.key}
-                type="button"
-                className="task-workspace-model"
-                aria-label={`View ${entry.label} results`}
-                aria-pressed={selected === entry}
-                onClick={() =>
-                  onMove({ modelId: entry.model.id, runId: entry.run?.runId, attempt: undefined })
-                }
-              >
-                <ModelAvatar model={entry.model} />
-                <span className="task-workspace-model-name">
-                  <strong>{entry.model.name}</strong>
-                  <small>
-                    {entry.run ? `${entry.run.reasoning} reasoning` : "No transaction run"}
-                  </small>
-                </span>
-                <span className="task-workspace-outcome">
-                  <small>
-                    {entry.run
-                      ? `${own.filter((trial) => trial.passed).length}/${own.length} passed`
-                      : "Not run"}
-                  </small>
-                </span>
-                <ChevronRight size={15} aria-hidden="true" />
-              </button>
-            );
-          })}
-        </div>
-        <p className="task-workspace-hint">
-          Spot transactions: scored separately, not part of the Spot score.
-        </p>
-      </section>
+          <div className="task-workspace-model-list" role="group" aria-label="Model results">
+            {entries.map(({ model, run, key, label }) => {
+              const own = run?.trials.filter((trial) => trial.taskId === task.id) ?? [];
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className="task-workspace-model"
+                  aria-label={`View ${label} results`}
+                  aria-pressed={selected?.key === key}
+                  onClick={() => chooseEntry(key)}
+                >
+                  <ModelAvatar model={model} />
+                  <span className="task-workspace-model-name">
+                    <strong>{model.name}</strong>
+                    <small>{run ? `${run.reasoning} reasoning` : "No transaction run"}</small>
+                  </span>
+                  <span className="task-workspace-outcome">
+                    <small>
+                      {run
+                        ? `${own.filter((trial) => trial.passed).length}/${own.length} passed`
+                        : "Not run"}
+                    </small>
+                  </span>
+                  <ChevronRight size={15} aria-hidden="true" />
+                </button>
+              );
+            })}
+          </div>
+          <p className="task-workspace-hint">
+            Spot transactions: scored separately, not part of the Spot score.
+          </p>
+        </section>
+      </details>
       <section className="task-workspace-inspector" aria-labelledby="workspace-model-heading">
         <div className="task-workspace-inspector-header">
           <div className="task-workspace-model-heading">
-            <h2 id="workspace-model-heading">{selected?.label ?? "No model selected"}</h2>
+            <h3 id="workspace-model-heading" className="results-sr-only">
+              {selected?.model.name ?? "No model selected"} attempt evidence
+            </h3>
+            <div className="task-model-picker">
+              {selected && <ModelAvatar model={selected.model} />}
+              <label className="task-workspace-model-select">
+                <span>Model</span>
+                <select
+                  aria-label="Selected model"
+                  ref={modelSelect}
+                  value={selected?.key ?? ""}
+                  onChange={(event) => chooseEntry(event.target.value)}
+                >
+                  {entries.map(({ key, label }) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            {run && (
+              <p className="task-transaction-setting">
+                {run.reasoning} reasoning · {run.date}
+              </p>
+            )}
           </div>
           {trials.length > 0 && (
             <div className="task-attempts" role="group" aria-label="Attempts">
@@ -171,19 +195,6 @@ export function TransactionTaskPanels({
           aria-labelledby={`task-tab-${view}`}
           tabIndex={0}
         >
-          <details className="task-workspace-prompt" key={task.id}>
-            <summary>
-              {task.name} <span>· Prompt & criteria</span>
-            </summary>
-            <p>{task.prompt}</p>
-            <p>
-              Scripted user replies <strong>{task.userReply === "approve" ? "yes" : "no"}</strong>.
-              Correct outcome: <code>{task.expectedOutcome}</code>. {task.tests}
-            </p>
-            <p>
-              <a href="#/methodology?section=transactions">How transaction evals are graded ↗</a>
-            </p>
-          </details>
           {run === undefined ? (
             <p role="status">No transaction run is recorded for this model yet.</p>
           ) : view === "run" ? (

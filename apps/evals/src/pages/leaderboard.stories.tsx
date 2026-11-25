@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { LeaderboardPage } from "./leaderboard";
 import { canonicalRuns } from "../canonical/canonical";
-import { unifiedLeaderboardRows } from "../canonical/selectors";
+import { configurationLeaderboardRows, unifiedLeaderboardRows } from "../canonical/selectors";
 import "../styles/evals.css";
 
 const meta = {
@@ -40,3 +40,14 @@ export const PartialCoverage: Story = {
   },
 };
 export const Mobile: Story = { globals: { viewport: { value: "mobile", isRotated: false } } };
+export const LongModelName: Story = {
+  args: {
+    rows: configurationLeaderboardRows()
+      .slice(0, 1)
+      .map((row) => ({
+        ...row,
+        model: { ...row.model, name: "A model with a deliberately long descriptive name" },
+      })),
+  },
+};
+export const RecoveryAndMissingCost: Story = { args: { initialSearch: "Grok 4.7" } };

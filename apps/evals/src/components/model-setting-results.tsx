@@ -1,103 +1,126 @@
-import { SCORED_FAMILIES, modelProfileRows, recordedBudgetLabel } from "../canonical/selectors";
-import { Panel } from "./eval-ui";
-import { RecordedResult, SummaryValue, rowKey } from "./leaderboard-results";
-import { dollars, seconds } from "./results-ui";
+import {
+  SCORED_FAMILIES,
+  modelProfileRows,
+  recordedBudgetLabel,
+  type LeaderboardModelRow,
+} from "../canonical/selectors";
+import { CompactScore, rowKey } from "./leaderboard-results";
 
-export function ModelSettingResults({ modelId }: { modelId: string }) {
+export function ModelSettingResults({
+  modelId,
+  selectedRowId,
+  onSelectSetting,
+}: {
+  modelId: string;
+  selectedRowId?: string;
+  onSelectSetting?: (row: LeaderboardModelRow) => void;
+}) {
   const rows = modelProfileRows(modelId);
   if (!rows.length) return null;
   return (
-    <Panel
-      className="model-profile-results"
-      title="Results by reasoning level"
-      description="Latest recorded results for each setting, using the same scores as the leaderboard. Earlier runs remain in Run history."
-    >
-      <p className="model-profile-results-note">
-        Completed means every trial finished processing, including execution errors. Graded counts
-        trials with a pass or fail verdict. Scores divide verified passes by all planned trials;
-        timeouts and execution errors earn zero credit. Overall averages the three categories
-        equally. Select a category result to explore its tasks and chat transcripts.
-      </p>
-      <p className="model-profile-scroll-hint">Scroll across for category scores, time and cost.</p>
-      <div
-        className="model-profile-table-scroll"
-        role="region"
-        aria-label="Results by reasoning level"
-        tabIndex={0}
-      >
-        <table className="eval-table model-profile-table model-profile-results-table">
-          <thead>
-            <tr>
-              <th scope="col">Recorded setting</th>
-              <th scope="col">Overall</th>
-              {SCORED_FAMILIES.map((family) => (
-                <th scope="col" key={family}>
-                  {family}
-                </th>
-              ))}
-              <th scope="col">Avg. time</th>
-              <th scope="col">Est. cost / task</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => {
-              const runs = Object.values(row.runs);
-              const first = runs[0]!;
-              return (
-                <tr
-                  key={rowKey(row)}
-                  data-setting={first.configuration.reasoning}
-                  data-campaign={row.campaignId}
-                >
-                  <th scope="row">
-                    <span className="model-profile-setting-label">{row.configurationLabel}</span>
-                    <small>
-                      {first.startedAt.slice(0, 10)} · {first.cohort.repetitions} reps
-                    </small>
-                    <small>{recordedBudgetLabel(runs)}</small>
-                    {row.coverageLabel && <small>{row.coverageLabel}</small>}
-                  </th>
-                  <td>
-                    <RecordedResult
-                      runs={runs}
-                      score={row.overall}
-                      overall
-                      reason={row.overallReason}
-                    />
-                  </td>
-                  {SCORED_FAMILIES.map((family) => {
-                    const run = row.runs[family];
-                    return (
-                      <td key={family}>
-                        <RecordedResult
-                          runs={run ? [run] : []}
-                          score={row.scores[family]}
-                          href={
-                            run
-                              ? `#/tasks?category=${family}&model=${row.model.id}&run=${encodeURIComponent(run.runId)}&view=conversation`
-                              : undefined
-                          }
-                        />
-                      </td>
-                    );
-                  })}
-                  <td>
-                    <SummaryValue metric={row.averageTime} format={seconds} />
-                  </td>
-                  <td>
-                    <SummaryValue
-                      metric={row.estimatedCost}
-                      format={dollars}
-                      cost
-                      scope={row.coverageLabel}
-                    />
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+    <section className="model-profile-results mp-settings" aria-labelledby="mp-settings-heading">
+      <div className="mp-section-heading">
+        <div>
+          <h2 id="mp-settings-heading">Results by reasoning level</h2>
+          <p>Latest recorded setting per reasoning level. Select one to update the overview.</p>
+        </div>
+        <span>{rows.length} settings</span>
       </div>
-    </Panel>
+      <table className="mp-settings-table">
+        <caption className="results-sr-only">
+          Success rates and completed-attempt time and estimated cost. Earlier campaigns remain in
+          Run history. Categories have equal weight in Overall.
+        </caption>
+        <colgroup>
+          <col className="mp-setting-column" />
+          <col />
+          <col data-family="Spot" />
+          <col data-family="Perps" />
+          <col data-family="Predictions" />
+          <col />
+          <col />
+        </colgroup>
+        <thead>
+          <tr>
+            <th scope="col">Recorded setting</th>
+            <th scope="col">Overall</th>
+            {SCORED_FAMILIES.map((family) => (
+              <th scope="col" key={family} data-family={family}>
+                {family}
+              </th>
+            ))}
+            <th scope="col">Avg. time</th>
+            <th scope="col">Est. cost / task</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const runs = Object.values(row.runs);
+            const first = runs[0]!;
+            const selected = rowKey(row) === selectedRowId;
+            return (
+              <tr
+                key={rowKey(row)}
+                data-setting={first.configuration.reasoning}
+                data-campaign={row.campaignId}
+                data-selected={selected}
+              >
+                <th scope="row">
+                  {onSelectSetting ? (
+                    <button
+                      type="button"
+                      className="mp-setting-choice"
+                      aria-pressed={selected}
+                      onClick={() => onSelectSetting(row)}
+                    >
+                      {row.configurationLabel}
+                      <span aria-hidden="true">{selected ? "Selected" : "View"}</span>
+                    </button>
+                  ) : (
+                    <span>{row.configurationLabel}</span>
+                  )}
+                  <small>{recordedBudgetLabel(runs)}</small>
+                  <span className="results-sr-only">
+                    {first.startedAt.slice(0, 10)} · {first.cohort.repetitions} reps{" "}
+                    {row.coverageLabel}
+                  </span>
+                </th>
+                <td>
+                  <CompactScore row={row} />
+                </td>
+                {SCORED_FAMILIES.map((family) => {
+                  const run = row.runs[family];
+                  return (
+                    <td key={family} data-family={family}>
+                      {run ? (
+                        <a
+                          className="mp-category-score-link"
+                          href={`#/tasks?category=${family}&model=${modelId}&run=${encodeURIComponent(run.runId)}&view=conversation`}
+                        >
+                          <CompactScore row={row} metric={family} />
+                        </a>
+                      ) : (
+                        <CompactScore row={row} metric={family} />
+                      )}
+                    </td>
+                  );
+                })}
+                <td>
+                  <CompactScore row={row} metric="time" />
+                </td>
+                <td>
+                  <CompactScore row={row} metric="cost" />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <p className="mp-scope-note">
+        Overall averages Spot, Perps and Predictions equally. Terminal errors earn zero credit;
+        unfinished processing has no score. Time and cost exclude execution errors. Different
+        clients and budgets can affect comparisons.
+      </p>
+    </section>
   );
 }

@@ -103,7 +103,11 @@ test("retains visible outcomes when a later configuration has incomplete grading
   expect(html).toContain("73 ungraded · zero credit");
   expect(html).toContain("38.3%");
   expect(html).not.toMatch(/>\s*—\s*</u);
-  expect(html).toContain("run=astra-max-perps-1");
+  expect(html).toContain("#/models/astra?run=astra-max-spot-1");
+  const evidence = renderToStaticMarkup(
+    createElement(LeaderboardPage, { rows: [row], initialExpandedModel: row.model.id }),
+  );
+  expect(evidence).toContain("run=astra-max-perps-1");
 });
 
 test("the page supplies all eligible original and recovery settings to the chart", () => {

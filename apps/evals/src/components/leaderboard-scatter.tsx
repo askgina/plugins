@@ -34,7 +34,7 @@ export function LeaderboardScatter({
   const width = canvasWidth || (compact ? 360 : 1100);
   const height = compact
     ? Math.round((width * 280) / 360)
-    : Math.min(380, Math.round((width * 380) / 960));
+    : Math.min(300, Math.round((width * 300) / 960));
   const margin = compact
     ? { top: 30, right: 16, bottom: 48, left: 52 }
     : { top: 30, right: 24, bottom: 48, left: 62 };

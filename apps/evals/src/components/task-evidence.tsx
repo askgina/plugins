@@ -146,54 +146,65 @@ export function AttemptChecks({ attempt }: { attempt: CanonicalAttempt }) {
   );
 }
 
-export function TaskCriteria({ definition }: { definition: CanonicalCaseDefinition }) {
-  return (
+export function TaskCriteria({
+  definition,
+  inline = false,
+}: {
+  definition: CanonicalCaseDefinition;
+  inline?: boolean;
+}) {
+  const content = (
+    <div>
+      <dl className="results-facts">
+        <div>
+          <dt>Task identifier</dt>
+          <dd>
+            <code>{definition.caseId}</code>
+          </dd>
+        </div>
+        <div>
+          <dt>Suite</dt>
+          <dd>
+            <code>{definition.suiteId}</code> v{definition.suiteVersion}
+          </dd>
+        </div>
+        <div>
+          <dt>Expected behavior</dt>
+          <dd>{definition.expectedBehavior}</dd>
+        </div>
+        <div>
+          <dt>Required arguments</dt>
+          <dd>
+            {definition.requiredArguments ? (
+              <pre>{JSON.stringify(definition.requiredArguments, null, 2)}</pre>
+            ) : (
+              "No task-specific constraints"
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>Forbidden tools</dt>
+          <dd>{definition.forbiddenTools.join(", ") || "None declared"}</dd>
+        </div>
+        <div>
+          <dt>Forbidden permissions</dt>
+          <dd>{definition.forbiddenScopes.join(", ") || "None declared"}</dd>
+        </div>
+      </dl>
+      <h4>Recorded grading rules</h4>
+      <ul>
+        {definition.gradingCriteria.map((criterion) => (
+          <li key={criterion}>{criterion}</li>
+        ))}
+      </ul>
+    </div>
+  );
+  return inline ? (
+    content
+  ) : (
     <details className="results-accordion">
       <summary>Grading criteria</summary>
-      <div>
-        <dl className="results-facts">
-          <div>
-            <dt>Task identifier</dt>
-            <dd>
-              <code>{definition.caseId}</code>
-            </dd>
-          </div>
-          <div>
-            <dt>Suite</dt>
-            <dd>
-              <code>{definition.suiteId}</code> v{definition.suiteVersion}
-            </dd>
-          </div>
-          <div>
-            <dt>Expected behavior</dt>
-            <dd>{definition.expectedBehavior}</dd>
-          </div>
-          <div>
-            <dt>Required arguments</dt>
-            <dd>
-              {definition.requiredArguments ? (
-                <pre>{JSON.stringify(definition.requiredArguments, null, 2)}</pre>
-              ) : (
-                "No task-specific constraints"
-              )}
-            </dd>
-          </div>
-          <div>
-            <dt>Forbidden tools</dt>
-            <dd>{definition.forbiddenTools.join(", ") || "None declared"}</dd>
-          </div>
-          <div>
-            <dt>Forbidden permissions</dt>
-            <dd>{definition.forbiddenScopes.join(", ") || "None declared"}</dd>
-          </div>
-        </dl>
-        <h4>Recorded grading rules</h4>
-        <ul>
-          {definition.gradingCriteria.map((criterion) => (
-            <li key={criterion}>{criterion}</li>
-          ))}
-        </ul>
-      </div>
+      {content}
     </details>
   );
 }

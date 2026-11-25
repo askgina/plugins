@@ -1,37 +1,44 @@
-import { Fragment, useState } from "react";
-import { ChevronDown, Search } from "lucide-react";
-import { LeaderboardMobile } from "../components/leaderboard-mobile";
+import { Fragment, useId, useState } from "react";
 import {
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  MoreHorizontal,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
+import { LeaderboardMobileView } from "../components/leaderboard-mobile";
+import {
+  columns,
+  CompactScore,
+  followModelRow,
+  RowIdentity,
   rowKey,
   rowLabel,
-  columns,
-  SummaryValue,
-  CoverageNote,
-  RecordedResult,
+  rowMetricValue,
 } from "../components/leaderboard-results";
-import { LeaderboardScatter } from "../components/leaderboard-scatter";
-import { LeaderboardConversations } from "../components/leaderboard-conversations";
-import { TransactionDetails, TransactionResult } from "../components/transaction-results";
-import { ModelAvatar, PageShell } from "../components/eval-ui";
-import { InfoPopover, ResultsHeader, RunDetails, dollars, seconds } from "../components/results-ui";
+import { LeaderboardEvidence } from "../components/leaderboard-evidence";
+import { LeaderboardOverview } from "../components/leaderboard-overview";
+import { PageShell } from "../components/eval-ui";
+import { InfoPopover } from "../components/results-ui";
+import { TransactionResult } from "../components/transaction-results";
+import { useLeaderboard } from "../lib/leaderboard-state";
 import {
-  SCORED_FAMILIES,
   campaignDisplayLabel,
   configurationLeaderboardRows,
-  leaderboardCampaignRows,
-  recordedBudgetLabel,
   recordedOutcomes,
-  sortLeaderboardRows,
   type LeaderboardMetric,
   type LeaderboardModelRow,
+  type ScoredFamily,
 } from "../canonical/selectors";
+import "../styles/leaderboard.css";
 
-const configurations = [...configurationLeaderboardRows()].sort((a, b) =>
+const defaultRows = [...configurationLeaderboardRows()].sort((a, b) =>
   (Object.values(b.runs)[0]?.startedAt ?? "").localeCompare(
     Object.values(a.runs)[0]?.startedAt ?? "",
   ),
 );
-const defaultRows = configurations;
+
 export function LeaderboardPage({
   initialSearch = "",
   initialExpandedModel,
@@ -39,60 +46,25 @@ export function LeaderboardPage({
 }: {
   initialSearch?: string;
   initialExpandedModel?: string;
-  /** Storybook can supply derived summaries; the app uses all measured current records. */
   rows?: readonly LeaderboardModelRow[];
 }) {
-  const [search, setSearch] = useState(initialSearch);
-  const [campaign, setCampaign] = useState(() =>
-    typeof window === "undefined"
-      ? "latest"
-      : (new URLSearchParams(window.location.hash.split("?")[1]).get("campaign") ?? "latest"),
-  );
-  const [grading, setGrading] = useState("all");
-  const [metric, setMetric] = useState<LeaderboardMetric>("overall");
-  const [direction, setDirection] = useState<"asc" | "desc">("desc");
+  const controller = useLeaderboard(rows, initialSearch);
+  const { state, update, sort, shown, clear } = controller;
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(
-    new Set(rows.filter((row) => row.model.id === initialExpandedModel).map(rowKey)),
+    () => new Set(rows.filter((row) => row.model.id === initialExpandedModel).map(rowKey)),
   );
-  const [chatRows, setChatRows] = useState<ReadonlySet<string>>(new Set());
-  function setChatOpen(key: string, open: boolean) {
-    setChatRows((current) => {
-      const next = new Set(current);
-      if (open) next.add(key);
-      else next.delete(key);
-      return next;
-    });
-  }
-  const query = search.trim().toLocaleLowerCase();
+  const id = useId();
   const campaigns = [...new Set(rows.map((row) => row.campaignId).filter(Boolean))];
-  const campaignRows = leaderboardCampaignRows(rows, campaign);
-  const shown = sortLeaderboardRows(
-    campaignRows.filter((row) => {
-      const counts = recordedOutcomes(Object.values(row.runs));
-      const complete = counts.planned > 0 && counts.graded === counts.planned;
-      return (
-        `${row.model.name} ${row.model.provider} ${row.configurationLabel ?? ""} ${row.campaignId ?? ""}`
-          .toLocaleLowerCase()
-          .includes(query) &&
-        (grading === "all" || (grading === "complete" ? complete : !complete))
-      );
-    }),
-    metric,
-    direction,
-  );
   const totals = recordedOutcomes(shown.flatMap((row) => Object.values(row.runs)));
-  function sort(next: LeaderboardMetric) {
-    setMetric(next);
-    setDirection(
-      next === metric
-        ? direction === "desc"
-          ? "asc"
-          : "desc"
-        : next === "time" || next === "cost"
-          ? "asc"
-          : "desc",
-    );
-  }
+  const modelCount = new Set(shown.map((row) => row.model.id)).size;
+  const activeFilters = Number(state.grading !== "all") + Number(state.group !== "settings");
+  const scope =
+    state.campaign === "latest"
+      ? "Latest per setting"
+      : state.campaign === "all"
+        ? "All campaigns (history)"
+        : campaignDisplayLabel(state.campaign);
   function toggle(key: string) {
     setExpanded((current) => {
       const next = new Set(current);
@@ -101,100 +73,223 @@ export function LeaderboardPage({
       return next;
     });
   }
-  function clearFilters() {
-    setSearch("");
-    setCampaign("latest");
-    setGrading("all");
-  }
   return (
-    <PageShell active="leaderboard">
-      <LeaderboardMobile rows={rows} initialSearch={initialSearch} />
-      <div className="eval-container results-page leaderboard-desktop">
-        <ResultsHeader
-          title="Gina Model Leaderboard"
-          description={
-            campaign === "latest"
-              ? "Financial evaluations to test model reliability, accuracy, and cost for executing transactions"
-              : "Recorded results by model, reasoning setting, and campaign."
-          }
-        />
-        <div className="results-toolbar">
-          <label className="results-search">
-            <Search size={17} aria-hidden="true" />
+    <PageShell active="leaderboard" className="lb-page">
+      <div className="eval-container results-page lb-content">
+        <header className="lb-page-heading">
+          <div>
+            <p className="lb-eyebrow">GINA / EVALUATIONS</p>
+            <h1>Gina Financial Evals Leaderboard</h1>
+          </div>
+          <p>Frontier model evals on financial transaction execution and financial data analysis</p>
+        </header>
+        <div className="lb-toolbar">
+          <label className="lb-search">
+            <Search size={16} aria-hidden="true" />
             <span className="results-sr-only">Search models, providers, or reasoning settings</span>
             <input
               type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              value={state.search}
+              onChange={(event) => update({ search: event.target.value })}
               placeholder="Search models or settings"
             />
           </label>
-        </div>
-        <div className="results-filter-bar">
-          <label>
-            Campaign
-            <select value={campaign} onChange={(event) => setCampaign(event.target.value)}>
+          <label className="lb-campaign">
+            <span className="results-sr-only">Campaign</span>
+            <select
+              value={state.campaign}
+              onChange={(event) => update({ campaign: event.target.value })}
+            >
               <option value="latest">Latest per setting</option>
               <option value="all">All campaigns (history)</option>
-              {campaigns.map((id) => (
-                <option key={id} value={id}>
-                  {campaignDisplayLabel(id)}
+              {campaigns.map((campaign) => (
+                <option key={campaign} value={campaign}>
+                  {campaignDisplayLabel(campaign)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            className="lb-filter-trigger"
+            type="button"
+            aria-expanded={filtersOpen}
+            aria-controls={`lb-filters-${id}`}
+            onClick={() => setFiltersOpen(!filtersOpen)}
+          >
+            <SlidersHorizontal size={15} aria-hidden="true" /> Filters
+            {activeFilters > 0 && <span>{activeFilters}</span>}
+          </button>
+          <p className="lb-result-count" role="status">
+            {`${modelCount} models · ${shown.length} ${state.campaign === "all" ? "records" : "settings"}`}
+            <span className="results-sr-only">
+              {" "}
+              · {totals.graded}/{totals.planned} attempts graded
+            </span>
+          </p>
+        </div>
+        <div className="lb-filter-scope">
+          <span>
+            {scope}
+            {state.grading !== "all"
+              ? ` · ${state.grading === "complete" ? "Fully graded" : "Incomplete grading"}`
+              : ""}
+          </span>
+          {(state.search || state.campaign !== "latest" || activeFilters > 0) && (
+            <button type="button" onClick={clear}>
+              Clear filters
+            </button>
+          )}
+        </div>
+        <div className="lb-advanced-filters" id={`lb-filters-${id}`} hidden={!filtersOpen}>
+          <label className="lb-mobile-campaign-control">
+            Campaign
+            <select
+              value={state.campaign}
+              onChange={(event) => update({ campaign: event.target.value })}
+            >
+              <option value="latest">Latest per setting</option>
+              <option value="all">All campaigns (history)</option>
+              {campaigns.map((campaign) => (
+                <option key={campaign} value={campaign}>
+                  {campaignDisplayLabel(campaign)}
                 </option>
               ))}
             </select>
           </label>
           <label>
             Grading
-            <select value={grading} onChange={(event) => setGrading(event.target.value)}>
+            <select
+              value={state.grading}
+              onChange={(event) => update({ grading: event.target.value as typeof state.grading })}
+            >
               <option value="all">All results</option>
               <option value="complete">Fully graded</option>
               <option value="incomplete">Incomplete grading</option>
             </select>
           </label>
-          <p role="status" className="results-filter-summary">
-            {shown.length} {campaign === "all" ? "records" : "settings"} ·{" "}
-            {new Set(shown.map((row) => row.model.id)).size} models ·{" "}
-            {totals.graded.toLocaleString()}/{totals.planned.toLocaleString()} attempts graded
-            <span>
-              {totals.passed.toLocaleString()} passed · {totals.failed.toLocaleString()} failed ·{" "}
-              {totals.timedOut} timed out · {totals.runtimeFailure} run errors
-            </span>
+          <label className="lb-group-control">
+            Results view
+            <select
+              value={state.group}
+              onChange={(event) => update({ group: event.target.value as typeof state.group })}
+            >
+              <option value="settings">All settings</option>
+              <option value="models">Group by model</option>
+            </select>
+          </label>
+          <p>
+            {totals.graded.toLocaleString()}/{totals.planned.toLocaleString()} attempts graded ·{" "}
+            {totals.passed} passed · {totals.failed} failed · {totals.timedOut} timed out ·{" "}
+            {totals.runtimeFailure} run errors
           </p>
         </div>
-        <div
-          className="results-scroll"
-          role="region"
-          aria-label="Gina Model Leaderboard"
-          tabIndex={0}
-        >
-          <table className="results-table leaderboard-table">
+        <LeaderboardOverview controller={controller} />
+        <div className="lb-responsive-controls">
+          <label>
+            Sort
+            <select
+              value={state.metric}
+              onChange={(event) => sort(event.target.value as LeaderboardMetric)}
+            >
+              {columns.map((column) => (
+                <option key={column.metric} value={column.metric}>
+                  {column.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            aria-label={`Sort ${state.direction === "desc" ? "ascending" : "descending"}`}
+            onClick={() => sort(state.metric)}
+          >
+            {state.direction === "desc" ? <ArrowDown size={15} /> : <ArrowUp size={15} />}
+          </button>
+          <label className="lb-category-control">
+            Category
+            <select
+              value={state.category}
+              onChange={(event) => update({ category: event.target.value as ScoredFamily })}
+            >
+              <option>Spot</option>
+              <option>Perps</option>
+              <option>Predictions</option>
+            </select>
+          </label>
+          <div
+            className="lb-efficiency-switch"
+            role="group"
+            aria-label="Displayed efficiency metric"
+          >
+            <button
+              type="button"
+              aria-pressed={state.efficiency === "time"}
+              onClick={() => update({ efficiency: "time" })}
+            >
+              Time
+            </button>
+            <button
+              type="button"
+              aria-pressed={state.efficiency === "cost"}
+              onClick={() => update({ efficiency: "cost" })}
+            >
+              Cost
+            </button>
+          </div>
+        </div>
+        <div className="lb-table-wrap leaderboard-desktop">
+          <table className="lb-table leaderboard-table">
             <caption className="results-sr-only">
-              {campaign === "latest" ? "Latest model settings" : "Recorded model settings"}, sorted
-              by {columns.find((col) => col.metric === metric)?.label},{" "}
-              {direction === "desc" ? "descending" : "ascending"}. Unavailable values appear last.
+              Latest recorded model settings, sorted by{" "}
+              {columns.find((column) => column.metric === state.metric)?.label},{" "}
+              {state.direction === "desc" ? "descending" : "ascending"}. Unavailable values appear
+              last.
             </caption>
+            <colgroup>
+              <col className="lb-col-position" />
+              <col className="lb-col-model" />
+              {columns.map((column) => (
+                <col
+                  key={column.metric}
+                  data-column={column.metric}
+                  data-selected={
+                    column.metric === state.category || column.metric === state.efficiency
+                  }
+                />
+              ))}
+              <col className="lb-col-evidence" />
+            </colgroup>
             <thead>
               <tr>
-                <th scope="col" className="results-sticky">
-                  Model / recorded setting
+                <th scope="col" className="lb-position">
+                  #
                 </th>
+                <th scope="col">Model / recorded setting</th>
                 {columns.map((column) => (
                   <th
                     key={column.metric}
                     scope="col"
+                    data-column={column.metric}
+                    data-selected={
+                      column.metric === state.category || column.metric === state.efficiency
+                    }
                     aria-sort={
-                      metric === column.metric
-                        ? direction === "desc"
+                      state.metric === column.metric
+                        ? state.direction === "desc"
                           ? "descending"
                           : "ascending"
                         : "none"
                     }
                   >
-                    <div className="results-column-label">
-                      <button className="results-sort" onClick={() => sort(column.metric)}>
+                    <div className="lb-column-heading">
+                      <button className="lb-sort" type="button" onClick={() => sort(column.metric)}>
                         {column.label}
                         <span aria-hidden="true">
-                          {metric === column.metric ? (direction === "desc" ? "↓" : "↑") : "↕"}
+                          {state.metric === column.metric
+                            ? state.direction === "desc"
+                              ? "↓"
+                              : "↑"
+                            : ""}
                         </span>
                       </button>
                       <InfoPopover label={`About ${column.label}`}>
@@ -203,142 +298,63 @@ export function LeaderboardPage({
                     </div>
                   </th>
                 ))}
+                <th scope="col">
+                  <span className="results-sr-only">Evidence</span>
+                </th>
               </tr>
             </thead>
             <tbody>
-              {shown.map((row) => {
+              {shown.map((row, index) => {
                 const key = rowKey(row);
-                const label = rowLabel(row);
-                const runs = Object.values(row.runs);
-                const first = runs[0];
-                const recovery = runs.some((run) => run.recovery);
+                const open = expanded.has(key);
                 return (
                   <Fragment key={key}>
                     <tr
                       data-configuration={key}
                       data-model={row.model.id}
                       data-campaign={row.campaignId}
+                      className="lb-data-row"
+                      onClick={(event) => followModelRow(event, row)}
                     >
-                      <th scope="row" className="results-sticky">
-                        <div className="results-model">
-                          <button
-                            className="results-disclosure"
-                            aria-label={`Run details for ${label}`}
-                            aria-expanded={expanded.has(key)}
-                            aria-controls={`runs-${key}`}
-                            onClick={() => toggle(key)}
-                          >
-                            <ChevronDown size={16} />
-                          </button>
-                          <ModelAvatar model={row.model} />
-                          <div>
-                            <a href={`#/models/${row.model.id}`}>{row.model.name}</a>
-                            <small className="results-configuration-label">
-                              {row.configurationLabel ?? "Recorded setting"}
-                            </small>
-                            <small>
-                              {recovery && "Recovery · "}
-                              {first?.startedAt.slice(0, 10)} · {recordedBudgetLabel(runs)} ·{" "}
-                              {first?.cohort.repetitions} reps
-                            </small>
-                            {row.coverageLabel && <small>{row.coverageLabel}</small>}
-                            <div className="results-row-actions">
-                              <button
-                                type="button"
-                                className="results-chat-trigger"
-                                aria-label={`Evidence and sources for ${label}`}
-                                aria-expanded={expanded.has(key)}
-                                aria-controls={`runs-${key}`}
-                                onClick={() => toggle(key)}
-                              >
-                                Evidence &amp; sources
-                              </button>
-                              {
-                                <button
-                                  type="button"
-                                  className="results-chat-trigger"
-                                  aria-label={`Chat transcripts for ${label}`}
-                                  aria-expanded={expanded.has(key) && chatRows.has(key)}
-                                  aria-controls={`leaderboard-chat-${key}`}
-                                  onClick={() => {
-                                    setExpanded((current) => new Set([...current, key]));
-                                    setChatOpen(key, true);
-                                  }}
-                                >
-                                  Chat
-                                </button>
-                              }
-                            </div>
-                          </div>
-                        </div>
-                      </th>
-                      <td className="results-overall">
-                        <RecordedResult
-                          runs={runs}
-                          score={row.overall}
-                          overall
-                          reason={row.overallReason}
-                        />
+                      <td className="lb-position">
+                        {rowMetricValue(row, state.metric) === null ? "·" : index + 1}
                       </td>
-                      {SCORED_FAMILIES.map((family) => (
-                        <td key={family}>
-                          <RecordedResult
-                            runs={row.runs[family] ? [row.runs[family]!] : []}
-                            score={row.scores[family]}
-                            href={
-                              row.runs[family]
-                                ? `#/tasks?category=${family}&model=${row.model.id}&run=${encodeURIComponent(row.runs[family]!.runId)}`
-                                : undefined
-                            }
-                          />
-                          {family === "Spot" && <TransactionResult row={row} />}
+                      <th scope="row">
+                        <RowIdentity row={row} />
+                      </th>
+                      {columns.map((column) => (
+                        <td
+                          key={column.metric}
+                          data-column={column.metric}
+                          data-selected={
+                            column.metric === state.category || column.metric === state.efficiency
+                          }
+                        >
+                          <CompactScore row={row} metric={column.metric} />
+                          {column.metric === "Spot" && (
+                            <span className="lb-transactions-note">
+                              <TransactionResult row={row} compact />
+                            </span>
+                          )}
                         </td>
                       ))}
                       <td>
-                        <SummaryValue metric={row.averageTime} format={seconds} />
-                      </td>
-                      <td>
-                        <SummaryValue
-                          metric={row.estimatedCost}
-                          format={dollars}
-                          cost
-                          scope={row.coverageLabel}
-                        />
+                        <button
+                          type="button"
+                          className="lb-evidence-trigger"
+                          aria-label={`Evidence and sources for ${rowLabel(row)}`}
+                          aria-expanded={open}
+                          aria-controls={`${id}-evidence-${key}`}
+                          onClick={() => toggle(key)}
+                        >
+                          {open ? <ChevronDown size={16} /> : <MoreHorizontal size={17} />}
+                        </button>
                       </td>
                     </tr>
-                    {expanded.has(key) && (
-                      <tr id={`runs-${key}`} className="results-expanded">
-                        <td colSpan={7}>
-                          <div className="results-detail-body">
-                            <h2>{label}: run details</h2>
-                            {row.overallReason && <p>{row.overallReason}</p>}
-                            {
-                              <LeaderboardConversations
-                                panelId={`leaderboard-chat-${key}`}
-                                row={row}
-                                open={chatRows.has(key)}
-                                onOpenChange={(open) => setChatOpen(key, open)}
-                              />
-                            }
-                            <div className="results-coverage">
-                              <CoverageNote label="Average time" metric={row.averageTime} />
-                              <CoverageNote label="Estimated cost" metric={row.estimatedCost} />
-                            </div>
-                            {SCORED_FAMILIES.map((family) =>
-                              row.runs[family] ? (
-                                <Fragment key={family}>
-                                  <RunDetails run={row.runs[family]} />
-                                  <a
-                                    className="results-score-link"
-                                    href={`#/tasks?category=${family}&model=${row.model.id}&run=${encodeURIComponent(row.runs[family]!.runId)}`}
-                                  >
-                                    View {family} tasks and conversations ↗
-                                  </a>
-                                </Fragment>
-                              ) : null,
-                            )}
-                            <TransactionDetails row={row} />
-                          </div>
+                    {open && (
+                      <tr className="lb-expanded-row">
+                        <td colSpan={9} id={`${id}-evidence-${key}`}>
+                          <LeaderboardEvidence row={row} />
                         </td>
                       </tr>
                     )}
@@ -347,21 +363,21 @@ export function LeaderboardPage({
               })}
             </tbody>
           </table>
+          {!shown.length && (
+            <div className="results-empty" role="status">
+              <h2>No matching results</h2>
+              <p>Try another model, setting, campaign, or grading filter.</p>
+              <button onClick={clear}>Clear filters</button>
+            </div>
+          )}
         </div>
-        {shown.length === 0 && (
-          <div className="results-empty" role="status">
-            <h2>No matching results</h2>
-            <p>Try another model, setting, campaign, or grading filter.</p>
-            <button onClick={clearFilters}>Clear filters</button>
-          </div>
-        )}
-        <p className="results-footnote">
-          Time and estimated token costs cover completed attempts, including graded failures.
-          Timeouts and run errors are excluded; sample counts are shown for both measures. Costs
-          include cache discounts and are not billed spend or subscription charges. Evidence and
-          sources include per-category latency, tokens, provenance, and recorded limitations.
+        <LeaderboardMobileView controller={controller} />
+        <p className="lb-footnote">
+          Overall averages three category success rates equally; terminal ungraded attempts earn
+          zero credit. Time and estimated token cost cover completed attempts; errors and timeouts
+          are excluded from those measurements. Spot transaction results are separate from Spot and
+          Overall. <a href="#/methodology">Scoring, coverage, and methodology ↗</a>
         </p>
-        <LeaderboardScatter rows={shown} />
       </div>
     </PageShell>
   );
