@@ -1,3 +1,4 @@
+import type { CSSProperties, MouseEvent } from "react";
 import type { CanonicalRun } from "../canonical/canonical";
 import {
   processingProgress,
@@ -6,7 +7,9 @@ import {
   type LeaderboardModelRow,
   type SummaryMetric,
 } from "../canonical/selectors";
-import { percent } from "./results-ui";
+import { dollars, percent, seconds } from "./results-ui";
+import { ModelAvatar } from "./eval-ui";
+import { recordedBudgetLabel } from "../canonical/selectors";
 
 export const rowKey = (row: LeaderboardModelRow) =>
   row.rowId ??
@@ -17,6 +20,148 @@ export const rowKey = (row: LeaderboardModelRow) =>
     row.model.id);
 export const rowLabel = (row: LeaderboardModelRow) =>
   `${row.model.name}, ${row.configurationLabel ?? "recorded setting"}, ${Object.values(row.runs)[0]?.startedAt.slice(0, 10) ?? "undated"}`;
+
+export function modelRowHref(row: LeaderboardModelRow) {
+  const run = row.runs.Spot ?? Object.values(row.runs)[0];
+  return `#/models/${row.model.id}${run ? `?run=${encodeURIComponent(run.runId)}` : ""}`;
+}
+
+export function followModelRow(event: MouseEvent<HTMLElement>, row: LeaderboardModelRow) {
+  if (event.target instanceof Element && event.target.closest("a,button,input,select,summary"))
+    return;
+  if (window.getSelection()?.toString()) return;
+  if (event.button !== 0) return;
+  const href = modelRowHref(row);
+  if (event.metaKey || event.ctrlKey || event.shiftKey)
+    window.open(href, "_blank", "noopener,noreferrer");
+  else window.location.hash = href.slice(1);
+}
+
+export function rowMetricValue(row: LeaderboardModelRow, metric: LeaderboardMetric) {
+  if (metric === "overall") return row.overall;
+  if (metric === "cost" || metric === "time") {
+    const summary = metric === "cost" ? row.estimatedCost : row.averageTime;
+    return summary.availability === "available" ? summary.value : null;
+  }
+  return row.scores[metric];
+}
+
+export function RowIdentity({
+  row,
+  compact = false,
+}: {
+  row: LeaderboardModelRow;
+  compact?: boolean;
+}) {
+  const runs = Object.values(row.runs);
+  const recovery = runs.some((run) => run.recovery);
+  const budget = recordedBudgetLabel(runs);
+  return (
+    <div className="lb-identity">
+      <ModelAvatar model={row.model} />
+      <div>
+        <a href={modelRowHref(row)}>{row.model.name}</a>
+        <small>
+          {compact
+            ? (row.configurationLabel?.replace(" reasoning", "") ?? "Recorded setting")
+            : (row.configurationLabel ?? "Recorded setting")}
+          {recovery && (
+            <span className="lb-record-flag" title={budget}>
+              {!compact && budget.includes(" / ") ? " · Recovery · mixed budgets" : " · Recovery"}
+            </span>
+          )}
+          {row.coverageLabel && <span className="lb-record-flag"> · {row.coverageLabel}</span>}
+        </small>
+        <span className="results-sr-only">
+          {runs[0]?.startedAt.slice(0, 10)} · {recovery ? "Recovery · " : ""}
+          {budget} · {runs[0]?.cohort.repetitions} reps
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export function CompactScore({
+  row,
+  metric = "overall",
+}: {
+  row: LeaderboardModelRow;
+  metric?: LeaderboardMetric;
+}) {
+  const value = rowMetricValue(row, metric);
+  if (metric === "time" || metric === "cost") {
+    const summary = metric === "cost" ? row.estimatedCost : row.averageTime;
+    return (
+      <span className="lb-compact-value">
+        <span>
+          {value === null
+            ? summary.availability === "unavailable" && summary.reason.includes("not published")
+              ? "Not published"
+              : "Not recorded"
+            : metric === "cost"
+              ? dollars(value)
+              : seconds(value)}
+        </span>
+        {summary.availability === "available" ? (
+          <>
+            {metric === "cost" && value === 0 && <small>Free model tier</small>}
+            {summary.excluded > 0 && <small>{summary.excluded} excluded</small>}
+            <span className="results-sr-only">
+              {summary.sampleCount} attempts · {summary.excluded} excluded. {summary.detail}
+            </span>
+          </>
+        ) : (
+          <span className="results-sr-only">{summary.reason}</span>
+        )}
+      </span>
+    );
+  }
+  const runs =
+    metric === "overall" ? Object.values(row.runs) : row.runs[metric] ? [row.runs[metric]!] : [];
+  const counts = recordedOutcomes(runs);
+  const progress = processingProgress(runs);
+  const reason = !runs.length
+    ? "Not evaluated"
+    : metric === "overall" && runs.length < 3
+      ? "Partial coverage"
+      : !progress.complete
+        ? "Incomplete"
+        : "Unavailable";
+  const interruptions = [
+    counts.timedOut ? `${counts.timedOut} timed out` : "",
+    counts.runtimeFailure ? `${counts.runtimeFailure} run errors` : "",
+    counts.pending ? `${counts.pending} pending` : "",
+    counts.unstarted ? `${counts.unstarted} not started` : "",
+    counts.unknown ? `${counts.unknown} unknown` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  return (
+    <span className="lb-compact-value" data-score-available={value !== null}>
+      <span>{value === null ? reason : percent(value)}</span>
+      {value !== null && counts.graded < counts.planned && (
+        <small aria-hidden="true">{counts.planned - counts.graded} ungraded</small>
+      )}
+      {metric === "overall" && value !== null && (
+        <span
+          className="lb-score-track"
+          aria-hidden="true"
+          style={{ "--lb-score": `${value * 100}%` } as CSSProperties}
+        />
+      )}
+      <span className="results-sr-only">
+        {progress.complete ? "Completed · " : ""}
+        {progress.processed}/{progress.planned} processed · {counts.graded}/{counts.planned} graded
+        · {counts.passed} passed · {counts.failed} failed
+        {interruptions ? ` · ${interruptions}` : ""}
+        {value !== null && counts.graded < counts.planned
+          ? ` · ${counts.planned - counts.graded} ungraded · zero credit`
+          : ""}
+        {value === null && metric === "overall" ? ` · ${row.overallReason ?? reason}` : ""}
+      </span>
+    </span>
+  );
+}
 
 export const columns: readonly { metric: LeaderboardMetric; label: string; explanation: string }[] =
   [

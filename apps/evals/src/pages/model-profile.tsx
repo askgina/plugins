@@ -3,7 +3,6 @@ import { clientDisplayName } from "../lib/client-labels";
 import { ArrowUpRight, ChevronDown, ChevronRight, Download } from "lucide-react";
 import {
   canonicalCampaigns,
-  MEASURED_FAMILIES,
   withdrawnRuns,
   type CanonicalAttempt,
   type CanonicalCampaign,
@@ -23,6 +22,8 @@ import {
   publicationFor,
   recordedBudgetLabel,
   recordedOutcomes,
+  configurationLeaderboardRows,
+  modelProfileRows,
   resolveBaselineRun,
   runHistoryFor,
   type DerivedCost,
@@ -45,8 +46,14 @@ import {
 import { CheckDimensionPanel } from "../components/check-dimension-radar";
 import { ModelAvatar, PageShell, Panel } from "../components/eval-ui";
 import { ModelSettingResults } from "../components/model-setting-results";
+import { ModelProfileOverview } from "../components/model-profile-overview";
 import { Button } from "../components/ui/button";
+import { rowKey } from "../components/leaderboard-results";
+import { selectProfileSetting } from "../lib/model-profile-selection";
+import type { LeaderboardModelRow } from "../canonical/selectors";
 import "./model-profile.css";
+import "../styles/leaderboard.css";
+import "./model-profile-clean.css";
 
 // ---------------------------------------------------------------------------
 // Bundled source artifact downloads (decision 13: byte-identical ?url imports)
@@ -214,135 +221,6 @@ function DerivedCostRow({ cost }: { cost: DerivedCost }) {
         </span>
       </td>
     </tr>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Metric cards per family (newest representative measured run)
-// ---------------------------------------------------------------------------
-
-function FamilyMetricCards({
-  modelId,
-  includeSynthetic,
-  onSelectRun,
-}: {
-  modelId: string;
-  includeSynthetic: boolean;
-  onSelectRun: (runId: string) => void;
-}) {
-  const cards = useMemo(() => {
-    return MEASURED_FAMILIES.map((family) => {
-      const runs = runHistoryFor(modelId, family).filter(
-        (run) => includeSynthetic || run.origin === "measured",
-      );
-      const representative = runs[0];
-      return { family, representative, count: runs.length };
-    }).filter((entry) => entry.representative !== undefined);
-  }, [modelId, includeSynthetic]);
-
-  if (cards.length === 0) return null;
-  const levels = [
-    ...new Set(
-      cards.map(({ representative }) => representative?.configuration.reasoning ?? "unspecified"),
-    ),
-  ];
-
-  return (
-    <>
-      <div className="model-profile-section-heading">
-        <h2>
-          Latest recorded {levels.length === 1 ? `${levels[0]} reasoning` : "category results"}
-        </h2>
-        <p className="eval-muted">
-          A closer look at the newest category runs. Compare every reasoning level in the table
-          below.
-        </p>
-      </div>
-      <section className="model-profile-metrics" aria-label="Latest recorded run per task family">
-        {cards.map(({ family, representative }) => {
-          if (!representative) return null;
-          const headline = headlineFor(representative);
-          const unscored = representative.counts.started - representative.counts.graded;
-          return (
-            <article className="model-profile-metric" key={family}>
-              <div className="model-profile-metric-header">
-                <span className="model-profile-metric-label">{family}</span>
-                <CoverageChip run={representative} />
-              </div>
-              <p className="model-profile-metric-unscored">
-                Reasoning {representative.configuration.reasoning ?? "not recorded"} ·{" "}
-                {clientDisplayName(representative.cohort.target)} ·{" "}
-                {recordedBudgetLabel([representative])}
-              </p>
-              <div className="model-profile-metric-headline">
-                <strong>
-                  <HeadlineValue headline={headline} />
-                </strong>
-                {headline.kind === "rate" && <span className="eval-muted">passes / started</span>}
-              </div>
-              <dl className="model-profile-metric-details">
-                <div className="model-profile-metric-row">
-                  <dt className="eval-muted">Graded / planned:</dt>
-                  <dd>
-                    {representative.counts.graded} / {representative.counts.planned}
-                  </dd>
-                </div>
-                <div className="model-profile-metric-row">
-                  <dt className="eval-muted">Latency:</dt>
-                  <dd>
-                    <LatencyValue metric={representative.metrics.latencyMs} />
-                  </dd>
-                </div>
-                <div className="model-profile-metric-row">
-                  <dt className="eval-muted">Tokens:</dt>
-                  <dd>
-                    <TokenUsageValue metric={representative.metrics.tokenUsage} />
-                  </dd>
-                </div>
-              </dl>
-              <div className="model-profile-metric-unscored">
-                {unscored > 0 ? (
-                  <span>
-                    {unscored} unscored (
-                    {[
-                      representative.counts.timedOut > 0
-                        ? `${representative.counts.timedOut} timed out`
-                        : null,
-                      representative.counts.runtimeFailure > 0
-                        ? `${representative.counts.runtimeFailure} runtime failure`
-                        : null,
-                      representative.counts.pending > 0
-                        ? `${representative.counts.pending} pending`
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(", ")}
-                    )
-                  </span>
-                ) : (
-                  <span className="eval-muted">All started attempts graded</span>
-                )}
-              </div>
-              <button
-                type="button"
-                className="eval-text-link"
-                style={{
-                  background: "none",
-                  border: "none",
-                  padding: 0,
-                  cursor: "pointer",
-                  textAlign: "left",
-                  font: "inherit",
-                }}
-                onClick={() => onSelectRun(representative.runId)}
-              >
-                Inspect run <code>{runDisplayLabel(representative.runId)}</code> →
-              </button>
-            </article>
-          );
-        })}
-      </section>
-    </>
   );
 }
 
@@ -1075,8 +953,9 @@ function CampaignsPanel({
         <ul>
           <li>
             <strong>Graded does not mean passed.</strong> Each graded attempt has a pass or fail
-            verdict. Timeouts and run errors remain ungraded; incomplete settings do not receive an
-            Overall score.
+            verdict. Terminal timeouts and run errors earn zero success credit without becoming
+            graded failures. Unfinished processing or missing category coverage keeps Overall
+            unavailable.
           </li>
           <li>
             <strong>These are small, live samples.</strong> Results reflect the model, client,
@@ -1124,190 +1003,223 @@ export function ModelProfilePage({
   initialRunId,
   includeSynthetic = false,
 }: ModelProfilePageProps) {
-  // Strip any query string attached to the prop (e.g. `gpt-5.5?run=…`)
   const rawId = propModelId?.split("?")[0] || "gpt-5.5";
   const cleanModelId = MODEL_ID_ALIASES[rawId] ?? rawId;
   const model = getModel(cleanModelId);
-
-  const [expandedRunId, setExpandedRunId] = useState<string | undefined>(() => {
-    return initialRunId ?? readRunQueryParam();
-  });
-
+  const [selectedRunId, setSelectedRunId] = useState(() => initialRunId ?? readRunQueryParam());
+  const [expandedRunId, setExpandedRunId] = useState(() => initialRunId ?? readRunQueryParam());
+  const [historyOpen, setHistoryOpen] = useState(Boolean(initialRunId));
+  const allSettings = useMemo(
+    () => configurationLeaderboardRows().filter((row) => row.model.id === cleanModelId),
+    [cleanModelId],
+  );
+  const settings = useMemo(
+    () => modelProfileRows(cleanModelId, allSettings),
+    [cleanModelId, allSettings],
+  );
+  const selected = selectProfileSetting(cleanModelId, selectedRunId, allSettings);
   useEffect(() => {
-    if (initialRunId) setExpandedRunId(initialRunId);
+    if (initialRunId) {
+      setSelectedRunId(initialRunId);
+      setExpandedRunId(initialRunId);
+      setHistoryOpen(true);
+    }
   }, [initialRunId]);
 
-  if (!model) {
+  if (!model)
     return (
-      <PageShell active="models">
-        <div className="eval-container model-profile-page">
-          <section
-            className="eval-hero model-profile-not-found"
-            aria-labelledby="model-profile-not-found-title"
-          >
-            <img className="eval-hero-art" src="/images/hero-watercolor-landscape.webp" alt="" />
-            <nav className="model-profile-breadcrumbs" aria-label="Breadcrumb">
-              <a href="#/leaderboard">Leaderboard</a>
-              <span aria-hidden="true">/</span>
-              <a href="#/models">Models</a>
-              <span aria-hidden="true">/</span>
-              <span aria-current="page">Not found</span>
-            </nav>
-            <p className="eval-eyebrow">Model profile · Conformance harness</p>
-            <h1 className="eval-title" id="model-profile-not-found-title">
-              Model not found<span>.</span>
-            </h1>
-            <p className="eval-description">
-              No canonical model matches the identifier <code>{cleanModelId}</code>.
-            </p>
-            <a className="eval-text-link" href="#/models">
-              Browse all models <ArrowUpRight size={14} aria-hidden="true" />
-            </a>
-          </section>
+      <PageShell active="models" className="lb-page mp-page">
+        <div className="eval-container mp-content">
+          <nav className="mp-breadcrumbs" aria-label="Breadcrumb">
+            <a href="#/leaderboard">Leaderboard</a>
+            <span>/</span>
+            <span>Model not found</span>
+          </nav>
+          <h1 className="mp-title">Model not found</h1>
+          <p>
+            No canonical model matches <code>{cleanModelId}</code>.
+          </p>
+          <a className="mp-inline-link" href="#/models">
+            Browse all models <ArrowUpRight size={14} />
+          </a>
         </div>
       </PageShell>
     );
-  }
 
-  // Filter runs by origin: synthetic runs are excluded from app pages (decision 9).
-  // They remain reachable when includeSynthetic is true (Storybook).
   const runs = runHistoryFor(model.id).filter(
     (run) => includeSynthetic || run.origin === "measured",
   );
-  const museSweepCounts =
-    model.id === "muse-spark"
-      ? runs.reduce(
-          (sum, run) => {
-            if (run.campaignId !== "reasoning-sweep-2026-09-16") return sum;
-            sum.planned += run.counts.planned;
-            sum.graded += run.counts.graded;
-            sum.passed += run.counts.passed;
-            sum.failed += run.counts.failed;
-            sum.unscored += run.counts.timedOut + run.counts.runtimeFailure;
-            return sum;
-          },
-          { planned: 0, graded: 0, passed: 0, failed: 0, unscored: 0 },
-        )
-      : null;
-
   const modelWithdrawn = withdrawnRuns.filter(
-    (w) => w.modelId === model.id && (includeSynthetic || w.origin === "measured"),
+    (run) => run.modelId === model.id && (includeSynthetic || run.origin === "measured"),
   );
-
-  const campaignIds = [...new Set(runs.map((run) => run.campaignId))];
-  const campaigns = canonicalCampaigns.filter((c) => campaignIds.includes(c.campaignId));
-
+  const campaigns = canonicalCampaigns.filter((campaign) =>
+    runs.some((run) => run.campaignId === campaign.campaignId),
+  );
   const artifacts = MODEL_ARTIFACTS[model.id] ?? [];
+  const historical =
+    selected !== undefined && !settings.some((row) => rowKey(row) === rowKey(selected));
+  const choices = historical ? [...settings, selected] : settings;
+  const selectedRuns = selected ? Object.values(selected.runs) : [];
+  const selectedFirst = selected?.runs.Spot ?? selectedRuns[0];
+  const requestedUnavailable =
+    selectedRunId !== undefined && !selectedRuns.some((run) => run.runId === selectedRunId);
 
-  const handleSelectRun = (runId: string) => {
+  function chooseRun(runId: string) {
+    setSelectedRunId(runId);
+    const params = new URLSearchParams(window.location.hash.split("?")[1]);
+    params.set("run", runId);
+    window.history.replaceState(window.history.state, "", `#/models/${model!.id}?${params}`);
+  }
+  function chooseSetting(row: LeaderboardModelRow) {
+    const run = row.runs.Spot ?? Object.values(row.runs)[0];
+    if (run) chooseRun(run.runId);
+  }
+  function inspectRun(runId: string) {
+    chooseRun(runId);
     setExpandedRunId(runId);
-    // Let the selected row render before bringing its inline details into view.
-    requestAnimationFrame(() => {
-      document
-        .getElementById(`run-row-${runId}`)
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  };
-
-  const handleToggleRun = (runId: string) => {
-    setExpandedRunId((prev) => (prev === runId ? undefined : runId));
-  };
+    setHistoryOpen(true);
+    requestAnimationFrame(() =>
+      document.getElementById(`run-row-${runId}`)?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "start",
+      }),
+    );
+  }
 
   return (
     <PageShell
       active="models"
-      footerNote={`Canonical evaluation profile for ${model.name}. Conformance results from bundled campaign artifacts.`}
+      className="lb-page mp-page"
+      footerNote={`Measured financial tool-use evaluations for ${model.name}. Scores reflect the recorded setting, client, and budget.`}
     >
-      <div className="eval-container model-profile-page">
-        {/* Hero section */}
-        <section className="eval-hero model-profile-hero" aria-labelledby="model-profile-title">
-          <img className="eval-hero-art" src="/images/hero-watercolor-landscape.webp" alt="" />
-          <div className="model-profile-intro">
-            <nav className="model-profile-breadcrumbs" aria-label="Breadcrumb">
-              <a href="#/leaderboard">Leaderboard</a>
-              <span aria-hidden="true">/</span>
-              <a href="#/models">Models</a>
-              <span aria-hidden="true">/</span>
-              <span aria-current="page">{model.name}</span>
-            </nav>
-            <p className="eval-eyebrow">
-              Model profile ·{" "}
-              {model.origin === "synthetic" ? "Synthetic demonstration" : "Measured conformance"}
-            </p>
-            <div className="model-profile-title-row">
-              <ModelAvatar model={model} size="lg" />
-              <h1 className="eval-title" id="model-profile-title">
-                {model.name}
-                <span>.</span>
-              </h1>
-              <OriginTag origin={model.origin} />
+      <div className="eval-container model-profile-page mp-content">
+        <nav className="mp-breadcrumbs" aria-label="Breadcrumb">
+          <a href="#/leaderboard">Leaderboard</a>
+          <span aria-hidden="true">/</span>
+          <a href="#/models">Models</a>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">{model.name}</span>
+        </nav>
+        <header className="mp-header">
+          <div className="mp-identity">
+            <ModelAvatar model={model} size="lg" />
+            <div>
+              <p className="mp-provider">{model.provider} · Financial evaluations</p>
+              <h1 className="mp-title">{model.name}</h1>
             </div>
-            <p className="model-profile-provider">
-              {model.provider} · <code>{model.providerModel}</code>
-            </p>
-            <p className="eval-description">
-              {campaigns.length > 0
-                ? campaigns.map((c) => `${c.harness} (${c.date}, ${c.repetitions} reps)`).join("; ")
-                : "Canonical evaluation profile"}
-              . Compare reasoning levels below, then inspect individual tasks and their evidence.
-            </p>
-            {museSweepCounts !== null && museSweepCounts.planned > 0 && (
-              <p className="eval-description" role="note">
-                <strong>Earlier sweep, 16 September.</strong> {museSweepCounts.graded} of{" "}
-                {museSweepCounts.planned} planned sweep trials were graded: {museSweepCounts.passed}{" "}
-                passed, {museSweepCounts.failed} failed and {museSweepCounts.unscored} remain
-                unscored in that original campaign. The results below include later recorded
-                attempts; the earlier runs remain in history.
-              </p>
-            )}
           </div>
-
-          <div className="model-profile-actions">
-            <Button asChild className="model-profile-download-button" variant="secondary">
+          <a className="mp-inline-link" href="#/methodology">
+            Methodology <ArrowUpRight size={14} aria-hidden="true" />
+          </a>
+        </header>
+        {model.origin === "synthetic" && (
+          <p className="mp-scope-note" role="note">
+            Synthetic demonstration. These are not measured model results.
+          </p>
+        )}
+        <div className="mp-selection-bar">
+          <label>
+            Recorded setting
+            <select
+              aria-label="Recorded setting"
+              value={selected ? rowKey(selected) : ""}
+              disabled={!choices.length}
+              onChange={(event) => {
+                const row = choices.find((entry) => rowKey(entry) === event.target.value);
+                if (row) chooseSetting(row);
+              }}
+            >
+              {choices.length ? (
+                choices.map((row) => (
+                  <option key={rowKey(row)} value={rowKey(row)}>
+                    {row.configurationLabel} · {Object.values(row.runs)[0]?.startedAt.slice(0, 10)}
+                    {historical && selected === row ? " · Historical" : ""}
+                  </option>
+                ))
+              ) : (
+                <option value="">No measured setting available</option>
+              )}
+            </select>
+          </label>
+          <span>
+            {historical
+              ? "Historical setting"
+              : selectedRunId && !requestedUnavailable
+                ? "Selected recorded setting"
+                : "Latest recorded setting"}
+            {selectedFirst ? ` · ${selectedFirst.startedAt.slice(0, 10)}` : ""}
+          </span>
+        </div>
+        {requestedUnavailable && (
+          <p className="mp-scope-note" role="status">
+            The requested run is unavailable for this model. Showing its latest available recorded
+            setting.
+          </p>
+        )}
+        {selected ? (
+          <ModelProfileOverview row={selected} onInspectRun={inspectRun} />
+        ) : (
+          <section className="mp-empty">
+            <h2>No measured summary available</h2>
+            <p>Recorded history and publication details are available below.</p>
+          </section>
+        )}
+        {model.origin !== "synthetic" && (
+          <ModelSettingResults
+            modelId={model.id}
+            selectedRowId={selected ? rowKey(selected) : undefined}
+            onSelectSetting={chooseSetting}
+          />
+        )}
+        <section className="mp-evidence-sections" aria-label="Evidence and sources">
+          <details
+            className="mp-disclosure"
+            open={historyOpen}
+            onToggle={(event) => setHistoryOpen(event.currentTarget.open)}
+          >
+            <summary>
+              <span>Run history &amp; task evidence</span>
+              <small>{runs.length} recorded runs</small>
+            </summary>
+            <RunHistoryPanel
+              runs={runs}
+              withdrawn={modelWithdrawn}
+              expandedRunId={historyOpen ? expandedRunId : undefined}
+              onToggleRun={(runId) =>
+                setExpandedRunId((current) => (current === runId ? undefined : runId))
+              }
+            />
+          </details>
+          <details className="mp-disclosure">
+            <summary>
+              <span>Configuration fingerprints &amp; original downloads</span>
+              <small>Sources &amp; provenance</small>
+            </summary>
+            <ConfigurationGroupsPanel runs={runs} onSelectRun={inspectRun} />
+            <div className="mp-downloads">
               <a href="/transcripts/index.json" download="askgina-transcript-index.json">
-                <Download size={15} aria-hidden="true" /> Transcript index
+                <Download size={14} aria-hidden="true" /> Transcript index
               </a>
-            </Button>
-            <a className="eval-text-link" href="#/methodology">
-              View methodology <ArrowUpRight size={14} aria-hidden="true" />
-            </a>
-          </div>
+              {artifacts.map((artifact) => (
+                <a key={artifact.filename} href={artifact.url} download={artifact.filename}>
+                  <Download size={14} aria-hidden="true" /> Original {artifact.description} JSON
+                </a>
+              ))}
+            </div>
+          </details>
+          <details className="mp-disclosure">
+            <summary>
+              <span>Campaigns, coverage &amp; limitations</span>
+              <small>{campaigns.length} campaigns</small>
+            </summary>
+            <CampaignsPanel campaigns={campaigns} runs={runs} />
+          </details>
         </section>
-
-        <FamilyMetricCards
-          modelId={model.id}
-          includeSynthetic={includeSynthetic}
-          onSelectRun={handleSelectRun}
-        />
-        {model.origin !== "synthetic" && <ModelSettingResults modelId={model.id} />}
-
-        {/* Run history table with expandable rows */}
-        <RunHistoryPanel
-          runs={runs}
-          withdrawn={modelWithdrawn}
-          expandedRunId={expandedRunId}
-          onToggleRun={handleToggleRun}
-        />
-
-        <details className="model-profile-provenance">
-          <summary>Configuration fingerprints &amp; original downloads</summary>
-          <ConfigurationGroupsPanel runs={runs} onSelectRun={handleSelectRun} />
-          <div className="model-profile-original-downloads">
-            {artifacts.map((artifact) => (
-              <a
-                className="eval-text-link"
-                key={artifact.filename}
-                href={artifact.url}
-                download={artifact.filename}
-              >
-                Original {artifact.description} JSON
-              </a>
-            ))}
-          </div>
-        </details>
-
-        {/* Campaigns & limitations */}
-        <CampaignsPanel campaigns={campaigns} runs={runs} />
+        <p className="mp-footer-note">
+          Scores describe financial tool use in recorded evaluations. Spot transaction results are
+          separate from the three tool-use category scores.{" "}
+          <a href="#/methodology">How these evaluations work ↗</a>
+        </p>
       </div>
     </PageShell>
   );

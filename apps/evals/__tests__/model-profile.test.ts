@@ -8,6 +8,27 @@ import {
 } from "../src/canonical/selectors";
 import { ModelSettingResults } from "../src/components/model-setting-results";
 import { ModelProfilePage } from "../src/pages/model-profile";
+import { selectProfileSetting } from "../src/lib/model-profile-selection";
+
+test("profile selection follows an exact run's whole setting, including historical campaigns", () => {
+  const high = selectProfileSetting("astra", "astra-high-perps-1")!;
+  expect(high.runs.Spot?.runId).toBe("astra-high-spot-1");
+  expect(high.overall).toBeCloseTo(0.866096866);
+  const historical = selectProfileSetting("astra", "astra-max-predictions-1")!;
+  expect(
+    Object.values(historical.runs).every((run) => run.campaignId === historical.campaignId),
+  ).toBe(true);
+  expect(historical.runs.Spot?.runId).toBe("astra-max-spot-1");
+  expect(historical.campaignId).not.toBe(selectProfileSetting("astra")?.campaignId);
+});
+
+test("unavailable and foreign runs fall back to the same model's latest setting", () => {
+  const latest = selectProfileSetting("astra")!;
+  expect(selectProfileSetting("astra", "missing-run")).toEqual(latest);
+  expect(selectProfileSetting("astra", "grok47-low-spot-1")).toEqual(latest);
+  expect(selectProfileSetting("astra", undefined, [])).toBeUndefined();
+  expect(latest.overall).toBeLessThan(selectProfileSetting("astra", "astra-high-spot-1")!.overall!);
+});
 
 test("expanded run details appear immediately after their history row", () => {
   const runId = "recovery-astra-max-perps-1";
@@ -134,8 +155,10 @@ test("model profiles retain earlier runs and source downloads below the setting 
   );
   expect(html).toContain("Configuration fingerprints &amp; original downloads");
   expect(html).not.toContain("Latest recorded run per family");
-  expect(html).toContain("Latest recorded max reasoning");
-  expect(html).toContain("model-profile-metrics");
+  expect(html).toContain("Latest recorded setting");
+  expect(html).toContain("mp-stat-strip");
+  expect(html).toContain("Success by category");
+  expect(html).not.toContain("model-profile-metrics");
   expect(html).toContain("How to read these results");
   expect(html.match(/Full campaign notes &amp; sources/gu)).toHaveLength(2);
   expect(html).toContain("209/210 graded");

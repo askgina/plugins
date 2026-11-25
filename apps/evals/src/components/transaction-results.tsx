@@ -15,15 +15,35 @@ const usd = (micros: number) => `$${(micros / 1_000_000).toFixed(2)}`;
 const secondsLabel = (ms: number) => `${Math.round(ms / 1000)}s`;
 
 /** Spot cell sub-line: the Spot transactions score owned by this row. Not part of the Spot score. */
-export function TransactionResult({ row }: { row: LeaderboardModelRow }) {
+export function TransactionResult({
+  row,
+  compact = false,
+}: {
+  row: LeaderboardModelRow;
+  compact?: boolean;
+}) {
   const run = transactionRunForRow(row);
   if (run === undefined) return null;
   const score = transactionScore(run);
   const passed = run.trials.filter((trial) => trial.passed).length;
   return (
-    <a className="results-transactions-line" href={spotTransactionsHref(row)}>
-      Transactions {score === null ? "incomplete" : percent(score)} · {passed}/{plannedTrials(run)}{" "}
-      attempts passed
+    <a
+      className="results-transactions-line"
+      href={spotTransactionsHref(row)}
+      title={
+        compact
+          ? `Transactions ${score === null ? "incomplete" : percent(score)} · ${passed}/${plannedTrials(run)} attempts passed. Separate from Spot and Overall.`
+          : undefined
+      }
+    >
+      {compact ? (
+        "Transactions ↗"
+      ) : (
+        <>
+          Transactions {score === null ? "incomplete" : percent(score)} · {passed}/
+          {plannedTrials(run)} attempts passed
+        </>
+      )}
     </a>
   );
 }
