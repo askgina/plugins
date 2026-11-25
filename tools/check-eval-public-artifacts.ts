@@ -3,7 +3,6 @@
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
-import { createHash } from "node:crypto";
 import { Data, Effect, FileSystem, Function, Layer, Option, Path, Schema } from "effect";
 import type { Plugin } from "vite-plus";
 
@@ -14,6 +13,8 @@ import {
   PublicEvalSha256Schema,
   PublicEvalTimestampSchema,
 } from "../packages/contracts/src/eval-results";
+import { sha256Hex } from "../packages/evals/src/canonical-json";
+import { HardCheckIdSchema } from "../packages/evals/src/execution/contracts";
 import { isSafePublicEvalText } from "../packages/evals/src/sanitize";
 import { isUnknownRecord } from "../packages/evals/src/type-guards";
 import {
@@ -191,6 +192,39 @@ const REASONING_LEVELS: Readonly<Record<string, true>> = {
 };
 const DIGEST = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u;
 const CLAUDE_ID = /(?:^|[/-])claude(?:[/-]|$)/iu;
+// Execution (transaction) results publish exactly these fields; anything else is rejected.
+const ExecutionText = Schema.NonEmptyString.check(
+  Schema.isMaxLength(2000),
+  Schema.isPattern(/^[^\p{Cc}]*$/u),
+  Schema.makeFilter(isSafePublicEvalText),
+);
+const ExecutionTrial = Schema.Struct({
+  taskId: SafeIdentifier,
+  repetition: Repetition,
+  passed: Schema.Boolean,
+  failedChecks: Schema.Array(Schema.Struct({ id: HardCheckIdSchema, detail: ExecutionText })),
+  durationMs: Count,
+  spendUsdMicros: Count,
+  submits: Count,
+  identityVerified: Schema.Boolean,
+});
+const decodeExecutionResult = Schema.decodeUnknownOption(
+  Schema.Struct({
+    runId: SafeIdentifier,
+    date: Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/u)),
+    model: ExecutionText,
+    modelId: SafeModel,
+    reasoning: Schema.String.check(
+      Schema.makeFilter((value: string) => Object.hasOwn(REASONING_LEVELS, value)),
+    ),
+    client: ExecutionText,
+    environment: ExecutionText,
+    sourceCommit: Schema.String.check(Schema.isPattern(/^[a-f0-9]{7,40}$/u)),
+    repetitions: Repetition,
+    trials: Schema.Array(ExecutionTrial),
+  }),
+  PUBLIC_EVAL_DECODE_OPTIONS,
+);
 // Freeze the reviewed legacy projections, including their free-form source
 // metadata. New paths or changed bytes require a new explicit privacy review.
 const APPROVED_CLAUDE_ARTIFACTS: Readonly<Record<string, string>> = {
@@ -268,12 +302,36 @@ const APPROVED_GROK47_ARTIFACTS: Readonly<Record<string, string>> = {
   "src/results/2026-09-22/grok-4.7/snapshot.json":
     "cdb01a1faf2db9b4f2806c042fc3f5831a3d1eb0d7237b56aa2a11697974bf4f",
 };
+// Claude-bearing execution results: the exact bytes reviewed for publication. A result is
+// Claude-bearing by its path or its own runId, model or modelId, never by file name alone.
+const APPROVED_EXECUTION_ARTIFACTS: Readonly<Record<string, string>> = {
+  "src/results/2026-10-06/execution/claude-opus-5.5-high.json":
+    "9be446580a2303a8f7e32966a32679aab70f34532e1da7631c3215aeed2856aa",
+  "src/results/2026-10-06/execution/claude-opus-5.5-low.json":
+    "dea35b608362266c4a42ba3a5df5758a5b218fa1166ae75815e02b913980fa3e",
+  "src/results/2026-10-06/execution/claude-opus-5.5-max.json":
+    "39a27d440bc79a787efbc6c8637836d38cf7eb41a280692e104005073aeefd6f",
+  "src/results/2026-10-06/execution/claude-opus-5.5-medium.json":
+    "c15683fc12dc3b8a3a88e87d3faeb7e28b7730f4409bda7da2d70d35070f564b",
+  "src/results/2026-10-06/execution/claude-opus-5.5-xhigh.json":
+    "10b418f1f643941023cd02ba2877e486b902d3ed76bd281d3159dab721099321",
+  "src/results/2026-10-06/execution/claude-sonnet-5.5-high.json":
+    "47969b3a12f46145d66f714455a2feb911e2355fefce2e0bc71901df204873ca",
+  "src/results/2026-10-06/execution/claude-sonnet-5.5-low.json":
+    "b29e113da68d38d4e2f50d4838c7f108cec3accd4c6e7b5a0c9cb85fc59fafef",
+  "src/results/2026-10-06/execution/claude-sonnet-5.5-max.json":
+    "fb7f3e86039eb4ef9f59e4e8a33941c2833e3a66d116cd2f59d191ee68744e92",
+  "src/results/2026-10-06/execution/claude-sonnet-5.5-medium.json":
+    "562ab15bf0c9237663b522dff14a73320adcd5d33be1c961e316add8f31a906d",
+  "src/results/2026-10-06/execution/claude-sonnet-5.5-xhigh.json":
+    "5bddbb90dc5ff21731fa631792daab3fb739dde260fe0cd1a1fadc2f6ab427c6",
+};
 // Numeric checks, public identifiers and evidence hashes only. Original result
 // and transcript bytes stay pinned separately above.
 const APPROVED_REGRADE_RECEIPT_SHA256 =
-  "af87e2b59f98e5f34f1255c2c82d863102955243105631c8d2adaaa910a245e0";
+  "85d85fbfb76d10f0889aed1b1b10459ee36b5ee7e0901dc6a3ca9a63468f7f49";
 const APPROVED_PERPS_REGRADE_RECEIPT_SHA256 =
-  "72dea8e991f73249eeb25061e5539f869f6b5a1456b98b2151272164845fbc80";
+  "120d64698d25701cf38ffd4e62b7f0fcde7923f119843dd9b2e78f0fc1c2a5f2";
 const decodeArtifactJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
 
 /** Fixed diagnostics never include provider values or schema issue excerpts. */
@@ -340,7 +398,13 @@ export const validateClaudePublicArtifact = Function.dual<
 );
 
 /** Scan source imports AND copied public assets, not a hand-maintained report list. */
-export const checkEvalPublicArtifacts = (appRoot?: string) =>
+export const checkEvalPublicArtifacts = ({
+  appRoot,
+  approvedExecutionArtifacts = APPROVED_EXECUTION_ARTIFACTS,
+}: {
+  readonly appRoot?: string;
+  readonly approvedExecutionArtifacts?: Readonly<Record<string, string>>;
+} = {}) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -362,7 +426,7 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
       const bytes = yield* fs
         .readFile(path.join(root, transcriptIndex))
         .pipe(Effect.mapError(() => fail(transcriptIndex, "unreadable_artifact")));
-      if (createHash("sha256").update(bytes).digest("hex") !== PUBLIC_TRANSCRIPTS_INDEX_SHA256)
+      if (sha256Hex(bytes) !== PUBLIC_TRANSCRIPTS_INDEX_SHA256)
         return yield* fail(transcriptIndex, "unapproved_artifact");
       const index = yield* Effect.try(() => textDecoder.decode(bytes)).pipe(
         Effect.flatMap(decodeArtifactJson),
@@ -394,10 +458,12 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
         if (info.type !== "File") return yield* fail(relative, "unsupported_entry");
         const publicTranscript = relative.startsWith("public/transcripts/");
         const grok47Artifact = relative.startsWith("src/results/2026-09-22/grok-4.7/");
+        const executionArtifact = /^src\/results\/[^/]+\/execution\//u.test(relative);
         if (!relative.toLowerCase().endsWith(".json")) {
           if (
             publicTranscript ||
             grok47Artifact ||
+            executionArtifact ||
             relative.startsWith("src/results/2026-09-24/claude-opus-5.5/")
           )
             return yield* fail(relative, "unapproved_artifact");
@@ -418,7 +484,7 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
           if (
             entry === undefined ||
             bytes.byteLength !== entry.bytes ||
-            createHash("sha256").update(bytes).digest("hex") !== entry.sha256 ||
+            sha256Hex(bytes) !== entry.sha256 ||
             !isPublicTranscript(input) ||
             publicTranscriptPath(input.reference) !== entry.path
           )
@@ -428,7 +494,7 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
         }
         if (relative.startsWith("src/results/2026-09-21/regrade/")) {
           if (
-            createHash("sha256").update(bytes).digest("hex") !==
+            sha256Hex(bytes) !==
             (relative === "src/results/2026-09-21/regrade/receipt.json"
               ? APPROVED_REGRADE_RECEIPT_SHA256
               : relative === "src/results/2026-09-21/regrade/perps-receipt.json"
@@ -439,21 +505,33 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
           }
           return;
         }
+        // Execution results have their own strict schema, so they never reach the read-only
+        // Trial guard below; Claude-bearing ones also need their reviewed bytes pinned.
+        if (executionArtifact) {
+          const result = decodeExecutionResult(input);
+          if (Option.isNone(result)) return yield* fail(relative, "private_payload");
+          const { runId, model, modelId } = result.value;
+          if (
+            [relative, runId, model, modelId].some((value) => /claude/iu.test(value)) &&
+            (!Object.hasOwn(approvedExecutionArtifacts, relative) ||
+              sha256Hex(bytes) !== approvedExecutionArtifacts[relative])
+          )
+            return yield* fail(relative, "unapproved_artifact");
+          return;
+        }
         const claudeBearing = /claude/iu.test(relative) || hasClaudeIdentity(input);
         const sweepArtifact = relative.startsWith("src/results/2026-09-16/reasoning-sweep/");
         const recoveryArtifact = relative.startsWith("src/results/2026-09-21/recovery/");
         if (
           recoveryArtifact &&
           (!Object.hasOwn(APPROVED_RECOVERY_ARTIFACTS, relative) ||
-            createHash("sha256").update(bytes).digest("hex") !==
-              APPROVED_RECOVERY_ARTIFACTS[relative])
+            sha256Hex(bytes) !== APPROVED_RECOVERY_ARTIFACTS[relative])
         )
           return yield* fail(relative, "unapproved_artifact");
         if (
           grok47Artifact &&
           (!Object.hasOwn(APPROVED_GROK47_ARTIFACTS, relative) ||
-            createHash("sha256").update(bytes).digest("hex") !==
-              APPROVED_GROK47_ARTIFACTS[relative])
+            sha256Hex(bytes) !== APPROVED_GROK47_ARTIFACTS[relative])
         )
           return yield* fail(relative, "unapproved_artifact");
         if (claudeBearing || sweepArtifact || recoveryArtifact || grok47Artifact) {
@@ -462,7 +540,7 @@ export const checkEvalPublicArtifacts = (appRoot?: string) =>
         if (claudeBearing) {
           if (
             !Object.hasOwn(APPROVED_CLAUDE_ARTIFACTS, relative) ||
-            createHash("sha256").update(bytes).digest("hex") !== APPROVED_CLAUDE_ARTIFACTS[relative]
+            sha256Hex(bytes) !== APPROVED_CLAUDE_ARTIFACTS[relative]
           ) {
             return yield* fail(relative, "unapproved_artifact");
           }
@@ -479,7 +557,7 @@ const main = (appRoot?: string) =>
   Effect.scoped(
     Effect.gen(function* () {
       const context = yield* Layer.build(services);
-      return yield* checkEvalPublicArtifacts(appRoot).pipe(Effect.provide(context));
+      return yield* checkEvalPublicArtifacts({ appRoot }).pipe(Effect.provide(context));
     }),
   );
 

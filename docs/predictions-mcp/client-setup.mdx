@@ -5,6 +5,8 @@ description: "Connect predictions execution tools using the right host configura
 
 This is **write access (Degen mode)**. It requests `tools:execute` and can perform predictions actions. For research only, use [Gina Read](/mcp-access/gina-read).
 
+To install the Predictions connection as a plugin instead, use `ask-gina-predictions`. See [install for your host](/agents/plugins-and-skills#install-for-your-host).
+
 ## Claude Code
 
 ```sh
@@ -50,3 +52,13 @@ Use a [Streamable HTTP client](/connect/other-clients) with this venue URL. Chec
 The credential must be valid for this venue and carry `tools:execute`. A read-only token or an old Gina execute grant is not a substitute. Complete a fresh connection if the grant is rejected.
 
 Next: run the [read-only connection checks](/predictions-mcp/quick-start) before attempting execution.
+
+## Check that it works
+
+Restart the client and complete Gina OAuth. In Claude Code, `/mcp` should list `predictions` as connected, and `bash` and the native tools should appear in the tool list. Call the native `searchPredictionMarkets` tool with:
+
+```json
+{ "query": "NBA" }
+```
+
+Expected: JSON with live Polymarket market rows under `data.payload`. This only reads data. If the tools are missing, remove the server, add it again and reconnect.

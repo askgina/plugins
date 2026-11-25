@@ -20,7 +20,7 @@ The [Ask Gina plugin and research skills](/agents/plugins-and-skills) use this c
 
 ## Write access (Degen mode)
 
-Choose [write access](/write-access/index) for an agent that should act on your behalf. Connect only the venue you need. Spot exposes native tools plus `bash`; Predictions and Perps expose `bash` with their own allowed host tools. See each venue's reference for the exact tool boundary.
+Choose [write access](/write-access/index) for an agent that should act on your behalf. Connect only the venue you need. Each venue exposes native tools plus `bash`. See [Spot features](/spot-mcp/features), [Predictions native tools](/predictions-mcp/tools) and [Perps native tools](/perps-mcp/tools) for the exact tool boundary.
 
 Write access can place orders or move funds. A request to prepare or quote differs from a request to execute; follow the selected venue's workflow.
 
@@ -31,3 +31,7 @@ In [Agent Setup](https://askgina.ai/agent-setup), **Read-only — view data** co
 The token form can start with full access selected. For research, explicitly select **Read-only — view data** before generating a token. An existing execute-scoped credential is not a read credential: reconnect or generate a token with the correct scope.
 
 Next: [choose your client](/connect/index), or [start here if you're an agent](/agents/start).
+
+## Check that it works
+
+Open your client's tool list for each server you added. `https://askgina.ai/ai/gina/mcp` shows named read tools and no `bash`. Each venue URL (`/ai/spot/mcp`, `/ai/predictions/mcp`, `/ai/perps/mcp`) shows `bash`. If a read connection shows `bash`, remove it and reconnect with **Read-only — view data**.

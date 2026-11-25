@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-
 import {
   PUBLIC_EVAL_DECODE_OPTIONS,
   PublicEvalAttemptCaptureSchema,
@@ -17,6 +15,7 @@ import {
 } from "@askgina/contracts";
 import { Data, Effect, Schema } from "effect";
 
+import { sha256Hex } from "./canonical-json";
 import { SanitizedEvalRunReportSchema, type SanitizedEvalRunReport } from "./report";
 import {
   hasSafePublicEvalFields,
@@ -143,8 +142,6 @@ const decodeDeclaredCoverage = Schema.decodeUnknownEffect(
 );
 
 const failure = (reason: PublicEvalResultErrorReason) => new PublicEvalResultError({ reason });
-const sha256Hex = (content: string): string =>
-  createHash("sha256").update(content, "utf8").digest("hex");
 
 /** Complements the strict capture decoder with report-bound identities and full repeated slots. */
 const attemptIssue = (

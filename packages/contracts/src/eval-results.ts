@@ -1,5 +1,6 @@
-import { createHash } from "node:crypto";
 import { Function, Schema, type SchemaAST } from "effect";
+
+import { sha256Hex } from "./sha256";
 
 /**
  * Public evaluation results contract (version one).
@@ -195,12 +196,9 @@ export const PublicEvalAttemptSummarySchema = Schema.Struct({
   Schema.makeFilter((attempt) => {
     const expected = publicEvalFailureCategories(attempt.checks);
     const issues: Schema.FilterIssue[] = [];
-    const digest = createHash("sha256")
-      .update(
-        publicEvalAttemptIdentityInput(attempt.runId, attempt.caseId, attempt.repetition),
-        "utf8",
-      )
-      .digest("hex");
+    const digest = sha256Hex(
+      publicEvalAttemptIdentityInput(attempt.runId, attempt.caseId, attempt.repetition),
+    );
     if (attempt.id !== `attempt-${digest}`) {
       issues.push({
         path: ["id"],

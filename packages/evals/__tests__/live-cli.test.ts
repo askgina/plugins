@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-
 import * as BunPath from "@effect/platform-bun/BunPath";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { assert, describe, it } from "@effect/vitest";
@@ -9,6 +7,7 @@ import { ChildProcess } from "effect/unstable/process";
 import { PRODUCTION_MCP_URL } from "@askgina/contracts";
 
 import { collectBoundedUtf8Output } from "../src/bounded-output";
+import { sha256Hex } from "../src/canonical-json";
 
 import {
   DEFAULT_CLAUDE_MAX_TURNS,
@@ -1115,9 +1114,7 @@ globalThis.fetch = async () => {
                   ...environment,
                   ASK_GINA_ACCESS_TOKEN: "synthetic-native-profile-token",
                   OMP_EVAL_EXECUTABLE: executablePath,
-                  OMP_EVAL_EXECUTABLE_SHA256: createHash("sha256")
-                    .update(executableBytes)
-                    .digest("hex"),
+                  OMP_EVAL_EXECUTABLE_SHA256: sha256Hex(executableBytes),
                 },
                 extendEnv: false,
                 stdin: "ignore",

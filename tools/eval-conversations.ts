@@ -1,6 +1,5 @@
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { createHash } from "node:crypto";
 import { Effect, FileSystem, Function, Layer, Path, Schema } from "effect";
 import { loadEnv, type Plugin } from "vite-plus";
 import {
@@ -8,6 +7,7 @@ import {
   type ConversationReference,
   type ConversationResponse,
 } from "../apps/evals/src/lib/conversations";
+import { sha256Hex } from "../packages/evals/src/canonical-json";
 
 const CAMPAIGN = "reasoning-sweep-2026-09-16";
 const Identifier = Schema.String.check(Schema.isPattern(/^[a-z0-9][a-z0-9-]{0,150}$/u));
@@ -148,10 +148,7 @@ export const readConversation = Function.dual<
     const filePath = yield* fs.realPath(path.join(root, entry.path));
     if (!filePath.startsWith(`${root}${path.sep}`)) return unavailable("invalid_bundle");
     const bytes = yield* fs.readFile(filePath);
-    if (
-      bytes.byteLength !== entry.bytes ||
-      createHash("sha256").update(bytes).digest("hex") !== entry.sha256
-    )
+    if (bytes.byteLength !== entry.bytes || sha256Hex(bytes) !== entry.sha256)
       return unavailable("mismatch");
     const document = yield* Schema.decodeEffect(Schema.fromJsonString(ConversationSchema))(
       new TextDecoder().decode(bytes),

@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { listCatalogToolNames } from "@askgina/contracts";
 import { assert, describe, it } from "@effect/vitest";
@@ -23,6 +21,7 @@ import {
   runCodexCliPluginEvalTrial,
 } from "../src/codex-cli";
 import { collectBoundedUtf8Output } from "../src/bounded-output";
+import { sha256Hex } from "../src/canonical-json";
 import type { PluginEvalCase } from "../src/contracts";
 
 const ASK_GINA_SKILL_PATH =
@@ -306,21 +305,27 @@ describe("Codex CLI trial adapter", () => {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "codex-descriptor-test-" });
         const executablePath = `${root}/codex`;
-        const trustedBytes = yield* fs.readFile("/bin/echo");
+        // Not /bin/echo: multicall coreutils (Ubuntu 26.04 runners) dispatch on
+        // argv[0], so a copy named `codex` would not run as echo.
+        const trustedBytes = yield* fs.readFile(process.execPath);
         const substituteBytes = yield* fs.readFile("/bin/false");
         yield* fs.writeFile(executablePath, trustedBytes);
         yield* fs.chmod(executablePath, 0o755);
         const opened = yield* openAttestedCodexExecutable({
           executablePath,
-          expectedSha256: createHash("sha256").update(trustedBytes).digest("hex"),
+          expectedSha256: sha256Hex(trustedBytes),
         });
 
         yield* fs.writeFile(executablePath, substituteBytes);
-        const child = yield* ChildProcess.make(opened.command, ["descriptor-ok"], {
-          stdin: "ignore",
-          stdout: "pipe",
-          stderr: "ignore",
-        });
+        const child = yield* ChildProcess.make(
+          opened.command,
+          ["-e", "process.stdout.write('descriptor-ok\\n')"],
+          {
+            stdin: "ignore",
+            stdout: "pipe",
+            stderr: "ignore",
+          },
+        );
         const [stdout, exitCode] = yield* Effect.all([
           collectBoundedUtf8Output(child.stdout, 1024),
           child.exitCode,
@@ -346,7 +351,7 @@ describe("Codex CLI trial adapter", () => {
         yield* fs.chmod(trustedPath, 0o755);
         const attested = yield* attestCodexExecutable({
           executablePath: trustedPath,
-          expectedSha256: createHash("sha256").update(trustedBytes).digest("hex"),
+          expectedSha256: sha256Hex(trustedBytes),
         });
         yield* fs.writeFileString(
           forgedPath,
@@ -380,7 +385,7 @@ describe("Codex CLI trial adapter", () => {
         const result = yield* Effect.result(
           openAttestedCodexExecutable({
             executablePath,
-            expectedSha256: createHash("sha256").update(bytes).digest("hex"),
+            expectedSha256: sha256Hex(bytes),
           }),
         );
 

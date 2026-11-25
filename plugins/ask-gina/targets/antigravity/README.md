@@ -1,0 +1,165 @@
+# Ask Gina
+
+**What this is:** a read-only research assistant for crypto, prediction
+markets, perpetuals, and equities. Use it to fetch real-time prices and
+historical data for tokens, Hyperliquid markets, and Polymarket prediction
+markets, and to analyze your Gina wallet, positions, and accounts. It is not a
+trading tool: this plugin cannot place trades or transfer assets in any host.
+
+- Production MCP: `https://askgina.ai/ai/gina/mcp`
+- Scope: `tools:read` only. This plugin does not include transaction execution
+  or transfers.
+
+New here? Follow [Install](#install) for your host, then try one of the example
+prompts in [What it can do](#what-it-can-do). Maintainers can skip to
+[For maintainers](#for-maintainers).
+
+## Install
+
+### Cursor and Grok Bot
+
+1. Install **Ask Gina** from the Cursor / Grok Bot plugin marketplace, or load
+   this folder as a local Cursor plugin (`~/.cursor/plugins/local/ask-gina` as a
+   real directory, not an external symlink).
+2. Open the Gina connector and choose **Connect**. Complete Ask Gina OAuth in
+   the browser.
+3. Confirm the connector shows the read tools (31 catalog tools). The skills
+   below should appear as well. In Cursor, the four slash commands and the
+   always-on read-only rule should appear too.
+
+Grok Bot loads plugins only from the Cursor marketplace. A local
+`~/.cursor/plugins/local` install proves the Cursor IDE loader, not Grok Bot.
+
+### Antigravity
+
+From a local checkout of [askgina/plugins](https://github.com/askgina/plugins),
+run this at the repository root:
+
+```sh
+agy plugin install ./plugins/ask-gina/targets/antigravity
+```
+
+Complete Ask Gina OAuth in the browser when the connection requests sign-in.
+This installs the read-only connection, research skills and `rules/GEMINI.md`;
+it does not grant trading access. See the
+[Antigravity guide](https://docs.askgina.ai/connect/antigravity) for setup and
+connection checks. This is a local source install, not a Marketplace listing.
+
+### Devin
+
+Add the direct `git-subdir` source to a Devin account or enterprise manifest:
+
+```json
+{
+  "requiredPlugins": [
+    {
+      "source": "git-subdir",
+      "url": "https://github.com/askgina/plugins.git",
+      "path": "plugins/ask-gina"
+    }
+  ]
+}
+```
+
+The repository is public, so this source needs no GitHub credentials. After
+install, Devin activates the four skills below as `/ask-gina:<skill>` and the
+`ask-gina` MCP server. The Cursor slash commands and read-only rule are not used
+in Devin.
+
+## What it can do
+
+| Skill                         | Use for                                                    |
+| ----------------------------- | ---------------------------------------------------------- |
+| `review-gina-account`         | Linked wallets, cross-chain holdings, scheduled prompts    |
+| `research-spot-tokens`        | Live spot prices, metadata, charts, completed swap history |
+| `research-hyperliquid`        | Hyperliquid / HIP-3 markets, positions, orders, fills      |
+| `research-prediction-markets` | Polymarket discovery, books, public rows, your positions   |
+
+Try:
+
+- "Show my linked wallets."
+- "Chart ETH over the past week."
+- "Which prediction markets expire soon?"
+
+Cursor slash commands: `/review-gina-account`, `/research-spot-tokens`,
+`/research-hyperliquid`, `/research-prediction-markets`. Grok Bot uses skills
+and MCP only.
+
+## What it cannot do
+
+Gina will not place trades, transfer assets, change leverage, redeem positions,
+or create/edit schedules from this plugin.
+
+## Privacy, terms, and support
+
+- Privacy: https://askgina.ai/privacy-policy
+- Terms: https://askgina.ai/terms-and-conditions
+- Support: https://askgina.ai/support
+
+---
+
+# For maintainers
+
+This directory is the `@askgina/plugin-core` workspace package and the plugin
+root that hosts install. This file is also the Cursor listing README:
+`bun run check:target-conformance` requires it, and the generated Cursor target
+carries an identical copy.
+
+## Canonical inputs and generated outputs
+
+Committed `src/**`, `plugin.yaml`, `skills/**`, `evals/**`, and `targets/**`
+are the canonical plugin inputs. `vp pack` derives the package `dist/` and the
+custom packer creates complete host archives under the repository's ignored
+`dist/` tree; generated package and host outputs are not source and are never
+authoritative.
+
+The repository may build, verify, and archive these artifacts. It does not
+publish, release, deploy, or submit them: packaging creates evidence, not
+publication authority.
+
+## Map of this directory
+
+| Path                                                                    | What lives there                                                        |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `plugin.yaml`, `src/`, `evals/`                                         | Canonical plugin definition, loaders, and plugin eval cases.            |
+| `skills/`                                                               | The four canonical skills, shared by every host.                        |
+| `.cursor-plugin/plugin.json`, `mcp.json`, `commands/`, `rules/*.mdc`    | Cursor and Grok Bot manifest, MCP config, slash commands, and rule.     |
+| `.devin-plugin/plugin.json`, `.mcp.json`                                | Devin manifest and MCP server config.                                   |
+| `.antigravity-plugin/plugin.json`, `mcp_config.json`, `rules/GEMINI.md` | Antigravity manifest, MCP config and read-only rule.                    |
+| `.codex-plugin/plugin.json`                                             | Codex manifest.                                                         |
+| `targets/`                                                              | Per-host inputs, including the generated, installable Antigravity tree. |
+| `assets/icon.svg`                                                       | Plugin logo.                                                            |
+
+## Devin `git-subdir` install
+
+The `git-subdir` source clones the whole `plugins/ask-gina/` directory,
+including Cursor extras and packaging internals. Devin activates the four
+canonical skills as `/ask-gina:<skill>` and the `ask-gina` MCP server from
+`.mcp.json`. `devin plugins info` reports no rules, no hooks, and no second MCP
+server, so Cursor `mcp.json`, `rules/*.mdc`, and `commands/` stay on disk
+unused. The repository root is outside this path, so contributor-facing
+`AGENTS.md` is not installed. A self-hosted Devin marketplace meta-plugin would
+need a dedicated repository whose root content is safe to install; this
+repository root is not one.
+
+The public Devin marketplace listing is a pinned `git-subdir` entry for
+`plugins/ask-gina` in `CognitionAI/devin-marketplace`'s root
+`.devin-plugin/plugin.json` `optionalPlugins`. That repository carries no
+display metadata, so the card reads `displayName`, `logo` (`assets/icon.svg`),
+and the category `keywords` (`Finance`) from `.devin-plugin/plugin.json` here
+at the pinned commit. After changing this plugin, bump the `sha` there with a
+PR.
+
+For local authoring, run `devin plugins install ./plugins/ask-gina`.
+
+## OAuth callbacks
+
+The Gina authorization server must allow:
+
+- `https://www.cursor.com/agents/mcp/oauth/callback` (Cursor / Grok Bot web)
+- `localhost:8787/callback` over plain HTTP (Cursor desktop)
+
+## `mcp.json` stays URL-only
+
+`mcp.json` is URL-only so Cursor and Grok Bot run Streamable HTTP plus MCP
+OAuth. Do not add a bearer header or `"type": "streamable-http"`.

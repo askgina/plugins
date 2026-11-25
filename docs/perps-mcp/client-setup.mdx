@@ -5,6 +5,8 @@ description: "Connect perps execution tools using the right host configuration."
 
 This is **write access (Degen mode)**. It requests `tools:execute` and can perform perps actions. For research only, use [Gina Read](/mcp-access/gina-read).
 
+To install the Perps connection as a plugin instead, use `ask-gina-perps`. See [install for your host](/agents/plugins-and-skills#install-for-your-host).
+
 ## Claude Code
 
 ```sh
@@ -50,3 +52,13 @@ Use a [Streamable HTTP client](/connect/other-clients) with this venue URL. Chec
 The credential must be valid for this venue and carry `tools:execute`. A read-only token or an old Gina execute grant is not a substitute. Complete a fresh connection if the grant is rejected.
 
 Next: run the [read-only connection checks](/perps-mcp/quick-start) before attempting execution.
+
+## Check that it works
+
+Restart the client and complete Gina OAuth. In Claude Code, `/mcp` should list `perps` as connected, and `bash` should appear in the tool list. Call `bash` with:
+
+```json
+{ "command": "capabilities --json" }
+```
+
+Expected: one payload with `commands` and `hostTools`. The call only reads data. If `bash` is missing, remove the server, add it again and reconnect.

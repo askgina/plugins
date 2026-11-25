@@ -38,7 +38,7 @@
     "effect": "4.0.0-rc.111",
     "ws": "8.21.0",
     "yaml": "2.8.3",
-    "zod": "4.1.8"
+    "zod": "4.6.6"
   },
   "devDependencies": {
     "@types/ws": "8.18.1"

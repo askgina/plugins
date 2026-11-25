@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 
@@ -9,6 +8,7 @@ import {
   type PublicEvalAdapterOptions,
 } from "../src/public-results";
 import type { SanitizedEvalRunReport } from "../src/report";
+import { sha256Hex as sha256 } from "../src/canonical-json";
 
 const RUN_ID = "synthetic-result-run";
 const CATALOG_SHA = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
@@ -17,7 +17,6 @@ const STATUS_SHA = "111111111111111111111111111111111111111111111111111111111111
 const COMPONENT_SHA = "2222222222222222222222222222222222222222222222222222222222222222";
 
 const encodeJson = Schema.encodeUnknownSync(Schema.fromJsonString(Schema.Unknown));
-const sha256 = (text: string): string => createHash("sha256").update(text, "utf8").digest("hex");
 /** Saved files end in a newline; the adapter must hash exactly these bytes. */
 const serialize = (value: unknown): string => `${JSON.stringify(value, null, 2)}\n`;
 /** Attempt identity is the SHA-256 of the literal JSON tuple, independent of the adapter. */

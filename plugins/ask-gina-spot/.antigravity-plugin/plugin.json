@@ -1,0 +1,32 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "ask-gina-spot",
+  "displayName": "Ask Gina Spot",
+  "description": "Research spot tokens and liquidity pools with Ask Gina. Quote swaps, transfers, and LP operations, then execute only with your confirmation.",
+  "version": "1.0.0",
+  "logo": "assets/icon.svg",
+  "suggestedPrompts": [
+    "Quote swapping 100 USDC for ETH.",
+    "Show my LP positions and propose any rebalancing.",
+    "Scan the top liquidity pools by fee APR."
+  ],
+  "author": {
+    "name": "Ask Gina",
+    "url": "https://askgina.ai"
+  },
+  "homepage": "https://askgina.ai",
+  "repository": "https://github.com/askgina/plugins",
+  "license": "Apache-2.0",
+  "keywords": [
+    "crypto",
+    "spot",
+    "swap",
+    "transfer",
+    "liquidity",
+    "lp",
+    "solana",
+    "uniswap",
+    "raydium",
+    "mcp"
+  ]
+}

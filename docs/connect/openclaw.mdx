@@ -1,6 +1,6 @@
 ---
 title: "OpenClaw"
-description: "Connect native MCP and load Gina research skills separately."
+description: "Add Gina's read-only MCP server to OpenClaw, then load the Gina research skills separately and verify both."
 ---
 
 OpenClaw is one way to run Gina tools and skills. The current research bundle comes from [askgina/plugins](https://github.com/askgina/plugins), not the older venue-specific skill bodies previously published in these docs.
@@ -25,9 +25,9 @@ Follow [OpenClaw's MCP guide](https://docs.openclaw.ai/tools/mcp) for version-sp
 
 Clone the source repository and copy the desired complete directories from `plugins/ask-gina/skills/` into your workspace `.agents/skills/`. Alternatively, configure `skills.load.extraDirs` with the absolute path to the checked-out Gina skills directory. Start a new session and confirm the selected skills are available.
 
-See [OpenClaw skill loading](https://docs.openclaw.ai/tools/skills) and [Gina's skill catalog](/agents/plugins-and-skills). Skills and MCP authentication are separate: verify both.
+See [OpenClaw skill loading](https://docs.openclaw.ai/tools/skills) and [Gina's skills catalog](/agents/skills-catalog). Skills and MCP authentication are separate, so verify both.
 
-Legacy ClawHub venue skills may use execution endpoints. They are not interchangeable with the current four read-only research skills. For execution, follow the venue's current guide rather than an old copied skill body.
+Legacy ClawHub venue skills may use execution endpoints. They are not interchangeable with the current read-only research skills. For execution, follow the venue's current guide rather than an old copied skill body.
 
 ## Verify your first result
 

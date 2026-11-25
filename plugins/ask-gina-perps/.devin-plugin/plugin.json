@@ -1,0 +1,15 @@
+{
+  "name": "ask-gina-perps",
+  "displayName": "Ask Gina Perps",
+  "version": "0.1.0",
+  "description": "Ask Gina Perps lets an agent read Hyperliquid account and market data and, with your approval, place, change and cancel perpetual-futures orders, adjust leverage, and deposit or withdraw funds from your Gina wallet. It also renders charts, positions and account overviews. Orders and funding move real money, so review every action before you approve it.",
+  "author": {
+    "name": "Ask Gina"
+  },
+  "homepage": "https://askgina.ai",
+  "repository": "https://github.com/askgina/plugins",
+  "license": "Apache-2.0",
+  "logo": "assets/icon.svg",
+  "keywords": ["Finance"],
+  "mcpServers": ".mcp.json"
+}

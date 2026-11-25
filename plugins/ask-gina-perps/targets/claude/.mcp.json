@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "perps": {
+      "type": "http",
+      "url": "https://askgina.ai/ai/perps/mcp"
+    }
+  }
+}

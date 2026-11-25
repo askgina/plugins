@@ -19,3 +19,11 @@ Do not repeatedly retry a transaction because its result is unclear. Follow the 
 See [authentication](/agents/authentication), [host setup](/connect/index), or venue-specific help for [Spot](/spot-mcp/troubleshooting), [Predictions](/predictions-mcp/troubleshooting), and [Perps](/perps-mcp/troubleshooting).
 
 If you contact [Gina support](https://askgina.ai/support), include the client, server URL, time, and a redacted error. Do not include tokens, private keys, or recovery phrases.
+
+## Check that it works
+
+After a fix, ask:
+
+> Use Gina to show ETH's price in USD over the past seven days. Include the time range and identify any missing data.
+
+Expected: your tool activity shows a Gina call such as `getSimplePrice` or `getTokenChart` (the host may add a prefix), and the answer matches that result. If no call appears, work down the table again.

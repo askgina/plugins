@@ -13,32 +13,20 @@ A quick checklist to verify everything is working.
 <Check>You've added `https://askgina.ai/ai/predictions/mcp` as a server</Check>
 <Check>You can open a browser for OAuth sign-in</Check>
 
-### Run These Commands
+### Run These Checks
 
 <Steps>
-  <Step title="Echo test">
-    ```json
-    { "command": "echo ok" }
-    ```
+  <Step title="Check the tool list">
+    Open your client's tool list for the `predictions` server.
+    <Check>Expected: the [native Predictions tools](/predictions-mcp/tools) and `bash`, with every Execute tool marked destructive</Check>
+  </Step>
+  <Step title="Fetch markets">
+    Call the native `getExpiringMarkets` tool with `{"timeWindow":"today","limit":5}`.
+    <Check>Expected: JSON with up to five markets that end today</Check>
+  </Step>
+  <Step title="Check the sandbox">
+    Call `bash` with `{ "command": "echo ok" }`.
     <Check>Expected: `ok`</Check>
-  </Step>
-  <Step title="List available commands">
-    ```json
-    { "command": "commands --help host-tools" }
-    ```
-    <Check>Expected: help text describing host-tools usage</Check>
-  </Step>
-  <Step title="Find a host tool">
-    ```json
-    { "command": "host-tools --name searchPredictionMarkets --limit 5 --full" }
-    ```
-    <Check>Expected: JSON output including `searchPredictionMarkets` tool details</Check>
-  </Step>
-  <Step title="Search prediction markets">
-    ```json
-    { "command": "host-tools searchPredictionMarkets '{\"query\":\"NBA\"}'" }
-    ```
-    <Check>Expected: JSON output with live market data</Check>
   </Step>
 </Steps>
 
@@ -71,7 +59,7 @@ https://askgina.ai/ai/predictions/mcp
   <Step title="Complete sign-in">Sign in to Gina in the browser window that opens.</Step>
   <Step title="Approve access">Click "Approve" when prompted.</Step>
   <Step title="Retry">
-    Return to your MCP client — `bash` should now appear as an available tool.
+    Return to your MCP client. The native Predictions tools and `bash` should appear.
   </Step>
 </Steps>
 
@@ -94,7 +82,7 @@ Some MCP clients show a sign-in link or "Authorize" button instead of opening a 
 
 ### 4. Signed In But No Tools
 
-If you signed in but no `bash` tool appears:
+If you signed in but no Predictions tools appear:
 
 <Steps>
   <Step title="Remove the server">Remove `predictions` from your MCP client.</Step>
@@ -104,23 +92,13 @@ If you signed in but no `bash` tool appears:
   <Step title="Re-authenticate">Restart your client and complete the sign-in flow again.</Step>
 </Steps>
 
-### 5. Commands Fail
+### 5. Tool Calls Fail
 
-First, verify the basics work:
-
-```json
-{ "command": "echo ok" }
-```
-
-If that succeeds, check what's available:
-
-```json
-{ "command": "commands --help host-tools" }
-```
+Read the tool's input schema in your client's tool list before retrying. A `bash` script that calls a host tool can print its schema with `host-tools schema <toolName>`.
 
 <Tip>
-  If a specific command fails, check that your input JSON is valid. A common issue is missing or
-  mismatched quotes in the JSON argument.
+  If a call fails, check that your input JSON is valid. A common issue is missing or mismatched
+  quotes in the JSON argument.
 </Tip>
 
 ### 6. Connection Timeout

@@ -9,7 +9,9 @@ For Ask Gina's broader user-facing capabilities, including wallets, market resea
 
 ## How It Works
 
-The server exposes one MCP tool, `bash`. Your client invokes it from your prompt; inside that sandbox, `host-tools` commands provide prediction-market discovery, pricing, trading, and portfolio operations.
+The server exposes native tools for prediction-market discovery, pricing, trading, portfolio and schedule operations, alongside a `bash` tool. Your client calls the native tools from your prompt. Inside the `bash` sandbox, `host-tools` commands reach the same host tools and add SQL over fetched market data. Two loaders, `fetchPolymarketData` and `fetchPolymarketHistory`, fill sandbox SQL tables and work only inside `bash`. [Native tools](/predictions-mcp/tools) lists every native tool by annotation class.
+
+Some results carry a typed `next` suggestion. Split and conversion previews suggest their respective calls with `authorized: true` and an editable amount. For a closed source market they can suggest `redeemPredictionMarket` instead; `getPolymarketPositions` also suggests redemption for redeemable positions. The server never runs a suggestion. Your client shows the call and waits for your approval. See [Trading](/predictions-mcp/features-trading) for the differences and eligibility.
 
 <CardGroup cols={3}>
   <Card title="Discover" icon="magnifying-glass">
@@ -44,3 +46,13 @@ The server exposes one MCP tool, `bash`. Your client invokes it from your prompt
     Explore the Predictions MCP feature reference and example prompts.
   </Card>
 </CardGroup>
+
+## Check that it works
+
+After you connect, ask your assistant "What tools do you have from the predictions server?" It should list `bash` and the native tools on [Native tools](/predictions-mcp/tools). Then call the native `searchPredictionMarkets` tool with:
+
+```json
+{ "query": "NBA" }
+```
+
+Expected: JSON with live Polymarket market rows under `data.payload`. Setup steps are in [Predictions client setup](/predictions-mcp/client-setup).

@@ -48,7 +48,7 @@ const commandOutput = (command: string, args: readonly string[], cwd: string) =>
     }),
   );
 
-const patchVersion = "effect-tsgo.0.37.0";
+const patchVersion = "effect-tsgo.0.55.0";
 
 const program = Effect.gen(function* () {
   const path = yield* Path.Path;

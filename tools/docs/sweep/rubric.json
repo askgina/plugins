@@ -1,0 +1,26 @@
+{
+  "hash": "a9c0bd91699f",
+  "questions": {
+    "onboarding": {
+      "type": "choice",
+      "instructions": "This is one public docs page for Ask Gina (MCP servers + agent plugin). Judge whether an AI agent reading ONLY this page (plus llms.txt-style fetch) could complete the page's task for a user without a human clicking through UI.",
+      "criteria": {
+        "self_serve": "The page has a concrete task and states prerequisites, the exact URL/command/tool names, the auth step, and how to verify success, all in text.",
+        "partial": "The page has a concrete task but omits at least one of prerequisites, exact URL/command/tool names, auth step or verification, or defers them to screenshots or other pages.",
+        "no_task": "The page is conceptual, reference, policy, changelog or marketing with no task for the reader to complete."
+      }
+    },
+    "ui_only": {
+      "type": "bool",
+      "instructions": "Does at least one required step exist only as a screenshot or vague UI direction ('click the button') with no text equivalent an agent could follow or relay?"
+    },
+    "drift_risk": {
+      "type": "bool",
+      "instructions": "Does the page hardcode counts, versions, catalog sizes, tool/skill lists or chain lists in prose that would silently go stale when the product changes (e.g. 'four skills', '31 reads')?"
+    },
+    "description_ok": {
+      "type": "bool",
+      "instructions": "Does the frontmatter `description` say in one sentence what the reader can do or learn on this page, specific enough to rank for that query and to serve as an llms.txt summary line?"
+    }
+  }
+}

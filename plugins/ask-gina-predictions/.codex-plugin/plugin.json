@@ -1,0 +1,34 @@
+{
+  "name": "ask-gina-predictions",
+  "version": "1.0.0",
+  "description": "Search Polymarket and, with your approval, trade prediction markets from your Gina wallet.",
+  "author": {
+    "name": "Ask Gina",
+    "url": "https://askgina.ai"
+  },
+  "homepage": "https://askgina.ai",
+  "repository": "https://github.com/askgina/plugins",
+  "license": "Apache-2.0",
+  "keywords": ["crypto", "predictions", "prediction-markets", "polymarket", "trading", "mcp"],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Ask Gina Predictions",
+    "shortDescription": "Polymarket prediction trading",
+    "longDescription": "Ask Gina Predictions connects your Ask Gina account to the Predictions MCP server. It can search Polymarket markets, read order books, your positions and order history and, with your approval, place trades, manage orders, redeem winning positions, and top up or withdraw your prediction balance from your Gina wallet. It can also create and manage scheduled prompts. Trades and balance changes move real funds, so review each action before you approve it. The plugin bundles no skills.",
+    "developerName": "Ask Gina",
+    "category": "Finance",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "websiteURL": "https://askgina.ai",
+    "privacyPolicyURL": "https://askgina.ai/privacy-policy",
+    "supportURL": "https://askgina.ai/support",
+    "termsOfServiceURL": "https://askgina.ai/terms-and-conditions",
+    "defaultPrompt": [
+      "Search Polymarket for markets that end today.",
+      "Show my open prediction positions.",
+      "Show the order book for a market that ends today."
+    ],
+    "brandColor": "#B50D00",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/icon.svg"
+  }
+}

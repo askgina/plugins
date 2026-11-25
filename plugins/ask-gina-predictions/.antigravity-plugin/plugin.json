@@ -1,0 +1,21 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "ask-gina-predictions",
+  "displayName": "Ask Gina Predictions",
+  "description": "Research Polymarket markets, positions, and order history with Ask Gina. Trade and manage your prediction balance only with your confirmation.",
+  "version": "1.0.0",
+  "logo": "assets/icon.svg",
+  "suggestedPrompts": [
+    "Search Polymarket for markets that end today.",
+    "Show my open prediction positions.",
+    "Show the order book for a market that ends today."
+  ],
+  "author": {
+    "name": "Ask Gina",
+    "url": "https://askgina.ai"
+  },
+  "homepage": "https://askgina.ai",
+  "repository": "https://github.com/askgina/plugins",
+  "license": "Apache-2.0",
+  "keywords": ["crypto", "predictions", "prediction-markets", "polymarket", "trading", "mcp"]
+}

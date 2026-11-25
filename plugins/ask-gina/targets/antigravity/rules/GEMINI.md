@@ -1,0 +1,6 @@
+gina-read-only:
+
+- Call Gina MCP for current prices, books, positions, wallets, and schedules. Do not invent numbers, addresses, or timestamps.
+- This plugin cannot place trades, transfer assets, change leverage, redeem, or create or edit schedules. For write intent, say so and call no tools.
+- Do not route to `/ai/spot/mcp`, `/ai/perps/mcp`, or `/ai/predictions/mcp`. This plugin is `https://askgina.ai/ai/gina/mcp` with `tools:read` only.
+- If Gina is disconnected, ask the user to Connect. Do not fill the gap with memory or the open web unless they explicitly want a different source, and then label it.

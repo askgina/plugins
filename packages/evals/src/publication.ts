@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import {
   decodePublicEvalIndex,
   decodePublicEvalPublication,
@@ -14,7 +13,7 @@ import {
 } from "@askgina/contracts";
 import { Data, DateTime, Effect, FileSystem, Function, Option, Path, Schema } from "effect";
 
-import { canonicalJson } from "./canonical-json";
+import { canonicalJson, sha256Hex } from "./canonical-json";
 import { hasSafePublicEvalFields } from "./sanitize";
 
 export type PublicEvalPublicationErrorReason =
@@ -152,25 +151,18 @@ export const decodePublicEvalExportRequest = (
     PUBLIC_EVAL_DECODE_OPTIONS,
   )(input).pipe(
     Effect.mapError(() => error("invalid_request")),
-    Effect.flatMap((request) =>
-      hasSafePublicEvalFields(request)
-        ? Effect.succeed(request)
-        : Effect.fail(error("unsafe_text")),
-    ),
+    Effect.filterOrFail(hasSafePublicEvalFields, () => error("unsafe_text")),
   );
 
 /** Canonical approval subject; deliberately excludes the approval record itself. */
 export const publicEvalPublicationSubjectSha256 = (
   publication: Omit<PublicEvalPublication, "review">,
 ): string =>
-  createHash("sha256")
-    .update(
-      canonicalJson(
-        Object.fromEntries(Object.entries(publication).filter(([key]) => key !== "review")),
-      ),
-      "utf8",
-    )
-    .digest("hex");
+  sha256Hex(
+    canonicalJson(
+      Object.fromEntries(Object.entries(publication).filter(([key]) => key !== "review")),
+    ),
+  );
 
 const validatePublication = (
   input: unknown,
@@ -256,8 +248,6 @@ type IndexRevision = IndexEntry["revisions"][number];
 const PATH_SEGMENT = /^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$/u;
 const snapshotPath = (publicationId: string, revisionId: string): string =>
   `${publicationId}/${revisionId}.json`;
-const sha256 = (content: string): string =>
-  createHash("sha256").update(content, "utf8").digest("hex");
 const decodeJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Unknown));
 
 /** Check every existing ancestor, including dangling links, before creating or opening files. */
@@ -425,8 +415,7 @@ const verifyIndexSnapshots = (
         const bytes = yield* fs
           .readFile(target)
           .pipe(Effect.mapError(() => error("prior_snapshot_mismatch")));
-        if (createHash("sha256").update(bytes).digest("hex") !== revision.sha256)
-          return yield* error("prior_snapshot_mismatch");
+        if (sha256Hex(bytes) !== revision.sha256) return yield* error("prior_snapshot_mismatch");
         const text = yield* Effect.try({
           try: () => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes),
           catch: () => error("prior_snapshot_mismatch"),
@@ -563,7 +552,7 @@ export const exportPublicEvalPublication = (
             state: "current",
             publishedAt: publication.publishedAt,
             path: relativePath,
-            sha256: sha256(content),
+            sha256: sha256Hex(content),
           });
           const nextEntry: IndexEntry = {
             publicationId: publication.publicationId,

@@ -1,0 +1,15 @@
+{
+  "name": "ask-gina-predictions",
+  "displayName": "Ask Gina Predictions",
+  "version": "0.1.0",
+  "description": "Ask Gina Predictions lets an agent search Polymarket markets, read your positions and order history, and, with your approval, place trades, manage orders, redeem winning positions, and top up or withdraw your prediction balance from your Gina wallet. It also manages scheduled prompts. Trades and balance changes move real funds, so review every action before you approve it.",
+  "author": {
+    "name": "Ask Gina"
+  },
+  "homepage": "https://askgina.ai",
+  "repository": "https://github.com/askgina/plugins",
+  "license": "Apache-2.0",
+  "logo": "assets/icon.svg",
+  "keywords": ["Finance"],
+  "mcpServers": ".mcp.json"
+}

@@ -4,6 +4,7 @@ import {
   ASK_GINA_SKILL_DEFINITIONS,
   PRODUCTION_MCP_URL,
   READ_SCOPE,
+  SKILL_NAMES,
   type AskGinaSkillDefinition,
   type SkillName,
 } from "@askgina/contracts";
@@ -24,6 +25,16 @@ const pluginManifestSchema = z
         scopes: z.tuple([z.literal(READ_SCOPE)]),
       })
       .strict(),
+    skills: z.array(
+      z
+        .object({
+          id: z.enum(SKILL_NAMES),
+          mcpServed: z.boolean(),
+        })
+        .strict(),
+    ),
+    // Host listing data; tools/plugin-manifests.ts validates it and generates every manifest.
+    listing: z.unknown(),
   })
   .strict();
 
@@ -40,6 +51,13 @@ export type AskGinaPluginManifest = Readonly<{
     url: typeof PRODUCTION_MCP_URL;
     scopes: readonly [typeof READ_SCOPE];
   }>;
+  skills: readonly AskGinaPluginSkillDeclaration[];
+}>;
+
+/** One `skills:` entry in plugin.yaml; `mcpServed` marks skills the MCP endpoint also serves. */
+export type AskGinaPluginSkillDeclaration = Readonly<{
+  id: SkillName;
+  mcpServed: boolean;
 }>;
 
 export type CanonicalSkillDocument = Readonly<{
@@ -228,10 +246,26 @@ export const loadPluginManifest: Effect.Effect<
   const manifest = yield* readCanonicalFile(root, "plugin.yaml");
   const source = yield* parseYaml(manifest.path, manifest.content);
   const parsed = pluginManifestSchema.safeParse(source);
+  if (!parsed.success) {
+    return yield* pluginSourceLoadError(
+      manifest.path,
+      `has invalid plugin manifest: ${parsed.error.message}`,
+    );
+  }
 
-  return yield* parsed.success
-    ? Effect.succeed(parsed.data)
-    : pluginSourceLoadError(manifest.path, `has invalid plugin manifest: ${parsed.error.message}`);
+  const declaredNames = parsed.data.skills.map(({ id }) => id).sort();
+  const expectedNames = [...canonicalSkillNames].sort();
+  if (
+    declaredNames.length !== expectedNames.length ||
+    declaredNames.some((name, index) => name !== expectedNames[index])
+  ) {
+    return yield* pluginSourceLoadError(
+      manifest.path,
+      `must declare exactly ${expectedNames.join(", ")} under skills; found ${declaredNames.join(", ") || "no skills"}`,
+    );
+  }
+
+  return parsed.data;
 });
 
 /** Reads and validates exactly the four package-local canonical SKILL.md sources. */

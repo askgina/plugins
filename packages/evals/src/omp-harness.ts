@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { createMCPClient, type ListToolsResult, type MCPClient } from "@ai-sdk/mcp";
 import Ajv, { type ValidateFunction } from "ajv";
@@ -39,6 +38,7 @@ import {
   Stream,
 } from "effect";
 
+import { createSha256Stream } from "./canonical-json";
 import type { PluginEvalCase, PluginEvalObservation, PluginEvalToolCall } from "./contracts";
 import { createLocalHarnessSandbox } from "./local-harness-sandbox";
 import {
@@ -828,7 +828,7 @@ const snapshotExecutable = (
               () => new PluginEvalOmpHarnessExecutableError({ reason: "invalid-file" }),
             ),
           );
-        const hash = createHash("sha256");
+        const hash = createSha256Stream();
         const header: number[] = [];
         while (true) {
           const maybeChunk = yield* source
@@ -863,7 +863,7 @@ const snapshotExecutable = (
             () => new PluginEvalOmpHarnessExecutableError({ reason: "invalid-file" }),
           ),
         );
-        const sha256 = hash.digest("hex");
+        const sha256 = hash.digestHex();
         const beforeIno = Option.getOrUndefined(before.ino);
         const afterIno = Option.getOrUndefined(after.ino);
         if (
@@ -1660,10 +1660,22 @@ const createOmpAcpHarness = (
     modelMapping: { type: "session-config-option", path: "model" },
     mcpServers: {},
     hostToolMcpTransport: "http",
+    // The host tools reach OMP through an ACP-supplied MCP server, which OMP connects behind a
+    // 250 ms startup gate that only OMP_MCP_STARTUP_TIMEOUT_MS overrides (ACP sessions ignore
+    // `mcp.startupTimeoutMs`). If the gate opens first, the first turn has no tools, every later
+    // turn sends the tools as deferred, and Anthropic rejects the request. Wait for the load.
     env:
       auth.mode === "api-key"
-        ? { NO_COLOR: "1", [OMP_EVAL_PROVIDER_API_KEY_ENV]: auth.apiKey }
-        : { NO_COLOR: "1", PI_CODING_AGENT_DIR: auth.agentDirectory },
+        ? {
+            NO_COLOR: "1",
+            OMP_MCP_STARTUP_TIMEOUT_MS: "0",
+            [OMP_EVAL_PROVIDER_API_KEY_ENV]: auth.apiKey,
+          }
+        : {
+            NO_COLOR: "1",
+            OMP_MCP_STARTUP_TIMEOUT_MS: "0",
+            PI_CODING_AGENT_DIR: auth.agentDirectory,
+          },
   });
 
 const promptText = (evalCase: PluginEvalCase): string =>

@@ -548,6 +548,15 @@ export const canonicalModels: readonly CanonicalModel[] = [
     origin: "measured",
   },
   {
+    id: "claude-sonnet-5-5",
+    name: "Claude Sonnet 5.5",
+    provider: "Anthropic",
+    providerModel: "claude-sonnet-5-5",
+    mark: "◎",
+    color: "#a07a2c",
+    origin: "measured",
+  },
+  {
     id: "claude-opus",
     release: { date: "2026-07-24", source: "https://www.anthropic.com/news/claude-opus-5" },
     name: "Claude Opus 5",

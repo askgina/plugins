@@ -1,6 +1,6 @@
 ---
 title: "Data & Automations"
-description: "SQL analysis on market data and scheduled automations"
+description: "Fetch prediction market data into a local SQLite table, query it with SQL and schedule recurring automations."
 ---
 
 ## Data Analysis
@@ -45,3 +45,13 @@ Set up recurring scheduled tasks that run automatically.
 "pause my morning briefing recipe"
 "delete the NBA alert automation"
 ```
+
+## Check that it works
+
+Call the native `listScheduledPrompts` tool with:
+
+```json
+{}
+```
+
+Expected: JSON under `data.payload` with your scheduled prompts, or an empty list if you have none. The call only reads data. Create, pause and delete requests change your account, so run them on purpose.

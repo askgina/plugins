@@ -1,9 +1,9 @@
 ---
 title: "Introduction"
-description: "What Perps MCP is and when to use it"
+description: "Connect to Perps MCP to read Hyperliquid markets, trade perpetual futures and analyze market data with SQL from your MCP client."
 ---
 
-Perps MCP is Gina's dedicated MCP server for Hyperliquid perpetual futures. It exposes a sandboxed `bash` tool that can discover and call allowlisted perps host tools for market data, account state, trading, HIP-3 DEX workflows, funding, and SQL analysis.
+Perps MCP is Gina's dedicated MCP server for Hyperliquid perpetual futures. It exposes native tools for market data, account state, order costs, orders, leverage, deposits and withdrawals, and a sandboxed `bash` tool that can discover and call allowlisted perps host tools for HIP-3 DEX workflows, funding, and SQL analysis. [Native tools](/perps-mcp/tools) lists every native tool by annotation class.
 
 ## How It Works
 
@@ -13,7 +13,7 @@ Your MCP client connects to:
 https://askgina.ai/ai/perps/mcp
 ```
 
-After OAuth sign-in, the client receives one MCP tool: `bash`. Inside that sandbox, use commands such as `capabilities`, `host-tools`, `sql`, and `ts-exec` to inspect the tool surface and run perps workflows.
+After OAuth sign-in, the client receives the native tools, the `bash` tool and render-only tools such as `perps.renderChart`. Call a native tool directly for a one-off read or order. Inside the `bash` sandbox, use commands such as `capabilities`, `host-tools`, `sql`, and `ts-exec` to inspect the tool surface and run perps workflows.
 
 <CardGroup cols={3}>
   <Card title="Discover" icon="search">
@@ -42,3 +42,13 @@ Perps MCP is default enabled for authenticated Gina users. Runtime access is con
     See the full feature reference with example prompts and direct commands.
   </Card>
 </CardGroup>
+
+## Check that it works
+
+After you connect, ask your assistant to call `getHyperliquidPrice`, or call the native tool with:
+
+```json
+{ "coin": "BTC" }
+```
+
+Expected: JSON with the current BTC perpetual futures price under `data.payload`. The call only reads data. To check the sandbox too, call `bash` with `{ "command": "echo ok" }` and expect `ok`.

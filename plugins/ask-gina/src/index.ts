@@ -5,6 +5,7 @@ export {
   loadCanonicalSkillDocuments,
   loadPluginManifest,
   type AskGinaPluginManifest,
+  type AskGinaPluginSkillDeclaration,
   type AskGinaPluginSource,
   type CanonicalSkillDocument,
 } from "./loaders";

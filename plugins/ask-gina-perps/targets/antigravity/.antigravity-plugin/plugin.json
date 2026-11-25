@@ -1,0 +1,21 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "ask-gina-perps",
+  "displayName": "Ask Gina Perps",
+  "description": "Read Hyperliquid markets, positions, and account health with Ask Gina. Place or manage perps orders and funding only with your confirmation.",
+  "version": "1.0.0",
+  "logo": "assets/icon.svg",
+  "suggestedPrompts": [
+    "Show my Hyperliquid positions and open orders.",
+    "Preview the cost of a small ETH long without placing it.",
+    "Check my perps account health."
+  ],
+  "author": {
+    "name": "Ask Gina",
+    "url": "https://askgina.ai"
+  },
+  "homepage": "https://askgina.ai",
+  "repository": "https://github.com/askgina/plugins",
+  "license": "Apache-2.0",
+  "keywords": ["crypto", "perps", "perpetuals", "hyperliquid", "hip-3", "trading", "mcp"]
+}

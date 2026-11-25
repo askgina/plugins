@@ -184,5 +184,5 @@ Nothing presented as measured may be invented; synthetic stays labelled.
       canonical selectors or delete if coverage moves; `public-results.test.ts`
       unaffected.
 - [ ] `bun run evals:typecheck && bun run evals:build && bun run lint &&
-bun run fmt:check`; Storybook visual pass incl. 375px mobile on every
+  bun run fmt:check`; Storybook visual pass incl. 375px mobile on every
       touched page.

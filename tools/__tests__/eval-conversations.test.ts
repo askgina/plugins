@@ -1,7 +1,6 @@
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { assert, describe, it } from "@effect/vitest";
-import { createHash } from "node:crypto";
 import { Effect, FileSystem, Layer, Path, Schema } from "effect";
 import {
   evalConversationsPlugin,
@@ -9,6 +8,7 @@ import {
   readConversation,
 } from "../eval-conversations";
 import type { ConversationReference } from "../../apps/evals/src/lib/conversations";
+import { sha256Hex } from "../../packages/evals/src/canonical-json";
 
 const services = Layer.merge(BunFileSystem.layer, BunPath.layer);
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
@@ -84,7 +84,7 @@ const fixture = (
       repetition: reference.repetition,
       path: options.path ?? relative,
       bytes: new TextEncoder().encode(text).byteLength,
-      sha256: createHash("sha256").update(text).digest("hex"),
+      sha256: sha256Hex(text),
     };
     yield* fs.makeDirectory(path.join(root, "chats/sample-high/spot"), { recursive: true });
     yield* fs.writeFileString(path.join(root, relative), text);
